@@ -1,5 +1,19 @@
 # Release History
 
+## 3.0.7 (2026-04-30) (pre-release)
+
+### Added
+
+- Added `azurebackup_policy_update` command for modifying RSV backup policy schedule and retention settings. [[#2452](https://github.com/microsoft/mcp/pull/2452)]
+
+### Fixed
+
+- Fixed CLI mode log messages being written to stdout instead of stderr, ensuring agents and pipelines consuming stdout receive clean JSON only. Logs can be viewed with `2>&1` or captured separately using `2> file.log`. [[#2535](https://github.com/microsoft/mcp/pull/2535)]
+
+### Changed
+
+- Fixed telemetry-triaged failures by hardening input validation and null handling as well as by migrating RSV soft-delete and cross-region restore to supported Vault Patch APIs. [[#2518](https://github.com/microsoft/mcp/pull/2518)]
+
 ## 3.0.6 (2026-04-28) (pre-release)
 
 ### Added
@@ -30,6 +44,16 @@
 - Added an automated end-to-end (E2E) testing tool that uses the GitHub Copilot SDK to validate Azure MCP tool invocations from prompt fixtures. [[#1830](https://github.com/microsoft/mcp/pull/1830)]
 - Improved deploy tool invocation by rewriting tool descriptions and defaulting previously required options, and restricted `deploy_app_logs_get` to local-only mode (`LocalRequired=true`). [[#2418](https://github.com/microsoft/mcp/pull/2418)]
 - Added custom telemetry dimensions to Azure Backup MCP commands. [[#2505](https://github.com/microsoft/mcp/pull/2505)]
+
+## 2.0.2 (2026-04-24)
+
+### Changed
+
+- **Breaking:** Renamed `--detector-name` parameter to `--detector-id` in `appservice_webapp_diagnostic_diagnose` command to accurately reflect that the parameter expects a detector ID, not a display name. [[#2469](https://github.com/microsoft/mcp/pull/2469)]
+
+### Fixed
+
+- Fixed App Service `diagnostic_list` returning detector display names instead of detector IDs, causing `diagnostic_diagnose` to fail with 404 Not Found errors. [[#2469](https://github.com/microsoft/mcp/pull/2469)]
 
 ## 3.0.5 (2026-04-23) (pre-release)
 

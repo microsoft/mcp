@@ -2,15 +2,19 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.7 (Unreleased)
+## 3.0.0-beta.7 (2026-04-30)
 
 ### Features Added
 
-### Breaking Changes
+- Added `azurebackup_policy_update` command for modifying RSV backup policy schedule and retention settings. [[#2452](https://github.com/microsoft/mcp/pull/2452)]
 
 ### Bugs Fixed
 
+- Fixed CLI mode log messages being written to stdout instead of stderr, ensuring agents and pipelines consuming stdout receive clean JSON only. Logs can be viewed with `2>&1` or captured separately using `2> file.log`. [[#2535](https://github.com/microsoft/mcp/pull/2535)]
+
 ### Other Changes
+
+- Fixed telemetry-triaged failures by hardening input validation and null handling as well as by migrating RSV soft-delete and cross-region restore to supported Vault Patch APIs. [[#2518](https://github.com/microsoft/mcp/pull/2518)]
 
 ## 3.0.0-beta.6 (2026-04-28)
 
@@ -45,6 +49,30 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added an automated end-to-end (E2E) testing tool that uses the GitHub Copilot SDK to validate Azure MCP tool invocations from prompt fixtures. [[#1830](https://github.com/microsoft/mcp/pull/1830)]
 - Improved deploy tool invocation by rewriting tool descriptions and defaulting previously required options, and restricted `deploy_app_logs_get` to local-only mode (`LocalRequired=true`). [[#2418](https://github.com/microsoft/mcp/pull/2418)]
 - Added custom telemetry dimensions to Azure Backup MCP commands. [[#2505](https://github.com/microsoft/mcp/pull/2505)]
+
+## 2.0.2 (2026-04-24)
+
+### Breaking Changes
+
+- Renamed `--detector-name` parameter to `--detector-id` in `appservice_webapp_diagnostic_diagnose` command to accurately reflect that the parameter expects a detector ID, not a display name. [[#2469](https://github.com/microsoft/mcp/pull/2469)]
+
+### Bugs Fixed
+
+- Fixed App Service `diagnostic_list` returning detector display names instead of detector IDs, causing `diagnostic_diagnose` to fail with 404 Not Found errors. [[#2469](https://github.com/microsoft/mcp/pull/2469)]
+
+### Other Changes
+
+- Fixed MCPB packaging to only include the platform a bundle was created for. Also updated the descriptions in `manifest.json`, as well as its list of keywords to reflect new namespace additions. [[#2461](https://github.com/microsoft/mcp/pull/2461)]
+
+#### Dependency Updates
+
+- Updated the following `System` dependencies: [[#2461](https://github.com/microsoft/mcp/pull/2461)]
+  - `System.CommandLine`: `2.0.1` → `2.0.6`
+  - `System.Formats.Asn1`: `10.0.2` → `10.0.6`
+  - `System.IdentityModel.Tokens.Jwt`: `8.15.0` → `8.17.0`
+  - `System.Net.ServerSentEvents`: `10.0.2` → `10.0.6`
+  - `System.Numerics.Tensors`: `10.0.2` → `10.0.6`
+  - `System.Text.Json`: `10.0.2` → `10.0.6`
 
 ## 3.0.0-beta.5 (2026-04-23)
 

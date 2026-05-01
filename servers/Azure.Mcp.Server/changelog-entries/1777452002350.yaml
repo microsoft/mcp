@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Fixed CLI mode log messages being written to stdout instead of stderr. Log output now goes exclusively to stderr, ensuring agents and pipelines consuming stdout receive clean JSON only. Use `2>&1` to see logs alongside output, or `2>file.log` to capture them separately."
