@@ -62,15 +62,17 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsHelpfulError_WhenResourceHealthUnsupported()
+    public async Task ExecuteAsync_ReturnsHelpfulError_WhenResourceHealthReturnsUnprocessableEntity()
     {
         var resourceId = "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet";
         var subscriptionId = "12345678-1234-1234-1234-123456789012";
         var resourceType = "Microsoft.Network/virtualNetworks";
-        var expectedError = $"Resource Health availability status is not supported for resource type '{resourceType}'. Use a supported Azure resource type, or list availability statuses at the subscription or resource group scope. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
+        var errorCode = "UnsupportedResourceType";
+        var errorMessage = "Resource type is not supported.";
+        var expectedError = $"Azure Resource Health could not process availability status for resource type '{resourceType}'. Error code: {errorCode}. Details: {errorMessage}. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
 
         Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new ResourceHealthUnsupportedResourceTypeException(resourceId, resourceType));
+            .ThrowsAsync(new ResourceHealthUnprocessableEntityException(resourceId, resourceType, errorCode, errorMessage));
 
         var response = await ExecuteCommandAsync("--resourceId", resourceId, "--subscription", subscriptionId);
 

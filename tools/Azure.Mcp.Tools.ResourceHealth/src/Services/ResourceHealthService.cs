@@ -53,17 +53,13 @@ public class ResourceHealthService(
         if (response.StatusCode == HttpStatusCode.UnprocessableEntity)
         {
             var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            try
-            {
-                using var jsonDoc = JsonDocument.Parse(responseContent);
-                if (jsonDoc.RootElement.TryGetProperty("code", out var codeProperty) && codeProperty.GetString() == "UnsupportedResourceType")
-                {
-                    throw new ResourceHealthUnsupportedResourceTypeException(resourceId, parsedResourceId.ResourceType.ToString(), responseContent);
-                }
-            }
-            catch (JsonException)
-            {
-            }
+            var (errorCode, errorMessage) = ParseErrorResponse(responseContent);
+            throw new ResourceHealthUnprocessableEntityException(
+                resourceId,
+                parsedResourceId.ResourceType.ToString(),
+                errorCode,
+                errorMessage,
+                responseContent);
         }
 
         response.EnsureSuccessStatusCode();
@@ -202,5 +198,37 @@ public class ResourceHealthService(
             .Select(item => item.ToServiceHealthEvent(subscriptionId))
             .Where(evt => !string.IsNullOrEmpty(evt.Id)) // Filter out any invalid entries
             .ToList();
+    }
+
+    private static (string? Code, string? Message) ParseErrorResponse(string responseContent)
+    {
+        if (string.IsNullOrWhiteSpace(responseContent))
+        {
+            return (null, null);
+        }
+
+        try
+        {
+            using var jsonDoc = JsonDocument.Parse(responseContent);
+            var root = jsonDoc.RootElement;
+
+            if (root.TryGetProperty("error", out var errorElement) && errorElement.ValueKind == JsonValueKind.Object)
+            {
+                return (GetStringProperty(errorElement, "code"), GetStringProperty(errorElement, "message"));
+            }
+
+            return (GetStringProperty(root, "code"), GetStringProperty(root, "message"));
+        }
+        catch (JsonException)
+        {
+            return (null, null);
+        }
+    }
+
+    private static string? GetStringProperty(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String
+            ? property.GetString()
+            : null;
     }
 }
