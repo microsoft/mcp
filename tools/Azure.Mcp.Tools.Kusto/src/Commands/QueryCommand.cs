@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     Id = "d1e22074-53ce-4eef-8596-0ea134a9e317",
     Name = "query",
     Title = "Query Kusto Database",
-    Description = "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query. Optionally specify --chart-type to receive a rendered chart image instead of the raw JSON results (the JSON is omitted when an image is returned).",
+    Description = "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query. Optionally specify --chart-type to receive a rendered chart image instead of the raw JSON results (the JSON is omitted when an image is returned). Charts are intended for visual pattern analysis — use them to identify trends, anomalies, spikes, dips, and plateaus over time, not to extract exact values. When a chart is returned, describe what you observe visually (e.g. 'CPU spikes around 14:00', 'steady plateau between 10:00–12:00', 'gradual upward trend') rather than quoting precise numbers.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -97,7 +97,10 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger, IKustoService kus
                     options.ChartType.Value,
                     title: $"Chart of Kusto query results ({options.ChartType.Value})");
                 context.Response.Images = [image];
-                context.Response.Message = "Query results rendered as a chart image — see the attached image.";
+                context.Response.Message = "Query results rendered as a chart image — see the attached image. "
+                    + "Use it to identify visual patterns: trends, anomalies, spikes, dips, and plateaus. "
+                    + "Describe what you observe (e.g. 'spike around 14:00', 'steady plateau', 'gradual upward trend') "
+                    + "rather than quoting precise values — approximate ranges are sufficient.";
                 context.Response.OmitTextContent = true;
             }
             else
