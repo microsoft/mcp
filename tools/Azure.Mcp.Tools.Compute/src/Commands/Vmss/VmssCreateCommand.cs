@@ -31,10 +31,11 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
     ReadOnly = false,
     Secret = true,
     LocalRequired = false)]
-public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
+public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmssCreateOptions>(true)
 {
-    private readonly ILogger<VmssCreateCommand> _logger = logger;
+    private readonly ILogger<VmssCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override void RegisterOptions(Command command)
     {
@@ -134,13 +135,11 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var result = await computeService.CreateVmssAsync(
+            var result = await _computeService.CreateVmssAsync(
                 options.VmssName!,
                 options.ResourceGroup!,
                 options.Subscription!,

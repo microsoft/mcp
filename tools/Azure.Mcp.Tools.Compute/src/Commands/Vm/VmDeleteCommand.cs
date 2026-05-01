@@ -31,10 +31,11 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     ReadOnly = false,
     Secret = true,
     LocalRequired = false)]
-public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
+public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmDeleteOptions>(true)
 {
-    private readonly ILogger<VmDeleteCommand> _logger = logger;
+    private readonly ILogger<VmDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override void RegisterOptions(Command command)
     {
@@ -62,13 +63,11 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            await computeService.DeleteVmAsync(
+            await _computeService.DeleteVmAsync(
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,

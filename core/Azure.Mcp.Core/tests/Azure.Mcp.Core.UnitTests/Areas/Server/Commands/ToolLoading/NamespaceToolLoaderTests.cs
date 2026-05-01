@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
@@ -15,7 +16,7 @@ using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.ToolLoading;
 
-public sealed class NamespaceToolLoaderTests : IDisposable
+public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 {
     private readonly ServiceProvider _serviceProvider;
     private readonly ICommandFactory _commandFactory;
@@ -28,7 +29,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
             ?? throw new InvalidOperationException("Failed to create service provider");
         _commandFactory = CommandFactoryHelpers.CreateCommandFactory(_serviceProvider);
         _options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
-        _logger = _serviceProvider.GetRequiredService<ILogger<NamespaceToolLoader>>();
+        _logger = NullLogger<NamespaceToolLoader>.Instance;
     }
 
     [Fact]
@@ -116,7 +117,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     public async Task ListToolsHandler_FiltersNamespacesWhenConfigured()
     {
         // Arrange
-        using var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
+        await using var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
             ?? throw new InvalidOperationException("Failed to create service provider");
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
         var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
@@ -829,7 +830,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     public async Task GetChildToolList_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
     {
         // Arrange
-        using var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
+        await using var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
             ?? throw new InvalidOperationException("Failed to create service provider");
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
         var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
@@ -853,16 +854,13 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     public async Task GetChildToolList_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
     {
         // Arrange
-        using var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
-            ?? throw new InvalidOperationException("Failed to create service provider");
-        var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
         var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
         {
             Transport = TransportTypes.Http
         });
-        var logger = serviceProvider.GetRequiredService<ILogger<NamespaceToolLoader>>();
+        var logger = NullLogger<NamespaceToolLoader>.Instance;
 
-        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var loader = new NamespaceToolLoader(_commandFactory, options, _serviceProvider, logger);
         var request = CreateCallToolRequest("storage", []);
 
         // Act
@@ -953,8 +951,14 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var result = method.Invoke(loader, [server]);
         return (ModelContextProtocol.Client.McpClientOptions)result!;
     }
-    public void Dispose()
+
+    public async ValueTask DisposeAsync()
     {
-        _serviceProvider?.Dispose();
+        if (_serviceProvider != null)
+        {
+            await _serviceProvider.DisposeAsync();
+        }
+
+        GC.SuppressFinalize(this);
     }
 }

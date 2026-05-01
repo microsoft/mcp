@@ -30,10 +30,11 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
     ReadOnly = false,
     Secret = true,
     LocalRequired = false)]
-public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
+public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmssDeleteOptions>(true)
 {
-    private readonly ILogger<VmssDeleteCommand> _logger = logger;
+    private readonly ILogger<VmssDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override void RegisterOptions(Command command)
     {
@@ -61,13 +62,11 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            await computeService.DeleteVmssAsync(
+            await _computeService.DeleteVmssAsync(
                 options.VmssName!,
                 options.ResourceGroup!,
                 options.Subscription!,

@@ -25,9 +25,10 @@ namespace Azure.Mcp.Tools.Cosmos.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : SubscriptionCommand<CosmosListOptions>()
+public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmosService cosmosService) : SubscriptionCommand<CosmosListOptions>()
 {
     private readonly ILogger<CosmosListCommand> _logger = logger;
+    private readonly ICosmosService _cosmosService = cosmosService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -64,12 +65,10 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
 
         try
         {
-            var cosmosService = context.GetService<ICosmosService>() ?? throw new InvalidOperationException("Cosmos DB service is not available.");
-
             if (!string.IsNullOrEmpty(options.Database))
             {
                 // List containers in the specified database
-                var containers = await cosmosService.ListContainers(
+                var containers = await _cosmosService.ListContainers(
                     options.Account!,
                     options.Database!,
                     options.Subscription!,
@@ -85,7 +84,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
             else if (!string.IsNullOrEmpty(options.Account))
             {
                 // List databases in the specified account
-                var databases = await cosmosService.ListDatabases(
+                var databases = await _cosmosService.ListDatabases(
                     options.Account!,
                     options.Subscription!,
                     options.AuthMethod ?? AuthMethod.Credential,
@@ -100,7 +99,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
             else
             {
                 // List all accounts in the subscription
-                var accounts = await cosmosService.GetCosmosAccounts(
+                var accounts = await _cosmosService.GetCosmosAccounts(
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
