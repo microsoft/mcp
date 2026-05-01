@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fix issue where writing exception to stdio is interpreted as JSON RPC response."
