@@ -9,7 +9,7 @@ param(
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/../common/scripts/common.ps1"
 
-$RepoRoot = $RepoRoot.Path.Replace('\\', '/')
+$RepoRoot = $RepoRoot.Path.Replace('\', '/')
 $projectPath = Join-Path $RepoRoot $VsCodeProjectPath
 
 if (!(Test-Path $projectPath)) {
