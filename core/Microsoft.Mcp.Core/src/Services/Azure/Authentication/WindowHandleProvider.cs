@@ -34,11 +34,11 @@ public static partial class WindowHandleProvider
                     : "X display is available.");
                 return display;
             }
-            catch (Exception)
+            catch (Exception exception)
             {
                 // X11 display detection failed; running in headless mode.
                 // Avoid logging exception details to console to prevent information disclosure.
-                Console.Error.WriteLine($"Failed to detect X display. Running in headless mode. Exception type: {typeof(Exception).FullName}");
+                Console.Error.WriteLine($"Failed to detect X display. Running in headless mode. Exception type: {exception.GetType().FullName}");
             }
         }
 
