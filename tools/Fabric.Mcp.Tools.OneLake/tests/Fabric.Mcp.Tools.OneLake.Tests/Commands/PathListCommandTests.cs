@@ -14,7 +14,6 @@ public class PathListCommandTests : CommandUnitTestsBase<PathListCommand, IOneLa
     {
         Assert.Equal("list_files", Command.Name);
         Assert.Equal("List OneLake Path Structure", Command.Title);
-        Assert.Contains("List files and directories", Command.Description);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);

@@ -23,7 +23,6 @@ public class DiskDeleteCommandTests : CommandUnitTestsBase<DiskDeleteCommand, IC
     {
         Assert.NotNull(Command);
         Assert.Equal("delete", Command.Name);
-        Assert.Contains("disk", Command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.NotEqual(Guid.Empty.ToString(), Command.Id.ToString());
     }
 

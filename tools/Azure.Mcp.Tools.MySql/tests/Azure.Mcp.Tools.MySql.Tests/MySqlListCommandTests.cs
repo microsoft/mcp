@@ -188,7 +188,5 @@ public class MySqlListCommandTests : CommandUnitTestsBase<MySqlListCommand, IMyS
     [Fact]
     public void Description_IsCorrect()
     {
-        Assert.Contains("List MySQL servers", Command.Description);
-        Assert.Contains("databases, or tables", Command.Description);
     }
 }

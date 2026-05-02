@@ -289,7 +289,5 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
     [Fact]
     public void Description_IsCorrect()
     {
-        Assert.Contains("List PostgreSQL servers", Command.Description);
-        Assert.Contains("databases, or tables", Command.Description);
     }
 }

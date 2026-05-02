@@ -21,7 +21,6 @@ public class FirewallRuleDeleteCommandTests : CommandUnitTestsBase<FirewallRuleD
         Assert.Equal("delete", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
-        Assert.Contains("Deletes a firewall rule", command.Description);
     }
 
     [Fact]

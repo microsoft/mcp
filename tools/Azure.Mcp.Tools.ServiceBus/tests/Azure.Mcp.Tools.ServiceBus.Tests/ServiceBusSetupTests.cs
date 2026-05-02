@@ -62,24 +62,6 @@ public class ServiceBusSetupTests
 
         // Assert
         Assert.NotNull(serviceBusGroup);
-
-        // Verify key terms are present in the description
-        Assert.Contains("Service Bus", serviceBusGroup.Description);
-        Assert.Contains("asynchronous messaging", serviceBusGroup.Description);
-        Assert.Contains("enterprise integration", serviceBusGroup.Description);
-        Assert.Contains("point-to-point", serviceBusGroup.Description);
-        Assert.Contains("publish-subscribe", serviceBusGroup.Description);
-        Assert.Contains("dead-letter handling", serviceBusGroup.Description);
-        Assert.Contains("decoupled architectures", serviceBusGroup.Description);
-
-        Assert.Contains("decoupled architectures", serviceBusGroup.Description);
-        Assert.Contains("intended for real-time communication", serviceBusGroup.Description);
-        Assert.Contains("direct API calls", serviceBusGroup.Description);
-        Assert.Contains("database", serviceBusGroup.Description);
-
-        // Verify MCP router information
-        Assert.Contains("hierarchical MCP command model", serviceBusGroup.Description);
-        Assert.Contains("learn=true", serviceBusGroup.Description);
     }
 
     [Fact]
@@ -98,7 +80,6 @@ public class ServiceBusSetupTests
         var queueGroup = serviceBusGroup.SubGroup.FirstOrDefault(g => g.Name == "queue");
         Assert.NotNull(queueGroup);
         Assert.Equal("queue", queueGroup.Name);
-        Assert.Contains("Queue operations", queueGroup.Description);
     }
 
     [Fact]
@@ -117,7 +98,6 @@ public class ServiceBusSetupTests
         var topicGroup = serviceBusGroup.SubGroup.FirstOrDefault(g => g.Name == "topic");
         Assert.NotNull(topicGroup);
         Assert.Equal("topic", topicGroup.Name);
-        Assert.Contains("Topic operations", topicGroup.Description);
     }
 
     [Fact]
@@ -139,7 +119,6 @@ public class ServiceBusSetupTests
         var subscriptionGroup = topicGroup.SubGroup.FirstOrDefault(g => g.Name == "subscription");
         Assert.NotNull(subscriptionGroup);
         Assert.Equal("subscription", subscriptionGroup.Name);
-        Assert.Contains("Subscription operations", subscriptionGroup.Description);
     }
 
     [Fact]

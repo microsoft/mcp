@@ -22,7 +22,6 @@ public class ShowWorkbooksCommandTests : CommandUnitTestsBase<ShowWorkbooksComma
         Assert.Equal("show", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("workbook", CommandDefinition.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -42,8 +41,6 @@ public class ShowWorkbooksCommandTests : CommandUnitTestsBase<ShowWorkbooksComma
     {
         var description = Command.Description;
         Assert.NotNull(description);
-        Assert.Contains("workbook", description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("batch", description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

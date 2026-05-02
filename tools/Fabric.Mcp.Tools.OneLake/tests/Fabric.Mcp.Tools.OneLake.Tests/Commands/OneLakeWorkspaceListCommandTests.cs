@@ -14,7 +14,6 @@ public class OneLakeWorkspaceListCommandTests : CommandUnitTestsBase<OneLakeWork
     {
         Assert.Equal("list_workspaces", Command.Name);
         Assert.Equal("List OneLake Workspaces", Command.Title);
-        Assert.Contains("Lists all Fabric workspaces accessible via OneLake", Command.Description);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);

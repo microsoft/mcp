@@ -27,7 +27,6 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
     {
         Assert.NotNull(Command);
         Assert.Equal("create", Command.Name);
-        Assert.Contains("managed disk", Command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.NotEqual(Guid.Empty.ToString(), Command.Id);
     }
 

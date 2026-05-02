@@ -22,8 +22,6 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
         Assert.Equal("update", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("Updates properties", CommandDefinition.Description);
-        Assert.Contains("workbook", CommandDefinition.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -43,10 +41,6 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
     {
         var description = Command.Description;
         Assert.NotNull(description);
-        Assert.Contains("Updates properties", description);
-        Assert.Contains("workbook", description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("display name", description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("serialized content", description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

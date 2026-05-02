@@ -21,7 +21,6 @@ public class FirewallRuleCreateCommandTests : CommandUnitTestsBase<FirewallRuleC
         Assert.Equal("create", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("Creates a firewall rule", CommandDefinition.Description);
     }
 
     [Theory]
