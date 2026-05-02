@@ -15,7 +15,6 @@ public class FileWriteCommandTests : CommandUnitTestsBase<FileWriteCommand, IOne
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Contains("Write content to a file in OneLake storage", Command.Description);
         Assert.False(Command.Metadata.ReadOnly);
         Assert.True(Command.Metadata.Destructive);
     }

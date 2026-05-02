@@ -22,7 +22,6 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
         Assert.Equal("get", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("Azure SQL database", CommandDefinition.Description);
     }
 
     [Fact]

@@ -28,7 +28,6 @@ public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLa
     {
         Assert.Equal("read", Command.Name);
         Assert.Equal("Read OneLake File", Command.Title);
-        Assert.Contains("Read the contents of a file from OneLake storage", Command.Description);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);

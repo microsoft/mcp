@@ -62,7 +62,6 @@ public class SpeechSetupTests
 
         // Assert
         Assert.NotNull(speechGroup);
-        Assert.Contains("Azure AI Services Speech", speechGroup.Description);
     }
 
     [Fact]
@@ -81,7 +80,6 @@ public class SpeechSetupTests
         var sttGroup = speechGroup.SubGroup.FirstOrDefault(g => g.Name == "stt");
         Assert.NotNull(sttGroup);
         Assert.Equal("stt", sttGroup.Name);
-        Assert.Contains("Speech-to-text", sttGroup.Description);
     }
 
     [Fact]

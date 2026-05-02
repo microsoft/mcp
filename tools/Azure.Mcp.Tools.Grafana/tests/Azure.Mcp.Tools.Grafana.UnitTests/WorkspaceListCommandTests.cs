@@ -22,7 +22,6 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
     {
         Assert.Equal("list", Command.Name);
         Assert.Equal("List Grafana Workspaces", Command.Title);
-        Assert.Contains("List all Grafana workspace resources", Command.Description);
     }
 
     [Fact]

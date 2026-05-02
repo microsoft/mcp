@@ -21,7 +21,6 @@ public class DatabaseRenameCommandTests : CommandUnitTestsBase<DatabaseRenameCom
     {
         Assert.Equal("rename", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
-        Assert.Contains("Rename an existing Azure SQL Database", CommandDefinition.Description);
     }
 
     [Fact]

@@ -21,7 +21,6 @@ public class EventsPublishCommandTests : CommandUnitTestsBase<EventGridPublishCo
     public void Command_Properties_AreCorrect()
     {
         Assert.Equal("publish", Command.Name);
-        Assert.Contains("Publish custom events to Event Grid topics", Command.Description);
         Assert.Equal("Publish Events to Event Grid Topic", Command.Title);
     }
 

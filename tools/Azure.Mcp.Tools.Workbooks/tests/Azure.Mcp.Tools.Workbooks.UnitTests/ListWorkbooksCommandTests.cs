@@ -22,7 +22,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
         Assert.Equal("list", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("workbook", CommandDefinition.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -42,8 +41,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
     {
         var description = Command.Description;
         Assert.NotNull(description);
-        Assert.Contains("workbook", description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("subscription", description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

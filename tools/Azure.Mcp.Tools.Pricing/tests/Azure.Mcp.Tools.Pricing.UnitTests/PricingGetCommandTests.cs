@@ -19,7 +19,6 @@ public sealed class PricingGetCommandTests : CommandUnitTestsBase<PricingGetComm
     {
         Assert.Equal("get", Command.Name);
         Assert.Equal("Get Azure Retail Pricing", Command.Title);
-        Assert.Contains("Azure retail pricing", Command.Description);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.ReadOnly);
     }

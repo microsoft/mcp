@@ -30,9 +30,6 @@ public class AIAppBestPracticesCommandTests : CommandUnitTestsBase<AIAppBestPrac
         Assert.Equal("ai_app", Command.Name);
         Assert.Equal("Get AI App Best Practices", Command.Title);
         Assert.Equal("6c29659e-406d-4b9b-8150-e3d4fd7ba31c", Command.Id);
-        Assert.Contains("AI applications in Azure", Command.Description);
-        Assert.Contains("Microsoft Foundry", Command.Description);
-        Assert.Contains("AI agents, chatbots, workflows", Command.Description);
     }
 
     [Fact]

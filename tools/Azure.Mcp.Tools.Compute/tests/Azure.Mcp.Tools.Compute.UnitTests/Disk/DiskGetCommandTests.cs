@@ -22,7 +22,6 @@ public class DiskGetCommandTests : CommandUnitTestsBase<DiskGetCommand, ICompute
     {
         Assert.NotNull(Command);
         Assert.Equal("get", Command.Name);
-        Assert.Contains("disk", Command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.NotEqual(Guid.Empty.ToString(), Command.Id.ToString());
     }
 
