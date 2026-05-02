@@ -115,6 +115,10 @@ public abstract class GlobalCommand<
         RequestFailedException rfEx => HandleRequestFailedException(rfEx),
         HttpRequestException httpEx =>
             $"Service unavailable or network connectivity issues. Details: {httpEx.Message}",
+        TimeoutException timeoutEx =>
+            $"The operation timed out. Details: {timeoutEx.Message.TrimEnd('.')}",
+        TaskCanceledException canceledEx =>
+            $"The operation timed out or was canceled. Details: {canceledEx.Message.TrimEnd('.')}",
         _ => ex.Message  // Just return the actual exception message
     };
 
@@ -125,6 +129,8 @@ public abstract class GlobalCommand<
         AuthenticationFailedException => HttpStatusCode.Unauthorized,
         RequestFailedException rfEx => (HttpStatusCode)rfEx.Status,
         HttpRequestException httpEx => httpEx.StatusCode ?? HttpStatusCode.ServiceUnavailable,
+        TimeoutException => HttpStatusCode.GatewayTimeout,
+        TaskCanceledException => HttpStatusCode.GatewayTimeout,
         _ => HttpStatusCode.InternalServerError
     };
 

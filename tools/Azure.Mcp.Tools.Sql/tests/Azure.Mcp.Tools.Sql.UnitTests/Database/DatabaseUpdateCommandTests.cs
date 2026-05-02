@@ -460,7 +460,7 @@ public class DatabaseUpdateCommandTests : CommandUnitTestsBase<DatabaseUpdateCom
             "--database", "testdb");
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Invalid server name", response.Message);
     }
 

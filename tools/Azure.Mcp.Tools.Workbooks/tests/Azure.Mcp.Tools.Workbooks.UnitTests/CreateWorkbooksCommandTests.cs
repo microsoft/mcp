@@ -496,6 +496,6 @@ public class CreateWorkbooksCommandTests : CommandUnitTestsBase<CreateWorkbooksC
             "--serialized-content", """{"items":[]}""");
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
     }
 }

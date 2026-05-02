@@ -295,7 +295,7 @@ public class DatabaseDeleteCommandTests : CommandUnitTestsBase<DatabaseDeleteCom
             "--server", "server1",
             "--database", "invalidDb");
 
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Invalid database name", response.Message);
     }
 
