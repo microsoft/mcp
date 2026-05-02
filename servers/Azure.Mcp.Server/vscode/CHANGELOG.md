@@ -1,5 +1,27 @@
 # Release History
 
+## 3.0.8 (2026-05-01) (pre-release)
+
+### Added
+
+- Added `appservice_webapp_change-state` tool to change the running state of an App Service web app. [[#1934](https://github.com/microsoft/mcp/pull/1934)]
+
+### Fixed
+
+- Improved Resource Health availability status errors for unsupported resource types. [[#2554](https://github.com/microsoft/mcp/pull/2554)]
+- Fixed parameter handling to honor the optional `--resource-group` parameter, which was previously not passed through to the service layer, causing subscription-wide results to always be returned regardless of the specified resource group for the following tools: [[#2552](https://github.com/microsoft/mcp/pull/2552)]
+  - `appconfig_account_list`
+  - `grafana_list`
+  - `kusto_cluster_list`
+  - `monitor_workspace_list`
+  - `search_service_list`
+  - `storage_account_get`
+- Fixed issue where exceptions written to stdout were incorrectly interpreted as JSON RPC response. [[#2559](https://github.com/microsoft/mcp/pull/2559)]
+
+### Changed
+
+- Improved Azure Functions tool descriptions and prompts for better AI agent tool selection and invocation. [[#2517](https://github.com/microsoft/mcp/pull/2517)]
+
 ## 3.0.7 (2026-04-30) (pre-release)
 
 ### Added
