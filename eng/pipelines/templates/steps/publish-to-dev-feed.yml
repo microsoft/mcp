@@ -54,7 +54,7 @@ steps:
         }
 
         Write-Host "> $command"
-        Invoke-Expression $command 2&>1 | Tee-Object -Variable publishOutput
+        Invoke-Expression $command 2>&1 | Tee-Object -Variable publishOutput
         if ($LASTEXITCODE -ne 0) {
           if ($ignoreDuplicates -and $publishOutput -match 'The feed .* already contains file') {
             Write-Host "Package $($file.FullName) has already been published with the same version. Skipping."
