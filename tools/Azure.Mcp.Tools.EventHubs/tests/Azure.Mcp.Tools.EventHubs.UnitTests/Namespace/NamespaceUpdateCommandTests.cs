@@ -23,6 +23,7 @@ public class NamespaceUpdateCommandTests : CommandUnitTestsBase<NamespaceUpdateC
         Assert.True(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);
         Assert.False(Command.Metadata.ReadOnly);
+        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Theory]

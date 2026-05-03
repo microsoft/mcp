@@ -31,6 +31,7 @@ public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLa
         Assert.True(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);
+        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

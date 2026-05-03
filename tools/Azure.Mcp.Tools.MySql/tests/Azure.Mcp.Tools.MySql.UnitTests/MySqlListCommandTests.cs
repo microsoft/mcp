@@ -185,8 +185,4 @@ public class MySqlListCommandTests : CommandUnitTestsBase<MySqlListCommand, IMyS
         Assert.Equal("list", Command.Name);
     }
 
-    [Fact]
-    public void Description_IsCorrect()
-    {
-    }
 }

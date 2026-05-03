@@ -286,8 +286,4 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
         Assert.Equal("list", Command.Name);
     }
 
-    [Fact]
-    public void Description_IsCorrect()
-    {
-    }
 }

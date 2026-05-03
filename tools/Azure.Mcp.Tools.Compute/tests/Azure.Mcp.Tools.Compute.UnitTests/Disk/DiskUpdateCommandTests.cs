@@ -25,6 +25,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
         Assert.NotNull(Command);
         Assert.Equal("update", Command.Name);
         Assert.NotEqual(Guid.Empty.ToString(), Command.Id);
+        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
