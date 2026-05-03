@@ -21,6 +21,7 @@ public class SessionHostUserSessionListCommandTests : CommandUnitTestsBase<Sessi
         Assert.Equal("user-list", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
+        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Theory]

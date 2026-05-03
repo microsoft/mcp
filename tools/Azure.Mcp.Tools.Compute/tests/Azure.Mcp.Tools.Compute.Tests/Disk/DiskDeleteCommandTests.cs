@@ -24,6 +24,7 @@ public class DiskDeleteCommandTests : CommandUnitTestsBase<DiskDeleteCommand, IC
         Assert.NotNull(Command);
         Assert.Equal("delete", Command.Name);
         Assert.NotEqual(Guid.Empty.ToString(), Command.Id.ToString());
+        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

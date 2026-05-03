@@ -100,6 +100,7 @@ public class SingleProxyToolLoaderTests
 
         var azureTool = result.Tools.FirstOrDefault(t => t.Name == "azure");
         Assert.NotNull(azureTool);
+        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
         // Verify the tool has proper structure
         Assert.True(azureTool.InputSchema.ValueKind != JsonValueKind.Undefined);
         Assert.NotNull(azureTool.Annotations);

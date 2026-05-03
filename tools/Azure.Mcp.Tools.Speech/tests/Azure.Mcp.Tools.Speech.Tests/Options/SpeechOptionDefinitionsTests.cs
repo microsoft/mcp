@@ -60,6 +60,7 @@ public class SpeechOptionDefinitionsTests
         Assert.NotNull(option);
         Assert.Equal("--endpoint", option.Name);
         Assert.True(option.Required);
+        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

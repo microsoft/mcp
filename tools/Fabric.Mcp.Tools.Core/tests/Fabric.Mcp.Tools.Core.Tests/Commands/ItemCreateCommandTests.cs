@@ -17,6 +17,7 @@ public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IF
         Assert.False(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
         Assert.False(Command.Metadata.Idempotent);
+        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
