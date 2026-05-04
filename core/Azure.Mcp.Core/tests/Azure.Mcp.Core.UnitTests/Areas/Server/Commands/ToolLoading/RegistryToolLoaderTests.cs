@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Azure.Mcp.Core.UnitTests.Areas.Server.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
@@ -221,7 +221,8 @@ public class RegistryToolLoaderTests
             Description = "Local required tool",
             InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
             Annotations = new(),
-            Meta = new JsonObject { ["LocalRequiredHint"] = true } // Simulate a tool that requires local access (not suitable for HTTP mode)
+            // Simulate a tool that requires local access (not suitable for HTTP mode)
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, true)]
         };
 
         var notLocalRequiredTool = new Tool
@@ -230,7 +231,7 @@ public class RegistryToolLoaderTests
             Description = "Write tool",
             InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
             Annotations = new(),
-            Meta = new JsonObject { ["LocalRequiredHint"] = false }
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, false)]
         };
 
         var clientBuilder = new MockMcpClientBuilder()
@@ -262,7 +263,7 @@ public class RegistryToolLoaderTests
         var returnedTool = result.Tools.First();
         Assert.Equal(notLocalRequiredTool.Name, returnedTool.Name);
         Assert.NotNull(returnedTool.Meta);
-        Assert.Equal(JsonValueKind.False, returnedTool.Meta["LocalRequiredHint"]?.GetValueKind());
+        Assert.False(McpHelper.HasHint(returnedTool, McpHelper.LocalRequiredHintMetaKey));
 
         // Verify that the write tool was filtered out
         Assert.DoesNotContain(result.Tools, t => t.Name == localRequiredTool.Name);
@@ -278,7 +279,8 @@ public class RegistryToolLoaderTests
             Description = "Local required tool",
             InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
             Annotations = new(),
-            Meta = new JsonObject { ["LocalRequiredHint"] = true } // Simulate a tool that requires local access (not suitable for HTTP mode)
+            // Simulate a tool that requires local access (not suitable for HTTP mode)
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, true)]
         };
 
         var notLocalRequiredTool = new Tool
@@ -287,7 +289,7 @@ public class RegistryToolLoaderTests
             Description = "Write tool",
             InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
             Annotations = new(),
-            Meta = new JsonObject { ["LocalRequiredHint"] = false }
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, false)]
         };
 
         var clientBuilder = new MockMcpClientBuilder()
@@ -323,9 +325,9 @@ public class RegistryToolLoaderTests
         var localRequiredToolResult = result.Tools.First(t => t.Name == localRequiredTool.Name);
         var notLocalRequiredToolResult = result.Tools.First(t => t.Name == notLocalRequiredTool.Name);
         Assert.NotNull(localRequiredToolResult.Meta);
-        Assert.Equal(JsonValueKind.True, localRequiredToolResult.Meta["LocalRequiredHint"]?.GetValueKind());
+        Assert.True(McpHelper.HasHint(localRequiredToolResult, McpHelper.LocalRequiredHintMetaKey));
         Assert.NotNull(notLocalRequiredToolResult.Meta);
-        Assert.Equal(JsonValueKind.False, notLocalRequiredToolResult.Meta["LocalRequiredHint"]?.GetValueKind());
+        Assert.False(McpHelper.HasHint(notLocalRequiredToolResult, McpHelper.LocalRequiredHintMetaKey));
     }
 
     [Fact]
@@ -968,7 +970,7 @@ public class RegistryToolLoaderTests
             Description = "Local required tool",
             InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
             Annotations = new(),
-            Meta = new JsonObject { ["LocalRequiredHint"] = true }
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, true)]
         };
 
         var remoteTool = new Tool
@@ -977,7 +979,7 @@ public class RegistryToolLoaderTests
             Description = "Remote tool",
             InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
             Annotations = new(),
-            Meta = new JsonObject { ["LocalRequiredHint"] = false }
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, false)]
         };
 
         var clientBuilder = new MockMcpClientBuilder()
