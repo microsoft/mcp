@@ -65,6 +65,7 @@ Get P50/P95/P99 latency for successful calls. See [kql-queries.md](./references/
 
 Query `azurebackup/VaultType`, `azurebackup/WorkloadType`, `azurebackup/DatasourceType`, `azurebackup/OperationScope`
 dimensions to see if users have upgraded to versions with telemetry tags.
+Use queries 7, 11, 12, and 13 from [kql-queries.md](./references/kql-queries.md).
 
 ### Step 2: Gather Git Context
 
@@ -91,8 +92,9 @@ $facts = (Select-String "\[Fact\]" tools/Azure.Mcp.Tools.AzureBackup/tests/Azure
 $inlines = (Select-String "\[InlineData" tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.UnitTests/**/*.cs | Measure-Object).Count
 # Total runnable = $facts + $inlines
 
-# Live test count (test methods)
-Select-String "\[Fact\]|\[Theory\]|\[LiveTestOnly\]|\[RecordedTest\]" tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.LiveTests/*.cs | Measure-Object
+# Live test count — count only [Fact] (each method has [Fact]; [LiveTestOnly] is an
+# additional attribute on the same method, so counting both would double-count)
+Select-String "\[Fact\]" tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.LiveTests/*.cs | Measure-Object
 
 # Registered tools
 Select-String "AddCommand" tools/Azure.Mcp.Tools.AzureBackup/src/AzureBackupSetup.cs | Measure-Object
@@ -109,7 +111,7 @@ Apply the 3-way error classification:
 |----------|----------------|---------------|
 | **Customer (4xx)** | `RequestFailedException` with 400/403/404, `KeyNotFoundException` | User error — wrong input, missing permissions, resource doesn't exist |
 | **Azure Service** | `AggregateException`, `RequestFailedException` with 5xx | Azure SDK/API/auth layer failure — tool correctly surfaces it |
-| **MCP Tool Bug** | `FormatException`, `ArgumentNullException`, `ArgumentException`, `InvalidOperationException` (from our code) | Our tool code is wrong — needs a fix |
+| **MCP Tool Bug** | `FormatException`, `ArgumentNullException`, `ArgumentException`, `InvalidOperationException` (thrown by our code for unsupported operations) | Our tool code is wrong — needs a fix |
 
 **MCP Tool Success Rate** = (Total - MCP Tool Bugs) / Total
 
@@ -161,7 +163,7 @@ Is success == true?
               └─ YES → "Azure Service"
             Is ExceptionType System.AggregateException?
               └─ YES → "Azure Service"
-            Is ExceptionType FormatException / ArgumentNullException / ArgumentException?
+            Is ExceptionType FormatException / ArgumentNullException / ArgumentException / InvalidOperationException?
               └─ YES → "MCP Tool Bug"
             Otherwise → "Unknown" (investigate)
 ```

@@ -5,6 +5,11 @@ All queries use the `getAzureMcpEvents_ToolCalls` function from the Azure MCP te
 - **Cluster URI:** `https://ddazureclients.kusto.windows.net`
 - **Database:** `AzureDevExp`
 
+> **Note on field casing:** The telemetry source emits `ToolName` and `DevDeviceId` (PascalCase),
+> but `customDimensions.toolname` (lowercase) works in practice because the `getAzureMcpEvents_ToolCalls`
+> function normalizes bag key access. If queries return empty results, try PascalCase variants
+> (`customDimensions.ToolName`, `customDimensions.DevDeviceId`).
+
 ---
 
 ## 1. Per-Tool Health with 3-Way Error Classification (7-day)
@@ -45,11 +50,12 @@ getAzureMcpEvents_ToolCalls(ago(7d), now())
 let ThisWeek = startofweek(ago(0d));
 let LastWeek = startofweek(ago(7d));
 let TwoWeeksAgo = startofweek(ago(14d));
-getAzureMcpEvents_ToolCalls(TwoWeeksAgo, ThisWeek)
+getAzureMcpEvents_ToolCalls(TwoWeeksAgo, now())
 | extend
     ToolName = tostring(customDimensions.toolname),
-    Week = iff(timestamp >= LastWeek, "ThisWeek", "LastWeek")
+    Week = iff(timestamp >= ThisWeek, "ThisWeek", iff(timestamp >= LastWeek, "LastWeek", "TwoWeeksAgo"))
 | where ToolName contains "azurebackup"
+| where Week in ("ThisWeek", "LastWeek")
 | extend
     ExMsg = tostring(customDimensions["exception.message"]),
     ExType = tostring(customDimensions["exception.type"])
@@ -60,7 +66,7 @@ getAzureMcpEvents_ToolCalls(TwoWeeksAgo, ThisWeek)
     ExType == "System.Collections.Generic.KeyNotFoundException", "Customer",
     ExType == "Azure.RequestFailedException" and StatusCode >= 500, "AzureService",
     ExType == "System.AggregateException", "AzureService",
-    ExType in ("System.FormatException", "System.ArgumentNullException", "System.ArgumentException"), "McpToolBug",
+    ExType in ("System.FormatException", "System.ArgumentNullException", "System.ArgumentException", "System.InvalidOperationException"), "McpToolBug",
     "Unknown")
 | summarize
     Total = count(),
@@ -109,7 +115,7 @@ getAzureMcpEvents_ToolCalls(ago(7d), now())
     ExType == "System.Collections.Generic.KeyNotFoundException", "Customer",
     ExType == "Azure.RequestFailedException" and StatusCode >= 500, "AzureService",
     ExType == "System.AggregateException", "AzureService",
-    ExType in ("System.FormatException", "System.ArgumentNullException", "System.ArgumentException"), "McpToolBug",
+    ExType in ("System.FormatException", "System.ArgumentNullException", "System.ArgumentException", "System.InvalidOperationException"), "McpToolBug",
     "Unknown")
 | summarize Count = count()
     by ToolName, StatusCode, ErrorCategory, ExType
@@ -209,4 +215,48 @@ getAzureMcpEvents_ToolCalls(ago(30d), now())
     FailureRate = round(100.0 * Failed / Total, 2),
     SuccessRate = round(100.0 * Succeeded / Total, 2)
 | order by Total desc
+```
+
+## 11. Custom Telemetry Tags — WorkloadType Usage (7-day)
+
+```kql
+getAzureMcpEvents_ToolCalls(ago(7d), now())
+| extend
+    ToolName = tostring(customDimensions.toolname),
+    WorkloadType = tostring(customDimensions["azurebackup/WorkloadType"])
+| where ToolName contains "azurebackup"
+| where isnotempty(WorkloadType)
+| summarize Calls = count(), Errors = countif(success == false),
+    Users = dcount(tostring(customDimensions.devdeviceid))
+    by ToolName, WorkloadType
+| order by Calls desc
+```
+
+## 12. Custom Telemetry Tags — DatasourceType Usage (7-day)
+
+```kql
+getAzureMcpEvents_ToolCalls(ago(7d), now())
+| extend
+    ToolName = tostring(customDimensions.toolname),
+    DatasourceType = tostring(customDimensions["azurebackup/DatasourceType"])
+| where ToolName contains "azurebackup"
+| where isnotempty(DatasourceType)
+| summarize Calls = count(), Errors = countif(success == false),
+    P95_ms = percentile(duration, 95)
+    by ToolName, DatasourceType
+| order by Calls desc
+```
+
+## 13. Custom Telemetry Tags — OperationScope (single vs list) (7-day)
+
+```kql
+getAzureMcpEvents_ToolCalls(ago(7d), now())
+| extend
+    ToolName = tostring(customDimensions.toolname),
+    OperationScope = tostring(customDimensions["azurebackup/OperationScope"])
+| where ToolName contains "azurebackup"
+| where isnotempty(OperationScope)
+| summarize Calls = count(), P50_ms = percentile(duration, 50)
+    by ToolName, OperationScope
+| order by ToolName asc, OperationScope asc
 ```

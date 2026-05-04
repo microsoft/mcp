@@ -28,7 +28,7 @@ ensuring it passes all validation gates before PR submission.
 
 ### Phase 1: Implementation
 
-Follow [/servers/Azure.Mcp.Server/docs/new-command.md](../../../servers/Azure.Mcp.Server/docs/new-command.md) as the authoritative guide.
+Follow [/servers/Azure.Mcp.Server/docs/new-command.md](../../../../../servers/Azure.Mcp.Server/docs/new-command.md) as the authoritative guide.
 The Azure Backup toolset lives in `tools/Azure.Mcp.Tools.AzureBackup/`.
 
 #### 1a. Create Option Definitions
@@ -43,7 +43,8 @@ public class MyNewOptions : BaseAzureBackupOptions
 }
 ```
 
-- Use `OptionDefinitions.Common.*` for shared options (subscription, resourceGroup, vault, vaultType)
+- Use `OptionDefinitions.Common.*` for shared options (subscription, resourceGroup)
+- Use `AzureBackupOptionDefinitions.Vault` and `AzureBackupOptionDefinitions.VaultType` for vault options
 - Add new options to `AzureBackupOptionDefinitions` if reusable across commands
 - Use `.AsRequired()` / `.AsOptional()` extension methods
 
@@ -136,17 +137,30 @@ File: `tests/Azure.Mcp.Tools.AzureBackup.LiveTests/AzureBackupCommandTests.cs`
 
 #### 4a. Add Test Methods
 
+Azure Backup live tests use `[Fact]` on a `RecordedCommandTestsBase` subclass with `CallToolAsync`.
+There is no `[RecordedTest]` attribute in this toolset.
+
 ```csharp
-[RecordedTest]
+[Fact]
 public async Task MyNewCommand_RsvVault()
 {
-    var args = $"azurebackup mygroup myop --subscription {SubscriptionId} ...";
-    await RunCommandAndAssert(args);
+    var result = await CallToolAsync(
+        "azurebackup", "mygroup", "myop",
+        new Dictionary<string, object>
+        {
+            ["subscription"] = SubscriptionId,
+            ["resourceGroup"] = ResourceGroupName,
+            ["vault"] = DeploymentOutputs["AZUREBACKUP_RSV_VAULT_NAME"],
+            // add other params
+        });
+
+    Assert.NotNull(result);
+    // assert on result content
 }
 ```
 
-- Use `[RecordedTest]` attribute for tests that hit Azure APIs
-- Use `[LiveTestOnly]` for long-running E2E tests that should skip playback
+- Use `[Fact]` for all live tests (not `[RecordedTest]` — that attribute is not used in Azure Backup)
+- Use `[LiveTestOnly]` alongside `[Fact]` for long-running E2E tests that cannot reliably replay
 - Use test resource values from `DeploymentOutputs` (set in `test-resources-post.ps1`)
 
 #### 4b. Update Test Infrastructure (if needed)
@@ -254,6 +268,17 @@ If new technical terms are flagged, add them to `.vscode/cspell.json`.
 ./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx
 ```
 
+#### 5g. AOT/Native Build Verification
+
+Azure Backup is marked `IsAotCompatible=true`, so also validate native compilation:
+
+```powershell
+./eng/scripts/Build-Local.ps1 -BuildNative
+```
+
+If this fails for a new Azure SDK dependency, the toolset may need to be excluded
+from native builds (see `docs/aot-compatibility.md`).
+
 ### Phase 6: Tool Description Evaluation
 
 Run the ToolDescriptionEvaluator to verify the new tool's description is discoverable by AI agents.
@@ -282,6 +307,12 @@ File: `servers/Azure.Mcp.Server/docs/azmcp-commands.md`
 
 Add the new command in alphabetical order within the azurebackup section.
 
+Then regenerate the commands metadata:
+```powershell
+./eng/scripts/Update-AzCommandsMetadata.ps1
+```
+This is required for CI validation.
+
 #### 7b. Add Test Prompts
 
 File: `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
@@ -309,13 +340,15 @@ Before creating the PR, verify:
 - [ ] **Command registered** in `AzureBackupSetup.cs`
 - [ ] **JSON context registered** for AOT safety
 - [ ] **Telemetry tags added** via `AzureBackupTelemetryTags`
-- [ ] **Documentation updated** (commands.md, e2eTestPrompts.md, changelog)
+- [ ] **Documentation updated** (commands.md, e2eTestPrompts.md, changelog, README.md, eng/vscode/README.md)
+- [ ] **Commands metadata regenerated** via `Update-AzCommandsMetadata.ps1`
+- [ ] **AOT/native build passes** (`Build-Local.ps1 -BuildNative`)
 - [ ] **One tool per PR** (don't bundle unrelated changes)
 
 #### Create the PR
 
 ```powershell
-git add tools/Azure.Mcp.Tools.AzureBackup/ servers/Azure.Mcp.Server/
+git add tools/Azure.Mcp.Tools.AzureBackup/ servers/Azure.Mcp.Server/ README.md eng/vscode/README.md
 git commit -m "feat(azurebackup): Add <group> <operation> command
 
 <description of what the command does>"
