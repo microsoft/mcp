@@ -91,7 +91,7 @@ public class WebappGetCommandTests : CommandUnitTestsBase<WebappGetCommand, IApp
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
 
         await Service.Received(1).GetWebAppsAsync("sub123", "rg1", "test-app",
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());

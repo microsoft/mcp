@@ -207,7 +207,7 @@ public class EventsPublishCommandTests : CommandUnitTestsBase<EventGridPublishCo
             "--data", eventData);
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status); // The base command returns InternalServerError for general exceptions by default
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
         Assert.Contains("not found", response.Message);
     }
 

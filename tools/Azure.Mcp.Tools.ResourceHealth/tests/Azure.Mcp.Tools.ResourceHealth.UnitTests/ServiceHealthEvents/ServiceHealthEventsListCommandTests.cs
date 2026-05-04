@@ -118,7 +118,7 @@ public class ServiceHealthEventsListCommandTests : CommandUnitTestsBase<ServiceH
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
         Assert.Contains(expectedError, response.Message ?? "");
     }
 

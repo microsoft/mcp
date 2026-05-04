@@ -226,6 +226,6 @@ public class DatabaseAddCommandTests : CommandUnitTestsBase<DatabaseAddCommand, 
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
     }
 }

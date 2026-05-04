@@ -112,7 +112,7 @@ public class GetWorkloadApisCommandTests : CommandUnitTestsBase<GetWorkloadApisC
         var result = await ExecuteCommandAsync("--workload-type", "notebook");
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, result.Status);
         Assert.NotEmpty(result.Message);
     }
 }
