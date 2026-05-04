@@ -148,7 +148,7 @@ public class WebappChangeStateCommandTests : CommandUnitTestsBase<WebappChangeSt
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
 
         await Service.Received(1).ChangeWebAppStateAsync("sub123", "rg1", "test-app", stateChange,
             softRestart, waitForCompletion, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),

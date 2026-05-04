@@ -167,7 +167,7 @@ public class DetectorDiagnoseCommandTests : CommandUnitTestsBase<DetectorDiagnos
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
 
         await Service.Received(1).DiagnoseDetectorAsync("sub123", "rg1", "test-app", "LinuxMemoryDrillDown",
             startTime, endTime, interval, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
