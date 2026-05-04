@@ -14,34 +14,25 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
-public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : BaseMonitorWebTestsCommand<WebTestsGetOptions>
-{
-    private const string CommandTitle = "Get or list web tests";
-
-    public override string Id => "c9897ba5-445c-43dc-9902-e8454dbdc243";
-
-    public override string Name => "get";
-
-    public override string Description =>
-         $"""
+[CommandMetadata(
+    Id = "c9897ba5-445c-43dc-9902-e8454dbdc243",
+    Name = "get",
+    Title = "Get or list web tests",
+    Description = """
         Gets details for a specific web test or lists all web tests.
         When --webtest-resource is provided, returns detailed information about a single web test.
         When --webtest-resource is omitted, returns a list of all web tests in the subscription (optionally filtered by resource group).
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger, IMonitorWebTestService monitorWebTestService) : BaseMonitorWebTestsCommand<WebTestsGetOptions>
+{
     private readonly ILogger<WebTestsGetCommand> _logger = logger;
+    private readonly IMonitorWebTestService _monitorWebTestService = monitorWebTestService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -51,8 +42,8 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
 
         command.Validators.Add(commandResult =>
         {
-            var webTestName = commandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.WebTestResourceName.Name);
-            var resourceGroup = commandResult.GetValueWithoutDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+            var webTestName = commandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.WebTestResourceName);
+            var resourceGroup = commandResult.GetValueWithoutDefault(OptionDefinitions.Common.ResourceGroup);
 
             if (!string.IsNullOrEmpty(webTestName) && string.IsNullOrEmpty(resourceGroup))
             {
@@ -79,12 +70,10 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
         var options = BindOptions(parseResult);
         try
         {
-            var monitorWebTestService = context.GetService<IMonitorWebTestService>();
-
             // If --webtest-resource is provided, get a specific web test
             if (!string.IsNullOrEmpty(options.WebTestName))
             {
-                var webTest = await monitorWebTestService.GetWebTest(
+                var webTest = await _monitorWebTestService.GetWebTest(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.WebTestName!,
@@ -106,8 +95,8 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
             {
                 // Otherwise, list web tests
                 var webTests = options.ResourceGroup == null
-                    ? await monitorWebTestService.ListWebTests(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken)
-                    : await monitorWebTestService.ListWebTests(options.Subscription!, options.ResourceGroup, options.Tenant, options.RetryPolicy, cancellationToken);
+                    ? await _monitorWebTestService.ListWebTests(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken)
+                    : await _monitorWebTestService.ListWebTests(options.Subscription!, options.ResourceGroup, options.Tenant, options.RetryPolicy, cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(webTests ?? []), MonitorJsonContext.Default.WebTestsGetCommandListResult);
             }

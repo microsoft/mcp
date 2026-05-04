@@ -13,35 +13,27 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
-public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
-    : BaseComputeCommand<VmssUpdateOptions>(true)
-{
-    private const string CommandTitle = "Update Virtual Machine Scale Set";
-    private readonly ILogger<VmssUpdateCommand> _logger = logger;
-
-    public override string Id => "aaa0ad51-3c16-4ec2-99e2-b24f28a1e7d0";
-
-    public override string Name => "update";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "aaa0ad51-3c16-4ec2-99e2-b24f28a1e7d0",
+    Name = "update",
+    Title = "Update Virtual Machine Scale Set",
+    Description = """
         Update, modify, or reconfigure an existing Azure Virtual Machine Scale Set (VMSS).
         Use this to scale instance count, resize VMs, change upgrade policy, or update tags on a scale set.
         Equivalent to 'az vmss update'. Changes may require 'update-instances' to roll out to existing VMs.
         Do not use this to create a new VMSS (use VMSS create) or to update a single VM (use VM update).
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger, IComputeService computeService)
+    : BaseComputeCommand<VmssUpdateOptions>(true)
+{
+    private readonly ILogger<VmssUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override void RegisterOptions(Command command)
     {
@@ -63,13 +55,13 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
         command.Validators.Add(commandResult =>
         {
             // Custom validation: At least one update property must be specified
-            if (string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UpgradePolicy.Name)) &&
-                !commandResult.GetValueOrDefault<int?>(ComputeOptionDefinitions.Capacity.Name).HasValue &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name)) &&
-                !commandResult.GetValueOrDefault<bool?>(ComputeOptionDefinitions.Overprovision.Name).HasValue &&
-                !commandResult.GetValueOrDefault<bool?>(ComputeOptionDefinitions.EnableAutoOsUpgrade.Name).HasValue &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.ScaleInPolicy.Name)) &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name)))
+            if (!commandResult.HasOptionResult(ComputeOptionDefinitions.UpgradePolicy) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.Capacity) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.VmSize) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.Overprovision) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.EnableAutoOsUpgrade) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.ScaleInPolicy) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.Tags))
             {
                 commandResult.AddError(
                     "At least one update property must be specified: --upgrade-policy, --capacity, --vm-size, --overprovision, --enable-auto-os-upgrade, --scale-in-policy, or --tags.");
@@ -80,14 +72,14 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
     protected override VmssUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VmssName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmssName.Name);
-        options.UpgradePolicy = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UpgradePolicy.Name);
-        options.Capacity = parseResult.GetValueOrDefault<int?>(ComputeOptionDefinitions.Capacity.Name);
-        options.VmSize = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name);
-        options.Overprovision = parseResult.GetValueOrDefault<bool?>(ComputeOptionDefinitions.Overprovision.Name);
-        options.EnableAutoOsUpgrade = parseResult.GetValueOrDefault<bool?>(ComputeOptionDefinitions.EnableAutoOsUpgrade.Name);
-        options.ScaleInPolicy = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.ScaleInPolicy.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name);
+        options.VmssName = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VmssName);
+        options.UpgradePolicy = parseResult.GetValueOrDefault(ComputeOptionDefinitions.UpgradePolicy);
+        options.Capacity = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Capacity);
+        options.VmSize = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VmSize);
+        options.Overprovision = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Overprovision);
+        options.EnableAutoOsUpgrade = parseResult.GetValueOrDefault(ComputeOptionDefinitions.EnableAutoOsUpgrade);
+        options.ScaleInPolicy = parseResult.GetValueOrDefault(ComputeOptionDefinitions.ScaleInPolicy);
+        options.Tags = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Tags);
         return options;
     }
 
@@ -100,13 +92,12 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
 
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var result = await computeService.UpdateVmssAsync(
+            var result = await _computeService.UpdateVmssAsync(
                 options.VmssName!,
                 options.ResourceGroup!,
                 options.Subscription!,

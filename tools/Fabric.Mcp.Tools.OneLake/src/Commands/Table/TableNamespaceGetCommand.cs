@@ -11,27 +11,23 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
 
+[CommandMetadata(
+    Id = "a86298d1-7475-4ea8-8c1b-e4c54ac2b896",
+    Name = "get_table_namespace",
+    Title = "Get OneLake Table Namespace",
+    Description = "Retrieves metadata for a specific table namespace. Use this when the user needs details about a namespace.",
+    Destructive = false,
+    Idempotent = true,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false)]
 public sealed class TableNamespaceGetCommand(
     ILogger<TableNamespaceGetCommand> logger,
     IOneLakeService oneLakeService) : GlobalCommand<TableNamespaceGetOptions>()
 {
     private readonly ILogger<TableNamespaceGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "a86298d1-7475-4ea8-8c1b-e4c54ac2b896";
-    public override string Name => "get_table_namespace";
-    public override string Title => "Get OneLake Table Namespace";
-    public override string Description => "Retrieves metadata for a specific table namespace. Use this when the user needs details about a namespace.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

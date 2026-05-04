@@ -12,30 +12,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Cluster;
 
+[CommandMetadata(
+    Id = "34e0d3d3-cbc5-4df8-8244-1439b97f3de5",
+    Name = "get",
+    Title = "Get Azure Kubernetes Service (AKS) Cluster Details",
+    Description = "List/enumerate all AKS (Azure Kubernetes Service) clusters in a subscription. Get/retrieve/show the details of a specific cluster if a name is provided.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksService aksService) : BaseAksCommand<ClusterGetOptions>
 {
-    private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
     private readonly IAksService _aksService = aksService;
-
-    public override string Id => "34e0d3d3-cbc5-4df8-8244-1439b97f3de5";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "List/enumerate all AKS (Azure Kubernetes Service) clusters in a subscription. Get/retrieve/show the details of a specific cluster if a name is provided.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -56,8 +47,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksSer
     protected override ClusterGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ClusterName = parseResult.GetValueOrDefault<string>(AksOptionDefinitions.Cluster.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.ClusterName = parseResult.GetValueOrDefault(AksOptionDefinitions.Cluster);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
         return options;
     }
 

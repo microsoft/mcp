@@ -13,33 +13,25 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
 
-public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
-    : BaseDatabaseCommand<DatabaseCreateOptions>(logger)
-{
-    private const string CommandTitle = "Create SQL Database";
-
-    public override string Id => "a4d9af17-fe8b-4df3-93be-23b69f0b5a0c";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a4d9af17-fe8b-4df3-93be-23b69f0b5a0c",
+    Name = "create",
+    Title = "Create SQL Database",
+    Description = """
         Create a new Azure SQL Database on an existing SQL Server. This command creates a database with configurable
         performance tiers, size limits, and other settings. Equivalent to 'az sql db create'.
         Returns the newly created database information including configuration details.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DatabaseCreateCommand(ISqlService sqlService, ILogger<DatabaseCreateCommand> logger)
+    : BaseDatabaseCommand<DatabaseCreateOptions>(logger)
+{
+    private readonly ISqlService _sqlService = sqlService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -79,9 +71,7 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
 
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var database = await sqlService.CreateDatabaseAsync(
+            var database = await _sqlService.CreateDatabaseAsync(
                 options.Server!,
                 options.Database!,
                 options.ResourceGroup!,

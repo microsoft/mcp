@@ -14,37 +14,31 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
-public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
-    : BaseComputeCommand<VmCreateOptions>(true)
-{
-    private const string CommandTitle = "Create Virtual Machine";
-    private readonly ILogger<VmCreateCommand> _logger = logger;
-
-    public override string Id => "b765ab9c-788d-4422-80aa-54488f6be648";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "b765ab9c-788d-4422-80aa-54488f6be648",
+    Name = "create",
+    Title = "Create Virtual Machine",
+    Description = """
         Create, deploy, or provision a single Azure Virtual Machine (VM).
         Use this to launch a new Linux or Windows VM with SSH key or password authentication.
         Automatically creates networking resources (VNet, subnet, NSG, NIC, public IP) when not specified.
-        Equivalent to 'az vm create'. Defaults to Standard_DS1_v2 size and Ubuntu 24.04 LTS if not specified.
+        Equivalent to 'az vm create'. Defaults to Standard_D2s_v5 VM size when not specified.
+        The --image option is required and has no default; if the user does not specify an image, ask them which image to use
+        (an alias such as 'Ubuntu2404' or 'Win2022Datacenter', a marketplace URN like 'publisher:offer:sku:version',
+        or a shared gallery image ID starting with '/sharedGalleries/').
         For Linux VMs with SSH, read the user's public key file (e.g., ~/.ssh/id_rsa.pub) and pass its content.
         Do not use this for creating Virtual Machine Scale Sets with multiple identical instances (use VMSS create instead).
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = true
-    };
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = true,
+    LocalRequired = false)]
+public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
+    : BaseComputeCommand<VmCreateOptions>(true)
+{
+    private readonly ILogger<VmCreateCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {
@@ -59,9 +53,11 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
         command.Options.Add(ComputeOptionDefinitions.AdminPassword);
         command.Options.Add(ComputeOptionDefinitions.SshPublicKey);
 
+        // Image is required and has no default
+        command.Options.Add(ComputeOptionDefinitions.Image.AsRequired());
+
         // Optional configuration
         command.Options.Add(ComputeOptionDefinitions.VmSize);
-        command.Options.Add(ComputeOptionDefinitions.Image);
         command.Options.Add(ComputeOptionDefinitions.OsType);
 
         // Network options

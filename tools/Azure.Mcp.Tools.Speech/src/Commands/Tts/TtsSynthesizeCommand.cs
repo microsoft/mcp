@@ -13,37 +13,29 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Speech.Commands.Tts;
 
-public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) : BaseSpeechCommand<TtsSynthesizeOptions>()
-{
-    internal record TtsSynthesizeCommandResult(SynthesisResult Result);
-
-    private const string CommandTitle = "Synthesize Speech from Text";
-    private static readonly HashSet<string> SupportedExtensions = [".wav", ".mp3", ".ogg", ".raw"];
-    private readonly ILogger<TtsSynthesizeCommand> _logger = logger;
-
-    public override string Name => "synthesize";
-
-    public override string Id => "d6f6687f-feee-4e15-9b98-71aea4076e04";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "d6f6687f-feee-4e15-9b98-71aea4076e04",
+    Name = "synthesize",
+    Title = "Synthesize Speech from Text",
+    Description = """
         Convert text to speech using Azure AI Services Speech. This command takes text input and generates an audio file using advanced neural text-to-speech capabilities.
         You must provide an Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/), the text to convert, and an output file path.
         Optional parameters include language specification (default: en-US), voice selection, audio output format (default: Riff24Khz16BitMonoPcm), and custom voice endpoint ID.
         The command supports a wide variety of output formats and neural voices for natural-sounding speech synthesis.
-        """;
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = true)]
+public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, ISpeechService speechService) : BaseSpeechCommand<TtsSynthesizeOptions>()
+{
+    internal record TtsSynthesizeCommandResult(SynthesisResult Result);
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = true, // Requires local file output
-        Secret = false
-    };
+    private static readonly HashSet<string> SupportedExtensions = [".wav", ".mp3", ".ogg", ".raw"];
+    private readonly ILogger<TtsSynthesizeCommand> _logger = logger;
+    private readonly ISpeechService _speechService = speechService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -140,8 +132,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
 
         try
         {
-            var speechService = context.GetService<ISpeechService>();
-            var result = await speechService.SynthesizeSpeechToFile(
+            var result = await _speechService.SynthesizeSpeechToFile(
                 options.Endpoint!,
                 options.Text!,
                 options.OutputAudio!,

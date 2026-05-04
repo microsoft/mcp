@@ -54,6 +54,22 @@ internal class Program
             var serviceProvider = SetupBasicInitializer();
 
             var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
+
+            // Short-circuit for --learn: return command metadata without executing.
+            // This MUST happen before Parse/InvokeAsync so that System.CommandLine's
+            // required-option validation cannot block the discovery response, and to
+            // avoid wastefully parsing 250+ commands and options only to discard the result.
+            if (args.Any(a => string.Equals(a, ICommandFactory.LearnOptionName, StringComparison.OrdinalIgnoreCase)))
+            {
+                var learnJson = commandFactory.GetLearnResponse(args);
+                Console.WriteLine(learnJson);
+                using var learnDoc = JsonDocument.Parse(learnJson);
+                var learnStatus = learnDoc.RootElement.TryGetProperty("status", out var statusEl)
+                    ? statusEl.GetInt32()
+                    : (int)HttpStatusCode.InternalServerError;
+                return (learnStatus >= (int)HttpStatusCode.OK && learnStatus < (int)HttpStatusCode.MultipleChoices) ? 0 : 1;
+            }
+
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
             var command = parseResult.CommandResult.Command;
@@ -129,9 +145,11 @@ internal class Program
             new Azure.Mcp.Tools.AppLens.AppLensSetup(),
             new Azure.Mcp.Tools.AppService.AppServiceSetup(),
             new Azure.Mcp.Tools.Authorization.AuthorizationSetup(),
+            new Azure.Mcp.Tools.AzureBackup.AzureBackupSetup(),
             new Azure.Mcp.Tools.AzureIsv.AzureIsvSetup(),
             new Azure.Mcp.Tools.ManagedLustre.ManagedLustreSetup(),
             new Azure.Mcp.Tools.AzureMigrate.AzureMigrateSetup(),
+            new Azure.Mcp.Tools.AzureTerraform.AzureTerraformSetup(),
             new Azure.Mcp.Tools.AzureTerraformBestPractices.AzureTerraformBestPracticesSetup(),
             new Azure.Mcp.Tools.Deploy.DeploySetup(),
             new Azure.Mcp.Tools.DeviceRegistry.DeviceRegistrySetup(),
@@ -313,7 +331,7 @@ internal class Program
 
         services.AddLogging(builder =>
         {
-            builder.AddConsole();
+            builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
             builder.SetMinimumLevel(LogLevel.Information);
         });
 

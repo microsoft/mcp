@@ -319,6 +319,12 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             return;
         }
 
+        // If no keys were returned, there's nothing to dispose
+        if (keys == null)
+        {
+            return;
+        }
+
         // Filter for client keys only (those that start with the client prefix)
         var clientKeys = keys.Where(k => k.StartsWith(CosmosClientsCacheKeyPrefix));
 

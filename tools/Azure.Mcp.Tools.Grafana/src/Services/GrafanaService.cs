@@ -25,6 +25,7 @@ public class GrafanaService(
 
     public async Task<ResourceQueryResults<GrafanaWorkspace>> ListWorkspacesAsync(
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -33,7 +34,7 @@ public class GrafanaService(
 
         var workspaces = await ExecuteResourceQueryAsync(
             "Microsoft.Dashboard/grafana",
-            resourceGroup: null, // all resource groups
+            resourceGroup: resourceGroup,
             subscription,
             retryPolicy,
             ConvertToWorkspaceModel,

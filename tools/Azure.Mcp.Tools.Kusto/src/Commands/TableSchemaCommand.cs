@@ -9,30 +9,21 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
+[CommandMetadata(
+    Id = "9a972c48-6797-49bb-9784-8063ad1f7e96",
+    Name = "schema",
+    Title = "Get Kusto Table Schema",
+    Description = "Get/retrieve/show the schema of a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger, IKustoService kustoService) : BaseTableCommand<TableSchemaOptions>
 {
-    private const string CommandTitle = "Get Kusto Table Schema";
     private readonly ILogger<TableSchemaCommand> _logger = logger;
     private readonly IKustoService _kustoService = kustoService;
-
-    public override string Id => "9a972c48-6797-49bb-9784-8063ad1f7e96";
-
-    public override string Name => "schema";
-
-    public override string Description =>
-        "Get/retrieve/show the schema of a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

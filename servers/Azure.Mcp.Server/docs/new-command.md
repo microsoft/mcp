@@ -20,13 +20,15 @@ This keeps all code, options, models, JSON serialization contexts, and tests for
 
 **CRITICAL DECISION POINT**: Does your command interact with Azure resources?
 
-### **Azure Service Commands (REQUIRES Test Infrastructure)**
+### **Azure Service Commands (REQUIRE Test Infrastructure and Live Tests)**
 If your command interacts with Azure resources (storage accounts, databases, VMs, etc.):
 - ✅ **MUST create** `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
 - ✅ **MUST create** `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources-post.ps1` (required even if basic template)
 - ✅ **MUST include** RBAC role assignments for test application
 - ✅ **MUST validate** with `az bicep build --file tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
 - ✅ **MUST test deployment** with `./eng/scripts/Deploy-TestResources.ps1 -Tool 'Azure.Mcp.Tools.{Toolset}'`
+- ✅ **MUST include** live tests in `Azure.Mcp.Tools.{Toolset}.LiveTests`
+- ✅ **MUST record** live tests for playback using `RecordedCommandTestsBase` (see [`/docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md))
 
 ### **Non-Azure Commands (No Test Infrastructure Needed)**
 If your command is a wrapper/utility (CLI tools, best practices, documentation):
@@ -115,7 +117,7 @@ Every new command (whether purely computational or Azure-resource backed) requir
 5. Service implementation: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/{ServiceName}Service.cs`
     - Most toolsets have one primary service; some may have multiple where domain boundaries justify separation
 6. Unit test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests/{Resource}/{Resource}{Operation}CommandTests.cs`
-7. Integration test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests/{Toolset}CommandTests.cs`
+7. Live test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests/{Toolset}CommandTests.cs`
 8. Command registration in RegisterCommands(): `tools/Azure.Mcp.Tools.{Toolset}/src/{Toolset}Setup.cs`
 9. Toolset registration in RegisterAreas(): `servers/Azure.Mcp.Server/src/Program.cs`
 10. **Live test infrastructure** (for Azure service commands):
@@ -728,35 +730,26 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
-public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Command> logger)
-    : Base{Toolset}Command<{Resource}{Operation}Options>
-{
-    private const string CommandTitle = "Human Readable Title";
-    private readonly ILogger<{Resource}{Operation}Command> _logger = logger;
-
-    public override string Id => "<GUID>"
-
-    public override string Name => "operation";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "<GUID>",
+    Name = "operation",
+    Title = "Human Readable Title",
+    Description = """
         Detailed description of what the command does.
         Returns description of return format.
           Required options:
         - list required options
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,    // Set to true for tools that modify resources
-        OpenWorld = true,       // Set to false for tools whose domain of interaction is closed and well-defined
-        Idempotent = true,      // Set to false for tools that are not idempotent
-        ReadOnly = true,        // Set to false for tools that modify resources
-        Secret = false,         // Set to true for tools that may return sensitive information
-        LocalRequired = false   // Set to true for tools requiring local execution/resources
-    };
+        """,
+    Destructive = false,    // Set to true for tools that modify resources
+    OpenWorld = true,       // Set to false for tools whose domain of interaction is closed and well-defined
+    Idempotent = true,      // Set to false for tools that are not idempotent
+    ReadOnly = true,        // Set to false for tools that modify resources
+    Secret = false,         // Set to true for tools that may return sensitive information
+    LocalRequired = false)] // Set to true for tools requiring local execution/resources
+public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Command> logger)
+    : Base{Toolset}Command<{Resource}{Operation}Options>
+{
+    private readonly ILogger<{Resource}{Operation}Command> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {
@@ -1318,13 +1311,13 @@ Guidelines:
     [assembly: Xunit.CollectionBehavior(Xunit.CollectionBehavior.CollectionPerAssembly)]
     ```
 
-### 8. Integration Tests
+### 8. Live Tests
 
-Integration tests inherit from `CommandTestsBase` and use test fixtures:
+Live tests **must** inherit from `RecordedCommandTestsBase` and use test fixtures. All live tests are required to be recorded for playback. See [`/docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md) for the full recording workflow.
 
 ```csharp
-public class {Toolset}CommandTests(ITestOutputHelper output)
-    : CommandTestsBase( output)
+public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     [Theory]
     [InlineData(AuthMethod.Credential)]
@@ -1390,7 +1383,7 @@ private CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     var resource = new CommandGroup("{resource}", "{Resource} operations description");
     service.AddSubGroup(resource);
 
-    resource.AddCommand(serviceProvider.GetRequiredService<{Resource}{Operation}Command>());
+    resource.AddCommand<{Resource}{Operation}Command>(serviceProvider);
 
     return service;
 }
@@ -1615,8 +1608,11 @@ dotnet test --filter "FullyQualifiedName~EntraAdminListCommandTests" --verbosity
 dotnet test --verbosity normal
 ```
 
-### Integration Tests
+### Live Tests
+
 Azure service commands requiring test resource deployment must add a bicep template, `tests/test-resources.bicep`, to their toolset directory. Additionally, all Azure service commands must include a `test-resources-post.ps1` file in the same directory, even if it contains only the basic template without custom logic. See `/tools/Azure.Mcp.Tools.Storage/tests/test-resources.bicep` and `/tools/Azure.Mcp.Tools.Storage/tests/test-resources-post.ps1` for canonical examples.
+
+All live tests **must** be recorded for playback using `RecordedCommandTestsBase`. See [`/docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md) for the full recording workflow, sanitizer configuration, and migration guide.
 
 #### Live Test Resource Infrastructure
 

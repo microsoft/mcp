@@ -15,36 +15,28 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 
-public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : SubscriptionCommand<BaseQueueOptions>
-{
-    private const string CommandTitle = "Get Service Bus Queue Details";
-    private readonly ILogger<QueueDetailsCommand> _logger = logger;
-
-    public override string Id => "a02c58ce-e89f-4303-ac4a-c9dfb118e761";
-
-    public override string Name => "details";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a02c58ce-e89f-4303-ac4a-c9dfb118e761",
+    Name = "details",
+    Title = "Get Service Bus Queue Details",
+    Description = """
         Get details about a Service Bus queue. Returns queue properties and runtime information. Properties returned include
         lock duration, max message size, queue size, creation date, status, current message counts, etc.
 
         Required arguments:
         - namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)
         - queue: Queue name to get details and runtime information for.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<BaseQueueOptions>
+{
+    private readonly ILogger<QueueDetailsCommand> _logger = logger;
+    private readonly IServiceBusService _serviceBusService = serviceBusService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -72,8 +64,7 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
 
         try
         {
-            var service = context.GetService<IServiceBusService>();
-            var details = await service.GetQueueDetails(
+            var details = await _serviceBusService.GetQueueDetails(
                 options.Namespace!,
                 options.Name!,
                 options.Tenant,

@@ -952,6 +952,26 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Delete application setting 'LogLevel' from my 'my-webapp' in 'my-resource-group'"
 * "List the deployments for web app 'my-webapp' in 'my-resource-group'"
 * "Get the deployment 'deployment-id' for web app 'my-webapp' in 'my-resource-group'"
+* "List the diagnostic detectors for web app 'my-webapp' in 'my-resource-group'"
+* "Diagnose the web app 'my-webapp' with detector 'detector-name' in 'my-resource-group'"
+* "Start the web app 'my-webapp' in 'my-resource-group'"
+* "Stop the web app 'my-webapp' in 'my-resource-group'"
+* "Restart the web app 'my-webapp' in 'my-resource-group'"
+* "Soft restart the web app 'my-webapp' in 'my-resource-group' waiting for restart to complete"
+
+### 🛡️ Azure Backup
+
+* "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus with vault-type 'rsv'"
+* "Get details of backup vault 'myvault' in resource group 'myRG'"
+* "Create a backup policy for Azure VMs in vault 'myvault'"
+* "Update backup policy schedule time to 04:00 in vault 'myvault'"
+* "List protectable items in my backup vault"
+* "Check backup status for my Azure resource in eastus"
+* "Get recovery points for a protected item"
+* "Find unprotected resources in my subscription"
+* "Configure soft delete to 'AlwaysOn' and immutability to 'Locked' on my vault"
+* "Enable cross-region restore on my vault"
+* "Restore a soft-deleted backup item in vault 'myvault' for datasource '/subscriptions/.../virtualMachines/myvm'"
 
 ### 🖥️ Azure CLI Generate
 
@@ -1137,6 +1157,20 @@ Example prompts that generate Azure CLI commands:
 * "Turn off DDoS protection in my Platform Landing Zone"
 * "Turn off Bastion host in my Platform Landing Zone"
 
+### Azure Terraform
+
+* "Get the documentation for azurerm_virtual_network"
+* "Show me the arguments for azurerm_storage_account"
+* "Get AzAPI documentation for Microsoft.Storage/storageAccounts"
+* "Get AzAPI docs for Microsoft.Compute/virtualMachines with API version 2024-07-01"
+* "List all available Azure Verified Modules"
+* "Show all versions of avm-res-network-virtualnetwork"
+* "Get the documentation for avm-res-storage-storageaccount version 0.1.0"
+* "Export all resources in resource group my-rg to Terraform"
+* "Export all storage accounts in my subscription using a resource graph query"
+* "Validate Terraform files in ./my-terraform-folder against Azure security policies"
+* "Validate my Terraform plan file against Azure-Proactive-Resiliency-Library-v2 policies"
+
 ### 🏛️ Azure Well-Architected Framework
 
 * "List all services with Well-Architected Framework guidance"
@@ -1154,6 +1188,7 @@ The Azure MCP Server provides tools for interacting with **43+ Azure service are
 - 🎤 **Azure AI Services Speech** - Speech-to-text recognition and text-to-speech synthesis
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
+- 🛡️ **Azure Backup** - Recovery Services vault management, backup policies, protection, jobs, recovery points, governance, and disaster recovery
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📞 **Azure Communication Services** - SMS messaging and communication
@@ -1193,6 +1228,7 @@ The Azure MCP Server provides tools for interacting with **43+ Azure service are
 - 💾 **Azure Storage** - Blob storage
 -  **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management
+- 🏗️ **Azure Terraform** - Terraform provider documentation, Azure Verified Modules, resource export, and policy validation
 - 🏗️ **Azure Terraform Best Practices** - Infrastructure as code guidance
 - 🖥️ **Azure Virtual Desktop** - Virtual desktop infrastructure
 - 🏛️ **Azure Well-Architected Framework** - Architectural best practices and design patterns

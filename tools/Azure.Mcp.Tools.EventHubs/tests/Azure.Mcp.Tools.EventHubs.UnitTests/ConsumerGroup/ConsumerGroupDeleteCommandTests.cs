@@ -3,37 +3,16 @@
 
 using Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.UnitTests.ConsumerGroup;
 
-public class ConsumerGroupDeleteCommandTests
+public class ConsumerGroupDeleteCommandTests : CommandUnitTestsBase<ConsumerGroupDeleteCommand, IEventHubsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IEventHubsService _eventHubsService;
-    private readonly ILogger<ConsumerGroupDeleteCommand> _logger;
-    private readonly ConsumerGroupDeleteCommand _command;
-    private readonly CommandContext _context;
-
-    public ConsumerGroupDeleteCommandTests()
-    {
-        _eventHubsService = Substitute.For<IEventHubsService>();
-        _logger = Substitute.For<ILogger<ConsumerGroupDeleteCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_eventHubsService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger, _eventHubsService);
-        _context = new(_serviceProvider);
-    }
-
     [Theory]
     [InlineData("", false)]
     [InlineData("--subscription test-subscription", false)]
@@ -44,10 +23,9 @@ public class ConsumerGroupDeleteCommandTests
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse(args);
         if (shouldSucceed)
         {
-            _eventHubsService.DeleteConsumerGroupAsync(
+            Service.DeleteConsumerGroupAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -60,7 +38,7 @@ public class ConsumerGroupDeleteCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -79,9 +57,7 @@ public class ConsumerGroupDeleteCommandTests
     public async Task ExecuteAsync_DeletesConsumerGroupSuccessfully()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group");
-
-        _eventHubsService.DeleteConsumerGroupAsync(
+        Service.DeleteConsumerGroupAsync(
             "test-consumer-group",
             "test-eventhub",
             "test-namespace",
@@ -93,13 +69,18 @@ public class ConsumerGroupDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace",
+            "--eventhub", "test-eventhub",
+            "--consumer-group", "test-consumer-group");
 
         // Assert
         Assert.Equal(200, (int)response.Status);
         Assert.NotNull(response.Results);
 
-        await _eventHubsService.Received(1).DeleteConsumerGroupAsync(
+        await Service.Received(1).DeleteConsumerGroupAsync(
             "test-consumer-group",
             "test-eventhub",
             "test-namespace",
@@ -114,9 +95,7 @@ public class ConsumerGroupDeleteCommandTests
     public async Task ExecuteAsync_HandlesServiceError()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group");
-
-        _eventHubsService.DeleteConsumerGroupAsync(
+        Service.DeleteConsumerGroupAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -128,7 +107,12 @@ public class ConsumerGroupDeleteCommandTests
             .ThrowsAsync(new InvalidOperationException("Consumer group 'test-consumer-group' could not be found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace",
+            "--eventhub", "test-eventhub",
+            "--consumer-group", "test-consumer-group");
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -139,9 +123,7 @@ public class ConsumerGroupDeleteCommandTests
     public async Task ExecuteAsync_HandlesAuthenticationError()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse("--subscription unauthorized-sub --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group");
-
-        _eventHubsService.DeleteConsumerGroupAsync(
+        Service.DeleteConsumerGroupAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -153,7 +135,12 @@ public class ConsumerGroupDeleteCommandTests
             .ThrowsAsync(new UnauthorizedAccessException("The current user does not have access to subscription 'unauthorized-sub'"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "unauthorized-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace",
+            "--eventhub", "test-eventhub",
+            "--consumer-group", "test-consumer-group");
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -170,9 +157,7 @@ public class ConsumerGroupDeleteCommandTests
         const string eventHubName = "my-eventhub";
         const string consumerGroupName = "my-consumer-group";
 
-        var parseResult = _command.GetCommand().Parse($"--subscription {subscriptionId} --resource-group {resourceGroup} --namespace {namespaceName} --eventhub {eventHubName} --consumer-group {consumerGroupName}");
-
-        _eventHubsService.DeleteConsumerGroupAsync(
+        Service.DeleteConsumerGroupAsync(
             consumerGroupName,
             eventHubName,
             namespaceName,
@@ -184,12 +169,17 @@ public class ConsumerGroupDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--namespace", namespaceName,
+            "--eventhub", eventHubName,
+            "--consumer-group", consumerGroupName);
 
         // Assert
         Assert.Equal(200, (int)response.Status);
 
-        await _eventHubsService.Received(1).DeleteConsumerGroupAsync(
+        await Service.Received(1).DeleteConsumerGroupAsync(
             consumerGroupName,
             eventHubName,
             namespaceName,

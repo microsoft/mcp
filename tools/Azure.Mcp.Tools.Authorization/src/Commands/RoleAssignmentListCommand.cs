@@ -13,33 +13,24 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Authorization.Commands;
 
-public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand> logger, IAuthorizationService authorizationService) : SubscriptionCommand<RoleAssignmentListOptions>
-{
-    private const string _commandTitle = "List Role Assignments";
-    private readonly ILogger<RoleAssignmentListCommand> _logger = logger;
-    private readonly IAuthorizationService _authorizationService = authorizationService;
-
-    public override string Id => "1dfbef45-4014-4575-a9ba-2242bc792e54";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "1dfbef45-4014-4575-a9ba-2242bc792e54",
+    Name = "list",
+    Title = "List Role Assignments",
+    Description = """
         List role assignments. This command retrieves and displays all Azure RBAC role assignments
         in the specified scope. Results include role definition IDs and principal IDs, returned as a JSON array.
-        """;
-
-    public override string Title => _commandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand> logger, IAuthorizationService authorizationService) : SubscriptionCommand<RoleAssignmentListOptions>
+{
+    private readonly ILogger<RoleAssignmentListCommand> _logger = logger;
+    private readonly IAuthorizationService _authorizationService = authorizationService;
 
     protected override void RegisterOptions(Command command)
     {

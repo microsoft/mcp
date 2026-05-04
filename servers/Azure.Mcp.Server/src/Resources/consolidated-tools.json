@@ -401,7 +401,7 @@
     },
     {
       "name": "deploy_azure_resources_and_applications",
-      "description": "Deploy resources and applications to Azure. Retrieve application logs, access Bicep and Terraform rules, get CI/CD pipeline guidance, and generate deployment plans.",
+      "description": "Deploy resources and applications to Azure. Generate architecture diagrams, deployment plans, IaC rules for Bicep and Terraform, and CI/CD pipeline guidance.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -429,10 +429,43 @@
         }
       },
       "mappedToolList": [
-        "deploy_app_logs_get",
+        "deploy_architecture_diagram_generate",
         "deploy_iac_rules_get",
         "deploy_pipeline_guidance_get",
         "deploy_plan_get"
+      ]
+    },
+    {
+      "name": "get_azd_deployed_app_logs",
+      "description": "Retrieve application logs for Azure Developer CLI (azd) deployed applications from their associated Log Analytics workspace. Supports Container Apps, App Services, and Function Apps deployed via 'azd up'. Requires local workspace access to read the azure.yaml project file.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local server mode to access the azure.yaml project file in the local workspace."
+        }
+      },
+      "mappedToolList": [
+        "deploy_app_logs_get"
       ]
     },
     {
@@ -3561,6 +3594,39 @@
       ]
     },
     {
+      "name": "change_state_azure_appservice_resources",
+      "description": "Changes the running state of Azure App Service resources including Web Apps.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "appservice_webapp_change-state"
+      ]
+    },
+    {
       "name": "get_azure_monitor_instrumentation_learning_resource",
       "description": "List and read Azure Monitor instrumentation onboarding learning resources. Returns all available resource paths or retrieves the full content of a specific resource by path.",
       "toolMetadata": {
@@ -3661,6 +3727,193 @@
       },
       "mappedToolList": [
         "deviceregistry_namespace_list"
+      ]
+    },
+    {
+      "name": "get_azure_backup_details",
+      "description": "Get information about Azure Backup resources including vault details, backup policies, protected items, protectable items, backup status, jobs, recovery points, and unprotected resources.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only read operations without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "azurebackup_vault_get",
+        "azurebackup_policy_get",
+        "azurebackup_protecteditem_get",
+        "azurebackup_protectableitem_list",
+        "azurebackup_backup_status",
+        "azurebackup_job_get",
+        "azurebackup_recoverypoint_get",
+        "azurebackup_governance_find-unprotected"
+      ]
+    },
+    {
+      "name": "create_azure_backup_resources",
+      "description": "Create Azure Backup resources including Recovery Services vaults, backup policies, and enable protection for Azure resources.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool creates new Azure Backup resources such as vaults, policies, and protection configurations."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times may create duplicate resources or produce errors."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating new resources."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "azurebackup_vault_create",
+        "azurebackup_policy_create",
+        "azurebackup_protecteditem_protect"
+      ]
+    },
+    {
+      "name": "update_azure_backup_settings",
+      "description": "Update Azure Backup settings including vault configuration, governance policies for soft delete, immutability, and cross-region restore.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool modifies existing Azure Backup settings and governance configurations."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by updating existing configurations."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "azurebackup_vault_update",
+        "azurebackup_policy_update",
+        "azurebackup_governance_immutability",
+        "azurebackup_governance_soft-delete",
+        "azurebackup_disasterrecovery_enable-crr",
+        "azurebackup_protecteditem_undelete"
+      ]
+    },
+    {
+      "name": "get_azure_terraform_documentation",
+      "description": "Retrieve Terraform provider documentation for Azure resources. Get AzureRM and AzAPI provider docs including arguments, attributes, and examples. List, get versions, and read documentation for Azure Verified Modules (AVM).",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not delete, modify, or otherwise change resources or state."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "azureterraform_avm_get",
+        "azureterraform_avm_list",
+        "azureterraform_avm_versions",
+        "azureterraform_azapi_get",
+        "azureterraform_azurerm_get"
+      ]
+    },
+    {
+      "name": "generate_azure_terraform_export_and_validation_commands",
+      "description": "Generate aztfexport commands to export Azure resources, resource groups, or query-matched resources to Terraform configuration. Generate conftest commands to validate Terraform workspace files or plan files against Azure policies.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not delete, modify, or otherwise change resources or state."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool is only available when the Azure MCP server is configured to run as a Local MCP Server (STDIO)."
+        }
+      },
+      "mappedToolList": [
+        "azureterraform_aztfexport_query",
+        "azureterraform_aztfexport_resource",
+        "azureterraform_aztfexport_resourcegroup",
+        "azureterraform_conftest_plan",
+        "azureterraform_conftest_workspace"
       ]
     }
   ]

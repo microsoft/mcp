@@ -9,6 +9,7 @@ namespace Azure.Mcp.Tools.AppService.Models;
 /// Represents details about a Web App detector.
 /// </summary>
 public sealed record DetectorDetails(
+    [property: JsonPropertyName("id")] string Id,
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("type")] string Type,
     [property: JsonPropertyName("description")] string? Description,

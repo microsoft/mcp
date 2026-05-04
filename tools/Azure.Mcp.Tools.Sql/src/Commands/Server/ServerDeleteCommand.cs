@@ -12,33 +12,25 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
-public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
-    : BaseSqlCommand<ServerDeleteOptions>(logger)
-{
-    private const string CommandTitle = "Delete SQL Server";
-
-    public override string Id => "381bd0ef-5bb4-45ed-ae51-d129dcc044b2";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "381bd0ef-5bb4-45ed-ae51-d129dcc044b2",
+    Name = "delete",
+    Title = "Delete SQL Server",
+    Description = """
         Remove the specified SQL server from your Azure subscription, including all associated databases.
         This operation permanently deletes all server data and cannot be reversed.
         Use --force to bypass confirmation.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ServerDeleteCommand(ISqlService sqlService, ILogger<ServerDeleteCommand> logger)
+    : BaseSqlCommand<ServerDeleteOptions>(logger)
+{
+    private readonly ISqlService _sqlService = sqlService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -75,9 +67,7 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
                 return context.Response;
             }
 
-            var sqlService = context.GetService<ISqlService>();
-
-            var deleted = await sqlService.DeleteServerAsync(
+            var deleted = await _sqlService.DeleteServerAsync(
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,

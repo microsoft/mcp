@@ -26,6 +26,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
     public async Task<ResourceQueryResults<AppConfigurationAccount>> GetAppConfigAccounts(
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -34,7 +35,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
         return await ExecuteResourceQueryAsync(
             "Microsoft.AppConfiguration/configurationStores",
-            resourceGroup: null, // all resource groups
+            resourceGroup: resourceGroup,
             subscription,
             retryPolicy,
             ConvertToAppConfigurationAccountModel,

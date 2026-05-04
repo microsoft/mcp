@@ -10,17 +10,20 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands;
 
-public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMySqlCommand<MySqlDatabaseOptions>(logger)
+[CommandMetadata(
+    Id = "77e60b50-5c16-4879-96b1-6a40d9c08a37",
+    Name = "list",
+    Title = "List MySQL Resources",
+    Description = "List MySQL servers, databases, or tables in your subscription. Returns all servers by default. Specify --server to list databases on that server, or --server and --database to list tables in a specific database.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlService mysqlService) : BaseMySqlCommand<MySqlDatabaseOptions>(logger)
 {
-    public override string Id => "77e60b50-5c16-4879-96b1-6a40d9c08a37";
-
-    public override string Name => "list";
-
-    public override string Description => "List MySQL servers, databases, or tables in your subscription. Returns all servers by default. Specify --server to list databases on that server, or --server and --database to list tables in a specific database.";
-
-    public override string Title => "List MySQL Resources";
-
-    public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false };
+    private readonly IMySqlService _mysqlService = mysqlService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -59,13 +62,11 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
 
             options = BindOptions(parseResult);
 
-            IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
-
             // Route based on provided parameters
             if (!string.IsNullOrEmpty(options.Database))
             {
                 // List tables in specified database
-                List<string> tables = await mysqlService.GetTablesAsync(
+                List<string> tables = await _mysqlService.GetTablesAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.User!,
@@ -80,7 +81,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
             else if (!string.IsNullOrEmpty(options.Server))
             {
                 // List databases on specified server
-                List<string> databases = await mysqlService.ListDatabasesAsync(
+                List<string> databases = await _mysqlService.ListDatabasesAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.User!,
@@ -94,7 +95,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
             else
             {
                 // List servers in resource group
-                List<string> servers = await mysqlService.ListServersAsync(
+                List<string> servers = await _mysqlService.ListServersAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.User!,

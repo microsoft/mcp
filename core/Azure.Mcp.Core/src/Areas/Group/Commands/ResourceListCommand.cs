@@ -13,35 +13,26 @@ using Microsoft.Mcp.Core.Models.Resource;
 
 namespace Azure.Mcp.Core.Areas.Group.Commands;
 
+[CommandMetadata(
+    Id = "b1c2d3e4-f5a6-7890-abcd-ef1234567890",
+    Name = "list",
+    Title = "List Resources in Resource Group",
+    Description = """
+        List all resources in a resource group. This command retrieves all resources available
+        in the specified resource group within the given subscription. Results include resource
+        names, IDs, types, and locations. The command returns a JSON object with a `resources`
+        array containing these entries.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false)]
 public sealed class ResourceListCommand(ILogger<ResourceListCommand> logger, IResourceGroupService resourceGroupService) : SubscriptionCommand<ResourceListOptions>()
 {
-    private const string CommandTitle = "List Resources in Resource Group";
     private readonly ILogger<ResourceListCommand> _logger = logger;
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService;
-
-    public override string Id => "b1c2d3e4-f5a6-7890-abcd-ef1234567890";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        $"""
-        List all resources in a resource group. This command retrieves all resources available
-        in the specified {OptionDefinitions.Common.ResourceGroupName} within the given
-        {OptionDefinitions.Common.SubscriptionName}. Results include resource names, IDs, types,
-        and locations. The command returns a JSON object with a `resources` array containing these entries.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -52,7 +43,7 @@ public sealed class ResourceListCommand(ILogger<ResourceListCommand> logger, IRe
     protected override ResourceListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
         return options;
     }
 

@@ -11,25 +11,20 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
 
+[CommandMetadata(
+    Id = "c6d7e8f9-a0b1-4c2d-3e4f-5a6b7c8d9e0f",
+    Name = "update",
+    Title = "Update Private Endpoint Connection",
+    Description = "Update the state of a private endpoint connection for a file share. Use this to approve or reject private endpoint connection requests.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class PrivateEndpointConnectionUpdateCommand(ILogger<PrivateEndpointConnectionUpdateCommand> logger, IFileSharesService service)
     : BaseFileSharesCommand<PrivateEndpointConnectionUpdateOptions>(logger, service)
 {
-    private const string CommandTitle = "Update Private Endpoint Connection";
-
-    public override string Id => "c6d7e8f9-a0b1-4c2d-3e4f-5a6b7c8d9e0f";
-    public override string Name => "update";
-    public override string Description => "Update the state of a private endpoint connection for a file share. Use this to approve or reject private endpoint connection requests.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

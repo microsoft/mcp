@@ -14,10 +14,13 @@ public static class AppServiceOptionDefinitions
     public const string AppSettingValueName = "setting-value";
     public const string AppSettingUpdateTypeName = "setting-update-type";
     public const string DeploymentIdName = "deployment-id";
-    public const string DetectorNameName = "detector-name";
+    public const string DetectorIdName = "detector-id";
     public const string StartTimeName = "start-time";
     public const string EndTimeName = "end-time";
     public const string IntervalName = "interval";
+    public const string StateChangeName = "state-change";
+    public const string SoftRestartName = "soft-restart";
+    public const string WaitForCompletionName = "wait-for-completion";
 
     public static readonly Option<string> AppServiceName = new($"--{AppName}")
     {
@@ -73,9 +76,9 @@ public static class AppServiceOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> DetectorName = new($"--{DetectorNameName}")
+    public static readonly Option<string> DetectorId = new($"--{DetectorIdName}")
     {
-        Description = "The name of the diagnostic detector to run (e.g., Availability, CpuAnalysis, MemoryAnalysis).",
+        Description = "The ID of the diagnostic detector to run. Use the 'id' field from 'azmcp appservice webapp diagnostic list' output (e.g., LinuxContainerRecycle, LinuxMemoryDrillDown).",
         Required = true
     };
 
@@ -94,6 +97,26 @@ public static class AppServiceOptionDefinitions
     public static readonly Option<string> Interval = new($"--{IntervalName}")
     {
         Description = "The time interval (e.g., PT1H for 1 hour, PT5M for 5 minutes).",
+        Required = false
+    };
+
+    public static readonly Option<string> StateChange = new($"--{StateChangeName}")
+    {
+        Description = "The state change action to perform. Valid values are: start, stop, restart.",
+        Required = true
+    };
+
+    public static readonly Option<bool> SoftRestart = new($"--{SoftRestartName}")
+    {
+        Description = "When state-change is restart, indicates whether to perform a soft restart.",
+        DefaultValueFactory = _ => false,
+        Required = false
+    };
+
+    public static readonly Option<bool> WaitForCompletion = new($"--{WaitForCompletionName}")
+    {
+        Description = "When state-change is restart, indicates whether to synchronously wait for the state change operation to complete before returning.",
+        DefaultValueFactory = _ => false,
         Required = false
     };
 }
