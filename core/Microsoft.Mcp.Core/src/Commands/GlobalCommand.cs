@@ -129,6 +129,7 @@ public abstract class GlobalCommand<
         AuthenticationFailedException => HttpStatusCode.Unauthorized,
         RequestFailedException rfEx => (HttpStatusCode)rfEx.Status,
         HttpRequestException httpEx => httpEx.StatusCode ?? HttpStatusCode.ServiceUnavailable,
+        InvalidOperationException => HttpStatusCode.UnprocessableEntity,
         TimeoutException => HttpStatusCode.GatewayTimeout,
         TaskCanceledException => HttpStatusCode.GatewayTimeout,
         _ => HttpStatusCode.InternalServerError
