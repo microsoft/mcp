@@ -66,13 +66,11 @@ foreach ($serverDir in $serverDirs) {
         $jsonString = ($rawOutput | Where-Object { $_ -is [string] }) -join "`n"
         $parsed = $jsonString | ConvertFrom-Json
 
-            Write-Warning "  Invalid 'tools list' response for $($serverDir.Name): expected a payload with 'results' - skipping"
-            $hasErrors = $true
-            Write-Host "  ❌ No results returned for $($serverDir.Name)" -ForegroundColor Red
+        if ($null -eq $parsed -or $null -eq $parsed.results) {
+            Write-Warning "  ❌ Invalid 'tools list' response for $($serverDir.Name)" -ForegroundColor Red
             $hasErrors = $true
             continue
         }
-
 
         # --- Common options extraction ---
         # Build a 2-level map: optionName -> jsonForm -> count
@@ -195,7 +193,12 @@ foreach ($serverDir in $serverDirs) {
 }
 
 if ($hasErrors) {
-    Write-Host ""
-    Write-Host "❌ tools.json drift detected. Please run 'eng/scripts/Update-ToolsList.ps1' and commit the changes." -ForegroundColor Red
+    if ($Verify) {
+        Write-Host ""
+        Write-Host "❌ tools.json drift detected. Please run 'eng/scripts/Update-ToolsList.ps1' to regenerate the files and commit the changes." -ForegroundColor Red
+    } else {
+        Write-Host ""
+        Write-Host "❌ errors encountered while updating tools.json files. Please review the output above." -ForegroundColor Red
+    }
     exit 1
 }
