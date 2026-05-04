@@ -226,7 +226,7 @@ public class ResourceHealthServiceSsrfValidationTests
 
         Assert.Equal(HttpStatusCode.Conflict, exception.StatusCode);
         Assert.Equal("MissingSubscriptionRegistration", exception.ErrorCode);
-        Assert.Equal("The subscription is not registered to use namespace 'Microsoft.ResourceHealth'.", exception.ErrorDetails);
+        Assert.Equal("The subscription is not registered to use namespace 'Microsoft.ResourceHealth'.", exception.ErrorMessage);
         Assert.Equal(responseContent, exception.ResponseContent);
     }
 

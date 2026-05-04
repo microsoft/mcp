@@ -16,17 +16,23 @@ public sealed class ResourceHealthRequestFailedException(
 
     public string? ErrorCode { get; } = errorCode;
 
-    public string? ErrorDetails { get; } = errorMessage;
+    public string? ErrorMessage { get; } = errorMessage;
 
     public string? ResponseContent { get; } = responseContent;
 
     private static string CreateMessage(HttpStatusCode statusCode, string? errorCode, string? errorMessage)
     {
-        var code = string.IsNullOrWhiteSpace(errorCode) ? statusCode.ToString() : errorCode;
-        var details = string.IsNullOrWhiteSpace(errorMessage)
-            ? $"Azure Resource Health returned status {(int)statusCode} ({statusCode})"
-            : errorMessage;
+        var message = $"Azure Resource Health request failed with status {(int)statusCode} ({statusCode})";
+        if (!string.IsNullOrWhiteSpace(errorCode))
+        {
+            message += $". Error code: {errorCode.Trim()}";
+        }
 
-        return $"Azure Resource Health returned {code}: {details}";
+        if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            message += $". Details: {errorMessage.Trim()}";
+        }
+
+        return message;
     }
 }

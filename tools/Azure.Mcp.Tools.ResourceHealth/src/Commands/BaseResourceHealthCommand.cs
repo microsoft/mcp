@@ -18,9 +18,9 @@ public abstract class BaseResourceHealthCommand<
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         ResourceHealthRequestFailedException { StatusCode: HttpStatusCode.Conflict } requestFailedEx =>
-            $"Azure Resource Health returned Conflict. The subscription may need the Microsoft.ResourceHealth provider registered, or the provider may still be registering. Details: {requestFailedEx.ErrorDetails ?? requestFailedEx.Message}",
+            $"Azure Resource Health returned Conflict. The subscription may need the Microsoft.ResourceHealth provider registered, or the provider may still be registering. Details: {requestFailedEx.ErrorMessage ?? requestFailedEx.Message}",
         ResourceHealthRequestFailedException requestFailedEx =>
-            $"Azure Resource Health request failed with status {(int)requestFailedEx.StatusCode} ({requestFailedEx.StatusCode}). Error code: {requestFailedEx.ErrorCode ?? requestFailedEx.StatusCode.ToString()}. Details: {requestFailedEx.ErrorDetails ?? requestFailedEx.Message}",
+            $"Azure Resource Health request failed with status {(int)requestFailedEx.StatusCode} ({requestFailedEx.StatusCode}). Error code: {requestFailedEx.ErrorCode ?? requestFailedEx.StatusCode.ToString()}. Details: {requestFailedEx.ErrorMessage ?? requestFailedEx.Message}",
         _ => base.GetErrorMessage(ex)
     };
 
