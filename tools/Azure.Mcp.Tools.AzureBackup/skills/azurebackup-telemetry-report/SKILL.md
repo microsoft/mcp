@@ -84,17 +84,22 @@ git branch -a --list "*azurebackup*"
 git diff <last-release-tag>..upstream/main --stat -- tools/Azure.Mcp.Tools.AzureBackup/
 ```
 
-Also count tests on main:
+Also count tests on main (checkout `upstream/main` test files first):
 ```bash
-# Unit test count (from source)
-Select-String "\[Fact\]|\[Theory\]" tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.UnitTests/**/*.cs | Measure-Object
+# Runnable unit test count = [Fact] + [InlineData] (each InlineData is a separate test run)
+$facts = (Select-String "\[Fact\]" tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.UnitTests/**/*.cs | Measure-Object).Count
+$inlines = (Select-String "\[InlineData" tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.UnitTests/**/*.cs | Measure-Object).Count
+# Total runnable = $facts + $inlines
 
-# Live test count (from source)
+# Live test count (test methods)
 Select-String "\[Fact\]|\[Theory\]|\[LiveTestOnly\]|\[RecordedTest\]" tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.LiveTests/*.cs | Measure-Object
 
 # Registered tools
 Select-String "AddCommand" tools/Azure.Mcp.Tools.AzureBackup/src/AzureBackupSetup.cs | Measure-Object
 ```
+
+> **Important:** Do NOT count `[Fact]` + `[Theory]` as the unit test count — that gives you
+> method count, not runnable test count. Each `[InlineData]` on a `[Theory]` is a separate test.
 
 ### Step 3: Analyze and Classify
 
@@ -165,17 +170,20 @@ Is success == true?
 
 These are the bugs triaged from the original telemetry analysis (April 2026):
 
-| Bug | Tool | Description | Fix PR |
-|-----|------|-------------|--------|
-| BUG-1 | backup_status | ArgumentNullException on null ResourceType | policy-create-fixes branch |
-| BUG-2 | protecteditem_protect | VM pre-discovery loop timeout | #2470 |
-| BUG-3 | protectableitem_list | Workload normalization ArgumentException | #2518 |
-| BUG-4 | soft-delete | Deprecated BackupResourceVaultConfig API | #2518 |
-| BUG-5 | enable-crr | Deprecated BackupResourceConfig API | #2518 |
-| BUG-6 | vault_get | FormatException on subscription name (non-GUID) | #2518 |
-| BUG-7 | protecteditem_protect | DPP vault missing managed identity | #2470 |
-| BUG-8 | recoverypoint_get | Null container in resolution | #2518 |
-| NEW-1 | vault_get | AggregateException — pre-existing auth race | Not filed |
+| Bug | Tool | Description | Fix PR | Release |
+|-----|------|-------------|--------|---------|
+| BUG-1 | backup_status | ArgumentNullException on null ResourceType | #2518 (code included, not in PR title) | beta.7 |
+| BUG-2 | protecteditem_protect | VM pre-discovery loop timeout | #2470 | beta.6 |
+| BUG-3 | protectableitem_list | Workload normalization ArgumentException | #2518 | beta.7 |
+| BUG-4 | soft-delete | Deprecated BackupResourceVaultConfig API | #2518 | beta.7 |
+| BUG-5 | enable-crr | Deprecated BackupResourceConfig API | #2518 | beta.7 |
+| BUG-6 | vault_get | FormatException on subscription name (non-GUID) | #2518 | beta.7 |
+| BUG-7 | protecteditem_protect | DPP vault missing managed identity | #2470 | beta.6 |
+| BUG-8 | recoverypoint_get | Null container in resolution | #2518 | beta.7 |
+| NEW-1 | vault_get | AggregateException — pre-existing auth race (Azure Service, not MCP bug) | Not filed | — |
+
+> **Note:** PR #2518 title says "Fix 5 telemetry-triaged bugs (BUG-3,4,5,6,8)" but the
+> actual merged code also includes the BUG-1 fix. Always verify the diff, not just the title.
 
 When new errors appear, assign the next sequential ID (NEW-2, NEW-3, etc.) and add to this table.
 
