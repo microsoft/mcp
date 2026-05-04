@@ -53,17 +53,12 @@ internal class Program
             PluginTelemetryCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             // Optimization: detect the target service area early so we can skip registering the
-            // other 60+ areas in both the DI container and the CommandFactory command tree.
+            // other 60+ areas in the DI container.
             var targetAreaName = GetTargetAreaName(args);
 
             ServiceCollection services = new();
 
             ConfigureServices(services, targetAreaName);
-
-            if (targetAreaName != null)
-            {
-                services.Configure<CommandFactoryOptions>(o => o.TargetAreaName = targetAreaName);
-            }
 
             services.AddLogging(builder =>
             {
@@ -399,8 +394,8 @@ internal class Program
     /// <returns>Exit code if request was handled, null otherwise.</returns>
     private static int? TryHandleFastPathRequest(string[] args)
     {
-        // Handle --version flag (only --version; -v is not a recognized alias for this CLI)
-        if (args.Length == 1 && args[0] == "--version")
+        // Handle --version / -v flags before DI initialization
+        if (args.Length == 1 && (args[0] == "--version" || args[0] == "-v"))
         {
             var version = AssemblyHelper.GetFullAssemblyVersion(typeof(Program).Assembly);
             Console.WriteLine(version);

@@ -107,10 +107,6 @@ public class CommandFactory : ICommandFactory
     private readonly Dictionary<string, IAreaSetup> _commandNamesToArea = new(StringComparer.OrdinalIgnoreCase);
     private readonly ITelemetryService _telemetryService;
     private readonly IOptions<McpServerConfiguration> _configurationOptions;
-    private readonly IOptions<CommandFactoryOptions> _commandFactoryOptions;
-
-    private static readonly IOptions<CommandFactoryOptions> s_defaultCommandFactoryOptions =
-        Microsoft.Extensions.Options.Options.Create(new CommandFactoryOptions());
 
     // Add this new class inside CommandFactory
     private class StringConverter : JsonConverter<string>
@@ -132,15 +128,13 @@ public class CommandFactory : ICommandFactory
         IEnumerable<IAreaSetup> serviceAreas,
         ITelemetryService telemetryService,
         IOptions<McpServerConfiguration> configurationOptions,
-        ILogger<CommandFactory> logger,
-        IOptions<CommandFactoryOptions>? commandFactoryOptions = null)
+        ILogger<CommandFactory> logger)
     {
         _serviceAreas = serviceAreas?.ToArray() ?? throw new ArgumentNullException(nameof(serviceAreas));
         _serviceProvider = serviceProvider;
         _logger = logger;
         _telemetryService = telemetryService;
         _configurationOptions = configurationOptions;
-        _commandFactoryOptions = commandFactoryOptions ?? s_defaultCommandFactoryOptions;
         _rootGroup = new(_configurationOptions.Value.RootCommandGroupName, _configurationOptions.Value.DisplayName);
         _rootCommand = CreateRootCommand();
         _commandMap = CreateCommandDictionary(_rootGroup);
@@ -187,11 +181,6 @@ public class CommandFactory : ICommandFactory
 
     private void RegisterCommandGroup()
     {
-        // When a target area is known (single-command CLI invocation), skip all other areas to
-        // avoid eagerly constructing the ~250 commands that are not needed for this call.
-        // When null, all areas are initialized (required for server start, root help, --learn, etc.).
-        var targetArea = _commandFactoryOptions.Value.TargetAreaName;
-
         // Register area command groups
         var existingAreaNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -219,19 +208,6 @@ public class CommandFactory : ICommandFactory
                     string.Join(", ", matchingAreaTypes));
 
                 throw error;
-            }
-
-            // Skip areas that don't match the target when a specific area is requested.
-            // The DI container contains IAreaSetup instances for ALL infrastructure areas
-            // (Category != AzureServices) plus the single matching Azure service area.
-            // This guard intentionally excludes ALL non-matching areas — both unrelated Azure
-            // service areas and infrastructure areas — from the parse tree. Infrastructure
-            // commands (server, subscription, group, tools) are not needed when routing a
-            // targeted invocation (e.g. "azmcp storage account get" only needs the storage
-            // branch, not server/subscription/group/tools commands).
-            if (targetArea != null && !string.Equals(area.Name, targetArea, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
             }
 
             // Get the commands for the IAreaSetup and register it to the root node.
