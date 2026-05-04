@@ -210,7 +210,6 @@
         "--retry-network-timeout",
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,
@@ -263,7 +262,6 @@
         "--retry-network-timeout",
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,
@@ -479,7 +477,6 @@
         "--item",
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,
@@ -655,7 +652,6 @@
         "--item",
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,
@@ -798,7 +794,6 @@
       "commonOptions": [
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,

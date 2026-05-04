@@ -965,7 +965,6 @@
         "--vault-type",
         "--learn"
       ],
-      "options": [],
       "destructive": true,
       "idempotent": true,
       "openWorld": false,
@@ -1773,7 +1772,6 @@
       "commonOptions": [
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": true,
@@ -2113,7 +2111,6 @@
       "commonOptions": [
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,
@@ -5213,7 +5210,6 @@
       "commonOptions": [
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,
@@ -5290,7 +5286,6 @@
       "commonOptions": [
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,
@@ -5373,7 +5368,6 @@
         "--subscription",
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,
@@ -5398,7 +5392,6 @@
         "--resource-group",
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,
@@ -8758,7 +8751,6 @@
         "--subscription",
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,
@@ -9118,7 +9110,6 @@
       "commonOptions": [
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,
@@ -9909,7 +9900,6 @@
         "--server",
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,
@@ -10022,7 +10012,6 @@
         "--server",
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,
@@ -10126,7 +10115,6 @@
         "--server",
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,
@@ -10997,7 +10985,6 @@
         "--name",
         "--learn"
       ],
-      "options": [],
       "destructive": true,
       "idempotent": false,
       "openWorld": false,
@@ -11195,7 +11182,6 @@
         "--retry-network-timeout",
         "--learn"
       ],
-      "options": [],
       "destructive": false,
       "idempotent": true,
       "openWorld": false,

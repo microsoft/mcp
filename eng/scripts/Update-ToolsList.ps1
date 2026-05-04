@@ -108,7 +108,7 @@ foreach ($serverDir in $serverDirs) {
             $remainingOptions = @()
             $commonOptionNames = @()
 
-            if ($tool.option -and $commonOptions.Count -gt 0) {
+            if ($tool.option) {
                 foreach ($opt in $tool.option) {
                     $optName = $opt.name
                     if ($commonOptions.Contains($optName)) {
@@ -117,12 +117,11 @@ foreach ($serverDir in $serverDirs) {
                         $commonJson = $commonOptions[$optName] | ConvertTo-Json -Depth 5 -Compress
                         if ($optJson -eq $commonJson) {
                             $commonOptionNames += $optName
-                        } else {
-                            $remainingOptions += $opt
+                            continue;
                         }
-                    } else {
-                        $remainingOptions += $opt
                     }
+
+                    $remainingOptions += $opt
                 }
             }
 
@@ -131,8 +130,12 @@ foreach ($serverDir in $serverDirs) {
                 name          = $tool.name
                 description   = $tool.description
                 command       = $tool.command
-                commonOptions = $commonOptionNames
-                options       = $remainingOptions
+            }
+            if ($commonOptionNames.Count -gt 0) {
+                $result.commonOptions = $commonOptionNames
+            }
+            if ($remainingOptions.Count -gt 0) {
+                $result.options = $remainingOptions
             }
             if ($null -ne $tool.metadata) {
                 $result.destructive   = $tool.metadata.destructive.value

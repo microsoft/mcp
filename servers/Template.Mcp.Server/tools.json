@@ -4,8 +4,13 @@
     "name": "info",
     "description": "Displays running MCP server information.",
     "command": "server info",
-    "commonOptions": [],
-    "options": [],
+    "options": [
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
     "destructive": false,
     "idempotent": true,
     "openWorld": false,
@@ -18,8 +23,71 @@
     "name": "plugin-telemetry",
     "description": "Publish plugin-related telemetry events from agent hooks.\r\nAccepts command-line options such as '--timestamp', '--event-type', '--session-id', '--client-type', '--client-name', \r\n'--plugin-name', '--plugin-version', '--skill-name', '--skill-version', '--tool-name', and '--file-reference'. \r\nUse this command from agent hooks in clients like VS Code, Claude Desktop, or Copilot CLI to emit usage metrics.",
     "command": "server plugin-telemetry",
-    "commonOptions": [],
-    "options": [],
+    "options": [
+      {
+        "name": "--timestamp",
+        "description": "Timestamp of the telemetry event in ISO 8601 format.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--event-type",
+        "description": "Type of event being logged (e.g., 'skill_invocation', 'tool_invocation', 'reference_file_read').",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--session-id",
+        "description": "Session identifier for correlating related events.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--client-type",
+        "description": "Type of client invoking the telemetry (e.g., 'copilot-cli', 'claude-code', 'vscode'). Deprecated: prefer --client-name.",
+        "type": "string"
+      },
+      {
+        "name": "--client-name",
+        "description": "Name of the client invoking the telemetry (e.g., 'copilot-cli', 'claude-code', 'Visual Studio Code', 'Visual Studio Code - Insiders').",
+        "type": "string"
+      },
+      {
+        "name": "--plugin-name",
+        "description": "Name of the plugin being invoked.",
+        "type": "string"
+      },
+      {
+        "name": "--plugin-version",
+        "description": "Version of the plugin being invoked.",
+        "type": "string"
+      },
+      {
+        "name": "--skill-name",
+        "description": "Name of the skill being invoked.",
+        "type": "string"
+      },
+      {
+        "name": "--skill-version",
+        "description": "Version of the skill being invoked.",
+        "type": "string"
+      },
+      {
+        "name": "--tool-name",
+        "description": "Name of the tool being invoked.",
+        "type": "string"
+      },
+      {
+        "name": "--file-reference",
+        "description": "Plugin-relative file reference being accessed (will be validated against an allowlist).",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
     "destructive": false,
     "idempotent": false,
     "openWorld": false,
@@ -32,8 +100,78 @@
     "name": "start",
     "description": "Starts Azure MCP Server.",
     "command": "server start",
-    "commonOptions": [],
-    "options": [],
+    "options": [
+      {
+        "name": "--transport",
+        "description": "Transport mechanism to use for MCP Server.",
+        "type": "string"
+      },
+      {
+        "name": "--namespace",
+        "description": "The service namespaces to expose on the MCP server (e.g., storage, keyvault, cosmos).",
+        "type": "string"
+      },
+      {
+        "name": "--mode",
+        "description": "Mode for the MCP server. 'single' exposes one azure tool that routes to all services. 'namespace' (default) exposes one tool per service namespace. 'all' exposes all tools individually.",
+        "type": "string"
+      },
+      {
+        "name": "--tool",
+        "description": "Expose only specific tools by name (e.g., 'acr_registry_list'). Repeat this option to include multiple tools, e.g., --tool \"acr_registry_list\" --tool \"group_list\". It automatically switches to \"all\" mode when \"--tool\" is used. It can't be used together with \"--namespace\".",
+        "type": "string"
+      },
+      {
+        "name": "--read-only",
+        "description": "Whether the MCP server should be read-only. If true, no write operations will be allowed.",
+        "type": "string"
+      },
+      {
+        "name": "--debug",
+        "description": "Enable debug mode with verbose logging to stderr.",
+        "type": "string"
+      },
+      {
+        "name": "--dangerously-disable-http-incoming-auth",
+        "description": "Dangerously disables HTTP incoming authentication, exposing the server to unauthenticated access over HTTP. Use with extreme caution, this disables all transport security and may expose sensitive data to interception.",
+        "type": "string"
+      },
+      {
+        "name": "--dangerously-disable-elicitation",
+        "description": "Disable elicitation (user confirmation) before allowing high risk commands to run, such as returning Secrets (passwords) from KeyVault.",
+        "type": "string"
+      },
+      {
+        "name": "--outgoing-auth-strategy",
+        "description": "Outgoing authentication strategy for service requests. Valid values: NotSet, UseHostingEnvironmentIdentity, UseOnBehalfOf.",
+        "type": "string"
+      },
+      {
+        "name": "--dangerously-write-support-logs-to-dir",
+        "description": "Dangerously enables detailed debug-level logging for support and troubleshooting purposes. Specify a folder path where log files will be automatically created with timestamp-based filenames (e.g., azmcp_20251202_143052.log). This may include sensitive information in logs. Use with extreme caution and only when requested by support.",
+        "type": "string"
+      },
+      {
+        "name": "--dangerously-disable-retry-limits",
+        "description": "Dangerously disables upper bounds on retry delays, max delays, network timeouts, and max retries. This may lead to excessively long waits and should only be used when explicitly needed.",
+        "type": "string"
+      },
+      {
+        "name": "--cloud",
+        "description": "Azure cloud environment for authentication. Valid values: AzureCloud (default), AzureChinaCloud, AzureUSGovernment, or a custom authority host URL starting with https://",
+        "type": "string"
+      },
+      {
+        "name": "--disable-caching",
+        "description": "Disable caching of resource responses, requiring repeated requests to fetch fresh data each time.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
     "destructive": false,
     "idempotent": false,
     "openWorld": true,
@@ -46,8 +184,33 @@
     "name": "list",
     "description": "List all available commands and their tools in a hierarchical structure. This command returns detailed information\r\nabout each command, including its name, description, full command path, available subcommands, and all supported\r\narguments. Use --name-only to return only tool names, and --namespace to filter by specific namespaces.",
     "command": "tools list",
-    "commonOptions": [],
-    "options": [],
+    "options": [
+      {
+        "name": "--namespace-mode",
+        "description": "If specified, returns a list of top-level service namespaces instead of individual tools.",
+        "type": "string"
+      },
+      {
+        "name": "--namespace",
+        "description": "Filter tools by namespace (e.g., 'storage', 'keyvault'). Can be specified multiple times to include multiple namespaces.",
+        "type": "string"
+      },
+      {
+        "name": "--name-only",
+        "description": "If specified, returns only tool names without descriptions or metadata.",
+        "type": "string"
+      },
+      {
+        "name": "--include-hidden",
+        "description": "If specified, includes hidden commands in the output.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
     "destructive": false,
     "idempotent": true,
     "openWorld": false,
