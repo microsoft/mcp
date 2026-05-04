@@ -382,7 +382,8 @@ internal class Program
         string? firstToken = null;
         foreach (var arg in args)
         {
-            if (arg == "--") break;
+            if (arg == "--")
+                break;
             if (arg.Length > 0 && !arg.StartsWith('-'))
             {
                 firstToken = arg;
