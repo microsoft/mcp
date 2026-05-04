@@ -40,6 +40,8 @@ jobs:
       deploy:
         steps:
         # Note: checkout is not allowed in release jobs, so we inline the script logic here
+        - template: /eng/common/pipelines/templates/steps/login-to-github.yml
+
         - pwsh: |
             $ErrorActionPreference = "Stop"
             $serverName = '${{ parameters.ServerName }}'
@@ -108,4 +110,4 @@ jobs:
             Write-Host "`n✓ All MCPB files uploaded successfully"
           displayName: "Upload MCPB to GitHub Release"
           env:
-            GH_TOKEN: $(azuresdk-github-pat)
+            GH_TOKEN: $(GH_TOKEN)
