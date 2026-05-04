@@ -146,3 +146,53 @@ Each `azd` template provisions:
 - Entra ID app registration(s) with the correct scopes and roles
 - Managed identity with appropriate RBAC assignments
 - Azure Container App configured to run the Azure MCP Server with all required environment variables and server flags
+
+---
+
+## Troubleshooting
+
+### External MCP server auth fails with `AzurePowerShellCredential`
+
+**Symptom**
+
+When the Azure MCP Server tries to connect to an external registry server (e.g. a Foundry MCP server), you see an error like:
+
+```
+Failed to create MCP client for registry server 'foundry': The ChainedTokenCredential failed to retrieve a token from the included credentials.
+- AzurePowerShellCredential is not available: Azure PowerShell authentication failed due to an unknown error...
+  SharedTokenCacheCredential authentication failed: AADSTS65002: Consent between first party application '1950a258-227b-4e31-a9cf-717495945fc2' and first party resource '...' must be configured via preauthorization
+- InteractiveBrowserCredential is not available: Authentication is not configured correctly. Please authenticate using Azure CLI ('az login')...
+```
+
+**Cause**
+
+The credential chain tries `AzurePowerShellCredential` and it fails because the PowerShell shared token cache does not have consent configured for the target resource. `InteractiveBrowserCredential` is also unavailable in non-interactive stdio/CLI mode.
+
+**Fix**
+
+Use Azure CLI authentication instead. This is the most reliable credential for stdio/CLI mode:
+
+1. Sign in with the Azure CLI:
+
+   ```bash
+   az login
+   ```
+
+2. Pin the credential chain to Azure CLI only by setting the `AZURE_TOKEN_CREDENTIALS` environment variable before starting the server:
+
+   ```bash
+   # bash / zsh
+   export AZURE_TOKEN_CREDENTIALS=AzureCliCredential
+   ```
+
+   ```powershell
+   # PowerShell
+   $env:AZURE_TOKEN_CREDENTIALS = "AzureCliCredential"
+   ```
+
+   Or set it permanently in your shell profile / system environment variables.
+
+3. Restart the Azure MCP Server (or your IDE) so it picks up the new environment variable.
+
+> [!NOTE]
+> `AZURE_TOKEN_CREDENTIALS=AzureCliCredential` skips the entire credential chain and uses `az login` credentials directly. It will fail if you are not logged in with the Azure CLI, so make sure `az account show` returns the expected account before starting the server.
