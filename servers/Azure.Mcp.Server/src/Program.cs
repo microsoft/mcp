@@ -78,12 +78,20 @@ internal class Program
             // from the thread pool. CommandFactory resolves command singletons for the target area.
             // Both complete in parallel so neither adds to the other's latency on the hot path.
             //
-            // Optimization: run telemetry initialization concurrently with CommandFactory resolution.
-            // Attach a no-op continuation immediately so that any exception from InitializeServicesAsync
-            // is always observed — even if GetRequiredService throws before we reach the await.
-            var telemetryInitTask = InitializeServicesAsync(serviceProvider)
-                .ContinueWith(static t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
-            var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
+            // If GetRequiredService throws before we reach the await, telemetryInitTask would become
+            // an unobserved faulted task. Observe it (suppressing its exception) in that path so the
+            // DI failure is what surfaces to the user — not a TaskScheduler.UnobservedTaskException.
+            var telemetryInitTask = InitializeServicesAsync(serviceProvider);
+            ICommandFactory commandFactory;
+            try
+            {
+                commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
+            }
+            catch
+            {
+                await telemetryInitTask.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+                throw;
+            }
             await telemetryInitTask;
 
             // Short-circuit for --learn: return command metadata without executing.
