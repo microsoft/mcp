@@ -66,7 +66,8 @@ foreach ($serverDir in $serverDirs) {
         $jsonString = ($rawOutput | Where-Object { $_ -is [string] }) -join "`n"
         $parsed = $jsonString | ConvertFrom-Json
 
-        if ($null -eq $parsed -or $null -eq $parsed.results) {
+            Write-Warning "  Invalid 'tools list' response for $($serverDir.Name): expected a payload with 'results' - skipping"
+            $hasErrors = $true
             Write-Host "  ❌ No results returned for $($serverDir.Name)" -ForegroundColor Red
             $hasErrors = $true
             continue
