@@ -5,9 +5,9 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
-using static Azure.Mcp.Core.Services.ProcessExecution.ProcessExtensions;
+using static Microsoft.Mcp.Core.Services.ProcessExecution.ProcessExtensions;
 
-namespace Azure.Mcp.Core.Services.ProcessExecution;
+namespace Microsoft.Mcp.Core.Services.ProcessExecution;
 
 /// <summary>
 /// Executes external processes and captures their output in a timeout and cancellation aware way.

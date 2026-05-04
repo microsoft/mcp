@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Kusto.Models;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 
@@ -11,6 +12,7 @@ public interface IKustoService
 {
     Task<ResourceQueryResults<string>> ListClustersAsync(
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

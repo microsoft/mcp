@@ -1,51 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 using SessionHostModel = Azure.Mcp.Tools.VirtualDesktop.Models.SessionHost;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.UnitTests.SessionHost;
 
-public class SessionHostListCommandTests
+public class SessionHostListCommandTests : CommandUnitTestsBase<SessionHostListCommand, IVirtualDesktopService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IVirtualDesktopService _virtualDesktopService;
-    private readonly ILogger<SessionHostListCommand> _logger;
-    private readonly SessionHostListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public SessionHostListCommandTests()
-    {
-        _virtualDesktopService = Substitute.For<IVirtualDesktopService>();
-        _logger = Substitute.For<ILogger<SessionHostListCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_virtualDesktopService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("list", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
-        Assert.Equal("List SessionHosts", _command.Title);
+        Assert.Equal("list", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
+        Assert.Equal("List SessionHosts", Command.Title);
     }
 
     [Theory]
@@ -70,37 +46,34 @@ public class SessionHostListCommandTests
                 CreateMockSessionHost("sessionhost2")
             };
 
-            _virtualDesktopService.ListSessionHostsAsync(
+            Service.ListSessionHostsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult<IReadOnlyList<SessionHostModel>>(mockSessionHosts));
+                .Returns(mockSessionHosts);
 
-            _virtualDesktopService.ListSessionHostsByResourceIdAsync(
+            Service.ListSessionHostsByResourceIdAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult<IReadOnlyList<SessionHostModel>>(mockSessionHosts));
+                .Returns(mockSessionHosts);
 
-            _virtualDesktopService.ListSessionHostsByResourceGroupAsync(
+            Service.ListSessionHostsByResourceGroupAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult<IReadOnlyList<SessionHostModel>>(mockSessionHosts));
+                .Returns(mockSessionHosts);
         }
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -126,7 +99,7 @@ public class SessionHostListCommandTests
             new() { Name = "sessionhost1" },
             new() { Name = "sessionhost2" }
         };
-        _virtualDesktopService.ListSessionHostsAsync(
+        Service.ListSessionHostsAsync(
             "sub123",
             "pool1",
             null,
@@ -134,18 +107,15 @@ public class SessionHostListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedSessionHosts);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--hostpool", "pool1");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
-        await _virtualDesktopService.Received(1).ListSessionHostsAsync(
+        await Service.Received(1).ListSessionHostsAsync(
             "sub123",
             "pool1",
             null,
@@ -164,7 +134,7 @@ public class SessionHostListCommandTests
         };
         var resourceId = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.DesktopVirtualization/hostPools/pool1";
 
-        _virtualDesktopService.ListSessionHostsByResourceIdAsync(
+        Service.ListSessionHostsByResourceIdAsync(
             "sub123",
             resourceId,
             null,
@@ -172,25 +142,22 @@ public class SessionHostListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedSessionHosts);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse($"--subscription sub123 --hostpool-resource-id {resourceId}");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--hostpool-resource-id", resourceId);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
-        await _virtualDesktopService.Received(1).ListSessionHostsByResourceIdAsync(
+        await Service.Received(1).ListSessionHostsByResourceIdAsync(
             "sub123",
             resourceId,
             null,
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
-        await _virtualDesktopService.DidNotReceive().ListSessionHostsAsync(
+        await Service.DidNotReceive().ListSessionHostsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -201,19 +168,6 @@ public class SessionHostListCommandTests
     [Fact]
     public async Task ExecuteAsync_WithResourceGroup_CallsServiceCorrectly()
     {
-        // First test: Can we parse the command line correctly?
-        var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1 --resource-group rg1");
-
-        // Check for parse errors
-        if (parseResult.Errors.Any())
-        {
-            Console.WriteLine("Parse errors:");
-            foreach (var error in parseResult.Errors)
-            {
-                Console.WriteLine($"  {error}");
-            }
-        }
-
         // Arrange
         var expectedSessionHosts = new List<SessionHostModel>
         {
@@ -221,7 +175,7 @@ public class SessionHostListCommandTests
             CreateMockSessionHost("sessionhost2")
         };
 
-        _virtualDesktopService.ListSessionHostsByResourceGroupAsync(
+        Service.ListSessionHostsByResourceGroupAsync(
             "sub123",
             "rg1",
             "pool1",
@@ -230,24 +184,15 @@ public class SessionHostListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedSessionHosts);
 
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--hostpool", "pool1", "--resource-group", "rg1");
 
         // Assert
-        // If this fails, let's see what the actual message is
-        if (response.Status != HttpStatusCode.OK)
-        {
-            Console.WriteLine($"Actual Status: {response.Status}");
-            Console.WriteLine($"Actual Message: {response.Message}");
-        }
-
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
-        await _virtualDesktopService.Received(1).ListSessionHostsByResourceGroupAsync(
+        await Service.Received(1).ListSessionHostsByResourceGroupAsync(
             "sub123",
             "rg1",
             "pool1",
@@ -260,7 +205,7 @@ public class SessionHostListCommandTests
     public async Task ExecuteAsync_WithEmptyResults_ReturnsNullResults()
     {
         // Arrange
-        _virtualDesktopService.ListSessionHostsAsync(
+        Service.ListSessionHostsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -268,19 +213,16 @@ public class SessionHostListCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        _virtualDesktopService.ListSessionHostsByResourceIdAsync(
+        Service.ListSessionHostsByResourceIdAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
-
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--hostpool", "pool1");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -292,27 +234,24 @@ public class SessionHostListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _virtualDesktopService.ListSessionHostsAsync(
+        Service.ListSessionHostsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<IReadOnlyList<SessionHostModel>>(new Exception("Test error")));
+            .ThrowsAsync(new Exception("Test error"));
 
-        _virtualDesktopService.ListSessionHostsByResourceIdAsync(
+        Service.ListSessionHostsByResourceIdAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<IReadOnlyList<SessionHostModel>>(new Exception("Test error")));
-
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1");
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--hostpool", "pool1");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -326,14 +265,10 @@ public class SessionHostListCommandTests
     [InlineData("--invalid-option")]
     public async Task ExecuteAsync_WithInvalidArgs_ReturnsBadRequest(string invalidArgs)
     {
-        // Arrange
-        var context = new CommandContext(_serviceProvider);
-
         // Act & Assert
         try
         {
-            var parseResult = _commandDefinition.Parse(invalidArgs);
-            var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync(invalidArgs);
 
             // If parsing succeeds but validation fails, expect 400
             Assert.Equal(HttpStatusCode.BadRequest, response.Status);

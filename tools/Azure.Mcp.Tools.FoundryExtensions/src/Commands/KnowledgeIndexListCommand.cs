@@ -1,26 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
+using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexListOptions>
-{
-    private const string CommandTitle = "List Knowledge Indexes in Microsoft Foundry";
-
-    public override string Id => "b2c3d4e5-2345-6789-bcde-f01234567890";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "b2c3d4e5-2345-6789-bcde-f01234567890",
+    Name = "list",
+    Title = "List Knowledge Indexes in Microsoft Foundry",
+    Description = """
         Retrieves a list of knowledge indexes from Microsoft Foundry.
 
         This function is used when a user requests information about the available knowledge indexes in Microsoft Foundry. It provides an overview of the knowledge bases and search indexes that are currently deployed and available for use with AI agents and applications.
@@ -34,24 +30,31 @@ public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexList
             - The indexes listed are knowledge indexes specifically created within Microsoft Foundry projects.
             - These indexes can be used with AI agents for knowledge retrieval and RAG applications.
             - The list may change as new indexes are created or existing ones are updated.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryExtensionsService) : GlobalCommand<KnowledgeIndexListOptions>
+{
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
         command.Options.Add(FoundryExtensionsOptionDefinitions.EndpointOption);
+        command.Validators.Add(commandResult =>
+        {
+            var endpointValue = commandResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.EndpointOption);
+            if (string.IsNullOrWhiteSpace(endpointValue))
+            {
+                return;
+            }
+
+            ValidateFoundryEndpoint(endpointValue, commandResult);
+        });
     }
 
     protected override KnowledgeIndexListOptions BindOptions(ParseResult parseResult)
@@ -72,8 +75,7 @@ public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexList
 
         try
         {
-            var service = context.GetService<IFoundryExtensionsService>();
-            var indexes = await service.ListKnowledgeIndexes(
+            var indexes = await _foundryExtensionsService.ListKnowledgeIndexes(
                 options.Endpoint!,
                 options.Tenant,
                 options.RetryPolicy,
@@ -87,6 +89,27 @@ public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexList
         }
 
         return context.Response;
+    }
+
+    private static void ValidateFoundryEndpoint(string endpoint, System.CommandLine.Parsing.CommandResult commandResult)
+    {
+        ArmEnvironment[] clouds = [ArmEnvironment.AzurePublicCloud, ArmEnvironment.AzureChina, ArmEnvironment.AzureGovernment, ArmEnvironment.AzureGermany];
+        string? lastError = null;
+
+        foreach (var cloud in clouds)
+        {
+            try
+            {
+                EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "foundry", cloud);
+                return;
+            }
+            catch (Exception ex)
+            {
+                lastError = ex.Message;
+            }
+        }
+
+        commandResult.AddError(lastError ?? $"Invalid Foundry project endpoint: {endpoint}");
     }
 
     internal record KnowledgeIndexListCommandResult(IEnumerable<KnowledgeIndexInformation> Indexes);

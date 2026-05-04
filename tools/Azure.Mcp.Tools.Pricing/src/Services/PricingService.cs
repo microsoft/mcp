@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tools.Pricing.Models;
 using AzureRetailPrices;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Pricing.Services;
 

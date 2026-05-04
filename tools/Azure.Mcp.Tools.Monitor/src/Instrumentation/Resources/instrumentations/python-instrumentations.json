@@ -1,0 +1,441 @@
+{
+  "$schema": "./python-instrumentations.schema.json",
+  "metadata": {
+    "lastUpdated": "2026-01-15",
+    "source": "https://github.com/open-telemetry/opentelemetry-python-contrib",
+    "distroSource": "https://github.com/Azure/azure-sdk-for-python/tree/main/sdk/monitor/azure-monitor-opentelemetry"
+  },
+  "azureMonitorPackages": [
+    "azure-monitor-opentelemetry",
+    "azure-monitor-opentelemetry-exporter"
+  ],
+  "openTelemetryCorePackages": [
+    "opentelemetry-api",
+    "opentelemetry-sdk",
+    "opentelemetry-instrumentation"
+  ],
+  "applicationInsightsPackages": [
+    "applicationinsights",
+    "opencensus-ext-azure"
+  ],
+  "distroInstrumentations": [
+    "django",
+    "flask",
+    "fastapi",
+    "requests",
+    "urllib",
+    "urllib3",
+    "psycopg2",
+    "psycopg2-binary",
+    "azure-core"
+  ],
+  "instrumentations": {
+    "framework": [
+      {
+        "libraryName": "django",
+        "displayName": "Django",
+        "moduleName": "django",
+        "instrumentationPackage": "opentelemetry-instrumentation-django",
+        "inDistro": true
+      },
+      {
+        "libraryName": "flask",
+        "displayName": "Flask",
+        "moduleName": "flask",
+        "instrumentationPackage": "opentelemetry-instrumentation-flask",
+        "inDistro": true
+      },
+      {
+        "libraryName": "fastapi",
+        "displayName": "FastAPI",
+        "moduleName": "fastapi",
+        "instrumentationPackage": "opentelemetry-instrumentation-fastapi",
+        "inDistro": true
+      },
+      {
+        "libraryName": "falcon",
+        "displayName": "Falcon",
+        "moduleName": "falcon",
+        "instrumentationPackage": "opentelemetry-instrumentation-falcon",
+        "inDistro": false
+      },
+      {
+        "libraryName": "pyramid",
+        "displayName": "Pyramid",
+        "moduleName": "pyramid",
+        "instrumentationPackage": "opentelemetry-instrumentation-pyramid",
+        "inDistro": false
+      },
+      {
+        "libraryName": "starlette",
+        "displayName": "Starlette",
+        "moduleName": "starlette",
+        "instrumentationPackage": "opentelemetry-instrumentation-starlette",
+        "inDistro": false
+      },
+      {
+        "libraryName": "tornado",
+        "displayName": "Tornado",
+        "moduleName": "tornado",
+        "instrumentationPackage": "opentelemetry-instrumentation-tornado",
+        "inDistro": false
+      }
+    ],
+    "http": [
+      {
+        "libraryName": "requests",
+        "displayName": "Requests",
+        "moduleName": "requests",
+        "instrumentationPackage": "opentelemetry-instrumentation-requests",
+        "inDistro": true
+      },
+      {
+        "libraryName": "urllib",
+        "displayName": "URLLib",
+        "moduleName": "urllib",
+        "instrumentationPackage": "opentelemetry-instrumentation-urllib",
+        "inDistro": true
+      },
+      {
+        "libraryName": "urllib3",
+        "displayName": "URLLib3",
+        "moduleName": "urllib3",
+        "instrumentationPackage": "opentelemetry-instrumentation-urllib3",
+        "inDistro": true
+      },
+      {
+        "libraryName": "httpx",
+        "displayName": "HTTPX",
+        "moduleName": "httpx",
+        "instrumentationPackage": "opentelemetry-instrumentation-httpx",
+        "inDistro": false
+      },
+      {
+        "libraryName": "aiohttp",
+        "displayName": "aiohttp",
+        "moduleName": "aiohttp",
+        "instrumentationPackage": "opentelemetry-instrumentation-aiohttp-client",
+        "inDistro": false
+      },
+      {
+        "libraryName": "grpcio",
+        "displayName": "gRPC",
+        "moduleName": "grpcio",
+        "instrumentationPackage": "opentelemetry-instrumentation-grpc",
+        "inDistro": false
+      },
+      {
+        "libraryName": "grpcio-tools",
+        "displayName": "gRPC Tools",
+        "moduleName": "grpcio_tools",
+        "instrumentationPackage": "opentelemetry-instrumentation-grpc",
+        "inDistro": false
+      }
+    ],
+    "database": [
+      {
+        "libraryName": "psycopg2",
+        "displayName": "Psycopg2",
+        "moduleName": "psycopg2",
+        "instrumentationPackage": "opentelemetry-instrumentation-psycopg2",
+        "inDistro": true
+      },
+      {
+        "libraryName": "psycopg2-binary",
+        "displayName": "Psycopg2 Binary",
+        "moduleName": "psycopg2",
+        "instrumentationPackage": "opentelemetry-instrumentation-psycopg2",
+        "inDistro": true
+      },
+      {
+        "libraryName": "psycopg",
+        "displayName": "Psycopg",
+        "moduleName": "psycopg",
+        "instrumentationPackage": "opentelemetry-instrumentation-psycopg",
+        "inDistro": false
+      },
+      {
+        "libraryName": "sqlalchemy",
+        "displayName": "SQLAlchemy",
+        "moduleName": "sqlalchemy",
+        "instrumentationPackage": "opentelemetry-instrumentation-sqlalchemy",
+        "inDistro": false
+      },
+      {
+        "libraryName": "pymongo",
+        "displayName": "PyMongo",
+        "moduleName": "pymongo",
+        "instrumentationPackage": "opentelemetry-instrumentation-pymongo",
+        "inDistro": false
+      },
+      {
+        "libraryName": "redis",
+        "displayName": "Redis",
+        "moduleName": "redis",
+        "instrumentationPackage": "opentelemetry-instrumentation-redis",
+        "inDistro": false
+      },
+      {
+        "libraryName": "pymysql",
+        "displayName": "PyMySQL",
+        "moduleName": "pymysql",
+        "instrumentationPackage": "opentelemetry-instrumentation-pymysql",
+        "inDistro": false
+      },
+      {
+        "libraryName": "mysqlclient",
+        "displayName": "MySQLClient",
+        "moduleName": "mysqlclient",
+        "instrumentationPackage": "opentelemetry-instrumentation-mysql",
+        "inDistro": false
+      },
+      {
+        "libraryName": "mysql-connector-python",
+        "displayName": "MySQL Connector",
+        "moduleName": "mysql_connector_python",
+        "instrumentationPackage": "opentelemetry-instrumentation-mysql",
+        "inDistro": false
+      },
+      {
+        "libraryName": "asyncpg",
+        "displayName": "asyncpg",
+        "moduleName": "asyncpg",
+        "instrumentationPackage": "opentelemetry-instrumentation-asyncpg",
+        "inDistro": false
+      },
+      {
+        "libraryName": "aiopg",
+        "displayName": "aiopg",
+        "moduleName": "aiopg",
+        "instrumentationPackage": "opentelemetry-instrumentation-aiopg",
+        "inDistro": false
+      },
+      {
+        "libraryName": "elasticsearch",
+        "displayName": "Elasticsearch",
+        "moduleName": "elasticsearch",
+        "instrumentationPackage": "opentelemetry-instrumentation-elasticsearch",
+        "inDistro": false
+      },
+      {
+        "libraryName": "cassandra-driver",
+        "displayName": "Cassandra",
+        "moduleName": "cassandra",
+        "instrumentationPackage": "opentelemetry-instrumentation-cassandra",
+        "inDistro": false
+      },
+      {
+        "libraryName": "pymemcache",
+        "displayName": "pymemcache",
+        "moduleName": "pymemcache",
+        "instrumentationPackage": "opentelemetry-instrumentation-pymemcache",
+        "inDistro": false
+      },
+      {
+        "libraryName": "pymssql",
+        "displayName": "pymssql",
+        "moduleName": "pymssql",
+        "instrumentationPackage": "opentelemetry-instrumentation-pymssql",
+        "inDistro": false
+      },
+      {
+        "libraryName": "sqlite3",
+        "displayName": "SQLite3",
+        "moduleName": "sqlite3",
+        "instrumentationPackage": "opentelemetry-instrumentation-sqlite3",
+        "inDistro": false
+      },
+      {
+        "libraryName": "tortoise-orm",
+        "displayName": "Tortoise ORM",
+        "moduleName": "tortoise",
+        "instrumentationPackage": "opentelemetry-instrumentation-tortoiseorm",
+        "inDistro": false
+      }
+    ],
+    "messaging": [
+      {
+        "libraryName": "celery",
+        "displayName": "Celery",
+        "moduleName": "celery",
+        "instrumentationPackage": "opentelemetry-instrumentation-celery",
+        "inDistro": false
+      },
+      {
+        "libraryName": "kafka-python",
+        "displayName": "Kafka Python",
+        "moduleName": "kafka",
+        "instrumentationPackage": "opentelemetry-instrumentation-kafka-python",
+        "inDistro": false
+      },
+      {
+        "libraryName": "confluent-kafka",
+        "displayName": "Confluent Kafka",
+        "moduleName": "confluent_kafka",
+        "instrumentationPackage": "opentelemetry-instrumentation-confluent-kafka",
+        "inDistro": false
+      },
+      {
+        "libraryName": "pika",
+        "displayName": "Pika",
+        "moduleName": "pika",
+        "instrumentationPackage": "opentelemetry-instrumentation-pika",
+        "inDistro": false
+      },
+      {
+        "libraryName": "aio-pika",
+        "displayName": "aio-pika",
+        "moduleName": "aio_pika",
+        "instrumentationPackage": "opentelemetry-instrumentation-aio-pika",
+        "inDistro": false
+      },
+      {
+        "libraryName": "aiokafka",
+        "displayName": "aiokafka",
+        "moduleName": "aiokafka",
+        "instrumentationPackage": "opentelemetry-instrumentation-aiokafka",
+        "inDistro": false
+      },
+      {
+        "libraryName": "remoulade",
+        "displayName": "Remoulade",
+        "moduleName": "remoulade",
+        "instrumentationPackage": "opentelemetry-instrumentation-remoulade",
+        "inDistro": false
+      }
+    ],
+    "cloud": [
+      {
+        "libraryName": "boto",
+        "displayName": "Boto",
+        "moduleName": "boto",
+        "instrumentationPackage": "opentelemetry-instrumentation-boto",
+        "inDistro": false
+      },
+      {
+        "libraryName": "boto3",
+        "displayName": "Boto3",
+        "moduleName": "boto3",
+        "instrumentationPackage": "opentelemetry-instrumentation-boto3sqs",
+        "inDistro": false
+      },
+      {
+        "libraryName": "botocore",
+        "displayName": "Botocore",
+        "moduleName": "botocore",
+        "instrumentationPackage": "opentelemetry-instrumentation-botocore",
+        "inDistro": false
+      },
+      {
+        "libraryName": "azure-core",
+        "displayName": "Azure SDK",
+        "moduleName": "azure.core",
+        "instrumentationPackage": "azure-core-tracing-opentelemetry",
+        "inDistro": true,
+        "note": "Azure SDK uses plugin system, not standard instrumentor"
+      }
+    ],
+    "genai": [
+      {
+        "libraryName": "openai",
+        "displayName": "OpenAI",
+        "moduleName": "openai",
+        "instrumentationPackage": "opentelemetry-instrumentation-openai",
+        "inDistro": false
+      },
+      {
+        "libraryName": "anthropic",
+        "displayName": "Anthropic",
+        "moduleName": "anthropic",
+        "instrumentationPackage": "opentelemetry-instrumentation-anthropic",
+        "inDistro": false
+      },
+      {
+        "libraryName": "langchain",
+        "displayName": "LangChain",
+        "moduleName": "langchain",
+        "instrumentationPackage": "opentelemetry-instrumentation-langchain",
+        "inDistro": false
+      },
+      {
+        "libraryName": "langchain-core",
+        "displayName": "LangChain Core",
+        "moduleName": "langchain_core",
+        "instrumentationPackage": "opentelemetry-instrumentation-langchain",
+        "inDistro": false
+      },
+      {
+        "libraryName": "langchain-community",
+        "displayName": "LangChain Community",
+        "moduleName": "langchain_community",
+        "instrumentationPackage": "opentelemetry-instrumentation-langchain",
+        "inDistro": false
+      },
+      {
+        "libraryName": "google-cloud-aiplatform",
+        "displayName": "Google Cloud AI Platform",
+        "moduleName": "google.cloud.aiplatform",
+        "instrumentationPackage": "opentelemetry-instrumentation-vertexai",
+        "inDistro": false
+      },
+      {
+        "libraryName": "google-genai",
+        "displayName": "Google GenAI",
+        "moduleName": "google.genai",
+        "instrumentationPackage": "opentelemetry-instrumentation-google-genai",
+        "inDistro": false
+      },
+      {
+        "libraryName": "openai-agents",
+        "displayName": "OpenAI Agents",
+        "moduleName": "openai.agents",
+        "instrumentationPackage": "opentelemetry-instrumentation-openai-agents",
+        "inDistro": false
+      },
+      {
+        "libraryName": "weaviate-client",
+        "displayName": "Weaviate Client",
+        "moduleName": "weaviate",
+        "instrumentationPackage": "opentelemetry-instrumentation-weaviate",
+        "inDistro": false
+      }
+    ],
+    "other": [
+      {
+        "libraryName": "jinja2",
+        "displayName": "Jinja2",
+        "moduleName": "jinja2",
+        "instrumentationPackage": "opentelemetry-instrumentation-jinja2",
+        "inDistro": false
+      },
+      {
+        "libraryName": "asyncio",
+        "displayName": "asyncio",
+        "moduleName": "asyncio",
+        "instrumentationPackage": "opentelemetry-instrumentation-asyncio",
+        "inDistro": false
+      },
+      {
+        "libraryName": "logging",
+        "displayName": "Logging",
+        "moduleName": "logging",
+        "instrumentationPackage": "opentelemetry-instrumentation-logging",
+        "inDistro": false
+      },
+      {
+        "libraryName": "asgiref",
+        "displayName": "ASGI",
+        "moduleName": "asgiref",
+        "instrumentationPackage": "opentelemetry-instrumentation-asgi",
+        "inDistro": false
+      },
+      {
+        "libraryName": "psutil",
+        "displayName": "psutil",
+        "moduleName": "psutil",
+        "instrumentationPackage": "opentelemetry-instrumentation-system-metrics",
+        "inDistro": false
+      }
+    ]
+  }
+}

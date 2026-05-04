@@ -2,65 +2,45 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Workbooks.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Workbooks.UnitTests;
 
-public class ShowWorkbooksCommandTests
+public class ShowWorkbooksCommandTests : CommandUnitTestsBase<ShowWorkbooksCommand, IWorkbooksService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IWorkbooksService _service;
-    private readonly ILogger<ShowWorkbooksCommand> _logger;
-    private readonly ShowWorkbooksCommand _command;
-
-    public ShowWorkbooksCommandTests()
-    {
-        _service = Substitute.For<IWorkbooksService>();
-        _logger = Substitute.For<ILogger<ShowWorkbooksCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("show", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
-        Assert.Contains("workbook", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("show", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
+        Assert.Contains("workbook", CommandDefinition.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void Name_ReturnsCorrectValue()
     {
-        Assert.Equal("show", _command.Name);
+        Assert.Equal("show", Command.Name);
     }
 
     [Fact]
     public void Title_ReturnsCorrectValue()
     {
-        Assert.Equal("Get Workbook", _command.Title);
+        Assert.Equal("Get Workbook", Command.Title);
     }
 
     [Fact]
     public void Description_ContainsRequiredInformation()
     {
-        var description = _command.Description;
+        var description = Command.Description;
         Assert.NotNull(description);
         Assert.Contains("workbook", description, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("batch", description, StringComparison.OrdinalIgnoreCase);
@@ -88,31 +68,19 @@ public class ShowWorkbooksCommandTests
 
         var batchResult = new WorkbookBatchResult([expectedWorkbook], []);
 
-        _service.GetWorkbooksAsync(
+        Service.GetWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(batchResult);
 
-        var args = _command.GetCommand().Parse([
-            "--workbook-ids", workbookId
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--workbook-ids", workbookId);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.Workbooks);
         Assert.Empty(result.Errors);
         Assert.Equal("Test Workbook", result.Workbooks[0].DisplayName);
@@ -160,32 +128,19 @@ public class ShowWorkbooksCommandTests
 
         var batchResult = new WorkbookBatchResult(expectedWorkbooks, []);
 
-        _service.GetWorkbooksAsync(
+        Service.GetWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(batchResult);
 
-        var args = _command.GetCommand().Parse([
-            "--workbook-ids", workbookId1,
-            "--workbook-ids", workbookId2
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--workbook-ids", workbookId1, "--workbook-ids", workbookId2);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(2, result.Workbooks.Count);
         Assert.Empty(result.Errors);
     }
@@ -216,32 +171,19 @@ public class ShowWorkbooksCommandTests
 
         var batchResult = new WorkbookBatchResult([expectedWorkbook], [error]);
 
-        _service.GetWorkbooksAsync(
+        Service.GetWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(batchResult);
 
-        var args = _command.GetCommand().Parse([
-            "--workbook-ids", workbookId1,
-            "--workbook-ids", workbookId2
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--workbook-ids", workbookId1, "--workbook-ids", workbookId2);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.Workbooks);
         Assert.Single(result.Errors);
         Assert.Equal(workbookId2, result.Errors[0].WorkbookId);
@@ -254,21 +196,15 @@ public class ShowWorkbooksCommandTests
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
 
-        _service.GetWorkbooksAsync(
+        Service.GetWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<WorkbookBatchResult>(new Exception("Service error")));
-
-        var args = _command.GetCommand().Parse([
-            "--workbook-ids", workbookId
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
+            .ThrowsAsync(new Exception("Service error"));
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--workbook-ids", workbookId);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -283,25 +219,18 @@ public class ShowWorkbooksCommandTests
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
         var batchResult = new WorkbookBatchResult([], []);
 
-        _service.GetWorkbooksAsync(
+        Service.GetWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(batchResult);
 
-        var args = _command.GetCommand().Parse([
-            "--workbook-ids", workbookId,
-            "--tenant", "test-tenant"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync("--workbook-ids", workbookId, "--tenant", "test-tenant");
 
         // Assert
-        await _service.Received(1).GetWorkbooksAsync(
+        await Service.Received(1).GetWorkbooksAsync(
             Arg.Is<IReadOnlyList<string>>(ids => ids.Contains(workbookId)),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Is("test-tenant"),
@@ -315,24 +244,18 @@ public class ShowWorkbooksCommandTests
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
         var batchResult = new WorkbookBatchResult([], []);
 
-        _service.GetWorkbooksAsync(
+        Service.GetWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(batchResult);
 
-        var args = _command.GetCommand().Parse([
-            "--workbook-ids", workbookId
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync("--workbook-ids", workbookId);
 
         // Assert
-        await _service.Received(1).GetWorkbooksAsync(
+        await Service.Received(1).GetWorkbooksAsync(
             Arg.Is<IReadOnlyList<string>>(ids => ids.Contains(workbookId)),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Is<string?>(t => t == null),
@@ -346,25 +269,18 @@ public class ShowWorkbooksCommandTests
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
         var batchResult = new WorkbookBatchResult([], []);
 
-        _service.GetWorkbooksAsync(
+        Service.GetWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(batchResult);
 
-        var args = _command.GetCommand().Parse([
-            "--workbook-ids", workbookId,
-            "--auth-method", "1"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync("--workbook-ids", workbookId, "--auth-method", "1");
 
         // Assert
-        await _service.Received(1).GetWorkbooksAsync(
+        await Service.Received(1).GetWorkbooksAsync(
             Arg.Is<IReadOnlyList<string>>(ids => ids.Contains(workbookId)),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
@@ -374,13 +290,8 @@ public class ShowWorkbooksCommandTests
     [Fact]
     public async Task ExecuteAsync_WithoutWorkbookIds_ReturnsError()
     {
-        // Arrange
-        var args = _command.GetCommand().Parse([]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync([]);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -445,31 +356,19 @@ public class ShowWorkbooksCommandTests
 
         var batchResult = new WorkbookBatchResult([expectedWorkbook], []);
 
-        _service.GetWorkbooksAsync(
+        Service.GetWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(batchResult);
 
-        var args = _command.GetCommand().Parse([
-            "--workbook-ids", workbookId
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--workbook-ids", workbookId);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.Workbooks);
         Assert.Empty(result.Errors);
 

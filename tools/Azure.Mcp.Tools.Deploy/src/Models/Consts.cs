@@ -48,6 +48,8 @@ public static class DeployTelemetryTags
     public static readonly string ComputeHostResources = AddPrefix("ComputeHostResources");
     public static readonly string DeploymentTool = AddPrefix("DeploymentTool");
     public static readonly string IacType = AddPrefix("IacType");
+    public static readonly string DeployOption = AddPrefix("DeployOption");
+    public static readonly string SourceType = AddPrefix("SourceType");
     public static readonly string ProjectName = AddPrefix("ProjectName");
     public static readonly string ServiceCount = AddPrefix("ServiceCount");
     public static readonly string BackingServiceResources = AddPrefix("BackingServiceResources");

@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Grafana.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Grafana.Services;
 
@@ -19,6 +19,7 @@ public interface IGrafanaService
     /// <exception cref="Exception">When the service request fails</exception>
     Task<ResourceQueryResults<GrafanaWorkspace>> ListWorkspacesAsync(
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

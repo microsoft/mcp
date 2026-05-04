@@ -1,5 +1,14 @@
+## Tools for Azure Functions Code Generation
+    use `azmcp functions` tools together with best practices guidance:
+    1. `language list` - Get supported languages and runtime versions
+    2. `project get --language <lang>` - Get project scaffold files
+    3. `template get --language <lang>` - List available templates
+    4. `template get --language <lang> --template <name>` - Get function code
+ 
+## General Best Practices
+
 Azure Functions code generation best practices:
-    - Use the latest programming models (v4 for JavaScript, v2 for Python)
+    - Use the latest programming models (v4 for TypeScript/JavaScript, v2 for Python)
     - Use this extension bundles version `[4.*, 5.0.0)` in the host.json file.
     - Use Azure Functions Core Tools for creating Function Apps
     - If the user specifies the subscription, use the mcp_azure_mcp_policy tool with the `command` to be 'policy_assignment_list' and the 'subscription' parameter the subscriptionID provided by the user. Use the policy assignments info from the output of the command to ensure that any generated code complies with these policies.
@@ -13,6 +22,7 @@ Azure Functions code generation best practices:
     - Use the latest language runtime version
     - Follow language-specific project layouts and conventions
     - For python, do not use grpcio dependent packages such as azure-functions-worker, unless necessary
+    - Prefer TypeScript over JavaScript for Node.js projects — v4 SDK provides first-class types for compile-time error detection and full IntelliSense
     - JavaScript v4 Structure:
         ```
         root/

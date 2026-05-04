@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Services.ProcessExecution;
+namespace Microsoft.Mcp.Core.Services.ProcessExecution;
 
 public record ProcessResult(
     int ExitCode,

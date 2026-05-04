@@ -1,45 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.Account;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Tools.AppConfig.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.UnitTests.Account;
 
-public class AccountListCommandTests
+public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, IAppConfigService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IAppConfigService _appConfigService;
-    private readonly ILogger<AccountListCommand> _logger;
-    private readonly AccountListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public AccountListCommandTests()
-    {
-        _appConfigService = Substitute.For<IAppConfigService>();
-        _logger = Substitute.For<ILogger<AccountListCommand>>();
-
-        _command = new(_logger, _appConfigService);
-        _commandDefinition = _command.GetCommand();
-        _serviceProvider = new ServiceCollection()
-            .BuildServiceProvider();
-        _context = new(_serviceProvider);
-    }
-
     [Fact]
     public async Task ExecuteAsync_ReturnsAccounts_WhenAccountsExist()
     {
@@ -49,26 +26,20 @@ public class AccountListCommandTests
             new() { Name = "account1", Location = "East US", Endpoint = "https://account1.azconfig.io" },
             new() { Name = "account2", Location = "West US", Endpoint = "https://account2.azconfig.io" }
         ], false);
-        _appConfigService.GetAppConfigAccounts(
+        Service.GetAppConfigAccounts(
             "sub123",
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
 
-        var args = _commandDefinition.Parse(["--subscription", "sub123"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.AccountListCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.AccountListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(2, result.Accounts.Count);
         Assert.Equal("account1", result.Accounts[0].Name);
         Assert.Equal("account2", result.Accounts[1].Name);
@@ -78,26 +49,20 @@ public class AccountListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccountsExist()
     {
         // Arrange
-        _appConfigService.GetAppConfigAccounts(
+        Service.GetAppConfigAccounts(
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<AppConfigurationAccount>([], false));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub123"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.AccountListCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.AccountListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Accounts);
     }
 
@@ -105,17 +70,11 @@ public class AccountListCommandTests
     public async Task ExecuteAsync_Returns500_WhenServiceThrowsException()
     {
         // Arrange
-        _appConfigService.GetAppConfigAccounts(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub123"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -126,7 +85,7 @@ public class AccountListCommandTests
     public async Task ExecuteAsync_Returns400_WhenSubscriptionIsMissing()
     {
         // Arrange && Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse([]), TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync();
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -137,16 +96,30 @@ public class AccountListCommandTests
     public async Task ExecuteAsync_Returns503_WhenServiceIsUnavailable()
     {
         // Arrange
-        _appConfigService.GetAppConfigAccounts(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new HttpRequestException("Service Unavailable", null, System.Net.HttpStatusCode.ServiceUnavailable));
-
-        var args = _commandDefinition.Parse(["--subscription", "sub123"]);
+        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("Service Unavailable", null, HttpStatusCode.ServiceUnavailable));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);
         Assert.Contains("Service Unavailable", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithResourceGroup_ForwardsResourceGroupToService()
+    {
+        // Arrange
+        const string resourceGroup = "test-rg";
+        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<AppConfigurationAccount>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", resourceGroup);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).GetAppConfigAccounts(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 }

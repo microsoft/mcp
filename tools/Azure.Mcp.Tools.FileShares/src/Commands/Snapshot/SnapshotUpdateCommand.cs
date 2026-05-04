@@ -1,42 +1,31 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.Snapshot;
 using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
+[CommandMetadata(
+    Id = "b5c6d7e8-f9a0-4b1c-2d3e-4f5a6b7c8d9e",
+    Name = "update",
+    Title = "Update File Share Snapshot",
+    Description = "Update properties and metadata of an Azure managed file share snapshot, such as tags or retention policies.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger, IFileSharesService service)
     : BaseFileSharesCommand<SnapshotUpdateOptions>(logger, service)
 {
-    private const string CommandTitle = "Update File Share Snapshot";
-
-    public override string Id => "b5c6d7e8-f9a0-4b1c-2d3e-4f5a6b7c8d9e";
-    public override string Name => "update";
-    public override string Description => "Update properties and metadata of an Azure managed file share snapshot, such as tags or retention policies.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -95,8 +84,7 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            var result = new SnapshotUpdateCommandResult(snapshot);
-            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.SnapshotUpdateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(snapshot), FileSharesJsonContext.Default.SnapshotUpdateCommandResult);
 
             _logger.LogInformation("Snapshot updated successfully. SnapshotName: {SnapshotName}", options.SnapshotName);
         }
@@ -109,5 +97,5 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
         return context.Response;
     }
 
-    internal record SnapshotUpdateCommandResult([property: JsonPropertyName("snapshot")] FileShareSnapshotInfo Snapshot);
+    internal record SnapshotUpdateCommandResult(FileShareSnapshotInfo Snapshot);
 }

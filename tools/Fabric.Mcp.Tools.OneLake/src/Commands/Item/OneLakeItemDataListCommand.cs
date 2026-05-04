@@ -1,45 +1,38 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Net;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 
 /// <summary>
 /// Command to list OneLake items in a workspace using the OneLake DFS (Data Lake File System) API.
 /// </summary>
+[CommandMetadata(
+    Id = "8925d0c4-becf-4b5a-8af1-3e998c1058ec",
+    Name = "list_items_dfs",
+    Title = "List OneLake Items (Data API)",
+    Description = "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) data API.",
+    Destructive = false,
+    Idempotent = true,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false)]
 public sealed class OneLakeItemDataListCommand(
     ILogger<OneLakeItemDataListCommand> logger,
     IOneLakeService oneLakeService) : GlobalCommand<OneLakeItemDataListOptions>()
 {
     private readonly ILogger<OneLakeItemDataListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "8925d0c4-becf-4b5a-8af1-3e998c1058ec";
-    public override string Name => "list-data";
-    public override string Title => "List OneLake Items (Data API)";
-    public override string Description => "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) data API.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -48,6 +41,16 @@ public sealed class OneLakeItemDataListCommand(
         command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Recursive);
         command.Options.Add(FabricOptionDefinitions.ContinuationToken);
+        command.Validators.Add(result =>
+        {
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+
+            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
+            {
+                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
+            }
+        });
     }
 
     protected override OneLakeItemDataListOptions BindOptions(ParseResult parseResult)
@@ -73,11 +76,6 @@ public sealed class OneLakeItemDataListCommand(
         var options = BindOptions(parseResult);
         try
         {
-            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
-            {
-                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
-            }
-
             var jsonResponse = await _oneLakeService.ListOneLakeItemsDfsJsonAsync(
                 options.WorkspaceId,
                 recursive: options.Recursive,
@@ -89,7 +87,7 @@ public sealed class OneLakeItemDataListCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing OneLake items (data API) in workspace {WorkspaceId}. Options: {@Options}", options.WorkspaceId, options);
+            _logger.LogError(ex, "Error listing OneLake items (data API) in workspace {WorkspaceId}.", options.WorkspaceId);
             HandleException(context, ex);
         }
 

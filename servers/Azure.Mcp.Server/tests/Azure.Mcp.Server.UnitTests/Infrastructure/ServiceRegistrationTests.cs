@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Areas.Server.Commands;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
 using Xunit;
 
 namespace Azure.Mcp.Server.UnitTests.Infrastructure;

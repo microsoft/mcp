@@ -1,46 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.UnitTests.Server;
 
-public class ServerDeleteCommandTests
+public class ServerDeleteCommandTests : CommandUnitTestsBase<ServerDeleteCommand, ISqlService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ISqlService _service;
-    private readonly ILogger<ServerDeleteCommand> _logger;
-    private readonly ServerDeleteCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public ServerDeleteCommandTests()
-    {
-        _service = Substitute.For<ISqlService>();
-        _logger = Substitute.For<ILogger<ServerDeleteCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("delete", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -58,7 +35,7 @@ public class ServerDeleteCommandTests
         // Arrange
         if (shouldSucceed && args.Contains("--force"))
         {
-            _service.DeleteServerAsync(
+            Service.DeleteServerAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -67,10 +44,8 @@ public class ServerDeleteCommandTests
                 .Returns(true);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -86,11 +61,11 @@ public class ServerDeleteCommandTests
     [Fact]
     public async Task ExecuteAsync_WhenForceNotSpecified_ReturnsWarning()
     {
-        // Arrange
-        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver");
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -103,7 +78,7 @@ public class ServerDeleteCommandTests
     public async Task ExecuteAsync_WhenServerDeletedSuccessfully_ReturnsSuccess()
     {
         // Arrange
-        _service.DeleteServerAsync(
+        Service.DeleteServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -111,22 +86,24 @@ public class ServerDeleteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(true);
 
-        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --force");
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver",
+            "--force");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        await _service.Received(1).DeleteServerAsync("testserver", "rg", "sub", Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).DeleteServerAsync("testserver", "rg", "sub", Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_WhenServerNotFound_Returns404()
     {
         // Arrange
-        _service.DeleteServerAsync(
+        Service.DeleteServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -134,10 +111,12 @@ public class ServerDeleteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(false);
 
-        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --force");
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver",
+            "--force");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -148,18 +127,20 @@ public class ServerDeleteCommandTests
     public async Task ExecuteAsync_WhenServiceThrowsException_ReturnsErrorResponse()
     {
         // Arrange
-        _service.DeleteServerAsync(
+        Service.DeleteServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<bool>(new Exception("Test error")));
-
-        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --force");
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver",
+            "--force");
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -172,18 +153,20 @@ public class ServerDeleteCommandTests
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.NotFound, "Not Found: Server not found");
 
-        _service.DeleteServerAsync(
+        Service.DeleteServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<bool>(requestException));
-
-        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --force");
+            .ThrowsAsync(requestException);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver",
+            "--force");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -196,18 +179,20 @@ public class ServerDeleteCommandTests
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Forbidden: Insufficient permissions");
 
-        _service.DeleteServerAsync(
+        Service.DeleteServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<bool>(requestException));
-
-        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --force");
+            .ThrowsAsync(requestException);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver",
+            "--force");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);

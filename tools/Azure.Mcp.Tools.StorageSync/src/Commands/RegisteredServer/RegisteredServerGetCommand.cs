@@ -3,42 +3,32 @@
 
 using System.Net;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Models;
 using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
 
+[CommandMetadata(
+    Id = "fe3b07c3-9a11-465e-bfb6-6461b85b2e52",
+    Name = "get",
+    Title = "Get Registered Server",
+    Description = "List all registered servers in a Storage Sync service or retrieve details about a specific registered server. Returns server properties including server ID, registration status, agent version, OS version, and last heartbeat. Use --server-id for a specific server.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<RegisteredServerGetOptions>
 {
-    private const string CommandTitle = "Get Registered Server";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<RegisteredServerGetCommand> _logger = logger;
-
-    public override string Id => "fe3b07c3-9a11-465e-bfb6-6461b85b2e52";
-
-    public override string Name => "get";
-
-    public override string Description => "List all registered servers in a Storage Sync service or retrieve details about a specific registered server. Returns server properties including server ID, registration status, agent version, OS version, and last heartbeat. Use --server-id for a specific server.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -90,8 +80,7 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
                     return context.Response;
                 }
 
-                var singleResult = new RegisteredServerGetCommandResult([server]);
-                context.Response.Results = ResponseResult.Create(singleResult, StorageSyncJsonContext.Default.RegisteredServerGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new([server]), StorageSyncJsonContext.Default.RegisteredServerGetCommandResult);
             }
             else
             {
@@ -107,8 +96,7 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
                     options.RetryPolicy,
                     cancellationToken);
 
-                var results = new RegisteredServerGetCommandResult(servers ?? []);
-                context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.RegisteredServerGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(servers ?? []), StorageSyncJsonContext.Default.RegisteredServerGetCommandResult);
             }
         }
         catch (Exception ex)

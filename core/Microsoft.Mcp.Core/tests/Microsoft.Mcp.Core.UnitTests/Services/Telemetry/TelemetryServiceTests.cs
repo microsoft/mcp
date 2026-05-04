@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Runtime.InteropServices;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
-using static Azure.Mcp.Core.Services.Azure.Authentication.AzureCloudConfiguration;
+using static Microsoft.Mcp.Core.Services.Azure.Authentication.AzureCloudConfiguration;
 
 namespace Microsoft.Mcp.Core.UnitTests.Services.Telemetry;
 
@@ -321,7 +321,6 @@ public class TelemetryServiceTests
     [InlineData("AzureCloud", AzureCloud.AzurePublicCloud)]
     [InlineData("AzurePublicCloud", AzureCloud.AzurePublicCloud)]
     [InlineData("Public", AzureCloud.AzurePublicCloud)]
-    [InlineData("https://custom.login.microsoftonline.com", AzureCloud.AzurePublicCloud)]
     [InlineData("AzureChinaCloud", AzureCloud.AzureChinaCloud)]
     [InlineData("China", AzureCloud.AzureChinaCloud)]
     [InlineData("AzureUSGovernmentCloud", AzureCloud.AzureUSGovernmentCloud)]
@@ -392,7 +391,7 @@ public class TelemetryServiceTests
             RootCommandGroupName = "azmcp"
         };
         var operationName = "an-activity-id";
-        var mockOptions = Options.Create(configuration);
+        var mockOptions = Microsoft.Extensions.Options.Options.Create(configuration);
 
         var mockConfiguration = Substitute.For<IConfiguration>();
         mockConfiguration[configName].Returns(cloud);
@@ -424,7 +423,6 @@ public class TelemetryServiceTests
             ("AzureCloud", AzureCloud.AzurePublicCloud),
             ("AzurePublicCloud", AzureCloud.AzurePublicCloud),
             ("Public", AzureCloud.AzurePublicCloud),
-            ("https://custom.login.microsoftonline.com", AzureCloud.AzurePublicCloud),
             ("AzureChinaCloud", AzureCloud.AzureChinaCloud),
             ("China", AzureCloud.AzureChinaCloud),
             ("AzureUSGovernmentCloud", AzureCloud.AzureUSGovernmentCloud),

@@ -3,7 +3,7 @@
 
 using System.Reflection;
 
-namespace Azure.Mcp.Core.Helpers;
+namespace Microsoft.Mcp.Core.Helpers;
 
 /// <summary>
 /// Utility methods for working with assembly metadata.

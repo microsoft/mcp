@@ -1,45 +1,40 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
-public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCommand> logger)
-    : BaseLoadTestingCommand<TestRunCreateOrUpdateOptions>
-{
-    private const string _commandTitle = "Test Run Create or Update";
-    private readonly ILogger<TestRunCreateOrUpdateCommand> _logger = logger;
-    public override string Id => "0e3c8f2c-57ce-49c0-bff4-27c9573e7049";
-    public override string Name => "createorupdate";
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "0e3c8f2c-57ce-49c0-bff4-27c9573e7049",
+    Name = "createorupdate",
+    Title = "Test Run Create or Update",
+    Description = """
         Create or update a load test run execution.
         Creates a new test run for a specified test in the load testing resource, or updates metadata and display properties of an existing test run.
         When creating: Triggers a new test run execution based on the existing test configuration. Use testrun ID to specify the new run identifier. Create operations are NOT idempotent - each call starts a new test run with unique timestamps and execution state.
         When updating: Modifies descriptive information (display name, description) of a completed or in-progress test run for better organization and documentation. Update operations are idempotent - repeated calls with same values produce the same result.
         This does not modify the test plan configuration or create a new test/resource - only manages test run executions.
-        """;
-    public override string Title => _commandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCommand> logger, ILoadTestingService loadTestingService)
+    : BaseLoadTestingCommand<TestRunCreateOrUpdateOptions>
+{
+    private readonly ILogger<TestRunCreateOrUpdateCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -75,10 +70,8 @@ public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCo
 
         try
         {
-            // Get the appropriate service from DI
-            var service = context.GetService<ILoadTestingService>();
             // Call service operation(s)
-            var results = await service.CreateOrUpdateLoadTestRunAsync(
+            var results = await _loadTestingService.CreateOrUpdateLoadTestRunAsync(
                 options.Subscription!,
                 options.TestResourceName!,
                 options.TestId!,

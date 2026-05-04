@@ -4,7 +4,7 @@
 using Azure.Core;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Azure.Mcp.Core.Services.Azure.Authentication;
+namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
 /// Providers instances of <see cref="TokenCredential"/> appropriate for the current environment.

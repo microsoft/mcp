@@ -4,11 +4,6 @@
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Net;
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Logging;
-using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -27,7 +22,12 @@ using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Logging;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
@@ -41,9 +41,15 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 /// This command is hidden from the main command list.
 /// </summary>
 [HiddenCommand]
+[CommandMetadata(
+    Id = "9953ff62-e3d7-4bdf-9b70-d569e54e3df1",
+    Name = "start",
+    Title = "Start MCP Server",
+    Description = "Starts Azure MCP Server.",
+    Destructive = false,
+    ReadOnly = true)]
 public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 {
-    private const string CommandTitle = "Start MCP Server";
     private static readonly string[] StdioHostBuilderArgs =
     [
         $"--contentRoot={AppContext.BaseDirectory}",
@@ -55,31 +61,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         ContentRootPath = AppContext.BaseDirectory
     };
 
-    /// <summary>
-    /// Gets the name of the command.
-    /// </summary>
-    public override string Name => "start";
-
-    /// <summary>
-    /// Gets the description of the command.
-    /// </summary>
-    public override string Description => "Starts Azure MCP Server.";
-
-    /// <summary>
-    /// Gets the title of the command.
-    /// </summary>
-    public override string Title => CommandTitle;
-
-    /// <summary>
-    /// Gets the metadata for this command.
-    /// </summary>
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
-
     public static Action<IServiceCollection> ConfigureServices { get; set; } = _ => { };
 
     public static Func<IServiceProvider, Task> InitializeServicesAsync { get; set; } = _ => Task.CompletedTask;
-
-    public override string Id => "9953ff62-e3d7-4bdf-9b70-d569e54e3df1";
 
     /// <summary>
     /// Registers command options for the service start command.
@@ -98,16 +82,18 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableElicitation);
         command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
         command.Options.Add(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir);
+        command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableRetryLimits);
         command.Options.Add(ServiceOptionDefinitions.Cloud);
+        command.Options.Add(ServiceOptionDefinitions.DisableCaching);
         command.Validators.Add(commandResult =>
         {
             string transport = ResolveTransport(commandResult);
-            bool httpIncomingAuthDisabled = commandResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
+            bool httpIncomingAuthDisabled = commandResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
             ValidateMode(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode), commandResult);
             ValidateTransportConfiguration(transport, httpIncomingAuthDisabled, commandResult);
             ValidateNamespaceAndToolMutualExclusion(
-                commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
-                commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
+                commandResult.GetValueOrDefault(ServiceOptionDefinitions.Namespace),
+                commandResult.GetValueOrDefault(ServiceOptionDefinitions.Tool),
                 commandResult);
             ValidateOutgoingAuthStrategy(commandResult);
             ValidateSupportLoggingFolder(commandResult);
@@ -120,7 +106,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <param name="commandResult">Command result to update on failure.</param>
     private static void ValidateSupportLoggingFolder(CommandResult commandResult)
     {
-        string? folderPath = commandResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name);
+        string? folderPath = commandResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir);
 
         if (folderPath is null)
         {
@@ -153,8 +139,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>A configured ServiceStartOptions instance.</returns>
     protected override ServiceStartOptions BindOptions(ParseResult parseResult)
     {
-        var mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name);
-        var tools = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name);
+        var mode = parseResult.GetValueOrDefault(ServiceOptionDefinitions.Mode);
+        var tools = parseResult.GetValueOrDefault(ServiceOptionDefinitions.Tool);
 
         // When --tool switch is used, automatically change the mode to "all"
         if (tools != null && tools.Length > 0)
@@ -167,16 +153,18 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         var options = new ServiceStartOptions
         {
             Transport = ResolveTransport(parseResult),
-            Namespace = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
+            Namespace = parseResult.GetValueOrDefault(ServiceOptionDefinitions.Namespace),
             Mode = mode,
             Tool = tools,
-            ReadOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name),
-            Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
-            DangerouslyDisableHttpIncomingAuth = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth.Name),
-            DangerouslyDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableElicitation.Name),
+            ReadOnly = parseResult.GetValueOrDefault(ServiceOptionDefinitions.ReadOnly),
+            Debug = parseResult.GetValueOrDefault(ServiceOptionDefinitions.Debug),
+            DangerouslyDisableHttpIncomingAuth = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth),
+            DangerouslyDisableElicitation = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyDisableElicitation),
             OutgoingAuthStrategy = outgoingAuthStrategy,
-            SupportLoggingFolder = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name),
-            Cloud = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Cloud.Name)
+            SupportLoggingFolder = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir),
+            DangerouslyDisableRetryLimits = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyDisableRetryLimits),
+            Cloud = parseResult.GetValueOrDefault(ServiceOptionDefinitions.Cloud),
+            DisableCaching = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DisableCaching)
         };
         return options;
     }
@@ -337,12 +325,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <param name="commandResult">Command result to update on failure.</param>
     private static void ValidateOutgoingAuthStrategy(CommandResult commandResult)
     {
-        var outgoingAuthStrategy = commandResult.GetValueOrDefault<OutgoingAuthStrategy>(ServiceOptionDefinitions.OutgoingAuthStrategy.Name);
+        var outgoingAuthStrategy = commandResult.GetValueOrDefault(ServiceOptionDefinitions.OutgoingAuthStrategy);
         if (outgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
         {
 #if ENABLE_HTTP
             string transport = ResolveTransport(commandResult);
-            bool httpIncomingAuthDisabled = commandResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
+            bool httpIncomingAuthDisabled = commandResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
 
             if (transport != TransportTypes.Http || httpIncomingAuthDisabled)
             {
@@ -447,6 +435,11 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 // Configure the outgoing authentication strategy.
                 services.AddSingleIdentityTokenCredentialProvider();
 
+                // Configure Single User CLI Cache for stdio transport here, before ConfigureServices is called.
+                // ConfigureServices will also add in Single User CLI Cache tentatively, but this spot knows about
+                // server configurations and will take precedent.
+                services.AddSingleUserCliCacheService(serverOptions.DisableCaching);
+
                 ConfigureServices(services);
                 ConfigureMcpServer(services, serverOptions);
             })
@@ -488,30 +481,41 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             .AddMicrosoftIdentityWebApiAot(
                 options => azureAdSection.Bind(options),
                 JwtBearerDefaults.AuthenticationScheme,
-                null);
-
-        // Configure incoming auth JWT Bearer events for OAuth protected resource metadata.
-        services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
-        {
-            options.Events = new JwtBearerEvents
-            {
-                OnChallenge = context =>
+                jwtOptions =>
                 {
-                    // Add resource_metadata parameter to WWW-Authenticate header
-                    if (!context.Response.HasStarted)
-                    {
-                        HttpRequest request = context.Request;
-                        string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
-                        string resourceMetadataUrl = $"{scheme}://{request.Host}/.well-known/oauth-protected-resource";
+                    // Only disable HTTPS metadata requirement in development environments.
+                    // Production environments should enforce HTTPS for metadata endpoints.
+                    // Note: Azure AD (login.microsoftonline.com) always uses HTTPS regardless of this setting.
+                    jwtOptions.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
 
-                        // Modify the WWW-Authenticate header to include resource_metadata
-                        context.Response.Headers.WWWAuthenticate =
-                            $"Bearer realm=\"{request.Host}\", resource_metadata=\"{resourceMetadataUrl}\"";
-                    }
-                    return Task.CompletedTask;
-                }
-            };
-        });
+                    // Configure JWT Bearer events for OAuth protected resource metadata
+                    jwtOptions.Events = new JwtBearerEvents
+                    {
+                        OnChallenge = context =>
+                        {
+                            // Add resource_metadata parameter to WWW-Authenticate header
+                            if (!context.Response.HasStarted)
+                            {
+                                HttpRequest request = context.Request;
+                                string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
+                                string resourceMetadataUrl = $"{scheme}://{request.Host}/.well-known/oauth-protected-resource";
+
+                                context.Response.StatusCode = 401;
+
+                                var header = $"Bearer realm=\"{request.Host}\", resource_metadata=\"{resourceMetadataUrl}\"";
+                                if (!string.IsNullOrEmpty(context.Error))
+                                    header += $", error=\"{context.Error}\"";
+                                if (!string.IsNullOrEmpty(context.ErrorDescription))
+                                    header += $", error_description=\"{context.ErrorDescription}\"";
+
+                                // Modify the WWW-Authenticate header to include resource_metadata
+                                context.Response.Headers.WWWAuthenticate = header;
+                            }
+                            context.HandleResponse();
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
 
         // Configure authorization policy for MCP access.
         services.AddAuthorizationBuilder()
@@ -542,8 +546,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
 
         // Add a multi-user, HTTP context-aware caching strategy to isolate cache entries.
-        services.AddHttpServiceCacheService();
-
+        services.AddHttpServiceCacheService(serverOptions.DisableCaching);
 
         // Configure non-MCP controllers/endpoints/routes/etc.
         services.AddHealthChecks();
@@ -671,7 +674,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // because we don't yet know what security model we want for this "insecure" mode.
         // As a positive, it gives some isolation locally, but that's not a
         // design strategy we've fully vetted or endorsed.
-        services.AddHttpServiceCacheService();
+        services.AddHttpServiceCacheService(serverOptions.DisableCaching);
 
         WebApplication app = builder.Build();
 
@@ -856,13 +859,13 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     private static OutgoingAuthStrategy ResolveAuthStrategy(ParseResult parseResult)
     {
 #if ENABLE_HTTP
-        var outgoingAuthStrategy = parseResult.GetValueOrDefault<OutgoingAuthStrategy>(ServiceOptionDefinitions.OutgoingAuthStrategy.Name);
+        var outgoingAuthStrategy = parseResult.GetValueOrDefault(ServiceOptionDefinitions.OutgoingAuthStrategy);
         if (outgoingAuthStrategy == OutgoingAuthStrategy.NotSet)
         {
             string transport = ResolveTransport(parseResult);
             if (transport == TransportTypes.Http)
             {
-                bool httpIncomingAuthDisabled = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth.Name);
+                bool httpIncomingAuthDisabled = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
                 return httpIncomingAuthDisabled
                     ? OutgoingAuthStrategy.UseHostingEnvironmentIdentity
                     : OutgoingAuthStrategy.UseOnBehalfOf;
@@ -884,9 +887,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <param name="parseResult">The parsed command line arguments.</param>
     /// <returns>The transport type string (stdio or http).</returns>
     private static string ResolveTransport(ParseResult parseResult)
-    {
-        return parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo;
-    }
+        => parseResult.GetValueOrDefault(ServiceOptionDefinitions.Transport) ?? TransportTypes.StdIo;
 
     /// <summary>
     /// Resolves the transport type from command result, defaulting to STDIO if not specified.
@@ -894,9 +895,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <param name="commandResult">The command result to extract transport from.</param>
     /// <returns>The transport type string (stdio or http).</returns>
     private static string ResolveTransport(CommandResult commandResult)
-    {
-        return commandResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo;
-    }
+        => commandResult.GetValueOrDefault(ServiceOptionDefinitions.Transport) ?? TransportTypes.StdIo;
 
     private static WebApplication UseHttpsRedirectionIfEnabled(WebApplication app)
     {

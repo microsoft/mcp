@@ -3,8 +3,8 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Services.Azure.Models;
 using Azure.Mcp.Tools.Acr.Commands;
+using Microsoft.Mcp.Core.Services.Azure.Models;
 
 namespace Azure.Mcp.Tools.Acr.Services.Models;
 

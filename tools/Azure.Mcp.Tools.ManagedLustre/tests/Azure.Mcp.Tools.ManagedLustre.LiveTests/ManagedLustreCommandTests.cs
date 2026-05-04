@@ -12,7 +12,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.LiveTests;
 
-public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private static readonly string[] _sanitizedHeaders =
     [
@@ -232,7 +233,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
         // Wait for filesystem to be available before creating jobs
         var maxWaitTime = TimeSpan.FromMinutes(30);
-        var pollInterval = TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(30);
+        var pollInterval = PollInterval(30_000);
         var startTime = DateTime.UtcNow;
         var isAvailable = false;
 
@@ -271,7 +272,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         Assert.True(isAvailable, $"Filesystem '{fsName}' did not reach 'Succeeded' provisioning state within {maxWaitTime.TotalMinutes} minutes.");
 
         // Wait for filesystem to stabilize before creating jobs
-        await Task.Delay(TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
+        await Task.Delay(PollInterval(15_000), TestContext.Current.CancellationToken);
 
         // Test autoimport job lifecycle
         var autoimportJobNameStr = $"autoimport-{fsName}";
@@ -336,7 +337,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         Assert.Contains(autoimportJobNameStr, autoimportJobText);
 
         // Wait 15 seconds to cancel auto import job
-        await Task.Delay(TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
+        await Task.Delay(PollInterval(15_000), TestContext.Current.CancellationToken);
 
         // Cancel autoimport job
         var autoimportCancelResult = await CallToolAsync(
@@ -373,7 +374,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         Assert.Equal("Deleted", autoimportDeleteStatus.GetString());
 
         // Wait for filesystem to stabilize after deleting import job and before creating export job
-        await Task.Delay(TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
+        await Task.Delay(PollInterval(15_000), TestContext.Current.CancellationToken);
 
         // Test autoexport job lifecycle.
         var autoexportJobNameStr = $"autoexport-{fsName}";
@@ -436,7 +437,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         Assert.Contains(autoexportJobNameStr, autoexportJobText);
 
         // Wait 15 seconds to cancel auto export job.
-        await Task.Delay(TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
+        await Task.Delay(PollInterval(15_000), TestContext.Current.CancellationToken);
         // Cancel autoexport job
         var autoexportCancelResult = await CallToolAsync(
             "managedlustre_fs_blob_autoexport_cancel",
@@ -472,7 +473,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         Assert.Equal("Deleted", autoexportDeleteStatus.GetString());
 
         // Wait for filesystem to stabilize after deleting autoexport job and before creating import job
-        await Task.Delay(TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
+        await Task.Delay(PollInterval(15_000), TestContext.Current.CancellationToken);
 
         // Test import job lifecycle
         var importJobNameStr = $"import-{fsName}";

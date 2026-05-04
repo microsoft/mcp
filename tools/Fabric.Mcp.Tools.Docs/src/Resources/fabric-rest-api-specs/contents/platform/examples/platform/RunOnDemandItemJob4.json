@@ -1,0 +1,32 @@
+{
+    "parameters": {
+        "workspaceId": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1",
+        "itemId": "dddddddd-9999-0000-1111-eeeeeeeeeeee",
+        "jobType": "Execute",
+        "runOnDemandItemJobRequest": {
+            "executionData": {
+                "executeOption": "ApplyChangesIfNeeded"
+            },
+            "parameters": [
+                {
+                    "name": "Threshold",
+                    "value": "start",
+                    "type": "Automatic"
+                },
+                {
+                    "name": "OrderKey",
+                    "value": 25,
+                    "type": "Automatic"
+                }
+            ]
+        }
+    },
+    "responses": {
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/workspaces/a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1/items/dddddddd-9999-0000-1111-eeeeeeeeeeee/jobs/instances?jobType=Execute",
+                "Retry-After": 60
+            }
+        }
+    }
+}

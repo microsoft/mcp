@@ -1,5 +1,4 @@
 using Azure.Mcp.Tools.Cosmos.Validation;
-using Microsoft.Mcp.Core.Commands;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.UnitTests;
@@ -26,7 +25,7 @@ public class CosmosQueryValidatorTests
     [InlineData("select * from c where c.name = 'test'")] // lowercase
     public void EnsureReadOnlySelect_ValidQueries_ShouldPass(string query)
     {
-        CosmosQueryValidator.EnsureReadOnlySelect(query);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Theory]
@@ -34,8 +33,7 @@ public class CosmosQueryValidatorTests
     [InlineData("   ")]
     public void EnsureReadOnlySelect_EmptyQuery_ShouldThrow(string query)
     {
-        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.Contains("empty", ex.Message.ToLowerInvariant());
+        Assert.Contains("empty", CosmosQueryValidator.EnsureReadOnlySelect(query), StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -46,8 +44,7 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_NonSelectQuery_ShouldThrow(string query)
     {
         // These don't start with SELECT, so they're rejected
-        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.Contains("select", ex.Message.ToLowerInvariant());
+        Assert.Contains("select", CosmosQueryValidator.EnsureReadOnlySelect(query), StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -55,7 +52,7 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_UnionQueries_ShouldPass(string query)
     {
         // UNION is not blocked since Cosmos SQL doesn't support it - Cosmos DB will reject at execution
-        CosmosQueryValidator.EnsureReadOnlySelect(query);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Theory]
@@ -63,8 +60,7 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_StackedStatementsWithDML_ShouldThrow(string query)
     {
         // This fails because of multiple statements (semicolon)
-        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.Contains("multiple", ex.Message.ToLowerInvariant());
+        Assert.Contains("multiple", CosmosQueryValidator.EnsureReadOnlySelect(query), StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -72,8 +68,7 @@ public class CosmosQueryValidatorTests
     [InlineData("SELECT * FROM c;DROP TABLE x")]
     public void EnsureReadOnlySelect_StackedStatements_ShouldThrow(string query)
     {
-        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.Contains("multiple", ex.Message.ToLowerInvariant());
+        Assert.Contains("multiple", CosmosQueryValidator.EnsureReadOnlySelect(query), StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -81,34 +76,53 @@ public class CosmosQueryValidatorTests
     [InlineData("/* block comment */ SELECT * FROM c")] // has comments which are blocked
     public void EnsureReadOnlySelect_CommentsPresent_ShouldThrow(string query)
     {
-        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.True(ex.Message.Contains("Comments", StringComparison.OrdinalIgnoreCase) ||
-                   ex.Message.Contains("select", StringComparison.OrdinalIgnoreCase));
+        var message = CosmosQueryValidator.EnsureReadOnlySelect(query);
+        Assert.NotNull(message);
+        Assert.True(message.Contains("Comments", StringComparison.OrdinalIgnoreCase) ||
+                   message.Contains("select", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
     public void EnsureReadOnlySelect_LongQuery_ShouldThrow()
     {
         var longQuery = "SELECT * FROM c WHERE c.x = '" + new string('x', 6000) + "'";
-        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(longQuery));
-        Assert.Contains("exceeds", ex.Message.ToLowerInvariant());
+        Assert.Contains("exceeds", CosmosQueryValidator.EnsureReadOnlySelect(longQuery), StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
     [InlineData(null)]
     public void EnsureReadOnlySelect_NullQuery_ShouldThrow(string? query)
     {
-        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.Contains("empty", ex.Message.ToLowerInvariant());
+        Assert.Contains("empty", CosmosQueryValidator.EnsureReadOnlySelect(query), StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
     [InlineData("SELECT * FROM c WHERE c.name = 'test' OR 1=1")]
     [InlineData("SELECT * FROM c WHERE c.name = 'x' OR '1'='1'")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR 2=2")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR a=a")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR 1 = 1")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR '2'='2'")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR 'a'='a'")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR 99=99")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' or true")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR TRUE")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR 'anything'='anything'")]
     public void EnsureReadOnlySelect_SqlInjectionTautologies_ShouldThrow(string query)
     {
-        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.Contains("tautology", ex.Message.ToLowerInvariant());
+        Assert.Contains("tautology", CosmosQueryValidator.EnsureReadOnlySelect(query), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("SELECT * FROM c WHERE c.name = 'contains or 1=1 inside string'")]
+    [InlineData("SELECT * FROM c WHERE c.note = 'or true is fine in a string'")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'a' OR c.status = 'b'")] // different literals are not tautologies
+    [InlineData("SELECT * FROM c WHERE c.x = 1 OR 'a'='b'")] // non-tautology: different string constants
+    [InlineData("SELECT * FROM c WHERE c.x = 1 OR 1=2")] // non-tautology: different numeric constants
+    public void EnsureReadOnlySelect_TautologyPatternsInsideStrings_ShouldPass(string query)
+    {
+        // Tautology-like text inside string literals should not trigger false positives
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Theory]
@@ -117,15 +131,14 @@ public class CosmosQueryValidatorTests
     [InlineData("SELECT * FROM c; INSERT INTO d VALUES(1)")]
     public void EnsureReadOnlySelect_MultipleStatements_ShouldThrow(string query)
     {
-        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.Contains("multiple", ex.Message.ToLowerInvariant());
+        Assert.Contains("multiple", CosmosQueryValidator.EnsureReadOnlySelect(query), StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
     [InlineData("SELECT * FROM c;")]  // trailing semicolon should be allowed
     public void EnsureReadOnlySelect_TrailingSemicolon_ShouldPass(string query)
     {
-        CosmosQueryValidator.EnsureReadOnlySelect(query);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Theory]
@@ -135,7 +148,7 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_KeywordsInStrings_ShouldPass(string query)
     {
         // Keywords inside quoted strings should not trigger validation errors
-        CosmosQueryValidator.EnsureReadOnlySelect(query);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Theory]
@@ -145,7 +158,7 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_CustomIdentifiers_ShouldPass(string query)
     {
         // Custom table names, column names, and identifiers should be allowed
-        CosmosQueryValidator.EnsureReadOnlySelect(query);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Theory]
@@ -154,7 +167,7 @@ public class CosmosQueryValidatorTests
     [InlineData("SELECT * FROM c WHERE c.age NOT BETWEEN 25 AND 35")]
     public void EnsureReadOnlySelect_ComplexWhereConditions_ShouldPass(string query)
     {
-        CosmosQueryValidator.EnsureReadOnlySelect(query);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Theory]
@@ -163,8 +176,7 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_StoredProcedureExecution_ShouldThrow(string query)
     {
         // These don't start with SELECT or attempt to execute stored procedures
-        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.True(ex.Message.Contains("select", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains("select", CosmosQueryValidator.EnsureReadOnlySelect(query), StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -173,7 +185,7 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_SetOperations_ShouldPass(string query)
     {
         // EXCEPT and INTERSECT are not blocked - Cosmos DB will reject them at execution if unsupported
-        CosmosQueryValidator.EnsureReadOnlySelect(query);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Theory]
@@ -182,7 +194,7 @@ public class CosmosQueryValidatorTests
     [InlineData("\tSELECT * FROM c\t")]    // tabs
     public void EnsureReadOnlySelect_WhitespaceVariations_ShouldPass(string query)
     {
-        CosmosQueryValidator.EnsureReadOnlySelect(query);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Theory]
@@ -193,7 +205,7 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_CosmosSpecificSyntax_ShouldPassWithCustomIdentifiers(string query)
     {
         // Cosmos-specific functions and syntax should work when they're treated as identifiers
-        CosmosQueryValidator.EnsureReadOnlySelect(query);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Theory]
@@ -202,7 +214,7 @@ public class CosmosQueryValidatorTests
     [InlineData("SELECT * FROM c WHERE c.json = '{\"key\": \"DROP TABLE\"}'")] // JSON with keywords
     public void EnsureReadOnlySelect_StringLiteralsWithSpecialContent_ShouldPass(string query)
     {
-        CosmosQueryValidator.EnsureReadOnlySelect(query);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Theory]
@@ -216,8 +228,7 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_DDLStatements_ShouldThrow(string query)
     {
         // These don't start with SELECT
-        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.Contains("select", ex.Message.ToLowerInvariant());
+        Assert.Contains("select", CosmosQueryValidator.EnsureReadOnlySelect(query), StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -226,7 +237,7 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_UnrecognizedKeywords_ShouldPassAsIdentifiers(string query)
     {
         // Keywords not in KnownCosmosKeywords are treated as identifiers and allowed
-        CosmosQueryValidator.EnsureReadOnlySelect(query);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Theory]
@@ -235,7 +246,7 @@ public class CosmosQueryValidatorTests
     [InlineData("SELECT * FROM c WHERE c.scientific = 1.23E-4")] // scientific notation
     public void EnsureReadOnlySelect_NumericLiterals_ShouldPass(string query)
     {
-        CosmosQueryValidator.EnsureReadOnlySelect(query);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Fact]
@@ -243,7 +254,7 @@ public class CosmosQueryValidatorTests
     {
         // Query that's just under the length limit
         var nearLimitQuery = "SELECT * FROM c WHERE c.description = '" + new string('x', 4900) + "'";
-        CosmosQueryValidator.EnsureReadOnlySelect(nearLimitQuery);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(nearLimitQuery));
     }
 
     [Theory]
@@ -252,15 +263,14 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_IncompleteButValidSelectQueries_ShouldPass(string query)
     {
         // These start with SELECT so they pass basic validation (Cosmos DB will reject them at execution)
-        CosmosQueryValidator.EnsureReadOnlySelect(query);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Theory]
     [InlineData("FROM c")]   // missing SELECT
     public void EnsureReadOnlySelect_NonSelectQueries_ShouldThrow(string query)
     {
-        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.Contains("select", ex.Message.ToLowerInvariant());
+        Assert.Contains("select", CosmosQueryValidator.EnsureReadOnlySelect(query), StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -271,7 +281,7 @@ public class CosmosQueryValidatorTests
         var potentialReDoSPattern = "SELECT * FROM c WHERE c.field = '" + new string('a', 1000) + new string('b', 1000) + "'";
 
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        CosmosQueryValidator.EnsureReadOnlySelect(potentialReDoSPattern);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(potentialReDoSPattern));
         stopwatch.Stop();
 
         // Should complete quickly (well under 5 seconds) due to regex timeout protection
@@ -286,8 +296,7 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_StoredProcedureKeywords_ShouldThrow(string query)
     {
         // Attempts to use stored procedure execution keywords should be blocked
-        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.Contains("stored procedure", ex.Message.ToLowerInvariant());
+        Assert.Contains("stored procedure", CosmosQueryValidator.EnsureReadOnlySelect(query), StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -301,7 +310,7 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_StoredProcedureKeywordsInStringsOrIdentifiers_ShouldPass(string query)
     {
         // Keywords inside quoted strings or as part of legitimate identifiers should not trigger validation errors
-        CosmosQueryValidator.EnsureReadOnlySelect(query);
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Theory]
@@ -311,7 +320,6 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_StoredProcedureKeywordsAsIdentifiers_ShouldThrow(string query)
     {
         // Keywords used as identifiers (outside of strings) should be blocked
-        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.Contains("stored procedure", ex.Message.ToLowerInvariant());
+        Assert.Contains("stored procedure", CosmosQueryValidator.EnsureReadOnlySelect(query), StringComparison.OrdinalIgnoreCase);
     }
 }

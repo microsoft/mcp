@@ -1,49 +1,39 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 
-public sealed class ImportJobDeleteCommand(ILogger<ImportJobDeleteCommand> logger)
-    : BaseManagedLustreCommand<ImportJobDeleteOptions>(logger)
-{
-    private const string CommandTitle = "Delete Azure Managed Lustre Import Job";
-
-    private new readonly ILogger<ImportJobDeleteCommand> _logger = logger;
-
-    public override string Id => "e4i6f8h0-2g5b-7e9f-1h3d-5g7b9e1g3f5h";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "e4i6f8h0-2g5b-7e9f-1h3d-5g7b9e1g3f5h",
+    Name = "delete",
+    Title = "Delete Azure Managed Lustre Import Job",
+    Description = """
         Deletes an import job for an Azure Managed Lustre filesystem. This removes the job record and history. The job must be completed or cancelled before it can be deleted.
         Required options:
         - filesystem-name: The name of the AMLFS filesystem
         - job-name: Name of the import job to delete
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ImportJobDeleteCommand(IManagedLustreService service, ILogger<ImportJobDeleteCommand> logger)
+    : BaseManagedLustreCommand<ImportJobDeleteOptions>(logger)
+{
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IManagedLustreService _service = service;
+    private new readonly ILogger<ImportJobDeleteCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {
@@ -73,9 +63,8 @@ public sealed class ImportJobDeleteCommand(ILogger<ImportJobDeleteCommand> logge
 
         try
         {
-            var svc = context.GetService<IManagedLustreService>();
 
-            await svc.DeleteImportJobAsync(
+            await _service.DeleteImportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,
@@ -88,8 +77,8 @@ public sealed class ImportJobDeleteCommand(ILogger<ImportJobDeleteCommand> logge
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting import job {JobName} for AMLFS filesystem {FileSystem}. Options: {@Options}",
-                options.JobName, options.FileSystemName, options);
+            _logger.LogError(ex, "Error deleting import job {JobName} for AMLFS filesystem {FileSystem}.",
+                options.JobName, options.FileSystemName);
             HandleException(context, ex);
         }
 

@@ -5,10 +5,10 @@ using System.Text;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Identity.Broker;
-using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
-namespace Azure.Mcp.Core.Services.Azure.Authentication;
+namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
 /// A custom token credential that chains multiple Azure credentials with a broker-enabled instance of
@@ -74,9 +74,10 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// </para>
 /// <para>
 /// The <c>forceBrowserFallback</c> constructor parameter lets callers (e.g. registry server OAuth)
-/// request interactive browser as a last resort, but it is subject to the same restrictions:
-/// any explicit AZURE_TOKEN_CREDENTIALS value — including "prod" and named credentials — is
-/// always honored and prevents the browser popup even when <c>forceBrowserFallback</c> is <c>true</c>.
+/// request interactive browser as a last resort. It overrides most pinned credential modes, but
+/// AZURE_TOKEN_CREDENTIALS="prod" is always honored and prevents the browser popup even when
+/// <c>forceBrowserFallback</c> is <c>true</c>. Prod signals a non-interactive environment
+/// (CI, Managed Identity, Workload Identity) where a browser popup must never appear.
 /// </para>
 /// <para>
 /// For User-Assigned Managed Identity, set the AZURE_CLIENT_ID environment variable to the client ID of the managed identity.
@@ -129,9 +130,8 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         bool hasExplicitCredentialSetting = !string.IsNullOrEmpty(tokenCredentials);
 
 #if DEBUG
-        bool isPlaybackMode = string.Equals(tokenCredentials, "PlaybackTokenCredential", StringComparison.OrdinalIgnoreCase);
         // Short-circuit for playback to avoid any real auth & interactive prompts.
-        if (isPlaybackMode)
+        if (EnvironmentHelpers.IsPlaybackTesting())
         {
             logger?.LogDebug("Playback mode detected: using PlaybackTokenCredential.");
             return new PlaybackTokenCredential();
@@ -185,12 +185,22 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         // is treated as a pinned credential choice — interactive browser must not be injected.
         // Pinned mode: any explicit setting other than "dev" or "InteractiveBrowserCredential" means
         // the caller wants exactly that credential — no interactive popup, even with forceBrowserFallback.
+        bool isProd = tokenCredentials?.Equals("prod", StringComparison.OrdinalIgnoreCase) ?? false;
         bool isPinnedCredentialMode = hasExplicitCredentialSetting && !isDevMode && !isExplicitBrowserMode;
-        bool shouldAddBrowserFallback = !isPinnedCredentialMode || forceBrowserFallback;
+        // forceBrowserFallback overrides any pinned credential mode EXCEPT prod.
+        // prod always suppresses interactive fallback — it signals a non-interactive environment
+        // (CI, Managed Identity, Workload Identity) where a browser popup must never appear.
+        // Other pinned credentials (e.g. AzureCliCredential) may still allow the browser fallback
+        // when the caller explicitly requests it via forceBrowserFallback=true.
+        bool shouldAddBrowserFallback = !isPinnedCredentialMode || (forceBrowserFallback && !isProd);
 
         if (shouldAddBrowserFallback)
         {
-            creds.Add(CreateBrowserCredential(tenantId, authRecord));
+            // Wrap in SafeTokenCredential so that MsalCachePersistenceException
+            // (libsecret missing / no keyring daemon in Docker/headless environments)
+            // is converted to CredentialUnavailableException, allowing the chain to
+            // continue rather than propagating an unhandled exception.
+            creds.Add(new SafeTokenCredential(CreateBrowserCredential(tenantId, authRecord), "InteractiveBrowserCredential"));
         }
 
         // Add DeviceCodeCredential as a fallback for headless environments (Docker, WSL, SSH, CI)

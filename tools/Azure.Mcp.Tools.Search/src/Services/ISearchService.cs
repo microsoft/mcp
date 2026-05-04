@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Search.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Search.Services;
 
@@ -10,6 +10,7 @@ public interface ISearchService
 {
     Task<List<string>> ListServices(
         string subscription,
+        string? resourceGroup = null,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

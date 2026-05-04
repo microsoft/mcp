@@ -220,7 +220,7 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
         var errorDetails = result.Value;
         errorDetails.AssertProperty("message");
         var typeProperty = errorDetails.AssertProperty("type");
-        Assert.Equal("Exception", typeProperty.GetString());
+        Assert.Equal("RequestFailedException", typeProperty.GetString());
     }
 
     [Fact]

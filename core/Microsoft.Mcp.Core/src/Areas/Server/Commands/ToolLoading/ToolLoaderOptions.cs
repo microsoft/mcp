@@ -11,4 +11,10 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// <param name="ReadOnly">Whether the tool loader should operate in read-only mode. When true, only tools marked as read-only will be exposed.</param>
 /// <param name="DangerouslyDisableElicitation">Whether elicitation is disabled (dangerous mode). When true, elicitation will always be treated as accepted.</param>
 /// <param name="Tool">The specific tool names to filter by. When specified, only these tools will be exposed.</param>
-public sealed record ToolLoaderOptions(string[]? Namespace = null, bool ReadOnly = false, bool DangerouslyDisableElicitation = false, string[]? Tool = null);
+/// <param name="IsHttpMode">Whether the tool loader is operating in HTTP mode. When true, tools that require local execution will be filtered out.</param>
+public sealed record ToolLoaderOptions(
+    string[]? Namespace = null,
+    bool ReadOnly = false,
+    bool DangerouslyDisableElicitation = false,
+    string[]? Tool = null,
+    bool IsHttpMode = false);

@@ -10,28 +10,21 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Table.Commands;
 
-public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseStorageCommand<BaseStorageOptions>()
+[CommandMetadata(
+    Id = "1236ad1d-baf1-4b95-8c1d-420637ce08da",
+    Name = "list",
+    Title = "List Tables in Azure Storage",
+    Description = "List all tables in an Azure Storage account. Shows table names for the specified storage account. Required: account, subscription. Optional: tenant. Returns: table names. Do not use this tool for Cosmos DB tables or Kusto/Data Explorer tables.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageService storageService) : BaseStorageCommand<BaseStorageOptions>()
 {
-    private const string CommandTitle = "List Tables in Azure Storage";
     private readonly ILogger<TableListCommand> _logger = logger;
-
-    public override string Id => "1236ad1d-baf1-4b95-8c1d-420637ce08da";
-
-    public override string Name => "list";
-
-    public override string Description => "List all tables in an Azure Storage account. Shows table names for the specified storage account. Required: account, subscription. Optional: tenant. Returns: table names. Do not use this tool for Cosmos DB tables or Kusto/Data Explorer tables.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IStorageService _storageService = storageService;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -44,8 +37,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseSto
 
         try
         {
-            var tablesService = context.GetService<IStorageService>();
-            var tables = await tablesService.ListTables(
+            var tables = await _storageService.ListTables(
                 options.Account!,
                 options.Subscription!,
                 options.Tenant,

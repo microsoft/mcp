@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models;
 using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Speech.Services.Synthesizers;
 
@@ -37,10 +36,16 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(text), text), (nameof(outputFilePath), outputFilePath));
 
+        // Canonicalize and validate the output path (rejects UNC/device paths, traversal)
+        outputFilePath = FilePathValidator.ValidateAndCanonicalize(outputFilePath);
+
         if (string.IsNullOrWhiteSpace(text))
         {
             throw new ArgumentException("Text cannot be empty or whitespace.", nameof(text));
         }
+
+        // Record whether the file already exists so we only clean up files we created
+        bool existedBefore = File.Exists(outputFilePath);
 
         try
         {
@@ -56,7 +61,7 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
                 outputFilePath,
                 audioData.Length);
 
-            return new SynthesisResult
+            return new()
             {
                 FilePath = outputFilePath,
                 AudioSize = audioData.Length,
@@ -69,8 +74,8 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         {
             _logger.LogError(ex, "Error during speech synthesis.");
 
-            // Clean up partial file on error
-            if (File.Exists(outputFilePath))
+            // Clean up only if the file didn't exist before and now does (partial write)
+            if (!existedBefore && File.Exists(outputFilePath))
             {
                 try
                 {
@@ -104,8 +109,7 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         var credential = await GetCredential(cancellationToken);
 
         // Get access token for Cognitive Services with proper scope
-        var tokenRequestContext = new TokenRequestContext([GetCognitiveServicesScope()]);
-        var accessToken = await credential.GetTokenAsync(tokenRequestContext, cancellationToken);
+        var accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
 
         // Convert https endpoint to wss for WebSocket-based TTS
         var wssEndpoint = endpoint
@@ -113,7 +117,7 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
             .TrimEnd('/') + "/tts/cognitiveservices/websocket/v1?traffictype=localmcp";
 
         // Configure Speech SDK with endpoint
-        var config = SpeechConfig.FromEndpoint(new Uri(wssEndpoint));
+        var config = SpeechConfig.FromEndpoint(new(wssEndpoint));
 
         // Set the authorization token
         config.AuthorizationToken = accessToken.Token;

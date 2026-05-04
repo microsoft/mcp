@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Postgres.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Postgres.Commands;
 
@@ -14,15 +15,11 @@ public abstract class BaseServerCommand<
     : BasePostgresCommand<TOptions>(logger) where TOptions : BasePostgresOptions, new()
 
 {
-
-    public override string Name => "server";
-
-    public override string Description =>
-        "Retrieves information about a PostgreSQL server.";
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(PostgresOptionDefinitions.User);
         command.Options.Add(PostgresOptionDefinitions.Server);
     }
 

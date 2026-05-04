@@ -3,42 +3,32 @@
 
 using System.Net;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Models;
 using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.SyncGroup;
 
+[CommandMetadata(
+    Id = "95ce2336-19e6-40fb-a3ea-e2a76772036b",
+    Name = "get",
+    Title = "Get Sync Group",
+    Description = "Get details about a specific sync group or list all sync groups. If --sync-group-name is provided, returns a specific sync group; otherwise, lists all sync groups in the Storage Sync service.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<SyncGroupGetOptions>
 {
-    private const string CommandTitle = "Get Sync Group";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<SyncGroupGetCommand> _logger = logger;
-
-    public override string Id => "95ce2336-19e6-40fb-a3ea-e2a76772036b";
-
-    public override string Name => "get";
-
-    public override string Description => "Get details about a specific sync group or list all sync groups. If --sync-group-name is provided, returns a specific sync group; otherwise, lists all sync groups in the Storage Sync service.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -90,8 +80,7 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
                     return context.Response;
                 }
 
-                var singleResult = new SyncGroupGetCommandResult([syncGroup]);
-                context.Response.Results = ResponseResult.Create(singleResult, StorageSyncJsonContext.Default.SyncGroupGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new([syncGroup]), StorageSyncJsonContext.Default.SyncGroupGetCommandResult);
             }
             else
             {
@@ -107,8 +96,7 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
                     options.RetryPolicy,
                     cancellationToken);
 
-                var results = new SyncGroupGetCommandResult(syncGroups ?? []);
-                context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.SyncGroupGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(syncGroups ?? []), StorageSyncJsonContext.Default.SyncGroupGetCommandResult);
             }
         }
         catch (Exception ex)

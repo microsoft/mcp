@@ -1,15 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.Snapshot;
 using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -18,23 +14,20 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 /// <summary>
 /// Deletes a file share snapshot.
 /// </summary>
+[CommandMetadata(
+    Id = "c7d8e9f0-a1b2-4c3d-4e5f-6a7b8c9d0e1f",
+    Name = "delete",
+    Title = "Delete File Share Snapshot",
+    Description = "Delete a file share snapshot permanently. This operation cannot be undone.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger, IFileSharesService fileSharesService)
     : BaseFileSharesCommand<SnapshotDeleteOptions>(logger, fileSharesService)
 {
-    public override string Id => "c7d8e9f0-a1b2-4c3d-4e5f-6a7b8c9d0e1f";
-    public override string Name => "delete";
-    public override string Description => "Delete a file share snapshot permanently. This operation cannot be undone.";
-    public override string Title => "Delete File Share Snapshot";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -76,7 +69,7 @@ public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new SnapshotDeleteCommandResult(true, options.SnapshotName!),
+                new(true, options.SnapshotName!),
                 FileSharesJsonContext.Default.SnapshotDeleteCommandResult);
 
             _logger.LogInformation(
@@ -85,7 +78,7 @@ public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger,
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting snapshot. Options: {@Options}", options);
+            _logger.LogError(ex, "Error deleting snapshot. SnapshotName: {SnapshotName}, FileShareName: {FileShareName}, ResourceGroup: {ResourceGroup}.", options.SnapshotName, options.FileShareName, options.ResourceGroup);
             HandleException(context, ex);
         }
 

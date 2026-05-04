@@ -3,11 +3,12 @@
 
 using System.Net;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Azure.ResourceManager;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
 
@@ -24,13 +25,14 @@ public class ResourceHealthServiceSsrfValidationTests
     private readonly ITenantService _tenantService;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ResourceHealthService _service;
+    private readonly ILogger<ResourceHealthService> _logger = Substitute.For<ILogger<ResourceHealthService>>();
 
     public ResourceHealthServiceSsrfValidationTests()
     {
         _subscriptionService = Substitute.For<ISubscriptionService>();
         _tenantService = Substitute.For<ITenantService>();
         _httpClientFactory = Substitute.For<IHttpClientFactory>();
-        _service = new ResourceHealthService(_subscriptionService, _tenantService, _httpClientFactory);
+        _service = new ResourceHealthService(_subscriptionService, _tenantService, _httpClientFactory, _logger);
     }
 
     private void SetupMocksForValidRequest(HttpResponseMessage response)
@@ -177,6 +179,28 @@ public class ResourceHealthServiceSsrfValidationTests
         // Assert - valid resource IDs should pass validation and return a result
         Assert.NotNull(result);
         Assert.Equal("Available", result.AvailabilityState);
+    }
+
+    [Fact]
+    public async Task GetAvailabilityStatusAsync_ThrowsUnprocessableEntityException_WhenRequestIsUnprocessable()
+    {
+        var resourceId = "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet";
+        var responseContent = "{\"error\":{\"code\":\"UnsupportedResourceType\",\"message\":\"Resource type is not supported.\"}}";
+        var mockResponse = new HttpResponseMessage(HttpStatusCode.UnprocessableEntity)
+        {
+            Content = new StringContent(responseContent)
+        };
+        SetupMocksForValidRequest(mockResponse);
+
+        var exception = await Assert.ThrowsAsync<ResourceHealthUnprocessableEntityException>(
+            () => _service.GetAvailabilityStatusAsync(resourceId, cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal(resourceId, exception.ResourceId);
+        Assert.Equal("Microsoft.Network/virtualNetworks", exception.ResourceType);
+        Assert.Equal("UnsupportedResourceType", exception.ErrorCode);
+        Assert.Equal("Resource type is not supported.", exception.ErrorDetails);
+        Assert.Equal(responseContent, exception.ResponseContent);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, exception.StatusCode);
     }
 
     private sealed class MockHttpMessageHandler(HttpResponseMessage response) : HttpMessageHandler

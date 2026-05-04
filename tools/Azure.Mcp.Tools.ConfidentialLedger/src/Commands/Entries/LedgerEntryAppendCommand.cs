@@ -2,41 +2,32 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ConfidentialLedger.Options;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
 
+[CommandMetadata(
+    Id = "94fec47b-eb44-4d20-862f-24c284328956",
+    Name = "append",
+    Title = "Append Confidential Ledger Entry",
+    Description = "Appends a tamper-proof entry to a Confidential Ledger instance and returns the transaction identifier.",
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service, ILogger<LedgerEntryAppendCommand> logger)
     : BaseConfidentialLedgerCommand<AppendEntryOptions>
 {
-    private const string CommandTitle = "Append Confidential Ledger Entry";
     private readonly IConfidentialLedgerService _service = service;
     private readonly ILogger<LedgerEntryAppendCommand> _logger = logger;
-    public override string Id => "94fec47b-eb44-4d20-862f-24c284328956";
-
-    public override string Name => "append";
-
-    public override string Description =>
-        "Appends a tamper-proof entry to a Confidential Ledger instance and returns the transaction identifier.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        // Appending creates immutable data - not destructive but not idempotent.
-        OpenWorld = false,
-        Destructive = false,
-        Idempotent = false,
-        ReadOnly = false,
-        Secret = false,
-        LocalRequired = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

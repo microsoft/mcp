@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 

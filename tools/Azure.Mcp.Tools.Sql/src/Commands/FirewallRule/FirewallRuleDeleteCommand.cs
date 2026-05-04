@@ -2,44 +2,36 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.FirewallRule;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 
-public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand> logger)
-    : BaseSqlCommand<FirewallRuleDeleteOptions>(logger)
-{
-    private const string CommandTitle = "Delete SQL Server Firewall Rule";
-
-    public override string Id => "f13fc5d2-7547-480b-a704-36120e2e9b92";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "f13fc5d2-7547-480b-a704-36120e2e9b92",
+    Name = "delete",
+    Title = "Delete SQL Server Firewall Rule",
+    Description = """
         Deletes a firewall rule from a SQL server. This operation removes the specified
         firewall rule, potentially restricting access for the IP addresses that were
         previously allowed by this rule. The operation is idempotent - if the rule
         doesn't exist, no error is returned.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class FirewallRuleDeleteCommand(ISqlService sqlService, ILogger<FirewallRuleDeleteCommand> logger)
+    : BaseSqlCommand<FirewallRuleDeleteOptions>(logger)
+{
+    private readonly ISqlService _sqlService = sqlService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -65,9 +57,7 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
 
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var deleted = await sqlService.DeleteFirewallRuleAsync(
+            var deleted = await _sqlService.DeleteFirewallRuleAsync(
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,
@@ -80,8 +70,8 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error deleting SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options.FirewallRuleName, options);
+                "Error deleting SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}.",
+                options.Server, options.ResourceGroup, options.FirewallRuleName);
             HandleException(context, ex);
         }
 

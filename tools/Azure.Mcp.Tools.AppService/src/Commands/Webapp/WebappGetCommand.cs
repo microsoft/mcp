@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Services;
@@ -13,33 +12,27 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
 
-public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger)
-    : BaseAppServiceCommand<BaseAppServiceOptions>(resourceGroupRequired: false)
-{
-    private const string CommandTitle = "Gets Azure App Service Web App Details";
-    private readonly ILogger<WebappGetCommand> _logger = logger;
-    public override string Id => "4412f1af-16e7-46db-8305-33e3d7ae06de";
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "4412f1af-16e7-46db-8305-33e3d7ae06de",
+    Name = "get",
+    Title = "Gets Azure App Service Web App Details",
+    Description = """
         Retrieves detailed information about Azure App Service web apps, including app name, resource group, location,
         state, hostnames, etc. If a specific app name is not provided, the command will return details for all web apps
         in a subscription or resource group in a subscription. You can specify the app name, resource group name, and
         subscription to get details for a specific web app.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServiceService appServiceService)
+    : BaseAppServiceCommand<BaseAppServiceOptions>(resourceGroupRequired: false)
+{
+    private readonly ILogger<WebappGetCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -71,8 +64,7 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger)
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var appServiceService = context.GetService<IAppServiceService>();
-            var webapps = await appServiceService.GetWebAppsAsync(
+            var webapps = await _appServiceService.GetWebAppsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.AppName,

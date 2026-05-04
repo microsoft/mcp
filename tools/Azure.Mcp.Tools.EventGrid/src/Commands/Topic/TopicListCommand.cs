@@ -1,39 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Topic;
 
-public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEventGridCommand<TopicListOptions>
+[CommandMetadata(
+    Id = "42390294-2856-4980-a057-095c91355650",
+    Name = "list",
+    Title = "List Event Grid Topics",
+    Description = "List or show all Event Grid topics in a subscription, optionally filtered by resource group, returning endpoints, access keys, provisioning state, and subscription details for event publishing and management. A subscription or topic name is required.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TopicListCommand(ILogger<TopicListCommand> logger, IEventGridService eventGridService) : BaseEventGridCommand<TopicListOptions>
 {
-    private const string CommandTitle = "List Event Grid Topics";
     private readonly ILogger<TopicListCommand> _logger = logger;
-    public override string Id => "42390294-2856-4980-a057-095c91355650";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        List or show all Event Grid topics in a subscription, optionally filtered by resource group, returning endpoints, access keys, provisioning state, and subscription details for event publishing and management. A subscription or topic name is required.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IEventGridService _eventGridService = eventGridService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -59,8 +50,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
 
         try
         {
-            var eventGridService = context.GetService<IEventGridService>();
-            var topics = await eventGridService.GetTopicsAsync(
+            var topics = await _eventGridService.GetTopicsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
@@ -72,8 +62,8 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing Event Grid topics. Subscription: {Subscription}, Options: {@Options}",
-                options.Subscription, options);
+                "Error listing Event Grid topics. Subscription: {Subscription}.",
+                options.Subscription);
             HandleException(context, ex);
         }
 

@@ -154,10 +154,13 @@
     "Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>"
   ],
   "deploy_azure_resources_and_applications": [
-    "Create a plan to deploy this application to azure",
-    "How can I create a CI/CD pipeline to deploy this app to Azure?",
-    "Show me the log of the application deployed by azd",
-    "Show me the rules to generate bicep scripts"
+    "Generate an Azure deployment plan for this project using Azure CLI and IaC templates",
+    "Generate a CI/CD pipeline using GitHub Actions workflow to deploy my application to Azure with best practices",
+    "Give me the IaC rules for deploying this application to Azure Container Apps using Azure CLI and Bicep",
+    "Generate the Azure architecture diagram for this application"
+  ],
+  "get_azd_deployed_app_logs": [
+    "Show me the log of the application deployed by azd"
   ],
   "deploy_azure_ai_models": [
     "Deploy a GPT4o instance on my resource <resource-name>"

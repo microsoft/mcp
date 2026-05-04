@@ -1,0 +1,141 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "DataAgent data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "DataAgent": {
+            "description": "A DataAgent object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ]
+        },
+        "DataAgents": {
+            "description": "A list of data agents.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of data agents.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataAgent"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateDataAgentRequest": {
+            "description": "Create DataAgent request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The DataAgent display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The DataAgent description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the DataAgent is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The DataAgent public definition.",
+                    "$ref": "#/definitions/DataAgentPublicDefinition",
+                    "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the DataAgent.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateDataAgentDefinitionRequest": {
+            "description": "Update DataAgent public definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/DataAgentPublicDefinition"
+                }
+            }
+        },
+        "DataAgentDefinitionResponse": {
+            "description": "DataAgent public definition response.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/DataAgentPublicDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "DataAgentPublicDefinition" : {
+            "description": "DataAgent public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/data-agent-definition) for more details on the structure of the DataAgent definition.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataAgentPublicDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "DataAgentPublicDefinitionPart": {
+            "description": "DataAgent definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The DataAgent public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The DataAgent public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateDataAgentRequest": {
+            "description": "Update DataAgent request.",
+            "properties": {
+                "displayName": {
+                    "description": "The DataAgent display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The DataAgent description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        }
+    }
+}

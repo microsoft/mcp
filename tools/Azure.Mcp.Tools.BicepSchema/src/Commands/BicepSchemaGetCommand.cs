@@ -11,32 +11,21 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.BicepSchema.Commands
 {
+    [CommandMetadata(
+        Id = "553c003a-7cdf-4382-b833-94fe8bbb7386",
+        Name = "get",
+        Title = "Get Bicep Schema for a resource",
+        Description = "Provides the Bicep schema definition of any Azure resource type (latest service version). Use this to get the schema needed to write Bicep IaC (infrasturcture as code) for Azure resources such as AI models, storage accounts, databases, virtual machines, app services, key vaults, and more. Do not use this tool for resource deployment, deployment guidelines, or getting best practices.",
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        Secret = false,
+        LocalRequired = false)]
     public sealed class BicepSchemaGetCommand(ILogger<BicepSchemaGetCommand> logger) : BaseBicepSchemaCommand<BicepSchemaOptions>
     {
-        private const string CommandTitle = "Get Bicep Schema for a resource";
 
         private readonly ILogger<BicepSchemaGetCommand> _logger = logger;
-
-        public override string Id => "553c003a-7cdf-4382-b833-94fe8bbb7386";
-
-        public override string Name => "get";
-
-        public override string Description =>
-       """
-        Provides the Bicep schema definition of any Azure resource type (latest service version). Use this to get the schema needed to write Bicep IaC (infrasturcture as code) for Azure resources such as AI models, storage accounts, databases, virtual machines, app services, key vaults, and more. Do not use this tool for resource deployment, deployment guidelines, or getting best practices.
-       """;
-
-        public override string Title => CommandTitle;
-
-        public override ToolMetadata Metadata => new()
-        {
-            Destructive = false,
-            Idempotent = true,
-            OpenWorld = false,
-            ReadOnly = true,
-            LocalRequired = false,
-            Secret = false
-        };
 
         private static readonly Lazy<IServiceProvider> s_serviceProvider;
 

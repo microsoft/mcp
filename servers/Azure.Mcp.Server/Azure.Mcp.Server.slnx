@@ -87,6 +87,14 @@
     <Project Path="../../tools/Azure.Mcp.Tools.Authorization/tests/Azure.Mcp.Tools.Authorization.LiveTests/Azure.Mcp.Tools.Authorization.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.Authorization/tests/Azure.Mcp.Tools.Authorization.UnitTests/Azure.Mcp.Tools.Authorization.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.AzureBackup/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.AzureBackup/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.AzureBackup/src/Azure.Mcp.Tools.AzureBackup.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.AzureBackup/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.LiveTests/Azure.Mcp.Tools.AzureBackup.LiveTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.UnitTests/Azure.Mcp.Tools.AzureBackup.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureBestPractices/" />
   <Folder Name="/tools/Azure.Mcp.Tools.AzureBestPractices/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.AzureBestPractices/src/Azure.Mcp.Tools.AzureBestPractices.csproj" />
@@ -109,6 +117,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.AzureMigrate/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.AzureMigrate/tests/Azure.Mcp.Tools.AzureMigrate.LiveTests/Azure.Mcp.Tools.AzureMigrate.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.AzureMigrate/tests/Azure.Mcp.Tools.AzureMigrate.UnitTests/Azure.Mcp.Tools.AzureMigrate.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraform/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraform/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.AzureTerraform/src/Azure.Mcp.Tools.AzureTerraform.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraform/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.AzureTerraform/tests/Azure.Mcp.Tools.AzureTerraform.UnitTests/Azure.Mcp.Tools.AzureTerraform.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraformBestPractices/" />
   <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraformBestPractices/src/">
@@ -155,6 +170,13 @@
     <Project Path="../../tools/Azure.Mcp.Tools.ConfidentialLedger/tests/Azure.Mcp.Tools.ConfidentialLedger.LiveTests/Azure.Mcp.Tools.ConfidentialLedger.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.ConfidentialLedger/tests/Azure.Mcp.Tools.ConfidentialLedger.UnitTests/Azure.Mcp.Tools.ConfidentialLedger.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ContainerApps/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.ContainerApps/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.ContainerApps/src/Azure.Mcp.Tools.ContainerApps.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ContainerApps/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.ContainerApps/tests/Azure.Mcp.Tools.ContainerApps.UnitTests/Azure.Mcp.Tools.ContainerApps.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Cosmos/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Cosmos/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Cosmos/src/Azure.Mcp.Tools.Cosmos.csproj" />
@@ -170,6 +192,14 @@
   <Folder Name="/tools/Azure.Mcp.Tools.Deploy/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.Deploy/tests/Azure.Mcp.Tools.Deploy.LiveTests/Azure.Mcp.Tools.Deploy.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.Deploy/tests/Azure.Mcp.Tools.Deploy.UnitTests/Azure.Mcp.Tools.Deploy.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.DeviceRegistry/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.DeviceRegistry/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.DeviceRegistry/src/Azure.Mcp.Tools.DeviceRegistry.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.DeviceRegistry/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.DeviceRegistry/tests/Azure.Mcp.Tools.DeviceRegistry.LiveTests/Azure.Mcp.Tools.DeviceRegistry.LiveTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.DeviceRegistry/tests/Azure.Mcp.Tools.DeviceRegistry.UnitTests/Azure.Mcp.Tools.DeviceRegistry.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.EventGrid/" />
   <Folder Name="/tools/Azure.Mcp.Tools.EventGrid/src/">
@@ -217,6 +247,14 @@
   <Folder Name="/tools/Azure.Mcp.Tools.FunctionApp/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.FunctionApp/tests/Azure.Mcp.Tools.FunctionApp.LiveTests/Azure.Mcp.Tools.FunctionApp.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.FunctionApp/tests/Azure.Mcp.Tools.FunctionApp.UnitTests/Azure.Mcp.Tools.FunctionApp.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Functions/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Functions/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Functions/src/Azure.Mcp.Tools.Functions.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Functions/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Functions/tests/Azure.Mcp.Tools.Functions.LiveTests/Azure.Mcp.Tools.Functions.LiveTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Functions/tests/Azure.Mcp.Tools.Functions.UnitTests/Azure.Mcp.Tools.Functions.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Grafana/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Grafana/src/">
@@ -398,6 +436,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.VirtualDesktop/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.VirtualDesktop/tests/Azure.Mcp.Tools.VirtualDesktop.LiveTests/Azure.Mcp.Tools.VirtualDesktop.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.VirtualDesktop/tests/Azure.Mcp.Tools.VirtualDesktop.UnitTests/Azure.Mcp.Tools.VirtualDesktop.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.WellArchitectedFramework/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.WellArchitectedFramework/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.WellArchitectedFramework/src/Azure.Mcp.Tools.WellArchitectedFramework.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.WellArchitectedFramework/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.WellArchitectedFramework/tests/Azure.Mcp.Tools.WellArchitectedFramework.UnitTests/Azure.Mcp.Tools.WellArchitectedFramework.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Workbooks/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Workbooks/src/">

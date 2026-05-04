@@ -17,7 +17,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-namespace Azure.Mcp.Core.Extensions;
+namespace Microsoft.Mcp.Core.Extensions;
 
 public static class OpenTelemetryExtensions
 {

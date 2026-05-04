@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -10,32 +10,21 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 
+[CommandMetadata(
+    Id = "e3f09221-523a-4107-a715-823cebd97902",
+    Name = "list",
+    Title = "List Advisor Recommendations",
+    Description = "List Azure advisor recommendations in a subscription.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IAdvisorService advisorService)
     : BaseAdvisorCommand<RecommendationListOptions>(logger)
 {
     private readonly IAdvisorService _advisorService = advisorService;
-    private const string CommandTitle = "List Advisor Recommendations";
-
-    public override string Id => "e3f09221-523a-4107-a715-823cebd97902";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        List Azure advisor recommendations in a subscription.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -60,8 +49,8 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options);
+                "Error listing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}.",
+                options.Subscription, options.ResourceGroup);
             HandleException(context, ex);
         }
 

@@ -17,11 +17,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\src\Fabric.Mcp.Tools.OneLake.csproj" />
+    <ProjectReference Include="$(RepoRoot)core\Microsoft.Mcp.Core\tests\Microsoft.Mcp.Tests\Microsoft.Mcp.Tests.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="Xunit" />
-    <Using Include="Azure.Mcp.Core.Commands" />
+    <Using Include="Microsoft.Mcp.Core.Commands" />
   </ItemGroup>
 
 </Project>
