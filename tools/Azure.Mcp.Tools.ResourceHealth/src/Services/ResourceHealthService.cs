@@ -51,19 +51,7 @@ public class ResourceHealthService(
         var requestUri = new Uri(managementEndpoint, relativePath);
 
         using var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-        if (response.StatusCode == HttpStatusCode.UnprocessableEntity)
-        {
-            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            var (errorCode, errorMessage) = ParseErrorResponse(responseContent);
-            throw new ResourceHealthUnprocessableEntityException(
-                resourceId,
-                parsedResourceId.ResourceType.ToString(),
-                errorCode,
-                errorMessage,
-                responseContent);
-        }
-
-        response.EnsureSuccessStatusCode();
+        await EnsureResourceHealthSuccessAsync(response, cancellationToken, resourceId, parsedResourceId.ResourceType.ToString());
 
         var apiResponse = await response.Content.ReadFromJsonAsync(ResourceHealthJsonContext.Default.AvailabilityStatusResponse, cancellationToken)
             ?? throw new InvalidOperationException($"Failed to deserialize availability status response for resource '{resourceId}'");
@@ -96,7 +84,7 @@ public class ResourceHealthService(
         var requestUri = new Uri(managementEndpoint, relativePath);
 
         using var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        await EnsureResourceHealthSuccessAsync(response, cancellationToken);
 
         var apiResponse = await response.Content.ReadFromJsonAsync(ResourceHealthJsonContext.Default.AvailabilityStatusListResponse, cancellationToken);
 
@@ -183,7 +171,7 @@ public class ResourceHealthService(
         var requestUri = new Uri(managementEndpoint, relativePath);
 
         using var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        await EnsureResourceHealthSuccessAsync(response, cancellationToken);
 
         var apiResponse = await response.Content.ReadFromJsonAsync(ResourceHealthJsonContext.Default.ServiceHealthEventListResponse, cancellationToken);
 
@@ -196,6 +184,37 @@ public class ResourceHealthService(
             .Select(item => item.ToServiceHealthEvent(subscriptionId))
             .Where(evt => !string.IsNullOrEmpty(evt.Id)) // Filter out any invalid entries
             .ToList();
+    }
+
+    private static async Task EnsureResourceHealthSuccessAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken,
+        string? resourceId = null,
+        string? resourceType = null)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+        var (errorCode, errorMessage) = ParseErrorResponse(responseContent);
+
+        if (response.StatusCode == HttpStatusCode.UnprocessableEntity && resourceId is not null && resourceType is not null)
+        {
+            throw new ResourceHealthUnprocessableEntityException(
+                resourceId,
+                resourceType,
+                errorCode,
+                errorMessage,
+                responseContent);
+        }
+
+        throw new ResourceHealthRequestFailedException(
+            response.StatusCode,
+            errorCode,
+            errorMessage,
+            responseContent);
     }
 
     private static (string? Code, string? Message) ParseErrorResponse(string responseContent)
