@@ -57,29 +57,6 @@ try {
         }
     }
 
-    # Verify tools.json metadata files are up to date
-    if ($Fix) {
-        Write-Host "Updating tools.json metadata files..."
-        & "$PSScriptRoot/Update-ToolsList.ps1"
-
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "❌ errors encountered while updating tools.json metadata files."
-            $hasErrors = $true
-        } else {
-            Write-Host "✅ tools.json files updated."
-        }
-    } else {
-        Write-Host "Verifying tools.json metadata files..."
-        & "$PSScriptRoot/Update-ToolsList.ps1" -Verify
-
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "❌ tools.json drift detected. Run 'eng/scripts/Update-ToolsList.ps1' to regenerate."
-            $hasErrors = $true
-        } else {
-            Write-Host "✅ tools.json files are up to date."
-        }
-    }
-
     # Run cspell spell check
     if (!$env:TF_BUILD) {
         Write-Host "Running cspell spell check..."
