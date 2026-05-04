@@ -73,11 +73,11 @@ internal class Program
             // from the thread pool. CommandFactory resolves command singletons for the target area.
             // Both complete in parallel so neither adds to the other's latency on the hot path.
             //
-            // Error handling: if GetRequiredService throws, telemetryInitTask is abandoned rather than
-            // awaited. In .NET the unobserved exception is a diagnostic warning, not a process crash.
-            // That edge case (fatal DI failure + simultaneous telemetry failure) is acceptable because
-            // the DI failure is already reported to the user via the outer catch block.
-            var telemetryInitTask = InitializeServicesAsync(serviceProvider);
+            // Optimization: run telemetry initialization concurrently with CommandFactory resolution.
+            // Attach a no-op continuation immediately so that any exception from InitializeServicesAsync
+            // is always observed — even if GetRequiredService throws before we reach the await.
+            var telemetryInitTask = InitializeServicesAsync(serviceProvider)
+                .ContinueWith(static t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
             var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
             await telemetryInitTask;
 
@@ -363,8 +363,21 @@ internal class Program
     /// <returns>The area name (e.g. "storage"), or <see langword="null"/>.</returns>
     private static string? GetTargetAreaName(string[] args)
     {
-        var firstToken = args.Length > 0 ? args[0] : null;
-        if (firstToken is not { Length: > 0 } || firstToken.StartsWith('-'))
+        // Scan for the first token that is not an option flag (does not start with '-').
+        // '--' is the POSIX end-of-options marker: everything after it is a positional argument,
+        // but for our purposes we stop scanning at '--' and treat it as "no area found".
+        string? firstToken = null;
+        foreach (var arg in args)
+        {
+            if (arg == "--") break;
+            if (arg.Length > 0 && !arg.StartsWith('-'))
+            {
+                firstToken = arg;
+                break;
+            }
+        }
+
+        if (firstToken is null)
         {
             return null;
         }
