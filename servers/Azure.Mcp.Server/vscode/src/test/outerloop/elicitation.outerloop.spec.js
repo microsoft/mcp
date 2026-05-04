@@ -56,37 +56,21 @@ test.describe('VS Code MCP elicitation outerloop', () => {
         await fs.mkdir(artifactsDir, { recursive: true });
         await fs.writeFile(proxyLogPath, '', 'utf8');
 
-        // Install the test-only startup-trigger extension so workbench.mcp.startServer
-        // is invoked from the Extension Host (CI has no Copilot Chat to lazily start it).
+        // Install the test-only startup-trigger extension. It registers an
+        // mcpServerDefinitionProvider via vscode.lm.registerMcpServerDefinitionProvider
+        // (the supported public API in stable 1.118+) and then calls
+        // workbench.mcp.startServer to spawn it.
         await installFixtureExtension(STARTUP_TRIGGER_SOURCE, extensionsDir, 'mcp-startup-trigger-0.0.1');
 
-        // Some VS Code builds gate MCP discovery behind settings; flip every plausible
-        // toggle on, in user settings, so the workspace mcp.json is honored.
         const userSettingsDir = path.join(userDataDir, 'User');
         await fs.mkdir(userSettingsDir, { recursive: true });
         await fs.writeFile(
             path.join(userSettingsDir, 'settings.json'),
             JSON.stringify({
                 'chat.mcp.enabled': true,
-                'chat.mcp.discovery.enabled': true,
-                'chat.mcp.autostart': 'all'
+                'chat.mcp.access': 'any',
+                'chat.mcp.autostart': 'newAndOutdated'
             }, null, 2),
-            'utf8'
-        );
-
-        const mcpSettings = {
-            servers: {
-                [MCP_SERVER_NAME]: {
-                    command: process.execPath,
-                    args: [PROXY_SCRIPT],
-                    env: { MCP_PROXY_LOG: proxyLogPath }
-                }
-            }
-        };
-
-        await fs.writeFile(
-            path.join(vscodeDir, 'mcp.json'),
-            JSON.stringify(mcpSettings, null, 2),
             'utf8'
         );
 
@@ -99,7 +83,13 @@ test.describe('VS Code MCP elicitation outerloop', () => {
                 '--disable-workspace-trust',
                 `--user-data-dir=${userDataDir}`,
                 `--extensions-dir=${extensionsDir}`
-            ]
+            ],
+            env: {
+                ...process.env,
+                MCP_TEST_PROXY_SCRIPT: PROXY_SCRIPT,
+                MCP_TEST_PROXY_LOG: proxyLogPath,
+                MCP_TEST_NODE_PATH: process.execPath
+            }
         });
 
         let window;
