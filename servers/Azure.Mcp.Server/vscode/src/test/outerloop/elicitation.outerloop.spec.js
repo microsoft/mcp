@@ -131,6 +131,7 @@ test.describe('VS Code MCP elicitation outerloop', () => {
             throw err;
         } finally {
             await app.close();
+            await fs.rm(tempRoot, { recursive: true, force: true });
         }
     });
 });
