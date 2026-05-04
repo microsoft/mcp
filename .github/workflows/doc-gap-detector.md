@@ -31,7 +31,7 @@ safe-outputs:
   report-failure-as-issue: false
   create-issue:
     title-prefix: "[Doc Gap]"
-    labels: ['documentation']
+    labels: ['documentation', 'copilot']
     max: 1
   noop:
     report-as-issue: false
@@ -60,7 +60,7 @@ Specifically, review and validate the following files:
 - **Identify tool changes** by looking for modifications to:
   - MCP tool names (renames, additions, removals)
   - Tool metadata (descriptions, parameters, options)
-  - Tool functionality (new capbilities, changes behavior)
+  - Tool functionality (new capabilities, changes behavior)
   - Tool file paths under `/tools/` or `/servers/`
 - Identify the commit author(s) and the PR number (if any) that triggered this push
 
@@ -122,7 +122,7 @@ The issue body must follow this structure:
 ## Documentation Gap
 
 **Server:** `<full server name>`
-**Tool directory:** `sdk/<server>/<tool>/`
+**Tool directory:** `<tools>/<toolset>`
 **Triggered by:** <commit SHA or PR #number> by @<author>
 **Changed files**: <list of relevant changed files>
 
