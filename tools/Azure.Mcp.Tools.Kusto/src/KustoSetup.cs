@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Kusto.Commands;
+using Azure.Mcp.Tools.Kusto.Rendering;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -18,6 +19,7 @@ public class KustoSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IKustoService, KustoService>();
+        services.AddSingleton<IKustoChartRenderer, ScottPlotChartRenderer>();
 
         services.AddSingleton<SampleCommand>();
         services.AddSingleton<QueryCommand>();

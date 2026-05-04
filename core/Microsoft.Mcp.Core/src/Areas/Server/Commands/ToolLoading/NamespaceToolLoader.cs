@@ -482,9 +482,32 @@ public sealed class NamespaceToolLoader(
                 return finalResponse;
             }
 
+            var successContent = new List<ContentBlock>();
+
+            // Mirror CommandFactoryToolLoader: suppress the text envelope when OmitTextContent is
+            // set (e.g. the command rendered a chart image) unless the response is an error.
+            if (!commandResponse.OmitTextContent || isError)
+            {
+                successContent.Add(new TextContentBlock { Text = jsonResponse });
+            }
+            else if (commandResponse.Images is { Count: > 0 } && !string.IsNullOrEmpty(commandResponse.Message))
+            {
+                // Emit the message as a lightweight text hint so the model knows to look at
+                // the attached image(s) without receiving the full JSON data envelope.
+                successContent.Add(new TextContentBlock { Text = commandResponse.Message });
+            }
+
+            if (commandResponse.Images != null)
+            {
+                foreach (var image in commandResponse.Images)
+                {
+                    successContent.Add(ImageContentBlock.FromBytes(image.Data, image.MimeType));
+                }
+            }
+
             return new CallToolResult
             {
-                Content = [new TextContentBlock { Text = jsonResponse }],
+                Content = successContent,
                 IsError = isError
             };
         }

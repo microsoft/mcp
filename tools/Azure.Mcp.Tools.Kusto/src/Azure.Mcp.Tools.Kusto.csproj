@@ -15,6 +15,7 @@
     <PackageReference Include="Azure.ResourceManager" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
+    <PackageReference Include="ScottPlot" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 </Project>

@@ -225,13 +225,33 @@ public sealed class CommandFactoryToolLoader(
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
+            var content = new List<ContentBlock>();
+
+            // The text JSON envelope is suppressed only when the command explicitly opted in via
+            // CommandResponse.OmitTextContent (e.g. an image is intended to fully replace raw data).
+            // Errors always include the JSON envelope so the caller can read status/message.
+            if (!commandResponse.OmitTextContent || isError)
+            {
+                content.Add(new TextContentBlock { Text = jsonResponse });
+            }
+            else if (commandResponse.Images is { Count: > 0 } && !string.IsNullOrEmpty(commandResponse.Message))
+            {
+                // Emit the message as a lightweight text hint so the model knows to look at
+                // the attached image(s) without receiving the full JSON data envelope.
+                content.Add(new TextContentBlock { Text = commandResponse.Message });
+            }
+
+            if (commandResponse.Images != null)
+            {
+                foreach (var image in commandResponse.Images)
+                {
+                    content.Add(ImageContentBlock.FromBytes(image.Data, image.MimeType));
+                }
+            }
+
             return new CallToolResult
             {
-                Content = [
-                    new TextContentBlock {
-                        Text = jsonResponse
-                    }
-                ],
+                Content = content,
                 IsError = isError
             };
         }

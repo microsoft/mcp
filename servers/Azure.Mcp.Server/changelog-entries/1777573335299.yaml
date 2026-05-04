@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added support for emitting MCP image content blocks from tool responses. Commands can now populate CommandResponse.Images with one or more PNG/JPEG payloads, and the MCP tool loader emits each as an ImageContentBlock in the CallToolResult. Setting CommandResponse.OmitTextContent suppresses the JSON envelope so vision-capable clients receive only the image when the rendering is intended to fully replace the raw data."
