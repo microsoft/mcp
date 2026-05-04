@@ -70,26 +70,92 @@ foreach ($serverDir in $serverDirs) {
             continue
         }
 
-        # Extract just the results array and flatten metadata to booleans
-        $toolsArray = @($parsed.results | ForEach-Object {
-            $tool = [ordered]@{
-                id          = $_.id
-                name        = $_.name
-                description = $_.description
-                command     = $_.command
-                option      = $_.option
+
+        # --- Common options extraction ---
+        # Build a 2-level map: optionName -> jsonForm -> count
+        # to find the most-used definition for each option name.
+        $optionHashMap = @{} # optionName -> @{ json -> @{ count=N; definition=obj } }
+
+        foreach ($tool in $parsed.results) {
+            if (-not $tool.option) { continue }
+            foreach ($opt in $tool.option) {
+                $optName = $opt.name
+                $optJson = $opt | ConvertTo-Json -Depth 5 -Compress
+
+                if (-not $optionHashMap.ContainsKey($optName)) {
+                    $optionHashMap[$optName] = @{}
+                }
+                if (-not $optionHashMap[$optName].ContainsKey($optJson)) {
+                    $optionHashMap[$optName][$optJson] = @{ count = 0; definition = $opt }
+                }
+                $optionHashMap[$optName][$optJson].count++
             }
-            if ($_.metadata) {
-                $tool.destructive   = [bool]$_.metadata.destructive.value
-                $tool.idempotent    = [bool]$_.metadata.idempotent.value
-                $tool.openWorld     = [bool]$_.metadata.openWorld.value
-                $tool.readOnly      = [bool]$_.metadata.readOnly.value
-                $tool.secret        = [bool]$_.metadata.secret.value
-                $tool.localRequired = [bool]$_.metadata.localRequired.value
+        }
+
+        # For each option name, find the most common hash; if count > 10, promote to common.
+        $commonOptions = [ordered]@{}
+        foreach ($optName in ($optionHashMap.Keys | Sort-Object)) {
+            $hashes = $optionHashMap[$optName]
+            $best = $hashes.GetEnumerator() | Sort-Object { $_.Value.count } -Descending | Select-Object -First 1
+            if ($best.Value.count -gt 10) {
+                $commonOptions[$optName] = $best.Value.definition
             }
-            [PSCustomObject]$tool
+        }
+
+        # Rebuild tools array: replace matching options with commonOptions reference
+        $finalTools = @($parsed.results | ForEach-Object {
+            $tool = $_
+            $remainingOptions = @()
+            $commonOptionNames = @()
+
+            if ($tool.option -and $commonOptions.Count -gt 0) {
+                foreach ($opt in $tool.option) {
+                    $optName = $opt.name
+                    if ($commonOptions.Contains($optName)) {
+                        # Check if this option matches the common definition
+                        $optJson = $opt | ConvertTo-Json -Depth 5 -Compress
+                        $commonJson = $commonOptions[$optName] | ConvertTo-Json -Depth 5 -Compress
+                        if ($optJson -eq $commonJson) {
+                            $commonOptionNames += $optName
+                        } else {
+                            $remainingOptions += $opt
+                        }
+                    } else {
+                        $remainingOptions += $opt
+                    }
+                }
+            }
+
+            $result = [ordered] @{
+                id            = $tool.id
+                name          = $tool.name
+                description   = $tool.description
+                command       = $tool.command
+                commonOptions = $commonOptionNames
+                options       = $remainingOptions
+            }
+            if ($null -ne $tool.metadata) {
+                $result.destructive   = $tool.metadata.destructive.value
+                $result.idempotent    = $tool.metadata.idempotent.value
+                $result.openWorld     = $tool.metadata.openWorld.value
+                $result.readOnly      = $tool.metadata.readOnly.value
+                $result.secret        = $tool.metadata.secret.value
+                $result.localRequired = $tool.metadata.localRequired.value
+            }
+            [PSCustomObject]$result            
         })
-        $formatted = $toolsArray | ConvertTo-Json -Depth 10
+
+        # Build final output object
+        if ($commonOptions.Count -gt 0) {
+            $output = [ordered]@{
+                commonOptions = $commonOptions
+                tools         = $finalTools
+            }
+        } else {
+            $output = $finalTools
+        }
+
+        $formatted = $output | ConvertTo-Json -Depth 10
 
     } catch {
         Write-Warning "  Error processing $($serverDir.Name): $_"
@@ -116,7 +182,8 @@ foreach ($serverDir in $serverDirs) {
         $formatted | Set-Content -Path $toolsJsonPath -NoNewline
         # Ensure trailing newline
         Add-Content -Path $toolsJsonPath -Value ""
-        Write-Host "  ✅ Updated $toolsJsonPath ($($toolsArray.Count) tools)"
+        $commonCount = $commonOptions.Count
+        Write-Host "  ✅ Updated $toolsJsonPath ($($finalTools.Count) tools, $commonCount common options)"
     }
 }
 
