@@ -160,6 +160,7 @@ public static class FunctionAppValidation
         };
     }
 
+    // Expects pre-normalized (trimmed, lowercased) input; callers should normalize first (see ValidateAndNormalizeInputs).
     public static HostingKind ParseHostingKind(string? planType)
     {
         if (string.IsNullOrWhiteSpace(planType))
