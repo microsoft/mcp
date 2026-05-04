@@ -12,32 +12,27 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectableItem;
 
+[CommandMetadata(
+    Id = "9f6b0a1e-1c2d-4e5f-8a9b-7c6d5e4f3a21",
+    Name = "list",
+    Title = "List Protectable Items",
+    Description = """
+        Lists items that can be backed up (protectable items) in a Recovery Services vault,
+        such as SQL databases and SAP HANA databases discovered on registered VMs.
+        Use this to find databases and workloads available for backup protection.
+        Only supported for RSV vaults; DPP datasources are protected by ARM resource ID directly.
+        Filter results by --workload-type (e.g., SQL, SAPHana) or --container.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectableItemListOptions>()
 {
-    private const string CommandTitle = "List Protectable Items";
     private readonly ILogger<ProtectableItemListCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override string Id => "9f6b0a1e-1c2d-4e5f-8a9b-7c6d5e4f3a21";
-    public override string Name => "list";
-    public override string Description =>
-        """
-        Lists protectable items (SQL databases, SAP HANA databases) discovered in the Recovery Services vault.
-        This command is only supported for RSV vaults; DPP datasources are protected by ARM resource ID directly.
-        Use after registering a container and running inquiry to discover databases available for protection.
-        Filter results by workload type or container name. Valid workload-type values include:
-        SAPHana, SAPHanaDatabase, SAPHanaSystem, SQL, SQLDataBase, SQLInstance.
-        """;
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -62,6 +57,8 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
         }
 
         var options = BindOptions(parseResult);
+
+        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context.Activity, options.VaultType ?? "rsv", options.WorkloadType);
 
         try
         {

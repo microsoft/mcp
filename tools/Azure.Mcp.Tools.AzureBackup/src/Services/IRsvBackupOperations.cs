@@ -70,12 +70,19 @@ public interface IRsvBackupOperations
         string subscription,
         string policyName,
         string workloadType,
-        string? scheduleFrequency,
         string? scheduleTime,
         string? dailyRetentionDays,
-        string? weeklyRetentionWeeks,
-        string? monthlyRetentionMonths,
-        string? yearlyRetentionYears,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<OperationResult> UpdatePolicyAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string policyName,
+        string? scheduleTime,
+        string? dailyRetentionDays,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
@@ -115,6 +122,16 @@ public interface IRsvBackupOperations
         string resourceGroup,
         string subscription,
         string? workloadType,
+        string? containerName,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<OperationResult> UndeleteProtectedItemAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string datasourceId,
         string? containerName,
         string? tenant,
         RetryPolicyOptions? retryPolicy,

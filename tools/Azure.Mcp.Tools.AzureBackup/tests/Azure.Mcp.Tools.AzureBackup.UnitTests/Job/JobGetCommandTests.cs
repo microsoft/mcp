@@ -2,50 +2,26 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Job;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.UnitTests.Job;
 
-public class JobGetCommandTests
+public class JobGetCommandTests : CommandUnitTestsBase<JobGetCommand, IAzureBackupService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IAzureBackupService _backupService;
-    private readonly ILogger<JobGetCommand> _logger;
-    private readonly JobGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly System.CommandLine.Command _commandDefinition;
-
-    public JobGetCommandTests()
-    {
-        _backupService = Substitute.For<IAzureBackupService>();
-        _logger = Substitute.For<ILogger<JobGetCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_backupService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _backupService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("get", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("get", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Fact]
@@ -61,7 +37,7 @@ public class JobGetCommandTests
             new("id2", "job2", "rsv", "Restore", "InProgress", DateTimeOffset.UtcNow.AddMinutes(-30), null, "SQLDataBase", "sql1")
         };
 
-        _backupService.ListJobsAsync(
+        Service.ListJobsAsync(
             Arg.Is(vault),
             Arg.Is(resourceGroup),
             Arg.Is(subscription),
@@ -69,21 +45,17 @@ public class JobGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedJobs));
-
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--vault", vault, "--resource-group", resourceGroup]);
+            .Returns(expectedJobs);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--vault", vault,
+            "--resource-group", resourceGroup);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.JobGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.JobGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(2, result.Jobs.Count);
         Assert.Equal("job1", result.Jobs[0].Name);
     }
@@ -98,7 +70,7 @@ public class JobGetCommandTests
         var jobId = "job1";
         var expectedJob = new BackupJobInfo("id1", jobId, "rsv", "Backup", "Completed", DateTimeOffset.UtcNow.AddHours(-2), DateTimeOffset.UtcNow.AddHours(-1), "AzureIaasVM", "vm1");
 
-        _backupService.GetJobAsync(
+        Service.GetJobAsync(
             Arg.Is(vault),
             Arg.Is(resourceGroup),
             Arg.Is(subscription),
@@ -107,21 +79,18 @@ public class JobGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedJob));
-
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--vault", vault, "--resource-group", resourceGroup, "--job", jobId]);
+            .Returns(expectedJob);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--vault", vault,
+            "--resource-group", resourceGroup,
+            "--job", jobId);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.JobGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.JobGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.Jobs);
         Assert.Equal(jobId, result.Jobs[0].Name);
     }
@@ -130,22 +99,19 @@ public class JobGetCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoJobsExist()
     {
         // Arrange
-        _backupService.ListJobsAsync(
+        Service.ListJobsAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(new List<BackupJobInfo>()));
-
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg"]);
+            .Returns([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.JobGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.JobGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Jobs);
     }
 
@@ -153,14 +119,15 @@ public class JobGetCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
-        _backupService.ListJobsAsync(
+        Service.ListJobsAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -171,14 +138,16 @@ public class JobGetCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
-        _backupService.GetJobAsync(
+        Service.GetJobAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("nonexistent"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Job not found"));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg", "--job", "nonexistent"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--job", "nonexistent");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -193,19 +162,17 @@ public class JobGetCommandTests
     {
         if (shouldSucceed)
         {
-            _backupService.ListJobsAsync(
+            Service.ListJobsAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(new List<BackupJobInfo>()));
+                .Returns([]);
 
-            _backupService.GetJobAsync(
+            Service.GetJobAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("j1"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(new BackupJobInfo("id", "j1", "rsv", "Backup", "Completed", null, null, "VM", "vm1")));
+                .Returns(new BackupJobInfo("id", "j1", "rsv", "Backup", "Completed", null, null, "VM", "vm1"));
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -222,8 +189,7 @@ public class JobGetCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange & Act
-        var command = _command.GetCommand();
-        var options = command.Options;
+        var options = CommandDefinition.Options;
 
         // Assert
         Assert.Contains(options, o => o.Name == "--subscription");

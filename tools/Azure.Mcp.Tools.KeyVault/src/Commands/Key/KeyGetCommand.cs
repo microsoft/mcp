@@ -13,30 +13,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
 
+[CommandMetadata(
+    Id = "c19a45a0-b963-427d-a087-35560a7f4e5b",
+    Name = "get",
+    Title = "Get Key Vault Key",
+    Description = """List all keys in your Key Vault or get a specific key by name. Shows all key names in the vault, or retrieves full key details including type, enabled status, and expiration dates. Use --include-managed to show managed keys.""",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<KeyGetOptions>
 {
-    private const string CommandTitle = "Get Key Vault Key";
     private readonly ILogger<KeyGetCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
-
-    public override string Id => "c19a45a0-b963-427d-a087-35560a7f4e5b";
-
-    public override string Name => "get";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    public override string Description =>
-        """List all keys in your Key Vault or get a specific key by name. Shows all key names in the vault, or retrieves full key details including type, enabled status, and expiration dates. Use --include-managed to show managed keys.""";
 
     protected override void RegisterOptions(Command command)
     {

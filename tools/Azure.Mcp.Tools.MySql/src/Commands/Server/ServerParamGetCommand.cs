@@ -11,28 +11,20 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Server;
 
+[CommandMetadata(
+    Id = "bae423b4-aee8-4f23-a104-e816727d183f",
+    Name = "get",
+    Title = "Get MySQL Server Parameter",
+    Description = "Retrieves the current value of a single server configuration parameter on an Azure Database for MySQL Flexible Server. Use to inspect a setting (e.g. max_connections, wait_timeout, slow_query_log) before changing it.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger, IMySqlService mysqlService) : BaseServerCommand<ServerParamGetOptions>(logger)
 {
-    private const string CommandTitle = "Get MySQL Server Parameter";
     private readonly IMySqlService _mysqlService = mysqlService;
-
-    public override string Id => "bae423b4-aee8-4f23-a104-e816727d183f";
-
-    public override string Name => "get";
-
-    public override string Description => "Retrieves the current value of a single server configuration parameter on an Azure Database for MySQL Flexible Server. Use to inspect a setting (e.g. max_connections, wait_timeout, slow_query_log) before changing it.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

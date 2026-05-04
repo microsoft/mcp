@@ -70,12 +70,8 @@ public interface IDppBackupOperations
         string subscription,
         string policyName,
         string workloadType,
-        string? scheduleFrequency,
         string? scheduleTime,
         string? dailyRetentionDays,
-        string? weeklyRetentionWeeks,
-        string? monthlyRetentionMonths,
-        string? yearlyRetentionYears,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
@@ -104,6 +100,15 @@ public interface IDppBackupOperations
         string vaultName,
         string resourceGroup,
         string subscription,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<OperationResult> UndeleteProtectedItemAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string datasourceId,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);

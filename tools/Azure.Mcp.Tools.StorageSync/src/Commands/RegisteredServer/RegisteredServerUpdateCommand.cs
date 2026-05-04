@@ -13,29 +13,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
 
+[CommandMetadata(
+    Id = "c443ed00-f17f-46a8-a5d3-df128aa1606b",
+    Name = "update",
+    Title = "Update Registered Server",
+    Description = "Update properties of a registered server.",
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class RegisteredServerUpdateCommand(ILogger<RegisteredServerUpdateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<RegisteredServerUpdateOptions>
 {
-    private const string CommandTitle = "Update Registered Server";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<RegisteredServerUpdateCommand> _logger = logger;
-
-    public override string Id => "c443ed00-f17f-46a8-a5d3-df128aa1606b";
-
-    public override string Name => "update";
-
-    public override string Description => "Update properties of a registered server.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

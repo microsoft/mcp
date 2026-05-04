@@ -1,52 +1,29 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.UnitTests.Vmss;
 
-public class VmssUpdateCommandTests
+public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IComputeService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IComputeService _computeService;
-    private readonly ILogger<VmssUpdateCommand> _logger;
-    private readonly VmssUpdateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
     private readonly string _knownVmssName = "test-vmss";
 
-    public VmssUpdateCommandTests()
-    {
-        _computeService = Substitute.For<IComputeService>();
-        _logger = Substitute.For<ILogger<VmssUpdateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_computeService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("update", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -56,6 +33,9 @@ public class VmssUpdateCommandTests
     [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --upgrade-policy Automatic", true)]
     [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --tags env=test", true)]
     [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --scale-in-policy OldestVM", true)]
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --capacity 10", true)] // Capacity only
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --overprovision true", true)] // Overprovision only
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --enable-auto-os-upgrade true", true)] // EnableAutoOsUpgrade only
     [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123", false)] // No update property
     [InlineData("--resource-group test-rg --subscription sub123 --tags env=test", false)] // Missing vmss-name
     [InlineData("--vmss-name test-vmss --subscription sub123 --tags env=test", false)] // Missing resource-group
@@ -75,7 +55,7 @@ public class VmssUpdateCommandTests
                 Zones: null,
                 Tags: null);
 
-            _computeService.UpdateVmssAsync(
+            Service.UpdateVmssAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -92,28 +72,18 @@ public class VmssUpdateCommandTests
                 .Returns(updateResult);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act & Assert
+        var response = await ExecuteCommandAsync(args);
+
         if (shouldSucceed)
         {
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
             Assert.Equal("Success", response.Message);
         }
         else
         {
-            // For missing required options, we expect BadRequest or exception
-            try
-            {
-                var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-                Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-            }
-            catch (Microsoft.Mcp.Core.Commands.CommandValidationException)
-            {
-                // Expected for validation failures
-            }
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         }
     }
 
@@ -132,7 +102,7 @@ public class VmssUpdateCommandTests
             Zones: null,
             Tags: new Dictionary<string, string> { { "env", "prod" } });
 
-        _computeService.UpdateVmssAsync(
+        Service.UpdateVmssAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -148,25 +118,15 @@ public class VmssUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--tags", "env=prod"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--tags", "env=prod");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmssUpdateCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssUpdateCommandResult);
         Assert.NotNull(result.Vmss);
         Assert.Equal(_knownVmssName, result.Vmss.Name);
         Assert.NotNull(result.Vmss.Tags);
@@ -188,7 +148,7 @@ public class VmssUpdateCommandTests
             Zones: null,
             Tags: null);
 
-        _computeService.UpdateVmssAsync(
+        Service.UpdateVmssAsync(
             Arg.Is(_knownVmssName),
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
@@ -204,20 +164,15 @@ public class VmssUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
-        var parseResult = _commandDefinition.Parse(
-            $"--vmss-name {_knownVmssName} --resource-group {_knownResourceGroup} --subscription {_knownSubscription} --upgrade-policy Automatic");
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--vmss-name", _knownVmssName,
+            "--resource-group", _knownResourceGroup,
+            "--subscription", _knownSubscription,
+            "--upgrade-policy", "Automatic");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmssUpdateCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssUpdateCommandResult);
         Assert.NotNull(result.Vmss);
         Assert.Equal("Automatic", result.Vmss.UpgradePolicy);
     }
@@ -228,7 +183,7 @@ public class VmssUpdateCommandTests
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "VMSS not found");
 
-        _computeService.UpdateVmssAsync(
+        Service.UpdateVmssAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -244,15 +199,12 @@ public class VmssUpdateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--tags", "env=test"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--tags", "env=test");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -265,7 +217,7 @@ public class VmssUpdateCommandTests
         // Arrange
         var quotaException = new RequestFailedException((int)HttpStatusCode.BadRequest, "Quota exceeded for VM size in region");
 
-        _computeService.UpdateVmssAsync(
+        Service.UpdateVmssAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -281,15 +233,12 @@ public class VmssUpdateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(quotaException);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--vm-size", "Standard_D4s_v3"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--vm-size", "Standard_D4s_v3");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -311,7 +260,7 @@ public class VmssUpdateCommandTests
             Zones: ["1"],
             Tags: new Dictionary<string, string> { { "env", "test" } });
 
-        _computeService.UpdateVmssAsync(
+        Service.UpdateVmssAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -327,22 +276,15 @@ public class VmssUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--tags", "env=test"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--tags", "env=test");
 
         // Assert
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmssUpdateCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssUpdateCommandResult);
         Assert.NotNull(result.Vmss);
         Assert.Equal(_knownVmssName, result.Vmss.Name);
     }
@@ -351,7 +293,7 @@ public class VmssUpdateCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange
-        var parseResult = _commandDefinition.Parse(
+        var parseResult = CommandDefinition.Parse(
             $"--vmss-name {_knownVmssName} --resource-group {_knownResourceGroup} --subscription {_knownSubscription} --capacity 5 --upgrade-policy Automatic --scale-in-policy OldestVM --tags env=test");
 
         // Assert parse was successful

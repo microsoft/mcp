@@ -1,0 +1,13 @@
+changes:
+  - section: "Breaking Changes"
+    description: "`azmcp compute vm create` and `azmcp compute vmss create` now require `--image` and no longer default to Ubuntu 24.04 LTS when an image is omitted. Specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`)."
+  - section: "Breaking Changes"
+    description: "Changed `Win2022Datacenter` image alias to use the `WindowsServer2022` marketplace offer (`MicrosoftWindowsServer:WindowsServer2022:2022-datacenter-azure-edition:latest`) instead of the previous `WindowsServer` offer. The new image avoids the deprecated .NET 6 runtime bundled with the old SKU."
+  - section: "Breaking Changes"
+    description: "Removed the `Win2019Datacenter` image alias. Use the marketplace URN format (`MicrosoftWindowsServer:WindowsServer:2019-datacenter-gensecond:latest`) directly if Windows Server 2019 is still needed."
+  - section: "Breaking Changes"
+    description: "Removed the `Ubuntu2004` image alias from `azmcp vm create`. Ubuntu 20.04 LTS reached end of standard support on May 31, 2025 and is no longer recommended for new VMs. Use `Ubuntu2204` or `Ubuntu2404`, or pass the marketplace URN directly (`Canonical:0001-com-ubuntu-server-focal:20_04-lts-gen2:latest`) if Ubuntu 20.04 is still required."
+  - section: "Features Added"
+    description: "Added `Win2022Datacenter1P` image alias for the first-party shared gallery Windows Server 2022 image (`/sharedGalleries/WINDOWSSERVER.1P/images/2022-DATACENTER-AZURE-EDITION/versions/latest`), which does not require a marketplace purchase plan."
+  - section: "Features Added"
+    description: "Added `Ubuntu2604` image alias for `azmcp vm create` mapping to the marketplace URN `Canonical:ubuntu-26_04-lts:server:latest`."

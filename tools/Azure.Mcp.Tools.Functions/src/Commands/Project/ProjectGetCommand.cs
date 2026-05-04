@@ -11,31 +11,20 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Functions.Commands.Project;
 
+[CommandMetadata(
+    Id = "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    Name = "get",
+    Title = "Get Project Template",
+    Description = "Get project scaffolding information for a new Azure Functions app. Call this tool when the user wants to create, initialize, or set up a new Azure Functions project. Returns the complete project structure, required files configurations and setup instructions for the specific language that agents use to create files. Use after functions language list and before functions template get.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger) : BaseCommand<ProjectGetOptions>
 {
     private readonly ILogger<ProjectGetCommand> _logger = logger;
-
-    public override string Id => "b2c3d4e5-f6a7-8901-bcde-f12345678901";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "Get project scaffolding information for a new Azure Functions app. " +
-        "Use for getting project structure, setup instructions, and file list for initializing serverless projects. " +
-        "Returns project structure overview and setup instructions that agents use to create files. " +
-        "Use after functions language list and before functions template get.";
-
-    public override string Title => "Get Project Template";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

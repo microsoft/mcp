@@ -12,18 +12,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryExtensionsService) : GlobalCommand<KnowledgeIndexListOptions>
-{
-    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
-
-    private const string CommandTitle = "List Knowledge Indexes in Microsoft Foundry";
-
-    public override string Id => "b2c3d4e5-2345-6789-bcde-f01234567890";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "b2c3d4e5-2345-6789-bcde-f01234567890",
+    Name = "list",
+    Title = "List Knowledge Indexes in Microsoft Foundry",
+    Description = """
         Retrieves a list of knowledge indexes from Microsoft Foundry.
 
         This function is used when a user requests information about the available knowledge indexes in Microsoft Foundry. It provides an overview of the knowledge bases and search indexes that are currently deployed and available for use with AI agents and applications.
@@ -37,19 +30,16 @@ public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryE
             - The indexes listed are knowledge indexes specifically created within Microsoft Foundry projects.
             - These indexes can be used with AI agents for knowledge retrieval and RAG applications.
             - The list may change as new indexes are created or existing ones are updated.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryExtensionsService) : GlobalCommand<KnowledgeIndexListOptions>
+{
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
     protected override void RegisterOptions(Command command)
     {

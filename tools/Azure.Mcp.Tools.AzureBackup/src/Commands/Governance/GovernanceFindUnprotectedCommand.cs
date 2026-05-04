@@ -14,35 +14,30 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
-public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnprotectedCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<GovernanceFindUnprotectedOptions>()
-{
-    private const string CommandTitle = "Find Unprotected Resources";
-    private readonly ILogger<GovernanceFindUnprotectedCommand> _logger = logger;
-    private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override string Id => "73b050ca-2e20-448c-a76c-08e8cd5bbe25";
-    public override string Name => "find-unprotected";
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "73b050ca-2e20-448c-a76c-08e8cd5bbe25",
+    Name = "find-unprotected",
+    Title = "Find Unprotected Resources",
+    Description = """
         Scans the subscription to find Azure resources that are not currently protected by any
         backup policy. Optionally filter by resource type, resource group, or tags.
-        """;
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnprotectedCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<GovernanceFindUnprotectedOptions>()
+{
+    private readonly ILogger<GovernanceFindUnprotectedCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
         command.Options.Add(AzureBackupOptionDefinitions.ResourceTypeFilter);
-        command.Options.Add(AzureBackupOptionDefinitions.ResourceGroupFilter);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(AzureBackupOptionDefinitions.TagFilter);
     }
 
@@ -50,7 +45,7 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
     {
         var options = base.BindOptions(parseResult);
         options.ResourceTypeFilter = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ResourceTypeFilter.Name);
-        options.ResourceGroupFilter = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ResourceGroupFilter.Name);
+        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.TagFilter = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.TagFilter.Name);
         return options;
     }
@@ -64,12 +59,14 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
 
         var options = BindOptions(parseResult);
 
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, "scan");
+
         try
         {
             var resources = await _azureBackupService.FindUnprotectedResourcesAsync(
                 options.Subscription!,
                 options.ResourceTypeFilter,
-                options.ResourceGroupFilter,
+                options.ResourceGroup,
                 options.TagFilter,
                 options.Tenant,
                 options.RetryPolicy,

@@ -13,35 +13,27 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
-public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
-    : BaseComputeCommand<VmUpdateOptions>(true)
-{
-    private const string CommandTitle = "Update Virtual Machine";
-    private readonly ILogger<VmUpdateCommand> _logger = logger;
-
-    public override string Id => "f330138e-8048-4a4a-8170-d8b6f958eaa4";
-
-    public override string Name => "update";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "f330138e-8048-4a4a-8170-d8b6f958eaa4",
+    Name = "update",
+    Title = "Update Virtual Machine",
+    Description = """
         Update, modify, or reconfigure an existing Azure Virtual Machine (VM).
         Use this to resize a VM, update tags, configure boot diagnostics, or change user data.
         Equivalent to 'az vm update'. The VM may need to be deallocated before resizing to certain sizes.
         Do not use this to create a new VM (use VM create) or to update Virtual Machine Scale Sets (use VMSS update).
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger, IComputeService computeService)
+    : BaseComputeCommand<VmUpdateOptions>(true)
+{
+    private readonly ILogger<VmUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override void RegisterOptions(Command command)
     {
@@ -93,13 +85,12 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
 
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var result = await computeService.UpdateVmAsync(
+            var result = await _computeService.UpdateVmAsync(
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,

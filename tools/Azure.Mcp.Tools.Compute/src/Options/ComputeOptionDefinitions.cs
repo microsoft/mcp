@@ -209,13 +209,13 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> VmSize = new($"--{VmSizeName}", "--size")
     {
-        Description = "The VM size (e.g., Standard_D2s_v3, Standard_B2s). Defaults to Standard_DS1_v2 if not specified",
+        Description = "The VM size (e.g., Standard_D2s_v3, Standard_B2s). Defaults to Standard_D2s_v5 if not specified",
         Required = false
     };
 
     public static readonly Option<string> Image = new($"--{ImageName}")
     {
-        Description = "The OS image to use. Can be URN (publisher:offer:sku:version) or alias like 'Ubuntu2404', 'Win2022Datacenter'. Defaults to Ubuntu 24.04 LTS",
+        Description = "The OS image to use. Can be a URN (publisher:offer:sku:version), a shared gallery image ID (starting with '/sharedGalleries/'), or an alias such as 'Ubuntu2404' or 'Win2022Datacenter'.",
         Required = false
     };
 

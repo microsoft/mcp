@@ -13,30 +13,21 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Region;
 
-public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> logger) : SubscriptionCommand<AvailabilityListOptions>()
+[CommandMetadata(
+    Id = "0b8902f5-3fd4-49d9-b73e-4cea88afdd62",
+    Name = "list",
+    Title = "Get available regions for Azure resource types",
+    Description = "Given a list of Azure resource types, this tool will return a list of regions where the resource types are available. Always get the user's subscription ID before calling this tool.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> logger, IQuotaService quotaService) : SubscriptionCommand<AvailabilityListOptions>()
 {
-    private const string CommandTitle = "Get available regions for Azure resource types";
     private readonly ILogger<AvailabilityListCommand> _logger = logger;
-
-    public override string Id => "0b8902f5-3fd4-49d9-b73e-4cea88afdd62";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        Given a list of Azure resource types, this tool will return a list of regions where the resource types are available. Always get the user's subscription ID before calling this tool.
-        """;
-
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IQuotaService _quotaService = quotaService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -83,8 +74,7 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
                 .Where(rt => !string.IsNullOrWhiteSpace(rt))
                 .ToArray();
 
-            var quotaService = context.GetService<IQuotaService>();
-            List<string> toolResult = await quotaService.GetAvailableRegionsForResourceTypesAsync(
+            List<string> toolResult = await _quotaService.GetAvailableRegionsForResourceTypesAsync(
                 resourceTypes,
                 options.Subscription!,
                 options.CognitiveServiceModelName,

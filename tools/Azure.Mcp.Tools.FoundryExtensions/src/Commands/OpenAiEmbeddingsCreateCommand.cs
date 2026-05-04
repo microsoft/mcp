@@ -13,35 +13,25 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiEmbeddingsCreateOptions>
-{
-    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
-
-    private const string CommandTitle = "Create OpenAI Embeddings";
-
-    public override string Id => "f6a7b8c9-6789-abcd-f012-345678901234";
-
-    public override string Name => "embeddings-create";
-
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "f6a7b8c9-6789-abcd-f012-345678901234",
+    Name = "embeddings-create",
+    Title = "Create OpenAI Embeddings",
+    Description = """
         Create embeddings using Azure OpenAI in Microsoft Foundry. Generate vector embeddings from text using Azure OpenAI
         deployments in your Microsoft Foundry resource for semantic search, similarity comparisons, clustering, or machine
         learning. Use this when you need to create foundry embeddings, generate vectors from text, or convert text to
         numerical representations using Azure OpenAI. Requires resource-name, deployment-name, and input-text.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiEmbeddingsCreateOptions>
+{
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
     protected override void RegisterOptions(Command command)
     {

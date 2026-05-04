@@ -2,47 +2,24 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.UnitTests.Governance;
 
-public class GovernanceFindUnprotectedCommandTests
+public class GovernanceFindUnprotectedCommandTests : CommandUnitTestsBase<GovernanceFindUnprotectedCommand, IAzureBackupService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IAzureBackupService _backupService;
-    private readonly ILogger<GovernanceFindUnprotectedCommand> _logger;
-    private readonly GovernanceFindUnprotectedCommand _command;
-    private readonly CommandContext _context;
-    private readonly System.CommandLine.Command _commandDefinition;
-
-    public GovernanceFindUnprotectedCommandTests()
-    {
-        _backupService = Substitute.For<IAzureBackupService>();
-        _logger = Substitute.For<ILogger<GovernanceFindUnprotectedCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_backupService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _backupService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("find-unprotected", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -58,24 +35,17 @@ public class GovernanceFindUnprotectedCommandTests
             new("/subscriptions/.../sql1", "sql1", "Microsoft.Sql/servers", "rg2", "westus", null)
         };
 
-        _backupService.FindUnprotectedResourcesAsync(
+        Service.FindUnprotectedResourcesAsync(
             Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResources));
-
-        var args = _commandDefinition.Parse(["--subscription", "sub123"]);
+            .Returns(expectedResources);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.GovernanceFindUnprotectedCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.GovernanceFindUnprotectedCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(2, result.Resources.Count);
         Assert.Equal("vm1", result.Resources[0].Name);
     }
@@ -84,23 +54,17 @@ public class GovernanceFindUnprotectedCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenAllProtected()
     {
         // Arrange
-        _backupService.FindUnprotectedResourcesAsync(
+        Service.FindUnprotectedResourcesAsync(
             Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(new List<UnprotectedResourceInfo>()));
-
-        var args = _commandDefinition.Parse(["--subscription", "sub123"]);
+            .Returns([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.GovernanceFindUnprotectedCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.GovernanceFindUnprotectedCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Resources);
     }
 
@@ -108,15 +72,13 @@ public class GovernanceFindUnprotectedCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
-        _backupService.FindUnprotectedResourcesAsync(
+        Service.FindUnprotectedResourcesAsync(
             Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub123"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -129,16 +91,14 @@ public class GovernanceFindUnprotectedCommandTests
     {
         if (shouldSucceed)
         {
-            _backupService.FindUnprotectedResourcesAsync(
+            Service.FindUnprotectedResourcesAsync(
                 Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
                 Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(new List<UnprotectedResourceInfo>()));
+                .Returns([]);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -155,13 +115,65 @@ public class GovernanceFindUnprotectedCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange & Act
-        var command = _command.GetCommand();
-        var options = command.Options;
+        var options = CommandDefinition.Options;
 
         // Assert
         Assert.Contains(options, o => o.Name == "--subscription");
         Assert.Contains(options, o => o.Name == "--resource-type-filter");
-        Assert.Contains(options, o => o.Name == "--resource-group-filter");
+        Assert.Contains(options, o => o.Name == "--resource-group");
         Assert.Contains(options, o => o.Name == "--tag-filter");
+    }
+
+    [Fact]
+    public void BindOptions_DoesNotContainOldResourceGroupFilterOption()
+    {
+        Assert.DoesNotContain(CommandDefinition.Options, o => o.Name == "--resource-group-filter");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithResourceGroup_PassesValueToService()
+    {
+        // Arrange
+        Service.FindUnprotectedResourcesAsync(
+            Arg.Is("sub123"), Arg.Any<string?>(), Arg.Is("myRG"), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "myRG");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).FindUnprotectedResourcesAsync(
+            "sub123", Arg.Any<string?>(), "myRG",
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DeserializationValidation()
+    {
+        // Arrange
+        var expectedResources = new List<UnprotectedResourceInfo>
+        {
+            new("/subscriptions/.../vm1", "vm1", "Microsoft.Compute/virtualMachines", "rg1", "eastus", null)
+        };
+
+        Service.FindUnprotectedResourcesAsync(
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(expectedResources);
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.GovernanceFindUnprotectedCommandResult);
+
+        Assert.Single(result.Resources);
+        Assert.Equal("vm1", result.Resources[0].Name);
+        Assert.Equal("Microsoft.Compute/virtualMachines", result.Resources[0].ResourceType);
+        Assert.Equal("rg1", result.Resources[0].ResourceGroup);
+        Assert.Equal("eastus", result.Resources[0].Location);
     }
 }

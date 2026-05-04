@@ -2,78 +2,49 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.UnitTests.Policy;
 
-public class PolicyCreateCommandTests
+public class PolicyCreateCommandTests : CommandUnitTestsBase<PolicyCreateCommand, IAzureBackupService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IAzureBackupService _backupService;
-    private readonly ILogger<PolicyCreateCommand> _logger;
-    private readonly PolicyCreateCommand _command;
-    private readonly CommandContext _context;
-    private readonly System.CommandLine.Command _commandDefinition;
-
-    public PolicyCreateCommandTests()
-    {
-        _backupService = Substitute.For<IAzureBackupService>();
-        _logger = Substitute.For<ILogger<PolicyCreateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_backupService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _backupService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("create", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("create", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Fact]
     public async Task ExecuteAsync_CreatesPolicy_Successfully()
     {
         // Arrange
-        var expected = new OperationResult("Succeeded", null, "Policy created successfully");
-
-        _backupService.CreatePolicyAsync(
+        Service.CreatePolicyAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("myPolicy"), Arg.Is("AzureIaasVM"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expected));
-
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
-            "--policy", "myPolicy", "--workload-type", "AzureIaasVM"]);
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(new OperationResult("Succeeded", null, "Policy created successfully"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--policy", "myPolicy",
+            "--workload-type", "AzureIaasVM");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.PolicyCreateCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.PolicyCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal("Succeeded", result.Result.Status);
     }
 
@@ -81,17 +52,19 @@ public class PolicyCreateCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
-        _backupService.CreatePolicyAsync(
+        Service.CreatePolicyAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"), Arg.Is("AzureIaasVM"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
-            "--policy", "p", "--workload-type", "AzureIaasVM"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--policy", "p",
+            "--workload-type", "AzureIaasVM");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -105,17 +78,15 @@ public class PolicyCreateCommandTests
     {
         if (shouldSucceed)
         {
-            _backupService.CreatePolicyAsync(
+            Service.CreatePolicyAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"), Arg.Is("VM"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(new OperationResult("Succeeded", null, null)));
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+                Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                .Returns(new OperationResult("Succeeded", null, null));
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -132,8 +103,7 @@ public class PolicyCreateCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange & Act
-        var command = _command.GetCommand();
-        var options = command.Options;
+        var options = CommandDefinition.Options;
 
         // Assert
         Assert.Contains(options, o => o.Name == "--subscription");
@@ -144,5 +114,64 @@ public class PolicyCreateCommandTests
         Assert.Contains(options, o => o.Name == "--workload-type");
         Assert.Contains(options, o => o.Name == "--schedule-time");
         Assert.Contains(options, o => o.Name == "--daily-retention-days");
+    }
+
+    [Fact]
+    public void BindOptions_DoesNotContainRemovedRetentionOptions()
+    {
+        var optionNames = CommandDefinition.Options.Select(o => o.Name).ToList();
+
+        Assert.DoesNotContain("--schedule-frequency", optionNames);
+        Assert.DoesNotContain("--weekly-retention-weeks", optionNames);
+        Assert.DoesNotContain("--monthly-retention-months", optionNames);
+        Assert.DoesNotContain("--yearly-retention-years", optionNames);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DeserializationValidation()
+    {
+        // Arrange
+        Service.CreatePolicyAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new OperationResult("Succeeded", null, "Policy created successfully")));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--policy", "p",
+            "--workload-type", "VM");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.PolicyCreateCommandResult);
+
+        Assert.Equal("Succeeded", result.Result.Status);
+        Assert.Equal("Policy created successfully", result.Result.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesAuthorizationFailure()
+    {
+        // Arrange
+        Service.CreatePolicyAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"), Arg.Is("VM"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--policy", "p",
+            "--workload-type", "VM");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
+        Assert.Contains("Authorization failed", response.Message);
     }
 }

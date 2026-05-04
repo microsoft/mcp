@@ -1,14 +1,98 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Search.Services;
+using Azure.ResourceManager;
 using Azure.Search.Documents.KnowledgeBases.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Caching;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Search.UnitTests.Service;
+
+public class SearchServiceCacheTests
+{
+    private readonly ISubscriptionService _subscriptionService;
+    private readonly ICacheService _cacheService;
+    private readonly ITenantService _tenantService;
+    private readonly SearchService _service;
+
+    public SearchServiceCacheTests()
+    {
+        _subscriptionService = Substitute.For<ISubscriptionService>();
+        _cacheService = Substitute.For<ICacheService>();
+        _tenantService = Substitute.For<ITenantService>();
+
+        var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
+        cloudConfig.CloudType.Returns(AzureCloudConfiguration.AzureCloud.AzurePublicCloud);
+        cloudConfig.AuthorityHost.Returns(new Uri("https://login.microsoftonline.com"));
+        cloudConfig.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
+        _tenantService.CloudConfiguration.Returns(cloudConfig);
+
+        _service = new SearchService(
+            _subscriptionService,
+            _cacheService,
+            _tenantService,
+            Substitute.For<ILogger<SearchService>>());
+    }
+
+    [Fact]
+    public async Task ListServices_ReturnsCachedResult_WhenSubscriptionWideCacheHit()
+    {
+        // Arrange: cache already has data for this subscription
+        var cached = new List<string> { "cached-svc" };
+        _cacheService
+            .GetAsync<List<string>>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(cached);
+
+        // Act
+        var result = await _service.ListServices("sub123", cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert: result comes from cache and no ARM call is made
+        Assert.Equal(cached, result);
+        await _subscriptionService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ListServices_RgCacheKey_IsDistinctFromSubscriptionWideKey()
+    {
+        // Arrange: both paths hit the cache so no ARM call is needed
+        _cacheService
+            .GetAsync<List<string>>("search", Arg.Is<string>(k => k.Contains("my-rg")), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(["rg-svc"]);
+        _cacheService
+            .GetAsync<List<string>>("search", Arg.Is<string>(k => !k.Contains("my-rg")), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(["sub-svc"]);
+
+        // Act
+        var subResult = await _service.ListServices("sub123", cancellationToken: TestContext.Current.CancellationToken);
+        var rgResult = await _service.ListServices("sub123", resourceGroup: "my-rg", cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert: results are distinct — the RG key and sub-wide key are different
+        Assert.Equal(["sub-svc"], subResult);
+        Assert.Equal(["rg-svc"], rgResult);
+
+        // Verify the cache was queried with a key that includes "my-rg" for the RG call
+        await _cacheService.Received(1).GetAsync<List<string>>(
+            "search",
+            Arg.Is<string>(k => k.Contains("my-rg")),
+            Arg.Any<TimeSpan?>(),
+            Arg.Any<CancellationToken>());
+
+        // Verify the cache was queried with a key that excludes "my-rg" for the sub-wide call
+        await _cacheService.Received(1).GetAsync<List<string>>(
+            "search",
+            Arg.Is<string>(k => !k.Contains("my-rg")),
+            Arg.Any<TimeSpan?>(),
+            Arg.Any<CancellationToken>());
+    }
+}
 
 public class SearchServiceTests
 {

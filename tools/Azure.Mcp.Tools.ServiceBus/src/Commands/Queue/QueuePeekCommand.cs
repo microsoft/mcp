@@ -14,17 +14,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 
-public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : SubscriptionCommand<QueuePeekOptions>
-{
-    private const string CommandTitle = "Peek Messages from Service Bus Queue";
-    private readonly ILogger<QueuePeekCommand> _logger = logger;
-
-    public override string Id => "90c32c6c-0732-4079-b657-d5129293c67a";
-
-    public override string Name => "peek";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "90c32c6c-0732-4079-b657-d5129293c67a",
+    Name = "peek",
+    Title = "Peek Messages from Service Bus Queue",
+    Description = """
         Peek messages from a Service Bus queue without removing them.  Message browsing, or peeking, enables a
         Service Bus client to enumerate all messages in a queue, for diagnostic and debugging purposes.
         The peek operation returns active, locked, deferred, and scheduled messages in the queue.
@@ -34,19 +28,17 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
         Required arguments:
         - namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)
         - queue: Queue name to peek messages from
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<QueuePeekOptions>
+{
+    private readonly ILogger<QueuePeekCommand> _logger = logger;
+    private readonly IServiceBusService _serviceBusService = serviceBusService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -76,8 +68,7 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
 
         try
         {
-            var service = context.GetService<IServiceBusService>();
-            var messages = await service.PeekQueueMessages(
+            var messages = await _serviceBusService.PeekQueueMessages(
                 options.Namespace!,
                 options.Name!,
                 options.MaxMessages ?? 1,

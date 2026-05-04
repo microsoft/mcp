@@ -14,34 +14,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
-public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdateCommand> logger) : BaseMonitorWebTestsCommand<WebTestsCreateOrUpdateOptions>
-{
-    private const string CommandTitle = "Create or update a web test in Azure Monitor";
-
-    private readonly ILogger<WebTestsCreateOrUpdateCommand> _logger = logger;
-
-    public override string Id => "aa5a22bc-6a04-4bc0-a963-b6e462b5cdc4";
-
-    public override string Name => "createorupdate";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "aa5a22bc-6a04-4bc0-a963-b6e462b5cdc4",
+    Name = "createorupdate",
+    Title = "Create or update a web test in Azure Monitor",
+    Description = """
         Create or update a standard web test in Azure Monitor to monitor endpoint availability.
         Use this to set up new web tests or modify existing ones with monitoring configurations like URL, frequency, locations, and expected responses.
         Automatically creates a new test if it doesn't exist, or updates an existing test with new settings.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdateCommand> logger, IMonitorWebTestService monitorWebTestService) : BaseMonitorWebTestsCommand<WebTestsCreateOrUpdateOptions>
+{
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly ILogger<WebTestsCreateOrUpdateCommand> _logger = logger;
+    private readonly IMonitorWebTestService _monitorWebTestService = monitorWebTestService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -133,13 +125,11 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
         var options = BindOptions(parseResult);
         try
         {
-            var monitorWebTestService = context.GetService<IMonitorWebTestService>();
-
             // Check if the web test exists
             WebTestDetailedInfo? existingWebTest = null;
             try
             {
-                existingWebTest = await monitorWebTestService.GetWebTest(
+                existingWebTest = await _monitorWebTestService.GetWebTest(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.ResourceName!,
@@ -177,7 +167,7 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
                 var locationsArray = options.Locations!.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
                 var headersDictionary = options.Headers == null ? new Dictionary<string, string>(0) : OptionParsingHelpers.ParseKeyValuePairStringToDictionary(options.Headers);
 
-                webTest = await monitorWebTestService.CreateWebTest(
+                webTest = await _monitorWebTestService.CreateWebTest(
                     subscription: options.Subscription!,
                     resourceGroup: options.ResourceGroup!,
                     resourceName: options.ResourceName!,
@@ -210,7 +200,7 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
                 var locationsArray = options.Locations?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
                 var headersDictionary = options.Headers == null ? null : OptionParsingHelpers.ParseKeyValuePairStringToDictionary(options.Headers);
 
-                webTest = await monitorWebTestService.UpdateWebTest(
+                webTest = await _monitorWebTestService.UpdateWebTest(
                     subscription: options.Subscription!,
                     resourceGroup: options.ResourceGroup!,
                     resourceName: options.ResourceName!,

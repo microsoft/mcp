@@ -2,75 +2,53 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Table;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.TestUtilities;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Postgres.UnitTests.Table;
 
-public class TableSchemaGetCommandTests
+public class TableSchemaGetCommandTests : CommandUnitTestsBase<TableSchemaGetCommand, IPostgresService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IPostgresService _postgresService;
-    private readonly ILogger<TableSchemaGetCommand> _logger;
-
-    public TableSchemaGetCommandTests()
-    {
-        _postgresService = Substitute.For<IPostgresService>();
-        _logger = Substitute.For<ILogger<TableSchemaGetCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_postgresService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     [Fact]
     public async Task ExecuteAsync_ReturnsSchema_WhenSchemaExists()
     {
         var expectedSchema = new List<string>(["CREATE TABLE test (id INT);"]);
-        _postgresService.GetTableSchemaAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "table123", Arg.Any<CancellationToken>()).Returns(expectedSchema);
+        Service.GetTableSchemaAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "table123", Arg.Any<CancellationToken>()).Returns(expectedSchema);
 
-        var command = new TableSchemaGetCommand(_logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra, "--user", "user1", "--server", "server1", "--database", "db123", "--table", "table123"]);
-        var context = new CommandContext(_serviceProvider);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
+            "--user", "user1",
+            "--server", "server1",
+            "--database", "db123",
+            "--table", "table123");
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.TableSchemaGetCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, PostgresJsonContext.Default.TableSchemaGetCommandResult);
         Assert.Equal(expectedSchema, result.Schema);
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenSchemaDoesNotExist()
     {
-        _postgresService.GetTableSchemaAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "table123", Arg.Any<CancellationToken>()).Returns([]);
+        Service.GetTableSchemaAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "table123", Arg.Any<CancellationToken>()).Returns([]);
 
-        var command = new TableSchemaGetCommand(_logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra, "--user", "user1", "--server", "server1", "--database", "db123", "--table", "table123"]);
-        var context = new CommandContext(_serviceProvider);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
+            "--user", "user1",
+            "--server", "server1",
+            "--database", "db123",
+            "--table", "table123");
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.TableSchemaGetCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, PostgresJsonContext.Default.TableSchemaGetCommandResult);
         Assert.Empty(result.Schema);
     }
 
@@ -83,8 +61,7 @@ public class TableSchemaGetCommandTests
     [InlineData("--table")]
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
-        var command = new TableSchemaGetCommand(_logger);
-        var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
+        var response = await ExecuteCommandAsync(ArgBuilder.BuildArgs(missingParameter,
             ("--subscription", "sub123"),
             ("--resource-group", "rg1"),
             ($"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra),
@@ -93,9 +70,6 @@ public class TableSchemaGetCommandTests
             ("--database", "db123"),
             ("--table", "table123")
         ));
-
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

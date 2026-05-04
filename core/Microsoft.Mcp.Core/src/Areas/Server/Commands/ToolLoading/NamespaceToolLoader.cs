@@ -417,7 +417,11 @@ public sealed class NamespaceToolLoader(
             var realCommand = cmd.GetCommand();
 
             ParseResult commandOptions;
-            if (realCommand.Options.Count == 1 && IsRawMcpToolInputOption(realCommand.Options[0]))
+            var effectiveOptions = realCommand.Options
+                .Where(o => !CommandFactory.IsLearnOption(o))
+                .ToList();
+
+            if (effectiveOptions.Count == 1 && IsRawMcpToolInputOption(effectiveOptions[0]))
             {
                 commandOptions = realCommand.ParseFromRawMcpToolInput(parameters);
             }
@@ -629,9 +633,11 @@ public sealed class NamespaceToolLoader(
         tool.Meta = meta;
 
         var schema = new ToolInputSchema();
-        var options = command.GetCommand().Options;
+        var options = command.GetCommand().Options
+            .Where(o => !CommandFactory.IsLearnOption(o))
+            .ToList();
 
-        if (options?.Count > 0)
+        if (options.Count > 0)
         {
             if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
             {

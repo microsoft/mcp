@@ -14,30 +14,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
+[CommandMetadata(
+    Id = "5fc5a42b-a7f6-4d4a-9517-a8e119752b7a",
+    Name = "get",
+    Title = "Get Kusto Cluster Details",
+    Description = "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IKustoService kustoService) : SubscriptionCommand<ClusterGetOptions>
 {
-    private const string CommandTitle = "Get Kusto Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
     private readonly IKustoService _kustoService = kustoService;
-
-    public override string Id => "5fc5a42b-a7f6-4d4a-9517-a8e119752b7a";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

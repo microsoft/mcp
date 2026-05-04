@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.4 (Unreleased)
+## 3.0.0-beta.9 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,127 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 3.0.0-beta.8 (2026-05-01)
+
+### Features Added
+
+- Added `appservice_webapp_change-state` tool to change the running state of an App Service web app. [[#1934](https://github.com/microsoft/mcp/pull/1934)]
+
+### Bugs Fixed
+
+- Improved Resource Health availability status errors for unsupported resource types. [[#2554](https://github.com/microsoft/mcp/pull/2554)]
+- Fixed parameter handling to honor the optional `--resource-group` parameter, which was previously not passed through to the service layer, causing subscription-wide results to always be returned regardless of the specified resource group for the following tools: [[#2552](https://github.com/microsoft/mcp/pull/2552)]
+  - `appconfig_account_list`
+  - `grafana_list`
+  - `kusto_cluster_list`
+  - `monitor_workspace_list`
+  - `search_service_list`
+  - `storage_account_get`
+- Fixed issue where exceptions written to stdout were incorrectly interpreted as JSON RPC response. [[#2559](https://github.com/microsoft/mcp/pull/2559)]
+
+### Other Changes
+
+- Improved Azure Functions tool descriptions and prompts for better AI agent tool selection and invocation. [[#2517](https://github.com/microsoft/mcp/pull/2517)]
+
+## 3.0.0-beta.7 (2026-04-30)
+
+### Features Added
+
+- Added `azurebackup_policy_update` command for modifying RSV backup policy schedule and retention settings. [[#2452](https://github.com/microsoft/mcp/pull/2452)]
+
+### Bugs Fixed
+
+- Fixed CLI mode log messages being written to stdout instead of stderr, ensuring agents and pipelines consuming stdout receive clean JSON only. Logs can be viewed with `2>&1` or captured separately using `2> file.log`. [[#2535](https://github.com/microsoft/mcp/pull/2535)]
+
+### Other Changes
+
+- Fixed telemetry-triaged failures by hardening input validation and null handling as well as by migrating RSV soft-delete and cross-region restore to supported Vault Patch APIs. [[#2518](https://github.com/microsoft/mcp/pull/2518)]
+
+## 3.0.0-beta.6 (2026-04-28)
+
+### Features Added
+
+- Added Azure Terraform toolset with 10 tools: AzureRM and AzAPI provider documentation, Azure Verified Modules listing/versions/documentation, aztfexport resource/resource group/query export, and conftest workspace/plan policy validation: [[#2382](https://github.com/microsoft/mcp/pull/2382)]
+  - `azureterraform_azurerm_get`
+  - `azureterraform_azapi_get`
+  - `azureterraform_avm_list`
+  - `azureterraform_avm_versions`
+  - `azureterraform_avm_get`
+  - `azureterraform_aztfexport_resource`
+  - `azureterraform_aztfexport_resourcegroup`
+  - `azureterraform_aztfexport_query`
+  - `azureterraform_conftest_workspace`
+  - `azureterraform_conftest_plan`
+- Updated Marketplace tool to use API version 2025-05-01 and added new response model fields: `offerId`, `mixProductId`, `offeringType`, `licenseManagementType`, `hasRIPlans`, `leadGeneration`, and `experienceConfig`. [[#2502](https://github.com/microsoft/mcp/pull/2502)]
+- Added learn-mode discovery for azmcp commands. AI agents can use the azmcp CLI `--learn` flag, and MCP tool flows surface the same command and parameter discovery behavior without executing Azure operations. [[#2455](https://github.com/microsoft/mcp/pull/2455)]
+
+### Breaking Changes
+
+- Updated Marketplace `product_get` by removing `--market` and `--pricing-audience` (now fetched from the subscription), renaming `ProductsListResponse` fields (`Items` → `Value`, `NextPageLink` → `NextLink`), and changing `Badge`, `ProductType`, and `PricingAudience` from enums to strings. [[#2502](https://github.com/microsoft/mcp/pull/2502)]
+
+### Bugs Fixed
+
+- Fixed `azurebackup vault create --vault-type dpp` to enable a system-assigned managed identity by default, preventing subsequent `protecteditem protect` failures with `VaultMSIUnauthorized` (existing vaults unaffected; use `azurebackup vault update --identity-type SystemAssigned` if needed). [[#2470](https://github.com/microsoft/mcp/pull/2470)]
+- Fixed `azurebackup protecteditem protect` to return the real protect outcome (instead of a synthetic `Accepted` + non-resolvable base64 job id): RSV now polls the underlying `ConfigureBackup` job to a terminal state and returns its actual status (`Completed`, `CompletedWithWarnings`, `Failed`, `Cancelled`, or `InProgress` if polling exceeds the budget) plus error details; DPP now waits for completion, reads back the backup instance, returns the actual `protectionStatus` (e.g., `ProtectionConfigured`), and no longer includes a misleading `jobId` (use `azurebackup protecteditem get`/`list` to verify). [[#2470](https://github.com/microsoft/mcp/pull/2470)]
+- Fixed RSV IaaS VM protection in `azurebackup protecteditem protect` by submitting the protect request directly (removing the 180s container-discovery pre-poll), preventing timeouts for newly created VMs and matching `az backup protection enable-for-vm` behavior. [[#2470](https://github.com/microsoft/mcp/pull/2470)]
+
+### Other Changes
+
+- Added an automated end-to-end (E2E) testing tool that uses the GitHub Copilot SDK to validate Azure MCP tool invocations from prompt fixtures. [[#1830](https://github.com/microsoft/mcp/pull/1830)]
+- Improved deploy tool invocation by rewriting tool descriptions and defaulting previously required options, and restricted `deploy_app_logs_get` to local-only mode (`LocalRequired=true`). [[#2418](https://github.com/microsoft/mcp/pull/2418)]
+- Added custom telemetry dimensions to Azure Backup MCP commands. [[#2505](https://github.com/microsoft/mcp/pull/2505)]
+
+## 2.0.2 (2026-04-24)
+
+### Breaking Changes
+
+- Renamed `--detector-name` parameter to `--detector-id` in `appservice_webapp_diagnostic_diagnose` command to accurately reflect that the parameter expects a detector ID, not a display name. [[#2469](https://github.com/microsoft/mcp/pull/2469)]
+
+### Bugs Fixed
+
+- Fixed App Service `diagnostic_list` returning detector display names instead of detector IDs, causing `diagnostic_diagnose` to fail with 404 Not Found errors. [[#2469](https://github.com/microsoft/mcp/pull/2469)]
+
+### Other Changes
+
+- Fixed MCPB packaging to only include the platform a bundle was created for. Also updated the descriptions in `manifest.json`, as well as its list of keywords to reflect new namespace additions. [[#2461](https://github.com/microsoft/mcp/pull/2461)]
+
+#### Dependency Updates
+
+- Updated the following `System` dependencies: [[#2461](https://github.com/microsoft/mcp/pull/2461)]
+  - `System.CommandLine`: `2.0.1` → `2.0.6`
+  - `System.Formats.Asn1`: `10.0.2` → `10.0.6`
+  - `System.IdentityModel.Tokens.Jwt`: `8.15.0` → `8.17.0`
+  - `System.Net.ServerSentEvents`: `10.0.2` → `10.0.6`
+  - `System.Numerics.Tensors`: `10.0.2` → `10.0.6`
+  - `System.Text.Json`: `10.0.2` → `10.0.6`
+
+## 3.0.0-beta.5 (2026-04-23)
+
+### Breaking Changes
+
+- Changed default VM size for `vm create` and `vmss create` commands from `Standard_DS1_v2` (older generation) to `Standard_D2s_v5` (2 vCPU, 8 GB RAM, D-series v5) [[#2415](https://github.com/microsoft/mcp/pull/2415)]
+- Renamed `--detector-name` parameter to `--detector-id` in `appservice_webapp_diagnostic_diagnose` command to accurately reflect that the parameter expects a detector ID, not a display name. [[#2458](https://github.com/microsoft/mcp/pull/2458)]
+
+### Bugs Fixed
+
+- Fixed App Service `diagnostic_list` returning detector display names instead of detector IDs, causing `diagnostic_diagnose` to fail with 404 Not Found errors. [[#2458](https://github.com/microsoft/mcp/pull/2458)]
+
+### Other Changes
+
+- Added a `-Verify` flag to `Update-Solution.ps1` that checks whether `.slnx` solution files are up to date without overwriting them, and integrated this verification into `Analyze-Code.ps1` so stale solution files are caught before merge. [[#2430](https://github.com/microsoft/mcp/pull/2430)]
+
+## 3.0.0-beta.4 (2026-04-21)
+
+### Features Added
+
+- Added Azure Backup toolset for vault management, backup policies, protection, jobs, recovery points, governance, and disaster recovery. Tools added: `azurebackup_vault_get`, `azurebackup_vault_create`, `azurebackup_vault_update`, `azurebackup_policy_get`, `azurebackup_policy_create`, `azurebackup_protecteditem_get`, `azurebackup_protecteditem_protect`, `azurebackup_protectableitem_list`, `azurebackup_backup_status`, `azurebackup_job_get`, `azurebackup_recoverypoint_get`, `azurebackup_governance_find-unprotected`, `azurebackup_governance_immutability`, `azurebackup_governance_soft-delete`, `azurebackup_disasterrecovery_enable-crr`. [[#2116](https://github.com/microsoft/mcp/pull/2116)]
+- Added a new `azurebackup protecteditem undelete` command that restores soft-deleted backup items to an active protection state for both RSV (Recovery Services vault) and DPP (Data Protection) vault types. [[#2441](https://github.com/microsoft/mcp/pull/2441)]
+
+### Bugs Fixed
+
+- Added validation in `SearchService.GetSearchEndpoint` to prevent URL injection if called without prior `ValidateServiceName` check. [[#2420](https://github.com/microsoft/mcp/pull/2420)]
+- Fixed `compute_vmss_update` tool returning HTTP 400 when only `--capacity`, `--overprovision`, or `--enable-auto-os-upgrade` is provided by correcting option type definitions to use nullable types. [[#2421](https://github.com/microsoft/mcp/pull/2421)]
 
 ## 3.0.0-beta.3 (2026-04-16)
 

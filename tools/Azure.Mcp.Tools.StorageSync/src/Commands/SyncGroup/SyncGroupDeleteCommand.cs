@@ -12,29 +12,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.SyncGroup;
 
+[CommandMetadata(
+    Id = "c8f91bd7-ea1d-4af4-9703-fe83c43b34b5",
+    Name = "delete",
+    Title = "Delete Sync Group",
+    Description = "Remove a sync group from a Storage Sync service. Deleting a sync group also removes all associated cloud endpoints and server endpoints within that group.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SyncGroupDeleteCommand(ILogger<SyncGroupDeleteCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<SyncGroupDeleteOptions>
 {
-    private const string CommandTitle = "Delete Sync Group";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<SyncGroupDeleteCommand> _logger = logger;
-
-    public override string Id => "c8f91bd7-ea1d-4af4-9703-fe83c43b34b5";
-
-    public override string Name => "delete";
-
-    public override string Description => "Remove a sync group from a Storage Sync service. Deleting a sync group also removes all associated cloud endpoints and server endpoints within that group.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

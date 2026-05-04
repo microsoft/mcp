@@ -4,7 +4,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.AzureBackup.Commands.Backup;
-using Azure.Mcp.Tools.AzureBackup.Commands.Dr;
+using Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Commands.Job;
 using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
@@ -21,8 +21,10 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands;
 [JsonSerializable(typeof(VaultUpdateCommand.VaultUpdateCommandResult))]
 [JsonSerializable(typeof(PolicyGetCommand.PolicyGetCommandResult))]
 [JsonSerializable(typeof(PolicyCreateCommand.PolicyCreateCommandResult))]
+[JsonSerializable(typeof(PolicyUpdateCommand.PolicyUpdateCommandResult))]
 [JsonSerializable(typeof(ProtectedItemGetCommand.ProtectedItemGetCommandResult))]
 [JsonSerializable(typeof(ProtectedItemProtectCommand.ProtectedItemProtectCommandResult))]
+[JsonSerializable(typeof(ProtectedItemUndeleteCommand.ProtectedItemUndeleteCommandResult))]
 [JsonSerializable(typeof(ProtectableItemListCommand.ProtectableItemListCommandResult))]
 [JsonSerializable(typeof(BackupStatusCommand.BackupStatusCommandResult))]
 [JsonSerializable(typeof(JobGetCommand.JobGetCommandResult))]
@@ -30,7 +32,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands;
 [JsonSerializable(typeof(GovernanceFindUnprotectedCommand.GovernanceFindUnprotectedCommandResult))]
 [JsonSerializable(typeof(GovernanceImmutabilityCommand.GovernanceImmutabilityCommandResult))]
 [JsonSerializable(typeof(GovernanceSoftDeleteCommand.GovernanceSoftDeleteCommandResult))]
-[JsonSerializable(typeof(DrEnableCrrCommand.DrEnableCrrCommandResult))]
+[JsonSerializable(typeof(DisasterRecoveryEnableCrrCommand.DisasterRecoveryEnableCrrCommandResult))]
 [JsonSerializable(typeof(BackupVaultInfo))]
 [JsonSerializable(typeof(ProtectedItemInfo))]
 [JsonSerializable(typeof(BackupPolicyInfo))]
