@@ -161,16 +161,15 @@ When the Azure MCP Server tries to connect to an external registry server (e.g. 
 Failed to create MCP client for registry server 'foundry': The ChainedTokenCredential failed to retrieve a token from the included credentials.
 - AzurePowerShellCredential is not available: Azure PowerShell authentication failed due to an unknown error...
   SharedTokenCacheCredential authentication failed: AADSTS65002: Consent between first party application '1950a258-227b-4e31-a9cf-717495945fc2' and first party resource '...' must be configured via preauthorization
-- InteractiveBrowserCredential is not available: Authentication is not configured correctly. Please authenticate using Azure CLI ('az login')...
 ```
 
 **Cause**
 
-The credential chain tries `AzurePowerShellCredential` and it fails because the PowerShell shared token cache does not have consent configured for the target resource. `InteractiveBrowserCredential` is also unavailable in non-interactive stdio/CLI mode.
+The credential chain tries `AzurePowerShellCredential` and it fails because the PowerShell shared token cache does not have consent configured for the target resource.
 
 **Fix**
 
-Use Azure CLI authentication instead. This is the most reliable credential for stdio/CLI mode:
+Use Azure CLI authentication instead.
 
 1. Sign in with the Azure CLI:
 
