@@ -28,7 +28,7 @@ ensuring it passes all validation gates before PR submission.
 
 ### Phase 1: Implementation
 
-Follow [/servers/Azure.Mcp.Server/docs/new-command.md](/servers/Azure.Mcp.Server/docs/new-command.md) as the authoritative guide.
+Follow [`/servers/Azure.Mcp.Server/docs/new-command.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md) as the authoritative guide.
 The Azure Backup toolset lives in `tools/Azure.Mcp.Tools.AzureBackup/`.
 
 #### 1a. Create Option Definitions

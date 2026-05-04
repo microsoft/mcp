@@ -45,27 +45,27 @@ This is the primary query. It classifies every call into one of four categories:
 - **Azure Service**: Azure SDK/API/auth layer failed — not an MCP code bug (includes `AggregateException`, `RequestFailedException` with 5xx)
 - **MCP Tool Bug**: Our tool code is wrong — `FormatException`, `ArgumentNullException`, `ArgumentException`, etc.
 
-Refer to [kql-queries.md](/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-queries.md) for the full query.
+Refer to [`kql-queries.md`](https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-queries.md) for the full query.
 
 #### 1b. Aggregate KPI — This Week vs Last Week
 
 Compare total calls, success rate, customer errors, Azure service errors, and MCP tool bugs between
-the current week and the previous week. See [kql-queries.md](/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-queries.md).
+the current week and the previous week. See [`kql-queries.md`](https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-queries.md).
 
 #### 1c. Error Details
 
 Run the error summary query to get per-tool exception types, messages, and stack traces.
-Also run the daily error trend query. See [kql-queries.md](/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-queries.md).
+Also run the daily error trend query. See [`kql-queries.md`](https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-queries.md).
 
 #### 1d. Duration Percentiles
 
-Get P50/P95/P99 latency for successful calls. See [kql-queries.md](/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-queries.md).
+Get P50/P95/P99 latency for successful calls. See [`kql-queries.md`](https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-queries.md).
 
 #### 1e. Custom Dimension Tags
 
 Query `azurebackup/VaultType`, `azurebackup/WorkloadType`, `azurebackup/DatasourceType`, `azurebackup/OperationScope`
 dimensions to see if users have upgraded to versions with telemetry tags.
-Use queries 7, 11, 12, and 13 from [kql-queries.md](/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-queries.md).
+Use queries 7, 11, 12, and 13 from [`kql-queries.md`](https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-queries.md).
 
 ### Step 2: Gather Git Context
 
@@ -123,7 +123,7 @@ For each error cluster, determine:
 
 ### Step 4: Generate the Report
 
-Use the [Outlook HTML template](/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/assets/report-template.html) as a starting point.
+Use the [`report-template.html`](https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/assets/report-template.html) as a starting point.
 
 The report must include these sections in order:
 1. **Header** — Title, date range, summary line
@@ -191,5 +191,5 @@ When new errors appear, assign the next sequential ID (NEW-2, NEW-3, etc.) and a
 
 ## References
 
-- [KQL Queries](/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-queries.md) — All Kusto queries used in the report
-- [Report Template](/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/assets/report-template.html) — Outlook-compatible HTML template
+- [`kql-queries.md`](https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-queries.md) — All Kusto queries used in the report
+- [`report-template.html`](https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/assets/report-template.html) — Outlook-compatible HTML template
