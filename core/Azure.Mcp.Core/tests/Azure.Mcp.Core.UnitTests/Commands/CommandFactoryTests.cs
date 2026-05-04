@@ -445,6 +445,88 @@ public class CommandFactoryTests
         Assert.Contains("nonexistent", messageText, StringComparison.OrdinalIgnoreCase);
     }
 
+    // -----------------------------------------------------------------------
+    // TargetAreaName filtering (startup optimization)
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public void TargetAreaName_Set_OnlyMatchingAreaRegisteredInParseTree()
+    {
+        // Arrange – three areas; only name2 is targeted
+        var area1 = CreateIAreaSetup("name1");
+        var area2 = CreateIAreaSetup("name2");
+        var area3 = CreateIAreaSetup("name3");
+        var serviceAreas = new List<IAreaSetup> { area1, area2, area3 };
+        var options = Microsoft.Extensions.Options.Options.Create(new CommandFactoryOptions { TargetAreaName = "name2" });
+
+        // Act
+        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _configurationOptions, _logger, options);
+
+        // Assert – only name2 appears in the root group's sub-groups
+        Assert.Single(factory.RootGroup.SubGroup);
+        Assert.Equal("name2", factory.RootGroup.SubGroup[0].Name, StringComparer.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void TargetAreaName_CaseInsensitive_MatchesArea()
+    {
+        // Arrange
+        var area1 = CreateIAreaSetup("name1");
+        var area2 = CreateIAreaSetup("name2");
+        var options = Microsoft.Extensions.Options.Options.Create(new CommandFactoryOptions { TargetAreaName = "NAME1" });
+
+        // Act
+        var factory = new CommandFactory(_serviceProvider, [area1, area2], _telemetryService, _configurationOptions, _logger, options);
+
+        // Assert – "NAME1" is treated case-insensitively; only name1 is registered
+        Assert.Single(factory.RootGroup.SubGroup);
+        Assert.Equal("name1", factory.RootGroup.SubGroup[0].Name, StringComparer.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void TargetAreaName_Null_AllAreasRegistered()
+    {
+        // Arrange
+        var area1 = CreateIAreaSetup("name1");
+        var area2 = CreateIAreaSetup("name2");
+        var options = Microsoft.Extensions.Options.Options.Create(new CommandFactoryOptions { TargetAreaName = null });
+
+        // Act
+        var factory = new CommandFactory(_serviceProvider, [area1, area2], _telemetryService, _configurationOptions, _logger, options);
+
+        // Assert – null target means full init: all areas must be registered
+        Assert.Equal(2, factory.RootGroup.SubGroup.Count);
+    }
+
+    [Fact]
+    public void TargetAreaName_DefaultConstructor_NoOptionsParam_AllAreasRegistered()
+    {
+        // Arrange – no options param; backward-compat path should default to full init
+        var area1 = CreateIAreaSetup("name1");
+        var area2 = CreateIAreaSetup("name2");
+
+        // Act
+        var factory = new CommandFactory(_serviceProvider, [area1, area2], _telemetryService, _configurationOptions, _logger);
+
+        // Assert – all areas registered when no options are supplied
+        Assert.Equal(2, factory.RootGroup.SubGroup.Count);
+    }
+
+    [Fact]
+    public void TargetAreaName_DuplicateCheck_StillRunsForFilteredAreas()
+    {
+        // Arrange – name2 appears twice; even though it would be skipped by TargetAreaName = "name1",
+        // duplicate detection must still run across the full area list before the skip takes effect.
+        var area1 = CreateIAreaSetup("name1");
+        var area2a = CreateIAreaSetup("name2");
+        var area2b = CreateIAreaSetup("name2"); // duplicate
+        var options = Microsoft.Extensions.Options.Options.Create(new CommandFactoryOptions { TargetAreaName = "name1" });
+
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() =>
+            new CommandFactory(_serviceProvider, [area1, area2a, area2b], _telemetryService, _configurationOptions, _logger, options));
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
