@@ -4,9 +4,9 @@
 using System.Net;
 using Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
 using Azure.Mcp.Tools.ResourceHealth.Services;
-using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -31,9 +31,7 @@ public class ServiceHealthEventsListCommandTests : CommandUnitTestsBase<ServiceH
         // profile default is present so we only assert when validation actually fails.
         if (!shouldSucceed && string.IsNullOrWhiteSpace(args))
         {
-            Assert.SkipWhen(
-                !string.IsNullOrEmpty(CommandHelper.GetDefaultSubscription()),
-                "An Azure CLI default subscription is configured; cannot validate missing --subscription.");
+            TestEnvironment.SkipIfDefaultSubscriptionConfigured();
         }
 
         // Arrange
