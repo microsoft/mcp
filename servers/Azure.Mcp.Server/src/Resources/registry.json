@@ -24,7 +24,7 @@
         },
         "arm": {
             "url": "https://mcp.management.azure.com",
-            "title": "Azure ARM MCP",
+            "title": "Azure Management MCP",
             "description": "MCP server with tools to generate and execute Azure Resource Graph queries to retrieve and filter information about Azure resources in a customer's subscription.",
             "toolPrefix": "arm_",
             "oauthScopes": ["22bfbae3-f4e7-485f-be43-8cee15065084/.default"]
