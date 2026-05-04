@@ -615,7 +615,9 @@ To ensure consistent code quality, code analysis checks will run during all PR a
 ./eng/scripts/Analyze-Code.ps1 -Fix
 ```
 
-This runs: solution file verification, `dotnet format`, tools.json regeneration, spelling check, tool metadata validation, and README validation. Fixable issues (format, solution files, tools.json) are corrected automatically with `-Fix`.
+This runs: solution file verification, `dotnet format`, tools.json regeneration, spelling check, and tool metadata validation. Fixable issues (format, solution files, tools.json) are corrected automatically with `-Fix`.
+
+Package README validation currently runs separately in CI, so a clean local `Analyze-Code.ps1 -Fix` run does not cover that check.
 
 To run the check in verify-only mode (as CI does):
 
