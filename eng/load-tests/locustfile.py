@@ -12,9 +12,10 @@ Simulates MCP clients that:
 Environment variables
 ---------------------
 MCP_SUBSCRIPTION : Azure subscription ID or name to pass to the tool
+MCP_PATH         : (optional) MCP endpoint path. Defaults to '/mcp'.
 
 The MCP server base URL is supplied to Locust via the `host` field in
-config.yaml (or `--host` on the CLI); `self.client.post('/mcp', ...)` resolves
+config.yaml (or `--host` on the CLI); `self.client.post(MCP_PATH, ...)` resolves
 against that host automatically.
 """
 
@@ -25,6 +26,8 @@ import os
 import uuid
 
 from locust import HttpUser, between, task
+
+MCP_PATH = os.environ.get("MCP_PATH", "/mcp")
 
 
 def _jsonrpc_request(method: str, params: dict | None = None, *, notify: bool = False) -> dict:
@@ -82,7 +85,7 @@ class McpUser(HttpUser):
             },
         )
         with self.client.post(
-            "/mcp",
+            MCP_PATH,
             json=payload,
             headers={"Content-Type": "application/json", "Accept": "application/json, text/event-stream"},
             name="initialize",
@@ -108,7 +111,7 @@ class McpUser(HttpUser):
             headers["Mcp-Session-Id"] = self.session_id
 
         with self.client.post(
-            "/mcp",
+            MCP_PATH,
             json=payload,
             headers=headers,
             name="notifications/initialized",
@@ -137,7 +140,7 @@ class McpUser(HttpUser):
             headers["Mcp-Session-Id"] = self.session_id
 
         with self.client.post(
-            "/mcp",
+            MCP_PATH,
             json=payload,
             headers=headers,
             name="tools/call [azmcp_storage_account_get]",

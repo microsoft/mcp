@@ -19,7 +19,6 @@
 # ---------------------------------------------------------------------------
 
 trigger: none
-pr: none
 
 parameters:
   - name: engineInstances
