@@ -12,7 +12,7 @@
 - Run `dotnet build` after making changes
 - Follow the `{Resource}{Operation}Command` naming pattern
 - Use extension methods `.AsRequired()` and `.AsOptional()` for option handling
-- Use name-based binding with `parseResult.GetValueOrDefault<T>()`
+- Use Option-based binding with `parseResult.GetValueOrDefault(Option<T>)`
 - Always call `HandleException(context, ex)` in catch blocks
 - Include live tests for all commands that interact with Azure resources
 - Create Bicep templates for Azure service commands (`test-resources.bicep`)
@@ -140,7 +140,7 @@ Microsoft MCP (Model Context Protocol) servers provide AI agents with structured
 ### Prerequisites
 1. **Visual Studio Code**: [VS Code Stable](https://code.visualstudio.com/download) or [Insiders](https://code.visualstudio.com/insiders)
 2. **GitHub Copilot**: Install [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
-3. **Node.js**: [Node.js 20+](https://nodejs.org/en/download) (ensure `node` and `npm` are in PATH)
+3. **Node.js**: [Latest Node.js LTS](https://nodejs.org/en/download) (ensure `node` and `npm` are in PATH)
 4. **PowerShell**: [PowerShell 7.0+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) (required for build/test scripts)
 5. **.NET SDK**: .NET 10.0.201 (configured in `global.json`)
 6. **Azure PowerShell**: For live tests - [Install Azure PowerShell](https://learn.microsoft.com/powershell/azure/install-azure-powershell)
@@ -377,12 +377,12 @@ protected override void RegisterOptions(Command command)
     command.Options.Add(StorageOptionDefinitions.Account.AsOptional());
 }
 
-// Use name-based binding with type safety
+// Use Option-based binding with type safety
 protected override StorageAccountListOptions BindOptions(ParseResult parseResult)
 {
     var options = base.BindOptions(parseResult);
-    options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-    options.Account = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Account.Name);
+    options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+    options.Account = parseResult.GetValueOrDefault(StorageOptionDefinitions.Account);
     return options;
 }
 ```
@@ -428,7 +428,7 @@ try
 }
 catch (Exception ex)
 {
-    _logger.LogError(ex, "Error in {Operation}. Resource: {Resource}", Name, resourceId, options);
+    _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}", Name, options.Subscription);
     HandleException(context, ex);
 }
 ```
