@@ -1,0 +1,1783 @@
+[
+  {
+    "id": "bfdfd3c0-4551-4454-a930-5bf5b1ad5690",
+    "name": "create-item",
+    "description": "Creates a new item in a Fabric workspace. Use this when the user wants to create a Lakehouse, Notebook, or other Fabric item type. Requires workspace ID, item name, and item type.",
+    "command": "core create-item",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace-id",
+        "description": "The ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace",
+        "description": "The name or ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--display-name",
+        "description": "The display name for the item.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--item-type",
+        "description": "The type of the Fabric item (e.g., Lakehouse, Notebook, etc.).",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--description",
+        "description": "The description for the item.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": false,
+    "openWorld": false,
+    "readOnly": false,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "3efdeea3-ee84-43e7-b7a9-c4accb03795a",
+    "name": "api-examples",
+    "description": "Retrieves example API request and response files for a Fabric workload. Use this when the user needs sample API calls or implementation examples. Returns dictionary of example files with their contents.",
+    "command": "docs api-examples",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workload-type",
+        "description": "The type of Microsoft Fabric workload.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "0a73ecc9-d257-4ff3-8e05-fd3158c2cd31",
+    "name": "best-practices",
+    "description": "Retrieves embedded best practice documentation for a specific Fabric topic. Use this when the user needs guidance, recommendations, or implementation patterns for Fabric features. Returns detailed best practice content.",
+    "command": "docs best-practices",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--topic",
+        "description": "The best practice topic to retrieve documentation for.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "445c49f3-2a5d-478a-82ca-87fde1a7943e",
+    "name": "item-definitions",
+    "description": "Retrieves JSON schema definitions for items in a Fabric workload API. Use this when the user needs to understand item structure or validate item definitions. Returns schema definitions for the specified workload.",
+    "command": "docs item-definitions",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workload-type",
+        "description": "The type of Microsoft Fabric workload.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "2338df97-d6d9-4f1d-9e92-e118efe9c643",
+    "name": "platform-api-spec",
+    "description": "Retrieves the OpenAPI specification for core Fabric platform APIs. Use this when the user needs documentation for cross-workload platform APIs like workspace management. Returns complete platform API specification.",
+    "command": "docs platform-api-spec",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "97229a98-c1ae-4255-a6e2-07631c2a42c5",
+    "name": "workload-api-spec",
+    "description": "Retrieves the complete OpenAPI specification for a specific Fabric workload. Use this when the user needs detailed API documentation for a workload like notebooks or reports. Returns full API spec in JSON format.",
+    "command": "docs workload-api-spec",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workload-type",
+        "description": "The type of Microsoft Fabric workload.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "b1f80251-df7b-4054-953b-5f452c42dd09",
+    "name": "workloads",
+    "description": "Lists Fabric workload types that have public API specifications available. Use this when the user needs to discover what APIs exist for Fabric workloads. Returns workload names like notebook, report, or platform.",
+    "command": "docs workloads",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "0c4cf0f4-2ef4-4f1d-9f80-24fd7636d5fe",
+    "name": "create_directory",
+    "description": "Creates a directory in OneLake storage. Use this when the user needs to organize files or prepare folder structures. Can create nested directory paths.",
+    "command": "onelake create directory",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace-id",
+        "description": "The ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace",
+        "description": "The name or ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--item-id",
+        "description": "The ID of the Fabric item.",
+        "type": "string"
+      },
+      {
+        "name": "--item",
+        "description": "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').",
+        "type": "string"
+      },
+      {
+        "name": "--directory-path",
+        "description": "The path to the directory in OneLake.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": false,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "86991cd6-75fa-4870-9d99-f986ba9f5f73",
+    "name": "delete_directory",
+    "description": "Deletes a directory from OneLake storage. Use this when the user wants to remove a folder. Use recursive flag to delete non-empty directories.",
+    "command": "onelake delete directory",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace-id",
+        "description": "The ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace",
+        "description": "The name or ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--item-id",
+        "description": "The ID of the Fabric item.",
+        "type": "string"
+      },
+      {
+        "name": "--item",
+        "description": "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').",
+        "type": "string"
+      },
+      {
+        "name": "--directory-path",
+        "description": "The path to the directory in OneLake.",
+        "type": "string"
+      },
+      {
+        "name": "--recursive",
+        "description": "Whether to perform the operation recursively.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": true,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": false,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "0aa3f887-0085-4141-8e34-f0cf1ed44f71",
+    "name": "delete_file",
+    "description": "Deletes a file from OneLake storage. Use this when the user wants to remove a specific file. Permanently removes the file at the specified path.",
+    "command": "onelake delete file",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace-id",
+        "description": "The ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace",
+        "description": "The name or ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--item-id",
+        "description": "The ID of the Fabric item.",
+        "type": "string"
+      },
+      {
+        "name": "--item",
+        "description": "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').",
+        "type": "string"
+      },
+      {
+        "name": "--file-path",
+        "description": "The path to the file in OneLake.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": true,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": false,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "75d6cb4c-4e81-4e69-a4ec-eca53a7dacd9",
+    "name": "download_file",
+    "description": "Downloads a file from OneLake storage. Use this when the user needs to retrieve file content or metadata. Returns base64 content, metadata, and text when applicable.",
+    "command": "onelake download file",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace-id",
+        "description": "The ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace",
+        "description": "The name or ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--item-id",
+        "description": "The ID of the Fabric item.",
+        "type": "string"
+      },
+      {
+        "name": "--item",
+        "description": "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').",
+        "type": "string"
+      },
+      {
+        "name": "--file-path",
+        "description": "The path to the file in OneLake.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--download-file-path",
+        "description": "Local path to save the downloaded content when running locally.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "19bb5a6a-2a09-410c-bfa0-312986c6acc6",
+    "name": "get_table",
+    "description": "Retrieves table definition from OneLake. Use this when the user needs table schema or metadata.",
+    "command": "onelake get table",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace-id",
+        "description": "The ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace",
+        "description": "The name or ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--item-id",
+        "description": "The ID of the Fabric item.",
+        "type": "string"
+      },
+      {
+        "name": "--item",
+        "description": "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').",
+        "type": "string"
+      },
+      {
+        "name": "--namespace",
+        "description": "The table namespace (schema) to inspect within the OneLake table API.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--schema",
+        "description": "Alias for --namespace when specifying table schemas in the OneLake table API.",
+        "type": "string"
+      },
+      {
+        "name": "--table",
+        "description": "The table name exposed by the OneLake table API.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "bc15c475-0329-4cc3-aaa8-0e9f3fbde6f8",
+    "name": "get_table_config",
+    "description": "Retrieves table API configuration for OneLake. Use this when the user needs to understand table access settings.",
+    "command": "onelake get table config",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace-id",
+        "description": "The ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace",
+        "description": "The name or ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--item-id",
+        "description": "The ID of the Fabric item.",
+        "type": "string"
+      },
+      {
+        "name": "--item",
+        "description": "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "a86298d1-7475-4ea8-8c1b-e4c54ac2b896",
+    "name": "get_table_namespace",
+    "description": "Retrieves metadata for a specific table namespace. Use this when the user needs details about a namespace.",
+    "command": "onelake get table namespace",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace-id",
+        "description": "The ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace",
+        "description": "The name or ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--item-id",
+        "description": "The ID of the Fabric item.",
+        "type": "string"
+      },
+      {
+        "name": "--item",
+        "description": "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').",
+        "type": "string"
+      },
+      {
+        "name": "--namespace",
+        "description": "The table namespace (schema) to inspect within the OneLake table API.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--schema",
+        "description": "Alias for --namespace when specifying table schemas in the OneLake table API.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "3bf1b82d-ff44-4984-9b97-0e6d9e4917a3",
+    "name": "list_files",
+    "description": "List files and directories in OneLake storage using a filesystem-style hierarchical view, similar to Azure Data Lake Storage Gen2. \r\nShows directory structure with paths, sizes, timestamps, and metadata. Use this to explore OneLake content in a filesystem format \r\nrather than flat blob listing. Supports optional path filtering and recursive directory traversal.\r\n\r\nIf no path is specified, intelligently discovers content by searching both Files and Tables folders automatically,\r\nproviding comprehensive visibility across all top-level OneLake folders.\r\n\r\nUse --format=raw to get the unprocessed OneLake DFS API response for debugging and analysis.",
+    "command": "onelake list files",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace-id",
+        "description": "The ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace",
+        "description": "The name or ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--item-id",
+        "description": "The ID of the Fabric item.",
+        "type": "string"
+      },
+      {
+        "name": "--item",
+        "description": "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').",
+        "type": "string"
+      },
+      {
+        "name": "--path",
+        "description": "The path to list in OneLake storage (optional, defaults to root).",
+        "type": "string"
+      },
+      {
+        "name": "--recursive",
+        "description": "Whether to perform the operation recursively.",
+        "type": "string"
+      },
+      {
+        "name": "--format",
+        "description": "Output format for OneLake API responses. Use 'json' for parsed objects, 'xml' for raw XML API response, or 'raw' for unprocessed API response. Supported values: 'json' (default), 'xml', 'raw'.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "61eb86d8-3879-4d2d-969a-6c96f2e0ce0d",
+    "name": "list_items",
+    "description": "Lists OneLake items in a Fabric workspace using the high-level OneLake API. Use this when the user needs to see what items exist in a workspace. Returns item names, types, and metadata.",
+    "command": "onelake list items",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace-id",
+        "description": "The ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace",
+        "description": "The name or ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--continuation-token",
+        "description": "Token for retrieving the next page of results.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "8925d0c4-becf-4b5a-8af1-3e998c1058ec",
+    "name": "list_items_dfs",
+    "description": "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) data API.",
+    "command": "onelake list items dfs",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace-id",
+        "description": "The ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace",
+        "description": "The name or ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--recursive",
+        "description": "Whether to perform the operation recursively.",
+        "type": "string"
+      },
+      {
+        "name": "--continuation-token",
+        "description": "Token for retrieving the next page of results.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "173cfc00-7c12-486d-a0e7-c0d4c1de23fd",
+    "name": "list_table_namespaces",
+    "description": "Lists table namespaces in OneLake. Use this when the user needs to discover available table namespaces.",
+    "command": "onelake list table namespaces",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace-id",
+        "description": "The ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace",
+        "description": "The name or ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--item-id",
+        "description": "The ID of the Fabric item.",
+        "type": "string"
+      },
+      {
+        "name": "--item",
+        "description": "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "7b1688e5-2a16-475d-8fd1-9bf3b0acf4f7",
+    "name": "list_tables",
+    "description": "Lists tables in OneLake. Use this when the user needs to see available tables.",
+    "command": "onelake list tables",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace-id",
+        "description": "The ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace",
+        "description": "The name or ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--item-id",
+        "description": "The ID of the Fabric item.",
+        "type": "string"
+      },
+      {
+        "name": "--item",
+        "description": "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').",
+        "type": "string"
+      },
+      {
+        "name": "--namespace",
+        "description": "The table namespace (schema) to inspect within the OneLake table API.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--schema",
+        "description": "Alias for --namespace when specifying table schemas in the OneLake table API.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "5f005a27-9838-4c09-9785-55ce49963c97",
+    "name": "list_workspaces",
+    "description": "Lists all Fabric workspaces accessible via OneLake data plane API. Use this when the user needs to view available workspaces or select a workspace for data operations. Returns workspace names and IDs.",
+    "command": "onelake list workspaces",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--continuation-token",
+        "description": "Token for retrieving the next page of results.",
+        "type": "string"
+      },
+      {
+        "name": "--format",
+        "description": "Output format for OneLake API responses. Use 'json' for parsed objects, 'xml' for raw XML API response, or 'raw' for unprocessed API response. Supported values: 'json' (default), 'xml', 'raw'.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "f6b3249d-6481-4e80-9d34-0d6867718dd7",
+    "name": "upload_file",
+    "description": "Uploads a file to OneLake storage from inline content or local file path. Use this when the user needs to store data in OneLake. Supports overwrite control and content type specification.",
+    "command": "onelake upload file",
+    "option": [
+      {
+        "name": "--tenant",
+        "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+        "type": "string"
+      },
+      {
+        "name": "--auth-method",
+        "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-delay",
+        "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-delay",
+        "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-max-retries",
+        "description": "Maximum number of retry attempts for failed operations before giving up.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-mode",
+        "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+        "type": "string"
+      },
+      {
+        "name": "--retry-network-timeout",
+        "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace-id",
+        "description": "The ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--workspace",
+        "description": "The name or ID of the Microsoft Fabric workspace.",
+        "type": "string"
+      },
+      {
+        "name": "--item-id",
+        "description": "The ID of the Fabric item.",
+        "type": "string"
+      },
+      {
+        "name": "--item",
+        "description": "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').",
+        "type": "string"
+      },
+      {
+        "name": "--file-path",
+        "description": "The path to the file in OneLake.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--content",
+        "description": "The content to write to the file.",
+        "type": "string"
+      },
+      {
+        "name": "--local-file-path",
+        "description": "The path to a local file to upload.",
+        "type": "string"
+      },
+      {
+        "name": "--overwrite",
+        "description": "Whether to overwrite existing files.",
+        "type": "string"
+      },
+      {
+        "name": "--content-type",
+        "description": "MIME content type to set on the uploaded file (e.g., 'application/json'). Defaults to 'application/octet-stream'.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": true,
+    "idempotent": false,
+    "openWorld": false,
+    "readOnly": false,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "add0f6fe-258c-45c4-af74-0c165d4913cb",
+    "name": "info",
+    "description": "Displays running MCP server information.",
+    "command": "server info",
+    "option": [
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "b3e7c1a2-4f85-4d9e-a6c3-8f2b1e0d7a94",
+    "name": "plugin-telemetry",
+    "description": "Publish plugin-related telemetry events from agent hooks.\r\nAccepts command-line options such as '--timestamp', '--event-type', '--session-id', '--client-type', '--client-name', \r\n'--plugin-name', '--plugin-version', '--skill-name', '--skill-version', '--tool-name', and '--file-reference'. \r\nUse this command from agent hooks in clients like VS Code, Claude Desktop, or Copilot CLI to emit usage metrics.",
+    "command": "server plugin-telemetry",
+    "option": [
+      {
+        "name": "--timestamp",
+        "description": "Timestamp of the telemetry event in ISO 8601 format.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--event-type",
+        "description": "Type of event being logged (e.g., 'skill_invocation', 'tool_invocation', 'reference_file_read').",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--session-id",
+        "description": "Session identifier for correlating related events.",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "--client-type",
+        "description": "Type of client invoking the telemetry (e.g., 'copilot-cli', 'claude-code', 'vscode'). Deprecated: prefer --client-name.",
+        "type": "string"
+      },
+      {
+        "name": "--client-name",
+        "description": "Name of the client invoking the telemetry (e.g., 'copilot-cli', 'claude-code', 'Visual Studio Code', 'Visual Studio Code - Insiders').",
+        "type": "string"
+      },
+      {
+        "name": "--plugin-name",
+        "description": "Name of the plugin being invoked.",
+        "type": "string"
+      },
+      {
+        "name": "--plugin-version",
+        "description": "Version of the plugin being invoked.",
+        "type": "string"
+      },
+      {
+        "name": "--skill-name",
+        "description": "Name of the skill being invoked.",
+        "type": "string"
+      },
+      {
+        "name": "--skill-version",
+        "description": "Version of the skill being invoked.",
+        "type": "string"
+      },
+      {
+        "name": "--tool-name",
+        "description": "Name of the tool being invoked.",
+        "type": "string"
+      },
+      {
+        "name": "--file-reference",
+        "description": "Plugin-relative file reference being accessed (will be validated against an allowlist).",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": false,
+    "openWorld": false,
+    "readOnly": false,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "9953ff62-e3d7-4bdf-9b70-d569e54e3df1",
+    "name": "start",
+    "description": "Starts Azure MCP Server.",
+    "command": "server start",
+    "option": [
+      {
+        "name": "--transport",
+        "description": "Transport mechanism to use for MCP Server.",
+        "type": "string"
+      },
+      {
+        "name": "--namespace",
+        "description": "The service namespaces to expose on the MCP server (e.g., storage, keyvault, cosmos).",
+        "type": "string"
+      },
+      {
+        "name": "--mode",
+        "description": "Mode for the MCP server. 'single' exposes one azure tool that routes to all services. 'namespace' (default) exposes one tool per service namespace. 'all' exposes all tools individually.",
+        "type": "string"
+      },
+      {
+        "name": "--tool",
+        "description": "Expose only specific tools by name (e.g., 'acr_registry_list'). Repeat this option to include multiple tools, e.g., --tool \"acr_registry_list\" --tool \"group_list\". It automatically switches to \"all\" mode when \"--tool\" is used. It can't be used together with \"--namespace\".",
+        "type": "string"
+      },
+      {
+        "name": "--read-only",
+        "description": "Whether the MCP server should be read-only. If true, no write operations will be allowed.",
+        "type": "string"
+      },
+      {
+        "name": "--debug",
+        "description": "Enable debug mode with verbose logging to stderr.",
+        "type": "string"
+      },
+      {
+        "name": "--dangerously-disable-http-incoming-auth",
+        "description": "Dangerously disables HTTP incoming authentication, exposing the server to unauthenticated access over HTTP. Use with extreme caution, this disables all transport security and may expose sensitive data to interception.",
+        "type": "string"
+      },
+      {
+        "name": "--dangerously-disable-elicitation",
+        "description": "Disable elicitation (user confirmation) before allowing high risk commands to run, such as returning Secrets (passwords) from KeyVault.",
+        "type": "string"
+      },
+      {
+        "name": "--outgoing-auth-strategy",
+        "description": "Outgoing authentication strategy for service requests. Valid values: NotSet, UseHostingEnvironmentIdentity, UseOnBehalfOf.",
+        "type": "string"
+      },
+      {
+        "name": "--dangerously-write-support-logs-to-dir",
+        "description": "Dangerously enables detailed debug-level logging for support and troubleshooting purposes. Specify a folder path where log files will be automatically created with timestamp-based filenames (e.g., azmcp_20251202_143052.log). This may include sensitive information in logs. Use with extreme caution and only when requested by support.",
+        "type": "string"
+      },
+      {
+        "name": "--dangerously-disable-retry-limits",
+        "description": "Dangerously disables upper bounds on retry delays, max delays, network timeouts, and max retries. This may lead to excessively long waits and should only be used when explicitly needed.",
+        "type": "string"
+      },
+      {
+        "name": "--cloud",
+        "description": "Azure cloud environment for authentication. Valid values: AzureCloud (default), AzureChinaCloud, AzureUSGovernment, or a custom authority host URL starting with https://",
+        "type": "string"
+      },
+      {
+        "name": "--disable-caching",
+        "description": "Disable caching of resource responses, requiring repeated requests to fetch fresh data each time.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": false,
+    "openWorld": true,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  },
+  {
+    "id": "63de05a7-047d-4f8a-86ea-cebd64527e2b",
+    "name": "list",
+    "description": "List all available commands and their tools in a hierarchical structure. This command returns detailed information\r\nabout each command, including its name, description, full command path, available subcommands, and all supported\r\narguments. Use --name-only to return only tool names, and --namespace to filter by specific namespaces.",
+    "command": "tools list",
+    "option": [
+      {
+        "name": "--namespace-mode",
+        "description": "If specified, returns a list of top-level service namespaces instead of individual tools.",
+        "type": "string"
+      },
+      {
+        "name": "--namespace",
+        "description": "Filter tools by namespace (e.g., 'storage', 'keyvault'). Can be specified multiple times to include multiple namespaces.",
+        "type": "string"
+      },
+      {
+        "name": "--name-only",
+        "description": "If specified, returns only tool names without descriptions or metadata.",
+        "type": "string"
+      },
+      {
+        "name": "--include-hidden",
+        "description": "If specified, includes hidden commands in the output.",
+        "type": "string"
+      },
+      {
+        "name": "--learn",
+        "description": "Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.",
+        "type": "string"
+      }
+    ],
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false,
+    "readOnly": true,
+    "secret": false,
+    "localRequired": false
+  }
+]

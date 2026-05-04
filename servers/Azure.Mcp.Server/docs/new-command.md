@@ -2840,11 +2840,8 @@ Before submitting:
 - [ ] No compiler warnings
 - [ ] Tests pass (run specific tests: `dotnet test --filter "FullyQualifiedName~YourCommandTests"`)
 - [ ] Build succeeds with `dotnet build`
-- [ ] Code formatting applied with `dotnet format`
-- [ ] Spelling check passes with `.\eng\common\spelling\Invoke-Cspell.ps1`
+- [ ] Run `./eng/scripts/Analyze-Code.ps1 -Fix` to auto-fix formatting, solution files, and tools.json drift. This will also run additional checks that may require manual correction like spelling, etc.
 - [ ] **AOT compilation verified** with `./eng/scripts/Build-Local.ps1 -BuildNative`
-- [ ] **Clean up unused using statements**: Run `dotnet format --include="tools/Azure.Mcp.Tools.{Toolset}/**/*.cs"` to remove unnecessary imports and ensure consistent formatting
-- [ ] Fix formatting issues with `dotnet format ./Microsoft.Mcp.slnx` and ensure no warnings
 
 ### Azure SDK Integration
 - [ ] All Azure SDK property names verified and correct

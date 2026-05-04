@@ -103,8 +103,9 @@ If you are contributing significant changes, or if the issue is already assigned
 2. Create a feature branch
 3. Make your changes
 4. Write or update tests
-5. Test locally
-6. Submit a pull request
+5. Run `./eng/scripts/Analyze-Code.ps1 -Fix` to auto-fix formatting, solution files, and tools.json drift
+6. Test locally
+7. Submit a pull request
 
 ### Adding a New Command
 
@@ -608,17 +609,29 @@ To debug the Azure MCP Server (`azmcp`) when running live tests in VS Code:
 
 ### Code Style
 
-To ensure consistent code quality, code format checks will run during all PR and CI builds. Run `dotnet format` before submitting to catch format errors early.
+To ensure consistent code quality, code analysis checks will run during all PR and CI builds. Run `Analyze-Code.ps1 -Fix` before submitting to auto-fix formatting, solution files, and tools.json drift, and to catch remaining issues early:
+
+```pwsh
+./eng/scripts/Analyze-Code.ps1 -Fix
+```
+
+This runs: solution file verification, `dotnet format`, tools.json regeneration, spelling check, tool metadata validation, and README validation. Fixable issues (format, solution files, tools.json) are corrected automatically with `-Fix`.
+
+To run the check in verify-only mode (as CI does):
+
+```pwsh
+./eng/scripts/Analyze-Code.ps1
+```
 
 #### Spelling Check
 
-To ensure consistent spelling across the codebase, run the spelling check before submitting:
+To run spelling check standalone:
 
 ```pwsh
 .\eng\common\spelling\Invoke-Cspell.ps1
 ```
 
-This will check all files for spelling errors using the project's dictionary. Add any new technical terms or proper nouns to `.vscode/cspell.json` if needed.
+Add any new technical terms or proper nouns to `.vscode/cspell.json` if needed.
 
 #### Requirements
 
