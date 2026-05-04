@@ -382,6 +382,9 @@ public sealed class SingleProxyToolLoader(
         try
         {
             await NotifyProgressAsync(request, $"Calling {tool} {command}...", cancellationToken);
+
+            // Return without injecting tool metadata since this is a proxy and the actual tool execution happens in another server.
+            // Leave the other server responsible for injecting the correct tool metadata for observability and telemetry purposes.
             return await client.CallToolAsync(command, parameters, cancellationToken: cancellationToken);
         }
         catch (Exception ex)

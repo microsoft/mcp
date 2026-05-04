@@ -172,6 +172,9 @@ public sealed class RegistryToolLoader(
             .SetTag(TagName.IsServerCommandInvoked, true);
 
         var parameters = TransformArgumentsToDictionary(request.Params.Arguments);
+
+        // Return without injecting tool metadata since this is a proxy and the actual tool execution happens in another server.
+        // Leave the other server responsible for injecting the correct tool metadata for observability and telemetry purposes.
         return await kvp.Client.CallToolAsync(kvp.OriginalToolName, parameters, cancellationToken: cancellationToken);
     }
 
