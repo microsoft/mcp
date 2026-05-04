@@ -26,9 +26,10 @@ namespace Azure.Mcp.Core.Areas.Group.Commands;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : SubscriptionCommand<BaseGroupOptions>()
+public sealed class GroupListCommand(ILogger<GroupListCommand> logger, IResourceGroupService resourceGroupService) : SubscriptionCommand<BaseGroupOptions>()
 {
     private readonly ILogger<GroupListCommand> _logger = logger;
+    private readonly IResourceGroupService _resourceGroupService = resourceGroupService;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -41,8 +42,7 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : Subscri
 
         try
         {
-            var resourceGroupService = context.GetService<IResourceGroupService>();
-            var groups = await resourceGroupService.GetResourceGroups(
+            var groups = await _resourceGroupService.GetResourceGroups(
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,

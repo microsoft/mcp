@@ -1,6 +1,9 @@
 using System.CommandLine;
 using Azure.Mcp.Core.Areas.Group.Commands;
+using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
@@ -134,7 +137,7 @@ public class CommandHelperTests
 
     private static ParseResult GetParseResult(params string[] args)
     {
-        var command = new GroupListCommand(Substitute.For<ILogger<GroupListCommand>>());
+        var command = new GroupListCommand(NullLogger<GroupListCommand>.Instance, Substitute.For<IResourceGroupService>());
         var commandDefinition = command.GetCommand();
         return commandDefinition.Parse(args);
     }

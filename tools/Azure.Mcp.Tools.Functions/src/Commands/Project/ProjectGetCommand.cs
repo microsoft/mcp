@@ -22,9 +22,10 @@ namespace Azure.Mcp.Tools.Functions.Commands.Project;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger) : BaseCommand<ProjectGetOptions>
+public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger, IFunctionsService functionsService) : BaseCommand<ProjectGetOptions>
 {
     private readonly ILogger<ProjectGetCommand> _logger = logger;
+    private readonly IFunctionsService _functionsService = functionsService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -67,8 +68,7 @@ public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger) : BaseC
 
         try
         {
-            var service = context.GetService<IFunctionsService>();
-            var result = await service.GetProjectTemplateAsync(options.Language!, cancellationToken);
+            var result = await _functionsService.GetProjectTemplateAsync(options.Language!, cancellationToken);
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(
