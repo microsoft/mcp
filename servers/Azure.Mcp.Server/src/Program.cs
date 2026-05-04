@@ -366,7 +366,7 @@ internal class Program
     /// </summary>
     /// <param name="args">Command-line arguments.</param>
     /// <returns>The area name (e.g. "storage"), or <see langword="null"/>.</returns>
-    private static string? GetTargetAreaName(string[] args)
+    internal static string? GetTargetAreaName(string[] args)
     {
         // Scan for the first token that is not an option flag (does not start with '-').
         // '--' is the POSIX end-of-options marker: everything after it is a positional argument,
