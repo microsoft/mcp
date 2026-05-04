@@ -29,9 +29,10 @@ internal record TemplateGetCommandResult(TemplateListResult? TemplateList, Funct
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : BaseCommand<TemplateGetOptions>
+public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger, IFunctionsService functionsService) : BaseCommand<TemplateGetOptions>
 {
     private readonly ILogger<TemplateGetCommand> _logger = logger;
+    private readonly IFunctionsService _functionsService = functionsService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -80,12 +81,10 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
 
         try
         {
-            var service = context.GetService<IFunctionsService>();
-
             if (string.IsNullOrEmpty(options.Template))
             {
                 // List mode: return all templates grouped by binding type
-                var templateList = await service.GetTemplateListAsync(options.Language!, cancellationToken);
+                var templateList = await _functionsService.GetTemplateListAsync(options.Language!, cancellationToken);
 
                 context.Response.Status = HttpStatusCode.OK;
                 context.Response.Results = ResponseResult.Create(
@@ -96,7 +95,7 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
             else
             {
                 // Get mode: fetch specific template files
-                var functionTemplate = await service.GetFunctionTemplateAsync(
+                var functionTemplate = await _functionsService.GetFunctionTemplateAsync(
                     options.Language!, options.Template, options.RuntimeVersion, options.Output, cancellationToken);
 
                 context.Response.Status = HttpStatusCode.OK;
