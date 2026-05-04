@@ -58,7 +58,8 @@ foreach ($serverDir in $serverDirs) {
         $rawOutput = dotnet run --project $projectFile --no-launch-profile -- tools list --include-hidden 2>&1
 
         if ($LASTEXITCODE -ne 0) {
-            Write-Warning "  'tools list' failed for $($serverDir.Name) (exit code $LASTEXITCODE) - skipping"
+            Write-Host "  ❌ 'tools list' failed for $($serverDir.Name) (exit code $LASTEXITCODE)" -ForegroundColor Red
+            $hasErrors = $true
             continue
         }
 
@@ -66,7 +67,8 @@ foreach ($serverDir in $serverDirs) {
         $parsed = $jsonString | ConvertFrom-Json
 
         if ($null -eq $parsed -or $null -eq $parsed.results) {
-            Write-Warning "  No results returned for $($serverDir.Name) - skipping"
+            Write-Host "  ❌ No results returned for $($serverDir.Name)" -ForegroundColor Red
+            $hasErrors = $true
             continue
         }
 
@@ -161,7 +163,8 @@ foreach ($serverDir in $serverDirs) {
         $formatted = $output | ConvertTo-Json -Depth 10
 
     } catch {
-        Write-Warning "  Error processing $($serverDir.Name): $_"
+        Write-Host "  ❌ Error processing $($serverDir.Name): $_" -ForegroundColor Red
+        $hasErrors = $true
         continue
     }
 
