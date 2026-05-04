@@ -60,7 +60,9 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
 internal class CommandFactoryHelpers
 {
-    public static ICommandFactory CreateCommandFactory(IServiceProvider? serviceProvider = default)
+    public static ICommandFactory CreateCommandFactory(
+        IServiceProvider? serviceProvider = default,
+        IAreaSetup[]? additionalAreaSetups = default)
     {
         IAreaSetup[] areaSetups = [
             // Core areas
@@ -104,6 +106,7 @@ internal class CommandFactoryHelpers
             new StorageSetup(),
             new VirtualDesktopSetup(),
             new WorkbooksSetup(),
+            .. (additionalAreaSetups ?? []),
         ];
 
         var services = serviceProvider ?? CreateDefaultServiceProvider();

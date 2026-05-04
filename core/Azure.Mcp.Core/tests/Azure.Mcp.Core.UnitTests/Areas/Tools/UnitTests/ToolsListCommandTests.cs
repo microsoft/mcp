@@ -8,6 +8,7 @@ using Azure.Mcp.Core.UnitTests.Areas.Server;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Tools;
 using Microsoft.Mcp.Core.Areas.Tools.Commands;
 using Microsoft.Mcp.Core.Areas.Tools.Options;
 using Microsoft.Mcp.Core.Commands;
@@ -864,5 +865,187 @@ public class ToolsListCommandTests
         // Should contain both namespaces
         Assert.Contains(result, cmd => cmd.Name.Equals("storage", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(result, cmd => cmd.Name.Equals("keyvault", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Verifies that --include-hidden returns hidden commands that are normally filtered out.
+    /// The ToolsListCommand itself is [HiddenCommand], so it should appear only with --include-hidden.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_WithIncludeHidden_ReturnsHiddenCommands()
+    {
+        // Arrange - use a context with ToolsSetup registered so there's a hidden command
+        var context = CreateContextWithToolsSetup();
+        var args = _commandDefinition.Parse(["--include-hidden"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var result = DeserializeResults(response.Results);
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+
+        // ToolsListCommand is [HiddenCommand] - it should appear with --include-hidden
+        Assert.Contains(result, cmd => cmd.Command == "tools list");
+    }
+
+    /// <summary>
+    /// Verifies that without --include-hidden, hidden commands like "tools list" are excluded.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_WithoutIncludeHidden_ExcludesHiddenCommands()
+    {
+        // Arrange - use a context with ToolsSetup registered so there's a hidden command to filter
+        var context = CreateContextWithToolsSetup();
+        var args = _commandDefinition.Parse([]);
+
+        // Act
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.NotNull(response.Results);
+
+        var result = DeserializeResults(response.Results);
+        Assert.NotNull(result);
+
+        // ToolsListCommand is [HiddenCommand] - it should NOT appear without --include-hidden
+        Assert.DoesNotContain(result, cmd => cmd.Command == "tools list");
+    }
+
+    /// <summary>
+    /// Verifies that --include-hidden returns more commands than the default (without --include-hidden).
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_WithIncludeHidden_ReturnsMoreCommandsThanDefault()
+    {
+        // Arrange - both runs must use contexts with ToolsSetup, but separate instances
+        // since CommandContext.Response is shared per instance
+        var defaultContext = CreateContextWithToolsSetup();
+        var hiddenContext = CreateContextWithToolsSetup();
+        var defaultArgs = _commandDefinition.Parse([]);
+        var includeHiddenArgs = _commandDefinition.Parse(["--include-hidden"]);
+
+        // Act
+        var defaultResponse = await _command.ExecuteAsync(defaultContext, defaultArgs, TestContext.Current.CancellationToken);
+        var hiddenResponse = await _command.ExecuteAsync(hiddenContext, includeHiddenArgs, TestContext.Current.CancellationToken);
+
+        // Assert
+        var defaultResult = DeserializeResults(defaultResponse.Results!);
+        var hiddenResult = DeserializeResults(hiddenResponse.Results!);
+
+        Assert.True(hiddenResult.Count > defaultResult.Count,
+            $"Expected --include-hidden to return more commands ({hiddenResult.Count}) than default ({defaultResult.Count})");
+    }
+
+    /// <summary>
+    /// Verifies that --include-hidden with --name-only includes hidden command names.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_WithIncludeHiddenAndNameOnly_IncludesHiddenNames()
+    {
+        // Arrange - separate contexts since CommandContext.Response is shared per instance
+        var defaultContext = CreateContextWithToolsSetup();
+        var hiddenContext = CreateContextWithToolsSetup();
+        var defaultArgs = _commandDefinition.Parse(["--name-only"]);
+        var includeHiddenArgs = _commandDefinition.Parse(["--name-only", "--include-hidden"]);
+
+        // Act
+        var defaultResponse = await _command.ExecuteAsync(defaultContext, defaultArgs, TestContext.Current.CancellationToken);
+        var hiddenResponse = await _command.ExecuteAsync(hiddenContext, includeHiddenArgs, TestContext.Current.CancellationToken);
+
+        // Assert
+        var defaultResult = DeserializeToolNamesResult(defaultResponse.Results!);
+        var hiddenResult = DeserializeToolNamesResult(hiddenResponse.Results!);
+
+        Assert.True(hiddenResult.Names.Count > defaultResult.Names.Count,
+            $"Expected --include-hidden --name-only to return more names ({hiddenResult.Names.Count}) than default ({defaultResult.Names.Count})");
+
+        // "tools_list" should only appear in the hidden results
+        Assert.Contains(hiddenResult.Names, name => name.Contains("tools") && name.Contains("list"));
+        Assert.DoesNotContain(defaultResult.Names, name => name.Contains("tools") && name.Contains("list"));
+    }
+
+    /// <summary>
+    /// Verifies that --include-hidden can be parsed without errors.
+    /// </summary>
+    [Fact]
+    public void CanParseIncludeHiddenOption()
+    {
+        // Arrange & Act
+        var parseResult = _commandDefinition.Parse(["--include-hidden"]);
+
+        // Assert
+        Assert.False(parseResult.Errors.Any(), $"Parse errors for --include-hidden: {string.Join(", ", parseResult.Errors)}");
+        Assert.True(parseResult.GetValueOrDefault<bool>(ToolsListOptionDefinitions.IncludeHidden.Name));
+    }
+
+    /// <summary>
+    /// Verifies that BindOptions correctly binds the --include-hidden option.
+    /// </summary>
+    [Fact]
+    public void BindOptions_WithIncludeHidden_BindsCorrectly()
+    {
+        // Arrange
+        var parseResult = _commandDefinition.Parse(["--include-hidden"]);
+
+        var bindOptionsMethod = typeof(ToolsListCommand).GetMethod("BindOptions",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        Assert.NotNull(bindOptionsMethod);
+
+        // Act
+        var options = bindOptionsMethod.Invoke(_command, [parseResult]) as ToolsListOptions;
+
+        // Assert
+        Assert.NotNull(options);
+        Assert.True(options.IncludeHidden);
+        Assert.False(options.NameOnly);
+        Assert.False(options.NamespaceMode);
+    }
+
+    /// <summary>
+    /// Verifies that BindOptions defaults IncludeHidden to false when not specified.
+    /// </summary>
+    [Fact]
+    public void BindOptions_WithoutIncludeHidden_DefaultsToFalse()
+    {
+        // Arrange
+        var parseResult = _commandDefinition.Parse([]);
+
+        var bindOptionsMethod = typeof(ToolsListCommand).GetMethod("BindOptions",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        Assert.NotNull(bindOptionsMethod);
+
+        // Act
+        var options = bindOptionsMethod.Invoke(_command, [parseResult]) as ToolsListOptions;
+
+        // Assert
+        Assert.NotNull(options);
+        Assert.False(options.IncludeHidden);
+    }
+
+    /// <summary>
+    /// Creates a CommandContext whose ICommandFactory includes ToolsSetup,
+    /// so the hidden ToolsListCommand is registered and available for filtering tests.
+    /// </summary>
+    private static CommandContext CreateContextWithToolsSetup()
+    {
+        var services = CommandFactoryHelpers.SetupCommonServices();
+        var toolsSetup = new ToolsSetup();
+        toolsSetup.ConfigureServices(services);
+        var sp = services.BuildServiceProvider();
+
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory(
+            serviceProvider: sp,
+            additionalAreaSetups: [toolsSetup]);
+        services.AddSingleton(commandFactory);
+
+        sp = services.BuildServiceProvider();
+        return new CommandContext(sp);
     }
 }
