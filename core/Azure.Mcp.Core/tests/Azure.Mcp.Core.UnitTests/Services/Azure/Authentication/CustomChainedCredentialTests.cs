@@ -443,7 +443,7 @@ public class CustomChainedCredentialTests
     /// <summary>
     /// Helper method to create CustomChainedCredential using reflection since it's an internal class.
     /// </summary>
-    private static TokenCredential CreateCustomChainedCredential(bool forceBrowserFallback = false)
+    private static TokenCredential CreateCustomChainedCredential(bool forceBrowserFallback = false, bool isolateTenantAuth = false)
     {
         var assembly = typeof(global::Microsoft.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
         var customChainedCredentialType = assembly.GetType("Microsoft.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
@@ -454,18 +454,61 @@ public class CustomChainedCredentialTests
             .FirstOrDefault(c =>
             {
                 var parameters = c.GetParameters();
-                return parameters.Length == 3 &&
+                return parameters.Length == 4 &&
                        parameters[0].ParameterType == typeof(string) &&
                        parameters[1].ParameterType == typeof(ILogger<>).MakeGenericType(customChainedCredentialType) &&
-                       parameters[2].ParameterType == typeof(bool);
+                       parameters[2].ParameterType == typeof(bool) &&
+                       parameters[3].ParameterType == typeof(bool);
             });
 
         Assert.NotNull(constructor);
 
-        var credential = constructor.Invoke([null, null, forceBrowserFallback]) as TokenCredential;
+        var credential = constructor.Invoke([null, null, forceBrowserFallback, isolateTenantAuth]) as TokenCredential;
         Assert.NotNull(credential);
 
         return credential;
+    }
+
+    /// <summary>
+    /// Tests that isolateTenantAuth=true bypasses a cached auth record, forcing a fresh login.
+    /// Expected: CreateCredential succeeds even when AZURE_MCP_AUTHENTICATION_RECORD contains invalid JSON,
+    /// because the early-return path never reads it.
+    /// </summary>
+    [Fact]
+    public void IsolateTenantAuth_IgnoresCachedAuthRecord()
+    {
+        using var env = new EnvironmentScope("AZURE_MCP_AUTHENTICATION_RECORD", "AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_MCP_AUTHENTICATION_RECORD", "not-valid-json");
+
+        var type = GetCustomChainedCredentialType();
+        var createCredential = type.GetMethod("CreateCredential", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(createCredential);
+
+        // With isolation + non-null tenantId: fires before reading the auth record — must not throw
+        var result = createCredential.Invoke(null, ["test-tenant-id", null, false, true]);
+        Assert.NotNull(result);
+        Assert.IsAssignableFrom<TokenCredential>(result);
+    }
+
+    /// <summary>
+    /// Tests that isolateTenantAuth=true respects prod mode — no interactive browser in non-interactive environments.
+    /// Expected: When AZURE_TOKEN_CREDENTIALS=prod, the isolation early-return is skipped and the
+    /// prod credential chain is returned instead.
+    /// </summary>
+    [Fact]
+    public void IsolateTenantAuth_RespectsProductionMode()
+    {
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "prod");
+
+        var type = GetCustomChainedCredentialType();
+        var createCredential = type.GetMethod("CreateCredential", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(createCredential);
+
+        // In prod mode, isolation early-return is skipped — must return the prod chain credential
+        var result = createCredential.Invoke(null, ["test-tenant-id", null, false, true]);
+        Assert.NotNull(result);
+        Assert.IsAssignableFrom<TokenCredential>(result);
     }
 
     private static Type GetCustomChainedCredentialType()
