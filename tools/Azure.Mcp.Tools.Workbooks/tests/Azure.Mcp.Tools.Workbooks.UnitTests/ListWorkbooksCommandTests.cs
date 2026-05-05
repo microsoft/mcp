@@ -38,10 +38,11 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
     }
 
     [Fact]
-    public void Description_ContainsRequiredInformation()
+    public void Description_VerifyLength()
     {
         var description = Command.Description;
         Assert.NotNull(description);
+        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

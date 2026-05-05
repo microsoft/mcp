@@ -45,6 +45,8 @@ public class WebTestsGetCommandTests : CommandUnitTestsBase<WebTestsGetCommand, 
     {
         var description = Command.Description;
         Assert.NotNull(description);
+        Assert.NotEmpty(description);
+        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

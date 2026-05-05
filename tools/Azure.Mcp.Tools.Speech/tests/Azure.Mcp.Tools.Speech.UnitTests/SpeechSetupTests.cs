@@ -48,20 +48,7 @@ public class SpeechSetupTests
         Assert.Equal("speech", speechGroup.Name);
         Assert.NotNull(speechGroup.Description);
         Assert.NotEmpty(speechGroup.Description);
-    }
-
-    [Fact]
-    public void RegisterCommands_SpeechGroup_ShouldHaveCorrectDescription()
-    {
-        // Arrange
-        var setup = new SpeechSetup();
-        var services = CreateServiceProvider(setup);
-
-        // Act
-        var speechGroup = setup.RegisterCommands(services);
-
-        // Assert
-        Assert.NotNull(speechGroup);
+        Assert.True(speechGroup.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

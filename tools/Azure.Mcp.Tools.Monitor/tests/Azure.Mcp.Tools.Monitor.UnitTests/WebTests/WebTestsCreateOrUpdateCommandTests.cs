@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Reflection;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
@@ -43,7 +44,8 @@ public class WebTestsCreateOrUpdateCommandTests : CommandUnitTestsBase<WebTestsC
     public void Description_ContainsRequiredInformation()
     {
         var description = Command.Description;
-        Assert.NotNull(description);
+        Assert.False(string.IsNullOrEmpty(description));
+        Assert.True(description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
