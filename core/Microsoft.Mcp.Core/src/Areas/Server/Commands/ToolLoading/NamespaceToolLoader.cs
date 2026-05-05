@@ -369,7 +369,7 @@ public sealed class NamespaceToolLoader(
             // Enforce read-only mode at execution time
             if ((_options.Value.ReadOnly ?? false) && !cmd.Metadata.ReadOnly)
             {
-                return new CallToolResult
+                return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
                     Content =
                     [
@@ -379,13 +379,13 @@ public sealed class NamespaceToolLoader(
                         }
                     ],
                     IsError = true,
-                };
+                }, cmd.Id);
             }
 
             // Enforce HTTP mode restrictions at execution time
             if (_options.Value.IsHttpMode && cmd.Metadata.LocalRequired)
             {
-                return new CallToolResult
+                return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
                     Content =
                     [
@@ -395,15 +395,14 @@ public sealed class NamespaceToolLoader(
                         }
                     ],
                     IsError = true,
-                };
+                }, cmd.Id);
             }
 
             // Check if this tool requires elicitation for sensitive or destructive operations
-            var metadata = cmd.Metadata;
             var elicitationResult = await HandleElicitationAsync(
                 request,
                 $"{namespaceName} {command}",
-                metadata,
+                cmd,
                 _options.Value.DangerouslyDisableElicitation,
                 _logger,
                 cancellationToken);
@@ -479,14 +478,14 @@ public sealed class NamespaceToolLoader(
 
                 // Add original response content
                 finalResponse.Content.Add(new TextContentBlock { Text = jsonResponse });
-                return finalResponse;
+                return McpHelper.InjectToolIdMetadata(finalResponse, cmd.Id);
             }
 
-            return new CallToolResult
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
             {
                 Content = [new TextContentBlock { Text = jsonResponse }],
                 IsError = isError
-            };
+            }, cmd.Id);
         }
         catch (Exception ex)
         {
@@ -620,18 +619,16 @@ public sealed class NamespaceToolLoader(
             Title = command.Title,
         };
 
-        JsonObject? meta = null;
+        JsonObject meta = [new(McpHelper.ToolIdMetaKey, command.Id)];
         // Add Secret metadata to tool.Meta if the property exists
         if (metadata.Secret)
         {
-            meta ??= new();
-            meta["SecretHint"] = metadata.Secret;
+            meta[McpHelper.SecretHintMetaKey] = metadata.Secret;
         }
         // Add LocalRequired metadata to tool.Meta if the property exists
         if (metadata.LocalRequired)
         {
-            meta ??= new();
-            meta["LocalRequiredHint"] = metadata.LocalRequired;
+            meta[McpHelper.LocalRequiredHintMetaKey] = metadata.LocalRequired;
         }
         tool.Meta = meta;
 

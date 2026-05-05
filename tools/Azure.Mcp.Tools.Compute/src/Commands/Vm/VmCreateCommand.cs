@@ -35,10 +35,11 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     ReadOnly = false,
     Secret = true,
     LocalRequired = false)]
-public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
+public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmCreateOptions>(true)
 {
     private readonly ILogger<VmCreateCommand> _logger = logger;
+    private readonly IComputeService _computeService = computeService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -140,13 +141,11 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var result = await computeService.CreateVmAsync(
+            var result = await _computeService.CreateVmAsync(
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,

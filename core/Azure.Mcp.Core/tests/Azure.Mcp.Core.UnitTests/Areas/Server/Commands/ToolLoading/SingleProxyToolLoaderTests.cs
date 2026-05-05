@@ -303,13 +303,13 @@ public class SingleProxyToolLoaderTests
         var storageTool = new Tool()
         {
             Name = "storage",
-            Meta = new([new("LocalRequiredHint", true)])
+            Meta = new([new(McpHelper.LocalRequiredHintMetaKey, true)])
         };
         var storageClientTool = new McpClientTool(Substitute.For<McpClient>(), storageTool);
         var keyvaultTool = new Tool()
         {
             Name = "keyvault",
-            Meta = new([new("LocalRequiredHint", false)])
+            Meta = new([new(McpHelper.LocalRequiredHintMetaKey, false)])
         };
         var keyvaultClientTool = new McpClientTool(Substitute.For<McpClient>(), keyvaultTool);
         var mcpClient = Substitute.For<McpClient>();
@@ -321,13 +321,13 @@ public class SingleProxyToolLoaderTests
                         new JsonObject([
                             new("name", "storage"),
                             new("meta", new JsonObject([
-                                new("LocalRequiredHint", true)
+                                new(McpHelper.LocalRequiredHintMetaKey, true)
                             ]))
                         ]),
                         new JsonObject([
                             new("name", "keyvault"),
                             new("meta", new JsonObject([
-                                new("LocalRequiredHint", false)
+                                new(McpHelper.LocalRequiredHintMetaKey, false)
                             ]))
                         ])
                     ]))
@@ -349,12 +349,8 @@ public class SingleProxyToolLoaderTests
         Assert.NotEmpty(tools);
         Assert.All(tools, tool =>
         {
-            var meta = tool.ProtocolTool.Meta;
-            if (meta != null && meta.TryGetPropertyValue("LocalRequiredHint", out var localRequiredHint))
-            {
-                Assert.False(localRequiredHint?.GetValue<bool>(),
-                    $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
-            }
+            Assert.False(McpHelper.HasHint(tool.ProtocolTool, McpHelper.LocalRequiredHintMetaKey),
+                $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
         });
     }
 
@@ -520,7 +516,7 @@ public class SingleProxyToolLoaderTests
             Description = "Local-only command",
             InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
             Annotations = new ToolAnnotations(),
-            Meta = new JsonObject { ["LocalRequiredHint"] = true }
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, true)]
         };
 
         var remoteTool = new Tool

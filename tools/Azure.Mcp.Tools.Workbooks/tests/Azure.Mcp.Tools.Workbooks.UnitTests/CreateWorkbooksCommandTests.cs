@@ -174,7 +174,7 @@ public class CreateWorkbooksCommandTests : CommandUnitTestsBase<CreateWorkbooksC
             "--serialized-content", """{"items":[{"type":"text","content":"Test content"}]}""");
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, result.Status);
     }
 
     [Fact]
@@ -200,7 +200,7 @@ public class CreateWorkbooksCommandTests : CommandUnitTestsBase<CreateWorkbooksC
             "--serialized-content", """{"items":[{"type":"text","content":"Test content"}]}""");
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, result.Status);
     }
 
     [Fact]
@@ -496,6 +496,6 @@ public class CreateWorkbooksCommandTests : CommandUnitTestsBase<CreateWorkbooksC
             "--serialized-content", """{"items":[]}""");
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
     }
 }

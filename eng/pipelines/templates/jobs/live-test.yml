@@ -76,6 +76,10 @@ jobs:
       pwsh: true
       workingDirectory: $(Build.SourcesDirectory)
 
+  - template: /eng/common/TestResources/remove-test-resources.yml
+    parameters:
+      ServiceConnection: azure-sdk-tests-public
+
   - template: /eng/common/TestResources/deploy-test-resources.yml
     parameters:
       ServiceConnection: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}

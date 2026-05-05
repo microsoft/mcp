@@ -46,7 +46,7 @@ public class TableSchemaGetCommandTests : CommandUnitTestsBase<TableSchemaGetCom
             "--table", "nonexistent");
 
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Table not found", response.Message);
     }
 

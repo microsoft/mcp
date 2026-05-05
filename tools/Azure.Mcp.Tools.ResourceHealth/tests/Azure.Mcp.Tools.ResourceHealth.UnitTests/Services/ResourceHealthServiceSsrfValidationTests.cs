@@ -2,11 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Azure.ResourceManager;
+using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
@@ -35,7 +37,7 @@ public class ResourceHealthServiceSsrfValidationTests
         _service = new ResourceHealthService(_subscriptionService, _tenantService, _httpClientFactory, _logger);
     }
 
-    private void SetupMocksForValidRequest(HttpResponseMessage response)
+    private void SetupMocksForValidRequest(HttpResponseMessage response, string subscriptionId = "12345678-1234-1234-1234-123456789012")
     {
         // Mock CloudConfiguration to return a valid ArmEnvironment
         var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
@@ -51,6 +53,11 @@ public class ResourceHealthServiceSsrfValidationTests
         // Mock TenantService to return the credential
         _tenantService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(mockCredential));
+
+        var subscriptionResource = Substitute.For<SubscriptionResource>();
+        subscriptionResource.Id.Returns(SubscriptionResource.CreateResourceIdentifier(subscriptionId));
+        _subscriptionService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(subscriptionResource);
 
         // Mock HttpClientFactory
         var mockHttpMessageHandler = new MockHttpMessageHandler(response);
@@ -203,6 +210,39 @@ public class ResourceHealthServiceSsrfValidationTests
         Assert.Equal(HttpStatusCode.UnprocessableEntity, exception.StatusCode);
     }
 
+    [Fact]
+    public async Task ListServiceHealthEventsAsync_DeserializesSuccessResponseFromStream()
+    {
+        const string subscriptionId = "12345678-1234-1234-1234-123456789012";
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StreamOnlyJsonContent("""
+                {
+                    "value": [
+                        {
+                            "id": "/subscriptions/12345678-1234-1234-1234-123456789012/providers/Microsoft.ResourceHealth/events/TRACK123",
+                            "name": "TRACK123",
+                            "type": "Microsoft.ResourceHealth/events",
+                            "properties": {
+                                "title": "Test event",
+                                "summary": "Test summary",
+                                "eventType": "ServiceIssue",
+                                "status": "Active",
+                                "trackingId": "TRACK123"
+                            }
+                        }
+                    ]
+                }
+                """)
+        };
+        SetupMocksForValidRequest(response, subscriptionId);
+
+        var result = await _service.ListServiceHealthEventsAsync(subscriptionId, cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Single(result);
+        Assert.Equal("TRACK123", result[0].TrackingId);
+    }
+
     private sealed class MockHttpMessageHandler(HttpResponseMessage response) : HttpMessageHandler
     {
         private readonly HttpResponseMessage _response = response;
@@ -210,6 +250,23 @@ public class ResourceHealthServiceSsrfValidationTests
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             return Task.FromResult(_response);
+        }
+    }
+
+    private sealed class StreamOnlyJsonContent(string json) : HttpContent
+    {
+        private readonly byte[] _content = Encoding.UTF8.GetBytes(json);
+
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context) =>
+            throw new InvalidOperationException("The response content should be read as a stream without buffering to a string.");
+
+        protected override Task<Stream> CreateContentReadStreamAsync() =>
+            Task.FromResult<Stream>(new MemoryStream(_content, writable: false));
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = _content.Length;
+            return true;
         }
     }
 }

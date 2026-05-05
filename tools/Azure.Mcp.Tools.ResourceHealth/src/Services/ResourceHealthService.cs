@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
@@ -49,7 +50,7 @@ public class ResourceHealthService(
         var relativePath = $"{parsedResourceId}/providers/Microsoft.ResourceHealth/availabilityStatuses/current?api-version={ResourceHealthApiVersion}";
         var requestUri = new Uri(managementEndpoint, relativePath);
 
-        using var response = await client.GetAsync(requestUri, cancellationToken);
+        using var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         if (response.StatusCode == HttpStatusCode.UnprocessableEntity)
         {
             var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -64,8 +65,7 @@ public class ResourceHealthService(
 
         response.EnsureSuccessStatusCode();
 
-        var content = await response.Content.ReadAsStringAsync(cancellationToken);
-        var apiResponse = JsonSerializer.Deserialize(content, ResourceHealthJsonContext.Default.AvailabilityStatusResponse)
+        var apiResponse = await response.Content.ReadFromJsonAsync(ResourceHealthJsonContext.Default.AvailabilityStatusResponse, cancellationToken)
             ?? throw new InvalidOperationException($"Failed to deserialize availability status response for resource '{resourceId}'");
 
         return apiResponse.ToAvailabilityStatus();
@@ -95,11 +95,10 @@ public class ResourceHealthService(
             : $"/subscriptions/{subscriptionId}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}";
         var requestUri = new Uri(managementEndpoint, relativePath);
 
-        using var response = await client.GetAsync(requestUri, cancellationToken);
+        using var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var content = await response.Content.ReadAsStringAsync(cancellationToken);
-        var apiResponse = JsonSerializer.Deserialize(content, ResourceHealthJsonContext.Default.AvailabilityStatusListResponse);
+        var apiResponse = await response.Content.ReadFromJsonAsync(ResourceHealthJsonContext.Default.AvailabilityStatusListResponse, cancellationToken);
 
         if (apiResponse?.Value == null)
         {
@@ -183,11 +182,10 @@ public class ResourceHealthService(
         // Construct URL safely using Uri to ensure path is relative to base
         var requestUri = new Uri(managementEndpoint, relativePath);
 
-        using var response = await client.GetAsync(requestUri, cancellationToken);
+        using var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
-        var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
-        var apiResponse = JsonSerializer.Deserialize(content, ResourceHealthJsonContext.Default.ServiceHealthEventListResponse);
+        var apiResponse = await response.Content.ReadFromJsonAsync(ResourceHealthJsonContext.Default.ServiceHealthEventListResponse, cancellationToken);
 
         if (apiResponse?.Value == null)
         {
