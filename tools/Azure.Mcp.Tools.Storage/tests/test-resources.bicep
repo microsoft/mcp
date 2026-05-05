@@ -77,3 +77,5 @@ resource provisionerBlobRoleAssignment 'Microsoft.Authorization/roleAssignments@
     description: 'Blob Contributor for provisionerApplicationOid'
   }
 }
+
+output location string = location
