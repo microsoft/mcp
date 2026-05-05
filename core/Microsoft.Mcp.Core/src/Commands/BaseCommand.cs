@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Reflection;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 using Azure;
 using Azure.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Extensions;
@@ -204,3 +205,30 @@ public record ExceptionResult(
     string Message,
     string? StackTrace,
     string Type);
+
+/// <summary>
+/// Base command that additionally declares the strongly-typed success-payload type written to
+/// <see cref="CommandResponse.Results"/>. The <typeparamref name="TResult"/> parameter ties the
+/// schema, the <see cref="JsonTypeInfo"/>, and the value passed to <see cref="ResponseResult.Create{T}"/>
+/// together at compile time so the MCP <c>outputSchema</c> stays in sync with the actual result shape.
+/// </summary>
+public abstract class BaseCommand<TOptions, TResult> : BaseCommand<TOptions>, IBaseCommand where TOptions : class, new()
+{
+    /// <summary>
+    /// Gets the source-generated <see cref="JsonTypeInfo{T}"/> describing this command's result payload.
+    /// Implementations should return a context-cached instance (e.g., <c>StorageJsonContext.Default.AccountGetCommandResult</c>).
+    /// </summary>
+    protected abstract JsonTypeInfo<TResult> ResultTypeInfo { get; }
+
+    JsonTypeInfo IBaseCommand.ResultTypeInfo => ResultTypeInfo;
+
+    /// <summary>
+    /// Sets the strongly-typed success result on <paramref name="context"/>'s response, wrapping the value
+    /// with the command's <see cref="ResultTypeInfo"/>.
+    /// </summary>
+    protected void SetResult(CommandContext context, TResult value)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        context.Response.Results = ResponseResult.Create(value, ResultTypeInfo);
+    }
+}

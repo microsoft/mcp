@@ -70,7 +70,7 @@ public sealed class RegistryToolLoader(
             {
                 var exposedTool = string.IsNullOrEmpty(prefix)
                     ? tool
-                    : new Tool { Name = prefix + tool.Name, Description = tool.Description, InputSchema = tool.InputSchema, Annotations = tool.Annotations };
+                    : new Tool { Name = prefix + tool.Name, Description = tool.Description, InputSchema = tool.InputSchema, OutputSchema = tool.OutputSchema, Annotations = tool.Annotations };
                 allToolsResponse.Tools.Add(exposedTool);
             }
         }

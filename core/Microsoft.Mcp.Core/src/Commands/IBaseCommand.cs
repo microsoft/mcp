@@ -3,6 +3,7 @@
 
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Microsoft.Mcp.Core.Commands;
@@ -39,6 +40,18 @@ public interface IBaseCommand
     /// This metadata helps MCP clients understand how the tool operates and its potential effects.
     /// </summary>
     ToolMetadata Metadata { get; }
+
+    /// <summary>
+    /// Gets the <see cref="JsonTypeInfo"/> describing the strongly-typed result payload this command writes
+    /// to <see cref="CommandResponse.Results"/>. When non-<see langword="null"/>, the tool loader uses it to
+    /// generate the MCP <c>outputSchema</c> and to populate <c>structuredContent</c> on successful tool calls.
+    /// </summary>
+    /// <remarks>
+    /// Default returns <see langword="null"/> for transitional source-compat with commands not yet reparented
+    /// onto <see cref="BaseCommand{TOptions, TResult}"/>. The default is removed once every command is on the
+    /// generic base.
+    /// </remarks>
+    JsonTypeInfo? ResultTypeInfo => null;
 
     /// <summary>
     /// Gets the command definition

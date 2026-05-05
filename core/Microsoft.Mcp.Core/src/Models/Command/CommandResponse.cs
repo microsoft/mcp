@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
@@ -44,6 +45,16 @@ public sealed class ResponseResult
     public void Write(Utf8JsonWriter writer)
     {
         JsonSerializer.Serialize(writer, _result, _typeInfo);
+    }
+
+    /// <summary>
+    /// Serializes the carried payload to a <see cref="JsonElement"/> using its source-generated
+    /// <see cref="JsonTypeInfo"/>. Used to populate <c>CallToolResult.StructuredContent</c> so MCP clients
+    /// can validate responses against the tool's advertised <c>outputSchema</c>.
+    /// </summary>
+    public JsonElement AsStructuredContent()
+    {
+        return JsonSerializer.SerializeToElement(_result, _typeInfo);
     }
 }
 

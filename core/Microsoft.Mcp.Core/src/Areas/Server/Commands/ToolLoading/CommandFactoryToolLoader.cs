@@ -225,6 +225,14 @@ public sealed class CommandFactoryToolLoader(
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
+            // Populate structuredContent from the typed payload when the command advertises an outputSchema
+            // and the call succeeded. Clients can validate this against tool.OutputSchema.
+            JsonElement? structuredContent = null;
+            if (!isError && command.ResultTypeInfo is not null && commandResponse.Results is not null)
+            {
+                structuredContent = commandResponse.Results.AsStructuredContent();
+            }
+
             return new CallToolResult
             {
                 Content = [
@@ -232,6 +240,7 @@ public sealed class CommandFactoryToolLoader(
                         Text = jsonResponse
                     }
                 ],
+                StructuredContent = structuredContent,
                 IsError = isError
             };
         }
@@ -300,6 +309,14 @@ public sealed class CommandFactoryToolLoader(
 
         var schema = OptionSchemaGenerator.CreateInputSchema(options);
         tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.JsonObject);
+
+        // Generate outputSchema when the command exposes a strongly-typed result.
+        var resultTypeInfo = command.ResultTypeInfo;
+        if (resultTypeInfo is not null)
+        {
+            var outputSchema = OptionSchemaGenerator.CreateOutputSchema(resultTypeInfo);
+            tool.OutputSchema = JsonSerializer.SerializeToElement(outputSchema, ServerJsonContext.Default.JsonObject);
+        }
 
         return tool;
     }

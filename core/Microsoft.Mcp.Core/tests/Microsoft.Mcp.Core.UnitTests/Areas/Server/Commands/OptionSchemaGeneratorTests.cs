@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Xunit;
 
@@ -13,7 +14,7 @@ namespace Microsoft.Mcp.Core.UnitTests.Areas.Server.Commands;
 /// produces an MCP-compatible <c>object</c> schema and that representative option types
 /// flow through <see cref="System.Text.Json.Schema.JsonSchemaExporter"/> correctly.
 /// </summary>
-public sealed class OptionSchemaGeneratorTests
+public sealed partial class OptionSchemaGeneratorTests
 {
     private enum TestColor { Red, Green, Blue }
 
@@ -117,5 +118,68 @@ public sealed class OptionSchemaGeneratorTests
         var schema = OptionSchemaGenerator.CreateInputSchema([option]);
 
         Assert.False(schema["additionalProperties"]!.GetValue<bool>());
+    }
+
+    public record SampleResult(string Name, int Count, IList<string> Tags);
+
+    [JsonSerializable(typeof(SampleResult))]
+    [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+    private partial class SampleJsonContext : JsonSerializerContext;
+
+    [Fact]
+    public void CreateOutputSchema_FromTypedRecord_ReturnsObjectSchemaWithProperties()
+    {
+        var schema = OptionSchemaGenerator.CreateOutputSchema(SampleJsonContext.Default.SampleResult);
+
+        Assert.Equal("object", schema["type"]!.GetValue<string>());
+        var properties = Assert.IsType<JsonObject>(schema["properties"]);
+        Assert.Contains("name", properties);
+        Assert.Contains("count", properties);
+        Assert.Contains("tags", properties);
+    }
+
+    [Fact]
+    public void CreateOutputSchema_StripsSchemaAndTitleKeywords()
+    {
+        var schema = OptionSchemaGenerator.CreateOutputSchema(SampleJsonContext.Default.SampleResult);
+
+        AssertNoKeyRecursive(schema, "$schema");
+        AssertNoKeyRecursive(schema, "title");
+    }
+
+    [Fact]
+    public void CreateOutputSchema_LeavesAdditionalPropertiesUnset()
+    {
+        var schema = OptionSchemaGenerator.CreateOutputSchema(SampleJsonContext.Default.SampleResult);
+
+        // Output schemas intentionally omit additionalProperties so server-side fields added later
+        // don't break clients (input schemas set it to false for OpenAI strict-mode).
+        Assert.Null(schema["additionalProperties"]);
+    }
+
+    [Fact]
+    public void CreateOutputSchema_NullTypeInfo_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => OptionSchemaGenerator.CreateOutputSchema(null!));
+    }
+
+    private static void AssertNoKeyRecursive(JsonNode? node, string key)
+    {
+        switch (node)
+        {
+            case JsonObject obj:
+                Assert.False(obj.ContainsKey(key), $"Schema unexpectedly contains '{key}': {obj.ToJsonString()}");
+                foreach (var kvp in obj)
+                {
+                    AssertNoKeyRecursive(kvp.Value, key);
+                }
+                break;
+            case JsonArray arr:
+                foreach (var item in arr)
+                {
+                    AssertNoKeyRecursive(item, key);
+                }
+                break;
+        }
     }
 }

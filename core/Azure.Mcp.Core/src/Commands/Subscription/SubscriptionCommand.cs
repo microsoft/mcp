@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
 
@@ -39,5 +41,27 @@ public abstract class SubscriptionCommand<
         }
 
         return options;
+    }
+}
+
+/// <summary>
+/// Two-generic variant of <see cref="SubscriptionCommand{TOptions}"/> that additionally declares the
+/// strongly-typed success-payload type via <typeparamref name="TResult"/>. Mirrors
+/// <see cref="BaseCommand{TOptions, TResult}"/>.
+/// </summary>
+public abstract class SubscriptionCommand<
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions,
+    TResult> : SubscriptionCommand<TOptions>, IBaseCommand where TOptions : SubscriptionOptions, new()
+{
+    /// <inheritdoc cref="BaseCommand{TOptions, TResult}.ResultTypeInfo"/>
+    protected abstract JsonTypeInfo<TResult> ResultTypeInfo { get; }
+
+    JsonTypeInfo IBaseCommand.ResultTypeInfo => ResultTypeInfo;
+
+    /// <inheritdoc cref="BaseCommand{TOptions, TResult}.SetResult"/>
+    protected void SetResult(CommandContext context, TResult value)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        context.Response.Results = ResponseResult.Create(value, ResultTypeInfo);
     }
 }

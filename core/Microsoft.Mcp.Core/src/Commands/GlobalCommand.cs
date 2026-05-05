@@ -3,11 +3,13 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure;
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
 
@@ -145,5 +147,27 @@ public abstract class GlobalCommand<
         }
 
         return message;
+    }
+}
+
+/// <summary>
+/// Two-generic variant of <see cref="GlobalCommand{TOptions}"/> that additionally declares the
+/// strongly-typed success-payload type via <typeparamref name="TResult"/>. Mirrors
+/// <see cref="BaseCommand{TOptions, TResult}"/>.
+/// </summary>
+public abstract class GlobalCommand<
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions,
+    TResult> : GlobalCommand<TOptions>, IBaseCommand where TOptions : GlobalOptions, new()
+{
+    /// <inheritdoc cref="BaseCommand{TOptions, TResult}.ResultTypeInfo"/>
+    protected abstract JsonTypeInfo<TResult> ResultTypeInfo { get; }
+
+    JsonTypeInfo IBaseCommand.ResultTypeInfo => ResultTypeInfo;
+
+    /// <inheritdoc cref="BaseCommand{TOptions, TResult}.SetResult"/>
+    protected void SetResult(CommandContext context, TResult value)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        context.Response.Results = ResponseResult.Create(value, ResultTypeInfo);
     }
 }
