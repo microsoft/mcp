@@ -1,0 +1,46 @@
+# Azure Load Testing configuration for MCP Server load tests.
+# Test type: Locust-based load testing
+# Target tool: azmcp_storage_account_get (list storage accounts)
+#
+# The pipeline deploys a standalone MCP Server Container App with auth disabled
+# (--dangerously-disable-http-incoming-auth) for each test run, so no OAuth
+# token is needed.
+#
+# This file is a TEMPLATE. The load-test pipeline (eng/pipelines/load-test.yml)
+# renders it with `envsubst` before invoking the AzureLoadTest@1 task, so the
+# `${...}` placeholders below are substituted with values from the pipeline's
+# queue-time parameters and runtime variables. Do not run this file directly
+# against `az load test create` without first performing that substitution.
+#
+# Reference: https://learn.microsoft.com/azure/load-testing/how-to-create-manage-test#locust
+
+version: v0.1
+testId: mcp-server-storage-account-load-test
+displayName: MCP Server - Storage Account Get Load Test
+description: >
+  Locust-based load test that exercises the azmcp_storage_account_get tool
+  via the MCP Streamable HTTP protocol on an ephemeral Azure MCP Server
+  deployed as an Azure Container App (auth disabled).
+
+testType: Locust
+testPlan: locustfile.py
+
+engineInstances: ${ENGINE_INSTANCES}
+
+failureCriteria:
+  - avg(response_time_ms) > 5000
+  - percentage(error) > 10
+
+# Locust derives the base URL from `locustConfig.host` below, so MCP_SERVER_URL
+# is intentionally NOT exposed as an env var. Only values the locustfile reads
+# from os.environ belong here.
+env:
+  - name: MCP_SUBSCRIPTION
+    value: ${MCP_SUBSCRIPTION}
+
+locustConfig:
+  users: ${USERS}
+  spawnRate: ${SPAWN_RATE}
+  runTime: ${DURATION}s
+  host: ${MCP_SERVER_ENDPOINT}
+  locustfile: locustfile.py
