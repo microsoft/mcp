@@ -19,8 +19,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
     public void Constructor_InitializesCommandCorrectly()
     {
         Assert.Equal("create", CommandDefinition.Name);
-        Assert.NotNull(CommandDefinition.Description);
-        Assert.NotEmpty(CommandDefinition.Description);
+        Assert.False(string.IsNullOrEmpty(CommandDefinition.Description));
         Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 

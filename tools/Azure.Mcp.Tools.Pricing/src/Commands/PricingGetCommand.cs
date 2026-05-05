@@ -19,10 +19,10 @@ namespace Azure.Mcp.Tools.Pricing.Commands;
     Name = "get",
     Title = "Get Azure Retail Pricing",
     Description = """
-        Get Azure retail pricing information. CRITICAL/MANDATORY: Do NOT call this tool if the user only specifies a broad service name (e.g., 'Virtual Machines', 'Storage', 'SQL Database') without a specific SKU. Instead, FIRST ask the user which specific SKU or tier they want pricing for. If the user asks to compare pricing across regions or SKUs without specifying exact ARM SKU names, ask them which specific SKUs they want to compare.
-        Do NOT assume or pick default SKUs. Only call this tool AFTER the user provides a specific SKU (--sku) or confirms they want all pricing for that service. Requires at least one filter: --sku, --service, --region, --service-family, or --filter. SAVINGS PLAN: 'SavingsPlan' is NOT a valid --price-type. Use --include-savings-plan flag instead.
-        Valid --price-type values: Consumption, Reservation, DevTestConsumption. When --include-savings-plan is true, Consumption items include nested 'savingsPlan' array with 1-year/3-year pricing (mainly Linux VMs).
-        FOR BICEP/ARM COST ESTIMATION: When user asks to estimate costs from a Bicep or ARM template file, read the file, extract each resource's type and SKU, call this tool for each resource and aggregate the monthly costs (hourly price * 730 hours/month).
+        Get Azure retail pricing information. Do NOT call this tool if the user provides only a broad service name (e.g., "Virtual Machines", "Storage", "SQL Database") without a specific SKU—ask for the exact SKU or tier first. 
+        For comparisons across regions or SKUs, require explicit ARM SKU names. Do not assume defaults. Call this tool only after the user specifies a SKU (--sku) or confirms they want all pricing for a service. Requires at least one filter: --sku, --service, --region, --service-family, or --filter. 
+        SavingsPlan is not a valid --price-type; use --include-savings-plan instead. Valid --price-type: Consumption, Reservation, DevTestConsumption. When --include-savings-plan is true, Consumption results include a nested savingsPlan array (1-year/3-year pricing, mainly Linux VMs). 
+        For Bicep/ARM cost estimation, extract resource type and SKU, query per resource, and sum monthly costs (hourly × 730).
         """,
     Destructive = false,
     Idempotent = true,

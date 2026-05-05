@@ -20,7 +20,7 @@ public class DatabaseRenameCommandTests : CommandUnitTestsBase<DatabaseRenameCom
     public void Constructor_InitializesCommandCorrectly()
     {
         Assert.Equal("rename", CommandDefinition.Name);
-        Assert.NotNull(CommandDefinition.Description);
+        Assert.False(string.IsNullOrEmpty(CommandDefinition.Description));
         Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 

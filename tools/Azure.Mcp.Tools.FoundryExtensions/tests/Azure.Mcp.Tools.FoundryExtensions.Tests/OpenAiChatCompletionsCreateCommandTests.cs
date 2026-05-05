@@ -19,8 +19,6 @@ public class OpenAiChatCompletionsCreateCommandTests : CommandUnitTestsBase<Open
     [Fact]
     public void Description_ContainsExpectedContent()
     {
-        Assert.NotNull(Command.Description);
-        Assert.NotEmpty(Command.Description);
         Assert.False(string.IsNullOrEmpty(Command.Description));
         Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }

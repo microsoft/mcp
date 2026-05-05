@@ -62,6 +62,7 @@ public class ServiceBusSetupTests
 
         // Assert
         Assert.NotNull(serviceBusGroup);
+        Assert.False(string.IsNullOrEmpty(serviceBusGroup.Description));
         Assert.True(serviceBusGroup.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
