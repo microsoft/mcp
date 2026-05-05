@@ -8,6 +8,9 @@ jobs:
     fetchDepth: 0
 
   - template: /eng/pipelines/templates/steps/install-dotnet.yml
+
+  - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    - template: /eng/common/pipelines/templates/steps/login-to-github.yml
   
   - task: Powershell@2
     displayName: "Run source analysis"
@@ -15,7 +18,7 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Analyze-Code.ps1
     env:
-      GH_TOKEN: $(azuresdk-github-pat)
+      GH_TOKEN: $(GH_TOKEN)
 
   # Run AOT analysis only on Linux x64
   - template: /eng/pipelines/templates/steps/analyze-aot-compact.yml
