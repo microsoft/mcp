@@ -21,9 +21,10 @@ namespace Azure.Mcp.Tools.Functions.Commands.Language;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger) : BaseCommand<EmptyOptions>
+public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger, IFunctionsService functionsService) : BaseCommand<EmptyOptions>
 {
     private readonly ILogger<LanguageListCommand> _logger = logger;
+    private readonly IFunctionsService _functionsService = functionsService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -39,8 +40,7 @@ public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger) : B
     {
         try
         {
-            var service = context.GetService<IFunctionsService>();
-            var result = await service.GetLanguageListAsync(cancellationToken);
+            var result = await _functionsService.GetLanguageListAsync(cancellationToken);
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(

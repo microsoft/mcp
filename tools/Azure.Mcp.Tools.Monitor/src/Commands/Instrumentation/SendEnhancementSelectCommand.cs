@@ -27,10 +27,11 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
     ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
-public sealed class SendEnhancementSelectCommand(ILogger<SendEnhancementSelectCommand> logger)
+public sealed class SendEnhancementSelectCommand(ILogger<SendEnhancementSelectCommand> logger, SendEnhancementSelectTool sendEnhancementSelectTool)
     : BaseCommand<SendEnhancementSelectOptions>
 {
     private readonly ILogger<SendEnhancementSelectCommand> _logger = logger;
+    private readonly SendEnhancementSelectTool _sendEnhancementSelectTool = sendEnhancementSelectTool;
 
     protected override void RegisterOptions(Command command)
     {
@@ -58,8 +59,7 @@ public sealed class SendEnhancementSelectCommand(ILogger<SendEnhancementSelectCo
 
         try
         {
-            var tool = context.GetService<SendEnhancementSelectTool>();
-            var result = tool.Send(options.SessionId!, options.EnhancementKeys!);
+            var result = _sendEnhancementSelectTool.Send(options.SessionId!, options.EnhancementKeys!);
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
