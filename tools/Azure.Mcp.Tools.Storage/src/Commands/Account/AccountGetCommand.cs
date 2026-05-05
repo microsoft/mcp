@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Account;
 
-public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorageService storageService) : SubscriptionCommand<AccountGetOptions>()
+public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorageService storageService) : SubscriptionCommand<AccountGetOptions, AccountGetCommand.AccountGetCommandResult>()
 {
     private const string CommandTitle = "Get Storage Account Details";
     private readonly ILogger<AccountGetCommand> _logger = logger;
@@ -40,6 +41,8 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<AccountGetCommandResult> ResultTypeInfo => StorageJsonContext.Default.AccountGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -74,7 +77,7 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
                 cancellationToken);
 
             // Set results
-            context.Response.Results = ResponseResult.Create(new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false), StorageJsonContext.Default.AccountGetCommandResult);
+            SetResult(context, new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false));
         }
         catch (Exception ex)
         {
@@ -94,5 +97,5 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
     }
 
     // Strongly-typed result record
-    internal record AccountGetCommandResult(List<StorageAccountInfo> Accounts, bool AreResultsTruncated);
+    public record AccountGetCommandResult(List<StorageAccountInfo> Accounts, bool AreResultsTruncated);
 }

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
@@ -11,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob;
 
-public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorageService storageService) : BaseBlobCommand<BlobUploadOptions>
+public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorageService storageService) : BaseBlobCommand<BlobUploadOptions, BlobUploadResult>
 {
     private const string CommandTitle = "Upload Local File to Blob";
     private readonly ILogger<BlobUploadCommand> _logger = logger;
@@ -38,6 +40,8 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorag
         LocalRequired = true,
         Secret = false
     };
+
+    protected override JsonTypeInfo<BlobUploadResult> ResultTypeInfo => StorageJsonContext.Default.BlobUploadResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -73,7 +77,7 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorag
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(result, StorageJsonContext.Default.BlobUploadResult);
+            SetResult(context, result);
 
             _logger.LogInformation("Successfully uploaded file {LocalFilePath} to blob {Blob} in container {Container}.",
                 options.LocalFilePath, options.Blob, options.Container);

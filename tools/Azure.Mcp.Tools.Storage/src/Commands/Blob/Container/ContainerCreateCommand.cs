@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
@@ -10,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 
-public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logger, IStorageService storageService) : BaseContainerCommand<ContainerCreateOptions>()
+public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logger, IStorageService storageService) : BaseContainerCommand<ContainerCreateOptions, ContainerCreateCommand.ContainerCreateCommandResult>()
 {
     private const string CommandTitle = "Create Storage Blob Container";
     private readonly ILogger<ContainerCreateCommand> _logger = logger;
@@ -43,6 +44,8 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
         Secret = false
     };
 
+    protected override JsonTypeInfo<ContainerCreateCommandResult> ResultTypeInfo => StorageJsonContext.Default.ContainerCreateCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -62,7 +65,7 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(containerInfo), StorageJsonContext.Default.ContainerCreateCommandResult);
+            SetResult(context, new(containerInfo));
         }
         catch (Exception ex)
         {
@@ -74,5 +77,5 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
         return context.Response;
     }
 
-    internal record ContainerCreateCommandResult(ContainerInfo Container);
+    public record ContainerCreateCommandResult(ContainerInfo Container);
 }

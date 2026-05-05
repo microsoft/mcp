@@ -10,8 +10,9 @@ using Microsoft.Mcp.Core.Extensions;
 namespace Azure.Mcp.Tools.Storage.Commands;
 
 public abstract class BaseStorageCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
-    : SubscriptionCommand<T>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T,
+    TResult>
+    : SubscriptionCommand<T, TResult>
     where T : BaseStorageOptions, new()
 {
     protected override void RegisterOptions(Command command)

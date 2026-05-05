@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 
-public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IStorageService storageService) : BaseStorageCommand<ContainerGetOptions>()
+public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IStorageService storageService) : BaseStorageCommand<ContainerGetOptions, ContainerGetCommand.ContainerGetCommandResult>()
 {
     private const string CommandTitle = "Get Storage Container Details";
     private readonly ILogger<ContainerGetCommand> _logger = logger;
@@ -48,6 +49,8 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ContainerGetCommandResult> ResultTypeInfo => StorageJsonContext.Default.ContainerGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -85,7 +88,7 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
                 cancellationToken
             );
 
-            context.Response.Results = ResponseResult.Create(new(containers ?? []), StorageJsonContext.Default.ContainerGetCommandResult);
+            SetResult(context, new(containers ?? []));
             return context.Response;
         }
         catch (Exception ex)
@@ -103,5 +106,5 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
         }
     }
 
-    internal record ContainerGetCommandResult(List<ContainerInfo> Containers);
+    public record ContainerGetCommandResult(List<ContainerInfo> Containers);
 }

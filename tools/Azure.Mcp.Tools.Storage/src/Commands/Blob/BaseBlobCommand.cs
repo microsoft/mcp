@@ -11,8 +11,9 @@ using Microsoft.Mcp.Core.Extensions;
 namespace Azure.Mcp.Tools.Storage.Commands.Blob;
 
 public abstract class BaseBlobCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : BaseContainerCommand<TOptions> where TOptions : BaseBlobOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions,
+    TResult>
+    : BaseContainerCommand<TOptions, TResult> where TOptions : BaseBlobOptions, new()
 {
     protected BaseBlobCommand()
     {

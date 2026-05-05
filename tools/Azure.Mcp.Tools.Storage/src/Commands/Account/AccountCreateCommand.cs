@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
@@ -15,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Account;
 
-public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, IStorageService storageService) : SubscriptionCommand<AccountCreateOptions>()
+public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, IStorageService storageService) : SubscriptionCommand<AccountCreateOptions, AccountCreateCommand.AccountCreateCommandResult>()
 {
     private const string CommandTitle = "Create Storage Account";
     private readonly ILogger<AccountCreateCommand> _logger = logger;
@@ -42,6 +43,8 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, I
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<AccountCreateCommandResult> ResultTypeInfo => StorageJsonContext.Default.AccountCreateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -92,7 +95,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, I
                 cancellationToken);
 
             // Set results
-            context.Response.Results = ResponseResult.Create(new(account), StorageJsonContext.Default.AccountCreateCommandResult);
+            SetResult(context, new(account));
         }
         catch (Exception ex)
         {
@@ -121,5 +124,5 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, I
     };
 
     // Strongly-typed result record
-    internal record AccountCreateCommandResult(StorageAccountResult Account);
+    public record AccountCreateCommandResult(StorageAccountResult Account);
 }

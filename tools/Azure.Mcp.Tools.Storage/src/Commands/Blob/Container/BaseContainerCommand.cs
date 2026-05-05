@@ -10,8 +10,9 @@ using Microsoft.Mcp.Core.Extensions;
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 
 public abstract class BaseContainerCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : BaseStorageCommand<TOptions> where TOptions : BaseContainerOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions,
+    TResult>
+    : BaseStorageCommand<TOptions, TResult> where TOptions : BaseContainerOptions, new()
 {
     protected BaseContainerCommand()
     {

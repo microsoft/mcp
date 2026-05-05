@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Services;
@@ -10,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Table.Commands;
 
-public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageService storageService) : BaseStorageCommand<BaseStorageOptions>()
+public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageService storageService) : BaseStorageCommand<BaseStorageOptions, TableListCommand.TableListCommandResult>()
 {
     private const string CommandTitle = "List Tables in Azure Storage";
     private readonly ILogger<TableListCommand> _logger = logger;
@@ -34,6 +35,8 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageS
         Secret = false
     };
 
+    protected override JsonTypeInfo<TableListCommandResult> ResultTypeInfo => StorageJsonContext.Default.TableListCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -52,7 +55,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageS
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(tables ?? []), StorageJsonContext.Default.TableListCommandResult);
+            SetResult(context, new(tables ?? []));
         }
         catch (Exception ex)
         {
@@ -63,5 +66,5 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageS
         return context.Response;
     }
 
-    internal record TableListCommandResult(List<string> Tables);
+    public record TableListCommandResult(List<string> Tables);
 }
