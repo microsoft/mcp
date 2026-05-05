@@ -41,6 +41,10 @@ jobs:
           querySuite: 'sdl-required, active-ssirp, secure-future-initiative'
           compiled:
             enabled: true
+          querySuites:
+            - active-ssirp
+            - sdl-required
+            - secure-future-initiative
 
   steps:
   - download: current
