@@ -835,6 +835,60 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'.");
     }
 
+    public async Task<OperationResult> ConfigureMultiUserAuthorizationAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string resourceGuardId, string? tenant, RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(resourceGuardId), resourceGuardId));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+        var proxyCollection = vaultResource.GetResourceGuardProxyBaseResources();
+
+        var proxyData = new ResourceGuardProxyBaseResourceData
+        {
+            Properties = new ResourceGuardProxyBase
+            {
+                ResourceGuardResourceId = resourceGuardId
+            }
+        };
+
+        await proxyCollection.CreateOrUpdateAsync(
+            WaitUntil.Completed,
+            "DppResourceGuardProxy",
+            proxyData,
+            cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Multi-User Authorization enabled on vault '{vaultName}' with Resource Guard '{resourceGuardId}'.");
+    }
+
+    public async Task<OperationResult> DisableMultiUserAuthorizationAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? tenant, RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+
+        var proxyResponse = await vaultResource.GetResourceGuardProxyBaseResourceAsync("DppResourceGuardProxy", cancellationToken);
+        await proxyResponse.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Multi-User Authorization disabled on vault '{vaultName}'.");
+    }
+
+
     private static BackupVaultInfo MapToVaultInfo(DataProtectionBackupVaultData data, string? resourceGroup)
     {
         var securitySettings = data.Properties?.SecuritySettings;

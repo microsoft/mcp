@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 using Azure.Mcp.Tools.AzureBackup.Commands.ProtectableItem;
 using Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 using Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
+using Azure.Mcp.Tools.AzureBackup.Commands.Security;
 using Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,6 +55,8 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<GovernanceSoftDeleteCommand>();
 
         services.AddSingleton<DisasterRecoveryEnableCrrCommand>();
+
+        services.AddSingleton<SecurityConfigureMuaCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -110,6 +113,10 @@ public sealed class AzureBackupSetup : IAreaSetup
         var disasterrecovery = new CommandGroup("disasterrecovery", "Disaster recovery operations - Enable Cross-Region Restore on a GRS vault.");
         azureBackup.AddSubGroup(disasterrecovery);
         disasterrecovery.AddCommand<DisasterRecoveryEnableCrrCommand>(serviceProvider);
+
+        var security = new CommandGroup("security", "Security operations - Configure Multi-User Authorization (MUA) for backup vaults.");
+        azureBackup.AddSubGroup(security);
+        security.AddCommand<SecurityConfigureMuaCommand>(serviceProvider);
 
         return azureBackup;
     }

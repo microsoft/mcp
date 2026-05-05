@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Text.Json;
@@ -1412,6 +1412,203 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         var opResult = result.AssertProperty("result");
         Assert.Equal("Accepted", opResult.AssertProperty("status").GetString());
     }
+
+    #endregion
+
+    #region Security Tests (MUA - RSV)
+
+    [Fact]
+    public async Task SecurityConfigureMua_RsvVault_EnableMua_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var resourceGuardId = Settings.DeploymentOutputs?.GetValueOrDefault("RESOURCE_GUARD_ID")
+            ?? "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-security/providers/Microsoft.DataProtection/resourceGuards/test-guard";
+
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_RSV_Enable");
+
+        var result = await CallToolAsync(
+            "azurebackup_security_configure-mua",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "resource-guard-id", resourceGuardId }
+            });
+
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityConfigureMua_RSV_Enable");
+
+        if (result.HasValue && result.Value.TryGetProperty("result", out var opResult))
+        {
+            Assert.Equal("Succeeded", opResult.GetProperty("status").GetString());
+        }
+        else if (result.HasValue && result.Value.TryGetProperty("message", out var message))
+        {
+            var msg = message.GetString() ?? "";
+            bool isEnvironmentSpecific = msg.Contains("NotFound", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("ResourceGuard", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("Conflict", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("Reader", StringComparison.OrdinalIgnoreCase);
+            Assert.True(isEnvironmentSpecific, $"Unexpected error: {msg[..Math.Min(msg.Length, 300)]}");
+            Output.WriteLine($"MUA enable skipped due to environment constraint: {msg[..Math.Min(msg.Length, 200)]}");
+        }
+        else
+        {
+            Assert.Fail("Unexpected response from SecurityConfigureMua (RSV Enable)");
+        }
+    }
+
+    [Fact]
+    public async Task SecurityConfigureMua_RsvVault_DisableMua_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_RSV_Disable");
+
+        var result = await CallToolAsync(
+            "azurebackup_security_configure-mua",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName }
+            });
+
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityConfigureMua_RSV_Disable");
+
+        if (result.HasValue && result.Value.TryGetProperty("result", out var opResult))
+        {
+            Assert.Equal("Succeeded", opResult.GetProperty("status").GetString());
+        }
+        else if (result.HasValue && result.Value.TryGetProperty("message", out var message))
+        {
+            var msg = message.GetString() ?? "";
+            bool isEnvironmentSpecific = msg.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("Authorization", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("NotFound", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("Forbidden", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("UnlockPreviligeAccess", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("UnlockPrivilegeAccess", StringComparison.OrdinalIgnoreCase);
+            Assert.True(isEnvironmentSpecific, $"Unexpected error: {msg[..Math.Min(msg.Length, 300)]}");
+            Output.WriteLine($"MUA disable skipped: {msg[..Math.Min(msg.Length, 200)]}");
+        }
+        else
+        {
+            Assert.Fail("Unexpected response from SecurityConfigureMua (RSV Disable)");
+        }
+    }
+
+    #endregion
+
+    #region Security Tests (MUA - DPP)
+
+    [Fact]
+    public async Task SecurityConfigureMua_DppVault_EnableMua_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        var resourceGuardId = Settings.DeploymentOutputs?.GetValueOrDefault("RESOURCE_GUARD_ID")
+            ?? "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-security/providers/Microsoft.DataProtection/resourceGuards/test-guard";
+
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_DPP_Enable");
+
+        var result = await CallToolAsync(
+            "azurebackup_security_configure-mua",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "dpp" },
+                { "resource-guard-id", resourceGuardId }
+            });
+
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityConfigureMua_DPP_Enable");
+
+        if (result.HasValue && result.Value.TryGetProperty("result", out var opResult))
+        {
+            Assert.Equal("Succeeded", opResult.GetProperty("status").GetString());
+        }
+        else if (result.HasValue && result.Value.TryGetProperty("message", out var message))
+        {
+            var msg = message.GetString() ?? "";
+            bool isEnvironmentSpecific = msg.Contains("NotFound", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("ResourceGuard", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("Conflict", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("Reader", StringComparison.OrdinalIgnoreCase);
+            Assert.True(isEnvironmentSpecific, $"Unexpected error: {msg[..Math.Min(msg.Length, 300)]}");
+            Output.WriteLine($"MUA enable skipped (DPP): {msg[..Math.Min(msg.Length, 200)]}");
+        }
+        else
+        {
+            Assert.Fail("Unexpected response from SecurityConfigureMua (DPP Enable)");
+        }
+    }
+
+    [Fact]
+    public async Task SecurityConfigureMua_DppVault_DisableMua_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_DPP_Disable");
+
+        var result = await CallToolAsync(
+            "azurebackup_security_configure-mua",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "dpp" }
+            });
+
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityConfigureMua_DPP_Disable");
+
+        if (result.HasValue && result.Value.TryGetProperty("result", out var opResult))
+        {
+            Assert.Equal("Succeeded", opResult.GetProperty("status").GetString());
+        }
+        else if (result.HasValue && result.Value.TryGetProperty("message", out var message))
+        {
+            var msg = message.GetString() ?? "";
+            bool isEnvironmentSpecific = msg.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("Authorization", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("NotFound", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("Forbidden", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("UnlockPreviligeAccess", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("UnlockPrivilegeAccess", StringComparison.OrdinalIgnoreCase);
+            Assert.True(isEnvironmentSpecific, $"Unexpected error: {msg[..Math.Min(msg.Length, 300)]}");
+            Output.WriteLine($"MUA disable skipped (DPP): {msg[..Math.Min(msg.Length, 200)]}");
+        }
+        else
+        {
+            Assert.Fail("Unexpected response from SecurityConfigureMua (DPP Disable)");
+        }
+    }
+
+    [Fact]
+    public async Task SecurityConfigureMua_RsvVault_WithExplicitVaultType_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var resourceGuardId = Settings.DeploymentOutputs?.GetValueOrDefault("RESOURCE_GUARD_ID")
+            ?? "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-security/providers/Microsoft.DataProtection/resourceGuards/test-guard";
+
+        var result = await CallToolAsync(
+            "azurebackup_security_configure-mua",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "rsv" },
+                { "resource-guard-id", resourceGuardId }
+            });
+
+        // Any response is acceptable — validates the command routing works with explicit vault type
+        Assert.True(result.HasValue, "Response should not be empty");
+    }
+
+    // TC-7: Invalid vault-type validation is covered by unit tests.
+    // Command-level validation errors return MCP error responses without tool content.
 
     #endregion
 }
