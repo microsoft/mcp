@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
@@ -74,7 +75,9 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearch
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(results, SearchJsonContext.Default.ListJsonElement);
+            context.Response.Results = ResponseResult.Create(
+                new IndexQueryCommandResult(results ?? []),
+                SearchJsonContext.Default.IndexQueryCommandResult);
         }
         catch (Exception ex)
         {
@@ -84,4 +87,6 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearch
 
         return context.Response;
     }
+
+    public record IndexQueryCommandResult(List<JsonElement> Results);
 }

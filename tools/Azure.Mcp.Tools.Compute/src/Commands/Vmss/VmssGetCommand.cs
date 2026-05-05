@@ -100,7 +100,9 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(vmInstance), ComputeJsonContext.Default.VmssGetVmInstanceResult);
+                context.Response.Results = ResponseResult.Create(
+                    new VmssGetCommandResult(VmInstance: vmInstance),
+                    ComputeJsonContext.Default.VmssGetCommandResult);
             }
             // Scenario 2: Get specific VMSS
             else if (!string.IsNullOrEmpty(options.VmssName))
@@ -113,7 +115,9 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(vmss), ComputeJsonContext.Default.VmssGetSingleResult);
+                context.Response.Results = ResponseResult.Create(
+                    new VmssGetCommandResult(Vmss: vmss),
+                    ComputeJsonContext.Default.VmssGetCommandResult);
             }
             // Scenario 3: List VMSS in resource group
             else
@@ -125,7 +129,9 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(vmssList ?? []), ComputeJsonContext.Default.VmssGetListResult);
+                context.Response.Results = ResponseResult.Create(
+                    new VmssGetCommandResult(VmssList: vmssList ?? []),
+                    ComputeJsonContext.Default.VmssGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -149,7 +155,8 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmssGetSingleResult(VmssInfo Vmss);
-    internal record VmssGetListResult(List<VmssInfo> VmssList);
-    internal record VmssGetVmInstanceResult(VmssVmInfo VmInstance);
+    public record VmssGetCommandResult(
+        List<VmssInfo>? VmssList = null,
+        VmssInfo? Vmss = null,
+        VmssVmInfo? VmInstance = null);
 }

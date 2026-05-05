@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Sql.Commands;
 [JsonSerializable(typeof(List<SqlServer>))]
 [JsonSerializable(typeof(ServerCreateCommand.ServerCreateResult))]
 [JsonSerializable(typeof(ServerDeleteCommand.ServerDeleteResult))]
+[JsonSerializable(typeof(ServerGetCommand.ServerGetCommandResult))]
 [JsonSerializable(typeof(ElasticPoolListCommand.ElasticPoolListResult))]
 [JsonSerializable(typeof(SqlDatabase))]
 [JsonSerializable(typeof(SqlServer))]

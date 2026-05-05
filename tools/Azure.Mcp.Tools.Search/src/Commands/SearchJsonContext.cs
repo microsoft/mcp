@@ -12,6 +12,7 @@ namespace Azure.Mcp.Tools.Search.Commands;
 [JsonSerializable(typeof(FieldInfo))]
 [JsonSerializable(typeof(IndexGetCommand.IndexGetCommandResult))]
 [JsonSerializable(typeof(IndexInfo))]
+[JsonSerializable(typeof(IndexQueryCommand.IndexQueryCommandResult))]
 [JsonSerializable(typeof(List<JsonElement>))]
 [JsonSerializable(typeof(ServiceListCommand.ServiceListCommandResult))]
 [JsonSerializable(typeof(KnowledgeSourceGetCommand.KnowledgeSourceGetCommandResult))]

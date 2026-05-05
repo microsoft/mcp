@@ -101,7 +101,9 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEv
                     cancellationToken);
 
                 context.Response.Results = namespaceDetails != null
-                    ? ResponseResult.Create(new(namespaceDetails), EventHubsJsonContext.Default.NamespaceGetCommandResult)
+                    ? ResponseResult.Create(
+                        new NamespaceGetCommandResult(Namespace: namespaceDetails),
+                        EventHubsJsonContext.Default.NamespaceGetCommandResult)
                     : null;
             }
             else
@@ -113,7 +115,9 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEv
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(namespaces ?? []), EventHubsJsonContext.Default.NamespacesGetCommandResult);
+                context.Response.Results = ResponseResult.Create(
+                    new NamespaceGetCommandResult(Namespaces: namespaces ?? []),
+                    EventHubsJsonContext.Default.NamespaceGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -125,6 +129,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEv
         return context.Response;
     }
 
-    internal record NamespacesGetCommandResult(List<Models.Namespace> Namespaces);
-    internal record NamespaceGetCommandResult(Models.Namespace Namespace);
+    public record NamespaceGetCommandResult(
+        List<Models.Namespace>? Namespaces = null,
+        Models.Namespace? Namespace = null);
 }

@@ -252,7 +252,7 @@ public class WebTestsGetCommandTests : CommandUnitTestsBase<WebTestsGetCommand, 
         var response = await ExecuteCommandAsync("--subscription", "sub1");
 
         // Assert
-        var results = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.WebTestsGetCommandListResult);
+        var results = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.WebTestsGetCommandResult);
 
         Assert.NotNull(results.WebTests);
         Assert.Equal(2, results.WebTests.Count);
@@ -281,7 +281,7 @@ public class WebTestsGetCommandTests : CommandUnitTestsBase<WebTestsGetCommand, 
         var response = await ExecuteCommandAsync("--subscription", "sub1", "--resource-group", "rg1");
 
         // Assert
-        var results = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.WebTestsGetCommandListResult);
+        var results = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.WebTestsGetCommandResult);
 
         Assert.NotNull(results.WebTests);
         Assert.Single(results.WebTests);

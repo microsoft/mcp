@@ -103,8 +103,8 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
                         cancellationToken);
 
                     context.Response.Results = ResponseResult.Create(
-                        new(vmWithInstanceView.VmInfo, vmWithInstanceView.InstanceView),
-                        ComputeJsonContext.Default.VmGetSingleResult);
+                        new VmGetCommandResult(Vm: vmWithInstanceView.VmInfo, InstanceView: vmWithInstanceView.InstanceView),
+                        ComputeJsonContext.Default.VmGetCommandResult);
                 }
                 else
                 {
@@ -116,20 +116,24 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
                         options.RetryPolicy,
                         cancellationToken);
 
-                    context.Response.Results = ResponseResult.Create(new(vm, null), ComputeJsonContext.Default.VmGetSingleResult);
+                    context.Response.Results = ResponseResult.Create(
+                        new VmGetCommandResult(Vm: vm),
+                        ComputeJsonContext.Default.VmGetCommandResult);
                 }
             }
             // Scenario 2: List VMs in resource group
             else
             {
-                var vms = await _computeService.ListVmsAsync(
+                var vmList = await _computeService.ListVmsAsync(
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(vms), ComputeJsonContext.Default.VmGetListResult);
+                context.Response.Results = ResponseResult.Create(
+                    new VmGetCommandResult(VmList: vmList),
+                    ComputeJsonContext.Default.VmGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -153,6 +157,8 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmGetSingleResult(VmInfo Vm, VmInstanceView? InstanceView);
-    internal record VmGetListResult(List<VmInfo> Vms);
+    public record VmGetCommandResult(
+        List<VmInfo>? VmList = null,
+        VmInfo? Vm = null,
+        VmInstanceView? InstanceView = null);
 }

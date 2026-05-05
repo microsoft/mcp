@@ -92,7 +92,9 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger, IMoni
 
                 if (webTest != null)
                 {
-                    context.Response.Results = ResponseResult.Create(new(webTest), MonitorJsonContext.Default.WebTestsGetCommandResult);
+                    context.Response.Results = ResponseResult.Create(
+                        new WebTestsGetCommandResult(WebTest: webTest),
+                        MonitorJsonContext.Default.WebTestsGetCommandResult);
                 }
                 else
                 {
@@ -107,7 +109,9 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger, IMoni
                     ? await _monitorWebTestService.ListWebTests(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken)
                     : await _monitorWebTestService.ListWebTests(options.Subscription!, options.ResourceGroup, options.Tenant, options.RetryPolicy, cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(webTests ?? []), MonitorJsonContext.Default.WebTestsGetCommandListResult);
+                context.Response.Results = ResponseResult.Create(
+                    new WebTestsGetCommandResult(WebTests: webTests ?? []),
+                    MonitorJsonContext.Default.WebTestsGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -122,6 +126,7 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger, IMoni
         return context.Response;
     }
 
-    internal record WebTestsGetCommandResult(WebTestDetailedInfo WebTest);
-    internal record WebTestsGetCommandListResult(List<WebTestSummaryInfo> WebTests);
+    public record WebTestsGetCommandResult(
+        List<WebTestSummaryInfo>? WebTests = null,
+        WebTestDetailedInfo? WebTest = null);
 }

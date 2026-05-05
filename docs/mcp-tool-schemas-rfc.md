@@ -345,6 +345,9 @@ A small number of commands today return more than one distinct result record dep
 | `WebTestsGetCommand` (Monitor) | Single + plural | 1 record |
 | `ServerGetCommand` (Sql) | raw `List<SqlServer>` | wrapped in `ServerGetCommandResult` |
 | `IndexQueryCommand` (Search) | raw `List<JsonElement>` | wrapped in `IndexQueryCommandResult` |
+| `ImportJobGetCommand` (ManagedLustre) | `ImportJobGetResult` + `ImportJobListResult` | 1 record with optional `Job?`, `Jobs?` |
+| `AutoimportJobGetCommand` (ManagedLustre) | `AutoimportJobGetResult` + `AutoimportJobListResult` | 1 record with optional `Job?`, `Jobs?` |
+| `AutoexportJobGetCommand` (ManagedLustre) | `AutoexportJobGetResult` + `AutoexportJobListResult` | 1 record with optional `Job?`, `Jobs?` |
 | `BlobUploadCommand` | `BlobUploadResult` (already an object) | rename to `BlobUploadCommandResult` for naming consistency (optional) |
 
 Going-forward rule: every command's `ResponseResult.Create<T>` call site writes a `*CommandResult` record root — no raw lists or primitives.

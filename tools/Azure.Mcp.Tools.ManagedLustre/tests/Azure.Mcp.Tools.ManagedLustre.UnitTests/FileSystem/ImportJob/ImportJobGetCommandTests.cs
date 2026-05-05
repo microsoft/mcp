@@ -52,7 +52,8 @@ public class ImportJobGetCommandTests : CommandUnitTestsBase<ImportJobGetCommand
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
-            var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobGetResult);
+            var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobGetCommandResult);
+            Assert.NotNull(result.Job);
             Assert.Equal(JobName, result.Job.Name);
         }
         else
@@ -155,7 +156,8 @@ public class ImportJobGetCommandTests : CommandUnitTestsBase<ImportJobGetCommand
         var response = await ExecuteCommandAsync("--subscription", Sub, "--resource-group", Rg, "--filesystem-name", Name);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobListResult);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobGetCommandResult);
+        Assert.NotNull(result.Jobs);
         Assert.Single(result.Jobs);
         Assert.Equal(JobName, result.Jobs[0].Name);
     }

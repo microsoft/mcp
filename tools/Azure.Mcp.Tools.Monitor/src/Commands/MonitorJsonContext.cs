@@ -27,7 +27,6 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(TableTypeListCommand.TableTypeListCommandResult))]
 [JsonSerializable(typeof(WebTestsCreateOrUpdateCommand.WebTestsCreateOrUpdateCommandResult))]
 [JsonSerializable(typeof(WebTestsGetCommand.WebTestsGetCommandResult))]
-[JsonSerializable(typeof(WebTestsGetCommand.WebTestsGetCommandListResult))]
 [JsonSerializable(typeof(WorkspaceListCommand.WorkspaceListCommandResult))]
 [JsonSerializable(typeof(Dictionary<string, object>))]
 [JsonSerializable(typeof(Dictionary<string, object?>))]

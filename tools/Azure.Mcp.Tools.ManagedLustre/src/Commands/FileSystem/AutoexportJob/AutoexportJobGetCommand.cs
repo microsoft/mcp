@@ -89,7 +89,7 @@ public sealed class AutoexportJobGetCommand(IManagedLustreService service, ILogg
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(result), ManagedLustreJsonContext.Default.AutoexportJobGetResult);
+                context.Response.Results = ResponseResult.Create(new(Job: result), ManagedLustreJsonContext.Default.AutoexportJobGetCommandResult);
             }
             else
             {
@@ -102,7 +102,7 @@ public sealed class AutoexportJobGetCommand(IManagedLustreService service, ILogg
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(results ?? []), ManagedLustreJsonContext.Default.AutoexportJobListResult);
+                context.Response.Results = ResponseResult.Create(new(Jobs: results ?? []), ManagedLustreJsonContext.Default.AutoexportJobGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -114,6 +114,7 @@ public sealed class AutoexportJobGetCommand(IManagedLustreService service, ILogg
         return context.Response;
     }
 
-    public record AutoexportJobGetResult(Models.AutoexportJob Job);
-    public record AutoexportJobListResult(List<Models.AutoexportJob> Jobs);
+    public record AutoexportJobGetCommandResult(
+        Models.AutoexportJob? Job = null,
+        List<Models.AutoexportJob>? Jobs = null);
 }
