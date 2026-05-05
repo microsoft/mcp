@@ -43,6 +43,7 @@ public class WebTestsCreateOrUpdateCommandTests : CommandUnitTestsBase<WebTestsC
     {
         var description = Command.Description;
         Assert.False(string.IsNullOrEmpty(description));
+        Assert.Contains("Create or update", Command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.True(description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 

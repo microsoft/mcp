@@ -30,6 +30,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
         Assert.NotEqual(Guid.Empty.ToString(), Command.Id);
         Assert.False(string.IsNullOrEmpty(Command.Description));
         Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
+        Assert.Contains("managed disk", Command.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
