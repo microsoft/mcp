@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Added startup performance benchmarks and end-to-end measurement script (eng/scripts/Test-StartupPerformance.ps1) that measures CLI cold-start time, MCP stdio startup time across default, namespace, and all-tools modes, and exact GPT-4o token budgets for each tools/list payload. Results can be gated against a baseline and are wired into the nightly AzDO pipeline via a new `Perf` stage in `common.yml`."

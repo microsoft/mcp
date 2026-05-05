@@ -1,0 +1,114 @@
+parameters:
+- name: Runs
+  type: number
+  default: 5
+- name: BaselinePath
+  type: string
+  default: ''
+  # Path to a JSON baseline file. When set, a second run gates on BaselineThreshold.
+- name: BaselineThreshold
+  type: number
+  default: 1.20
+
+jobs:
+- job: PerfTest
+  displayName: "Performance test"
+  timeoutInMinutes: 30
+  pool:
+    name: $(WINDOWSPOOL)
+    image: $(WINDOWSVMIMAGE)
+    os: windows
+  templateContext:
+    outputs:
+    - output: pipelineArtifact
+      condition: always()
+      targetPath: $(Build.ArtifactStagingDirectory)/perf
+      artifactName: perf-results
+
+  steps:
+  - checkout: self
+
+  - task: UseDotNet@2
+    displayName: "Use .NET SDK from global.json"
+    retryCountOnTaskFailure: 3
+    inputs:
+      useGlobalJson: true
+
+  - task: Powershell@2
+    displayName: "Build benchmark tool (Release)"
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        dotnet build servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/Azure.Mcp.Server.PerformanceBenchmarks.csproj `
+          -c Release /consoleloggerparameters:NoSummary /nowarn:NU1902
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  - task: Powershell@2
+    displayName: "Run performance measurements"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Test-StartupPerformance.ps1
+      arguments: >
+        -Executable '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Release/net10.0/azmcp.exe'
+        -Runs ${{ parameters.Runs }}
+        -OutputPath '$(Build.ArtifactStagingDirectory)/perf/startup-e2e.json'
+
+  # Regression gate — only active when BaselinePath is provided.
+  # Reads the already-written results JSON; does NOT re-run the benchmarks.
+  - ${{ if ne(parameters.BaselinePath, '') }}:
+    - task: Powershell@2
+      displayName: "Check regression against baseline"
+      inputs:
+        pwsh: true
+        targetType: inline
+        script: |
+          $results   = Get-Content '$(Build.ArtifactStagingDirectory)/perf/startup-e2e.json' | ConvertFrom-Json
+          $baseline  = Get-Content '${{ parameters.BaselinePath }}' | ConvertFrom-Json
+          $threshold = ${{ parameters.BaselineThreshold }}
+          $s = $results.scenarios
+          $b = $baseline.scenarios
+          $failures = @()
+          $checks = @(
+            @{ Name='cli_cold_start_ms (median)';           Current=$s.cli_cold_start_ms.median;            Baseline=$b.cli_cold_start_ms.median }
+            @{ Name='mcp_stdio_default (median)';           Current=$s.mcp_stdio_to_tools_list_ms.median;   Baseline=$b.mcp_stdio_to_tools_list_ms.median }
+            @{ Name='mcp_namespace_mode (median)';          Current=$s.mcp_namespace_mode_startup_ms.median; Baseline=$b.mcp_namespace_mode_startup_ms.median }
+            @{ Name='mcp_all_mode (median)';                Current=$s.mcp_all_mode_startup_ms.median;      Baseline=$b.mcp_all_mode_startup_ms.median }
+          )
+          foreach ($c in $checks) {
+            $limit  = [math]::Round($c.Baseline * $threshold)
+            $status = if ($c.Current -le $limit) { 'PASS' } else { $failures += $c.Name; 'FAIL' }
+            Write-Host ("  [{0}] {1}: current={2}ms  baseline={3}ms  limit={4}ms" -f $status, $c.Name, $c.Current, $c.Baseline, $limit)
+          }
+          if ($failures.Count -gt 0) { Write-Error "Regression detected in: $($failures -join ', ')" }
+
+  - task: Powershell@2
+    displayName: "Publish metrics to Azure Monitor (optional)"
+    condition: and(succeeded(), eq(variables['System.TeamProject'], 'internal'))
+    continueOnError: true
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        $results = Get-Content '$(Build.ArtifactStagingDirectory)/perf/startup-e2e.json' | ConvertFrom-Json
+        $s = $results.scenarios
+
+        $metrics = @(
+          @{ name = 'startup.cli.cold.median_ms';         value = $s.cli_cold_start_ms.median }
+          @{ name = 'startup.mcp.default.median_ms';      value = $s.mcp_stdio_to_tools_list_ms.median }
+          @{ name = 'startup.mcp.namespace.median_ms';    value = $s.mcp_namespace_mode_startup_ms.median }
+          @{ name = 'startup.mcp.all.median_ms';          value = $s.mcp_all_mode_startup_ms.median }
+          @{ name = 'tokens.default.exact_gpt4o';         value = $s.tools_list_payload.exact_tokens_gpt4o_o200k }
+          @{ name = 'tokens.namespace.exact_gpt4o';       value = $s.namespace_mode_tools_list_payload.exact_tokens_gpt4o_o200k }
+          @{ name = 'tokens.all.exact_gpt4o';             value = $s.all_mode_tools_list_payload.exact_tokens_gpt4o_o200k }
+          @{ name = 'tools.default.count';                value = $s.tools_list_payload.tool_count }
+          @{ name = 'tools.all.count';                    value = $s.all_mode_tools_list_payload.tool_count }
+        )
+
+        foreach ($m in $metrics) {
+          Write-Host ("##vso[task.logissue type=warning]METRIC: {0} = {1}" -f $m.name, $m.value)
+          # Replace the log statement above with your preferred telemetry sink, e.g.:
+          #   az monitor metrics alert create ...
+          #   Invoke-RestMethod -Uri $AppInsightsEndpoint -Body @{ name=$m.name; value=$m.value } ...
+        }
+        Write-Host "Metrics logged. Wire up a telemetry sink to persist them."

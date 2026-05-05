@@ -54,6 +54,9 @@
   </Folder>
   <Folder Name="/servers/" />
   <Folder Name="/servers/Azure.Mcp.Server/" />
+  <Folder Name="/servers/Azure.Mcp.Server/perf/">
+    <Project Path="servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/Azure.Mcp.Server.PerformanceBenchmarks.csproj" />
+  </Folder>
   <Folder Name="/servers/Azure.Mcp.Server/src/">
     <Project Path="servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj" />
   </Folder>
