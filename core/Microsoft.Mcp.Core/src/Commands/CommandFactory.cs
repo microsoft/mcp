@@ -316,8 +316,9 @@ public class CommandFactory : ICommandFactory
         {
             _logger.LogTrace("Executing '{Command}'.", command.Name);
 
-            using var activity = _telemetryService.StartActivity(ActivityName.CommandExecuted);
-            activity?.SetTag(TagName.ToolId, implementation.Id);
+            using var activity = _telemetryService.StartActivity(ActivityName.ToolExecuted);
+            activity?.SetTag(TagName.ToolId, implementation.Id)
+                .SetTag(TagName.ServerMode, "cli");
             InjectToolAreaAndName(activity, parseResult);
             var cmdContext = new CommandContext(_serviceProvider, activity);
             var startTime = DateTime.UtcNow;
@@ -533,17 +534,16 @@ public class CommandFactory : ICommandFactory
         }
 
         var commandResult = parseResult.CommandResult;
-        var fullCommandName = commandResult.Command.Name;
+        var fullCommandName = new List<string>() { commandResult.Command.Name };
         while (commandResult.Parent is CommandResult parent
             && parent.Command.Name != RootCommand.Name)
         {
-            fullCommandName = parent.Command.Name + Separator + fullCommandName;
+            fullCommandName.Insert(0, parent.Command.Name);
             commandResult = parent;
         }
 
-        var index = fullCommandName.IndexOf('_');
-        activity.SetTag(TagName.ToolArea, index == -1 ? fullCommandName : fullCommandName[..index])
-            .SetTag(TagName.ToolName, fullCommandName);
+        activity.SetTag(TagName.ToolArea, fullCommandName[0])
+            .SetTag(TagName.ToolName, string.Join(Separator, fullCommandName));
     }
 
     /// <summary>

@@ -247,11 +247,16 @@ public sealed class PluginTelemetryCommand(
                 }
             }
 
+            // Create host and log telemetry
+            using var host = CreateStdioHost(options);
+            await InitializeServicesAsync(host.Services);
+            await host.StartAsync(cancellationToken);
+
             // Validate tool name if provided: strip client-specific prefixes and check against registered commands/areas
             if (!string.IsNullOrWhiteSpace(options.ToolName))
             {
                 // Resolve ICommandFactory lazily to avoid circular dependency during construction
-                var commandFactory = _serviceProvider.GetRequiredService<ICommandFactory>();
+                var commandFactory = host.Services.GetRequiredService<ICommandFactory>();
 
                 var normalizedToolName = ValidateAndNormalizeToolName(options.ToolName, commandFactory);
                 if (normalizedToolName == null)
@@ -264,11 +269,6 @@ public sealed class PluginTelemetryCommand(
                 // Replace with normalized name for clean telemetry data
                 options.ToolName = normalizedToolName;
             }
-
-            // Create host and log telemetry
-            using var host = CreateStdioHost(options);
-            await InitializeServicesAsync(host.Services);
-            await host.StartAsync(cancellationToken);
 
             var telemetryService = host.Services.GetRequiredService<ITelemetryService>();
             LogPluginTelemetry(telemetryService, options);

@@ -309,7 +309,7 @@ internal class Program
     /// commands. Any changes to the dependencies of those commands may require changes here.
     /// </para>
     /// </summary>
-    /// <returns>The basic initializer serivce provider.</returns>
+    /// <returns>The basic initializer service provider.</returns>
     private static ServiceProvider SetupBasicInitializer()
     {
         var thisAssembly = typeof(Program).Assembly;
