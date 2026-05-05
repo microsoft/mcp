@@ -32,11 +32,11 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 public sealed class FileReadCommand(
     ILogger<FileReadCommand> logger,
     IOneLakeService oneLakeService,
-    IOptions<ServiceStartOptions>? options = null) : GlobalCommand<FileReadOptions>()
+    IOptions<ServiceStartOptions> options) : GlobalCommand<FileReadOptions>()
 {
     private readonly ILogger<FileReadCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-    private readonly IOptions<ServiceStartOptions>? _options = options;
+    private readonly IOptions<ServiceStartOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
 
     private const long InlineContentLimitBytes = 1 * 1024 * 1024; // 1 MiB inline payload limit
 
@@ -98,7 +98,7 @@ public sealed class FileReadCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var transport = _options?.Value.Transport ?? "stdio";
+            var transport = _options.Value.Transport ?? "stdio";
             var isLocalTransport = string.Equals(transport, "stdio", StringComparison.OrdinalIgnoreCase);
 
             string? downloadPath = null;
