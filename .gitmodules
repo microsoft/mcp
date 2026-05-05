@@ -1,0 +1,4 @@
+[submodule "external/DataFactory.MCP"]
+	path = external/DataFactory.MCP
+	url = https://github.com/microsoft/DataFactory.MCP.git
+	branch = fabric-mcp-integration

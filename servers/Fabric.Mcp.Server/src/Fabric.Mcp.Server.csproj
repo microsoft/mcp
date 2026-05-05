@@ -69,6 +69,8 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)\core\Fabric.Mcp.Core\src\Fabric.Mcp.Core.csproj" />
     <ProjectReference Include="$(RepoRoot)\tools\Fabric.*\src\*.csproj" />
+    <!-- DataFactory.MCP.Core integration (via git submodule at external/DataFactory.MCP) -->
+    <ProjectReference Include="$(RepoRoot)\external\DataFactory.MCP\DataFactory.MCP.Core\DataFactory.MCP.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
