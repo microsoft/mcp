@@ -92,6 +92,9 @@ If you are contributing significant changes, or if the issue is already assigned
       - `{server}.Mcp.Tools.{tool-name}.UnitTests/` - Unit tests require no authentication or test resources
       - `{server}.Mcp.Tools.{tool-name}.LiveTests/` - Live tests depend on Azure resources and authentication
       - `test-resources.bicep` - Infrastructure templates for testing
+- `external/` - Git submodules for external project integrations
+  - `DataFactory.MCP` - [DataFactory.MCP](https://github.com/microsoft/DataFactory.MCP) submodule (used by `Fabric.Mcp.Server`)
+  - Run `git submodule update --init --recursive` after cloning to fetch submodule contents
 - `eng/` - Shared tools, templates, CLI helpers
 - `docs/` - Central documentation and onboarding materials
 
@@ -100,11 +103,13 @@ If you are contributing significant changes, or if the issue is already assigned
 ### Development Process
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Write or update tests
-5. Test locally
-6. Submit a pull request
+2. Clone with submodules: `git clone --recurse-submodules <your-fork-url>`
+   - If already cloned, run: `git submodule update --init --recursive`
+3. Create a feature branch
+4. Make your changes
+5. Write or update tests
+6. Test locally
+7. Submit a pull request
 
 ### Adding a New Command
 

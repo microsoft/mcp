@@ -3,6 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="Apache.Arrow" Version="22.1.0" />
     <PackageVersion Include="Azure.Containers.ContainerRegistry" Version="1.2.0" />
     <PackageVersion Include="Azure.Communication.Sms" Version="1.0.2" />
     <PackageVersion Include="Azure.Communication.Email" Version="1.0.2" />
