@@ -14,6 +14,8 @@ jobs:
     inputs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Analyze-Code.ps1
+    env:
+      GH_TOKEN: $(azuresdk-github-pat)
 
   # Run AOT analysis only on Linux x64
   - template: /eng/pipelines/templates/steps/analyze-aot-compact.yml
