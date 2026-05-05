@@ -28,7 +28,7 @@ getAzureMcpEvents_ToolCalls(ago(7d), now())
     ExType == "System.Collections.Generic.KeyNotFoundException", "Customer",
     ExType == "Azure.RequestFailedException" and StatusCode >= 500, "AzureService",
     ExType == "System.AggregateException", "AzureService",
-    ExType in ("System.FormatException", "System.ArgumentNullException", "System.ArgumentException"), "McpToolBug",
+    ExType in ("System.FormatException", "System.ArgumentNullException", "System.ArgumentException", "System.InvalidOperationException"), "McpToolBug",
     "Unknown")
 | summarize
     Total = count(),
