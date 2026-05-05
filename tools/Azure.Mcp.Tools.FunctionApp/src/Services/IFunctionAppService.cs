@@ -15,4 +15,35 @@ public interface IFunctionAppService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<FunctionAppInfo> CreateFunctionApp(
+        string subscription,
+        string resourceGroup,
+        string functionAppName,
+        string location,
+        string? planName = null,
+        string? hostingKind = null,
+        string? sku = null,
+        string? runtime = null,
+        string? runtimeVersion = null,
+        string? os = null,
+        string? storageAccountName = null,
+        string? storageAuthMode = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<FunctionAppInfo> CreateContainerAppFunctionApp(
+        string subscription,
+        string resourceGroup,
+        string functionAppName,
+        string location,
+        string? runtime = null,
+        string? runtimeVersion = null,
+        string? storageAccountName = null,
+        string? storageAuthMode = null,
+        string? containerAppsEnvironmentName = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

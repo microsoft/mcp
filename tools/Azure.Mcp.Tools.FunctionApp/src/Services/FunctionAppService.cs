@@ -2,12 +2,17 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.ResourceManager.AppService;
+using Azure.ResourceManager.AppService.Models;
+using Azure.ResourceManager.Models;
+using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.FunctionApp.Services;
@@ -16,15 +21,30 @@ public sealed class FunctionAppService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
     ICacheService cacheService,
+    IResourceGroupService resourceGroupService,
     ILogger<FunctionAppService> logger) : BaseAzureService(tenantService), IFunctionAppService
 {
     private const int MaxFunctionApps = 10_000;
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-    private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-    private readonly ILogger<FunctionAppService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     private const string CacheGroup = "functionapp";
     private static readonly TimeSpan s_cacheDuration = CacheDurations.ServiceData;
+
+    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
+    private readonly ILogger<FunctionAppService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+    private static class FlexConsumptionDefaults
+    {
+        public const int InstanceMemoryMB = 2048;
+        public const int MaximumInstanceCount = 100;
+    }
+
+    private string GetStorageEndpointSuffix() => TenantService.CloudConfiguration.CloudType switch
+    {
+        AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "core.chinacloudapi.cn",
+        AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "core.usgovcloudapi.net",
+        _ => FunctionAppStorageProvisioner.DefaultStorageEndpointSuffix
+    };
 
     public async Task<List<FunctionAppInfo>?> GetFunctionApp(
         string subscription,
@@ -50,9 +70,7 @@ public sealed class FunctionAppService(
 
             var cachedResults = await _cacheService.GetAsync<List<FunctionAppInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)
-            {
                 return cachedResults;
-            }
 
             if (string.IsNullOrEmpty(resourceGroup))
             {
@@ -83,9 +101,7 @@ public sealed class FunctionAppService(
 
             var cachedResults = await _cacheService.GetAsync<List<FunctionAppInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)
-            {
                 return cachedResults;
-            }
 
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             if (!resourceGroupResource.HasValue)
@@ -123,8 +139,266 @@ public sealed class FunctionAppService(
         if (site?.Data != null && site?.Data.Kind?.Contains("functionapp", StringComparison.OrdinalIgnoreCase) == true)
         {
             var data = site.Data;
+            var os = data.Kind?.Contains("linux", StringComparison.OrdinalIgnoreCase) == true ? "linux" : "windows";
             functionApps.Add(new(data.Name, data.Id.ResourceGroupName, data.Location.ToString(), data.AppServicePlanId.Name,
-                data.State, data.DefaultHostName, data.Tags));
+                data.State, data.DefaultHostName, os, data.Tags));
         }
     }
+
+    public async Task<FunctionAppInfo> CreateFunctionApp(
+        string subscription,
+        string resourceGroup,
+        string functionAppName,
+        string location,
+        string? planName = null,
+        string? hostingKind = null,
+        string? sku = null,
+        string? runtime = null,
+        string? runtimeVersion = null,
+        string? os = null,
+        string? storageAccountName = null,
+        string? storageAuthMode = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var requestedAuthMode = FunctionAppValidation.ParseStorageAuthMode(storageAuthMode);
+        var inputs = FunctionAppValidation.ValidateAndNormalizeInputs(
+            subscription, resourceGroup, functionAppName, location,
+            runtime, runtimeVersion, hostingKind, sku, os,
+            storageAccountName, containerAppsEnvironmentName: null);
+
+        var resolvedHostingKind = FunctionAppValidation.ParseHostingKind(inputs.PlanType);
+        if (resolvedHostingKind == HostingKind.ContainerApp)
+            throw new ArgumentException("Use the 'functionapp containerapp create' command to host a Function App in Azure Container Apps.");
+
+        var useManagedIdentity = requestedAuthMode ?? true;
+        var options = FunctionAppValidation.BuildCreateOptions(inputs, useManagedIdentity);
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var rg = await _resourceGroupService.CreateOrUpdateResourceGroup(subscription, resourceGroup, location, tenant, retryPolicy, cancellationToken);
+
+        return await AppServiceStrategy.CreateFunctionAppAsync(subscriptionResource, rg, functionAppName, location, planName, options, inputs.StorageAccountName, GetStorageEndpointSuffix(), cancellationToken);
+    }
+
+    public async Task<FunctionAppInfo> CreateContainerAppFunctionApp(
+        string subscription,
+        string resourceGroup,
+        string functionAppName,
+        string location,
+        string? runtime = null,
+        string? runtimeVersion = null,
+        string? storageAccountName = null,
+        string? storageAuthMode = null,
+        string? containerAppsEnvironmentName = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var requestedAuthMode = FunctionAppValidation.ParseStorageAuthMode(storageAuthMode);
+        var useManagedIdentity = requestedAuthMode ?? true;
+
+        var inputs = FunctionAppValidation.ValidateAndNormalizeInputs(
+            subscription, resourceGroup, functionAppName, location,
+            runtime, runtimeVersion, hostingKind: "containerapp", sku: null, os: null,
+            storageAccountName, containerAppsEnvironmentName);
+        var options = FunctionAppValidation.BuildCreateOptions(inputs, useManagedIdentity);
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var rg = await _resourceGroupService.CreateOrUpdateResourceGroup(subscription, resourceGroup, location, tenant, retryPolicy, cancellationToken);
+
+        return await FunctionAppContainerAppStrategy.CreateFunctionAppAsync(subscriptionResource, rg, functionAppName, location, options, inputs.StorageAccountName, inputs.ContainerAppsEnvironmentName, GetStorageEndpointSuffix(), cancellationToken);
+    }
+
+    internal static SiteConfigProperties? BuildSiteConfig(bool isLinux, CreateOptions options)
+    {
+        if (isLinux)
+            return CreateLinuxSiteConfig(options.Runtime, options.RuntimeVersion);
+        return options.Runtime == "powershell" ? CreateWindowsPowerShellSiteConfig(options.RuntimeVersion) : null;
+    }
+
+    internal static string BuildKind(bool isLinux) => isLinux ? "functionapp,linux" : "functionapp";
+
+    internal static SiteConfigProperties? CreateLinuxSiteConfig(string runtime, string? runtimeVersion)
+    {
+        var config = new SiteConfigProperties();
+        var version = string.IsNullOrWhiteSpace(runtimeVersion) ? FunctionAppValidation.GetDefaultRuntimeVersion(runtime) : runtimeVersion;
+        if (runtime == "java" && version != null && version.EndsWith(".0", StringComparison.Ordinal))
+            version = version[..^2];
+        config.LinuxFxVersion = runtime switch
+        {
+            "python" => $"Python|{version}",
+            "node" => $"Node|{version}",
+            "dotnet" => $"DOTNET|{version}",
+            "dotnet-isolated" => $"DOTNET-ISOLATED|{version}",
+            "java" => $"Java|{version}",
+            "powershell" => $"PowerShell|{version}",
+            _ => config.LinuxFxVersion
+        };
+        return config;
+    }
+
+    internal static SiteConfigProperties? CreateWindowsPowerShellSiteConfig(string? runtimeVersion)
+    {
+        var version = string.IsNullOrWhiteSpace(runtimeVersion) ? FunctionAppValidation.GetDefaultRuntimeVersion("powershell") : runtimeVersion;
+        if (string.IsNullOrWhiteSpace(version))
+            return null;
+        return new SiteConfigProperties { PowerShellVersion = version };
+    }
+
+    internal static FunctionAppRuntimeName MapToFunctionAppRuntimeName(string runtime) => runtime switch
+    {
+        "dotnet-isolated" => FunctionAppRuntimeName.DotnetIsolated,
+        "node" => FunctionAppRuntimeName.Node,
+        "java" => FunctionAppRuntimeName.Java,
+        "powershell" => FunctionAppRuntimeName.Powershell,
+        "python" => FunctionAppRuntimeName.Python,
+        "dotnet" => FunctionAppRuntimeName.DotnetIsolated,
+        _ => FunctionAppRuntimeName.Custom
+    };
+
+    internal static string NormalizeRuntimeVersionForConfig(string runtime, string? runtimeVersion)
+    {
+        var version = string.IsNullOrWhiteSpace(runtimeVersion) ? FunctionAppValidation.GetDefaultRuntimeVersion(runtime) : runtimeVersion;
+        if (string.IsNullOrWhiteSpace(version))
+            return string.Empty;
+        if (runtime == "java" && version.EndsWith(".0", StringComparison.Ordinal))
+            version = version[..^2];
+        return version;
+    }
+
+    internal static AppServiceConfigurationDictionary BuildAppSettings(string runtime, string? runtimeVersion, bool requiresLinux, string storageConnectionString, bool includeWorkerRuntime = true)
+        => BuildAppSettingsInternal(runtime, runtimeVersion, requiresLinux, storageConnectionString, storageAccountName: null, useManagedIdentity: false, includeWorkerRuntime);
+
+    private static AppServiceConfigurationDictionary BuildAppSettingsInternal(
+        string runtime,
+        string? runtimeVersion,
+        bool requiresLinux,
+        string? storageConnectionString,
+        string? storageAccountName,
+        bool useManagedIdentity,
+        bool includeWorkerRuntime)
+    {
+        var settings = new AppServiceConfigurationDictionary
+        {
+            Properties = { ["FUNCTIONS_EXTENSION_VERSION"] = "~4" }
+        };
+        if (useManagedIdentity)
+        {
+            if (string.IsNullOrWhiteSpace(storageAccountName))
+                throw new InvalidOperationException("Storage account name is required for managed-identity storage auth.");
+            settings.Properties["AzureWebJobsStorage__accountName"] = storageAccountName!;
+            settings.Properties["AzureWebJobsStorage__credential"] = "managedidentity";
+        }
+        else
+        {
+            settings.Properties["AzureWebJobsStorage"] = storageConnectionString ?? string.Empty;
+        }
+        if (includeWorkerRuntime)
+            settings.Properties["FUNCTIONS_WORKER_RUNTIME"] = runtime;
+
+        var effectiveVersion = string.IsNullOrWhiteSpace(runtimeVersion) ? FunctionAppValidation.GetDefaultRuntimeVersion(runtime) : runtimeVersion;
+        if (!requiresLinux && runtime == "node" && !string.IsNullOrWhiteSpace(effectiveVersion))
+        {
+            var major = FunctionAppValidation.ExtractMajorVersion(effectiveVersion!);
+            if (!string.IsNullOrEmpty(major))
+                settings.Properties["WEBSITE_NODE_DEFAULT_VERSION"] = $"~{major}";
+        }
+        return settings;
+    }
+
+    private static void SanitizeAppSettingsForFlexConsumption(AppServiceConfigurationDictionary settings)
+    {
+        if (settings?.Properties is null)
+            return;
+        settings.Properties.Remove("WEBSITE_NODE_DEFAULT_VERSION");
+        settings.Properties.Remove("FUNCTIONS_WORKER_RUNTIME");
+    }
+
+    private static async Task ApplyAppSettings(WebSiteResource site, CreateOptions options, StorageProvisioningResult storage, bool effectiveRequiresLinux, CancellationToken cancellationToken)
+    {
+        var appSettings = BuildAppSettingsInternal(
+            options.Runtime,
+            options.RuntimeVersion,
+            effectiveRequiresLinux,
+            storage.ConnectionString,
+            storage.AccountName,
+            options.UseManagedIdentityStorage,
+            includeWorkerRuntime: options.HostingKind != HostingKind.FlexConsumption);
+        if (options.HostingKind == HostingKind.FlexConsumption)
+            SanitizeAppSettingsForFlexConsumption(appSettings);
+        await site.UpdateApplicationSettingsAsync(appSettings, cancellationToken);
+    }
+
+    private static async Task<WebSiteResource> CreateAppServiceSiteAsync(ResourceGroupResource rg, string functionAppName, string location, AppServicePlanResource plan, CreateOptions options, StorageProvisioningResult storage, string endpointSuffix, CancellationToken cancellationToken)
+    {
+        var isLinux = plan.Data.IsReserved == true;
+        var data = new WebSiteData(location)
+        {
+            Kind = BuildKind(isLinux),
+            AppServicePlanId = plan.Id,
+            SiteConfig = BuildSiteConfig(isLinux, options)
+        };
+        if (options.UseManagedIdentityStorage)
+            data.Identity = new ManagedServiceIdentity(ManagedServiceIdentityType.SystemAssigned);
+        if (options.HostingKind == HostingKind.FlexConsumption)
+        {
+            if (data.SiteConfig is not null)
+                data.SiteConfig.LinuxFxVersion = null;
+            data.FunctionAppConfig = new FunctionAppConfig
+            {
+                Runtime = new FunctionAppRuntime
+                {
+                    Name = MapToFunctionAppRuntimeName(options.Runtime),
+                    Version = NormalizeRuntimeVersionForConfig(options.Runtime, options.RuntimeVersion)
+                },
+                DeploymentStorage = FunctionAppStorageProvisioner.BuildDeploymentStorageForAccount(storage.AccountName, options.UseManagedIdentityStorage, endpointSuffix),
+                ScaleAndConcurrency = new FunctionAppScaleAndConcurrency
+                {
+                    InstanceMemoryMB = FlexConsumptionDefaults.InstanceMemoryMB,
+                    MaximumInstanceCount = FlexConsumptionDefaults.MaximumInstanceCount
+                }
+            };
+        }
+        var op = await rg.GetWebSites().CreateOrUpdateAsync(WaitUntil.Completed, functionAppName, data, cancellationToken);
+        return op.Value;
+    }
+
+    internal static FunctionAppInfo ConvertToFunctionAppModel(WebSiteResource siteResource)
+    {
+        var data = siteResource.Data;
+        var os = data.Kind?.Contains("linux", StringComparison.OrdinalIgnoreCase) == true ? "linux" : "windows";
+        return new FunctionAppInfo(
+            data.Name,
+            siteResource.Id.ResourceGroupName,
+            data.Location.ToString(),
+            data.AppServicePlanId.Name,
+            data.State,
+            data.DefaultHostName,
+            os,
+            data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
+    }
+
+    internal static class AppServiceStrategy
+    {
+        public static async Task<FunctionAppInfo> CreateFunctionAppAsync(
+            SubscriptionResource subscription,
+            ResourceGroupResource rg,
+            string functionAppName,
+            string location,
+            string? planName,
+            CreateOptions options,
+            string? storageAccountName,
+            string endpointSuffix,
+            CancellationToken cancellationToken)
+        {
+            var plan = await FunctionAppPlanProvisioner.EnsureAppServicePlan(rg, planName, functionAppName, location, options, cancellationToken);
+            var storage = await FunctionAppStorageProvisioner.EnsureStorageForFunctionApp(subscription, rg, functionAppName, location, storageAccountName, options.UseManagedIdentityStorage, endpointSuffix, cancellationToken);
+            var site = await CreateAppServiceSiteAsync(rg, functionAppName, location, plan, options, storage, endpointSuffix, cancellationToken);
+            var effectiveRequiresLinux = plan.Data.IsReserved == true;
+            await ApplyAppSettings(site, options, storage, effectiveRequiresLinux, cancellationToken);
+            return ConvertToFunctionAppModel(site);
+        }
+    }
+
 }
