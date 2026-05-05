@@ -50,8 +50,14 @@ test.describe('VS Code MCP elicitation outerloop', () => {
         if (process.env.MCP_OUTERLOOP_CLEAR_SHARED_VSCODE_CACHE === '1') {
             await clearSharedVsCodeDownloadCache();
         }
+        // Use VS Code Insiders by default so the test doesn't fight with a
+        // user's currently-running stable install (which can share an update
+        // lock and cause "Code is currently being updated" failures on the
+        // exact same build hash). Override with MCP_OUTERLOOP_VSCODE_VERSION
+        // (e.g., 'stable', 'insiders', or a specific version like '1.118.1').
+        const vscodeVersion = process.env.MCP_OUTERLOOP_VSCODE_VERSION || 'insiders';
         const vscodeExecutablePath = await downloadAndUnzipVSCode({
-            version: 'stable',
+            version: vscodeVersion,
             cachePath: vscodeCachePath
         });
 
@@ -93,22 +99,47 @@ test.describe('VS Code MCP elicitation outerloop', () => {
                 '--skip-welcome',
                 '--skip-release-notes',
                 '--disable-workspace-trust',
+                '--no-sandbox',
                 `--user-data-dir=${userDataDir}`,
                 `--extensions-dir=${extensionsDir}`
             ],
             env: {
                 ...process.env,
+                ELECTRON_ENABLE_LOGGING: '1',
                 MCP_TEST_PROXY_SCRIPT: PROXY_SCRIPT,
                 MCP_TEST_PROXY_LOG: proxyLogPath,
                 MCP_TEST_NODE_PATH: process.execPath
             }
         });
 
+        // Tee Electron main-process stdout/stderr into the artifacts dir so we
+        // can see why VS Code might fail to open a window in CI.
+        try {
+            const electronProc = app.process();
+            const stdoutLog = fsSync.createWriteStream(path.join(artifactsDir, 'vscode-stdout.log'), { flags: 'a' });
+            const stderrLog = fsSync.createWriteStream(path.join(artifactsDir, 'vscode-stderr.log'), { flags: 'a' });
+            electronProc.stdout?.on('data', chunk => {
+                const text = chunk.toString();
+                stdoutLog.write(text);
+                console.log(`[vscode stdout] ${text.trimEnd()}`);
+            });
+            electronProc.stderr?.on('data', chunk => {
+                const text = chunk.toString();
+                stderrLog.write(text);
+                console.log(`[vscode stderr] ${text.trimEnd()}`);
+            });
+            electronProc.on('exit', (code, signal) =>
+                console.log(`[vscode] electron process exited code=${code} signal=${signal}`)
+            );
+        } catch (procErr) {
+            console.log(`[outerloop] failed to attach electron process listeners: ${procErr && procErr.message}`);
+        }
+
         let window;
         let tracingStarted = false;
         let testFailed = false;
         try {
-            window = await waitForWorkbenchWindow(app);
+            window = await waitForWorkbenchWindow(app, 180000, artifactsDir);
 
             window.on('console', msg => console.log(`[vscode console] ${msg.type()}: ${msg.text()}`));
             window.on('pageerror', err => console.log(`[vscode pageerror] ${err.message}`));
@@ -155,7 +186,11 @@ test.describe('VS Code MCP elicitation outerloop', () => {
                 }
             }
             await app.close();
-            await fs.rm(tempRoot, { recursive: true, force: true });
+            // On Windows the OS may still hold handles to the just-downloaded
+            // VS Code archive for a moment after Electron exits. Retry the
+            // recursive remove so we don't fail an otherwise-passing test.
+            await fs.rm(tempRoot, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 })
+                .catch(err => console.log(`[outerloop] failed to remove tempRoot ${tempRoot}: ${err && err.message}`));
         }
     });
 });
@@ -172,14 +207,23 @@ async function clearSharedVsCodeDownloadCache() {
     }));
 }
 
-async function waitForWorkbenchWindow(app, timeoutMs = 120000) {
+async function waitForWorkbenchWindow(app, timeoutMs = 180000, artifactsDir) {
     const deadline = Date.now() + timeoutMs;
+    // The workbench shell is identified by .monaco-workbench. Older/newer builds
+    // also expose .part.editor or the body[data-vscode-window-kind="main"], so
+    // accept any of them.
+    const workbenchSelector = '.monaco-workbench, body[data-vscode-window-kind="main"]';
+    let lastSeenWindowCount = -1;
 
     while (Date.now() < deadline) {
         const windows = app.windows();
+        if (windows.length !== lastSeenWindowCount) {
+            console.log(`[outerloop] waitForWorkbenchWindow: windows=${windows.length}`);
+            lastSeenWindowCount = windows.length;
+        }
         for (const candidate of windows) {
             try {
-                const workbench = candidate.locator('.monaco-workbench');
+                const workbench = candidate.locator(workbenchSelector).first();
                 await workbench.waitFor({ state: 'visible', timeout: 2000 });
                 return candidate;
             } catch {
@@ -187,6 +231,32 @@ async function waitForWorkbenchWindow(app, timeoutMs = 120000) {
             }
         }
         await app.waitForEvent('window', { timeout: 2000 }).catch(() => undefined);
+    }
+
+    // Capture diagnostics for every window we can see before failing.
+    if (artifactsDir) {
+        const windows = app.windows();
+        console.log(`[outerloop] waitForWorkbenchWindow timing out with ${windows.length} window(s)`);
+        for (let i = 0; i < windows.length; i++) {
+            const w = windows[i];
+            try {
+                const url = w.url();
+                const title = await w.title().catch(() => '<title unavailable>');
+                console.log(`[outerloop] window[${i}] url=${url} title=${title}`);
+                await w.screenshot({
+                    path: path.join(artifactsDir, `timeout-window-${i}.png`),
+                    fullPage: true
+                }).catch(() => undefined);
+                const html = await w.content().catch(() => '<content unavailable>');
+                await fs.writeFile(
+                    path.join(artifactsDir, `timeout-window-${i}.html`),
+                    html,
+                    'utf8'
+                ).catch(() => undefined);
+            } catch (err) {
+                console.log(`[outerloop] window[${i}] capture failed: ${err && err.message}`);
+            }
+        }
     }
 
     throw new Error(`Timed out waiting for VS Code workbench window after ${timeoutMs}ms`);
