@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json.Nodes;
 using Azure.Core;
 
@@ -45,6 +46,12 @@ public sealed class KustoClient(
         ".kusto.sovcloud-api.de",
         ".kustomfa.sovcloud-api.de"
     ];
+
+    /// <summary>
+    /// Comma-separated list of additional trusted Kusto cluster hostnames (exact, case-insensitive match).
+    /// Relaxes SSRF protection — use with care.
+    /// </summary>
+    internal const string AdditionalTrustedHostsEnvVarName = "AZURE_MCP_DANGEROUSLY_ALLOW_ADDITIONAL_KUSTO_HOSTS";
 
     // Exact hostnames that are valid Kusto endpoints
     private static readonly HashSet<string> s_validKustoHostnames = new(StringComparer.OrdinalIgnoreCase)
@@ -129,6 +136,12 @@ public sealed class KustoClient(
             return true;
         }
 
+        // Check user-provided additional trusted hosts (opt-in via env var)
+        if (IsAdditionalTrustedHost(host))
+        {
+            return true;
+        }
+
         // Check if host ends with one of the valid Kusto domain suffixes
         var matchedSuffix = Array.Find(s_validKustoDomainSuffixes,
             suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
@@ -161,6 +174,44 @@ public sealed class KustoClient(
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Returns true if <paramref name="host"/> matches one of the hostnames listed in the
+    /// <see cref="AdditionalTrustedHostsEnvVarName"/> environment variable. The env var is read
+    /// each call (no caching) so changes take effect for the next constructed client without
+    /// requiring a process restart.
+    /// </summary>
+    /// <remarks>
+    /// <c>localhost</c> and IP literals (e.g. <c>127.0.0.1</c>, <c>169.254.169.254</c>) are
+    /// always rejected, even if listed in the env var. The legitimate proxy use-case has a
+    /// DNS hostname, so requiring DNS names is a cheap defense-in-depth measure against
+    /// misconfiguration.
+    /// </remarks>
+    private static bool IsAdditionalTrustedHost(string host)
+    {
+        // Never allow loopback by name or IP literals, even if the user listed them.
+        if (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) ||
+            IPAddress.TryParse(host, out _))
+        {
+            return false;
+        }
+
+        var raw = Environment.GetEnvironmentVariable(AdditionalTrustedHostsEnvVarName);
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return false;
+        }
+
+        foreach (var entry in raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (string.Equals(entry, host, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
