@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -205,6 +206,11 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
     [InlineData("--subscription")]
     public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing(string missingParameter)
     {
+        // The subscription option falls back to the Azure CLI profile or AZURE_SUBSCRIPTION_ID env var.
+        // Skip if a CLI profile default is present so the test only runs when
+        // the missing-subscription path is actually exercised.
+        TestEnvironment.SkipIfDefaultSubscriptionConfigured();
+
         var argsList = new List<string>();
         if (missingParameter != "--subscription")
         {
