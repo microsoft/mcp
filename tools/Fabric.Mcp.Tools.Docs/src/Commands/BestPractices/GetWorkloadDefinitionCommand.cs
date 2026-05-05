@@ -23,9 +23,11 @@ namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCommand> logger) : GlobalCommand<WorkloadCommandOptions>()
+public sealed class GetWorkloadDefinitionCommand(IFabricPublicApiService service, ILogger<GetWorkloadDefinitionCommand> logger)
+    : GlobalCommand<WorkloadCommandOptions>()
 {
     private readonly ILogger<GetWorkloadDefinitionCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
 
     protected override void RegisterOptions(Command command)
     {
@@ -51,8 +53,7 @@ public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCo
 
         try
         {
-            var fabricService = context.GetService<IFabricPublicApiService>();
-            var workloadItemDefinition = fabricService.GetWorkloadItemDefinition(options.WorkloadType!);
+            var workloadItemDefinition = _service.GetWorkloadItemDefinition(options.WorkloadType!);
 
             context.Response.Results = ResponseResult.Create(workloadItemDefinition, FabricJsonContext.Default.String);
         }
