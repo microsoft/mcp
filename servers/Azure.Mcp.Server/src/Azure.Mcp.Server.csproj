@@ -40,7 +40,7 @@
     <IsAotCompatible>true</IsAotCompatible>
     <PublishSingleFile>false</PublishSingleFile>
     <SelfContained>false</SelfContained>
-    <PublishReadyToRun>false</PublishReadyToRun>
+    <PublishReadyToRun>true</PublishReadyToRun>
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
@@ -95,4 +95,15 @@
     <None Include="..\docs\e2eTestPrompts.md" />
     <None Include="..\docs\new-command.md" />
   </ItemGroup>
+  <!-- R2R only System.Private.CoreLib — exclude all other DLLs dynamically -->
+  <Target Name="_ExcludeNonSpclFromReadyToRun"
+          BeforeTargets="_PrepareForReadyToRunCompilation"
+          DependsOnTargets="_ComputeAssembliesToPostprocessOnPublish"
+          Condition="'$(PublishReadyToRun)' == 'true'">
+    <ItemGroup>
+      <_NonSpclDlls Include="@(ResolvedFileToPublish)"
+          Condition="'%(Extension)' == '.dll' and '%(Filename)' != 'System.Private.CoreLib'" />
+      <PublishReadyToRunExclude Include="@(_NonSpclDlls->'%(Filename)%(Extension)')" />
+    </ItemGroup>
+  </Target>
 </Project>
