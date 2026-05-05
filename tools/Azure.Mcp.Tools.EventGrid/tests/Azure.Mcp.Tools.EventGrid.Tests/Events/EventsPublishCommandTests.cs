@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Reflection;
 using System.Text.Json;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Events;
@@ -22,6 +23,7 @@ public class EventsPublishCommandTests : CommandUnitTestsBase<EventGridPublishCo
     {
         Assert.Equal("publish", Command.Name);
         Assert.Equal("Publish Events to Event Grid Topic", Command.Title);
+        Assert.False(string.IsNullOrEmpty(CommandDefinition.Description));
         Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 

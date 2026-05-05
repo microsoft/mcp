@@ -51,7 +51,7 @@ public class ServiceBusSetupTests
     }
 
     [Fact]
-    public void RegisterCommands_ServiceBusGroup_ShouldHaveImprovedDescription()
+    public void RegisterCommands_ServiceBusGroup_DescriptionVerification()
     {
         // Arrange
         var setup = new ServiceBusSetup();
@@ -62,7 +62,7 @@ public class ServiceBusSetupTests
 
         // Assert
         Assert.NotNull(serviceBusGroup);
-        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
+        Assert.True(serviceBusGroup.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
@@ -81,6 +81,8 @@ public class ServiceBusSetupTests
         var queueGroup = serviceBusGroup.SubGroup.FirstOrDefault(g => g.Name == "queue");
         Assert.NotNull(queueGroup);
         Assert.Equal("queue", queueGroup.Name);
+        Assert.False(string.IsNullOrEmpty(queueGroup.Description));
+        Assert.True(queueGroup.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
@@ -99,6 +101,8 @@ public class ServiceBusSetupTests
         var topicGroup = serviceBusGroup.SubGroup.FirstOrDefault(g => g.Name == "topic");
         Assert.NotNull(topicGroup);
         Assert.Equal("topic", topicGroup.Name);
+        Assert.False(string.IsNullOrEmpty(topicGroup.Description));
+        Assert.True(topicGroup.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

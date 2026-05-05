@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Reflection;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Grafana.Commands;
 using Azure.Mcp.Tools.Grafana.Commands.Workspace;
@@ -22,6 +23,7 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
     {
         Assert.Equal("list", Command.Name);
         Assert.Equal("List Grafana Workspaces", Command.Title);
+        Assert.False(string.IsNullOrEmpty(commandDescription.Length));
         Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 

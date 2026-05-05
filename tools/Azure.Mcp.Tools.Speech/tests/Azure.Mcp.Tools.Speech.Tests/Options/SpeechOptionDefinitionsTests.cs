@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
 using Azure.Mcp.Tools.Speech.Options;
 using Xunit;
 
@@ -60,7 +61,8 @@ public class SpeechOptionDefinitionsTests
         Assert.NotNull(option);
         Assert.Equal("--endpoint", option.Name);
         Assert.True(option.Required);
-        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
+        Assert.False(string.IsNullOrEmpty(option.Description));
+        Assert.True(option.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
