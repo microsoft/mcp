@@ -22,9 +22,11 @@ namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : GlobalCommand<WorkloadCommandOptions>()
+public sealed class GetExamplesCommand(IFabricPublicApiService service, ILogger<GetExamplesCommand> logger)
+    : GlobalCommand<WorkloadCommandOptions>()
 {
     private readonly ILogger<GetExamplesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
 
     protected override void RegisterOptions(Command command)
     {
@@ -50,8 +52,7 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
 
         try
         {
-            var fabricService = context.GetService<IFabricPublicApiService>();
-            var availableExamples = await fabricService.GetWorkloadExamplesAsync(options.WorkloadType!, cancellationToken);
+            var availableExamples = await _service.GetWorkloadExamplesAsync(options.WorkloadType!, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(availableExamples), FabricJsonContext.Default.ExampleFileResult);
         }

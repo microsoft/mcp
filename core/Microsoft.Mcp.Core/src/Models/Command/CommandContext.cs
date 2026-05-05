@@ -48,7 +48,7 @@ public class CommandContext
     /// <typeparam name="T">The type of service to retrieve</typeparam>
     /// <returns>The requested service instance</returns>
     /// <exception cref="InvalidOperationException">Thrown if the service is not registered</exception>
-    public T GetService<T>() where T : class
+    internal T GetService<T>() where T : class
     {
         return _serviceProvider.GetRequiredService<T>();
     }
