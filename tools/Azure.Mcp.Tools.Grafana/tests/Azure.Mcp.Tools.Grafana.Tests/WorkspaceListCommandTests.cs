@@ -23,6 +23,8 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
         Assert.Equal("list", Command.Name);
         Assert.Equal("List Grafana Workspaces", Command.Title);
         Assert.False(string.IsNullOrEmpty(Command.Description));
+        Assert.Contains("List", Command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Grafana workspace", Command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 

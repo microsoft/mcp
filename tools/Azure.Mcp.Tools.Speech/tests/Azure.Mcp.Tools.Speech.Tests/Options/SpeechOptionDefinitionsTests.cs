@@ -61,6 +61,7 @@ public class SpeechOptionDefinitionsTests
         Assert.Equal("--endpoint", option.Name);
         Assert.True(option.Required);
         Assert.False(string.IsNullOrEmpty(option.Description));
+        Assert.Contains("Azure AI Services endpoint URL", option.Description, StringComparison.OrdinalIgnoreCase);
         Assert.True(option.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
