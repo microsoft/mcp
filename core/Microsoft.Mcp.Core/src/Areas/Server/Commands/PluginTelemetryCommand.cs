@@ -42,12 +42,10 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
     Secret = false)]
 public sealed class PluginTelemetryCommand(
     IPluginFileReferenceAllowlistProvider fileReferenceAllowlistProvider,
-    IPluginSkillNameAllowlistProvider skillNameAllowlistProvider,
-    IServiceProvider serviceProvider) : BaseCommand<PluginTelemetryOptions>
+    IPluginSkillNameAllowlistProvider skillNameAllowlistProvider) : BaseCommand<PluginTelemetryOptions>
 {
     private readonly IPluginFileReferenceAllowlistProvider _fileReferenceAllowlistProvider = fileReferenceAllowlistProvider;
     private readonly IPluginSkillNameAllowlistProvider _skillNameAllowlistProvider = skillNameAllowlistProvider;
-    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
     /// <summary>
     /// Gets or sets the service configuration action.
