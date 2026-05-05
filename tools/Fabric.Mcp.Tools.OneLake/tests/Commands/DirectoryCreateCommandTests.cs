@@ -19,7 +19,8 @@ public class DirectoryCreateCommandTests : CommandUnitTestsBase<DirectoryCreateC
         Assert.False(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);
-        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
+        Assert.False(string.IsNullOrEmpty(Command.Description));
+        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

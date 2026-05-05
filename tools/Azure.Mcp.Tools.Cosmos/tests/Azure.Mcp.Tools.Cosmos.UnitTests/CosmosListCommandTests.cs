@@ -26,8 +26,8 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
     {
         Assert.NotNull(Command.Description);
         Assert.NotEmpty(Command.Description);
-        Assert.False(string.IsNullOrEmpty(commandDefinition.Description));
-        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
+        Assert.False(string.IsNullOrEmpty(Command.Description));
+        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

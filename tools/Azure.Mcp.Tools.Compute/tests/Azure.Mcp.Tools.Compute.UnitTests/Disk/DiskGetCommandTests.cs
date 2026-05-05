@@ -23,7 +23,7 @@ public class DiskGetCommandTests : CommandUnitTestsBase<DiskGetCommand, ICompute
         Assert.NotNull(Command);
         Assert.Equal("get", Command.Name);
         Assert.NotEqual(Guid.Empty.ToString(), Command.Id.ToString());
-        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
+        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
