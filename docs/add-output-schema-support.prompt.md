@@ -9,7 +9,7 @@ The success-payload type is encoded as a `TResult` parameter on a new `BaseComma
 1. **Phase 1 — Core infrastructure** in [core/Microsoft.Mcp.Core](core/Microsoft.Mcp.Core)
    - Introduce `BaseCommand<TOptions, TResult>` deriving from `BaseCommand<TOptions>`, with an abstract `protected JsonTypeInfo<TResult> ResultTypeInfo { get; }` and a strongly-typed `protected void SetResult(CommandContext context, TResult value)` helper that wraps `ResponseResult.Create<TResult>(value, ResultTypeInfo)`. Expose the type-info to the loader via an explicit `IBaseCommand.ResultTypeInfo` implementation so the loader has a single read site regardless of which base a command derives from.
    - Add `JsonTypeInfo? ResultTypeInfo => null;` on `IBaseCommand` as a transitional default so commands not yet reparented to the generic base compile and continue to omit `outputSchema`. Remove the default in Phase 4 once every command is on the generic base.
-   - In `CommandFactoryToolLoader.GetTool()`, after setting `tool.InputSchema`, generate `tool.OutputSchema` via `JsonSchemaExporter.GetJsonSchemaAsNode(typeInfo.Options, typeInfo.Type)` when `ResultTypeInfo` is non-null.
+   - In `CommandFactoryToolLoader.GetTool()`, after setting `tool.InputSchema`, generate `tool.OutputSchema` via `JsonSchemaExporter.GetJsonSchemaAsNode(typeInfo.Options, typeInfo.Type)` when `ResultTypeInfo` is non-null. The input-schema modernization (RFC Part 1, tracked in [modernize-input-schema.prompt.md](modernize-input-schema.prompt.md)) already centralized input-schema generation in `OptionSchemaGenerator`; consider adding an `OptionSchemaGenerator.CreateOutputSchema(JsonTypeInfo)` sibling so both callers share one helper. The output path uses the command's source-generated `JsonTypeInfo`, which is fully AOT-safe and does **not** need the `UnconditionalSuppressMessage` attributes the input path carries.
    - Add a small post-processor for the exporter output (strip `$schema`/`title`, ensure top-level `type: "object"`, leave `additionalProperties` unset — see consideration #3 below).
    - Propagate `outputSchema` through `NamespaceToolLoader`, `ServerToolLoader`, `RegistryToolLoader`, and `SingleProxyToolLoader`.
    - Populate `CallToolResult.StructuredContent` from the same object passed to `ResponseResult.Create<T>` whenever `outputSchema` is advertised; keep existing text content for backward compatibility.
@@ -49,7 +49,7 @@ The success-payload type is encoded as a `TResult` parameter on a new `BaseComma
 
 **Verification**
 
-1. `dotnet build` and `./eng/scripts/Build-Local.ps1 -BuildNative` (AOT) green. After Phase 4, omitting `ResultTypeInfo` on a new command is a compile error — verify by writing a temporary command without it and confirming the build fails.
+1. `dotnet build` and `./eng/scripts/Build-Local.ps1 -IncludeNative` (AOT) green. After Phase 4, omitting `ResultTypeInfo` on a new command is a compile error — verify by writing a temporary command without it and confirming the build fails.
 2. New `ToolOutputSchemaTests` plus integration test that calls a representative tool, asserts `CallToolResult.StructuredContent` is populated and validates against the advertised schema.
 3. Run `azmcp server start`, hit `tools/list`, and spot-check 5 tools with diverse shapes (list, single, blob upload, vmss multi-shape, sql wrapped list) — every tool exposes a valid `outputSchema`.
 4. `./eng/scripts/Test-Code.ps1` and `.\eng\common\spelling\Invoke-Cspell.ps1` clean.

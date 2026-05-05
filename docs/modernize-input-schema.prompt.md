@@ -42,7 +42,7 @@ The MCP 2025-11-25 spec requires `inputSchema` to be a JSON Schema with `type: "
 Partially, yes:
 
 1. **`ToolInputSchema` and `ToolPropertySchema` duplicate JSON-Schema shapes that the SDK already accepts directly.** The SDK's `Tool.InputSchema` is just a `JsonElement`; we don't need typed DTOs to feed it.
-2. **`TypeToJsonTypeMapper` is a less-capable re-implementation of `System.Text.Json.Schema.JsonSchemaExporter`** (built into `System.Text.Json` as of .NET 9, AOT-safe via `JsonTypeInfo`). The exporter handles every case the mapper handles, plus `format`, nested objects, nullable unions, references, and validation-attribute hints. `Microsoft.Extensions.AI`'s `AIJsonUtilities.CreateJsonSchema` adds further attribute handling on top.
+2. **`TypeToJsonTypeMapper` is a less-capable re-implementation of `System.Text.Json.Schema.JsonSchemaExporter`** (built into `System.Text.Json` as of .NET 9). The exporter handles every case the mapper handles, plus `format`, nested objects, nullable unions, references, and validation-attribute hints. `Microsoft.Extensions.AI`'s `AIJsonUtilities.CreateJsonSchema` adds further attribute handling on top.
 3. **We don't validate generated schemas with `McpJsonUtilities.IsValidMcpToolSchema` ourselves.** The `Tool.InputSchema` setter does, but only at assignment time during startup — a discovery test would surface invalid schemas at build time.
 
 ### What's *not* worth changing
@@ -56,7 +56,7 @@ The MCP SDK's automatic schema path (`McpServerTool.Create(Delegate)`) operates 
 1. **Replace `TypeToJsonTypeMapper.CreatePropertySchema` with `JsonSchemaExporter`.** For each `System.CommandLine.Option`, call `JsonSchemaExporter.GetJsonSchemaAsNode(jsonOptions, option.ValueType)` and use the returned `JsonNode` as the property schema. Keep the per-option iteration over `command.GetCommand().Options` as-is. Side effect: nullable, nested-object, and `format` gaps close automatically.
 2. **Build the root schema as a `JsonObject` directly** (instead of through `ToolInputSchema`). Compose `{ type: "object", properties, required, additionalProperties: false }` as a `JsonObject` and assign it to `Tool.InputSchema` via `JsonElement`. Delete `ToolInputSchema` and `ToolPropertySchema` once nothing else depends on them.
 3. **Delete `TypeToJsonTypeMapper`** once all callers (input schema generation, the new output-schema path, and any test code) are off it. Confirm with a workspace-wide search before removal.
-4. **Add a discovery test** in `core/Microsoft.Mcp.Core/tests` that iterates every command discovered by `CommandFactory` and asserts the generated `inputSchema` (and, once Phase 1 of the outputSchema plan lands, `outputSchema`) passes `ModelContextProtocol.Protocol.McpJsonUtilities.IsValidMcpToolSchema`.
+4. **Add a discovery test** in the test project that already wires up every Azure toolset (`core/Azure.Mcp.Core/tests/Azure.Mcp.Core.UnitTests`, alongside the existing `CommandFactoryToolLoaderTests`) that iterates every command discovered by `CommandFactory` and asserts the generated `inputSchema` is well-formed. At minimum: the call doesn't throw, the root has `type: "object"`, contains a `properties` object, and pins `additionalProperties: false`. If `ModelContextProtocol.Protocol.McpJsonUtilities.IsValidMcpToolSchema` is exposed in the SDK version in use, also pipe the schema through it. (`Microsoft.Mcp.Core.UnitTests` is the wrong home for this test — the protocol-layer project doesn't reference the toolsets and so can't enumerate real commands.)
 5. **Preserve special-case handling.** The current `IsRawMcpToolInputOption` branch in `CommandFactoryToolLoader.GetTool()` (where a single option's `Description` *is* the raw schema JSON) keeps its existing behavior; only the standard option path moves to `JsonSchemaExporter`.
 6. **Keep the OpenAI strict-mode contract.** Continue setting `additionalProperties: false` on input schemas and continue normalizing option names via `NameNormalization.NormalizeOptionName(option.Name)`. The exporter's output for primitives never includes `additionalProperties`, so the root-level setting still applies cleanly.
 
@@ -71,7 +71,7 @@ The MCP SDK's automatic schema path (`McpServerTool.Create(Delegate)`) operates 
 
 **Verification**
 
-1. `dotnet build` and `./eng/scripts/Build-Local.ps1 -BuildNative` (AOT) green.
+1. `dotnet build` and `./eng/scripts/Build-Local.ps1 -IncludeNative` (AOT) green.
 2. New discovery test asserts every command's `inputSchema` passes `McpJsonUtilities.IsValidMcpToolSchema`.
 3. Snapshot-style tests for representative option types: `string`, `int`, `bool`, `Guid`, `DateTimeOffset`, `Uri`, `enum`, `string[]`, nullable variants. Assert `format` appears where expected (e.g., `"format": "uuid"` for `Guid`).
 4. Manually compare the generated `inputSchema` for a handful of commands (e.g., one storage, one compute, one keyvault) against `main` to confirm there are no unintended shape regressions; document any intentional changes.
@@ -82,7 +82,7 @@ The MCP SDK's automatic schema path (`McpServerTool.Create(Delegate)`) operates 
 - **Schema source:** `System.Text.Json.Schema.JsonSchemaExporter` for both inputs and outputs (single pipeline, AOT-safe, no reflection beyond what `JsonTypeInfo` already encodes).
 - **Schema shape:** built as a `JsonObject` directly; no typed DTO wrapper. `Tool.InputSchema` is `JsonElement` and accepts whatever we hand it.
 - **`additionalProperties`:** stays `false` on input schemas (OpenAI strict mode). Output schemas remain unset (per the outputSchema plan) for forward compatibility.
-- **`McpJsonUtilities.IsValidMcpToolSchema`:** enforced by a discovery test, not at runtime — the `Tool.InputSchema` setter remains as a defense-in-depth.
+- **`McpJsonUtilities.IsValidMcpToolSchema`:** enforced by a discovery test when the SDK surface is available; the `Tool.InputSchema` setter remains as defense-in-depth either way.
 - **Command model:** keep `System.CommandLine`-based commands. Do **not** migrate to `McpServerTool.Create(Delegate)`.
 - **Special cases:** the raw-MCP-tool-input pathway keeps its existing behavior.
 

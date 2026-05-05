@@ -80,7 +80,7 @@ dotnet build
 ./eng/scripts/Test-Code.ps1
 
 # AOT compatibility check (for new toolsets)
-./eng/scripts/Build-Local.ps1 -BuildNative
+./eng/scripts/Build-Local.ps1 -IncludeNative
 ```
 
 ## Safety and Permissions
@@ -253,7 +253,7 @@ dotnet build
 ./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx
 
 # AOT-compatible build (tests native compilation)
-./eng/scripts/Build-Local.ps1 -BuildNative
+./eng/scripts/Build-Local.ps1 -IncludeNative
 
 # Build with debugging symbols
 ./eng/scripts/Build-Local.ps1
@@ -601,7 +601,7 @@ All new toolsets must be AOT-compatible or excluded from native builds:
 
 ```powershell
 # Test AOT compatibility
-./eng/scripts/Build-Local.ps1 -BuildNative
+./eng/scripts/Build-Local.ps1 -IncludeNative
 
 # If AOT fails (common for new Azure services), exclude toolset:
 # 1. Move setup call in Program.cs under #if !BUILD_NATIVE
