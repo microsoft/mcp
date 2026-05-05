@@ -126,6 +126,7 @@ stages:
                       mcpServerImage=$(AZURE_ACR_NAME).azurecr.io/$(imageName):$(imageTag) \
                       containerAppName=$(containerAppName) \
                       acrName=$(AZURE_ACR_NAME) \
+                      loadTestName=$(AZURE_LOAD_TEST_NAME) \
                   --query 'properties.outputs.mcpServerFqdn.value' \
                   --output tsv)
 
