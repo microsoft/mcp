@@ -39,10 +39,22 @@ test.describe('VS Code MCP elicitation outerloop', () => {
     test.describe.configure({ timeout: 10 * 60 * 1000 });
 
     test('VS Code spawns Azure MCP server and elicitation/create flows back with the SECURITY WARNING', async ({}, testInfo) => {
-        await clearVsCodeDownloadCache();
-        const vscodeExecutablePath = await downloadAndUnzipVSCode('stable');
-
         const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'mcp-vscode-outerloop-'));
+
+        // Scope the @vscode/test-electron download cache to this test's temp
+        // directory so we don't touch shared caches under cwd or the user's
+        // home directory. Set MCP_OUTERLOOP_CLEAR_SHARED_VSCODE_CACHE=1 to
+        // opt in to the legacy behavior of also clearing those shared caches.
+        const vscodeCachePath = path.join(tempRoot, 'vscode-test-cache');
+        await fs.mkdir(vscodeCachePath, { recursive: true });
+        if (process.env.MCP_OUTERLOOP_CLEAR_SHARED_VSCODE_CACHE === '1') {
+            await clearSharedVsCodeDownloadCache();
+        }
+        const vscodeExecutablePath = await downloadAndUnzipVSCode({
+            version: 'stable',
+            cachePath: vscodeCachePath
+        });
+
         const workspacePath = path.join(tempRoot, 'workspace');
         const vscodeDir = path.join(workspacePath, '.vscode');
         const userDataDir = path.join(tempRoot, 'user-data');
@@ -93,6 +105,8 @@ test.describe('VS Code MCP elicitation outerloop', () => {
         });
 
         let window;
+        let tracingStarted = false;
+        let testFailed = false;
         try {
             window = await waitForWorkbenchWindow(app);
 
@@ -100,6 +114,7 @@ test.describe('VS Code MCP elicitation outerloop', () => {
             window.on('pageerror', err => console.log(`[vscode pageerror] ${err.message}`));
 
             await window.context().tracing.start({ screenshots: true, snapshots: true, sources: true });
+            tracingStarted = true;
 
             // The startup-trigger extension fires workbench.mcp.startServer from
             // onStartupFinished. VS Code prompts the user to trust the MCP server
@@ -112,12 +127,12 @@ test.describe('VS Code MCP elicitation outerloop', () => {
                 dismissTrustPrompts.stop();
             }
         } catch (err) {
+            testFailed = true;
             if (window) {
                 try {
                     await window.screenshot({ path: path.join(artifactsDir, 'failure.png'), fullPage: true });
                     const html = await window.content();
                     await fs.writeFile(path.join(artifactsDir, 'failure.html'), html, 'utf8');
-                    await window.context().tracing.stop({ path: path.join(artifactsDir, 'trace.zip') });
                 } catch (captureErr) {
                     console.log(`[outerloop] Failed to capture diagnostics: ${captureErr.message}`);
                 }
@@ -130,13 +145,22 @@ test.describe('VS Code MCP elicitation outerloop', () => {
             } catch { /* ignore */ }
             throw err;
         } finally {
+            if (tracingStarted && window) {
+                try {
+                    await window.context().tracing.stop({
+                        path: testFailed ? path.join(artifactsDir, 'trace.zip') : undefined
+                    });
+                } catch (traceErr) {
+                    console.log(`[outerloop] Failed to stop tracing: ${traceErr && traceErr.message}`);
+                }
+            }
             await app.close();
             await fs.rm(tempRoot, { recursive: true, force: true });
         }
     });
 });
 
-async function clearVsCodeDownloadCache() {
+async function clearSharedVsCodeDownloadCache() {
     const cacheCandidates = [
         path.join(process.cwd(), '.vscode-test'),
         path.join(os.homedir(), '.vscode-test'),

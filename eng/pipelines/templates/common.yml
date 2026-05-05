@@ -117,7 +117,7 @@ extends:
             MaxParallel: 10
             TimeoutInMinutes: 75
 
-    - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunVSCodeIntegrationTests, 'true')) }}:
+    - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunVSCodeIntegrationTests, true)) }}:
       - stage: VSCodeIntegration
         displayName: 'VS Code integration test'
         dependsOn:

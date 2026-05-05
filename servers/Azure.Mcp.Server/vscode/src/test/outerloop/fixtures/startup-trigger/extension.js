@@ -88,10 +88,15 @@ async function activate(context) {
                 },
                 resolveMcpServerDefinition: async (server) => server
             };
-            const reg = vscode.lm.registerMcpServerDefinitionProvider('azure-mcp-test-provider', provider);
-            context.subscriptions.push(reg);
-            consoleLog('registered MCP server definition provider');
-            fileLog('EXT', 'provider registered');
+            const reg = vscode.lm?.registerMcpServerDefinitionProvider?.('azure-mcp-test-provider', provider);
+            if (reg) {
+                context.subscriptions.push(reg);
+                consoleLog('registered MCP server definition provider');
+                fileLog('EXT', 'provider registered');
+            } else {
+                consoleLog('vscode.lm.registerMcpServerDefinitionProvider not available');
+                fileLog('EXT', 'vscode.lm.registerMcpServerDefinitionProvider not available');
+            }
         } else {
             fileLog('EXT', 'McpStdioServerDefinition not available');
         }
