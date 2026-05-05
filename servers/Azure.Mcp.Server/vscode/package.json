@@ -165,7 +165,9 @@
         "dev-build": "webpack --mode development",
         "lint": "eslint src --ext ts",
         "test": "npm run compile && node ./out/test/runAllTests.js",
-        "unit-test": "npm run compile && node ./out/test/runUnitTests.js"
+        "unit-test": "npm run compile && node ./out/test/runUnitTests.js",
+        "outerloop-test:install": "npm install --no-save --no-package-lock @playwright/test@^1",
+        "outerloop-test": "npm run outerloop-test:install && node ./node_modules/@playwright/test/cli.js test src/test/outerloop/elicitation.outerloop.spec.js --reporter=line"
     },
     "devDependencies": {
         "@azure/core-auth": "^1.4",

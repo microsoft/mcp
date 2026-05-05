@@ -10,6 +10,10 @@ parameters:
   displayName: Test Timeout In Minutes
   type: number
   default: 30
+- name: RunVSCodeIntegrationTests
+  displayName: Run VS Code Integration Tests (Outerloop Playwright)
+  type: boolean
+  default: false
 
 trigger: none
 pr: none
@@ -20,6 +24,7 @@ extends:
     ServerName: Azure.Mcp.Server
     PublishTarget: ${{ parameters.PublishTarget }}
     RunLiveTests: true
+    RunVSCodeIntegrationTests: ${{ parameters.RunVSCodeIntegrationTests }}
     PackageDocker: true
     PackageVSIX: true
     PackagePyPI: true
