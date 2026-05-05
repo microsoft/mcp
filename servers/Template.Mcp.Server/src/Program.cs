@@ -135,8 +135,7 @@ internal class Program
     /// <param name="services">A service collection.</param>
     internal static void ConfigureServices(IServiceCollection services)
     {
-        services.InitializeConfigurationAndOptions();
-        services.ConfigureOpenTelemetry();
+        services.InitializeConfigurationOptionsAndOpenTelemetry();
 
         services.AddMemoryCache();
         services.AddSingleton<IExternalProcessService, ExternalProcessService>();
