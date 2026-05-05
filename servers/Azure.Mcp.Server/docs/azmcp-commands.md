@@ -9,7 +9,7 @@ The following options are available for all commands:
 
 | Option | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `--subscription` | No | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources |
+| `--subscription` | No | Azure CLI profile, then `AZURE_SUBSCRIPTION_ID` env var | Azure subscription ID or display name. If not specified, uses the default subscription from `az account set` or `AZURE_SUBSCRIPTION_ID`. |
 | `--tenant-id` | No | - | Azure tenant ID for authentication |
 | `--auth-method` | No | 'credential' | Authentication method ('credential', 'key', 'connectionString') |
 | `--retry-max-retries` | No | 3 | Maximum retry attempts for failed operations |
