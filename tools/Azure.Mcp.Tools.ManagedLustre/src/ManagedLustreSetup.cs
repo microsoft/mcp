@@ -65,7 +65,7 @@ public class ManagedLustreSetup : IAreaSetup
 
         sku.AddCommand<SkuGetCommand>(serviceProvider);
 
-        var autoexportJob = new CommandGroup("blob_autoexport", "Autoexport job operations for Azure Managed Lustre - Commands for creating jobs to export data from the filesystem to blob storage.");
+        var autoexportJob = new CommandGroup("blob-autoexport", "Autoexport job operations for Azure Managed Lustre - Commands for creating jobs to export data from the filesystem to blob storage.");
         fileSystem.AddSubGroup(autoexportJob);
 
         autoexportJob.AddCommand<AutoexportJobCreateCommand>(serviceProvider);
@@ -73,7 +73,7 @@ public class ManagedLustreSetup : IAreaSetup
         autoexportJob.AddCommand<AutoexportJobGetCommand>(serviceProvider);
         autoexportJob.AddCommand<AutoexportJobDeleteCommand>(serviceProvider);
 
-        var autoimportJob = new CommandGroup("blob_autoimport", "Autoimport job operations for Azure Managed Lustre - Commands for creating jobs to import data from blob storage to the filesystem.");
+        var autoimportJob = new CommandGroup("blob-autoimport", "Autoimport job operations for Azure Managed Lustre - Commands for creating jobs to import data from blob storage to the filesystem.");
         fileSystem.AddSubGroup(autoimportJob);
 
         autoimportJob.AddCommand<AutoimportJobCreateCommand>(serviceProvider);
@@ -81,7 +81,7 @@ public class ManagedLustreSetup : IAreaSetup
         autoimportJob.AddCommand<AutoimportJobGetCommand>(serviceProvider);
         autoimportJob.AddCommand<AutoimportJobDeleteCommand>(serviceProvider);
 
-        var blobImport = new CommandGroup("blob_import", "One-time blob import operations for Azure Managed Lustre - Commands for creating jobs to perform one-time import of data from blob storage to the filesystem.");
+        var blobImport = new CommandGroup("blob-import", "One-time blob import operations for Azure Managed Lustre - Commands for creating jobs to perform one-time import of data from blob storage to the filesystem.");
         fileSystem.AddSubGroup(blobImport);
 
         blobImport.AddCommand<ImportJobCreateCommand>(serviceProvider);
