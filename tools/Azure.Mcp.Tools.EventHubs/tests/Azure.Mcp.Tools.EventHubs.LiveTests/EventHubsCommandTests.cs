@@ -150,7 +150,9 @@ public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fi
         // Verify service endpoint is present
         var serviceBusEndpoint = namespaceData.AssertProperty("serviceBusEndpoint");
         Assert.False(string.IsNullOrEmpty(serviceBusEndpoint.GetString()));
-        Assert.Contains(".servicebus.windows.net", serviceBusEndpoint.GetString());
+        // Use a cloud-agnostic substring; the suffix differs across sovereign clouds
+        // (e.g., .servicebus.windows.net, .servicebus.usgovcloudapi.net, .servicebus.chinacloudapi.cn).
+        Assert.Contains(".servicebus.", serviceBusEndpoint.GetString());
 
         // Verify metric ID is present
         var metricId = namespaceData.AssertProperty("metricId");
@@ -194,7 +196,7 @@ public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fi
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "namespace", testNamespaceName },
-                { "location", "East US" },
+                { "location", Settings.GetLocationOrDefault("East US") },
                 { "sku-name", "Standard" }
             });
 
@@ -206,7 +208,7 @@ public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fi
         Assert.False(string.IsNullOrEmpty(namespaceName));  // Matching on value presence as value is sanitized in playback
 
         var namespaceLocation = namespaceData.GetProperty("location").GetString();
-        Assert.Contains("eastus", namespaceLocation, StringComparison.OrdinalIgnoreCase);
+        Assert.False(string.IsNullOrEmpty(namespaceLocation)); // Location varies across sovereign clouds; just ensure it's set
 
         // Cleanup - delete the test namespace
         try

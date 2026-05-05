@@ -241,7 +241,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", createVmName },
                 { "vm-size", "Standard_B2s" },
-                { "location", "eastus2" },
+                { "location", Settings.GetLocationOrDefault("eastus2") },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
                 { "image", "Ubuntu2404" },
@@ -279,7 +279,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", createVmName },
                 { "vm-size", "Standard_B2s" },
-                { "location", "eastus2" },
+                { "location", Settings.GetLocationOrDefault("eastus2") },
                 { "admin-username", "azureuser" },
                 { "admin-password", "WinTestP@ss123!" },
                 { "image", "Win2022Datacenter" },
@@ -365,7 +365,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", createVmssName },
                 { "vm-size", "Standard_B2s" },
-                { "location", "eastus2" },
+                { "location", Settings.GetLocationOrDefault("eastus2") },
                 { "admin-username", "azureuser" },
                 { "admin-password", "WinTestP@ss789!" },
                 { "image", "Win2022Datacenter" },
@@ -401,7 +401,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", createVmssName },
                 { "vm-size", "Standard_B2s" },
-                { "location", "eastus2" },
+                { "location", Settings.GetLocationOrDefault("eastus2") },
                 { "admin-username", "azureuser" },
                 { "admin-password", "LinuxTestP@ss321!" },
                 { "image", "Ubuntu2404" },
@@ -485,7 +485,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", deleteVmName },
                 { "vm-size", "Standard_B2s" },
-                { "location", "eastus2" },
+                { "location", Settings.GetLocationOrDefault("eastus2") },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
                 { "image", "Ubuntu2404" },
@@ -528,7 +528,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", deleteVmssName },
                 { "vm-size", "Standard_B2s" },
-                { "location", "eastus2" },
+                { "location", Settings.GetLocationOrDefault("eastus2") },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
                 { "image", "Ubuntu2404" },
@@ -770,7 +770,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "disk-name", newDiskName },
                 { "size-gb", 64 },
                 { "sku", "Standard_LRS" },
-                { "location", "westus2" },
+                { "location", Settings.GetLocationOrDefault("westus2") },
                 { "tags", "environment=test,purpose=live-test" }
             });
 
@@ -874,7 +874,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "disk-name", newDiskName },
                 { "gallery-image-reference", galleryImageVersionId },
                 { "sku", "Standard_LRS" },
-                { "location", "eastus2" }
+                { "location", Settings.GetLocationOrDefault("eastus2") }
             });
 
         // Assert
@@ -907,7 +907,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "gallery-image-reference", galleryImageVersionId },
                 { "gallery-image-reference-lun", 0 },
                 { "sku", "Standard_LRS" },
-                { "location", "eastus2" }
+                { "location", Settings.GetLocationOrDefault("eastus2") }
             });
 
         // Assert

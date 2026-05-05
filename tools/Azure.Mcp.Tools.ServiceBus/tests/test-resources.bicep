@@ -66,3 +66,6 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' =  
     roleDefinitionId: dataOwnerRoleDefinition.id
   }
 }
+
+output location string = location
+output serviceBusEndpoint string = serviceBusNamespace.properties.serviceBusEndpoint

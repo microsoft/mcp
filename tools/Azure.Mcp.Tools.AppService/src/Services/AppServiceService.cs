@@ -469,9 +469,16 @@ public class AppServiceService(
 
     private string GetDetectorsEndpoint(string subscriptionId, string resourceGroupName, string siteName, string? detectorName = null)
     {
+        // The detectors API version registered with Microsoft.Web differs across clouds. The
+        // newest version (2025-05-01) is currently only registered in Azure Public Cloud; sovereign
+        // clouds report NoRegisteredProviderFound for that version. Fall back to a long-stable
+        // GA version for non-public clouds so the detector commands continue to work there.
+        var apiVersion = _tenantService.CloudConfiguration.CloudType == AzureCloudConfiguration.AzureCloud.AzurePublicCloud
+            ? "2025-05-01"
+            : "2024-04-01";
         string subscriptionPath = string.IsNullOrEmpty(detectorName)
-            ? $"subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}/detectors?api-version=2025-05-01"
-            : $"subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}/detectors/{detectorName}?api-version=2025-05-01";
+            ? $"subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}/detectors?api-version={apiVersion}"
+            : $"subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}/detectors/{detectorName}?api-version={apiVersion}";
         return _tenantService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{subscriptionPath}",

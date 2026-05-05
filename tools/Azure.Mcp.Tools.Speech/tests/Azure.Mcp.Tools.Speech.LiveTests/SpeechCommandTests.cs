@@ -6,19 +6,32 @@ using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.LiveTests;
 
 public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture)
 {
+    /// <summary>
+    /// Returns the Cognitive Services DNS suffix for the current cloud (Public, Gov, China),
+    /// so tests don't hardcode <c>cognitiveservices.azure.com</c> and break in sovereign clouds.
+    /// </summary>
+    private static string CognitiveServicesSuffix(AzureCloud cloud) => cloud switch
+    {
+        AzureCloud.AzureUSGovernmentCloud => ".cognitiveservices.azure.us",
+        AzureCloud.AzureChinaCloud => ".cognitiveservices.azure.cn",
+        _ => ".cognitiveservices.azure.com",
+    };
+
+    private string AiServicesEndpoint => $"https://{Settings.ResourceBaseName}{CognitiveServicesSuffix(Settings.Cloud)}/";
+
     #region SpeechToText Tests
 
     [Fact]
     public async Task SpeechToText_ShouldHandleMissingAudioFileGracefully()
     {
-        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
-
+        var aiServicesEndpoint = AiServicesEndpoint;
         var result = await CallToolAsync(
             "speech_stt_recognize",
             new()
@@ -53,8 +66,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
         var fileInfo = new FileInfo(testAudioFile);
         Assert.True(fileInfo.Length > 0, "Test audio file must not be empty");
 
-        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
-
+        var aiServicesEndpoint = AiServicesEndpoint;
         // Act
         var result = await CallToolAsync(
             "speech_stt_recognize",
@@ -94,8 +106,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
         var fileInfo = new FileInfo(testAudioFile);
         Assert.True(fileInfo.Length > 0, "Test audio file must not be empty");
 
-        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
-
+        var aiServicesEndpoint = AiServicesEndpoint;
         // Act
         var result = await CallToolAsync(
             "speech_stt_recognize",
@@ -134,7 +145,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
         var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", "test-audio.wav");
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
 
-        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+        var aiServicesEndpoint = AiServicesEndpoint;
         var expectedText = "By voice is my passport. Verify me.";
 
         // Act
@@ -193,8 +204,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
         var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", "en-US-with-profanity.wav");
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
 
-        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
-
+        var aiServicesEndpoint = AiServicesEndpoint;
         var result = await CallToolAsync(
             "speech_stt_recognize",
             new()
@@ -231,7 +241,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
         var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", "en-US-phraselist.wav");
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
 
-        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+        var aiServicesEndpoint = AiServicesEndpoint;
         var expectedText = "Years later, Douzi and Shitou have become packing opera stars, taking the names Cheng Dieyi and Duan Xiaolou, respectively.";
 
         // Act
@@ -296,8 +306,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
 
         try
         {
-            var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
-
+            var aiServicesEndpoint = AiServicesEndpoint;
             var result = await CallToolAsync(
                 "speech_stt_recognize",
                 new()
@@ -339,8 +348,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
 
         try
         {
-            var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
-
+            var aiServicesEndpoint = AiServicesEndpoint;
             var result = await CallToolAsync(
                 "speech_stt_recognize",
                 new()
@@ -388,8 +396,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
 
         try
         {
-            var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
-
+            var aiServicesEndpoint = AiServicesEndpoint;
             // Act
             var result = await CallToolAsync(
                 "speech_stt_recognize",
@@ -438,7 +445,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
         var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", "test-audio.wav");
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
 
-        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+        var aiServicesEndpoint = AiServicesEndpoint;
         var expectedText = "My voice is my passport. Verify me.";
 
         // Act
@@ -481,8 +488,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
         var fileInfo = new FileInfo(testAudioFile);
         Assert.True(fileInfo.Length > 0, "Test audio file must not be empty");
 
-        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
-
+        var aiServicesEndpoint = AiServicesEndpoint;
         // Test with the audio file - expect successful speech recognition
         var result = await CallToolAsync(
             "speech_stt_recognize",
@@ -524,7 +530,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     public async Task Should_synthesize_speech_to_file_with_text()
     {
         // Test basic TTS synthesis with text input
-        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+        var aiServicesEndpoint = AiServicesEndpoint;
         var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-{Guid.NewGuid()}.wav");
 
         try
@@ -579,7 +585,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     public async Task Should_synthesize_speech_with_different_voices(string language, string voice)
     {
         // Test TTS synthesis with different language/voice combinations
-        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+        var aiServicesEndpoint = AiServicesEndpoint;
         var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-{language}-{Guid.NewGuid()}.wav");
 
         try
@@ -631,7 +637,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     public async Task Should_synthesize_speech_with_different_formats(string format)
     {
         // Test TTS synthesis with different audio formats
-        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+        var aiServicesEndpoint = AiServicesEndpoint;
         var extension = format.Contains("Mp3") ? ".mp3" : ".wav";
         var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-{format}-{Guid.NewGuid()}{extension}");
 
@@ -679,7 +685,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     public async Task Should_handle_invalid_text_input()
     {
         // Test error handling for empty text
-        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+        var aiServicesEndpoint = AiServicesEndpoint;
         var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-invalid-{Guid.NewGuid()}.wav");
 
         try
@@ -711,7 +717,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     public async Task Should_handle_invalid_language_format()
     {
         // Test error handling for invalid language format
-        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+        var aiServicesEndpoint = AiServicesEndpoint;
         var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-invalid-lang-{Guid.NewGuid()}.wav");
 
         try
@@ -743,7 +749,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     public async Task Should_handle_large_text_input()
     {
         // Test TTS with larger text to verify streaming works correctly
-        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+        var aiServicesEndpoint = AiServicesEndpoint;
         var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-large-{Guid.NewGuid()}.wav");
 
         // Create a longer text (around 1000 words)
