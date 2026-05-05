@@ -22,8 +22,7 @@ public sealed class PricingGetCommandLiveTests(ITestOutputHelper output, TestPro
 
     [Fact]
     public async Task Should_get_prices_by_sku()
-    {
-        var result = await CallToolAsync(
+    {        var result = await CallToolAsync(
             "pricing_get",
             new()
             {
@@ -47,8 +46,7 @@ public sealed class PricingGetCommandLiveTests(ITestOutputHelper output, TestPro
 
     [Fact]
     public async Task Should_get_prices_by_service()
-    {
-        var result = await CallToolAsync(
+    {        var result = await CallToolAsync(
             "pricing_get",
             new()
             {
@@ -73,8 +71,7 @@ public sealed class PricingGetCommandLiveTests(ITestOutputHelper output, TestPro
 
     [Fact]
     public async Task Should_get_prices_by_region()
-    {
-        var result = await CallToolAsync(
+    {        var result = await CallToolAsync(
             "pricing_get",
             new()
             {
@@ -96,8 +93,7 @@ public sealed class PricingGetCommandLiveTests(ITestOutputHelper output, TestPro
 
     [Fact]
     public async Task Should_get_prices_by_service_family()
-    {
-        var result = await CallToolAsync(
+    {        var result = await CallToolAsync(
             "pricing_get",
             new()
             {
@@ -121,8 +117,7 @@ public sealed class PricingGetCommandLiveTests(ITestOutputHelper output, TestPro
 
     [Fact]
     public async Task Should_get_prices_by_price_type()
-    {
-        var result = await CallToolAsync(
+    {        var result = await CallToolAsync(
             "pricing_get",
             new()
             {
@@ -146,8 +141,7 @@ public sealed class PricingGetCommandLiveTests(ITestOutputHelper output, TestPro
 
     [Fact]
     public async Task Should_get_prices_with_currency()
-    {
-        var result = await CallToolAsync(
+    {        var result = await CallToolAsync(
             "pricing_get",
             new()
             {
@@ -171,8 +165,7 @@ public sealed class PricingGetCommandLiveTests(ITestOutputHelper output, TestPro
 
     [Fact]
     public async Task Should_get_prices_with_raw_filter()
-    {
-        var result = await CallToolAsync(
+    {        var result = await CallToolAsync(
             "pricing_get",
             new()
             {
@@ -197,8 +190,7 @@ public sealed class PricingGetCommandLiveTests(ITestOutputHelper output, TestPro
 
     [Fact]
     public async Task Should_get_prices_with_combined_filters()
-    {
-        var result = await CallToolAsync(
+    {        var result = await CallToolAsync(
             "pricing_get",
             new()
             {
@@ -228,8 +220,7 @@ public sealed class PricingGetCommandLiveTests(ITestOutputHelper output, TestPro
 
     [Fact]
     public async Task Should_return_reservation_prices()
-    {
-        var result = await CallToolAsync(
+    {        var result = await CallToolAsync(
             "pricing_get",
             new()
             {
@@ -251,8 +242,7 @@ public sealed class PricingGetCommandLiveTests(ITestOutputHelper output, TestPro
 
     [Fact]
     public async Task Should_return_empty_for_nonexistent_sku()
-    {
-        var result = await CallToolAsync(
+    {        var result = await CallToolAsync(
             "pricing_get",
             new()
             {
