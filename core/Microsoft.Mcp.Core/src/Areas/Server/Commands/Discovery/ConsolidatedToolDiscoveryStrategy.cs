@@ -82,7 +82,7 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
 
 #if DEBUG
             // In debug mode, validate that all tools in MappedToolList found a match when conditions are met
-            if (_options.Value.ReadOnly == false && (_options.Value.Namespace == null || _options.Value.Namespace.Length == 0))
+            if ((_options.Value.ReadOnly ?? false) == false && (_options.Value.Namespace == null || _options.Value.Namespace.Length == 0))
             {
                 if (consolidatedTool.MappedToolList != null)
                 {
@@ -175,7 +175,7 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
                 var serviceArea = _commandFactory.GetServiceArea(kvp.Key);
                 return serviceArea == null || !IgnoredCommandGroups.Contains(serviceArea, StringComparer.OrdinalIgnoreCase);
             })
-            .Where(kvp => _options.Value.ReadOnly == false || kvp.Value.Metadata.ReadOnly == true)
+            .Where(kvp => (_options.Value.ReadOnly ?? false) == false || kvp.Value.Metadata.ReadOnly == true)
             .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
             .Where(kvp =>
             {
