@@ -84,6 +84,16 @@ try {
         Write-Host "✅ Tool id validation passed."
     }
 
+    # Run changelog entry validation
+    & "$PSScriptRoot/Test-ChangelogEntry.ps1"
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "❌ Changelog entry validation failed"
+        $hasErrors = $true
+    } else {
+        Write-Host "✅ Changelog entry validation passed."
+    }
+
     if($hasErrors) {
         exit 1
     }
