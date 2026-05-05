@@ -23,6 +23,8 @@ try {
         Write-Host "Not a PR build - skipping skip-changelog label check."
         exit 0
     }
+    Write-Host "DEBUG: GH_TOKEN length = $($env:GH_TOKEN.Length)"
+    gh auth status 2>&1 | Write-Host
     Write-Host "DEBUG: Running 'gh pr view $prNumber --json labels --jq .labels[].name'"
     $labels = gh pr view $prNumber --json labels --jq '.labels[].name' 2>&1
     Write-Host "DEBUG: gh exit code = $LASTEXITCODE"
