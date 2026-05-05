@@ -247,17 +247,23 @@ public sealed class PluginTelemetryCommand(
                 }
             }
 
+            // Create host and log telemetry
+            using var host = CreateStdioHost(options);
+            await InitializeServicesAsync(host.Services);
+            await host.StartAsync(cancellationToken);
+
             // Validate tool name if provided: strip client-specific prefixes and check against registered commands/areas
             if (!string.IsNullOrWhiteSpace(options.ToolName))
             {
                 // Resolve ICommandFactory lazily to avoid circular dependency during construction
-                var commandFactory = _serviceProvider.GetRequiredService<ICommandFactory>();
+                var commandFactory = host.Services.GetRequiredService<ICommandFactory>();
 
                 var normalizedToolName = ValidateAndNormalizeToolName(options.ToolName, commandFactory);
                 if (normalizedToolName == null)
                 {
                     context.Response.Status = HttpStatusCode.Forbidden;
                     context.Response.Message = $"Tool name '{options.ToolName}' is not a recognized azmcp command and will not be logged.";
+                    await ShutdownHostAsync(host, cancellationToken);
                     return context.Response;
                 }
 
@@ -265,16 +271,10 @@ public sealed class PluginTelemetryCommand(
                 options.ToolName = normalizedToolName;
             }
 
-            // Create host and log telemetry
-            using var host = CreateStdioHost(options);
-            await InitializeServicesAsync(host.Services);
-            await host.StartAsync(cancellationToken);
-
             var telemetryService = host.Services.GetRequiredService<ITelemetryService>();
             LogPluginTelemetry(telemetryService, options);
 
-            await host.StopAsync(cancellationToken);
-            await host.WaitForShutdownAsync(cancellationToken);
+            await ShutdownHostAsync(host, cancellationToken);
 
             return context.Response;
         }
@@ -284,6 +284,12 @@ public sealed class PluginTelemetryCommand(
         }
 
         return context.Response;
+    }
+
+    private static async Task ShutdownHostAsync(IHost host, CancellationToken cancellationToken)
+    {
+        await host.StopAsync(cancellationToken);
+        await host.WaitForShutdownAsync(cancellationToken);
     }
 
     /// <summary>
