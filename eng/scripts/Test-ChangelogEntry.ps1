@@ -17,11 +17,16 @@ try {
 
     # Check for skip-changelog label via gh CLI
     $prNumber = $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
+    Write-Host "DEBUG: PR Number = '$prNumber'"
+    Write-Host "DEBUG: GH_TOKEN set = $([bool]$env:GH_TOKEN)"
     if (-not $prNumber) {
         Write-Host "Not a PR build - skipping skip-changelog label check."
         exit 0
     }
+    Write-Host "DEBUG: Running 'gh pr view $prNumber --json labels --jq .labels[].name'"
     $labels = gh pr view $prNumber --json labels --jq '.labels[].name' 2>&1
+    Write-Host "DEBUG: gh exit code = $LASTEXITCODE"
+    Write-Host "DEBUG: Labels returned = '$($labels -join ', ')'"
     if ($labels -contains 'skip-changelog') {
         Write-Host "'skip-changelog' label found — skipping."
         exit 0
