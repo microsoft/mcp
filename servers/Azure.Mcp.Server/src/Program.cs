@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
@@ -50,18 +51,7 @@ internal class Program
             PluginTelemetryCommand.ConfigureServices = ConfigureServices;
             PluginTelemetryCommand.InitializeServicesAsync = InitializeServicesAsync;
 
-            ServiceCollection services = new();
-
-            ConfigureServices(services);
-
-            services.AddLogging(builder =>
-            {
-                builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
-                builder.SetMinimumLevel(LogLevel.Information);
-            });
-
-            var serviceProvider = services.BuildServiceProvider();
-            await InitializeServicesAsync(serviceProvider);
+            var serviceProvider = SetupBasicInitializer();
 
             var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
 
@@ -82,7 +72,42 @@ internal class Program
 
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
-            var status = await parseResult.InvokeAsync();
+            var command = parseResult.CommandResult.Command;
+            int status = 0;
+
+            if (command is ExtendedCommand extendedCommand &&
+                (extendedCommand.BaseCommand is ServiceStartCommand || extendedCommand.BaseCommand is PluginTelemetryCommand))
+            {
+                // One of the special commands that need to be handled differently.
+                status = await parseResult.InvokeAsync();
+            }
+            else
+            {
+                // Command wasn't one of the registered ServerSetup commands, so bind up a Host of all the services
+                // to run the command.
+                var builder = Host.CreateApplicationBuilder();
+                builder.Logging.ClearProviders();
+                builder.Logging.AddEventSourceLogger();
+                ConfigureServices(builder.Services);
+                builder.Services.AddAzureMcpServer(new()
+                {
+                    Transport = TransportTypes.StdIo
+                });
+
+                using var host = builder.Build();
+
+                await InitializeServicesAsync(host.Services);
+                await host.StartAsync();
+
+                commandFactory = host.Services.GetRequiredService<ICommandFactory>();
+                rootCommand = commandFactory.RootCommand;
+                parseResult = rootCommand.Parse(args);
+
+                status = await parseResult.InvokeAsync();
+
+                await host.StopAsync();
+                await host.WaitForShutdownAsync();
+            }
 
             if (status == 0)
             {
@@ -180,9 +205,7 @@ internal class Program
     }
 
     private static void WriteResponse(CommandResponse response)
-    {
-        Console.WriteLine(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse));
-    }
+        => Console.WriteLine(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse));
 
     /// <summary>
     /// <para>
@@ -276,6 +299,43 @@ internal class Program
 
         services.AddSingleton<IPluginSkillNameAllowlistProvider>(sp =>
             ActivatorUtilities.CreateInstance<ResourcePluginSkillNameAllowlistProvider>(sp, thisAssembly, $"allowed-skill-names.json"));
+    }
+
+    /// <summary>
+    /// Creates a very small service provider that allows for 'server start' and 'plugin telemetry' commands to be
+    /// executed without initializing the full service, which reduces startup time for these commands significantly.
+    /// <para>
+    /// This is a tightly bound service provider that manually configures only what is necessary for those two
+    /// commands. Any changes to the dependencies of those commands may require changes here.
+    /// </para>
+    /// </summary>
+    /// <returns>The basic initializer serivce provider.</returns>
+    private static ServiceProvider SetupBasicInitializer()
+    {
+        var thisAssembly = typeof(Program).Assembly;
+        var services = new ServiceCollection();
+
+        services.InitializeConfigurationAndOptions();
+        services.AddSingleton<ITelemetryService, NoopTelemetryService>();
+        services.AddSingleton<IPluginFileReferenceAllowlistProvider>(sp =>
+            ActivatorUtilities.CreateInstance<ResourcePluginFileReferenceAllowlistProvider>(sp, thisAssembly, $"allowed-plugin-file-references.json"));
+        services.AddSingleton<IPluginSkillNameAllowlistProvider>(sp =>
+            ActivatorUtilities.CreateInstance<ResourcePluginSkillNameAllowlistProvider>(sp, thisAssembly, $"allowed-skill-names.json"));
+        services.AddSingleton<ICommandFactory, CommandFactory>();
+
+        foreach (IAreaSetup area in Areas.Where(area => area is ServerSetup))
+        {
+            services.AddSingleton(area);
+            area.ConfigureServices(services);
+        }
+
+        services.AddLogging(builder =>
+        {
+            builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
+            builder.SetMinimumLevel(LogLevel.Information);
+        });
+
+        return services.BuildServiceProvider();
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)

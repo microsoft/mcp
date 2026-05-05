@@ -25,7 +25,7 @@ public class McpRuntimeTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddSingleton<ITelemetryService, CommandFactoryHelpers.NoOpTelemetryService>();
+        services.AddSingleton<ITelemetryService, NoopTelemetryService>();
 
         return services.BuildServiceProvider();
     }
