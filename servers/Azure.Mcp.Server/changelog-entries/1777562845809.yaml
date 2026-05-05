@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added `azurebackup security configure-mua` command to enable/disable Multi-User Authorization (MUA) on Recovery Services vaults and Backup vaults by linking/unlinking a Resource Guard."
