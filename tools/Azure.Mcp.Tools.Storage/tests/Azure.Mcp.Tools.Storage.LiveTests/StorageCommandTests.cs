@@ -413,6 +413,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             // Arrange - Use a unique account name for testing
             var uniqueAccountName = RegisterOrRetrieveVariable("createdAccount", $"testacct{DateTime.UtcNow:MMddHHmmss}");
             var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+            var expectedLocation = Settings.GetLocationOrDefault("eastus");
 
             var result = await CallToolAsync(
                 "storage_account_create",
@@ -421,7 +422,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                     { "subscription", Settings.SubscriptionId },
                     { "account", uniqueAccountName },
                     { "resource-group", resourceGroupName },
-                    { "location", "eastus" },
+                    { "location", expectedLocation },
                     { "sku", "Standard_LRS" },
                     { "kind", "StorageV2" }
                 });
@@ -435,7 +436,8 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : uniqueAccountName, name);
 
             var location = account.GetProperty("location").GetString();
-            Assert.Equal("eastus", location);
+            // Compare normalized (Azure may return location with spaces or different casing)
+            Assert.Equal(expectedLocation.Replace(" ", string.Empty).ToLowerInvariant(), location?.Replace(" ", string.Empty).ToLowerInvariant());
 
             var kind = account.GetProperty("kind").GetString();
             Assert.Equal("StorageV2", kind);

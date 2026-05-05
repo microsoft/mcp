@@ -19,6 +19,12 @@ $isPipelineRun = $CI -or $env:TF_BUILD -eq 'true'
 $isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
 $exitCode = 0
 
+$govTest = $env:GOVTEST -eq 'true'
+$runAllLiveTests = $env:RUNALLLIVETESTS -eq 'true'
+
+Write-Host "GovTest: $govTest" -ForegroundColor Cyan
+Write-Host "RunAllLiveTests: $runAllLiveTests" -ForegroundColor Cyan
+
 $architectures = @('x64', 'arm64')
 
 # Supported Azure clouds for where the MCP tools may operate. This is used to determine which clouds to run tests against.
@@ -37,7 +43,7 @@ $excludedPlatforms = @(
 # be targeted or excluded in packaging scripts
 $additionalPlatforms = @(
     # We currently use a prerelease version of Microsoft.Identity.Web with AOT-safe HTTP support,
-    # which allows shipping trimmed azmcp with http across all distributions (including Docker). 
+    # which allows shipping trimmed azmcp with http across all distributions (including Docker).
     # Previously, Docker was shipped untrimmed to enable http support, while only other distributions
     # where trimmed without HTTP support. These additional Docker platforms are retained as a rollback safety net
     # in case we need to revert to the non-prerelease version and limit HTTP support to Docker only.
@@ -250,7 +256,7 @@ function Get-PathsToTest {
         | ForEach-Object { $Matches[0] }
         | Sort-Object -Unique
 
-    if($isPullRequestBuild) {
+    if($isPullRequestBuild -and -not $runAllLiveTests) {
         # Set of files that don't require build or test when changed
         $skipFiles = @(
             'CHANGELOG.md',

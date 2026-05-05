@@ -4,7 +4,7 @@
 param baseName string = resourceGroup().name
 
 @description('The location of the resource. By default, this is the same as the resource group.')
-param location string = 'northeurope' // resourceGroup().location
+param location string = resourceGroup().location // resourceGroup().location
 
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string = '26ffb325-f480-419c-b7a9-2c8a018203a8' // azure-sdk-internal-devops-connections

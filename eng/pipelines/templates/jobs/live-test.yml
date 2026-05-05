@@ -5,6 +5,8 @@ parameters:
   type: number
 - name: TimeoutInMinutes
   type: number
+- name: GovTest
+  type: boolean
 
 jobs:
 - job: LiveTest
@@ -12,6 +14,9 @@ jobs:
   timeoutInMinutes: ${{ parameters.TimeoutInMinutes }}
   # The variable reference in the matrix parameter will resolve to a json map. If there are no live test legs, it will be an empty map.
   condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'))
+  variables:
+    Environment: ${{ iif(parameters.GovTest, 'AzureUSGovernment', 'AzureCloud') }}
+    SubscriptionConfiguration: '{"Environment": "$(Environment)"}'
   strategy:
     maxParallel: ${{ parameters.MaxParallel }}
     matrix: $[ ${{ parameters.Matrix }} ]
@@ -46,9 +51,10 @@ jobs:
 
   - template: /eng/common/TestResources/deploy-test-resources.yml
     parameters:
-      ServiceConnection: azure-sdk-tests-public
+      ServiceConnection: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}
       PersistOidcToken: true
       TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
+      SubscriptionConfiguration: $(SubscriptionConfiguration)
 
   - task: AzurePowershell@5
     displayName: "Run tests (stdio) - az pwsh"
@@ -56,12 +62,13 @@ jobs:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
     inputs:
-      azureSubscription: azure-sdk-tests-public
+      azureSubscription: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}
       azurePowerShellVersion: 'LatestVersion'
       scriptType: InlineScript
       Inline: |
         ./eng/scripts/Test-Code.ps1 `
           -TestType 'Live' `
+          -Environment $(Environment) `
           -Path $(PathToTest) `
           -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
 
@@ -75,9 +82,10 @@ jobs:
 
   - template: /eng/common/TestResources/deploy-test-resources.yml
     parameters:
-      ServiceConnection: azure-sdk-tests-public
+      ServiceConnection: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}
       PersistOidcToken: true
       TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
+      SubscriptionConfiguration: $(SubscriptionConfiguration)
       AdditionalParameters: "@{ UseHttpTransport = true }"
 
   - task: AzurePowershell@5
@@ -86,12 +94,13 @@ jobs:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
     inputs:
-      azureSubscription: azure-sdk-tests-public
+      azureSubscription: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}
       azurePowerShellVersion: 'LatestVersion'
       scriptType: InlineScript
       Inline: |
         ./eng/scripts/Test-Code.ps1 `
           -TestType 'Live' `
+          -Environment $(Environment) `
           -Path $(PathToTest) `
           -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
 
@@ -110,4 +119,7 @@ jobs:
 
   - template: /eng/common/TestResources/remove-test-resources.yml
     parameters:
-      ServiceConnection: azure-sdk-tests-public
+      ServiceConnection: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}
+      EnvVars:
+        Pool: $(Pool)
+      SubscriptionConfiguration: $(SubscriptionConfiguration)

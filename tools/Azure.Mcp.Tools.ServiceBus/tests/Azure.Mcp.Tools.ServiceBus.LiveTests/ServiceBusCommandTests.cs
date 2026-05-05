@@ -21,6 +21,19 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
         private const string TopicName = "topic1";
         private const string SubscriptionName = "subscription1";
 
+        /// <summary>
+        /// Builds the fully qualified Service Bus namespace name using the cloud-specific
+        /// DNS suffix so live tests work in sovereign clouds (Public, Gov, China).
+        /// </summary>
+        private string NamespaceFqdn => $"{Settings.ResourceBaseName}{ServiceBusSuffix(Settings.Cloud)}";
+
+        private static string ServiceBusSuffix(AzureCloud cloud) => cloud switch
+        {
+            AzureCloud.AzureUSGovernmentCloud => ".servicebus.usgovcloudapi.net",
+            AzureCloud.AzureChinaCloud => ".servicebus.chinacloudapi.cn",
+            _ => ".servicebus.windows.net",
+        };
+
         [Fact(Skip = "The command for this test has been commented out until we know how to surface binary data.")]
         public async Task Queue_peek_messages()
         {
@@ -34,7 +47,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
                     { ServiceBusOptionDefinitions.QueueName, QueueName },
-                    { ServiceBusOptionDefinitions.NamespaceName, $"{Settings.ResourceBaseName}.servicebus.windows.net"},
+                    { ServiceBusOptionDefinitions.NamespaceName, NamespaceFqdn},
                     { ServiceBusOptionDefinitions.MaxMessagesName, numberOfMessages.ToString() }
                 });
 
@@ -55,7 +68,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
                 new()
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
-                    { ServiceBusOptionDefinitions.NamespaceName, $"{Settings.ResourceBaseName}.servicebus.windows.net"},
+                    { ServiceBusOptionDefinitions.NamespaceName, NamespaceFqdn},
                     { ServiceBusOptionDefinitions.TopicName, TopicName },
                     { ServiceBusOptionDefinitions.SubscriptionName, SubscriptionName },
                     { ServiceBusOptionDefinitions.MaxMessagesName, numberOfMessages.ToString() }
@@ -75,7 +88,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
                     { ServiceBusOptionDefinitions.QueueName, QueueName },
-                    { ServiceBusOptionDefinitions.NamespaceName, $"{Settings.ResourceBaseName}.servicebus.windows.net"},
+                    { ServiceBusOptionDefinitions.NamespaceName, NamespaceFqdn},
                 });
 
             var details = result.AssertProperty("queueDetails");
@@ -91,7 +104,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
                     { ServiceBusOptionDefinitions.TopicName, TopicName },
-                    { ServiceBusOptionDefinitions.NamespaceName, $"{Settings.ResourceBaseName}.servicebus.windows.net"},
+                    { ServiceBusOptionDefinitions.NamespaceName, NamespaceFqdn},
                 });
 
             var details = result.AssertProperty("topicDetails");
@@ -108,7 +121,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
                     { ServiceBusOptionDefinitions.TopicName, TopicName },
                     { ServiceBusOptionDefinitions.SubscriptionName, SubscriptionName },
-                    { ServiceBusOptionDefinitions.NamespaceName, $"{Settings.ResourceBaseName}.servicebus.windows.net"},
+                    { ServiceBusOptionDefinitions.NamespaceName, NamespaceFqdn},
                 });
 
             var details = result.AssertProperty("subscriptionDetails");
@@ -119,7 +132,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
         {
             var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
             TokenCredential credentials = await tokenProvider.GetTokenCredentialAsync(Settings.TenantId, default);
-            await using (var client = new ServiceBusClient($"{Settings.ResourceBaseName}.servicebus.windows.net", credentials))
+            await using (var client = new ServiceBusClient(NamespaceFqdn, credentials))
             await using (var sender = client.CreateSender(queueOrTopicName))
             {
                 var batch = await sender.CreateMessageBatchAsync(TestContext.Current.CancellationToken);
