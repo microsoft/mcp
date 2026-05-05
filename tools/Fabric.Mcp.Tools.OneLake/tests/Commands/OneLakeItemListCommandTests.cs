@@ -18,6 +18,7 @@ public class OneLakeItemListCommandTests : CommandUnitTestsBase<OneLakeItemListC
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);
         Assert.False(string.IsNullOrEmpty(Command.Description));
+        Assert.Contains("OneLake", Command.Description);
         Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 

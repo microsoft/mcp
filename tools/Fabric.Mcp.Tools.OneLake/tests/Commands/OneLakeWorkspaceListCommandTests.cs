@@ -18,6 +18,7 @@ public class OneLakeWorkspaceListCommandTests : CommandUnitTestsBase<OneLakeWork
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);
         Assert.False(string.IsNullOrEmpty(Command.Description));
+        Assert.Contains("OneLake", Command.Description);
         Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
@@ -25,7 +26,7 @@ public class OneLakeWorkspaceListCommandTests : CommandUnitTestsBase<OneLakeWork
     public void GetCommand_ReturnsValidCommand()
     {
         Assert.Equal("list_workspaces", CommandDefinition.Name);
-        Assert.NotNull(CommandDefinition.Description);
+        Assert.False(string.IsNullOrEmpty(CommandDefinition.Description));
         Assert.NotEmpty(CommandDefinition.Options);
     }
 }

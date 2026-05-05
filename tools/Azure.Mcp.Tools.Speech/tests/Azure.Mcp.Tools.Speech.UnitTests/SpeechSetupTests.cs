@@ -46,8 +46,7 @@ public class SpeechSetupTests
         // Assert
         Assert.NotNull(speechGroup);
         Assert.Equal("speech", speechGroup.Name);
-        Assert.NotNull(speechGroup.Description);
-        Assert.NotEmpty(speechGroup.Description);
+        Assert.False(string.IsNullOrEmpty(speechGroup.Description));
         Assert.True(speechGroup.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
