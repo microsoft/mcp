@@ -1,4 +1,4 @@
-<!-- Run below prompt in Copilot to generate the service-guides.json file. No need to include this comment in the prompt. -->
+<!-- Run below prompt in Copilot to generate the 'service-guides.json' file. No need to include this comment in the prompt. -->
 
 Analyze the TOC.yml file from https://github.com/MicrosoftDocs/well-architected/blob/main/well-architected/TOC.yml and generate a JSON file with Azure service guide mappings.
 
@@ -58,4 +58,3 @@ EXAMPLE OUTPUT:
 }
 
 Generate the complete service-guides.json file with all services found in the Service guides section.
-
