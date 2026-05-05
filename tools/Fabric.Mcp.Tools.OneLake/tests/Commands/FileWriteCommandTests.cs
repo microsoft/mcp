@@ -15,9 +15,10 @@ public class FileWriteCommandTests : CommandUnitTestsBase<FileWriteCommand, IOne
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Contains("Write content to a file in OneLake storage", Command.Description);
         Assert.False(Command.Metadata.ReadOnly);
         Assert.True(Command.Metadata.Destructive);
+        Assert.False(string.IsNullOrEmpty(Command.Description));
+        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

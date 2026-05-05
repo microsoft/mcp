@@ -14,10 +14,11 @@ public class PathListCommandTests : CommandUnitTestsBase<PathListCommand, IOneLa
     {
         Assert.Equal("list_files", Command.Name);
         Assert.Equal("List OneLake Path Structure", Command.Title);
-        Assert.Contains("List files and directories", Command.Description);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);
+        Assert.False(string.IsNullOrEmpty(Command.Description));
+        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

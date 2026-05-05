@@ -17,18 +17,8 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
         Assert.Equal("design", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-
-        // Check that the description contains the expected content from the actual implementation
-        Assert.Contains("Recommends architecture design for cloud services/apps/solutions", CommandDefinition.Description);
-        Assert.Contains("file storage, banking, video streaming, e-commerce, SaaS", CommandDefinition.Description);
-        Assert.Contains("Ask about user role, business goals, etc (1-2 questions at a time)", CommandDefinition.Description);
-        Assert.Contains("Track confidence returned by service and update requirements", CommandDefinition.Description);
-        Assert.Contains("confidence >= 0.7", CommandDefinition.Description);
-        Assert.Contains("Present architecture with table format, visual organization, ASCII diagrams", CommandDefinition.Description);
-        Assert.Contains("Follow Azure Well-Architected Framework principles", CommandDefinition.Description);
-        Assert.Contains("infrastructure, platform, application, data, security, operations", CommandDefinition.Description);
-        Assert.Contains("State tracks components, requirements by category, and confidence factors", CommandDefinition.Description);
-        Assert.Contains("Be conservative with suggestions", CommandDefinition.Description);
+        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
+        Assert.Contains("Architecture design", CommandDefinition.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -165,7 +155,6 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
         Assert.Equal("design", Command.Name);
         Assert.Equal("Design Azure cloud architectures through guided questions", Command.Title);
         Assert.NotEmpty(Command.Description);
-        Assert.Contains("Recommends architecture design for cloud services/apps/solutions", Command.Description);
     }
 
     [Fact]

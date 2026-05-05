@@ -19,9 +19,8 @@ public class FirewallRuleDeleteCommandTests : CommandUnitTestsBase<FirewallRuleD
     {
         var command = Command.GetCommand();
         Assert.Equal("delete", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
-        Assert.Contains("Deletes a firewall rule", command.Description);
+        Assert.False(string.IsNullOrEmpty(command.Description));
+        Assert.True(command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

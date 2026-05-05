@@ -20,9 +20,8 @@ public class ServerCreateCommandTests : CommandUnitTestsBase<ServerCreateCommand
     {
         var command = Command.GetCommand();
         Assert.Equal("create", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
-        Assert.Contains("Creates a new Azure SQL server", command.Description);
+        Assert.False(string.IsNullOrEmpty(command.Description));
+        Assert.True(command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Theory]

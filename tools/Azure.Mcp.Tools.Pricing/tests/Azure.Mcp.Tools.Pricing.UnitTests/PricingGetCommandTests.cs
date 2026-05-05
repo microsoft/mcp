@@ -19,9 +19,11 @@ public sealed class PricingGetCommandTests : CommandUnitTestsBase<PricingGetComm
     {
         Assert.Equal("get", Command.Name);
         Assert.Equal("Get Azure Retail Pricing", Command.Title);
-        Assert.Contains("Azure retail pricing", Command.Description);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.ReadOnly);
+        Assert.False(string.IsNullOrEmpty(Command.Description));
+        Assert.Contains("Azure retail pricing", Command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Theory]

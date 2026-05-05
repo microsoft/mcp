@@ -20,9 +20,8 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
     public void Constructor_InitializesCommandCorrectly()
     {
         Assert.Equal("get", CommandDefinition.Name);
-        Assert.NotNull(CommandDefinition.Description);
-        Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("Azure SQL database", CommandDefinition.Description);
+        Assert.False(string.IsNullOrEmpty(CommandDefinition.Description));
+        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

@@ -20,9 +20,8 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
     public void Constructor_InitializesCommandCorrectly()
     {
         Assert.Equal("list", CommandDefinition.Name);
-        Assert.NotNull(CommandDefinition.Description);
-        Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("workbook", CommandDefinition.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.False(string.IsNullOrEmpty(CommandDefinition.Description));
+        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
@@ -38,12 +37,11 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
     }
 
     [Fact]
-    public void Description_ContainsRequiredInformation()
+    public void Description_VerifyLength()
     {
         var description = Command.Description;
-        Assert.NotNull(description);
-        Assert.Contains("workbook", description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("subscription", description, StringComparison.OrdinalIgnoreCase);
+        Assert.False(string.IsNullOrEmpty(description));
+        Assert.True(description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

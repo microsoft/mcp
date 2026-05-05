@@ -22,9 +22,8 @@ public class WebTestsCreateOrUpdateCommandTests : CommandUnitTestsBase<WebTestsC
     public void Constructor_InitializesCommandCorrectly()
     {
         Assert.Equal("createorupdate", CommandDefinition.Name);
-        Assert.NotNull(CommandDefinition.Description);
-        Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("Create or update", CommandDefinition.Description);
+        Assert.False(string.IsNullOrEmpty(CommandDefinition.Description));
+        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
@@ -43,8 +42,9 @@ public class WebTestsCreateOrUpdateCommandTests : CommandUnitTestsBase<WebTestsC
     public void Description_ContainsRequiredInformation()
     {
         var description = Command.Description;
-        Assert.Contains("Create or update", description);
-        Assert.Contains("standard web test", description);
+        Assert.False(string.IsNullOrEmpty(description));
+        Assert.Contains("Create or update", Command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.True(description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

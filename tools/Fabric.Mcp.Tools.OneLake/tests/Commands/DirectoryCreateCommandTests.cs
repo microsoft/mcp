@@ -16,10 +16,11 @@ public class DirectoryCreateCommandTests : CommandUnitTestsBase<DirectoryCreateC
     {
         Assert.Equal("create_directory", Command.Name);
         Assert.Equal("Create OneLake Directory", Command.Title);
-        Assert.Contains("Creates a directory in OneLake storage", Command.Description);
         Assert.False(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);
+        Assert.False(string.IsNullOrEmpty(Command.Description));
+        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

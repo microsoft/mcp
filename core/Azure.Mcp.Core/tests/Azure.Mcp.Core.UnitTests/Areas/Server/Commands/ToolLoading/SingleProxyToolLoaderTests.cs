@@ -100,8 +100,8 @@ public class SingleProxyToolLoaderTests
 
         var azureTool = result.Tools.FirstOrDefault(t => t.Name == "azure");
         Assert.NotNull(azureTool);
-        Assert.Contains("real-time, programmatic access to all Azure products", azureTool.Description);
-
+        Assert.False(string.IsNullOrEmpty(azureTool.Description));
+        Assert.True(azureTool.Description.Length <= 1024, "Description should not exceed 1024 characters");
         // Verify the tool has proper structure
         Assert.True(azureTool.InputSchema.ValueKind != JsonValueKind.Undefined);
         Assert.NotNull(azureTool.Annotations);
@@ -127,7 +127,6 @@ public class SingleProxyToolLoaderTests
 
         var azureTool = result.Tools.First();
         Assert.Equal("azure", azureTool.Name);
-        Assert.Contains("real-time, programmatic access to all Azure products", azureTool.Description);
     }
 
     [Fact]

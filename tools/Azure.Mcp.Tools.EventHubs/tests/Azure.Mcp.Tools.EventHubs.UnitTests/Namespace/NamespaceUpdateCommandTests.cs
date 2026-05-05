@@ -20,10 +20,12 @@ public class NamespaceUpdateCommandTests : CommandUnitTestsBase<NamespaceUpdateC
     {
         Assert.Equal("update", Command.Name);
         Assert.Equal("Create or Update Event Hubs Namespace", Command.Title);
-        Assert.Contains("Create or Update a Namespace", Command.Description);
         Assert.True(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);
         Assert.False(Command.Metadata.ReadOnly);
+        Assert.False(string.IsNullOrEmpty(Command.Description));
+        Assert.Contains("Create or Update a Namespace", Command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Theory]

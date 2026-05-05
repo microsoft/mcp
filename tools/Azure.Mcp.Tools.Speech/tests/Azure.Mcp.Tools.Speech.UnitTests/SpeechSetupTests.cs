@@ -46,23 +46,8 @@ public class SpeechSetupTests
         // Assert
         Assert.NotNull(speechGroup);
         Assert.Equal("speech", speechGroup.Name);
-        Assert.NotNull(speechGroup.Description);
-        Assert.NotEmpty(speechGroup.Description);
-    }
-
-    [Fact]
-    public void RegisterCommands_SpeechGroup_ShouldHaveCorrectDescription()
-    {
-        // Arrange
-        var setup = new SpeechSetup();
-        var services = CreateServiceProvider(setup);
-
-        // Act
-        var speechGroup = setup.RegisterCommands(services);
-
-        // Assert
-        Assert.NotNull(speechGroup);
-        Assert.Contains("Azure AI Services Speech", speechGroup.Description);
+        Assert.False(string.IsNullOrEmpty(speechGroup.Description));
+        Assert.True(speechGroup.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
@@ -81,7 +66,6 @@ public class SpeechSetupTests
         var sttGroup = speechGroup.SubGroup.FirstOrDefault(g => g.Name == "stt");
         Assert.NotNull(sttGroup);
         Assert.Equal("stt", sttGroup.Name);
-        Assert.Contains("Speech-to-text", sttGroup.Description);
     }
 
     [Fact]

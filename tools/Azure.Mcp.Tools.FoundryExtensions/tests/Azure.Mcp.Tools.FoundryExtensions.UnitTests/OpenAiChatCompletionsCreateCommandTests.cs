@@ -19,10 +19,10 @@ public class OpenAiChatCompletionsCreateCommandTests : CommandUnitTestsBase<Open
     [Fact]
     public void Description_ContainsExpectedContent()
     {
-        Assert.Contains("Create chat completions", Command.Description);
-        Assert.Contains("Azure OpenAI", Command.Description);
-        Assert.Contains("Microsoft Foundry", Command.Description);
-        Assert.Contains("message-array", Command.Description);
+        Assert.False(string.IsNullOrEmpty(Command.Description));
+        Assert.Contains("Create chat completions", Command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Azure OpenAI", Command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

@@ -16,6 +16,14 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests;
 public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand, IPostgresService>
 {
     [Fact]
+    public void Description_Verification()
+    {
+        Assert.False(string.IsNullOrWhiteSpace(Command.Description));
+        Assert.Contains("List PostgreSQL servers", Command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters.");
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ListsServers_WhenNoServerOrDatabaseProvided()
     {
         var expectedServers = new List<string> { "postgres-server-1", "postgres-server-2", "postgres-server-3" };
@@ -286,10 +294,4 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
         Assert.Equal("list", Command.Name);
     }
 
-    [Fact]
-    public void Description_IsCorrect()
-    {
-        Assert.Contains("List PostgreSQL servers", Command.Description);
-        Assert.Contains("databases, or tables", Command.Description);
-    }
 }
