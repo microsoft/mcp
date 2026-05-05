@@ -60,7 +60,7 @@
     <!-- AOT native build flags -->
     <IsAotCompatible>true</IsAotCompatible>
     <PublishAot>true</PublishAot>
-    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
+    <OptimizationPreference>Size</OptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
   </PropertyGroup>
 
