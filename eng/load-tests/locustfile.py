@@ -147,11 +147,14 @@ class McpUser(HttpUser):
             catch_response=True,
         ) as resp:
             if resp.status_code == 200:
-                try:
-                    body = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else None
+                content_type = resp.headers.get("content-type", "")
+                if content_type.startswith("application/json"):
+                    try:
+                        body = resp.json()
+                    except Exception as exc:
+                        resp.failure(f"Invalid JSON response: {exc}")
+                        return
                     if body and body.get("error"):
                         resp.failure(f"JSON-RPC error: {json.dumps(body['error'])}")
-                except Exception:
-                    pass  # SSE or other streaming response – treat as success
             else:
                 resp.failure(f"tools/call returned {resp.status_code}")
