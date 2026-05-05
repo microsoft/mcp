@@ -20,9 +20,8 @@ public class ServerGetCommandTests : CommandUnitTestsBase<ServerGetCommand, ISql
     {
         var command = Command.GetCommand();
         Assert.Equal("get", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
-        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
+        Assert.False(string.IsNullOrEmpty(command.Description));
+        Assert.True(command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
