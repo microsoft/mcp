@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Reflection;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
@@ -10,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureTerraformBestPractices.Commands;
 
-public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraformBestPracticesGetCommand> logger) : BaseCommand<EmptyOptions>
+public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraformBestPracticesGetCommand> logger) : BaseCommand<EmptyOptions, List<string>>
 {
     private const string CommandTitle = "Get Terraform Best Practices for Azure";
     private readonly ILogger<AzureTerraformBestPracticesGetCommand> _logger = logger;
@@ -46,13 +47,15 @@ public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraform
         Secret = false
     };
 
+    protected override JsonTypeInfo<List<string>> ResultTypeInfo => AzureTerraformBestPracticesJsonContext.Default.ListString;
+
     protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         var bestPractices = GetBestPracticesText();
         context.Response.Status = HttpStatusCode.OK;
-        context.Response.Results = ResponseResult.Create([bestPractices], AzureTerraformBestPracticesJsonContext.Default.ListString);
+        SetResult(context, [bestPractices]);
         context.Response.Message = string.Empty;
         return Task.FromResult(context.Response);
     }

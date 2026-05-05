@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Policy.Models;
 using Azure.Mcp.Tools.Policy.Options;
@@ -15,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Policy.Commands.Assignment;
 
 public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListCommand> logger, IPolicyService policyService)
-    : SubscriptionCommand<PolicyAssignmentListOptions>
+    : SubscriptionCommand<PolicyAssignmentListOptions, PolicyAssignmentListCommand.PolicyAssignmentListCommandResult>
 {
     private const string CommandTitle = "List Policy Assignments";
     private readonly ILogger<PolicyAssignmentListCommand> _logger = logger;
@@ -45,6 +46,8 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<PolicyAssignmentListCommandResult> ResultTypeInfo => PolicyJsonContext.Default.PolicyAssignmentListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -77,9 +80,7 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(assignments ?? []),
-                PolicyJsonContext.Default.PolicyAssignmentListCommandResult);
+            SetResult(context, new(assignments ?? []));
         }
         catch (Exception ex)
         {

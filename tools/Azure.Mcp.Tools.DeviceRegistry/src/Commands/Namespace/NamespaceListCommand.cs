@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.DeviceRegistry.Models;
 using Azure.Mcp.Tools.DeviceRegistry.Options.Namespace;
 using Azure.Mcp.Tools.DeviceRegistry.Services;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.DeviceRegistry.Commands.Namespace;
 
 public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger)
-    : BaseDeviceRegistryCommand<NamespaceListOptions>()
+    : BaseDeviceRegistryCommand<NamespaceListOptions, NamespaceListCommand.NamespaceListCommandResult>()
 {
     private const string CommandTitle = "List Device Registry Namespaces";
     private readonly ILogger<NamespaceListCommand> _logger = logger;
@@ -41,6 +42,8 @@ public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger)
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<NamespaceListCommandResult> ResultTypeInfo => DeviceRegistryJsonContext.Default.NamespaceListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -77,9 +80,7 @@ public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(namespaces?.Results ?? [], namespaces?.AreResultsTruncated ?? false),
-                DeviceRegistryJsonContext.Default.NamespaceListCommandResult);
+            SetResult(context, new(namespaces?.Results ?? [], namespaces?.AreResultsTruncated ?? false));
         }
         catch (Exception ex)
         {
@@ -110,7 +111,7 @@ public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger)
         _ => base.GetStatusCode(ex)
     };
 
-    internal record NamespaceListCommandResult(
+    public record NamespaceListCommandResult(
         List<DeviceRegistryNamespaceInfo> Namespaces,
         bool AreResultsTruncated);
 }

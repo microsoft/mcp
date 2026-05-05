@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Options;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Authorization.Commands;
 
-public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand> logger, IAuthorizationService authorizationService) : SubscriptionCommand<RoleAssignmentListOptions>
+public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand> logger, IAuthorizationService authorizationService) : SubscriptionCommand<RoleAssignmentListOptions, RoleAssignmentListCommand.RoleAssignmentListCommandResult>
 {
     private const string _commandTitle = "List Role Assignments";
     private readonly ILogger<RoleAssignmentListCommand> _logger = logger;
@@ -40,6 +41,8 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<RoleAssignmentListCommandResult> ResultTypeInfo => AuthorizationJsonContext.Default.RoleAssignmentListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -72,7 +75,7 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(assignments?.Results ?? [], assignments?.AreResultsTruncated ?? false), AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
+            SetResult(context, new(assignments?.Results ?? [], assignments?.AreResultsTruncated ?? false));
         }
         catch (Exception ex)
         {
@@ -83,5 +86,5 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
         return context.Response;
     }
 
-    internal record RoleAssignmentListCommandResult(List<RoleAssignment> Assignments, bool AreResultsTruncated);
+    public record RoleAssignmentListCommandResult(List<RoleAssignment> Assignments, bool AreResultsTruncated);
 }

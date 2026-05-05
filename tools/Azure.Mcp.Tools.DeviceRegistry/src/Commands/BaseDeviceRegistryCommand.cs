@@ -9,6 +9,7 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.DeviceRegistry.Commands;
 
 public abstract class BaseDeviceRegistryCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
-    : SubscriptionCommand<T>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T,
+    TResult>
+    : SubscriptionCommand<T, TResult>
     where T : BaseDeviceRegistryOptions, new();

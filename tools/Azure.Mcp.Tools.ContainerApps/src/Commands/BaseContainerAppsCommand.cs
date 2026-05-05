@@ -11,8 +11,9 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.ContainerApps.Commands;
 
 public abstract class BaseContainerAppsCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions> where TOptions : SubscriptionOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions,
+    TResult>
+    : SubscriptionCommand<TOptions, TResult> where TOptions : SubscriptionOptions, new()
 {
     protected override void RegisterOptions(Command command)
     {

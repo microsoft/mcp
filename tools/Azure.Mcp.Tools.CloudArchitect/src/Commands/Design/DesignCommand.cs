@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Reflection;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.CloudArchitect.Models;
 using Azure.Mcp.Tools.CloudArchitect.Options;
 using Microsoft.Extensions.Logging;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.CloudArchitect.Commands.Design;
 
-public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand<ArchitectureDesignToolOptions>
+public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand<ArchitectureDesignToolOptions, CloudArchitectDesignResponse>
 {
     private const string CommandTitle = "Design Azure cloud architectures through guided questions";
     private readonly ILogger<DesignCommand> _logger = logger;
@@ -49,6 +50,8 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<CloudArchitectDesignResponse> ResultTypeInfo => CloudArchitectJsonContext.Default.CloudArchitectDesignResponse;
 
     private static string LoadArchitectureDesignText()
     {
@@ -157,7 +160,7 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
             };
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
+            SetResult(context, result);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)

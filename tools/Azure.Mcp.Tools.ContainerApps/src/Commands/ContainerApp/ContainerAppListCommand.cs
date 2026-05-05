@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.ContainerApps.Options.ContainerApp;
 using Azure.Mcp.Tools.ContainerApps.Services;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ContainerApps.Commands.ContainerApp;
 
-public sealed class ContainerAppListCommand(ILogger<ContainerAppListCommand> logger, IContainerAppsService containerAppsService) : BaseContainerAppsCommand<ContainerAppListOptions>
+public sealed class ContainerAppListCommand(ILogger<ContainerAppListCommand> logger, IContainerAppsService containerAppsService) : BaseContainerAppsCommand<ContainerAppListOptions, ContainerAppListCommand.ContainerAppListCommandResult>
 {
     private const string CommandTitle = "List Container Apps";
     private readonly ILogger<ContainerAppListCommand> _logger = logger;
@@ -38,6 +39,8 @@ public sealed class ContainerAppListCommand(ILogger<ContainerAppListCommand> log
         Secret = false
     };
 
+    protected override JsonTypeInfo<ContainerAppListCommandResult> ResultTypeInfo => ContainerAppsJsonContext.Default.ContainerAppListCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -55,7 +58,7 @@ public sealed class ContainerAppListCommand(ILogger<ContainerAppListCommand> log
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(containerApps?.Results ?? [], containerApps?.AreResultsTruncated ?? false), ContainerAppsJsonContext.Default.ContainerAppListCommandResult);
+            SetResult(context, new(containerApps?.Results ?? [], containerApps?.AreResultsTruncated ?? false));
         }
         catch (Exception ex)
         {
@@ -68,5 +71,5 @@ public sealed class ContainerAppListCommand(ILogger<ContainerAppListCommand> log
         return context.Response;
     }
 
-    internal record ContainerAppListCommandResult(List<Models.ContainerAppInfo> ContainerApps, bool AreResultsTruncated);
+    public record ContainerAppListCommandResult(List<Models.ContainerAppInfo> ContainerApps, bool AreResultsTruncated);
 }

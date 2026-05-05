@@ -9,7 +9,8 @@ using Microsoft.Mcp.Core.Extensions;
 namespace Azure.Mcp.Tools.BicepSchema.Commands;
 
 public abstract class BaseBicepSchemaCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : GlobalCommand<TOptions>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions,
+    TResult> : GlobalCommand<TOptions, TResult>
     where TOptions : BaseBicepSchemaOptions, new()
 {
     protected override void RegisterOptions(Command command)

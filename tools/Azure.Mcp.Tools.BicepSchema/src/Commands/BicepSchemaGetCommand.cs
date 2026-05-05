@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.BicepSchema.Options;
 using Azure.Mcp.Tools.BicepSchema.Services;
 using Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties.Entities;
@@ -11,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.BicepSchema.Commands
 {
-    public sealed class BicepSchemaGetCommand(ILogger<BicepSchemaGetCommand> logger) : BaseBicepSchemaCommand<BicepSchemaOptions>
+    public sealed class BicepSchemaGetCommand(ILogger<BicepSchemaGetCommand> logger) : BaseBicepSchemaCommand<BicepSchemaOptions, BicepSchemaGetCommand.BicepSchemaGetCommandResult>
     {
         private const string CommandTitle = "Get Bicep Schema for a resource";
 
@@ -37,6 +38,8 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands
             LocalRequired = false,
             Secret = false
         };
+
+        protected override JsonTypeInfo<BicepSchemaGetCommandResult> ResultTypeInfo => BicepSchemaJsonContext.Default.BicepSchemaGetCommandResult;
 
         private static readonly Lazy<IServiceProvider> s_serviceProvider;
 
@@ -70,8 +73,7 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands
                     // There is a slight chance that the LLM hallucinates the resource type
                     // parameter with value containing data that we shouldn't log.
                     context.Activity?.AddTag("resourceType", options.ResourceType);
-                    context.Response.Results = ResponseResult.Create(new(response),
-                        BicepSchemaJsonContext.Default.BicepSchemaGetCommandResult);
+                    SetResult(context, new(response));
                 }
                 else
                 {
@@ -87,6 +89,6 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands
 
         }
 
-        internal record BicepSchemaGetCommandResult(List<ComplexType> BicepSchemaResult);
+        public record BicepSchemaGetCommandResult(List<ComplexType> BicepSchemaResult);
     }
 }

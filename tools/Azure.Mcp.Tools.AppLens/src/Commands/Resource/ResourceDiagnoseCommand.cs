@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppLens.Models;
 using Azure.Mcp.Tools.AppLens.Options;
 using Azure.Mcp.Tools.AppLens.Options.Resource;
@@ -18,7 +19,7 @@ namespace Azure.Mcp.Tools.AppLens.Commands.Resource;
 /// Azure Resource Graph to discover the resource by name when they are not provided.
 /// </summary>
 public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> logger, IAppLensService appLensService)
-    : GlobalCommand<ResourceDiagnoseOptions>
+    : GlobalCommand<ResourceDiagnoseOptions, ResourceDiagnoseCommandResult>
 {
     private const string CommandTitle = "Diagnose Azure Resource Issues";
     private readonly ILogger<ResourceDiagnoseCommand> _logger = logger;
@@ -44,6 +45,8 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ResourceDiagnoseCommandResult> ResultTypeInfo => AppLensJsonContext.Default.ResourceDiagnoseCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -89,7 +92,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
                 options.Tenant,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(result), AppLensJsonContext.Default.ResourceDiagnoseCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {

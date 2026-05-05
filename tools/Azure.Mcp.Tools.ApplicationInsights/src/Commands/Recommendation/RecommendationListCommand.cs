@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ApplicationInsights.Options;
 using Azure.Mcp.Tools.ApplicationInsights.Services;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
 
-public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IApplicationInsightsService applicationInsightsService) : SubscriptionCommand<RecommendationListOptions>()
+public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IApplicationInsightsService applicationInsightsService) : SubscriptionCommand<RecommendationListOptions, RecommendationListCommand.RecommendationListCommandResult>()
 {
     private const string CommandTitle = "List Application Insights Recommendations";
     private readonly ILogger<RecommendationListCommand> _logger = logger;
@@ -33,6 +34,8 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, LocalRequired = false, OpenWorld = false, Secret = false, ReadOnly = true };
+
+    protected override JsonTypeInfo<RecommendationListCommandResult> ResultTypeInfo => ApplicationInsightsJsonContext.Default.RecommendationListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -65,9 +68,14 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = insights?.Count() > 0 ?
-                ResponseResult.Create(new(insights), ApplicationInsightsJsonContext.Default.RecommendationListCommandResult) :
-                null;
+            if (insights?.Count() > 0)
+            {
+                SetResult(context, new(insights));
+            }
+            else
+            {
+                context.Response.Results = null;
+            }
         }
         catch (Exception ex)
         {
@@ -77,5 +85,5 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         return context.Response;
     }
 
-    internal record RecommendationListCommandResult(IEnumerable<JsonNode> Recommendations);
+    public record RecommendationListCommandResult(IEnumerable<JsonNode> Recommendations);
 }

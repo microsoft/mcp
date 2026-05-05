@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.SignalR.Options;
 using Azure.Mcp.Tools.SignalR.Options.Runtime;
 using Azure.Mcp.Tools.SignalR.Services;
@@ -15,7 +16,7 @@ namespace Azure.Mcp.Tools.SignalR.Commands.Runtime;
 /// Shows details of an Azure SignalR Service.
 /// </summary>
 public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger, ISignalRService signalRService)
-    : BaseSignalRCommand<RuntimeGetOptions>
+    : BaseSignalRCommand<RuntimeGetOptions, RuntimeGetCommand.RuntimeGetCommandResult>
 {
     private const string CommandTitle = "Show Service Details";
     private readonly ILogger<RuntimeGetCommand> _logger = logger;
@@ -43,6 +44,8 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger, ISignal
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<RuntimeGetCommandResult> ResultTypeInfo => SignalRJsonContext.Default.RuntimeGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -80,7 +83,7 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger, ISignal
             _logger.LogInformation("Found {Count} SignalR service(s) in subscription {SubscriptionId}",
                 runtimes.Count(), options.Subscription);
 
-            context.Response.Results = ResponseResult.Create(new(runtimes ?? []), SignalRJsonContext.Default.RuntimeGetCommandResult);
+            SetResult(context, new(runtimes ?? []));
         }
         catch (Exception ex)
         {
@@ -91,5 +94,5 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger, ISignal
         return context.Response;
     }
 
-    internal record RuntimeGetCommandResult(IEnumerable<Models.Runtime> Runtimes);
+    public record RuntimeGetCommandResult(IEnumerable<Models.Runtime> Runtimes);
 }

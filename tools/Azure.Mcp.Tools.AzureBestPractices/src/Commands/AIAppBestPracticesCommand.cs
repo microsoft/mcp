@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Reflection;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
@@ -10,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
 
-public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand> logger) : BaseCommand<EmptyOptions>
+public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand> logger) : BaseCommand<EmptyOptions, List<string>>
 {
     private const string CommandTitle = "Get AI App Best Practices";
     private readonly ILogger<AIAppBestPracticesCommand> _logger = logger;
@@ -58,6 +59,8 @@ public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand>
         Secret = false
     };
 
+    protected override JsonTypeInfo<List<string>> ResultTypeInfo => AzureBestPracticesJsonContext.Default.ListString;
+
     protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
@@ -66,7 +69,7 @@ public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand>
         {
             var bestPractices = GetBestPracticesText();
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create([bestPractices], AzureBestPracticesJsonContext.Default.ListString);
+            SetResult(context, [bestPractices]);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)

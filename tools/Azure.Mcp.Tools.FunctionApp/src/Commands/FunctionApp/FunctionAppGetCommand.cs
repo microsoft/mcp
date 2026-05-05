@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.Mcp.Tools.FunctionApp.Options;
 using Azure.Mcp.Tools.FunctionApp.Options.FunctionApp;
@@ -15,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
 
 public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger, IFunctionAppService functionAppService)
-    : BaseFunctionAppCommand<FunctionAppGetOptions>()
+    : BaseFunctionAppCommand<FunctionAppGetOptions, FunctionAppGetCommand.FunctionAppGetCommandResult>()
 {
     private const string CommandTitle = "Get Azure Function App Details";
     private readonly ILogger<FunctionAppGetCommand> _logger = logger;
@@ -43,6 +44,8 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger,
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<FunctionAppGetCommandResult> ResultTypeInfo => FunctionAppJsonContext.Default.FunctionAppGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -84,7 +87,7 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(functionApps ?? []), FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
+            SetResult(context, new(functionApps ?? []));
         }
         catch (Exception ex)
         {
@@ -115,5 +118,5 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger,
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record FunctionAppGetCommandResult(List<FunctionAppInfo> FunctionApps);
+    public record FunctionAppGetCommandResult(List<FunctionAppInfo> FunctionApps);
 }

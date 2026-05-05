@@ -12,8 +12,9 @@ namespace Azure.Mcp.Tools.Pricing.Commands;
 /// Base command for all Pricing commands.
 /// </summary>
 public abstract class BasePricingCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : GlobalCommand<TOptions> where TOptions : BasePricingOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions,
+    TResult>
+    : GlobalCommand<TOptions, TResult> where TOptions : BasePricingOptions, new()
 {
     protected override void RegisterOptions(Command command)
     {

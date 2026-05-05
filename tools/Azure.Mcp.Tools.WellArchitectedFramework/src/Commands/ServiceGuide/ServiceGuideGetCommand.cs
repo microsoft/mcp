@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.WellArchitectedFramework.Options;
 using Azure.Mcp.Tools.WellArchitectedFramework.Options.ServiceGuide;
 using Azure.Mcp.Tools.WellArchitectedFramework.Services.ServiceGuide;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.WellArchitectedFramework.Commands.ServiceGuide;
 
 public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logger, IServiceGuideService serviceGuideService)
-    : BaseCommand<ServiceGuideGetOptions>
+    : BaseCommand<ServiceGuideGetOptions, List<string>>
 {
     private const string CommandTitle = "Get Well-Architected Framework Service Guide";
     private readonly ILogger<ServiceGuideGetCommand> _logger = logger;
@@ -40,6 +41,8 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<List<string>> ResultTypeInfo => WellArchitectedFrameworkJsonContext.Default.ListString;
 
     protected override void RegisterOptions(Command command)
     {
@@ -76,7 +79,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             if (string.IsNullOrWhiteSpace(options.Service))
             {
                 var listResponse = GetServiceListResponse(supportedServicesBulletList);
-                context.Response.Results = ResponseResult.Create([listResponse], WellArchitectedFrameworkJsonContext.Default.ListString);
+                SetResult(context, [listResponse]);
             }
             else
             {
@@ -88,7 +91,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
                     ? GetGuidanceNotAvailable(serviceName, supportedServicesBulletList)
                     : GetGuidanceAvailable(serviceName, serviceGuideUrl);
 
-                context.Response.Results = ResponseResult.Create([guidance], WellArchitectedFrameworkJsonContext.Default.ListString);
+                SetResult(context, [guidance]);
             }
         }
         catch (Exception ex)

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Grafana.Models;
 using Azure.Mcp.Tools.Grafana.Options.Workspace;
@@ -14,7 +15,7 @@ namespace Azure.Mcp.Tools.Grafana.Commands.Workspace;
 /// <summary>
 /// Lists Azure Managed Grafana workspaces in the specified subscription.
 /// </summary>
-public sealed class WorkspaceListCommand(IGrafanaService grafanaService, ILogger<WorkspaceListCommand> logger) : SubscriptionCommand<WorkspaceListOptions>()
+public sealed class WorkspaceListCommand(IGrafanaService grafanaService, ILogger<WorkspaceListCommand> logger) : SubscriptionCommand<WorkspaceListOptions, WorkspaceListCommand.WorkspaceListCommandResult>()
 {
     private const string CommandTitle = "List Grafana Workspaces";
     private readonly IGrafanaService _grafanaService = grafanaService;
@@ -42,6 +43,8 @@ public sealed class WorkspaceListCommand(IGrafanaService grafanaService, ILogger
         Secret = false
     };
 
+    protected override JsonTypeInfo<WorkspaceListCommandResult> ResultTypeInfo => GrafanaJsonContext.Default.WorkspaceListCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -59,7 +62,7 @@ public sealed class WorkspaceListCommand(IGrafanaService grafanaService, ILogger
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(workspaces?.Results ?? [], workspaces?.AreResultsTruncated ?? false), GrafanaJsonContext.Default.WorkspaceListCommandResult);
+            SetResult(context, new(workspaces?.Results ?? [], workspaces?.AreResultsTruncated ?? false));
         }
         catch (Exception ex)
         {
@@ -71,5 +74,5 @@ public sealed class WorkspaceListCommand(IGrafanaService grafanaService, ILogger
         return context.Response;
     }
 
-    internal record WorkspaceListCommandResult(IEnumerable<GrafanaWorkspace> Workspaces, bool AreResultsTruncated);
+    public record WorkspaceListCommandResult(IEnumerable<GrafanaWorkspace> Workspaces, bool AreResultsTruncated);
 }

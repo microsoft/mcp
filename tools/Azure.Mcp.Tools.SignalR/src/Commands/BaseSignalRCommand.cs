@@ -15,8 +15,9 @@ namespace Azure.Mcp.Tools.SignalR.Commands;
 /// </summary>
 public abstract class BaseSignalRCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)]
-TOptions>
-    : SubscriptionCommand<TOptions> where TOptions : BaseSignalROptions, new()
+TOptions,
+    TResult>
+    : SubscriptionCommand<TOptions, TResult> where TOptions : BaseSignalROptions, new()
 {
     protected override void RegisterOptions(Command command)
     {

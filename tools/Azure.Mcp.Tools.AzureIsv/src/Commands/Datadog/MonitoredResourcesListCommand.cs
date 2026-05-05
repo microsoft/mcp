@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.AzureIsv.Options;
 using Azure.Mcp.Tools.AzureIsv.Options.Datadog;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
 
-public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesListCommand> logger, IDatadogService datadogService) : SubscriptionCommand<MonitoredResourcesListOptions>
+public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesListCommand> logger, IDatadogService datadogService) : SubscriptionCommand<MonitoredResourcesListOptions, MonitoredResourcesListCommand.MonitoredResourcesListResult>
 {
     private const string _commandTitle = "List Monitored Resources in a Datadog Monitor";
     private readonly ILogger<MonitoredResourcesListCommand> _logger = logger;
@@ -42,6 +43,8 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<MonitoredResourcesListResult> ResultTypeInfo => DatadogJsonContext.Default.MonitoredResourcesListResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -74,9 +77,9 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
                 options.Subscription!,
                 options.DatadogResource!,
                 cancellationToken);
-            context.Response.Results = results?.Count > 0
-                ? ResponseResult.Create(new(results), DatadogJsonContext.Default.MonitoredResourcesListResult)
-                : ResponseResult.Create(new(["No monitored resources found for the specified Datadog resource."]), DatadogJsonContext.Default.MonitoredResourcesListResult);
+            SetResult(context, results?.Count > 0
+                ? new(results)
+                : new(["No monitored resources found for the specified Datadog resource."]));
         }
         catch (Exception ex)
         {
@@ -87,5 +90,5 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
         return context.Response;
     }
 
-    internal record MonitoredResourcesListResult(List<string> resources);
+    public record MonitoredResourcesListResult(List<string> resources);
 }

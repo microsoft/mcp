@@ -4,6 +4,7 @@
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AzureBestPractices.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
 
-public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand<BestPracticesOptions>
+public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand<BestPracticesOptions, List<string>>
 {
     private const string CommandTitle = "Get Azure Best Practices";
     private readonly ILogger<BestPracticesCommand> _logger = logger;
@@ -43,6 +44,8 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<List<string>> ResultTypeInfo => AzureBestPracticesJsonContext.Default.ListString;
 
     protected override void RegisterOptions(Command command)
     {
@@ -106,7 +109,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
             var bestPractices = GetBestPracticesText(resourceFileName);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create([bestPractices], AzureBestPracticesJsonContext.Default.ListString);
+            SetResult(context, [bestPractices]);
             context.Response.Message = string.Empty;
 
             context.Activity?.AddTag("BestPractices_Resource", options.Resource);

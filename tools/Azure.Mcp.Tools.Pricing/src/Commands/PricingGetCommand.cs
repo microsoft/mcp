@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Pricing.Models;
 using Azure.Mcp.Tools.Pricing.Options;
 using Azure.Mcp.Tools.Pricing.Services;
@@ -30,10 +31,12 @@ namespace Azure.Mcp.Tools.Pricing.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger, IPricingService pricingService) : BasePricingCommand<PricingGetOptions>
+public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger, IPricingService pricingService) : BasePricingCommand<PricingGetOptions, PricingGetCommand.PricingGetCommandResult>
 {
     private readonly ILogger<PricingGetCommand> _logger = logger;
     private readonly IPricingService _pricingService = pricingService;
+
+    protected override JsonTypeInfo<PricingGetCommandResult> ResultTypeInfo => PricingJsonContext.Default.PricingGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -126,9 +129,7 @@ public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger, IPricin
                 filter: options.Filter,
                 cancellationToken: cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(prices),
-                PricingJsonContext.Default.PricingGetCommandResult);
+            SetResult(context, new(prices));
         }
         catch (Exception ex)
         {
