@@ -36,6 +36,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         command.Options.Add(ToolsListOptionDefinitions.NamespaceMode);
         command.Options.Add(ToolsListOptionDefinitions.Namespace);
         command.Options.Add(ToolsListOptionDefinitions.NameOnly);
+        command.Options.Add(ToolsListOptionDefinitions.IncludeHidden);
     }
 
     protected override ToolsListOptions BindOptions(ParseResult parseResult)
@@ -45,6 +46,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         {
             NamespaceMode = parseResult.GetValueOrDefault(ToolsListOptionDefinitions.NamespaceMode),
             NameOnly = parseResult.GetValueOrDefault(ToolsListOptionDefinitions.NameOnly),
+            IncludeHidden = parseResult.GetValueOrDefault(ToolsListOptionDefinitions.IncludeHidden),
             Namespaces = namespaces.ToList()
         };
     }
@@ -89,7 +91,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                     if (subgroup is not null)
                     {
                         List<CommandInfo> foundCommands = [];
-                        searchCommandInCommandGroup("", subgroup, foundCommands);
+                        searchCommandInCommandGroup("", subgroup, foundCommands, options.IncludeHidden);
                         namespaceCommands.AddRange(foundCommands);
                     }
                 }
@@ -111,7 +113,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             if (options.NameOnly)
             {
                 // Get all visible commands and extract their tokenized names (full command paths)
-                var allToolNames = CommandFactory.GetVisibleCommands(factory.AllCommands)
+                var allToolNames = GetFilteredCommands(factory.AllCommands, options.IncludeHidden)
                     .Select(kvp => kvp.Key) // Use the tokenized key instead of just the command name
                     .Where(name => !string.IsNullOrEmpty(name));
 
@@ -128,7 +130,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             }
 
             // Get all tools with full details
-            var allTools = CommandFactory.GetVisibleCommands(factory.AllCommands)
+            var allTools = GetFilteredCommands(factory.AllCommands, options.IncludeHidden)
                 .Select(kvp => CreateCommand(kvp.Key, kvp.Value));
 
             // Apply namespace filtering if specified
@@ -148,6 +150,14 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
 
             return context.Response;
         }
+    }
+
+    private static IEnumerable<KeyValuePair<string, IBaseCommand>> GetFilteredCommands(
+        IEnumerable<KeyValuePair<string, IBaseCommand>> commands, bool includeHidden)
+    {
+        return includeHidden
+            ? commands.OrderBy(kvp => kvp.Key, StringComparer.Ordinal)
+            : CommandFactory.GetVisibleCommands(commands);
     }
 
     private static IEnumerable<string> ApplyNamespaceFilterToNames(IEnumerable<string> names, List<string> namespaces, char separator)
@@ -188,9 +198,9 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
     }
 
     public record ToolNamesResult(List<string> Names);
-    private void searchCommandInCommandGroup(string commandPrefix, CommandGroup searchedGroup, List<CommandInfo> foundCommands)
+    private static void searchCommandInCommandGroup(string commandPrefix, CommandGroup searchedGroup, List<CommandInfo> foundCommands, bool includeHidden)
     {
-        var commands = CommandFactory.GetVisibleCommands(searchedGroup.Commands).Select(kvp =>
+        var commands = GetFilteredCommands(searchedGroup.Commands, includeHidden).Select(kvp =>
         {
             var command = kvp.Value.GetCommand();
             return new CommandInfo
@@ -204,7 +214,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         foundCommands.AddRange(commands);
         foreach (CommandGroup nextLevelSubGroup in searchedGroup.SubGroup)
         {
-            searchCommandInCommandGroup($"{commandPrefix}{searchedGroup.Name} ", nextLevelSubGroup, foundCommands);
+            searchCommandInCommandGroup($"{commandPrefix}{searchedGroup.Name} ", nextLevelSubGroup, foundCommands, includeHidden);
         }
     }
 }

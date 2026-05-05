@@ -1,15 +1,24 @@
 #!/bin/env pwsh
 #Requires -Version 7
 
+param(
+    [switch]$Fix
+)
+
 . "$PSScriptRoot/../common/scripts/common.ps1"
 
 Push-Location $RepoRoot
 try {
     $hasErrors = $false
 
-    Write-Host "Checking if solution files are up to date."
     try {
-        & "$PSScriptRoot/Update-Solution.ps1" -All -Verify
+        if ($Fix) {
+            Write-Host "Updating solution files..."
+            & "$PSScriptRoot/Update-Solution.ps1" -All
+        } else {
+            Write-Host "Checking if solution files are up to date..."
+            & "$PSScriptRoot/Update-Solution.ps1" -All -Verify
+        }
     } catch {
         Write-Host "❌ Solution update failed: $_"
         $hasErrors = $true
@@ -21,20 +30,31 @@ try {
         Write-Host "✅ Solution files are up to date."
     }
 
-    Write-Host "Running dotnet format to check for formatting issues..."
     $solutionFile = "$RepoRoot/Microsoft.Mcp.slnx"
 
     # Excluding diagnostics IL2026 and IL3050 due to known issues with source generator
     # Can be removed when https://github.com/dotnet/sdk/issues/45054 is resolved
-    dotnet format $solutionFile --verify-no-changes --exclude-diagnostics IL2026 IL3050
+    if ($Fix) {
+        Write-Host "Running dotnet format to fix formatting issues..."
+        dotnet format $solutionFile --exclude-diagnostics IL2026 IL3050
 
-    # Run dotnet format
-    if ($LASTEXITCODE) {
-        Write-Host "❌ dotnet format detected formatting issues."
-        Write-Host "Please run 'dotnet format `"$solutionFile`"' to fix the issues and then try committing again."
-        $hasErrors = $true
+        if ($LASTEXITCODE) {
+            Write-Host "❌ dotnet format failed to fix all formatting issues. Please review the output above."
+            $hasErrors = $true
+        } else {
+            Write-Host "✅ dotnet format completed without errors."
+        }
     } else {
-        Write-Host "✅ dotnet format did not detect any formatting issues."
+        Write-Host "Running dotnet format to check for formatting issues..."
+        dotnet format $solutionFile --verify-no-changes --exclude-diagnostics IL2026 IL3050
+        
+        if ($LASTEXITCODE) {
+            Write-Host "❌ dotnet format detected formatting issues."
+            Write-Host "Please run 'dotnet format `"$solutionFile`"' to fix the issues and then try committing again."
+            $hasErrors = $true
+        } else {
+            Write-Host "✅ dotnet format did not detect any formatting issues."
+        }
     }
 
     # Run cspell spell check

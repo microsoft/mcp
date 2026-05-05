@@ -8,6 +8,7 @@ public static class ToolsListOptionDefinitions
     public const string NamespaceModeOptionName = "namespace-mode";
     public const string NamespaceOptionName = "namespace";
     public const string NameOnlyOptionName = "name-only";
+    public const string IncludeHiddenOptionName = "include-hidden";
 
     public static readonly Option<bool> NamespaceMode = new($"--{NamespaceModeOptionName}")
     {
@@ -25,6 +26,12 @@ public static class ToolsListOptionDefinitions
     public static readonly Option<bool> NameOnly = new($"--{NameOnlyOptionName}")
     {
         Description = "If specified, returns only tool names without descriptions or metadata.",
+        Required = false
+    };
+
+    public static readonly Option<bool> IncludeHidden = new($"--{IncludeHiddenOptionName}")
+    {
+        Description = "If specified, includes hidden commands in the output.",
         Required = false
     };
 }
