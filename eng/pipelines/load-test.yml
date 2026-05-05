@@ -150,7 +150,7 @@ stages:
           - script: |
               echo "Waiting for MCP server at $(mcpServerEndpoint) ..."
               for i in $(seq 1 30); do
-                STATUS=$(curl -s -o /dev/null -w "%%{http_code}" "$(mcpServerEndpoint)/health" || true)
+                STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$(mcpServerEndpoint)/health" || true)
                 if [ "$STATUS" = "200" ]; then
                   echo "Server is healthy."
                   exit 0
