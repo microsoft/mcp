@@ -12,10 +12,11 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Advisor.Commands;
 
 public abstract class BaseAdvisorCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>(ILogger<BaseAdvisorCommand<TOptions>> logger)
-    : SubscriptionCommand<TOptions> where TOptions : BaseAdvisorOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions,
+    TResult>(ILogger<BaseAdvisorCommand<TOptions, TResult>> logger)
+    : SubscriptionCommand<TOptions, TResult> where TOptions : BaseAdvisorOptions, new()
 {
-    protected readonly ILogger<BaseAdvisorCommand<TOptions>> _logger = logger;
+    protected readonly ILogger<BaseAdvisorCommand<TOptions, TResult>> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {

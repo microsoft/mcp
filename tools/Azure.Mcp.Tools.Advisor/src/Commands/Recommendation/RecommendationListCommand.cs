@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.Logging;
@@ -11,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 
 public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IAdvisorService advisorService)
-    : BaseAdvisorCommand<RecommendationListOptions>(logger)
+    : BaseAdvisorCommand<RecommendationListOptions, RecommendationListCommand.RecommendationListResult>(logger)
 {
     private readonly IAdvisorService _advisorService = advisorService;
     private const string CommandTitle = "List Advisor Recommendations";
@@ -37,6 +38,8 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         Secret = false
     };
 
+    protected override JsonTypeInfo<RecommendationListResult> ResultTypeInfo => AdvisorJsonContext.Default.RecommendationListResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -54,8 +57,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(recommendations?.Results ?? [], recommendations?.AreResultsTruncated ?? false),
-                AdvisorJsonContext.Default.RecommendationListResult);
+            SetResult(context, new(recommendations?.Results ?? [], recommendations?.AreResultsTruncated ?? false));
         }
         catch (Exception ex)
         {
@@ -78,5 +80,5 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record RecommendationListResult(List<Models.Recommendation> Recommendations, bool AreResultsTruncated);
+    public record RecommendationListResult(List<Models.Recommendation> Recommendations, bool AreResultsTruncated);
 }
