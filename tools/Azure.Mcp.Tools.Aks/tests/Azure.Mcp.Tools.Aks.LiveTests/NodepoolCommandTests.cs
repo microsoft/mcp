@@ -186,7 +186,7 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output, TestProxyFixt
     [Fact]
     public async Task Should_validate_required_parameters()
     {
-        // Missing cluster
+        // Missing cluster - validation catches it
         var r1 = await CallToolAsync(
             "aks_nodepool_get",
             new()
@@ -196,7 +196,7 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output, TestProxyFixt
             });
         Assert.False(r1.HasValue);
 
-        // Missing resource-group
+        // Missing resource-group - validation catches it
         var r2 = await CallToolAsync(
             "aks_nodepool_get",
             new()
@@ -206,7 +206,7 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output, TestProxyFixt
             });
         Assert.False(r2.HasValue);
 
-        // Missing subscription
+        // Missing subscription - falls back to default, nonexistent resources return error
         var r3 = await CallToolAsync(
             "aks_nodepool_get",
             new()
@@ -214,18 +214,20 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output, TestProxyFixt
                 { "resource-group", "rg" },
                 { "cluster", "cluster" }
             });
-        Assert.False(r3.HasValue);
+        Assert.True(r3.HasValue);
+        r3.Value.AssertProperty("message");
+        var r3Type = r3.Value.AssertProperty("type");
+        Assert.Equal("RequestFailedException", r3Type.GetString());
     }
 
     [Fact]
     public async Task Should_handle_invalid_subscription_gracefully()
     {
-        // Use obviously invalid subscription ID to ensure failure is surfaced
         var result = await CallToolAsync(
             "aks_nodepool_get",
             new()
             {
-                { "subscription", "invalid-subscription" },
+                { "subscription", "not-a-real-sub" },
                 { "resource-group", "rg" },
                 { "cluster", "cluster" }
             });
@@ -234,7 +236,7 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output, TestProxyFixt
         var errorDetails = result.Value;
         errorDetails.AssertProperty("message");
         var typeProperty = errorDetails.AssertProperty("type");
-        Assert.Equal("Exception", typeProperty.GetString());
+        Assert.Equal("ArgumentException", typeProperty.GetString());
     }
 
     [Fact]
@@ -249,7 +251,10 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output, TestProxyFixt
                 { "cluster", "cluster" }
             });
 
-        // Should return validation error response with no results
-        Assert.False(result.HasValue);
+        // Empty subscription falls back to default, nonexistent resources return error
+        Assert.True(result.HasValue);
+        result.Value.AssertProperty("message");
+        var typeProperty = result.Value.AssertProperty("type");
+        Assert.Equal("RequestFailedException", typeProperty.GetString());
     }
 }
