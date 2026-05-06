@@ -109,7 +109,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
         }
         else if (ex is MsalClientException msalClientException)
         {
-            // For MsalClientException, we can include the correlation code.
+            // For MsalClientException, we can include the error code and correlation ID.
             exceptionDetails.Add("ErrorCode", msalClientException.ErrorCode);
             exceptionDetails.Add("CorrelationId", msalClientException.CorrelationId);
         }
