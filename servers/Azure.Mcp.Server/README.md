@@ -197,12 +197,12 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
     {
         "mcpServers": {
             "azure-mcp-server": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "@azure/mcp@latest",
-                "server",
-                "start"
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "@azure/mcp@latest",
+                    "server",
+                    "start"
                 ]
             }
         }
