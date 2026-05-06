@@ -259,13 +259,7 @@ public class AppLensService(
     /// </summary>
     internal static bool IsResourceTypeSupported(string resourceType)
     {
-        if (resourceType.Equals("microsoft.web/sites", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        return resourceType.Equals("microsoft.containerservice/managedclusters", StringComparison.OrdinalIgnoreCase)
-            || resourceType.Equals("microsoft.apimanagement/service", StringComparison.OrdinalIgnoreCase);
+        return SupportedResourceTypes().Contains(resourceType, StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
