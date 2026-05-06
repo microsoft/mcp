@@ -185,6 +185,7 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output, TestProxyFixt
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_validate_required_parameters()
     {
         // Missing cluster - validation catches it
