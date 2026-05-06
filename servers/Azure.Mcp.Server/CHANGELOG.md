@@ -2,15 +2,24 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.9 (Unreleased)
+## 3.0.0-beta.9 (2026-05-05)
 
 ### Features Added
 
+- Added `azurebackup security configure-mua` command to enable or disable Multi-User Authorization on Recovery Services vaults and Backup vaults. [[#2544](https://github.com/microsoft/mcp/pull/2544)]
+- Added `Win2022Datacenter1P` image alias for the first-party shared gallery Windows Server 2022 image (`/sharedGalleries/WINDOWSSERVER.1P/images/2022-DATACENTER-AZURE-EDITION/versions/latest`) that does not require a marketplace purchase plan. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+- Added `Ubuntu2604` image alias for `azmcp vm create` mapping to marketplace URN `Canonical:ubuntu-26_04-lts:server:latest`. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+
 ### Breaking Changes
 
-### Bugs Fixed
+- Updated `azmcp compute vm create` and `azmcp compute vmss create` to require the `--image` parameter, removing the default `Ubuntu 24.04 LTS` image when omitted. Users must now specify an alias, Marketplace URN, or shared gallery image ID. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+- Changed `Win2022Datacenter` image alias to use the `WindowsServer2022` marketplace offer instead of the deprecated `WindowsServer` offer. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+- Removed the `Win2019Datacenter` image alias, use the marketplace URN format (`MicrosoftWindowsServer:WindowsServer:2019-datacenter-gensecond:latest`) directly if Windows Server 2019 is needed. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+- Removed the `Ubuntu2004` image alias from `azmcp vm create`. `Ubuntu 20.04` LTS reached end of standard support on May 31, 2025 and is no longer recommended for new VMs. Use `Ubuntu2204` or `Ubuntu2404`, or specify the Marketplace URN (`Canonical:0001-com-ubuntu-server-focal:20_04-lts-gen2:latest`) if `Ubuntu 20.04` is still required. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
 
 ### Other Changes
+
+- Optimized CLI startup time for targeted command invocations by ~39% (945ms to 573ms). [[#2569](https://github.com/microsoft/mcp/pull/2569)]
 
 ## 3.0.0-beta.8 (2026-05-01)
 

@@ -396,6 +396,10 @@ function Get-TestMatrix {
 
             $entry.testResourcesPath = $path.TestResourcesPath
             $entry.hasTestResources = $path.HasTestResources
+
+            if ($ServerName) {
+                $entry.serverName = $ServerName
+            }
         }
 
         if ($TestType -eq 'Unit' -and !$path.HasUnitTests) {

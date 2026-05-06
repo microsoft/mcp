@@ -27,6 +27,7 @@ jobs:
 
   - pwsh: >
       ./eng/scripts/Build-Local.ps1
+      -ServerName $(ServerName)
       -VerifyNpx
     displayName: "Build local package"
     workingDirectory: $(Build.SourcesDirectory)

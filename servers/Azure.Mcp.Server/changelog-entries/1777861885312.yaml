@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Optimized CLI startup time for targeted command invocations by ~39% (945ms to 573ms). Area-targeted DI registration now skips 60+ unrelated service areas, CommandFactory skips building parse-tree nodes for non-matching areas, telemetry initializes concurrently with command-factory build, and --version is handled before DI container construction."
