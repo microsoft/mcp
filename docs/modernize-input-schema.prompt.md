@@ -1,5 +1,7 @@
 # Plan: Modernize `inputSchema` generation
 
+> **Status:** implemented on branch `vcolin7/input-output-schema`. This prompt is preserved as the executable plan so a coding agent can replay it on a fresh `main` if the merge approach in that branch is abandoned. Verification steps below double as acceptance criteria for that replay.
+
 Today the `inputSchema` advertised on each MCP tool is built by hand-rolled code that predates the maturity of the `ModelContextProtocol` C# SDK and the `JsonSchemaExporter` that ships in `System.Text.Json`. This plan migrates `inputSchema` generation onto the SDK/runtime primitives so we stop maintaining a private re-implementation, close several spec gaps, and share one schema-generation pipeline with the upcoming `outputSchema` work.
 
 ## Current state
