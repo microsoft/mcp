@@ -42,12 +42,10 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
     Secret = false)]
 public sealed class PluginTelemetryCommand(
     IPluginFileReferenceAllowlistProvider fileReferenceAllowlistProvider,
-    IPluginSkillNameAllowlistProvider skillNameAllowlistProvider,
-    IServiceProvider serviceProvider) : BaseCommand<PluginTelemetryOptions>
+    IPluginSkillNameAllowlistProvider skillNameAllowlistProvider) : BaseCommand<PluginTelemetryOptions>
 {
     private readonly IPluginFileReferenceAllowlistProvider _fileReferenceAllowlistProvider = fileReferenceAllowlistProvider;
     private readonly IPluginSkillNameAllowlistProvider _skillNameAllowlistProvider = skillNameAllowlistProvider;
-    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
     /// <summary>
     /// Gets or sets the service configuration action.
@@ -250,7 +248,6 @@ public sealed class PluginTelemetryCommand(
             // Create host and log telemetry
             using var host = CreateStdioHost(options);
             await InitializeServicesAsync(host.Services);
-            await host.StartAsync(cancellationToken);
 
             // Validate tool name if provided: strip client-specific prefixes and check against registered commands/areas
             if (!string.IsNullOrWhiteSpace(options.ToolName))
@@ -269,6 +266,8 @@ public sealed class PluginTelemetryCommand(
                 // Replace with normalized name for clean telemetry data
                 options.ToolName = normalizedToolName;
             }
+
+            await host.StartAsync(cancellationToken);
 
             var telemetryService = host.Services.GetRequiredService<ITelemetryService>();
             LogPluginTelemetry(telemetryService, options);
@@ -356,7 +355,7 @@ public sealed class PluginTelemetryCommand(
     /// </summary>
     /// <param name="options">The plugin telemetry configuration options including debug and support logging settings.</param>
     /// <returns>An IHost instance configured for telemetry publishing with all required services registered.</returns>
-    private IHost CreateStdioHost(PluginTelemetryOptions options)
+    private static IHost CreateStdioHost(PluginTelemetryOptions options)
     {
         return Host.CreateDefaultBuilder()
             .ConfigureLogging(logging =>

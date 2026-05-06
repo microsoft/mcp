@@ -429,7 +429,7 @@ public class CommandFactory : ICommandFactory
         var commandParts = new List<string>();
         foreach (var token in args)
         {
-            if (token.StartsWith("-", StringComparison.Ordinal))
+            if (token.StartsWith('-'))
                 break;
             commandParts.Add(token);
         }
@@ -510,14 +510,7 @@ public class CommandFactory : ICommandFactory
             return null;
         }
 
-        if (_commandNamesToArea.TryGetValue(fullCommandName, out var area))
-        {
-            return area.Name;
-        }
-        else
-        {
-            return null;
-        }
+        return _commandNamesToArea.TryGetValue(fullCommandName, out var area) ? area.Name : null;
     }
 
     /// <summary>
