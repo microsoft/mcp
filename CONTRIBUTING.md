@@ -93,7 +93,7 @@ If you are contributing significant changes, or if the issue is already assigned
       - `{server}.Mcp.Tools.{tool-name}.LiveTests/` - Live tests depend on Azure resources and authentication
       - `test-resources.bicep` - Infrastructure templates for testing
 - `external/` - Git submodules for external project integrations
-  - `DataFactory.MCP` - [DataFactory.MCP](https://github.com/microsoft/DataFactory.MCP) submodule (used by `Fabric.Mcp.Server`)
+  - `Fabric.Mcp.Tools.DataFactory` - [DataFactory.MCP](https://github.com/microsoft/DataFactory.MCP) submodule (used by `Fabric.Mcp.Server`)
   - Run `git submodule update --init --recursive` after cloning to fetch submodule contents
 - `eng/` - Shared tools, templates, CLI helpers
 - `docs/` - Central documentation and onboarding materials
