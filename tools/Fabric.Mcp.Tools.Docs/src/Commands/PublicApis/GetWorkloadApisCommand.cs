@@ -23,9 +23,10 @@ namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logger) : GlobalCommand<WorkloadCommandOptions>()
+public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logger, IFabricPublicApiService fabricPublicApiService) : GlobalCommand<WorkloadCommandOptions>()
 {
     private readonly ILogger<GetWorkloadApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IFabricPublicApiService _fabricPublicApiService = fabricPublicApiService ?? throw new ArgumentNullException(nameof(fabricPublicApiService));
 
     protected override void RegisterOptions(Command command)
     {
@@ -58,8 +59,7 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
                 return context.Response;
             }
 
-            var fabricService = context.GetService<IFabricPublicApiService>();
-            var apis = await fabricService.GetWorkloadPublicApis(options.WorkloadType, cancellationToken);
+            var apis = await _fabricPublicApiService.GetWorkloadPublicApis(options.WorkloadType, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
         }

@@ -23,9 +23,10 @@ namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> logger) : GlobalCommand<GetBestPracticesOptions>()
+public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> logger, IFabricPublicApiService fabricPublicApiService) : GlobalCommand<GetBestPracticesOptions>()
 {
     private readonly ILogger<GetBestPracticesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IFabricPublicApiService _fabricPublicApiService = fabricPublicApiService ?? throw new ArgumentNullException(nameof(fabricPublicApiService));
 
     protected override void RegisterOptions(Command command)
     {
@@ -51,8 +52,7 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
 
         try
         {
-            var fabricService = context.GetService<IFabricPublicApiService>();
-            var bestPractices = fabricService.GetTopicBestPractices(options.Topic!);
+            var bestPractices = _fabricPublicApiService.GetTopicBestPractices(options.Topic!);
 
             context.Response.Results = ResponseResult.Create(bestPractices, FabricJsonContext.Default.IEnumerableString);
         }

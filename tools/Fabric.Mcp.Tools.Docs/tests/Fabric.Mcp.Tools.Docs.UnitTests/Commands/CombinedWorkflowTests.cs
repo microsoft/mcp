@@ -31,16 +31,17 @@ public sealed class CombinedWorkflowFixture : IDisposable
     public CombinedWorkflowFixture()
     {
         _loggerFactory = new LoggerFactory();
-        ListWorkloadsCommand = new ListWorkloadsCommand(_loggerFactory.CreateLogger<ListWorkloadsCommand>());
-        GetWorkloadApisCommand = new GetWorkloadApisCommand(_loggerFactory.CreateLogger<GetWorkloadApisCommand>());
-        GetWorkloadDefinitionCommand = new GetWorkloadDefinitionCommand(_loggerFactory.CreateLogger<GetWorkloadDefinitionCommand>());
-        GetExamplesCommand = new GetExamplesCommand(_loggerFactory.CreateLogger<GetExamplesCommand>());
 
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton<IResourceProviderService, EmbeddedResourceProviderService>();
         services.AddSingleton<IFabricPublicApiService, FabricPublicApiService>();
         ServiceProvider = services.BuildServiceProvider();
+
+        ListWorkloadsCommand = new ListWorkloadsCommand(_loggerFactory.CreateLogger<ListWorkloadsCommand>(), ServiceProvider.GetRequiredService<IFabricPublicApiService>());
+        GetWorkloadApisCommand = new GetWorkloadApisCommand(_loggerFactory.CreateLogger<GetWorkloadApisCommand>(), ServiceProvider.GetRequiredService<IFabricPublicApiService>());
+        GetWorkloadDefinitionCommand = new GetWorkloadDefinitionCommand(_loggerFactory.CreateLogger<GetWorkloadDefinitionCommand>(), ServiceProvider.GetRequiredService<IFabricPublicApiService>());
+        GetExamplesCommand = new GetExamplesCommand(_loggerFactory.CreateLogger<GetExamplesCommand>(), ServiceProvider.GetRequiredService<IFabricPublicApiService>());
     }
 
     public void Dispose()

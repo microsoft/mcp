@@ -31,10 +31,11 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class PathListCommand(ILogger<PathListCommand> logger)
+public sealed class PathListCommand(ILogger<PathListCommand> logger, IOneLakeService oneLakeService)
     : GlobalCommand<PathListOptions>()
 {
-    private readonly ILogger<PathListCommand> _logger = logger;
+    private readonly ILogger<PathListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     protected override void RegisterOptions(Command command)
     {
@@ -97,12 +98,10 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
 
         try
         {
-            var oneLakeService = context.GetService<IOneLakeService>();
-
             // Check if raw format is requested
             if (options.Format?.ToLowerInvariant() == "raw")
             {
-                var rawResponse = await oneLakeService.ListPathRawAsync(
+                var rawResponse = await _oneLakeService.ListPathRawAsync(
                     options.WorkspaceId!,
                     options.ItemId!,
                     options.Path,
@@ -120,7 +119,7 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
             // Use intelligent discovery if no path is specified
             if (string.IsNullOrWhiteSpace(options.Path))
             {
-                fileSystemItems = await oneLakeService.ListPathIntelligentAsync(
+                fileSystemItems = await _oneLakeService.ListPathIntelligentAsync(
                     options.WorkspaceId!,
                     options.ItemId!,
                     options.Recursive,
@@ -128,7 +127,7 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
             }
             else
             {
-                fileSystemItems = await oneLakeService.ListPathAsync(
+                fileSystemItems = await _oneLakeService.ListPathAsync(
                     options.WorkspaceId!,
                     options.ItemId!,
                     options.Path,
