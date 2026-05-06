@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Acr.Options;
 using Azure.Mcp.Tools.Acr.Options.Registry;
 using Azure.Mcp.Tools.Acr.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Acr.Commands.Registry;
 
 public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryListCommand> logger, IAcrService acrService)
-    : BaseAcrCommand<RegistryRepositoryListOptions>
+    : BaseAcrCommand<RegistryRepositoryListOptions, RegistryRepositoryListCommand.RegistryRepositoryListCommandResult>
 {
     private const string CommandTitle = "List Container Registry Repositories";
     private readonly ILogger<RegistryRepositoryListCommand> _logger = logger;
@@ -38,6 +39,8 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<RegistryRepositoryListCommandResult> ResultTypeInfo => AcrJsonContext.Default.RegistryRepositoryListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -71,7 +74,7 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(map ?? []), AcrJsonContext.Default.RegistryRepositoryListCommandResult);
+            SetResult(context, new(map ?? []));
         }
         catch (Exception ex)
         {
@@ -84,5 +87,5 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
         return context.Response;
     }
 
-    internal record RegistryRepositoryListCommandResult(Dictionary<string, List<string>> RepositoriesByRegistry);
+    public record RegistryRepositoryListCommandResult(Dictionary<string, List<string>> RepositoriesByRegistry);
 }

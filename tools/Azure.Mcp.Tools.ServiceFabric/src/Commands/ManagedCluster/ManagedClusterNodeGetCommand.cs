@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.ServiceFabric.Options;
 using Azure.Mcp.Tools.ServiceFabric.Options.ManagedCluster;
 using Azure.Mcp.Tools.ServiceFabric.Services;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
 
 public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCommand> logger, IServiceFabricService serviceFabricService)
-    : BaseServiceFabricCommand<ManagedClusterNodeGetOptions>
+    : BaseServiceFabricCommand<ManagedClusterNodeGetOptions, ManagedClusterNodeGetCommand.ManagedClusterNodeGetCommandResult>
 {
     private const string CommandTitle = "Get Service Fabric Managed Cluster Nodes";
     private readonly ILogger<ManagedClusterNodeGetCommand> _logger = logger;
@@ -38,6 +39,8 @@ public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCo
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ManagedClusterNodeGetCommandResult> ResultTypeInfo => ServiceFabricJsonContext.Default.ManagedClusterNodeGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -78,7 +81,7 @@ public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCo
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new([node]), ServiceFabricJsonContext.Default.ManagedClusterNodeGetCommandResult);
+                SetResult(context, new([node]));
             }
             else
             {
@@ -90,7 +93,7 @@ public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCo
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(nodes ?? []), ServiceFabricJsonContext.Default.ManagedClusterNodeGetCommandResult);
+                SetResult(context, new(nodes ?? []));
             }
         }
         catch (Exception ex)
@@ -120,5 +123,5 @@ public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCo
         _ => base.GetStatusCode(ex)
     };
 
-    internal record ManagedClusterNodeGetCommandResult(List<Models.ManagedClusterNode> Nodes);
+    public record ManagedClusterNodeGetCommandResult(List<Models.ManagedClusterNode> Nodes);
 }

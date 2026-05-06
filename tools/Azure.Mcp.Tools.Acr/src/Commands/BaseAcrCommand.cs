@@ -11,8 +11,9 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Acr.Commands;
 
 public abstract class BaseAcrCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions> where TOptions : BaseAcrOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions,
+    TResult>
+    : SubscriptionCommand<TOptions, TResult> where TOptions : BaseAcrOptions, new()
 {
     protected override void RegisterOptions(Command command)
     {

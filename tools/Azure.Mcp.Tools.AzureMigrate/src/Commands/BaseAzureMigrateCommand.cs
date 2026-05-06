@@ -11,5 +11,6 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands;
 /// Base command for all Azure Migrate commands.
 /// </summary>
 public abstract class BaseAzureMigrateCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : GlobalCommand<TOptions> where TOptions : BaseAzureMigrateOptions, new();
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions,
+    TResult>
+    : GlobalCommand<TOptions, TResult> where TOptions : BaseAzureMigrateOptions, new();

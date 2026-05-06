@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.Logging;
@@ -15,7 +16,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 /// Command to get platform landing zone modification guidance and recommendations.
 /// </summary>
 public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlatformLandingZoneGuidanceService guidanceService)
-    : BaseAzureMigrateCommand<GetGuidanceOptions>()
+    : BaseAzureMigrateCommand<GetGuidanceOptions, GetGuidanceCommand.GetGuidanceCommandResult>()
 {
     private readonly IPlatformLandingZoneGuidanceService _guidanceService = guidanceService;
     private const string CommandTitle = "Get Platform Landing Zone Modification Guidance";
@@ -76,6 +77,9 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
         LocalRequired = true,
         Secret = false
     };
+
+    /// <inheritdoc/>
+    protected override JsonTypeInfo<GetGuidanceCommandResult> ResultTypeInfo => AzureMigrateJsonContext.Default.GetGuidanceCommandResult;
 
     /// <inheritdoc/>
     protected override void RegisterOptions(Command command)
@@ -146,7 +150,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
                 }
             }
 
-            context.Response.Results = ResponseResult.Create(new(response.ToString()), AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
+            SetResult(context, new(response.ToString()));
         }
         catch (Exception ex)
         {
@@ -157,5 +161,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
         return context.Response;
     }
 
-    internal record GetGuidanceCommandResult(string Guidance);
+    /// <summary>Result returned by the get-guidance command.</summary>
+    /// <param name="Guidance">Guidance text returned to the caller.</param>
+    public record GetGuidanceCommandResult(string Guidance);
 }

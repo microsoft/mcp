@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Mcp.Tools.ConfidentialLedger.Options;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
 using Microsoft.Extensions.Logging;
@@ -13,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
 
 public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, ILogger<LedgerEntryGetCommand> logger)
-    : BaseConfidentialLedgerCommand<GetEntryOptions>
+    : BaseConfidentialLedgerCommand<GetEntryOptions, LedgerEntryGetResult>
 {
     private const string CommandTitle = "Retrieve Confidential Ledger Entry";
     private readonly IConfidentialLedgerService _service = service;
@@ -36,6 +38,8 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<LedgerEntryGetResult> ResultTypeInfo => ConfidentialLedgerJsonContext.Default.LedgerEntryGetResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -69,9 +73,7 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
                 options.CollectionId,
                 cancellationToken).ConfigureAwait(false);
 
-            context.Response.Results = ResponseResult.Create(
-                result,
-                ConfidentialLedgerJsonContext.Default.LedgerEntryGetResult);
+            SetResult(context, result);
         }
         catch (Exception ex)
         {

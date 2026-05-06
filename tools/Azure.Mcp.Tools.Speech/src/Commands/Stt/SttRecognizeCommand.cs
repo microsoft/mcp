@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Options;
 using Azure.Mcp.Tools.Speech.Options.Stt;
@@ -13,9 +14,9 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Speech.Commands.Stt;
 
-public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISpeechService speechService) : BaseSpeechCommand<SttRecognizeOptions>()
+public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISpeechService speechService) : BaseSpeechCommand<SttRecognizeOptions, SttRecognizeCommand.SttRecognizeCommandResult>()
 {
-    internal record SttRecognizeCommandResult(SpeechRecognitionResult Result);
+    public record SttRecognizeCommandResult(SpeechRecognitionResult Result);
 
     private const string CommandTitle = "Recognize Speech from Audio File";
     private readonly ILogger<SttRecognizeCommand> _logger = logger;
@@ -44,6 +45,8 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISp
         LocalRequired = true, // Requires local audio file access
         Secret = false
     };
+
+    protected override JsonTypeInfo<SttRecognizeCommandResult> ResultTypeInfo => SpeechJsonContext.Default.SttRecognizeCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -174,9 +177,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISp
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Message = "Speech recognition completed successfully.";
-            context.Response.Results = ResponseResult.Create(
-                new(result),
-                SpeechJsonContext.Default.SttRecognizeCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {

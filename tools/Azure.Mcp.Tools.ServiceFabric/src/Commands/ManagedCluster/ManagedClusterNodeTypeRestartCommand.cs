@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.ServiceFabric.Options;
 using Azure.Mcp.Tools.ServiceFabric.Options.ManagedCluster;
 using Azure.Mcp.Tools.ServiceFabric.Services;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
 
 public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterNodeTypeRestartCommand> logger, IServiceFabricService serviceFabricService)
-    : BaseServiceFabricCommand<ManagedClusterNodeTypeRestartOptions>
+    : BaseServiceFabricCommand<ManagedClusterNodeTypeRestartOptions, ManagedClusterNodeTypeRestartCommand.ManagedClusterNodeTypeRestartCommandResult>
 {
     private const string CommandTitle = "Restart Service Fabric Managed Cluster Nodes";
     private readonly ILogger<ManagedClusterNodeTypeRestartCommand> _logger = logger;
@@ -38,6 +39,8 @@ public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterN
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ManagedClusterNodeTypeRestartCommandResult> ResultTypeInfo => ServiceFabricJsonContext.Default.ManagedClusterNodeTypeRestartCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -82,9 +85,7 @@ public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterN
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(response),
-                ServiceFabricJsonContext.Default.ManagedClusterNodeTypeRestartCommandResult);
+            SetResult(context, new(response));
         }
         catch (Exception ex)
         {
@@ -113,5 +114,5 @@ public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterN
         _ => base.GetStatusCode(ex)
     };
 
-    internal record ManagedClusterNodeTypeRestartCommandResult(Models.RestartNodeResponse Response);
+    public record ManagedClusterNodeTypeRestartCommandResult(Models.RestartNodeResponse Response);
 }

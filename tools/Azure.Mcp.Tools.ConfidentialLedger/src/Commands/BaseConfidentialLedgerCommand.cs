@@ -11,8 +11,9 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.ConfidentialLedger.Commands;
 
 public abstract class BaseConfidentialLedgerCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
-    : GlobalCommand<T>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T,
+    TResult>
+    : GlobalCommand<T, TResult>
     where T : BaseConfidentialLedgerOptions, new()
 {
     protected override void RegisterOptions(Command command)

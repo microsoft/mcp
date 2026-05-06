@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Azure.Mcp.Tools.Cosmos.Validation;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
 
-public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseContainerCommand<ItemQueryOptions>()
+public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseContainerCommand<ItemQueryOptions, ItemQueryCommand.ItemQueryCommandResult>()
 {
     private const string CommandTitle = "Query Cosmos DB Container";
     private readonly ILogger<ItemQueryCommand> _logger = logger;
@@ -35,6 +36,8 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ItemQueryCommandResult> ResultTypeInfo => CosmosJsonContext.Default.ItemQueryCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -86,7 +89,7 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(items ?? []), CosmosJsonContext.Default.ItemQueryCommandResult);
+            SetResult(context, new(items ?? []));
         }
         catch (Exception ex)
         {
@@ -99,5 +102,5 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
         return context.Response;
     }
 
-    internal record ItemQueryCommandResult(List<JsonElement> Items);
+    public record ItemQueryCommandResult(List<JsonElement> Items);
 }

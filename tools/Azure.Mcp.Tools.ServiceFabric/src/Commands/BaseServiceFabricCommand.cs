@@ -9,5 +9,6 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.ServiceFabric.Commands;
 
 public abstract class BaseServiceFabricCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions> where TOptions : BaseServiceFabricOptions, new();
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions,
+    TResult>
+    : SubscriptionCommand<TOptions, TResult> where TOptions : BaseServiceFabricOptions, new();

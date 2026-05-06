@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Redis.Models;
 using Azure.Mcp.Tools.Redis.Options;
@@ -17,7 +18,7 @@ namespace Azure.Mcp.Tools.Redis.Commands;
 /// Creates a new Azure Managed Redis resource.
 /// </summary>
 public sealed class ResourceCreateCommand(IRedisService redisService, ILogger<ResourceCreateCommand> logger)
-    : SubscriptionCommand<ResourceCreateOptions>()
+    : SubscriptionCommand<ResourceCreateOptions, ResourceCreateCommand.ResourceCreateCommandResult>()
 {
     private const string CommandTitle = "Create Redis Resource";
     private readonly IRedisService _redisService = redisService;
@@ -43,6 +44,8 @@ public sealed class ResourceCreateCommand(IRedisService redisService, ILogger<Re
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ResourceCreateCommandResult> ResultTypeInfo => RedisJsonContext.Default.ResourceCreateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -94,9 +97,7 @@ public sealed class ResourceCreateCommand(IRedisService redisService, ILogger<Re
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(resource),
-                RedisJsonContext.Default.ResourceCreateCommandResult);
+            SetResult(context, new(resource));
         }
         catch (Exception ex)
         {
@@ -107,5 +108,5 @@ public sealed class ResourceCreateCommand(IRedisService redisService, ILogger<Re
         return context.Response;
     }
 
-    internal record ResourceCreateCommandResult(Resource Resource);
+    public record ResourceCreateCommandResult(Resource Resource);
 }

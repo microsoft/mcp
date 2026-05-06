@@ -9,8 +9,9 @@ using Microsoft.Mcp.Core.Extensions;
 namespace Azure.Mcp.Tools.Cosmos.Commands;
 
 public abstract class BaseDatabaseCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : BaseCosmosCommand<TOptions> where TOptions : BaseDatabaseOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions,
+    TResult>
+    : BaseCosmosCommand<TOptions, TResult> where TOptions : BaseDatabaseOptions, new()
 {
     protected override void RegisterOptions(Command command)
     {

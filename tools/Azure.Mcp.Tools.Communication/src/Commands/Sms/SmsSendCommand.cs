@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Communication.Models;
 using Azure.Mcp.Tools.Communication.Options;
 using Azure.Mcp.Tools.Communication.Options.Sms;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Communication.Commands.Sms;
 
-public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicationService communicationService) : BaseCommunicationCommand<SmsSendOptions>
+public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicationService communicationService) : BaseCommunicationCommand<SmsSendOptions, SmsSendCommandResult>
 {
     private const string CommandTitle = "Send SMS Message";
     private readonly ILogger<SmsSendCommand> _logger = logger;
@@ -38,6 +39,8 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicatio
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<SmsSendCommandResult> ResultTypeInfo => CommunicationJsonContext.Default.SmsSendCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -84,11 +87,14 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicatio
                 cancellationToken);
 
             // Set results
-            context.Response.Results = results?.Count > 0 ?
-                ResponseResult.Create(
-                    new SmsSendCommandResult(results),
-                    CommunicationJsonContext.Default.SmsSendCommandResult) :
-                null;
+            if (results?.Count > 0)
+            {
+                SetResult(context, new SmsSendCommandResult(results));
+            }
+            else
+            {
+                context.Response.Results = null;
+            }
         }
         catch (Exception ex)
         {

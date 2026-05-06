@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Mcp.Tools.ConfidentialLedger.Options;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
 using Microsoft.Extensions.Logging;
@@ -13,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
 
 public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service, ILogger<LedgerEntryAppendCommand> logger)
-    : BaseConfidentialLedgerCommand<AppendEntryOptions>
+    : BaseConfidentialLedgerCommand<AppendEntryOptions, AppendEntryResult>
 {
     private const string CommandTitle = "Append Confidential Ledger Entry";
     private readonly IConfidentialLedgerService _service = service;
@@ -37,6 +39,8 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<AppendEntryResult> ResultTypeInfo => ConfidentialLedgerJsonContext.Default.AppendEntryResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -65,7 +69,7 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
         try
         {
             var result = await _service.AppendEntryAsync(options.LedgerName!, options.Content!, options.CollectionId, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, ConfidentialLedgerJsonContext.Default.AppendEntryResult);
+            SetResult(context, result);
         }
         catch (Exception ex)
         {

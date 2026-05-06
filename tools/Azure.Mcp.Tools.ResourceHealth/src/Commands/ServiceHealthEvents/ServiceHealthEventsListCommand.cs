@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.ResourceHealth.Options.ServiceHealthEvents;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.Logging;
@@ -14,7 +15,7 @@ namespace Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
 /// Lists Azure service health events for a subscription, providing insights into ongoing or past service issues.
 /// </summary>
 public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsListCommand> logger, IResourceHealthService resourceHealthService)
-    : BaseResourceHealthCommand<ServiceHealthEventsListOptions>()
+    : BaseResourceHealthCommand<ServiceHealthEventsListOptions, ServiceHealthEventsListCommand.ServiceHealthEventsListCommandResult>()
 {
     private const string CommandTitle = "List Service Health Events";
     private readonly ILogger<ServiceHealthEventsListCommand> _logger = logger;
@@ -40,6 +41,8 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ServiceHealthEventsListCommandResult> ResultTypeInfo => ResourceHealthJsonContext.Default.ServiceHealthEventsListCommandResult;
 
     private static readonly HashSet<string> validEventTypes = new(StringComparer.OrdinalIgnoreCase) { "ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security" };
     private static readonly HashSet<string> validStatuses = new(StringComparer.OrdinalIgnoreCase) { "Active", "Resolved" };
@@ -112,7 +115,7 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(events ?? []), ResourceHealthJsonContext.Default.ServiceHealthEventsListCommandResult);
+            SetResult(context, new(events ?? []));
         }
         catch (Exception ex)
         {
@@ -123,5 +126,5 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
         return context.Response;
     }
 
-    internal record ServiceHealthEventsListCommandResult(List<Models.ServiceHealthEvent> Events);
+    public record ServiceHealthEventsListCommandResult(List<Models.ServiceHealthEvent> Events);
 }

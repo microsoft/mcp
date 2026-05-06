@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Options;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Region;
 
-public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> logger, IQuotaService quotaService) : SubscriptionCommand<AvailabilityListOptions>()
+public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> logger, IQuotaService quotaService) : SubscriptionCommand<AvailabilityListOptions, AvailabilityListCommand.RegionCheckCommandResult>()
 {
     private const string CommandTitle = "Get available regions for Azure resource types";
     private readonly ILogger<AvailabilityListCommand> _logger = logger;
@@ -38,6 +39,8 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<RegionCheckCommandResult> ResultTypeInfo => QuotaJsonContext.Default.RegionCheckCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -94,7 +97,7 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
 
             _logger.LogInformation("Region check result: {ToolResult}", toolResult);
 
-            context.Response.Results = ResponseResult.Create(new(toolResult ?? []), QuotaJsonContext.Default.RegionCheckCommandResult);
+            SetResult(context, new(toolResult ?? []));
         }
         catch (Exception ex)
         {

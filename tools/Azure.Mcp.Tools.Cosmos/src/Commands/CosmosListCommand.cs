@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Azure.Mcp.Tools.Cosmos.Services;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
 
-public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : SubscriptionCommand<CosmosListOptions>()
+public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : SubscriptionCommand<CosmosListOptions, CosmosListCommand.CosmosListCommandResult>()
 {
     private const string CommandTitle = "List Cosmos DB Resources";
     private readonly ILogger<CosmosListCommand> _logger = logger;
@@ -38,6 +39,8 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<CosmosListCommandResult> ResultTypeInfo => CosmosJsonContext.Default.CosmosListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -88,9 +91,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(null, null, containers ?? []),
-                    CosmosJsonContext.Default.CosmosListCommandResult);
+                SetResult(context, new(null, null, containers ?? []));
             }
             else if (!string.IsNullOrEmpty(options.Account))
             {
@@ -103,9 +104,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(null, databases ?? [], null),
-                    CosmosJsonContext.Default.CosmosListCommandResult);
+                SetResult(context, new(null, databases ?? [], null));
             }
             else
             {
@@ -116,9 +115,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(accounts ?? [], null, null),
-                    CosmosJsonContext.Default.CosmosListCommandResult);
+                SetResult(context, new(accounts ?? [], null, null));
             }
         }
         catch (Exception ex)
@@ -142,5 +139,5 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
         _ => base.GetStatusCode(ex)
     };
 
-    internal record CosmosListCommandResult(List<string>? Accounts, List<string>? Databases, IReadOnlyList<string>? Containers);
+    public record CosmosListCommandResult(List<string>? Accounts, List<string>? Databases, IReadOnlyList<string>? Containers);
 }

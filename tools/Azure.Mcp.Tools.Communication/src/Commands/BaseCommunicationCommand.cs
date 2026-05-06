@@ -9,7 +9,8 @@ namespace Azure.Mcp.Tools.Communication.Commands;
 
 public abstract class BaseCommunicationCommand<
     [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties | System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicProperties)]
-TOptions> : GlobalCommand<TOptions>
+TOptions,
+    TResult> : GlobalCommand<TOptions, TResult>
     where TOptions : BaseCommunicationOptions, new()
 {
     protected override void RegisterOptions(Command command)

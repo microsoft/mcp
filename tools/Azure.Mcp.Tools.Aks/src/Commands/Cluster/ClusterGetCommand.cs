@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Aks.Options;
 using Azure.Mcp.Tools.Aks.Options.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Cluster;
 
-public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksService aksService) : BaseAksCommand<ClusterGetOptions>
+public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksService aksService) : BaseAksCommand<ClusterGetOptions, ClusterGetCommand.ClusterGetCommandResult>
 {
     private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
@@ -36,6 +37,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksSer
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ClusterGetCommandResult> ResultTypeInfo => AksJsonContext.Default.ClusterGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -80,7 +83,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksSer
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(clusters ?? []), AksJsonContext.Default.ClusterGetCommandResult);
+            SetResult(context, new(clusters ?? []));
         }
         catch (Exception ex)
         {
@@ -93,5 +96,5 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksSer
         return context.Response;
     }
 
-    internal record ClusterGetCommandResult(List<Models.Cluster> Clusters);
+    public record ClusterGetCommandResult(List<Models.Cluster> Clusters);
 }

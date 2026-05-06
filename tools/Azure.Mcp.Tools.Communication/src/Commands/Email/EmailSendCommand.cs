@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Communication.Models;
 using Azure.Mcp.Tools.Communication.Options;
 using Azure.Mcp.Tools.Communication.Services;
@@ -14,7 +15,7 @@ namespace Azure.Mcp.Tools.Communication.Commands.Email;
 /// <summary>
 /// Send an email message using Azure Communication Services.
 /// </summary>
-public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunicationService communicationService) : BaseCommunicationCommand<EmailSendOptions>
+public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunicationService communicationService) : BaseCommunicationCommand<EmailSendOptions, EmailSendCommand.EmailSendCommandResult>
 {
     private const string CommandTitle = "Send Email";
     private readonly ILogger<EmailSendCommand> _logger = logger;
@@ -39,6 +40,8 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunic
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<EmailSendCommandResult> ResultTypeInfo => CommunicationJsonContext.Default.EmailSendCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -114,7 +117,7 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunic
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(result), CommunicationJsonContext.Default.EmailSendCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {

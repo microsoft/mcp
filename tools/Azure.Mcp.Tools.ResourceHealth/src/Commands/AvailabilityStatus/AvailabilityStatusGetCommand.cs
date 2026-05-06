@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.ResourceHealth.Options.AvailabilityStatus;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.Logging;
@@ -15,7 +16,7 @@ namespace Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
 /// Gets or lists availability status information for Azure resources.
 /// </summary>
 public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCommand> logger, IResourceHealthService resourceHealthService)
-    : BaseResourceHealthCommand<AvailabilityStatusGetOptions>()
+    : BaseResourceHealthCommand<AvailabilityStatusGetOptions, AvailabilityStatusGetCommand.AvailabilityStatusGetCommandResult>()
 {
     private const string CommandTitle = "Get/List Resource Availability Status";
     private readonly ILogger<AvailabilityStatusGetCommand> _logger = logger;
@@ -38,6 +39,8 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<AvailabilityStatusGetCommandResult> ResultTypeInfo => ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -88,9 +91,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
                     cancellationToken) ?? [];
             }
 
-            context.Response.Results = ResponseResult.Create(
-                new(statuses),
-                ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
+            SetResult(context, new(statuses));
         }
         catch (Exception ex)
         {
@@ -110,5 +111,5 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
         return context.Response;
     }
 
-    internal record AvailabilityStatusGetCommandResult(List<Models.AvailabilityStatus> Statuses);
+    public record AvailabilityStatusGetCommandResult(List<Models.AvailabilityStatus> Statuses);
 }

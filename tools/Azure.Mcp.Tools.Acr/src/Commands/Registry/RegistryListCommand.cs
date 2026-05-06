@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Acr.Options.Registry;
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Acr.Commands.Registry;
 
-public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger, IAcrService acrService) : BaseAcrCommand<RegistryListOptions>
+public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger, IAcrService acrService) : BaseAcrCommand<RegistryListOptions, RegistryListCommand.RegistryListCommandResult>
 {
     private const string CommandTitle = "List Container Registries";
     private readonly ILogger<RegistryListCommand> _logger = logger;
@@ -38,6 +39,8 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger, IAc
         Secret = false
     };
 
+    protected override JsonTypeInfo<RegistryListCommandResult> ResultTypeInfo => AcrJsonContext.Default.RegistryListCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -56,7 +59,7 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger, IAc
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(registries?.Results ?? [], registries?.AreResultsTruncated ?? false), AcrJsonContext.Default.RegistryListCommandResult);
+            SetResult(context, new(registries?.Results ?? [], registries?.AreResultsTruncated ?? false));
         }
         catch (Exception ex)
         {
@@ -69,5 +72,5 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger, IAc
         return context.Response;
     }
 
-    internal record RegistryListCommandResult(List<Models.AcrRegistryInfo> Registries, bool AreResultsTruncated);
+    public record RegistryListCommandResult(List<Models.AcrRegistryInfo> Registries, bool AreResultsTruncated);
 }

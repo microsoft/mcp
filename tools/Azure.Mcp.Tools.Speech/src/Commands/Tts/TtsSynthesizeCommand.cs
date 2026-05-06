@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Options;
 using Azure.Mcp.Tools.Speech.Options.Tts;
@@ -13,9 +14,9 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Speech.Commands.Tts;
 
-public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, ISpeechService speechService) : BaseSpeechCommand<TtsSynthesizeOptions>()
+public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, ISpeechService speechService) : BaseSpeechCommand<TtsSynthesizeOptions, TtsSynthesizeCommand.TtsSynthesizeCommandResult>()
 {
-    internal record TtsSynthesizeCommandResult(SynthesisResult Result);
+    public record TtsSynthesizeCommandResult(SynthesisResult Result);
 
     private const string CommandTitle = "Synthesize Speech from Text";
     private static readonly HashSet<string> SupportedExtensions = [".wav", ".mp3", ".ogg", ".raw"];
@@ -45,6 +46,8 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, I
         LocalRequired = true, // Requires local file output
         Secret = false
     };
+
+    protected override JsonTypeInfo<TtsSynthesizeCommandResult> ResultTypeInfo => SpeechJsonContext.Default.TtsSynthesizeCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -160,9 +163,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, I
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Message = "Speech synthesis completed successfully.";
-            context.Response.Results = ResponseResult.Create(
-                new(result),
-                SpeechJsonContext.Default.TtsSynthesizeCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {

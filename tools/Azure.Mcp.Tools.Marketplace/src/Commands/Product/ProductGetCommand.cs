@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Options;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
 
-public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarketplaceService marketplaceService) : SubscriptionCommand<ProductGetOptions>
+public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarketplaceService marketplaceService) : SubscriptionCommand<ProductGetOptions, ProductGetCommand.ProductGetCommandResult>
 {
     private const string CommandTitle = "Get Marketplace Product";
     private readonly ILogger<ProductGetCommand> _logger = logger;
@@ -41,6 +42,8 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarket
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ProductGetCommandResult> ResultTypeInfo => MarketplaceJsonContext.Default.ProductGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -99,9 +102,14 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarket
                 cancellationToken);
 
             // Set results
-            context.Response.Results = result != null ?
-                ResponseResult.Create(new(result), MarketplaceJsonContext.Default.ProductGetCommandResult) :
-                null;
+            if (result != null)
+            {
+                SetResult(context, new(result));
+            }
+            else
+            {
+                context.Response.Results = null;
+            }
         }
         catch (Exception ex)
         {
@@ -135,5 +143,5 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarket
     };
 
     // Strongly-typed result record
-    internal record ProductGetCommandResult(ProductDetails Product);
+    public record ProductGetCommandResult(ProductDetails Product);
 }

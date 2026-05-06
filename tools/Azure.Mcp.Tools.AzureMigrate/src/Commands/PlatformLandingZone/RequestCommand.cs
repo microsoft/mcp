@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
@@ -18,7 +19,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 /// Command to generate and download platform landing zone configurations, update parameters, check existing platform landing zones, and view status.
 /// </summary>
 public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLandingZoneService platformLandingZoneService, AzureMigrateProjectHelper azureMigrateProjectHelper)
-    : SubscriptionCommand<RequestOptions>()
+    : SubscriptionCommand<RequestOptions, RequestCommand.RequestCommandResult>()
 {
     private readonly IPlatformLandingZoneService _platformLandingZoneService = platformLandingZoneService;
     private readonly AzureMigrateProjectHelper _azureMigrateProjectHelper = azureMigrateProjectHelper;
@@ -90,6 +91,9 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
         OpenWorld = false,
         Secret = false
     };
+
+    /// <inheritdoc/>
+    protected override JsonTypeInfo<RequestCommandResult> ResultTypeInfo => AzureMigrateJsonContext.Default.RequestCommandResult;
 
     /// <inheritdoc/>
     protected override void RegisterOptions(Command command)
@@ -169,7 +173,7 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
                 _ => throw new ArgumentException($"Invalid action '{options.Action}'. Valid actions are: createmigrateproject, update, check, generate, download, status.")
             };
 
-            context.Response.Results = ResponseResult.Create(new(result), AzureMigrateJsonContext.Default.RequestCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -311,5 +315,5 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
     /// Result for the platform landing zone generate command.
     /// </summary>
     /// <param name="Message">The result message.</param>
-    internal sealed record RequestCommandResult(string Message);
+    public sealed record RequestCommandResult(string Message);
 }

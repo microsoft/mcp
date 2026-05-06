@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Options;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Usage;
 
-public sealed class CheckCommand(ILogger<CheckCommand> logger, IQuotaService quotaService) : SubscriptionCommand<CheckOptions>()
+public sealed class CheckCommand(ILogger<CheckCommand> logger, IQuotaService quotaService) : SubscriptionCommand<CheckOptions, CheckCommand.UsageCheckCommandResult>()
 {
     private const string CommandTitle = "Check Azure resources usage and quota in a region";
     private readonly ILogger<CheckCommand> _logger = logger;
@@ -39,6 +40,8 @@ public sealed class CheckCommand(ILogger<CheckCommand> logger, IQuotaService quo
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<UsageCheckCommandResult> ResultTypeInfo => QuotaJsonContext.Default.UsageCheckCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -82,7 +85,7 @@ public sealed class CheckCommand(ILogger<CheckCommand> logger, IQuotaService quo
 
             _logger.LogInformation("Quota check result: {ToolResult}", toolResult);
 
-            context.Response.Results = ResponseResult.Create(new(toolResult ?? []), QuotaJsonContext.Default.UsageCheckCommandResult);
+            SetResult(context, new(toolResult ?? []));
         }
         catch (Exception ex)
         {

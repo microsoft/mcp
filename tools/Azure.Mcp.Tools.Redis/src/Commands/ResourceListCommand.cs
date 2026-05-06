@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Redis.Models;
 using Azure.Mcp.Tools.Redis.Options;
@@ -15,7 +16,7 @@ namespace Azure.Mcp.Tools.Redis.Commands;
 /// Lists Redis resources in a subscription. Returns details for all Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources.
 /// </summary>
 public sealed class ResourceListCommand(IRedisService redisService, ILogger<ResourceListCommand> logger)
-    : SubscriptionCommand<ResourceListOptions>()
+    : SubscriptionCommand<ResourceListOptions, ResourceListCommand.ResourceListCommandResult>()
 {
     private const string CommandTitle = "List Redis Resources";
     private readonly IRedisService _redisService = redisService;
@@ -42,6 +43,8 @@ public sealed class ResourceListCommand(IRedisService redisService, ILogger<Reso
         Secret = false
     };
 
+    protected override JsonTypeInfo<ResourceListCommandResult> ResultTypeInfo => RedisJsonContext.Default.ResourceListCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -59,7 +62,7 @@ public sealed class ResourceListCommand(IRedisService redisService, ILogger<Reso
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(resources ?? []), RedisJsonContext.Default.ResourceListCommandResult);
+            SetResult(context, new(resources ?? []));
         }
         catch (Exception ex)
         {
@@ -71,5 +74,5 @@ public sealed class ResourceListCommand(IRedisService redisService, ILogger<Reso
         return context.Response;
     }
 
-    internal record ResourceListCommandResult(IEnumerable<Resource> Resources);
+    public record ResourceListCommandResult(IEnumerable<Resource> Resources);
 }

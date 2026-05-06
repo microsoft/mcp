@@ -9,5 +9,6 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.Aks.Commands;
 
 public abstract class BaseAksCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions> where TOptions : BaseAksOptions, new();
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions,
+    TResult>
+    : SubscriptionCommand<TOptions, TResult> where TOptions : BaseAksOptions, new();

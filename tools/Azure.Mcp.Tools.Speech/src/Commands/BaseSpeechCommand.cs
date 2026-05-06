@@ -11,8 +11,9 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Speech.Commands;
 
 public abstract class BaseSpeechCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
-    : SubscriptionCommand<T>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T,
+    TResult>
+    : SubscriptionCommand<T, TResult>
     where T : BaseSpeechOptions, new()
 {
     protected override void RegisterOptions(Command command)

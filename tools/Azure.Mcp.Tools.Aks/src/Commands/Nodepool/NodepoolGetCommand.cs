@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Aks.Options;
 using Azure.Mcp.Tools.Aks.Options.Nodepool;
 using Azure.Mcp.Tools.Aks.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Nodepool;
 
-public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksService aksService) : BaseAksCommand<NodepoolGetOptions>
+public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksService aksService) : BaseAksCommand<NodepoolGetOptions, NodepoolGetCommand.NodepoolGetCommandResult>
 {
     private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Node Pool Details";
     private readonly ILogger<NodepoolGetCommand> _logger = logger;
@@ -36,6 +37,8 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksS
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<NodepoolGetCommandResult> ResultTypeInfo => AksJsonContext.Default.NodepoolGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -74,7 +77,7 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksS
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(nodePools ?? []), AksJsonContext.Default.NodepoolGetCommandResult);
+            SetResult(context, new(nodePools ?? []));
         }
         catch (Exception ex)
         {
@@ -87,6 +90,6 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksS
         return context.Response;
     }
 
-    internal record NodepoolGetCommandResult(List<Models.NodePool> NodePools);
+    public record NodepoolGetCommandResult(List<Models.NodePool> NodePools);
 }
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Options;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
 
-public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMarketplaceService marketplaceService) : SubscriptionCommand<ProductListOptions>
+public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMarketplaceService marketplaceService) : SubscriptionCommand<ProductListOptions, ProductListCommand.ProductListCommandResult>
 {
     private const string CommandTitle = "List Marketplace Products";
     private readonly ILogger<ProductListCommand> _logger = logger;
@@ -40,6 +41,8 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMark
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ProductListCommandResult> ResultTypeInfo => MarketplaceJsonContext.Default.ProductListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -97,7 +100,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMark
                 cancellationToken);
 
             // Set results
-            context.Response.Results = ResponseResult.Create(new(results.Items ?? [], results.NextCursor), MarketplaceJsonContext.Default.ProductListCommandResult);
+            SetResult(context, new(results.Items ?? [], results.NextCursor));
         }
         catch (Exception ex)
         {
@@ -133,5 +136,5 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMark
     };
 
     // Strongly-typed result record
-    internal record ProductListCommandResult(List<ProductSummary> Products, string? NextCursor);
+    public record ProductListCommandResult(List<ProductSummary> Products, string? NextCursor);
 }
