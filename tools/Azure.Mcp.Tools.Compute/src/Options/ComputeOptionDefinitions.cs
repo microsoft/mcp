@@ -335,7 +335,7 @@ public static class ComputeOptionDefinitions
         Required = false
     };
 
-// Power state options
+    // Power state options
     public const string StateName = "state";
     public const string NoWaitName = "no-wait";
     public const string SkipShutdownName = "skip-shutdown";

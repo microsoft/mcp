@@ -19,8 +19,9 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
     Name = "create",
     Title = "Create Virtual Machine Scale Set",
     Description = """
-        Create, deploy, or provision an Azure Virtual Machine Scale Set (VMSS) for running multiple identical VM instances.
-        Use this to deploy workloads that need horizontal scaling, load balancing, or high availability across instances.
+        Create, deploy, or provision a new Azure Virtual Machine Scale Set (VMSS) for running multiple identical VM instances.
+        Use this to deploy a new scale set for workloads that need horizontal scaling, load balancing, or high availability.
+        Supports configuring upgrade policy (Manual, Rolling, or Automatic) and initial instance count during VMSS creation.
         Equivalent to 'az vmss create'. Defaults to 2 instances, Standard_D2s_v5 size, and Ubuntu 24.04 LTS.
         For Linux VMSS with SSH, read the user's public key file (e.g., ~/.ssh/id_rsa.pub) and pass its content.
         Do not use this for creating a single standalone VM (use VM create instead).

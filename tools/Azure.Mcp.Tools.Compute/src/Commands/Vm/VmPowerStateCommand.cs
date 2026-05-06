@@ -26,9 +26,14 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger)
 
     public override string Description =>
         """
-        Start, stop, deallocate, or restart an Azure VM via --state.
-        Equivalent to 'az vm start/stop/deallocate/restart'.
-        Use --skip-shutdown with stop to force power off. Use --no-wait to return immediately.
+        Deallocate, start, stop, power on, power off, or restart an Azure Virtual Machine (VM) to change its running state.
+        Use this to deallocate a VM to release compute resources while keeping the VM and preserving its configuration,
+        power on a stopped VM, power off or shut down a running VM, or reboot a VM.
+        Deallocating a VM stops billing for compute resources while the VM remains available to be started again later.
+        Supported --state values: deallocate (release compute resources while keeping the VM), start (power on), stop (power off, shut down), restart (reboot).
+        Equivalent to 'az vm deallocate', 'az vm start', 'az vm stop', 'az vm restart'.
+        Use --skip-shutdown with stop to force the action without graceful OS shutdown. Use --no-wait to return immediately.
+        Do not use this to query, check, or get a VM's current state; use the VM get command with --instance-view instead.
         """;
 
     public override string Title => CommandTitle;

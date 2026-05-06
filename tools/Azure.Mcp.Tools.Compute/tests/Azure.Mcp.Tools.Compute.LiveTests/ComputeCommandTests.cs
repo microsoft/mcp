@@ -610,9 +610,10 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     #region VM Power State Tests
 
     [Fact]
-    public async Task Should_stop_vm()
+    public async Task Should_perform_power_state_lifecycle()
     {
-        var result = await CallToolAsync(
+        // Step 1: Stop the VM (assumes VM starts in running state from test-resources deployment)
+        var stopResult = await CallToolAsync(
             "compute_vm_power-state",
             new()
             {
@@ -622,159 +623,115 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "state", "stop" }
             });
 
-        var powerState = result.AssertProperty("PowerState");
-        Assert.Equal(JsonValueKind.Object, powerState.ValueKind);
+        var stopPowerState = stopResult.AssertProperty("PowerState");
+        Assert.Equal(JsonValueKind.Object, stopPowerState.ValueKind);
+        Assert.NotNull(stopPowerState.GetProperty("name").GetString());
+        Assert.Equal("stop", stopPowerState.GetProperty("state").GetString());
+        Assert.True(stopPowerState.GetProperty("completed").GetBoolean());
 
-        var name = powerState.GetProperty("name");
-        Assert.NotNull(name.GetString());
+        // Step 2: Start the VM from stopped state
+        var startResult = await CallToolAsync(
+            "compute_vm_power-state",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", VmName },
+                { "state", "start" }
+            });
 
-        var state = powerState.GetProperty("state");
-        Assert.Equal("stop", state.GetString());
+        var startPowerState = startResult.AssertProperty("PowerState");
+        Assert.Equal(JsonValueKind.Object, startPowerState.ValueKind);
+        Assert.Equal("start", startPowerState.GetProperty("state").GetString());
+        Assert.Equal(JsonValueKind.True, startPowerState.GetProperty("completed").ValueKind);
 
-        var completed = powerState.GetProperty("completed");
-        Assert.True(completed.GetBoolean());
+        // Step 3: Restart the VM (requires running state)
+        var restartResult = await CallToolAsync(
+            "compute_vm_power-state",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", VmName },
+                { "state", "restart" }
+            });
+
+        var restartPowerState = restartResult.AssertProperty("PowerState");
+        Assert.Equal(JsonValueKind.Object, restartPowerState.ValueKind);
+        Assert.Equal("restart", restartPowerState.GetProperty("state").GetString());
+        Assert.Equal(JsonValueKind.True, restartPowerState.GetProperty("completed").ValueKind);
+
+        // Step 4: Stop with skip-shutdown (VM is running after restart)
+        var skipShutdownResult = await CallToolAsync(
+            "compute_vm_power-state",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", VmName },
+                { "state", "stop" },
+                { "skip-shutdown", true }
+            });
+
+        var skipShutdownPowerState = skipShutdownResult.AssertProperty("PowerState");
+        Assert.Equal(JsonValueKind.Object, skipShutdownPowerState.ValueKind);
+        Assert.Equal("stop", skipShutdownPowerState.GetProperty("state").GetString());
+        Assert.Equal(JsonValueKind.True, skipShutdownPowerState.GetProperty("completed").ValueKind);
+
+        // Step 5: Deallocate the VM (VM is stopped)
+        var deallocateResult = await CallToolAsync(
+            "compute_vm_power-state",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", VmName },
+                { "state", "deallocate" }
+            });
+
+        var deallocatePowerState = deallocateResult.AssertProperty("PowerState");
+        Assert.Equal(JsonValueKind.Object, deallocatePowerState.ValueKind);
+        Assert.Equal("deallocate", deallocatePowerState.GetProperty("state").GetString());
+        Assert.Equal(JsonValueKind.True, deallocatePowerState.GetProperty("completed").ValueKind);
+
+        // Step 6: Start with no-wait (VM is deallocated, restore to running state)
+        var noWaitResult = await CallToolAsync(
+            "compute_vm_power-state",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", VmName },
+                { "state", "start" },
+                { "no-wait", true }
+            });
+
+        var noWaitPowerState = noWaitResult.AssertProperty("PowerState");
+        Assert.Equal(JsonValueKind.Object, noWaitPowerState.ValueKind);
+        Assert.Equal("start", noWaitPowerState.GetProperty("state").GetString());
+        Assert.Equal(JsonValueKind.False, noWaitPowerState.GetProperty("completed").ValueKind);
+        Assert.Contains("initiated", noWaitPowerState.GetProperty("message").GetString());
     }
 
     [Fact]
-public async Task Should_deallocate_vm()
-{
-    var result = await CallToolAsync(
-        "compute_vm_power-state",
-        new()
-        {
-            { "subscription", Settings.SubscriptionId },
-            { "resource-group", Settings.ResourceGroupName },
-            { "vm-name", VmName },
-            { "state", "deallocate" }
-        });
+    public async Task Should_fail_power_state_for_nonexistent_vm()
+    {
+        var invalidVmName = RegisterOrRetrieveVariable("invalidPowerStateVm", "nonexistent-vm-" + Guid.NewGuid().ToString("N")[..8]);
 
-    var powerState = result.AssertProperty("PowerState");
-    Assert.Equal(JsonValueKind.Object, powerState.ValueKind);
+        var result = await CallToolAsync(
+            "compute_vm_power-state",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", invalidVmName },
+                { "state", "start" }
+            },
+            resultProcessor: elem => elem);
 
-    var state = powerState.GetProperty("state");
-    Assert.Equal("deallocate", state.GetString());
-
-    var completed = powerState.GetProperty("completed");
-    Assert.Equal(JsonValueKind.True, completed.ValueKind);
-}
-
-[Fact]
-public async Task Should_start_vm()
-{
-    var result = await CallToolAsync(
-        "compute_vm_power-state",
-        new()
-        {
-            { "subscription", Settings.SubscriptionId },
-            { "resource-group", Settings.ResourceGroupName },
-            { "vm-name", VmName },
-            { "state", "start" }
-        });
-
-    var powerState = result.AssertProperty("PowerState");
-    Assert.Equal(JsonValueKind.Object, powerState.ValueKind);
-
-    var state = powerState.GetProperty("state");
-    Assert.Equal("start", state.GetString());
-
-    var completed = powerState.GetProperty("completed");
-    Assert.Equal(JsonValueKind.True, completed.ValueKind);
-}
-
-[Fact]
-public async Task Should_restart_vm()
-{
-    var result = await CallToolAsync(
-        "compute_vm_power-state",
-        new()
-        {
-            { "subscription", Settings.SubscriptionId },
-            { "resource-group", Settings.ResourceGroupName },
-            { "vm-name", VmName },
-            { "state", "restart" }
-        });
-
-    var powerState = result.AssertProperty("PowerState");
-    Assert.Equal(JsonValueKind.Object, powerState.ValueKind);
-
-    var state = powerState.GetProperty("state");
-    Assert.Equal("restart", state.GetString());
-
-    var completed = powerState.GetProperty("completed");
-    Assert.Equal(JsonValueKind.True, completed.ValueKind);
-}
-
-[Fact]
-public async Task Should_stop_vm_with_skip_shutdown()
-{
-    var result = await CallToolAsync(
-        "compute_vm_power-state",
-        new()
-        {
-            { "subscription", Settings.SubscriptionId },
-            { "resource-group", Settings.ResourceGroupName },
-            { "vm-name", VmName },
-            { "state", "stop" },
-            { "skip-shutdown", true }
-        });
-
-    var powerState = result.AssertProperty("PowerState");
-    Assert.Equal(JsonValueKind.Object, powerState.ValueKind);
-
-    var state = powerState.GetProperty("state");
-    Assert.Equal("stop", state.GetString());
-
-    var completed = powerState.GetProperty("completed");
-    Assert.Equal(JsonValueKind.True, completed.ValueKind);
-}
-
-[Fact]
-public async Task Should_start_vm_with_no_wait()
-{
-    var result = await CallToolAsync(
-        "compute_vm_power-state",
-        new()
-        {
-            { "subscription", Settings.SubscriptionId },
-            { "resource-group", Settings.ResourceGroupName },
-            { "vm-name", VmName },
-            { "state", "start" },
-            { "no-wait", true }
-        });
-
-    var powerState = result.AssertProperty("PowerState");
-    Assert.Equal(JsonValueKind.Object, powerState.ValueKind);
-
-    var state = powerState.GetProperty("state");
-    Assert.Equal("start", state.GetString());
-
-    // With no-wait, completed should be false
-    var completed = powerState.GetProperty("completed");
-    Assert.Equal(JsonValueKind.False, completed.ValueKind);
-
-    var message = powerState.GetProperty("message");
-    Assert.Contains("initiated", message.GetString());
-}
-
-[Fact]
-public async Task Should_fail_power_state_for_nonexistent_vm()
-{
-    var invalidVmName = RegisterOrRetrieveVariable("invalidPowerStateVm", "nonexistent-vm-" + Guid.NewGuid().ToString("N")[..8]);
-
-    var result = await CallToolAsync(
-        "compute_vm_power-state",
-        new()
-        {
-            { "subscription", Settings.SubscriptionId },
-            { "resource-group", Settings.ResourceGroupName },
-            { "vm-name", invalidVmName },
-            { "state", "start" }
-        },
-        resultProcessor: elem => elem);
-
-    Assert.NotNull(result);
-    Assert.True(result.Value.TryGetProperty("message", out _));
-}
+        Assert.NotNull(result);
+        Assert.True(result.Value.TryGetProperty("message", out _));
+    }
 
     #endregion
 
