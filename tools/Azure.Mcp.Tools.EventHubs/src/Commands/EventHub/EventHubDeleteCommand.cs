@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Identity;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.EventHub;
@@ -15,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.EventHubs.Commands.EventHub;
 
 public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<EventHubDeleteOptions>
+    : BaseEventHubsCommand<EventHubDeleteOptions, EventHubDeleteCommand.EventHubDeleteCommandResult>
 {
     private const string CommandTitle = "Delete Event Hub";
     private readonly IEventHubsService _service = service;
@@ -46,6 +47,8 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<EventHubDeleteCommandResult> ResultTypeInfo => EventHubsJsonContext.Default.EventHubDeleteCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -84,9 +87,7 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(deleted, options.EventHub!),
-                EventHubsJsonContext.Default.EventHubDeleteCommandResult);
+            SetResult(context, new(deleted, options.EventHub!));
         }
         catch (Exception ex)
         {
@@ -107,5 +108,5 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
         _ => base.GetStatusCode(ex)
     };
 
-    internal record EventHubDeleteCommandResult(bool Deleted, string EventHubName);
+    public record EventHubDeleteCommandResult(bool Deleted, string EventHubName);
 }

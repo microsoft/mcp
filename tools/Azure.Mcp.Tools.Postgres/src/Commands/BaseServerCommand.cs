@@ -11,8 +11,8 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Postgres.Commands;
 
 public abstract class BaseServerCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>(ILogger<BasePostgresCommand<TOptions>> logger)
-    : BasePostgresCommand<TOptions>(logger) where TOptions : BasePostgresOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(ILogger<BasePostgresCommand<TOptions, TResult>> logger)
+    : BasePostgresCommand<TOptions, TResult>(logger) where TOptions : BasePostgresOptions, new()
 
 {
 

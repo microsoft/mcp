@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Identity;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.EventHub;
@@ -15,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.EventHubs.Commands.EventHub;
 
 public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<EventHubGetOptions>
+    : BaseEventHubsCommand<EventHubGetOptions, EventHubGetCommand.EventHubGetCommandResult>
 {
     private const string CommandTitle = "Get Event Hubs from Namespace";
     private readonly IEventHubsService _service = service;
@@ -46,6 +47,8 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<EventHubGetCommandResult> ResultTypeInfo => EventHubsJsonContext.Default.EventHubGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -89,7 +92,7 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
                     cancellationToken);
 
                 var results = eventHub != null ? new List<Models.EventHub> { eventHub } : new List<Models.EventHub>();
-                context.Response.Results = ResponseResult.Create(new(results), EventHubsJsonContext.Default.EventHubGetCommandResult);
+                SetResult(context, new(results));
             }
             else
             {
@@ -101,7 +104,7 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(eventHubs ?? []), EventHubsJsonContext.Default.EventHubGetCommandResult);
+                SetResult(context, new(eventHubs ?? []));
             }
         }
         catch (Exception ex)
@@ -132,5 +135,5 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
         _ => base.GetStatusCode(ex)
     };
 
-    internal record EventHubGetCommandResult(List<Models.EventHub> EventHubs);
+    public record EventHubGetCommandResult(List<Models.EventHub> EventHubs);
 }

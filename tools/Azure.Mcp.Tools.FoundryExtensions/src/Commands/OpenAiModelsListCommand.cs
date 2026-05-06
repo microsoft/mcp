@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiModelsListOptions>
+public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiModelsListOptions, OpenAiModelsListCommand.OpenAiModelsListCommandResult>
 {
     private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
@@ -42,6 +43,8 @@ public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExt
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<OpenAiModelsListCommandResult> ResultTypeInfo => FoundryExtensionsJsonContext.Default.OpenAiModelsListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -79,9 +82,7 @@ public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExt
                 options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result, options.ResourceName!),
-                FoundryExtensionsJsonContext.Default.OpenAiModelsListCommandResult);
+            SetResult(context, new(result, options.ResourceName!));
         }
         catch (Exception ex)
         {
@@ -91,5 +92,5 @@ public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExt
         return context.Response;
     }
 
-    internal record OpenAiModelsListCommandResult(OpenAiModelsListResult ModelsListResult, string ResourceName);
+    public record OpenAiModelsListCommandResult(OpenAiModelsListResult ModelsListResult, string ResourceName);
 }

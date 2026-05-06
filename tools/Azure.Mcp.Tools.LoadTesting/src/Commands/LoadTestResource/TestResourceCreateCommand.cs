@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestResource;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 
 public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand> logger, ILoadTestingService loadTestingService)
-    : BaseLoadTestingCommand<TestResourceCreateOptions>
+    : BaseLoadTestingCommand<TestResourceCreateOptions, TestResourceCreateCommand.TestResourceCreateCommandResult>
 {
     private const string _commandTitle = "Test Resource Create";
     private readonly ILogger<TestResourceCreateCommand> _logger = logger;
@@ -36,6 +37,8 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<TestResourceCreateCommandResult> ResultTypeInfo => LoadTestJsonContext.Default.TestResourceCreateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -64,9 +67,10 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
                 options.RetryPolicy,
                 cancellationToken);
             // Set results if any were returned
-            context.Response.Results = results != null ?
-                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestResourceCreateCommandResult) :
-                null;
+            if (results != null)
+            {
+                SetResult(context, new(results));
+            }
         }
         catch (Exception ex)
         {
@@ -77,5 +81,5 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
         }
         return context.Response;
     }
-    internal record TestResourceCreateCommandResult(TestResource LoadTest);
+    public record TestResourceCreateCommandResult(TestResource LoadTest);
 }

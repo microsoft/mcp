@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Server;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -11,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 
-public sealed class ServerParamGetCommand(IPostgresService postgresService, ILogger<ServerParamGetCommand> logger) : BaseServerCommand<ServerParamGetOptions>(logger)
+public sealed class ServerParamGetCommand(IPostgresService postgresService, ILogger<ServerParamGetCommand> logger) : BaseServerCommand<ServerParamGetOptions, ServerParamGetCommand.ServerParamGetCommandResult>(logger)
 {
     private readonly IPostgresService _postgresService = postgresService;
     private const string CommandTitle = "Get PostgreSQL Server Parameter";
@@ -34,6 +35,8 @@ public sealed class ServerParamGetCommand(IPostgresService postgresService, ILog
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ServerParamGetCommandResult> ResultTypeInfo => PostgresJsonContext.Default.ServerParamGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -60,9 +63,10 @@ public sealed class ServerParamGetCommand(IPostgresService postgresService, ILog
         try
         {
             var parameterValue = await _postgresService.GetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, cancellationToken);
-            context.Response.Results = parameterValue?.Length > 0 ?
-                ResponseResult.Create(new(parameterValue), PostgresJsonContext.Default.ServerParamGetCommandResult) :
-                null;
+            if (parameterValue?.Length > 0)
+            {
+                SetResult(context, new(parameterValue));
+            }
         }
         catch (Exception ex)
         {
@@ -72,5 +76,5 @@ public sealed class ServerParamGetCommand(IPostgresService postgresService, ILog
         return context.Response;
     }
 
-    internal record ServerParamGetCommandResult(string ParameterValue);
+    public record ServerParamGetCommandResult(string ParameterValue);
 }

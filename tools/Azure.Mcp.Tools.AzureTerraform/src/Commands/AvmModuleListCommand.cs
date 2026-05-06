@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Options;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -13,7 +14,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 
 public sealed class AvmModuleListCommand(
     ILogger<AvmModuleListCommand> logger,
-    IAvmDocsService avmDocsService) : BaseCommand<AvmModuleListOptions>
+    IAvmDocsService avmDocsService) : BaseCommand<AvmModuleListOptions, AvmModuleListResult>
 {
     private readonly ILogger<AvmModuleListCommand> _logger = logger;
     private readonly IAvmDocsService _avmDocsService = avmDocsService;
@@ -41,6 +42,8 @@ public sealed class AvmModuleListCommand(
         Secret = false
     };
 
+    protected override JsonTypeInfo<AvmModuleListResult> ResultTypeInfo => AzureTerraformJsonContext.Default.AvmModuleListResult;
+
     protected override AvmModuleListOptions BindOptions(ParseResult parseResult) => new();
 
     public override async Task<CommandResponse> ExecuteAsync(
@@ -54,7 +57,7 @@ public sealed class AvmModuleListCommand(
 
             var result = new Models.AvmModuleListResult { Modules = modules };
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AvmModuleListResult);
+            SetResult(context, result);
             context.Response.Message = string.Empty;
 
             context.Activity?.AddTag(AzureTerraformTelemetryTags.ToolArea, "avm");

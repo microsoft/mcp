@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Options;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -13,7 +14,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 
 public sealed class AvmDocumentationGetCommand(
     ILogger<AvmDocumentationGetCommand> logger,
-    IAvmDocsService avmDocsService) : BaseCommand<AvmDocumentationOptions>
+    IAvmDocsService avmDocsService) : BaseCommand<AvmDocumentationOptions, AvmDocumentationResult>
 {
     private readonly ILogger<AvmDocumentationGetCommand> _logger = logger;
     private readonly IAvmDocsService _avmDocsService = avmDocsService;
@@ -41,6 +42,8 @@ public sealed class AvmDocumentationGetCommand(
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<AvmDocumentationResult> ResultTypeInfo => AzureTerraformJsonContext.Default.AvmDocumentationResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -85,7 +88,7 @@ public sealed class AvmDocumentationGetCommand(
             };
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AvmDocumentationResult);
+            SetResult(context, result);
             context.Response.Message = string.Empty;
 
             context.Activity

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Key;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
 
-public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<KeyGetOptions>
+public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<KeyGetOptions, KeyGetCommand.KeyGetCommandResult>
 {
     private const string CommandTitle = "Get Key Vault Key";
     private readonly ILogger<KeyGetCommand> _logger = logger;
@@ -34,6 +35,8 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultServic
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<KeyGetCommandResult> ResultTypeInfo => KeyVaultJsonContext.Default.KeyGetCommandResult;
 
     public override string Description =>
         """List all keys in your Key Vault or get a specific key by name. Shows all key names in the vault, or retrieves full key details including type, enabled status, and expiration dates. Use --include-managed to show managed keys.""";
@@ -77,7 +80,7 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultServic
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(Keys: keys ?? [], Key: null), KeyVaultJsonContext.Default.KeyGetCommandResult);
+                SetResult(context, new(Keys: keys ?? [], Key: null));
             }
             else
             {
@@ -99,7 +102,7 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultServic
                     key.Properties.CreatedOn,
                     key.Properties.UpdatedOn);
 
-                context.Response.Results = ResponseResult.Create(new(Keys: null, Key: keyDetails), KeyVaultJsonContext.Default.KeyGetCommandResult);
+                SetResult(context, new(Keys: null, Key: keyDetails));
             }
         }
         catch (Exception ex)
@@ -118,6 +121,6 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultServic
         return context.Response;
     }
 
-    internal record KeyDetails(string Name, string KeyType, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn);
-    internal record KeyGetCommandResult(List<string>? Keys, KeyDetails? Key);
+    public record KeyDetails(string Name, string KeyType, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn);
+    public record KeyGetCommandResult(List<string>? Keys, KeyDetails? Key);
 }

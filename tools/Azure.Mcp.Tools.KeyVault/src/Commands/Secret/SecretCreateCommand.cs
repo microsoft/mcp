@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Secret;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
 
-public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<SecretCreateOptions>
+public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<SecretCreateOptions, SecretCreateCommand.SecretCreateCommandResult>
 {
     private const string CommandTitle = "Create Key Vault Secret";
     private readonly ILogger<SecretCreateCommand> _logger = logger;
@@ -33,6 +34,8 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger, IKe
         LocalRequired = false,
         Secret = true
     };
+
+    protected override JsonTypeInfo<SecretCreateCommandResult> ResultTypeInfo => KeyVaultJsonContext.Default.SecretCreateCommandResult;
 
     public override string Description =>
         "Create/set a secret in an Azure Key Vault with the specified name and value. Required: --vault <vault>, --secret <secret>, --subscription <subscription>. Optional: --tenant <tenant>. Creates a new secret version if it already exists.";
@@ -74,16 +77,14 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger, IKe
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(
-                    secret.Name,
-                    secret.Value,
-                    secret.Properties.Enabled,
-                    secret.Properties.NotBefore,
-                    secret.Properties.ExpiresOn,
-                    secret.Properties.CreatedOn,
-                    secret.Properties.UpdatedOn),
-                KeyVaultJsonContext.Default.SecretCreateCommandResult);
+            SetResult(context, new(
+                secret.Name,
+                secret.Value,
+                secret.Properties.Enabled,
+                secret.Properties.NotBefore,
+                secret.Properties.ExpiresOn,
+                secret.Properties.CreatedOn,
+                secret.Properties.UpdatedOn));
         }
         catch (Exception ex)
         {
@@ -94,5 +95,5 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger, IKe
         return context.Response;
     }
 
-    internal record SecretCreateCommandResult(string Name, string Value, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn);
+    public record SecretCreateCommandResult(string Name, string Value, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn);
 }

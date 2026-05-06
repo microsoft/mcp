@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class KnowledgeIndexSchemaCommand(IFoundryExtensionsService foundryExtensionsService) : GlobalCommand<KnowledgeIndexSchemaOptions>
+public sealed class KnowledgeIndexSchemaCommand(IFoundryExtensionsService foundryExtensionsService) : GlobalCommand<KnowledgeIndexSchemaOptions, KnowledgeIndexSchemaCommand.KnowledgeIndexSchemaCommandResult>
 {
     private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
@@ -46,6 +47,8 @@ public sealed class KnowledgeIndexSchemaCommand(IFoundryExtensionsService foundr
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<KnowledgeIndexSchemaCommandResult> ResultTypeInfo => FoundryExtensionsJsonContext.Default.KnowledgeIndexSchemaCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -95,7 +98,7 @@ public sealed class KnowledgeIndexSchemaCommand(IFoundryExtensionsService foundr
                 throw new Exception("Failed to retrieve knowledge index schema - no data returned.");
             }
 
-            context.Response.Results = ResponseResult.Create(new(indexSchema), FoundryExtensionsJsonContext.Default.KnowledgeIndexSchemaCommandResult);
+            SetResult(context, new(indexSchema));
         }
         catch (Exception ex)
         {
@@ -126,5 +129,5 @@ public sealed class KnowledgeIndexSchemaCommand(IFoundryExtensionsService foundr
         commandResult.AddError(lastError ?? $"Invalid Foundry project endpoint: {endpoint}");
     }
 
-    internal record KnowledgeIndexSchemaCommandResult(KnowledgeIndexSchema Schema);
+    public record KnowledgeIndexSchemaCommandResult(KnowledgeIndexSchema Schema);
 }

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
@@ -11,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Postgres.Commands;
 
-public sealed class PostgresListCommand(IPostgresService postgresService, ILogger<PostgresListCommand> logger) : BasePostgresCommand<BasePostgresOptions>(logger)
+public sealed class PostgresListCommand(IPostgresService postgresService, ILogger<PostgresListCommand> logger) : BasePostgresCommand<BasePostgresOptions, PostgresListCommand.PostgresListCommandResult>(logger)
 {
     private readonly IPostgresService _postgresService = postgresService;
     public override string Id => "8a12c3f4-2e5d-4b3a-9f2c-5e6d7f8a9b0c";
@@ -23,6 +24,8 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
     public override string Title => "List PostgreSQL Resources";
 
     public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false };
+
+    protected override JsonTypeInfo<PostgresListCommandResult> ResultTypeInfo => PostgresJsonContext.Default.PostgresListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -88,9 +91,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                     options.Database!,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(null, null, tables ?? []),
-                    PostgresJsonContext.Default.PostgresListCommandResult);
+                SetResult(context, new(null, null, tables ?? []));
             }
             else if (!string.IsNullOrEmpty(options.Server))
             {
@@ -104,9 +105,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                     options.Server!,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(null, databases ?? [], null),
-                    PostgresJsonContext.Default.PostgresListCommandResult);
+                SetResult(context, new(null, databases ?? [], null));
             }
             else
             {
@@ -116,9 +115,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                     options.ResourceGroup,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(servers ?? [], null, null),
-                    PostgresJsonContext.Default.PostgresListCommandResult);
+                SetResult(context, new(servers ?? [], null, null));
             }
         }
         catch (Exception ex)

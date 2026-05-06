@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
 public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<NamespaceDeleteOptions>
+    : BaseEventHubsCommand<NamespaceDeleteOptions, NamespaceDeleteCommand.NamespaceDeleteCommandResult>
 {
     private const string CommandTitle = "Delete Event Hubs Namespace";
 
@@ -50,6 +51,8 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
         LocalRequired = false  // Pure cloud API calls
     };
 
+    protected override JsonTypeInfo<NamespaceDeleteCommandResult> ResultTypeInfo => EventHubsJsonContext.Default.NamespaceDeleteCommandResult;
+
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
@@ -84,9 +87,7 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(success, $"Namespace '{options.Namespace}' deleted successfully"),
-                EventHubsJsonContext.Default.NamespaceDeleteCommandResult);
+            SetResult(context, new(success, $"Namespace '{options.Namespace}' deleted successfully"));
             context.Response.Status = HttpStatusCode.OK;
         }
         catch (Exception ex)
@@ -99,5 +100,5 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
         return context.Response;
     }
 
-    internal record NamespaceDeleteCommandResult(bool Success, string Message);
+    public record NamespaceDeleteCommandResult(bool Success, string Message);
 }

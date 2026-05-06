@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger, IKustoService kustoService) : BaseTableCommand<TableSchemaOptions>
+public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger, IKustoService kustoService) : BaseTableCommand<TableSchemaOptions, TableSchemaCommand.TableSchemaCommandResult>
 {
     private const string CommandTitle = "Get Kusto Table Schema";
     private readonly ILogger<TableSchemaCommand> _logger = logger;
@@ -33,6 +34,8 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger, IKust
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<TableSchemaCommandResult> ResultTypeInfo => KustoJsonContext.Default.TableSchemaCommandResult;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -71,7 +74,7 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger, IKust
                     cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(new(tableSchema), KustoJsonContext.Default.TableSchemaCommandResult);
+            SetResult(context, new(tableSchema));
         }
         catch (Exception ex)
         {
@@ -81,5 +84,5 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger, IKust
         return context.Response;
     }
 
-    internal record TableSchemaCommandResult(string Schema);
+    public record TableSchemaCommandResult(string Schema);
 }

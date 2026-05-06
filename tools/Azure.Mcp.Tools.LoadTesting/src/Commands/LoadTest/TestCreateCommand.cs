@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTest;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 
 public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger, ILoadTestingService loadTestingService)
-    : BaseLoadTestingCommand<TestCreateOptions>
+    : BaseLoadTestingCommand<TestCreateOptions, TestCreateCommand.TestCreateCommandResult>
 {
     private const string _commandTitle = "Test Create";
     private readonly ILogger<TestCreateCommand> _logger = logger;
@@ -40,6 +41,8 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger, ILoadTe
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<TestCreateCommandResult> ResultTypeInfo => LoadTestJsonContext.Default.TestCreateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -96,9 +99,10 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger, ILoadTe
                 cancellationToken);
 
             // Set results if any were returned
-            context.Response.Results = results != null ?
-                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestCreateCommandResult) :
-                null;
+            if (results != null)
+            {
+                SetResult(context, new(results));
+            }
         }
         catch (Exception ex)
         {
@@ -109,5 +113,5 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger, ILoadTe
         }
         return context.Response;
     }
-    internal record TestCreateCommandResult(Test Test);
+    public record TestCreateCommandResult(Test Test);
 }

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Options.Server;
 using Azure.Mcp.Tools.MySql.Services;
@@ -11,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Server;
 
-public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger, IMySqlService mysqlService) : BaseServerCommand<ServerParamGetOptions>(logger)
+public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger, IMySqlService mysqlService) : BaseServerCommand<ServerParamGetOptions, ServerParamGetCommand.ServerParamGetCommandResult>(logger)
 {
     private const string CommandTitle = "Get MySQL Server Parameter";
     private readonly IMySqlService _mysqlService = mysqlService;
@@ -33,6 +34,8 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger,
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ServerParamGetCommandResult> ResultTypeInfo => MySqlJsonContext.Default.ServerParamGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -59,9 +62,10 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger,
         try
         {
             var paramValue = await _mysqlService.GetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, cancellationToken);
-            context.Response.Results = !string.IsNullOrEmpty(paramValue) ?
-                ResponseResult.Create(new(options.Param!, paramValue), MySqlJsonContext.Default.ServerParamGetCommandResult) :
-                null;
+            if (!string.IsNullOrEmpty(paramValue))
+            {
+                SetResult(context, new(options.Param!, paramValue));
+            }
         }
         catch (Exception ex)
         {
@@ -71,5 +75,5 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger,
         return context.Response;
     }
 
-    internal record ServerParamGetCommandResult(string Parameter, string Value);
+    public record ServerParamGetCommandResult(string Parameter, string Value);
 }

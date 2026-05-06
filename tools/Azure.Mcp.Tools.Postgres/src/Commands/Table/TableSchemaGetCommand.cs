@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Table;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -11,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Table;
 
-public sealed class TableSchemaGetCommand(IPostgresService postgresService, ILogger<TableSchemaGetCommand> logger) : BaseDatabaseCommand<TableSchemaGetOptions>(logger)
+public sealed class TableSchemaGetCommand(IPostgresService postgresService, ILogger<TableSchemaGetCommand> logger) : BaseDatabaseCommand<TableSchemaGetOptions, TableSchemaGetCommand.TableSchemaGetCommandResult>(logger)
 {
     private readonly IPostgresService _postgresService = postgresService;
     private const string CommandTitle = "Get PostgreSQL Table Schema";
@@ -30,6 +31,8 @@ public sealed class TableSchemaGetCommand(IPostgresService postgresService, ILog
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<TableSchemaGetCommandResult> ResultTypeInfo => PostgresJsonContext.Default.TableSchemaGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -67,7 +70,7 @@ public sealed class TableSchemaGetCommand(IPostgresService postgresService, ILog
                 options.Database!,
                 options.Table!,
                 cancellationToken);
-            context.Response.Results = ResponseResult.Create(new(schema ?? []), PostgresJsonContext.Default.TableSchemaGetCommandResult);
+            SetResult(context, new(schema ?? []));
         }
         catch (Exception ex)
         {
@@ -78,5 +81,5 @@ public sealed class TableSchemaGetCommand(IPostgresService postgresService, ILog
         return context.Response;
     }
 
-    internal record TableSchemaGetCommandResult(List<string> Schema);
+    public record TableSchemaGetCommandResult(List<string> Schema);
 }

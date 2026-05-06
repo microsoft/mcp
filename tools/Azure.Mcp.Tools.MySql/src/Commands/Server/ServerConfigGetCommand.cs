@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.MySql.Options.Server;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Server;
 
-public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logger, IMySqlService mysqlService) : BaseServerCommand<ServerConfigGetOptions>(logger)
+public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logger, IMySqlService mysqlService) : BaseServerCommand<ServerConfigGetOptions, ServerConfigGetCommand.ServerConfigGetCommandResult>(logger)
 {
     private const string CommandTitle = "Get MySQL Server Configuration";
     private readonly IMySqlService _mysqlService = mysqlService;
@@ -32,6 +33,8 @@ public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logge
         Secret = false
     };
 
+    protected override JsonTypeInfo<ServerConfigGetCommandResult> ResultTypeInfo => MySqlJsonContext.Default.ServerConfigGetCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -44,9 +47,10 @@ public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logge
         try
         {
             var config = await _mysqlService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, cancellationToken);
-            context.Response.Results = !string.IsNullOrEmpty(config) ?
-                ResponseResult.Create(new(config), MySqlJsonContext.Default.ServerConfigGetCommandResult) :
-                null;
+            if (!string.IsNullOrEmpty(config))
+            {
+                SetResult(context, new(config));
+            }
         }
         catch (Exception ex)
         {
@@ -56,5 +60,5 @@ public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logge
         return context.Response;
     }
 
-    internal record ServerConfigGetCommandResult(string Configuration);
+    public record ServerConfigGetCommandResult(string Configuration);
 }

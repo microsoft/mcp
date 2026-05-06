@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Server;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 
-public sealed class ServerParamSetCommand(IPostgresService postgresService, ILogger<ServerParamSetCommand> logger) : BaseServerCommand<ServerParamSetOptions>(logger)
+public sealed class ServerParamSetCommand(IPostgresService postgresService, ILogger<ServerParamSetCommand> logger) : BaseServerCommand<ServerParamSetOptions, ServerParamSetCommand.ServerParamSetCommandResult>(logger)
 {
     private readonly IPostgresService _postgresService = postgresService;
     private const string CommandTitle = "Set PostgreSQL Server Parameter";
@@ -35,6 +36,8 @@ public sealed class ServerParamSetCommand(IPostgresService postgresService, ILog
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ServerParamSetCommandResult> ResultTypeInfo => PostgresJsonContext.Default.ServerParamSetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -65,9 +68,10 @@ public sealed class ServerParamSetCommand(IPostgresService postgresService, ILog
             ServerParameterValidator.EnsureParameterAllowed(options.Param);
 
             var result = await _postgresService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, options.Value!, cancellationToken);
-            context.Response.Results = !string.IsNullOrEmpty(result) ?
-                ResponseResult.Create(new(result, options.Param!, options.Value!), PostgresJsonContext.Default.ServerParamSetCommandResult) :
-                null;
+            if (!string.IsNullOrEmpty(result))
+            {
+                SetResult(context, new(result, options.Param!, options.Value!));
+            }
         }
         catch (Exception ex)
         {
@@ -77,5 +81,5 @@ public sealed class ServerParamSetCommand(IPostgresService postgresService, ILog
         return context.Response;
     }
 
-    internal record ServerParamSetCommandResult(string Message, string Parameter, string Value);
+    public record ServerParamSetCommandResult(string Message, string Parameter, string Value);
 }

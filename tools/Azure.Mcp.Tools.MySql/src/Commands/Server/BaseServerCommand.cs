@@ -10,8 +10,8 @@ using Microsoft.Mcp.Core.Extensions;
 namespace Azure.Mcp.Tools.MySql.Commands.Server;
 
 public abstract class BaseServerCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>(ILogger<BaseMySqlCommand<TOptions>> logger)
-    : BaseMySqlCommand<TOptions>(logger) where TOptions : MySqlServerOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(ILogger<BaseMySqlCommand<TOptions, TResult>> logger)
+    : BaseMySqlCommand<TOptions, TResult>(logger) where TOptions : MySqlServerOptions, new()
 {
     protected override void RegisterOptions(Command command)
     {

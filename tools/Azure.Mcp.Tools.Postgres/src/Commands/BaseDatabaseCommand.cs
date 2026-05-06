@@ -10,8 +10,8 @@ using Microsoft.Mcp.Core.Extensions;
 namespace Azure.Mcp.Tools.Postgres.Commands;
 
 public abstract class BaseDatabaseCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>(ILogger<BasePostgresCommand<TOptions>> logger)
-    : BaseServerCommand<TOptions>(logger) where TOptions : BasePostgresOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(ILogger<BasePostgresCommand<TOptions, TResult>> logger)
+    : BaseServerCommand<TOptions, TResult>(logger) where TOptions : BasePostgresOptions, new()
 {
 
     public override string Name => "database";

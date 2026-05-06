@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Admin;
 
-public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<BaseKeyVaultOptions>
+public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<BaseKeyVaultOptions, AdminSettingsGetCommand.AdminSettingsGetCommandResult>
 {
     private const string CommandTitle = "Get Key Vault Managed HSM Account Settings";
     private readonly ILogger<AdminSettingsGetCommand> _logger = logger;
@@ -30,6 +31,8 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
         Secret = false,          // Returns configuration settings, not secrets
         LocalRequired = false    // Pure Azure API call, no local resources needed
     };
+
+    protected override JsonTypeInfo<AdminSettingsGetCommandResult> ResultTypeInfo => KeyVaultJsonContext.Default.AdminSettingsGetCommandResult;
 
     public override string Description =>
         "Retrieves all Managed HSM account settings for a Key Vault. Returns configuration setting values such as purge protection and soft-delete retention days. " +
@@ -71,7 +74,7 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
                 }
             }
 
-            context.Response.Results = ResponseResult.Create(new(options.VaultName!, settings), KeyVaultJsonContext.Default.AdminSettingsGetCommandResult);
+            SetResult(context, new(options.VaultName!, settings));
         }
         catch (Exception ex)
         {
@@ -82,5 +85,5 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
         return context.Response;
     }
 
-    internal record AdminSettingsGetCommandResult(string Name, Dictionary<string, string> Settings);
+    public record AdminSettingsGetCommandResult(string Name, Dictionary<string, string> Settings);
 }

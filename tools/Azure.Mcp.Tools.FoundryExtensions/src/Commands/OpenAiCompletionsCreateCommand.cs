@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class OpenAiCompletionsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiCompletionsCreateOptions>
+public sealed class OpenAiCompletionsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiCompletionsCreateOptions, OpenAiCompletionsCreateCommand.OpenAiCompletionsCreateCommandResult>
 {
     private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
@@ -43,6 +44,8 @@ public sealed class OpenAiCompletionsCreateCommand(IFoundryExtensionsService fou
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<OpenAiCompletionsCreateCommandResult> ResultTypeInfo => FoundryExtensionsJsonContext.Default.OpenAiCompletionsCreateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -92,9 +95,7 @@ public sealed class OpenAiCompletionsCreateCommand(IFoundryExtensionsService fou
                 options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result.CompletionText, result.UsageInfo),
-                FoundryExtensionsJsonContext.Default.OpenAiCompletionsCreateCommandResult);
+            SetResult(context, new(result.CompletionText, result.UsageInfo));
         }
         catch (Exception ex)
         {
@@ -104,5 +105,5 @@ public sealed class OpenAiCompletionsCreateCommand(IFoundryExtensionsService fou
         return context.Response;
     }
 
-    internal record OpenAiCompletionsCreateCommandResult(string CompletionText, CompletionUsageInfo UsageInfo);
+    public record OpenAiCompletionsCreateCommandResult(string CompletionText, CompletionUsageInfo UsageInfo);
 }

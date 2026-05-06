@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Database;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Database;
 
-public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogger<DatabaseQueryCommand> logger) : BaseDatabaseCommand<DatabaseQueryOptions>(logger)
+public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogger<DatabaseQueryCommand> logger) : BaseDatabaseCommand<DatabaseQueryOptions, DatabaseQueryCommand.DatabaseQueryCommandResult>(logger)
 {
     private readonly IPostgresService _postgresService = postgresService;
     private const string CommandTitle = "Query PostgreSQL Database";
@@ -34,6 +35,8 @@ public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogg
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<DatabaseQueryCommandResult> ResultTypeInfo => PostgresJsonContext.Default.DatabaseQueryCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -71,7 +74,7 @@ public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogg
                 options.Database!,
                 options.Query!,
                 cancellationToken);
-            context.Response.Results = ResponseResult.Create(new(queryResult ?? []), PostgresJsonContext.Default.DatabaseQueryCommandResult);
+            SetResult(context, new(queryResult ?? []));
         }
         catch (Exception ex)
         {
@@ -82,5 +85,5 @@ public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogg
         return context.Response;
     }
 
-    internal record DatabaseQueryCommandResult(List<string> QueryResult);
+    public record DatabaseQueryCommandResult(List<string> QueryResult);
 }

@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
+using Fabric.Mcp.Tools.Docs.Models;
 using Fabric.Mcp.Tools.Docs.Options;
 using Fabric.Mcp.Tools.Docs.Options.PublicApis;
 using Fabric.Mcp.Tools.Docs.Services;
@@ -12,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
 
-public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logger) : GlobalCommand<WorkloadCommandOptions>()
+public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logger) : GlobalCommand<WorkloadCommandOptions, FabricWorkloadPublicApi>()
 {
     private const string CommandTitle = "Workload API Specification";
     private readonly ILogger<GetWorkloadApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -35,6 +37,8 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<FabricWorkloadPublicApi> ResultTypeInfo => FabricJsonContext.Default.FabricWorkloadPublicApi;
 
     protected override void RegisterOptions(Command command)
     {
@@ -70,7 +74,7 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
             var fabricService = context.GetService<IFabricPublicApiService>();
             var apis = await fabricService.GetWorkloadPublicApis(options.WorkloadType, cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
+            SetResult(context, apis);
         }
         catch (HttpRequestException httpEx)
         {

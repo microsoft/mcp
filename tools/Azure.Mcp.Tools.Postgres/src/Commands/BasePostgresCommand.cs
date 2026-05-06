@@ -12,10 +12,10 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Postgres.Commands;
 
 public abstract class BasePostgresCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>(ILogger<BasePostgresCommand<TOptions>> logger)
-    : SubscriptionCommand<TOptions> where TOptions : BasePostgresOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(ILogger<BasePostgresCommand<TOptions, TResult>> logger)
+    : SubscriptionCommand<TOptions, TResult> where TOptions : BasePostgresOptions, new()
 {
-    protected readonly ILogger<BasePostgresCommand<TOptions>> _logger = logger;
+    protected readonly ILogger<BasePostgresCommand<TOptions, TResult>> _logger = logger;
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {

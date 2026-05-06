@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Fabric.Mcp.Tools.Docs.Options;
 using Fabric.Mcp.Tools.Docs.Options.BestPractices;
 using Fabric.Mcp.Tools.Docs.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
 
-public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> logger) : GlobalCommand<GetBestPracticesOptions>()
+public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> logger) : GlobalCommand<GetBestPracticesOptions, IEnumerable<string>>()
 {
     private const string CommandTitle = "Best Practices";
 
@@ -36,6 +37,8 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<IEnumerable<string>> ResultTypeInfo => FabricJsonContext.Default.IEnumerableString;
 
     protected override void RegisterOptions(Command command)
     {
@@ -64,7 +67,7 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
             var fabricService = context.GetService<IFabricPublicApiService>();
             var bestPractices = fabricService.GetTopicBestPractices(options.Topic!);
 
-            context.Response.Results = ResponseResult.Create(bestPractices, FabricJsonContext.Default.IEnumerableString);
+            SetResult(context, bestPractices);
         }
         catch (ArgumentException argEx)
         {

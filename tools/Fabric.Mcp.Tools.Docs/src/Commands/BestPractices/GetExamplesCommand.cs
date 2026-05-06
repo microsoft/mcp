@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Fabric.Mcp.Tools.Docs.Options;
 using Fabric.Mcp.Tools.Docs.Options.PublicApis;
 using Fabric.Mcp.Tools.Docs.Services;
@@ -11,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
 
-public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : GlobalCommand<WorkloadCommandOptions>()
+public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : GlobalCommand<WorkloadCommandOptions, GetExamplesCommand.ExampleFileResult>()
 {
     private const string CommandTitle = "API Examples";
 
@@ -35,6 +36,8 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ExampleFileResult> ResultTypeInfo => FabricJsonContext.Default.ExampleFileResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -63,7 +66,7 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
             var fabricService = context.GetService<IFabricPublicApiService>();
             var availableExamples = await fabricService.GetWorkloadExamplesAsync(options.WorkloadType!, cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(availableExamples), FabricJsonContext.Default.ExampleFileResult);
+            SetResult(context, new(availableExamples));
         }
         catch (Exception ex)
         {

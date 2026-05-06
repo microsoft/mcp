@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Knowledge;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
-public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeBaseRetrieveOptions>()
+public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeBaseRetrieveOptions, KnowledgeBaseRetrieveCommand.KnowledgeBaseRetrieveCommandResult>()
 {
     private const string CommandTitle = "Execute retrieval using a knowledge base in Azure AI Search";
     private readonly ILogger<KnowledgeBaseRetrieveCommand> _logger = logger;
@@ -47,6 +48,8 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
         OpenWorld = true, // possibly interacts with Web content and federated data sources
         Secret = false
     };
+
+    protected override JsonTypeInfo<KnowledgeBaseRetrieveCommandResult> ResultTypeInfo => SearchJsonContext.Default.KnowledgeBaseRetrieveCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -123,7 +126,7 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
         try
         {
             var result = await _searchService.RetrieveFromKnowledgeBase(options.Service!, options.KnowledgeBase!, options.Query, parsedMessages, options.RetryPolicy, cancellationToken);
-            context.Response.Results = ResponseResult.Create(new(result), SearchJsonContext.Default.KnowledgeBaseRetrieveCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -154,5 +157,5 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
         return (role, content);
     }
 
-    internal sealed record KnowledgeBaseRetrieveCommandResult(string RetrievalResult);
+    public sealed record KnowledgeBaseRetrieveCommandResult(string RetrievalResult);
 }

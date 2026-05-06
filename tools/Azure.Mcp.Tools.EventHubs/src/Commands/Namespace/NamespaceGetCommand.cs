@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
 public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<NamespaceGetOptions>
+    : BaseEventHubsCommand<NamespaceGetOptions, NamespaceGetCommand.NamespaceGetCommandResult>
 {
     private const string CommandTitle = "Get Event Hubs Namespaces";
 
@@ -49,6 +50,8 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEv
         Secret = false,        // Returns non-sensitive information
         LocalRequired = false  // Pure cloud API calls
     };
+
+    protected override JsonTypeInfo<NamespaceGetCommandResult> ResultTypeInfo => EventHubsJsonContext.Default.NamespaceGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -100,11 +103,10 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEv
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = namespaceDetails != null
-                    ? ResponseResult.Create(
-                        new NamespaceGetCommandResult(Namespace: namespaceDetails),
-                        EventHubsJsonContext.Default.NamespaceGetCommandResult)
-                    : null;
+                if (namespaceDetails != null)
+                {
+                    SetResult(context, new NamespaceGetCommandResult(Namespace: namespaceDetails));
+                }
             }
             else
             {
@@ -115,9 +117,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEv
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new NamespaceGetCommandResult(Namespaces: namespaces ?? []),
-                    EventHubsJsonContext.Default.NamespaceGetCommandResult);
+                SetResult(context, new NamespaceGetCommandResult(Namespaces: namespaces ?? []));
             }
         }
         catch (Exception ex)

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Index;
 
-public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchService searchService) : GlobalCommand<IndexGetOptions>()
+public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchService searchService) : GlobalCommand<IndexGetOptions, IndexGetCommand.IndexGetCommandResult>()
 {
     private const string CommandTitle = "Get Azure AI Search (formerly known as \"Azure Cognitive Search\") Index Details";
     private readonly ILogger<IndexGetCommand> _logger = logger;
@@ -41,6 +42,8 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchServ
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<IndexGetCommandResult> ResultTypeInfo => SearchJsonContext.Default.IndexGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -74,7 +77,7 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchServ
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(indexes ?? []), SearchJsonContext.Default.IndexGetCommandResult);
+            SetResult(context, new(indexes ?? []));
         }
         catch (Exception ex)
         {
@@ -85,5 +88,5 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchServ
         return context.Response;
     }
 
-    internal sealed record IndexGetCommandResult(List<IndexInfo> Indexes);
+    public sealed record IndexGetCommandResult(List<IndexInfo> Indexes);
 }

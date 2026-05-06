@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTest;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 
 public sealed class TestGetCommand(ILogger<TestGetCommand> logger, ILoadTestingService loadTestingService)
-    : BaseLoadTestingCommand<TestGetOptions>
+    : BaseLoadTestingCommand<TestGetOptions, TestGetCommand.TestGetCommandResult>
 {
     private const string _commandTitle = "Test Get";
     private readonly ILogger<TestGetCommand> _logger = logger;
@@ -38,6 +39,8 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger, ILoadTestingS
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<TestGetCommandResult> ResultTypeInfo => LoadTestJsonContext.Default.TestGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -76,9 +79,10 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger, ILoadTestingS
                 cancellationToken);
 
             // Set results if any were returned
-            context.Response.Results = results != null ?
-                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestGetCommandResult) :
-                null;
+            if (results != null)
+            {
+                SetResult(context, new(results));
+            }
         }
         catch (Exception ex)
         {
@@ -89,5 +93,5 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger, ILoadTestingS
         }
         return context.Response;
     }
-    internal record TestGetCommandResult(Test Test);
+    public record TestGetCommandResult(Test Test);
 }

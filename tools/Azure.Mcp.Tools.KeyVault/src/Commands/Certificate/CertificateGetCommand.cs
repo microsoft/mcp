@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 
-public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<CertificateGetOptions>
+public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<CertificateGetOptions, CertificateGetCommand.CertificateGetCommandResult>
 {
     private const string CommandTitle = "Get Key Vault Certificate";
     private readonly ILogger<CertificateGetCommand> _logger = logger;
@@ -34,6 +35,8 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger,
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<CertificateGetCommandResult> ResultTypeInfo => KeyVaultJsonContext.Default.CertificateGetCommandResult;
 
     public override string Description =>
         """List all certificates in your Key Vault or get a specific certificate by name. Shows all certificate names in the vault, or retrieves full certificate details including key ID, secret ID, thumbprint, and policy information.""";
@@ -74,7 +77,7 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger,
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(Certificates: certificates ?? [], Certificate: null), KeyVaultJsonContext.Default.CertificateGetCommandResult);
+                SetResult(context, new(Certificates: certificates ?? [], Certificate: null));
             }
             else
             {
@@ -102,7 +105,7 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger,
                     certificate.Policy.Subject,
                     certificate.Policy.IssuerName);
 
-                context.Response.Results = ResponseResult.Create(new(Certificates: null, Certificate: certificateDetails), KeyVaultJsonContext.Default.CertificateGetCommandResult);
+                SetResult(context, new(Certificates: null, Certificate: certificateDetails));
             }
         }
         catch (Exception ex)
@@ -121,6 +124,6 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger,
         return context.Response;
     }
 
-    internal record CertificateDetails(string Name, Uri Id, Uri KeyId, Uri SecretId, string Cer, string Thumbprint, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn, string Subject, string IssuerName);
-    internal record CertificateGetCommandResult(List<string>? Certificates, CertificateDetails? Certificate);
+    public record CertificateDetails(string Name, Uri Id, Uri KeyId, Uri SecretId, string Cer, string Thumbprint, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn, string Subject, string IssuerName);
+    public record CertificateGetCommandResult(List<string>? Certificates, CertificateDetails? Certificate);
 }

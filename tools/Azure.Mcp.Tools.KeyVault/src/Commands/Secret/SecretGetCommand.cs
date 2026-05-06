@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Secret;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
 
-public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<SecretGetOptions>
+public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<SecretGetOptions, SecretGetCommand.SecretGetCommandResult>
 {
     private const string _commandTitle = "Get Key Vault Secret";
     private readonly ILogger<SecretGetCommand> _logger = logger;
@@ -34,6 +35,8 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVault
         LocalRequired = false,
         Secret = true
     };
+
+    protected override JsonTypeInfo<SecretGetCommandResult> ResultTypeInfo => KeyVaultJsonContext.Default.SecretGetCommandResult;
 
     public override string Description =>
         """List all secrets in your Key Vault or get a specific secret by name. Shows all secret names in the vault (without values), or retrieves the secret value and full details including enabled status and expiration dates.""";
@@ -74,7 +77,7 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVault
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(Secrets: secrets ?? [], Secret: null), KeyVaultJsonContext.Default.SecretGetCommandResult);
+                SetResult(context, new(Secrets: secrets ?? [], Secret: null));
             }
             else
             {
@@ -96,7 +99,7 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVault
                     secret.Properties.CreatedOn,
                     secret.Properties.UpdatedOn);
 
-                context.Response.Results = ResponseResult.Create(new(Secrets: null, Secret: secretDetails), KeyVaultJsonContext.Default.SecretGetCommandResult);
+                SetResult(context, new(Secrets: null, Secret: secretDetails));
             }
         }
         catch (Exception ex)
@@ -115,6 +118,6 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVault
         return context.Response;
     }
 
-    internal record SecretDetails(string Name, string Value, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn);
-    internal record SecretGetCommandResult(List<string>? Secrets, SecretDetails? Secret);
+    public record SecretDetails(string Name, string Value, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn);
+    public record SecretGetCommandResult(List<string>? Secrets, SecretDetails? Secret);
 }

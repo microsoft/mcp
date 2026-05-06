@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 
 public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<ConsumerGroupDeleteOptions>
+    : BaseEventHubsCommand<ConsumerGroupDeleteOptions, ConsumerGroupDeleteCommand.ConsumerGroupDeleteCommandResult>
 {
     private const string CommandTitle = "Delete Event Hubs Consumer Group";
 
@@ -43,6 +44,8 @@ public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteComman
         Secret = false,         // Returns non-sensitive information
         LocalRequired = false   // Pure cloud API calls
     };
+
+    protected override JsonTypeInfo<ConsumerGroupDeleteCommandResult> ResultTypeInfo => EventHubsJsonContext.Default.ConsumerGroupDeleteCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -84,7 +87,7 @@ public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteComman
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(deleted, options.ConsumerGroup!, options.EventHub!, options.Namespace!, options.ResourceGroup!), EventHubsJsonContext.Default.ConsumerGroupDeleteCommandResult);
+            SetResult(context, new(deleted, options.ConsumerGroup!, options.EventHub!, options.Namespace!, options.ResourceGroup!));
         }
         catch (Exception ex)
         {
@@ -95,5 +98,5 @@ public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteComman
         return context.Response;
     }
 
-    internal record ConsumerGroupDeleteCommandResult(bool Deleted, string ConsumerGroupName, string EventHubName, string NamespaceName, string ResourceGroup);
+    public record ConsumerGroupDeleteCommandResult(bool Deleted, string ConsumerGroupName, string EventHubName, string NamespaceName, string ResourceGroup);
 }

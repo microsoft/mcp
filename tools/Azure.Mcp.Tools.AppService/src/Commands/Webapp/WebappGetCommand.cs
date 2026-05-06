@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Services;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
 
 public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServiceService appServiceService)
-    : BaseAppServiceCommand<BaseAppServiceOptions>(resourceGroupRequired: false)
+    : BaseAppServiceCommand<BaseAppServiceOptions, WebappGetCommand.WebappGetResult>(resourceGroupRequired: false)
 {
     private const string CommandTitle = "Gets Azure App Service Web App Details";
     private readonly ILogger<WebappGetCommand> _logger = logger;
@@ -40,6 +41,8 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServi
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<WebappGetResult> ResultTypeInfo => AppServiceJsonContext.Default.WebappGetResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -79,7 +82,7 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServi
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(webapps), AppServiceJsonContext.Default.WebappGetResult);
+            SetResult(context, new(webapps));
         }
         catch (Exception ex)
         {

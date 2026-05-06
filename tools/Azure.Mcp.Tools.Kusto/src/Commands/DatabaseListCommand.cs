@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger, IKustoService kustoService) : BaseClusterCommand<DatabaseListOptions>()
+public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger, IKustoService kustoService) : BaseClusterCommand<DatabaseListOptions, DatabaseListCommand.DatabaseListCommandResult>()
 {
     private const string CommandTitle = "List Kusto Databases";
     private readonly ILogger<DatabaseListCommand> _logger = logger;
@@ -33,6 +34,8 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger, IKu
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<DatabaseListCommandResult> ResultTypeInfo => KustoJsonContext.Default.DatabaseListCommandResult;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -67,7 +70,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger, IKu
                     cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(new(databasesNames ?? []), KustoJsonContext.Default.DatabaseListCommandResult);
+            SetResult(context, new(databasesNames ?? []));
         }
         catch (Exception ex)
         {

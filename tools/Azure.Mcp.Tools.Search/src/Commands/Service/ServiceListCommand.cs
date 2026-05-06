@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Search.Options.Service;
 using Azure.Mcp.Tools.Search.Services;
@@ -10,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Search.Commands.Service;
 
-public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger, ISearchService searchService) : SubscriptionCommand<ServiceListOptions>()
+public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger, ISearchService searchService) : SubscriptionCommand<ServiceListOptions, ServiceListCommand.ServiceListCommandResult>()
 {
     private const string CommandTitle = "List Azure AI Search (formerly known as \"Azure Cognitive Search\") Services";
     private readonly ILogger<ServiceListCommand> _logger = logger;
@@ -37,6 +38,8 @@ public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger, ISear
         Secret = false
     };
 
+    protected override JsonTypeInfo<ServiceListCommandResult> ResultTypeInfo => SearchJsonContext.Default.ServiceListCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -54,7 +57,7 @@ public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger, ISear
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(services ?? []), SearchJsonContext.Default.ServiceListCommandResult);
+            SetResult(context, new(services ?? []));
         }
         catch (Exception ex)
         {
@@ -65,5 +68,5 @@ public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger, ISear
         return context.Response;
     }
 
-    internal sealed record ServiceListCommandResult(List<string> Services);
+    public sealed record ServiceListCommandResult(List<string> Services);
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Identity;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.EventHub;
@@ -15,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.EventHubs.Commands.EventHub;
 
 public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<EventHubUpdateOptions>
+    : BaseEventHubsCommand<EventHubUpdateOptions, EventHubUpdateCommand.EventHubUpdateCommandResult>
 {
     private const string CommandTitle = "Create or Update Event Hub";
     private readonly IEventHubsService _service = service;
@@ -49,6 +50,8 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<EventHubUpdateCommandResult> ResultTypeInfo => EventHubsJsonContext.Default.EventHubUpdateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -95,9 +98,7 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(eventHub),
-                EventHubsJsonContext.Default.EventHubUpdateCommandResult);
+            SetResult(context, new(eventHub));
         }
         catch (Exception ex)
         {
@@ -118,5 +119,5 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
         _ => base.GetStatusCode(ex)
     };
 
-    internal record EventHubUpdateCommandResult(Models.EventHub EventHub);
+    public record EventHubUpdateCommandResult(Models.EventHub EventHub);
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Options;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -14,7 +15,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 public sealed class AzApiDocsGetCommand(
     ILogger<AzApiDocsGetCommand> logger,
     IAzApiDocsService docsService,
-    IAzApiExamplesService examplesService) : BaseCommand<AzApiDocsOptions>
+    IAzApiExamplesService examplesService) : BaseCommand<AzApiDocsOptions, AzApiDocsResult>
 {
     private readonly ILogger<AzApiDocsGetCommand> _logger = logger;
     private readonly IAzApiDocsService _docsService = docsService;
@@ -46,6 +47,8 @@ public sealed class AzApiDocsGetCommand(
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<AzApiDocsResult> ResultTypeInfo => AzureTerraformJsonContext.Default.AzApiDocsResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -89,7 +92,7 @@ public sealed class AzApiDocsGetCommand(
             }
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AzApiDocsResult);
+            SetResult(context, result);
             context.Response.Message = string.Empty;
 
             context.Activity

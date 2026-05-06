@@ -9,5 +9,5 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.EventHubs.Commands;
 
 public abstract class BaseEventHubsCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions> where TOptions : BaseEventHubsOptions, new();
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>
+    : SubscriptionCommand<TOptions, TResult> where TOptions : BaseEventHubsOptions, new();

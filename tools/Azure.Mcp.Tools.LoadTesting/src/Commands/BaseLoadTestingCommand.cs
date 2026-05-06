@@ -11,8 +11,8 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.LoadTesting.Commands;
 
 public abstract class BaseLoadTestingCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions> where TOptions : BaseLoadTestingOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>
+    : SubscriptionCommand<TOptions, TResult> where TOptions : BaseLoadTestingOptions, new()
 {
     protected override void RegisterOptions(Command command)
     {

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Knowledge;
 using Azure.Mcp.Tools.Search.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
-public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeBaseGetOptions>()
+public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeBaseGetOptions, KnowledgeBaseGetCommand.KnowledgeBaseGetCommandResult>()
 {
     private const string CommandTitle = "Get Azure AI Search Knowledge Base Details";
     private readonly ILogger<KnowledgeBaseGetCommand> _logger = logger;
@@ -44,6 +45,8 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
         Secret = false
     };
 
+    protected override JsonTypeInfo<KnowledgeBaseGetCommandResult> ResultTypeInfo => SearchJsonContext.Default.KnowledgeBaseGetCommandResult;
+
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
@@ -71,7 +74,7 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
         try
         {
             var bases = await _searchService.ListKnowledgeBases(options.Service!, options.KnowledgeBase, options.RetryPolicy, cancellationToken);
-            context.Response.Results = ResponseResult.Create(new(bases ?? []), SearchJsonContext.Default.KnowledgeBaseGetCommandResult);
+            SetResult(context, new(bases ?? []));
         }
         catch (Exception ex)
         {
@@ -82,5 +85,5 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
         return context.Response;
     }
 
-    internal sealed record KnowledgeBaseGetCommandResult(List<Models.KnowledgeBaseInfo> KnowledgeBases);
+    public sealed record KnowledgeBaseGetCommandResult(List<Models.KnowledgeBaseInfo> KnowledgeBases);
 }

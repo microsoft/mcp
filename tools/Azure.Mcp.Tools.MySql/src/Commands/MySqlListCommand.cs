@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands;
 
-public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlService mysqlService) : BaseMySqlCommand<MySqlDatabaseOptions>(logger)
+public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlService mysqlService) : BaseMySqlCommand<MySqlDatabaseOptions, MySqlListCommand.MySqlListCommandResult>(logger)
 {
     private readonly IMySqlService _mysqlService = mysqlService;
     public override string Id => "77e60b50-5c16-4879-96b1-6a40d9c08a37";
@@ -22,6 +23,8 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
     public override string Title => "List MySQL Resources";
 
     public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false };
+
+    protected override JsonTypeInfo<MySqlListCommandResult> ResultTypeInfo => MySqlJsonContext.Default.MySqlListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -72,9 +75,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                     options.Database!,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(null, null, tables ?? []),
-                    MySqlJsonContext.Default.MySqlListCommandResult);
+                SetResult(context, new(null, null, tables ?? []));
             }
             else if (!string.IsNullOrEmpty(options.Server))
             {
@@ -86,9 +87,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                     options.Server!,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(null, databases ?? [], null),
-                    MySqlJsonContext.Default.MySqlListCommandResult);
+                SetResult(context, new(null, databases ?? [], null));
             }
             else
             {
@@ -99,9 +98,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                     options.User!,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(servers ?? [], null, null),
-                    MySqlJsonContext.Default.MySqlListCommandResult);
+                SetResult(context, new(servers ?? [], null, null));
             }
         }
         catch (Exception ex)

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestResource;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 
 public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> logger, ILoadTestingService loadTestingService)
-    : BaseLoadTestingCommand<TestResourceListOptions>
+    : BaseLoadTestingCommand<TestResourceListOptions, TestResourceListCommand.TestResourceListCommandResult>
 {
     private const string _commandTitle = "Test Resource List";
     private readonly ILogger<TestResourceListCommand> _logger = logger;
@@ -36,6 +37,8 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<TestResourceListCommandResult> ResultTypeInfo => LoadTestJsonContext.Default.TestResourceListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -64,7 +67,7 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
                 options.RetryPolicy,
                 cancellationToken);
             // Set results if any were returned
-            context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestResourceListCommandResult);
+            SetResult(context, new(results ?? []));
         }
         catch (Exception ex)
         {
@@ -75,5 +78,5 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
         }
         return context.Response;
     }
-    internal record TestResourceListCommandResult(List<TestResource> LoadTest);
+    public record TestResourceListCommandResult(List<TestResource> LoadTest);
 }

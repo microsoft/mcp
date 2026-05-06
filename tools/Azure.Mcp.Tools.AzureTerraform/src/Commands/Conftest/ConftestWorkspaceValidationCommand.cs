@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Options;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -13,7 +14,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 
 public sealed class ConftestWorkspaceValidationCommand(
     ILogger<ConftestWorkspaceValidationCommand> logger,
-    IConftestService conftestService) : BaseCommand<ConftestWorkspaceValidationOptions>
+    IConftestService conftestService) : BaseCommand<ConftestWorkspaceValidationOptions, ConftestCommandResult>
 {
     private readonly ILogger<ConftestWorkspaceValidationCommand> _logger = logger;
     private readonly IConftestService _conftestService = conftestService;
@@ -43,6 +44,8 @@ public sealed class ConftestWorkspaceValidationCommand(
         LocalRequired = true,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ConftestCommandResult> ResultTypeInfo => AzureTerraformJsonContext.Default.ConftestCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -96,7 +99,7 @@ public sealed class ConftestWorkspaceValidationCommand(
             }
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.ConftestCommandResult);
+            SetResult(context, result);
             context.Response.Message = string.Empty;
 
             context.Activity

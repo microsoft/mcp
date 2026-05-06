@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiEmbeddingsCreateOptions>
+public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiEmbeddingsCreateOptions, OpenAiEmbeddingsCreateCommand.OpenAiEmbeddingsCreateCommandResult>
 {
     private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
@@ -42,6 +43,8 @@ public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foun
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<OpenAiEmbeddingsCreateCommandResult> ResultTypeInfo => FoundryExtensionsJsonContext.Default.OpenAiEmbeddingsCreateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -94,9 +97,7 @@ public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foun
                 options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result, options.ResourceName!, options.DeploymentName!, options.InputText!),
-                FoundryExtensionsJsonContext.Default.OpenAiEmbeddingsCreateCommandResult);
+            SetResult(context, new(result, options.ResourceName!, options.DeploymentName!, options.InputText!));
         }
         catch (Exception ex)
         {
@@ -106,7 +107,7 @@ public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foun
         return context.Response;
     }
 
-    internal record OpenAiEmbeddingsCreateCommandResult(
+    public record OpenAiEmbeddingsCreateCommandResult(
         EmbeddingResult EmbeddingResult,
         string ResourceName,
         string DeploymentName,

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 
 public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger, IAppServiceService appServiceService)
-    : BaseAppServiceCommand<BaseAppServiceOptions>(resourceGroupRequired: true, appRequired: true)
+    : BaseAppServiceCommand<BaseAppServiceOptions, AppSettingsGetCommand.AppSettingsGetResult>(resourceGroupRequired: true, appRequired: true)
 {
     private const string CommandTitle = "Gets Azure App Service Web App Application Settings";
     private readonly ILogger<AppSettingsGetCommand> _logger = logger;
@@ -35,6 +36,8 @@ public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger,
         Secret = true,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<AppSettingsGetResult> ResultTypeInfo => AppServiceJsonContext.Default.AppSettingsGetResult;
 
     protected override void RegisterOptions(Command command) => base.RegisterOptions(command);
 
@@ -62,7 +65,7 @@ public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(appSettings), AppServiceJsonContext.Default.AppSettingsGetResult);
+            SetResult(context, new(appSettings));
         }
         catch (Exception ex)
         {

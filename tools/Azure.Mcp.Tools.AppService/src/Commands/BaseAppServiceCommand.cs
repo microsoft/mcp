@@ -11,8 +11,8 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.AppService.Commands;
 
 public abstract class BaseAppServiceCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>(bool resourceGroupRequired = false, bool appRequired = false)
-    : SubscriptionCommand<TOptions>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(bool resourceGroupRequired = false, bool appRequired = false)
+    : SubscriptionCommand<TOptions, TResult>
     where TOptions : BaseAppServiceOptions, new()
 {
     protected override void RegisterOptions(Command command)

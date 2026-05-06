@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Options.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 
 public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> logger, IAppServiceService appServiceService)
-    : BaseAppServiceCommand<AppSettingsUpdateOptions>(resourceGroupRequired: true, appRequired: true)
+    : BaseAppServiceCommand<AppSettingsUpdateOptions, AppSettingsUpdateCommand.AppSettingsUpdateResult>(resourceGroupRequired: true, appRequired: true)
 {
     private const string CommandTitle = "Updates Azure App Service Web App Application Settings";
     private readonly ILogger<AppSettingsUpdateCommand> _logger = logger;
@@ -44,6 +45,8 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<AppSettingsUpdateResult> ResultTypeInfo => AppServiceJsonContext.Default.AppSettingsUpdateResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -125,7 +128,7 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(updateResult), AppServiceJsonContext.Default.AppSettingsUpdateResult);
+            SetResult(context, new(updateResult));
         }
         catch (Exception ex)
         {

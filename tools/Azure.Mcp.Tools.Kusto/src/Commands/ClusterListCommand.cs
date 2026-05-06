@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
@@ -10,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger, IKustoService kustoService) : SubscriptionCommand<ClusterListOptions>()
+public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger, IKustoService kustoService) : SubscriptionCommand<ClusterListOptions, ClusterListCommand.ClusterListCommandResult>()
 {
     private const string CommandTitle = "List Kusto Clusters";
     private readonly ILogger<ClusterListCommand> _logger = logger;
@@ -35,6 +36,8 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger, IKust
         Secret = false
     };
 
+    protected override JsonTypeInfo<ClusterListCommandResult> ResultTypeInfo => KustoJsonContext.Default.ClusterListCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -52,7 +55,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger, IKust
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(clusterNames?.Results ?? [], clusterNames?.AreResultsTruncated ?? false), KustoJsonContext.Default.ClusterListCommandResult);
+            SetResult(context, new(clusterNames?.Results ?? [], clusterNames?.AreResultsTruncated ?? false));
         }
         catch (Exception ex)
         {
@@ -63,5 +66,5 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger, IKust
         return context.Response;
     }
 
-    internal record ClusterListCommandResult(List<string> Clusters, bool AreResultsTruncated);
+    public record ClusterListCommandResult(List<string> Clusters, bool AreResultsTruncated);
 }

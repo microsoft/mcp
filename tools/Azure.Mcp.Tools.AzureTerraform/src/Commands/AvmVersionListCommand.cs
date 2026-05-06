@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Options;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -13,7 +14,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 
 public sealed class AvmVersionListCommand(
     ILogger<AvmVersionListCommand> logger,
-    IAvmDocsService avmDocsService) : BaseCommand<AvmVersionOptions>
+    IAvmDocsService avmDocsService) : BaseCommand<AvmVersionOptions, AvmVersionListResult>
 {
     private readonly ILogger<AvmVersionListCommand> _logger = logger;
     private readonly IAvmDocsService _avmDocsService = avmDocsService;
@@ -41,6 +42,8 @@ public sealed class AvmVersionListCommand(
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<AvmVersionListResult> ResultTypeInfo => AzureTerraformJsonContext.Default.AvmVersionListResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -81,7 +84,7 @@ public sealed class AvmVersionListCommand(
             };
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AvmVersionListResult);
+            SetResult(context, result);
             context.Response.Message = string.Empty;
 
             context.Activity

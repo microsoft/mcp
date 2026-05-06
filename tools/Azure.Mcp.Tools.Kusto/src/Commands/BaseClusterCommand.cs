@@ -11,8 +11,8 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
 public abstract class BaseClusterCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : GlobalCommand<TOptions> where TOptions : BaseClusterOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>
+    : GlobalCommand<TOptions, TResult> where TOptions : BaseClusterOptions, new()
 {
     protected static bool UseClusterUri(BaseClusterOptions options) => !string.IsNullOrEmpty(options.ClusterUri);
 

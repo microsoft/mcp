@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 
 public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<ConsumerGroupUpdateOptions>
+    : BaseEventHubsCommand<ConsumerGroupUpdateOptions, ConsumerGroupUpdateCommand.ConsumerGroupUpdateCommandResult>
 {
     private const string CommandTitle = "Create or Update Event Hubs Consumer Group";
 
@@ -45,6 +46,8 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
         Secret = false,         // Returns non-sensitive information
         LocalRequired = false   // Pure cloud API calls
     };
+
+    protected override JsonTypeInfo<ConsumerGroupUpdateCommandResult> ResultTypeInfo => EventHubsJsonContext.Default.ConsumerGroupUpdateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -89,7 +92,7 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(consumerGroup), EventHubsJsonContext.Default.ConsumerGroupUpdateCommandResult);
+            SetResult(context, new(consumerGroup));
         }
         catch (Exception ex)
         {
@@ -100,5 +103,5 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
         return context.Response;
     }
 
-    internal record ConsumerGroupUpdateCommandResult(Models.ConsumerGroup ConsumerGroup);
+    public record ConsumerGroupUpdateCommandResult(Models.ConsumerGroup ConsumerGroup);
 }

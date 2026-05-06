@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class TableListCommand(ILogger<TableListCommand> logger, IKustoService kustoService) : BaseDatabaseCommand<TableListOptions>
+public sealed class TableListCommand(ILogger<TableListCommand> logger, IKustoService kustoService) : BaseDatabaseCommand<TableListOptions, TableListCommand.TableListCommandResult>
 {
     private const string CommandTitle = "List Kusto Tables";
     private readonly ILogger<TableListCommand> _logger = logger;
@@ -33,6 +34,8 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IKustoSer
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<TableListCommandResult> ResultTypeInfo => KustoJsonContext.Default.TableListCommandResult;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -69,7 +72,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IKustoSer
                     cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(new(tableNames ?? []), KustoJsonContext.Default.TableListCommandResult);
+            SetResult(context, new(tableNames ?? []));
         }
         catch (Exception ex)
         {

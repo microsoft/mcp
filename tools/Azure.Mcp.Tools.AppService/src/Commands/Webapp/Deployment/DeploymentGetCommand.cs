@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Options.Webapp.Deployment;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Deployment;
 
 public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger)
-    : BaseAppServiceCommand<DeploymentGetOptions>(resourceGroupRequired: true, appRequired: true)
+    : BaseAppServiceCommand<DeploymentGetOptions, DeploymentGetCommand.DeploymentGetResult>(resourceGroupRequired: true, appRequired: true)
 {
     private const string CommandTitle = "Gets Azure App Service Web App Deployment Details";
     private readonly ILogger<DeploymentGetCommand> _logger = logger;
@@ -40,6 +41,8 @@ public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger)
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<DeploymentGetResult> ResultTypeInfo => AppServiceJsonContext.Default.DeploymentGetResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -78,7 +81,7 @@ public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(deployments), AppServiceJsonContext.Default.DeploymentGetResult);
+            SetResult(context, new(deployments));
         }
         catch (Exception ex)
         {

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
+using Fabric.Mcp.Tools.Docs.Models;
 using Fabric.Mcp.Tools.Docs.Options;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
@@ -9,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
 
-public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logger) : GlobalCommand<BaseFabricOptions>()
+public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logger) : GlobalCommand<BaseFabricOptions, FabricWorkloadPublicApi>()
 {
     private const string CommandTitle = "Platform API Specification";
     private readonly ILogger<GetPlatformApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -33,6 +35,8 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
         Secret = false
     };
 
+    protected override JsonTypeInfo<FabricWorkloadPublicApi> ResultTypeInfo => FabricJsonContext.Default.FabricWorkloadPublicApi;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -47,7 +51,7 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
             var fabricService = context.GetService<IFabricPublicApiService>();
             var apis = await fabricService.GetWorkloadPublicApis("platform", cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
+            SetResult(context, apis);
         }
         catch (Exception ex)
         {

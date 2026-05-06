@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
 public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<NamespaceUpdateOptions>
+    : BaseEventHubsCommand<NamespaceUpdateOptions, NamespaceUpdateCommand.NamespaceUpdateCommandResult>
 {
     private const string CommandTitle = "Create or Update Event Hubs Namespace";
 
@@ -53,6 +54,8 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
         Secret = false,        // Returns non-sensitive information
         LocalRequired = false  // Pure cloud API calls
     };
+
+    protected override JsonTypeInfo<NamespaceUpdateCommandResult> ResultTypeInfo => EventHubsJsonContext.Default.NamespaceUpdateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -162,9 +165,7 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(updatedNamespace),
-                EventHubsJsonContext.Default.NamespaceUpdateCommandResult);
+            SetResult(context, new(updatedNamespace));
         }
         catch (Exception ex)
         {
@@ -176,5 +177,5 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
         return context.Response;
     }
 
-    internal record NamespaceUpdateCommandResult(Models.Namespace Namespace);
+    public record NamespaceUpdateCommandResult(Models.Namespace Namespace);
 }

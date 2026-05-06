@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Key;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
 
-public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<KeyCreateOptions>
+public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<KeyCreateOptions, KeyCreateCommand.KeyCreateCommandResult>
 {
     private const string CommandTitle = "Create Key Vault Key";
     private readonly ILogger<KeyCreateCommand> _logger = logger;
@@ -33,6 +34,8 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger, IKeyVault
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<KeyCreateCommandResult> ResultTypeInfo => KeyVaultJsonContext.Default.KeyCreateCommandResult;
 
     public override string Description =>
         "Create a new key in an Azure Key Vault. This command creates a key with the specified name and type in the given vault. Supports types: RSA, RSA-HSM, EC, EC-HSM, oct, oct-HSM. Required: --vault <vault>, --key <key> --key-type <key-type> --subscription <subscription>. Optional: --tenant <tenant>. Returns: Returns: name, id, keyId, keyType, enabled, notBefore, expiresOn, createdOn, updatedOn. Creates a new key version if it already exists.";
@@ -74,16 +77,14 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger, IKeyVault
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(
-                    key.Name,
-                    key.KeyType.ToString(),
-                    key.Properties.Enabled,
-                    key.Properties.NotBefore,
-                    key.Properties.ExpiresOn,
-                    key.Properties.CreatedOn,
-                    key.Properties.UpdatedOn),
-                KeyVaultJsonContext.Default.KeyCreateCommandResult);
+            SetResult(context, new(
+                key.Name,
+                key.KeyType.ToString(),
+                key.Properties.Enabled,
+                key.Properties.NotBefore,
+                key.Properties.ExpiresOn,
+                key.Properties.CreatedOn,
+                key.Properties.UpdatedOn));
         }
         catch (Exception ex)
         {
@@ -94,5 +95,5 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger, IKeyVault
         return context.Response;
     }
 
-    internal record KeyCreateCommandResult(string Name, string KeyType, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn);
+    public record KeyCreateCommandResult(string Name, string KeyType, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn);
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Options;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -13,7 +14,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 
 public sealed class AzureRMDocsGetCommand(
     ILogger<AzureRMDocsGetCommand> logger,
-    IAzureRMDocsService docsService) : BaseCommand<AzureRMDocsOptions>
+    IAzureRMDocsService docsService) : BaseCommand<AzureRMDocsOptions, AzureRMDocsResult>
 {
     private readonly ILogger<AzureRMDocsGetCommand> _logger = logger;
     private readonly IAzureRMDocsService _docsService = docsService;
@@ -42,6 +43,8 @@ public sealed class AzureRMDocsGetCommand(
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<AzureRMDocsResult> ResultTypeInfo => AzureTerraformJsonContext.Default.AzureRMDocsResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -85,7 +88,7 @@ public sealed class AzureRMDocsGetCommand(
                 cancellationToken).ConfigureAwait(false);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AzureRMDocsResult);
+            SetResult(context, result);
             context.Response.Message = string.Empty;
 
             context.Activity

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class OpenAiChatCompletionsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiChatCompletionsCreateOptions>
+public sealed class OpenAiChatCompletionsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiChatCompletionsCreateOptions, OpenAiChatCompletionsCreateCommand.OpenAiChatCompletionsCreateCommandResult>
 {
     private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
@@ -44,6 +45,8 @@ public sealed class OpenAiChatCompletionsCreateCommand(IFoundryExtensionsService
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<OpenAiChatCompletionsCreateCommandResult> ResultTypeInfo => FoundryExtensionsJsonContext.Default.OpenAiChatCompletionsCreateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -131,9 +134,7 @@ public sealed class OpenAiChatCompletionsCreateCommand(IFoundryExtensionsService
                 options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result, options.ResourceName!, options.DeploymentName!),
-                FoundryExtensionsJsonContext.Default.OpenAiChatCompletionsCreateCommandResult);
+            SetResult(context, new(result, options.ResourceName!, options.DeploymentName!));
         }
         catch (Exception ex)
         {
@@ -143,7 +144,7 @@ public sealed class OpenAiChatCompletionsCreateCommand(IFoundryExtensionsService
         return context.Response;
     }
 
-    internal record OpenAiChatCompletionsCreateCommandResult(
+    public record OpenAiChatCompletionsCreateCommandResult(
         ChatCompletionResult Result,
         string ResourceName,
         string DeploymentName);

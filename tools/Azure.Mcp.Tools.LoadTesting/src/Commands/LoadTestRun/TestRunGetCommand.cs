@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
 public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTestingService loadTestingService)
-    : BaseLoadTestingCommand<TestRunGetOptions>
+    : BaseLoadTestingCommand<TestRunGetOptions, TestRunGetCommand.TestRunGetCommandResult>
 {
     private const string _commandTitle = "Test Run Get";
     private readonly ILogger<TestRunGetCommand> _logger = logger;
@@ -38,6 +39,8 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<TestRunGetCommandResult> ResultTypeInfo => LoadTestJsonContext.Default.TestRunGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -95,9 +98,10 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
                     options.RetryPolicy,
                     cancellationToken);
                 // Set results if any were returned
-                context.Response.Results = result != null
-                    ? ResponseResult.Create(new([result]), LoadTestJsonContext.Default.TestRunGetCommandResult)
-                    : null;
+                if (result != null)
+                {
+                    SetResult(context, new([result]));
+                }
             }
             // Otherwise if TestId is provided, list all test runs for that test
             else if (!string.IsNullOrEmpty(options.TestId))
@@ -110,7 +114,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
-                context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestRunGetCommandResult);
+                SetResult(context, new(results ?? []));
             }
             // If neither is provided, that's ok - validation will catch it
         }
@@ -123,5 +127,5 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
         }
         return context.Response;
     }
-    internal record TestRunGetCommandResult(List<TestRun> TestRuns);
+    public record TestRunGetCommandResult(List<TestRun> TestRuns);
 }

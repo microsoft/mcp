@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Options.Webapp.Diagnostic;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 
 public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> logger)
-    : BaseAppServiceCommand<DetectorDiagnoseOptions>(resourceGroupRequired: true, appRequired: true)
+    : BaseAppServiceCommand<DetectorDiagnoseOptions, DetectorDiagnoseCommand.DetectorDiagnoseResult>(resourceGroupRequired: true, appRequired: true)
 {
     private const string CommandTitle = "Diagnose an App Service Web App";
     private readonly ILogger<DetectorDiagnoseCommand> _logger = logger;
@@ -40,6 +41,8 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<DetectorDiagnoseResult> ResultTypeInfo => AppServiceJsonContext.Default.DetectorDiagnoseResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -119,7 +122,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(diagnoses), AppServiceJsonContext.Default.DetectorDiagnoseResult);
+            SetResult(context, new(diagnoses));
         }
         catch (Exception ex)
         {

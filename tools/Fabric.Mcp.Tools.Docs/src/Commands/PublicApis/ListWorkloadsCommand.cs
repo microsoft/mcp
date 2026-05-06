@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Fabric.Mcp.Tools.Docs.Options;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
 
-public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) : GlobalCommand<BaseFabricOptions>()
+public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) : GlobalCommand<BaseFabricOptions, ListWorkloadsCommand.ItemListCommandResult>()
 {
     private const string CommandTitle = "Available Fabric Workloads";
 
@@ -34,6 +35,8 @@ public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) :
         Secret = false
     };
 
+    protected override JsonTypeInfo<ItemListCommandResult> ResultTypeInfo => FabricJsonContext.Default.ItemListCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
@@ -46,7 +49,7 @@ public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) :
             var fabricService = context.GetService<IFabricPublicApiService>();
             var workloads = await fabricService.ListWorkloadsAsync(cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(workloads), FabricJsonContext.Default.ItemListCommandResult);
+            SetResult(context, new(workloads));
         }
         catch (Exception ex)
         {

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Options;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IKustoService kustoService) : SubscriptionCommand<ClusterGetOptions>
+public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IKustoService kustoService) : SubscriptionCommand<ClusterGetOptions, ClusterGetCommand.ClusterGetCommandResult>
 {
     private const string CommandTitle = "Get Kusto Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
@@ -38,6 +39,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IKustoS
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ClusterGetCommandResult> ResultTypeInfo => KustoJsonContext.Default.ClusterGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -71,8 +74,10 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IKustoS
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = cluster is null ?
-                null : ResponseResult.Create(new(cluster), KustoJsonContext.Default.ClusterGetCommandResult);
+            if (cluster is not null)
+            {
+                SetResult(context, new(cluster));
+            }
         }
         catch (Exception ex)
         {
@@ -101,5 +106,5 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IKustoS
         _ => base.GetStatusCode(ex)
     };
 
-    internal record ClusterGetCommandResult(KustoClusterModel Cluster);
+    public record ClusterGetCommandResult(KustoClusterModel Cluster);
 }

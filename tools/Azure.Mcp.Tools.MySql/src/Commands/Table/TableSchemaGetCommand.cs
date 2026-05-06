@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.MySql.Commands.Database;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Options.Table;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Table;
 
-public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger, IMySqlService mysqlService) : BaseDatabaseCommand<TableSchemaGetOptions>(logger)
+public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger, IMySqlService mysqlService) : BaseDatabaseCommand<TableSchemaGetOptions, TableSchemaGetCommand.TableSchemaGetCommandResult>(logger)
 {
     private const string CommandTitle = "Get MySQL Table Schema";
     private readonly IMySqlService _mysqlService = mysqlService;
@@ -34,6 +35,8 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger,
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<TableSchemaGetCommandResult> ResultTypeInfo => MySqlJsonContext.Default.TableSchemaGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -60,7 +63,7 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger,
         try
         {
             var schema = await _mysqlService.GetTableSchemaAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!, options.Table!, cancellationToken);
-            context.Response.Results = ResponseResult.Create(new(schema ?? []), MySqlJsonContext.Default.TableSchemaGetCommandResult);
+            SetResult(context, new(schema ?? []));
         }
         catch (Exception ex)
         {

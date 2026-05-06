@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Options;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -13,7 +14,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 
 public sealed class AztfexportResourceCommand(
     ILogger<AztfexportResourceCommand> logger,
-    IAztfexportService aztfexportService) : BaseCommand<AztfexportResourceOptions>
+    IAztfexportService aztfexportService) : BaseCommand<AztfexportResourceOptions, AztfexportCommandResult>
 {
     private readonly ILogger<AztfexportResourceCommand> _logger = logger;
     private readonly IAztfexportService _aztfexportService = aztfexportService;
@@ -42,6 +43,8 @@ public sealed class AztfexportResourceCommand(
         LocalRequired = true,
         Secret = false
     };
+
+    protected override JsonTypeInfo<AztfexportCommandResult> ResultTypeInfo => AzureTerraformJsonContext.Default.AztfexportCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -104,7 +107,7 @@ public sealed class AztfexportResourceCommand(
             }
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AztfexportCommandResult);
+            SetResult(context, result);
             context.Response.Message = string.Empty;
 
             context.Activity

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryExtensionsService) : GlobalCommand<KnowledgeIndexListOptions>
+public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryExtensionsService) : GlobalCommand<KnowledgeIndexListOptions, KnowledgeIndexListCommand.KnowledgeIndexListCommandResult>
 {
     private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
@@ -50,6 +51,8 @@ public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryE
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<KnowledgeIndexListCommandResult> ResultTypeInfo => FoundryExtensionsJsonContext.Default.KnowledgeIndexListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -91,7 +94,7 @@ public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryE
                 options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(indexes ?? []), FoundryExtensionsJsonContext.Default.KnowledgeIndexListCommandResult);
+            SetResult(context, new(indexes ?? []));
         }
         catch (Exception ex)
         {
@@ -122,5 +125,5 @@ public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryE
         commandResult.AddError(lastError ?? $"Invalid Foundry project endpoint: {endpoint}");
     }
 
-    internal record KnowledgeIndexListCommandResult(IEnumerable<KnowledgeIndexInformation> Indexes);
+    public record KnowledgeIndexListCommandResult(IEnumerable<KnowledgeIndexInformation> Indexes);
 }

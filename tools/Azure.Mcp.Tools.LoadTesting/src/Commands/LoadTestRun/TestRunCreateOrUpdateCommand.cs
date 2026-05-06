@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
 public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCommand> logger, ILoadTestingService loadTestingService)
-    : BaseLoadTestingCommand<TestRunCreateOrUpdateOptions>
+    : BaseLoadTestingCommand<TestRunCreateOrUpdateOptions, TestRunCreateOrUpdateCommand.TestRunCreateOrUpdateCommandResult>
 {
     private const string _commandTitle = "Test Run Create or Update";
     private readonly ILogger<TestRunCreateOrUpdateCommand> _logger = logger;
@@ -40,6 +41,8 @@ public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCo
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<TestRunCreateOrUpdateCommandResult> ResultTypeInfo => LoadTestJsonContext.Default.TestRunCreateOrUpdateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -90,9 +93,10 @@ public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCo
                 options.RetryPolicy,
                 cancellationToken);
             // Set results if any were returned
-            context.Response.Results = results != null ?
-                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestRunCreateOrUpdateCommandResult) :
-                null;
+            if (results != null)
+            {
+                SetResult(context, new(results));
+            }
         }
         catch (Exception ex)
         {
@@ -103,5 +107,5 @@ public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCo
         }
         return context.Response;
     }
-    internal record TestRunCreateOrUpdateCommandResult(TestRun TestRun);
+    public record TestRunCreateOrUpdateCommandResult(TestRun TestRun);
 }

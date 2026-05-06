@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<ResourceGetOptions>()
+public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<ResourceGetOptions, ResourceGetCommand.ResourceGetCommandResult>()
 {
     private const string CommandTitle = "Get Microsoft Foundry Resource Details";
     private readonly ILogger<ResourceGetCommand> _logger = logger;
@@ -44,6 +45,8 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoun
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ResourceGetCommandResult> ResultTypeInfo => FoundryExtensionsJsonContext.Default.ResourceGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -84,9 +87,7 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoun
                     options.RetryPolicy,
                     cancellationToken: cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new([resource]),
-                    FoundryExtensionsJsonContext.Default.ResourceGetCommandResult);
+                SetResult(context, new([resource]));
             }
             // Otherwise, list all resources in subscription/resource group
             else
@@ -98,9 +99,7 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoun
                     options.RetryPolicy,
                     cancellationToken: cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(resources ?? []),
-                    FoundryExtensionsJsonContext.Default.ResourceGetCommandResult);
+                SetResult(context, new(resources ?? []));
             }
         }
         catch (Exception ex)
@@ -121,5 +120,5 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoun
         return context.Response;
     }
 
-    internal record ResourceGetCommandResult(List<AiResourceInformation> Resources);
+    public record ResourceGetCommandResult(List<AiResourceInformation> Resources);
 }

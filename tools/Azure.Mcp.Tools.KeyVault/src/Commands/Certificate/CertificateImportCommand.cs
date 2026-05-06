@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 
-public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<CertificateImportOptions>
+public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<CertificateImportOptions, CertificateImportCommand.CertificateImportCommandResult>
 {
     private const string CommandTitle = "Import Key Vault Certificate";
     private readonly ILogger<CertificateImportCommand> _logger = logger;
@@ -33,6 +34,8 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
         LocalRequired = true,
         Secret = false
     };
+
+    protected override JsonTypeInfo<CertificateImportCommandResult> ResultTypeInfo => KeyVaultJsonContext.Default.CertificateImportCommandResult;
 
     public override string Description =>
         "Imports/uploads an existing certificate (PFX or PEM with private key) into an Azure Key Vault without generating a new certificate or key material. This command accepts either a file path to a PFX/PEM file, a base64 encoded PFX, or raw PEM text starting with -----BEGIN. If the certificate is a password-protected PFX, a password must be provided. Required: --vault <vault>, --certificate <certificate>, --certificate-data <certificate-data>, --subscription <subscription>. Optional: --password <password-for-PFX>, --tenant <tenant>. Returns: name, id, keyId, secretId, cer (base64), thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuer. Creates a new certificate version if it already exists.";
@@ -77,22 +80,20 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(
-                    certificate.Name,
-                    certificate.Id,
-                    certificate.KeyId,
-                    certificate.SecretId,
-                    Convert.ToBase64String(certificate.Cer),
-                    certificate.Properties.X509ThumbprintString,
-                    certificate.Properties.Enabled,
-                    certificate.Properties.NotBefore,
-                    certificate.Properties.ExpiresOn,
-                    certificate.Properties.CreatedOn,
-                    certificate.Properties.UpdatedOn,
-                    certificate.Policy.Subject,
-                    certificate.Policy.IssuerName),
-                KeyVaultJsonContext.Default.CertificateImportCommandResult);
+            SetResult(context, new(
+                certificate.Name,
+                certificate.Id,
+                certificate.KeyId,
+                certificate.SecretId,
+                Convert.ToBase64String(certificate.Cer),
+                certificate.Properties.X509ThumbprintString,
+                certificate.Properties.Enabled,
+                certificate.Properties.NotBefore,
+                certificate.Properties.ExpiresOn,
+                certificate.Properties.CreatedOn,
+                certificate.Properties.UpdatedOn,
+                certificate.Policy.Subject,
+                certificate.Policy.IssuerName));
         }
         catch (Exception ex)
         {
@@ -103,5 +104,5 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
         return context.Response;
     }
 
-    internal record CertificateImportCommandResult(string Name, Uri Id, Uri KeyId, Uri SecretId, string Cer, string Thumbprint, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn, string Subject, string IssuerName);
+    public record CertificateImportCommandResult(string Name, Uri Id, Uri KeyId, Uri SecretId, string Cer, string Thumbprint, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn, string Subject, string IssuerName);
 }

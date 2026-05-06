@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Options.Database;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AppService.Commands.Database;
 
 public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger, IAppServiceService appServiceService)
-    : BaseAppServiceCommand<DatabaseAddOptions>(resourceGroupRequired: true, appRequired: true)
+    : BaseAppServiceCommand<DatabaseAddOptions, DatabaseAddCommand.DatabaseAddResult>(resourceGroupRequired: true, appRequired: true)
 {
     private const string CommandTitle = "Add Database to App Service";
     private readonly ILogger<DatabaseAddCommand> _logger = logger;
@@ -41,6 +42,8 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger, IAppS
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<DatabaseAddResult> ResultTypeInfo => AppServiceJsonContext.Default.DatabaseAddResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -87,7 +90,7 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger, IAppS
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(connectionInfo), AppServiceJsonContext.Default.DatabaseAddResult);
+            SetResult(context, new(connectionInfo));
         }
         catch (Exception ex)
         {

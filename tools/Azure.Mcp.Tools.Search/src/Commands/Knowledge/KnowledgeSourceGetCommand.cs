@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Knowledge;
 using Azure.Mcp.Tools.Search.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
-public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeSourceGetOptions>()
+public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeSourceGetOptions, KnowledgeSourceGetCommand.KnowledgeSourceGetCommandResult>()
 {
     private const string CommandTitle = "Get Azure AI Search Knowledge Source Details";
     private readonly ILogger<KnowledgeSourceGetCommand> _logger = logger;
@@ -46,6 +47,8 @@ public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand>
         Secret = false
     };
 
+    protected override JsonTypeInfo<KnowledgeSourceGetCommandResult> ResultTypeInfo => SearchJsonContext.Default.KnowledgeSourceGetCommandResult;
+
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
@@ -73,7 +76,7 @@ public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand>
         try
         {
             var sources = await _searchService.ListKnowledgeSources(options.Service!, options.KnowledgeSource, options.RetryPolicy, cancellationToken);
-            context.Response.Results = ResponseResult.Create(new(sources ?? []), SearchJsonContext.Default.KnowledgeSourceGetCommandResult);
+            SetResult(context, new(sources ?? []));
         }
         catch (Exception ex)
         {
@@ -84,5 +87,5 @@ public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand>
         return context.Response;
     }
 
-    internal sealed record KnowledgeSourceGetCommandResult(List<Models.KnowledgeSourceInfo> KnowledgeSources);
+    public sealed record KnowledgeSourceGetCommandResult(List<Models.KnowledgeSourceInfo> KnowledgeSources);
 }

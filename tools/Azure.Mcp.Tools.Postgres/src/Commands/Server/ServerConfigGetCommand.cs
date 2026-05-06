@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Postgres.Options.Server;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 
-public sealed class ServerConfigGetCommand(IPostgresService postgresService, ILogger<ServerConfigGetCommand> logger) : BaseServerCommand<ServerConfigGetOptions>(logger)
+public sealed class ServerConfigGetCommand(IPostgresService postgresService, ILogger<ServerConfigGetCommand> logger) : BaseServerCommand<ServerConfigGetOptions, ServerConfigGetCommand.ServerConfigGetCommandResult>(logger)
 {
     private readonly IPostgresService _postgresService = postgresService;
     private const string CommandTitle = "Get PostgreSQL Server Configuration";
@@ -33,6 +34,8 @@ public sealed class ServerConfigGetCommand(IPostgresService postgresService, ILo
         Secret = false
     };
 
+    protected override JsonTypeInfo<ServerConfigGetCommandResult> ResultTypeInfo => PostgresJsonContext.Default.ServerConfigGetCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -46,9 +49,10 @@ public sealed class ServerConfigGetCommand(IPostgresService postgresService, ILo
         {
 
             var config = await _postgresService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, cancellationToken);
-            context.Response.Results = config?.Length > 0 ?
-                ResponseResult.Create(new(config), PostgresJsonContext.Default.ServerConfigGetCommandResult) :
-                null;
+            if (config?.Length > 0)
+            {
+                SetResult(context, new(config));
+            }
         }
         catch (Exception ex)
         {
@@ -57,5 +61,5 @@ public sealed class ServerConfigGetCommand(IPostgresService postgresService, ILo
         }
         return context.Response;
     }
-    internal record ServerConfigGetCommandResult(string Configuration);
+    public record ServerConfigGetCommandResult(string Configuration);
 }

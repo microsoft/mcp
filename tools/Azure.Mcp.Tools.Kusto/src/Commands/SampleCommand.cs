@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService kustoService) : BaseTableCommand<SampleOptions>
+public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService kustoService) : BaseTableCommand<SampleOptions, SampleCommand.SampleCommandResult>
 {
     private const string CommandTitle = "Sample Kusto Table Data";
     private readonly ILogger<SampleCommand> _logger = logger;
@@ -47,6 +48,8 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService k
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<SampleCommandResult> ResultTypeInfo => KustoJsonContext.Default.SampleCommandResult;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -89,7 +92,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService k
                     cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.SampleCommandResult);
+            SetResult(context, new(results ?? []));
         }
         catch (Exception ex)
         {
@@ -99,5 +102,5 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService k
         return context.Response;
     }
 
-    internal record SampleCommandResult(List<JsonElement> Results);
+    public record SampleCommandResult(List<JsonElement> Results);
 }

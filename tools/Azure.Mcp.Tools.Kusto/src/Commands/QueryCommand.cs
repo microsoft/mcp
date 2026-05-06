@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class QueryCommand(ILogger<QueryCommand> logger, IKustoService kustoService) : BaseDatabaseCommand<QueryOptions>()
+public sealed class QueryCommand(ILogger<QueryCommand> logger, IKustoService kustoService) : BaseDatabaseCommand<QueryOptions, QueryCommand.QueryCommandResult>()
 {
     private const string CommandTitle = "Query Kusto Database";
     private readonly ILogger<QueryCommand> _logger = logger;
@@ -47,6 +48,8 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger, IKustoService kus
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<QueryCommandResult> ResultTypeInfo => KustoJsonContext.Default.QueryCommandResult;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -85,7 +88,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger, IKustoService kus
                     cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.QueryCommandResult);
+            SetResult(context, new(results ?? []));
         }
         catch (Exception ex)
         {
@@ -96,5 +99,5 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger, IKustoService kus
         return context.Response;
     }
 
-    internal record QueryCommandResult(List<JsonElement> Items);
+    public record QueryCommandResult(List<JsonElement> Items);
 }

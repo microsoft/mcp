@@ -9,8 +9,8 @@ using Microsoft.Mcp.Core.Extensions;
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
 public abstract class BaseTableCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : BaseDatabaseCommand<TOptions> where TOptions : BaseTableOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>
+    : BaseDatabaseCommand<TOptions, TResult> where TOptions : BaseTableOptions, new()
 {
     protected override void RegisterOptions(Command command)
     {

@@ -12,10 +12,10 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.MySql.Commands;
 
 public abstract class BaseMySqlCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>(ILogger<BaseMySqlCommand<TOptions>> logger)
-    : SubscriptionCommand<TOptions> where TOptions : BaseMySqlOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(ILogger<BaseMySqlCommand<TOptions, TResult>> logger)
+    : SubscriptionCommand<TOptions, TResult> where TOptions : BaseMySqlOptions, new()
 {
-    protected readonly ILogger<BaseMySqlCommand<TOptions>> _logger = logger;
+    protected readonly ILogger<BaseMySqlCommand<TOptions, TResult>> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {

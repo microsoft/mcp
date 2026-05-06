@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Search.Commands.Index;
 
-public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearchService searchService) : GlobalCommand<IndexQueryOptions>()
+public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearchService searchService) : GlobalCommand<IndexQueryOptions, IndexQueryCommand.IndexQueryCommandResult>()
 {
     private const string CommandTitle = "Query an Azure AI Search (formerly known as \"Azure Cognitive Search\") Index";
     private readonly ILogger<IndexQueryCommand> _logger = logger;
@@ -39,6 +40,8 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearch
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<IndexQueryCommandResult> ResultTypeInfo => SearchJsonContext.Default.IndexQueryCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -75,9 +78,7 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearch
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new IndexQueryCommandResult(results ?? []),
-                SearchJsonContext.Default.IndexQueryCommandResult);
+            SetResult(context, new IndexQueryCommandResult(results ?? []));
         }
         catch (Exception ex)
         {

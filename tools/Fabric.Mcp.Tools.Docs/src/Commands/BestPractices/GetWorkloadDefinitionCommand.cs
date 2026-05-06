@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Fabric.Mcp.Tools.Docs.Options;
 using Fabric.Mcp.Tools.Docs.Options.PublicApis;
 using Fabric.Mcp.Tools.Docs.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
 
-public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCommand> logger) : GlobalCommand<WorkloadCommandOptions>()
+public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCommand> logger) : GlobalCommand<WorkloadCommandOptions, string>()
 {
     private const string CommandTitle = "Item Definitions";
 
@@ -36,6 +37,8 @@ public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCo
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<string> ResultTypeInfo => FabricJsonContext.Default.String;
 
     protected override void RegisterOptions(Command command)
     {
@@ -64,7 +67,7 @@ public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCo
             var fabricService = context.GetService<IFabricPublicApiService>();
             var workloadItemDefinition = fabricService.GetWorkloadItemDefinition(options.WorkloadType!);
 
-            context.Response.Results = ResponseResult.Create(workloadItemDefinition, FabricJsonContext.Default.String);
+            SetResult(context, workloadItemDefinition);
         }
         catch (ArgumentException argEx)
         {

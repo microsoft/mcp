@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 
 public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<ConsumerGroupGetOptions>
+    : BaseEventHubsCommand<ConsumerGroupGetOptions, ConsumerGroupGetCommand.ConsumerGroupGetCommandResult>
 {
     private const string CommandTitle = "Get Event Hubs Consumer Groups";
 
@@ -46,6 +47,8 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
         Secret = false,         // Returns non-sensitive information
         LocalRequired = false   // Pure cloud API calls
     };
+
+    protected override JsonTypeInfo<ConsumerGroupGetCommandResult> ResultTypeInfo => EventHubsJsonContext.Default.ConsumerGroupGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -91,7 +94,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
                     cancellationToken);
 
                 var singleResult = consumerGroup != null ? new List<Models.ConsumerGroup> { consumerGroup } : new List<Models.ConsumerGroup>();
-                context.Response.Results = ResponseResult.Create(new(singleResult), EventHubsJsonContext.Default.ConsumerGroupGetCommandResult);
+                SetResult(context, new(singleResult));
             }
             else
             {
@@ -105,7 +108,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(consumerGroups ?? []), EventHubsJsonContext.Default.ConsumerGroupGetCommandResult);
+                SetResult(context, new(consumerGroups ?? []));
             }
         }
         catch (Exception ex)
@@ -117,5 +120,5 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
         return context.Response;
     }
 
-    internal record ConsumerGroupGetCommandResult(List<Models.ConsumerGroup> Results);
+    public record ConsumerGroupGetCommandResult(List<Models.ConsumerGroup> Results);
 }
