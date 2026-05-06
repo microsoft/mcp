@@ -255,15 +255,14 @@ public class AppLensService(
     }
 
     /// <summary>
-    /// Checks whether a resource type (and optionally kind) is supported by AppLens diagnostics.
+    /// Checks whether a resource type is supported by AppLens diagnostics.
     /// </summary>
     internal static bool IsResourceTypeSupported(string resourceType, string resourceKind)
     {
         if (resourceType.Equals("microsoft.web/sites", StringComparison.OrdinalIgnoreCase))
         {
-            return resourceKind.Equals("app", StringComparison.OrdinalIgnoreCase)
-                || resourceKind.Equals("linux", StringComparison.OrdinalIgnoreCase)
-                || resourceKind.Equals("functionapp", StringComparison.OrdinalIgnoreCase);
+            _ = resourceKind;
+            return true;
         }
 
         return resourceType.Equals("microsoft.containerservice/managedclusters", StringComparison.OrdinalIgnoreCase)
