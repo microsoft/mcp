@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Helpers;
@@ -94,8 +95,10 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_handle_empty_subscription_gracefully()
     {
+        // Empty subscription falls back to default subscription from CLI profile
         var result = await CallToolAsync(
             "aks_cluster_get",
             new()
@@ -103,8 +106,9 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
                 { "subscription", "" }
             });
 
-        // Should return validation error response with no results
-        Assert.False(result.HasValue);
+        Assert.True(result.HasValue);
+        var clusters = result.Value.AssertProperty("clusters");
+        Assert.Equal(JsonValueKind.Array, clusters.ValueKind);
     }
 
     [Fact]
@@ -114,7 +118,7 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
             "aks_cluster_get",
             new()
             {
-                { "subscription", "invalid-subscription" }
+                { "subscription", "not-a-real-sub" }
             });
 
         // Should return runtime error response with error details in results
@@ -122,16 +126,19 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
         var errorDetails = result.Value;
         errorDetails.AssertProperty("message");
         var typeProperty = errorDetails.AssertProperty("type");
-        Assert.Equal("Exception", typeProperty.GetString());
+        Assert.Equal("ArgumentException", typeProperty.GetString());
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_validate_required_subscription_parameter()
     {
+        // When subscription is omitted, falls back to default subscription from CLI profile
         var result = await CallToolAsync("aks_cluster_get", []);
 
-        // Should return error response for missing subscription (no results)
-        Assert.False(result.HasValue);
+        Assert.True(result.HasValue);
+        var clusters = result.Value.AssertProperty("clusters");
+        Assert.Equal(JsonValueKind.Array, clusters.ValueKind);
     }
 
     [Fact]
@@ -224,9 +231,10 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_validate_required_parameters_for_get_command()
     {
-        // Test missing resource-group
+        // Test missing resource-group when cluster is specified - validation catches it
         var result1 = await CallToolAsync(
             "aks_cluster_get",
             new()
@@ -236,7 +244,7 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
             });
         Assert.False(result1.HasValue);
 
-        // Test missing subscription
+        // Test missing subscription - falls back to default, nonexistent rg returns error
         var result2 = await CallToolAsync(
             "aks_cluster_get",
             new()
@@ -244,6 +252,9 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
                 { "resource-group", "test-rg" },
                 { "cluster", "test-cluster" }
             });
-        Assert.False(result2.HasValue);
+        Assert.True(result2.HasValue);
+        result2.Value.AssertProperty("message");
+        var typeProperty = result2.Value.AssertProperty("type");
+        Assert.Equal("RequestFailedException", typeProperty.GetString());
     }
 }

@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
@@ -70,6 +71,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_handle_empty_subscription_gracefully()
     {
         var result = await CallToolAsync(
@@ -79,7 +81,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
                 { "subscription", "" }
             });
 
-        Assert.False(result.HasValue);
+        Assert.True(result.HasValue);
     }
 
     [Fact]
@@ -89,22 +91,23 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
             "functionapp_get",
             new()
             {
-                { "subscription", "invalid-subscription" }
+                { "subscription", "not-a-real-sub" }
             });
 
         Assert.True(result.HasValue);
         var errorDetails = result.Value;
         errorDetails.AssertProperty("message");
         var typeProperty = errorDetails.AssertProperty("type");
-        Assert.Equal("Exception", typeProperty.GetString());
+        Assert.Equal("ArgumentException", typeProperty.GetString());
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_validate_required_subscription_parameter()
     {
         var result = await CallToolAsync("functionapp_get", []);
 
-        Assert.False(result.HasValue);
+        Assert.True(result.HasValue);
     }
 
     [Fact]
@@ -175,9 +178,10 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_validate_required_parameters_for_get_command()
     {
-        // Missing resource-group
+        // Missing resource-group when function-app is specified - validation catches it
         var missingRg = await CallToolAsync(
             "functionapp_get",
             new()
@@ -187,7 +191,8 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
             });
         Assert.False(missingRg.HasValue);
 
-        // Missing subscription
+        // Missing subscription with resource-group and function-app falls back to default subscription
+        // but resource group 'rg-test' doesn't exist, resulting in an error
         var missingSub = await CallToolAsync(
             "functionapp_get",
             new()
@@ -195,6 +200,9 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
                 { "resource-group", "rg-test" },
                 { "function-app", "name-test" }
             });
-        Assert.False(missingSub.HasValue);
+        Assert.True(missingSub.HasValue);
+        missingSub.Value.AssertProperty("message");
+        var missingSubType = missingSub.Value.AssertProperty("type");
+        Assert.Equal("RequestFailedException", missingSubType.GetString());
     }
 }
