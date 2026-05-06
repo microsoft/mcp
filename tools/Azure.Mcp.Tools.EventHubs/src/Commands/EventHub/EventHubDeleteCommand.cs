@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Identity;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.EventHub;
@@ -12,21 +11,15 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.EventHub;
 
-public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<EventHubDeleteOptions, EventHubDeleteCommand.EventHubDeleteCommandResult>
-{
-    private const string CommandTitle = "Delete Event Hub";
-    private readonly IEventHubsService _service = service;
-    private readonly ILogger<EventHubDeleteCommand> _logger = logger;
-    public override string Id => "108ffeab-8d37-4c29-98c9-aa99eb8f61c7";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "108ffeab-8d37-4c29-98c9-aa99eb8f61c7",
+    Name = "delete",
+    Title = "Delete Event Hub",
+    Description = """
         Delete an Event Hub from an Azure Event Hubs namespace. This operation permanently removes
         the specified Event Hub and all its data. This is a destructive operation.
 
@@ -34,19 +27,18 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
         with Deleted = false. If the Event Hub is successfully deleted, Deleted = true is returned.
         Warning: This operation cannot be undone. All messages and consumer groups in the Event Hub
         will be permanently deleted.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        OpenWorld = false,
-        Destructive = true,
-        Idempotent = true,
-        ReadOnly = false,
-        Secret = false,
-        LocalRequired = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger, IEventHubsService service)
+    : BaseEventHubsCommand<EventHubDeleteOptions, EventHubDeleteCommand.EventHubDeleteCommandResult>
+{
+    private readonly IEventHubsService _service = service;
+    private readonly ILogger<EventHubDeleteCommand> _logger = logger;
 
     protected override JsonTypeInfo<EventHubDeleteCommandResult> ResultTypeInfo => EventHubsJsonContext.Default.EventHubDeleteCommandResult;
 
@@ -87,7 +79,9 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(deleted, options.EventHub!));
+            context.Response.Results = ResponseResult.Create(
+                new(deleted, options.EventHub!),
+                EventHubsJsonContext.Default.EventHubDeleteCommandResult);
         }
         catch (Exception ex)
         {

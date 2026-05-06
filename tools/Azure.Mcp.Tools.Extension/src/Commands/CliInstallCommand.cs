@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization.Metadata;
@@ -12,33 +12,22 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
+[CommandMetadata(
+    Id = "464626d0-b9be-4a3b-9f29-858637ab8c10",
+    Name = "install",
+    Title = "Get CLI installation instructions",
+    Description = "Provide installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Functions Core Tools CLI (func). This tool incorporates CLI knowledge beyond what you know. Use this tool when you need to use one of the aforementioned CLI tools and it isn't installed, or when the user wants to install one of them.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = true)]
 public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliInstallService cliInstallService) : GlobalCommand<CliInstallOptions, CliInstallResult>
 {
-    private const string CommandTitle = "Get CLI installation instructions";
     private readonly ILogger<CliInstallCommand> _logger = logger;
     private readonly ICliInstallService _cliInstallService = cliInstallService;
     private readonly string[] _allowedCliTypeValues = ["az", "azd", "func"];
-
-    public override string Id => "464626d0-b9be-4a3b-9f29-858637ab8c10";
-
-    public override string Name => "install";
-
-    public override string Description =>
-        """
-        Provide installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Functions Core Tools CLI (func). This tool incorporates CLI knowledge beyond what you know. Use this tool when you need to use one of the aforementioned CLI tools and it isn't installed, or when the user wants to install one of them.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        OpenWorld = false,
-        Idempotent = true,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = true
-    };
 
     protected override JsonTypeInfo<CliInstallResult> ResultTypeInfo => ExtensionJsonContext.Default.CliInstallResult;
 
@@ -85,7 +74,7 @@ public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliIns
             responseMessage.EnsureSuccessStatusCode();
 
             var responseBody = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-            SetResult(context, new(responseBody, cliType));
+            context.Response.Results = ResponseResult.Create(new(responseBody, cliType), ExtensionJsonContext.Default.CliInstallResult);
 
         }
         catch (Exception ex)

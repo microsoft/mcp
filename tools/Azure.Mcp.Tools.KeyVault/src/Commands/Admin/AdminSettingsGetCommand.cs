@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -10,33 +9,27 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Admin;
 
+[CommandMetadata(
+    Id = "2e89755e-8c64-4c08-ae10-8fd47aead570",
+    Name = "get",
+    Title = "Get Key Vault Managed HSM Account Settings",
+    Description = "Retrieves all Managed HSM account settings for a Key Vault. Returns configuration setting values such as purge protection and soft-delete retention days. This is NOT for secrets, keys, or certificates ΓÇö use this when the user asks about vault configuration settings or account-level settings. This tool ONLY applies to Managed HSM vaults.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<BaseKeyVaultOptions, AdminSettingsGetCommand.AdminSettingsGetCommandResult>
 {
-    private const string CommandTitle = "Get Key Vault Managed HSM Account Settings";
     private readonly ILogger<AdminSettingsGetCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
-    public override string Id => "2e89755e-8c64-4c08-ae10-8fd47aead570";
-    public override string Name => "get";
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        OpenWorld = false,       // Command queries Azure resources (vault settings)
-        Destructive = false,     // Command only reads settings, no modifications
-        Idempotent = true,       // Same call produces same result
-        ReadOnly = true,         // Only reads data, no state changes
-        Secret = false,          // Returns configuration settings, not secrets
-        LocalRequired = false    // Pure Azure API call, no local resources needed
-    };
-
     protected override JsonTypeInfo<AdminSettingsGetCommandResult> ResultTypeInfo => KeyVaultJsonContext.Default.AdminSettingsGetCommandResult;
-
-    public override string Description =>
-        "Retrieves all Managed HSM account settings for a Key Vault. Returns configuration setting values such as purge protection and soft-delete retention days. " +
-        "This is NOT for secrets, keys, or certificates — use this when the user asks about vault configuration settings or account-level settings. This tool ONLY applies to Managed HSM vaults.";
 
     protected override void RegisterOptions(Command command)
     {
@@ -74,7 +67,7 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
                 }
             }
 
-            SetResult(context, new(options.VaultName!, settings));
+            context.Response.Results = ResponseResult.Create(new(options.VaultName!, settings), KeyVaultJsonContext.Default.AdminSettingsGetCommandResult);
         }
         catch (Exception ex)
         {

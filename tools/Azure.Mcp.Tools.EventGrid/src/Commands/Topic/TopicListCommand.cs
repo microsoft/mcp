@@ -1,41 +1,31 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.EventGrid.Options.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Topic;
 
+[CommandMetadata(
+    Id = "42390294-2856-4980-a057-095c91355650",
+    Name = "list",
+    Title = "List Event Grid Topics",
+    Description = "List or show all Event Grid topics in a subscription, optionally filtered by resource group, returning endpoints, access keys, provisioning state, and subscription details for event publishing and management. A subscription or topic name is required.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class TopicListCommand(ILogger<TopicListCommand> logger, IEventGridService eventGridService) : BaseEventGridCommand<TopicListOptions, TopicListCommand.TopicListCommandResult>
 {
-    private const string CommandTitle = "List Event Grid Topics";
     private readonly ILogger<TopicListCommand> _logger = logger;
     private readonly IEventGridService _eventGridService = eventGridService;
-    public override string Id => "42390294-2856-4980-a057-095c91355650";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        List or show all Event Grid topics in a subscription, optionally filtered by resource group, returning endpoints, access keys, provisioning state, and subscription details for event publishing and management. A subscription or topic name is required.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<TopicListCommandResult> ResultTypeInfo => EventGridJsonContext.Default.TopicListCommandResult;
 
@@ -70,7 +60,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger, IEventGri
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(topics ?? []));
+            context.Response.Results = ResponseResult.Create(new(topics ?? []), EventGridJsonContext.Default.TopicListCommandResult);
         }
         catch (Exception ex)
         {

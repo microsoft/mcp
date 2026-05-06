@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
@@ -12,20 +11,15 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, IWorkbooksService workbooksService) : SubscriptionCommand<ListWorkbooksOptions, ListWorkbooksCommand.ListWorkbooksCommandResult>
-{
-    private const string CommandTitle = "List Workbooks";
-    private readonly ILogger<ListWorkbooksCommand> _logger = logger;
-    private readonly IWorkbooksService _workbooksService = workbooksService;
-    public override string Id => "c4c90435-fbc0-4598-ba82-3b9213d58b26";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "c4c90435-fbc0-4598-ba82-3b9213d58b26",
+    Name = "list",
+    Title = "List Workbooks",
+    Description = """
         Search Azure Workbooks using Resource Graph (fast metadata query).
 
         USE FOR: Discovery, filtering, counting workbooks across scopes.
@@ -38,19 +32,17 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, I
         OUTPUT FORMAT: Use --output-format=summary for minimal tokens, --output-format=full for serializedData.
 
         FILTERS: --name-contains, --category, --kind, --source-id, --modified-after for semantic filtering.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, IWorkbooksService workbooksService) : SubscriptionCommand<ListWorkbooksOptions, ListWorkbooksCommand.ListWorkbooksCommandResult>
+{
+    private readonly ILogger<ListWorkbooksCommand> _logger = logger;
+    private readonly IWorkbooksService _workbooksService = workbooksService;
 
     protected override JsonTypeInfo<ListWorkbooksCommandResult> ResultTypeInfo => WorkbooksJsonContext.Default.ListWorkbooksCommandResult;
 
@@ -122,7 +114,9 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, I
                 options.Tenant,
                 cancellationToken);
 
-            SetResult(context, new(result.Workbooks.ToList(), result.TotalCount, result.Workbooks.Count));
+            context.Response.Results = ResponseResult.Create(
+                new(result.Workbooks.ToList(), result.TotalCount, result.Workbooks.Count),
+                WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
         }
         catch (Exception ex)
         {

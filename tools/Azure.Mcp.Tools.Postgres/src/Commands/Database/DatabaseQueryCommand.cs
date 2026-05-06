@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Database;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -10,31 +9,24 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Database;
 
+[CommandMetadata(
+    Id = "81a28bca-014c-4738-9e1a-654d77cb2dd8",
+    Name = "query",
+    Title = "Query PostgreSQL Database",
+    Description = "Executes a SQL query on an Azure Database for PostgreSQL server to search for specific terms, retrieve records, or perform SELECT operations.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogger<DatabaseQueryCommand> logger) : BaseDatabaseCommand<DatabaseQueryOptions, DatabaseQueryCommand.DatabaseQueryCommandResult>(logger)
 {
     private readonly IPostgresService _postgresService = postgresService;
-    private const string CommandTitle = "Query PostgreSQL Database";
-
-    public override string Id => "81a28bca-014c-4738-9e1a-654d77cb2dd8";
-
-    public override string Name => "query";
-
-    public override string Description => "Executes a SQL query on an Azure Database for PostgreSQL server to search for specific terms, retrieve records, or perform SELECT operations.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<DatabaseQueryCommandResult> ResultTypeInfo => PostgresJsonContext.Default.DatabaseQueryCommandResult;
 
@@ -74,7 +66,7 @@ public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogg
                 options.Database!,
                 options.Query!,
                 cancellationToken);
-            SetResult(context, new(queryResult ?? []));
+            context.Response.Results = ResponseResult.Create(new(queryResult ?? []), PostgresJsonContext.Default.DatabaseQueryCommandResult);
         }
         catch (Exception ex)
         {

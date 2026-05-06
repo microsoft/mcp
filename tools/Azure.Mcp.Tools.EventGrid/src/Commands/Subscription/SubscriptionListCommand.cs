@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Subscription;
 using Azure.Mcp.Tools.EventGrid.Services;
@@ -10,35 +9,26 @@ using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 
+[CommandMetadata(
+    Id = "716a33e5-755c-4168-87ed-8a4651476c6e",
+    Name = "list",
+    Title = "List Event Grid Subscriptions",
+    Description = "Show all available Event Grid subscriptions with optional topic filtering. This tool displays active event subscriptions including webhook endpoints, event filters, and delivery retry policies. Use this when you need to show, list, or get Event Grid subscriptions for topics. Requires either topic name OR subscription. If only topic is provided, searches all accessible subscriptions for a topic with that name. Resource group and location filters can be applied, but only when used with a subscription or topic.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger, IEventGridService eventGridService, ISubscriptionService subscriptionService) : GlobalCommand<SubscriptionListOptions, SubscriptionListCommand.SubscriptionListCommandResult>
 {
-    private const string CommandTitle = "List Event Grid Subscriptions";
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
     private readonly IEventGridService _eventGridService = eventGridService;
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
-    public override string Id => "716a33e5-755c-4168-87ed-8a4651476c6e";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        Show all available Event Grid subscriptions with optional topic filtering. This tool displays active event subscriptions including webhook endpoints, event filters, and delivery retry policies. Use this when you need to show, list, or get Event Grid subscriptions for topics. Requires either topic name OR subscription. If only topic is provided, searches all accessible subscriptions for a topic with that name. Resource group and location filters can be applied, but only when used with a subscription or topic.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<SubscriptionListCommandResult> ResultTypeInfo => EventGridJsonContext.Default.SubscriptionListCommandResult;
 
@@ -126,7 +116,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                         continue;
                     }
                 }
-                SetResult(context, new(aggregate));
+                context.Response.Results = ResponseResult.Create(new(aggregate), EventGridJsonContext.Default.SubscriptionListCommandResult);
             }
             else
             {
@@ -139,7 +129,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new(subscriptions ?? []));
+                context.Response.Results = ResponseResult.Create(new(subscriptions ?? []), EventGridJsonContext.Default.SubscriptionListCommandResult);
             }
         }
         catch (Exception ex)

@@ -1,39 +1,29 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Fabric.Mcp.Tools.Docs.Options;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
 
+[CommandMetadata(
+    Id = "b1f80251-df7b-4054-953b-5f452c42dd09",
+    Name = "workloads",
+    Title = "Available Fabric Workloads",
+    Description = "Lists Fabric workload types that have public API specifications available. Use this when the user needs to discover what APIs exist for Fabric workloads. Returns workload names like notebook, report, or platform.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false)]
 public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) : GlobalCommand<BaseFabricOptions, ListWorkloadsCommand.ItemListCommandResult>()
 {
-    private const string CommandTitle = "Available Fabric Workloads";
-
     private readonly ILogger<ListWorkloadsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    public override string Id => "b1f80251-df7b-4054-953b-5f452c42dd09";
-
-    public override string Name => "workloads";
-
-    public override string Description =>
-        "Lists Fabric workload types that have public API specifications available. Use this when the user needs to discover what APIs exist for Fabric workloads. Returns workload names like notebook, report, or platform.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<ItemListCommandResult> ResultTypeInfo => FabricJsonContext.Default.ItemListCommandResult;
 
@@ -49,7 +39,7 @@ public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) :
             var fabricService = context.GetService<IFabricPublicApiService>();
             var workloads = await fabricService.ListWorkloadsAsync(cancellationToken);
 
-            SetResult(context, new(workloads));
+            context.Response.Results = ResponseResult.Create(new(workloads), FabricJsonContext.Default.ItemListCommandResult);
         }
         catch (Exception ex)
         {

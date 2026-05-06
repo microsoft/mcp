@@ -1,46 +1,52 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Tools.AppConfig.Options.Account;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.Account;
 
+[CommandMetadata(
+    Id = "e403c988-b57b-4ac1-afb7-25ba3fdd6e6a",
+    Name = "list",
+    Title = "List App Configuration Stores",
+    Description = """
+        List all App Configuration stores in a subscription. This command retrieves and displays all App Configuration
+        stores available in the specified subscription. Results include store names returned as a JSON array.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppConfigService appConfigService) : SubscriptionCommand<AccountListOptions, AccountListCommand.AccountListCommandResult>()
 {
-    private const string CommandTitle = "List App Configuration Stores";
     private readonly ILogger<AccountListCommand> _logger = logger;
     private readonly IAppConfigService _appConfigService = appConfigService;
 
-    public override string Id => "e403c988-b57b-4ac1-afb7-25ba3fdd6e6a";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        List all App Configuration stores in a subscription. This command retrieves and displays all App Configuration
-        stores available in the specified subscription. Results include store names returned as a JSON array.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
     protected override JsonTypeInfo<AccountListCommandResult> ResultTypeInfo => AppConfigJsonContext.Default.AccountListCommandResult;
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+    }
+
+    protected override AccountListOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        return options;
+    }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -55,11 +61,12 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppC
         {
             var accounts = await _appConfigService.GetAppConfigAccounts(
                 options.Subscription!,
+                options.ResourceGroup,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false));
+            context.Response.Results = ResponseResult.Create(new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false), AppConfigJsonContext.Default.AccountListCommandResult);
         }
         catch (Exception ex)
         {

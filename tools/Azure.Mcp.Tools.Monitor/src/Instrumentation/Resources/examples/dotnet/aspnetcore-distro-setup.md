@@ -23,7 +23,7 @@ dotnet add package Azure.Monitor.OpenTelemetry.AspNetCore
 Or in `.csproj`:
 
 ```xml
-<PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.3.0" />
+<PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.4.0" />
 ```
 
 ## Step 2: Configure in Program.cs

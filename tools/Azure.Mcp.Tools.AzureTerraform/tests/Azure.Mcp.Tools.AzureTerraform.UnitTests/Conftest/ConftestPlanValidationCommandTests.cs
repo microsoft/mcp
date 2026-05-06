@@ -1,48 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Commands;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.AzureTerraform.UnitTests;
+namespace Azure.Mcp.Tools.AzureTerraform.UnitTests.Conftest;
 
-public class ConftestPlanValidationCommandTests
+public class ConftestPlanValidationCommandTests : CommandUnitTestsBase<ConftestPlanValidationCommand, IConftestService>
 {
-    private readonly ILogger<ConftestPlanValidationCommand> _logger;
-    private readonly IConftestService _conftestService;
-    private readonly CommandContext _context;
-    private readonly ConftestPlanValidationCommand _command;
-    private readonly Command _commandDefinition;
-
-    public ConftestPlanValidationCommandTests()
-    {
-        var collection = new ServiceCollection();
-        var serviceProvider = collection.BuildServiceProvider();
-        _context = new(serviceProvider);
-        _logger = Substitute.For<ILogger<ConftestPlanValidationCommand>>();
-        _conftestService = Substitute.For<IConftestService>();
-        _command = new(_logger, _conftestService);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("plan", _command.Name);
-        Assert.NotEmpty(_command.Description);
-        Assert.NotEmpty(_command.Id);
-        Assert.True(_command.Metadata.LocalRequired);
-        Assert.True(_command.Metadata.ReadOnly);
+        Assert.Equal("plan", Command.Name);
+        Assert.NotEmpty(Command.Description);
+        Assert.NotEmpty(Command.Id);
+        Assert.True(Command.Metadata.LocalRequired);
+        Assert.True(Command.Metadata.ReadOnly);
     }
 
     [Fact]
@@ -57,13 +36,12 @@ public class ConftestPlanValidationCommandTests
             Description = $"Validate Terraform plan in: {planFolder}"
         };
 
-        _conftestService.IsConftestAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
-        _conftestService.GeneratePlanValidationCommand(
+        Service.IsConftestAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
+        Service.GeneratePlanValidationCommand(
             planFolder, "all", null, null)
             .Returns(expectedResult);
 
-        var args = _commandDefinition.Parse(["--plan-folder", planFolder]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--plan-folder", planFolder);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -72,10 +50,9 @@ public class ConftestPlanValidationCommandTests
     [Fact]
     public async Task ExecuteAsync_ConftestNotAvailable_ReturnsInstallationHelp()
     {
-        _conftestService.IsConftestAvailableAsync(Arg.Any<CancellationToken>()).Returns(false);
+        Service.IsConftestAvailableAsync(Arg.Any<CancellationToken>()).Returns(false);
 
-        var args = _commandDefinition.Parse(["--plan-folder", "/home/user/project"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--plan-folder", "/home/user/project");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -84,8 +61,7 @@ public class ConftestPlanValidationCommandTests
     [Fact]
     public async Task ExecuteAsync_MissingPlanFolder_ReturnsValidationError()
     {
-        var args = _commandDefinition.Parse([]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync([]);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
@@ -103,13 +79,15 @@ public class ConftestPlanValidationCommandTests
             PolicySet = "avmsec"
         };
 
-        _conftestService.IsConftestAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
-        _conftestService.GeneratePlanValidationCommand(
+        Service.IsConftestAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
+        Service.GeneratePlanValidationCommand(
             planFolder, "avmsec", "high", null)
             .Returns(expectedResult);
 
-        var args = _commandDefinition.Parse(["--plan-folder", planFolder, "--policy-set", "avmsec", "--severity-filter", "high"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--plan-folder", planFolder,
+            "--policy-set", "avmsec",
+            "--severity-filter", "high");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -118,11 +96,10 @@ public class ConftestPlanValidationCommandTests
     [Fact]
     public async Task ExecuteAsync_ServiceThrows_HandlesException()
     {
-        _conftestService.IsConftestAvailableAsync(Arg.Any<CancellationToken>())
+        Service.IsConftestAvailableAsync(Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Test error"));
 
-        var args = _commandDefinition.Parse(["--plan-folder", "/home/user/project"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--plan-folder", "/home/user/project");
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
@@ -135,14 +112,13 @@ public class ConftestPlanValidationCommandTests
     {
         if (shouldSucceed)
         {
-            _conftestService.IsConftestAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
-            _conftestService.GeneratePlanValidationCommand(
+            Service.IsConftestAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
+            Service.GeneratePlanValidationCommand(
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>())
                 .Returns(new ConftestCommandResult { ConftestFound = true, Command = "conftest", Args = [], Description = "test" });
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         if (shouldSucceed)
         {
@@ -167,21 +143,15 @@ public class ConftestPlanValidationCommandTests
             PolicySet = "all"
         };
 
-        _conftestService.IsConftestAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
-        _conftestService.GeneratePlanValidationCommand(
+        Service.IsConftestAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
+        Service.GeneratePlanValidationCommand(
             planFolder, "all", null, null)
             .Returns(expectedResult);
 
-        var args = _commandDefinition.Parse(["--plan-folder", planFolder]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--plan-folder", planFolder);
 
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.ConftestCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureTerraformJsonContext.Default.ConftestCommandResult);
-
-        Assert.NotNull(result);
         Assert.True(result.ConftestFound);
         Assert.Equal("conftest", result.Command);
         Assert.NotNull(result.Args);
@@ -190,7 +160,7 @@ public class ConftestPlanValidationCommandTests
     [Fact]
     public void BindOptions_BindsOptionsCorrectly()
     {
-        var args = _commandDefinition.Parse([
+        var args = CommandDefinition.Parse([
             "--plan-folder", "/home/user/project",
             "--policy-set", "avmsec",
             "--severity-filter", "high"
@@ -199,8 +169,7 @@ public class ConftestPlanValidationCommandTests
         Assert.NotNull(args);
         Assert.Empty(args.Errors);
 
-        var command = _command.GetCommand();
-        var options = command.Options;
+        var options = CommandDefinition.Options;
 
         Assert.Contains(options, o => o.Name == "--plan-folder");
         Assert.Contains(options, o => o.Name == "--policy-set");

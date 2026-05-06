@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.SignalR.Options;
 using Azure.Mcp.Tools.SignalR.Options.Runtime;
 using Azure.Mcp.Tools.SignalR.Services;
@@ -9,41 +8,33 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.SignalR.Commands.Runtime;
 
 /// <summary>
 /// Shows details of an Azure SignalR Service.
 /// </summary>
-public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger, ISignalRService signalRService)
-    : BaseSignalRCommand<RuntimeGetOptions, RuntimeGetCommand.RuntimeGetCommandResult>
-{
-    private const string CommandTitle = "Show Service Details";
-    private readonly ILogger<RuntimeGetCommand> _logger = logger;
-    private readonly ISignalRService _signalRService = signalRService;
-
-    public override string Id => "bb9035f6-f642-4ee0-83c8-87d6da8266b1";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "bb9035f6-f642-4ee0-83c8-87d6da8266b1",
+    Name = "get",
+    Title = "Show Service Details",
+    Description = """
         Gets or lists details of an Azure SignalR Runtimes. If a specific SignalR name is used, the details of that
         SignalR runtime will be retrieved. Otherwise, all SignalR Runtimes in the specified subscription or resource
         group will be retrieved. Returns runtime information including identity, network ACLs, upstream templates.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger, ISignalRService signalRService)
+    : BaseSignalRCommand<RuntimeGetOptions, RuntimeGetCommand.RuntimeGetCommandResult>
+{
+    private readonly ILogger<RuntimeGetCommand> _logger = logger;
+    private readonly ISignalRService _signalRService = signalRService;
 
     protected override JsonTypeInfo<RuntimeGetCommandResult> ResultTypeInfo => SignalRJsonContext.Default.RuntimeGetCommandResult;
 
@@ -83,7 +74,7 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger, ISignal
             _logger.LogInformation("Found {Count} SignalR service(s) in subscription {SubscriptionId}",
                 runtimes.Count(), options.Subscription);
 
-            SetResult(context, new(runtimes ?? []));
+            context.Response.Results = ResponseResult.Create(new(runtimes ?? []), SignalRJsonContext.Default.RuntimeGetCommandResult);
         }
         catch (Exception ex)
         {

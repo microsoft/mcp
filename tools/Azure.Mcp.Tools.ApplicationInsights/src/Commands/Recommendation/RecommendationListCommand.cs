@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ApplicationInsights.Options;
 using Azure.Mcp.Tools.ApplicationInsights.Services;
@@ -12,28 +11,28 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
 
-public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IApplicationInsightsService applicationInsightsService) : SubscriptionCommand<RecommendationListOptions, RecommendationListCommand.RecommendationListCommandResult>()
-{
-    private const string CommandTitle = "List Application Insights Recommendations";
-    private readonly ILogger<RecommendationListCommand> _logger = logger;
-    private readonly IApplicationInsightsService _applicationInsightsService = applicationInsightsService;
-
-    public override string Id => "8d259f21-43b3-4962-bec8-de616b8b5f0d";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "8d259f21-43b3-4962-bec8-de616b8b5f0d",
+    Name = "list",
+    Title = "List Application Insights Recommendations",
+    Description = """
         List Application Insights Code Optimization Recommendations in a subscription. Optionally filter by resource group when --resource-group is provided.
         Returns the code optimization recommendations based on the profiler data.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, LocalRequired = false, OpenWorld = false, Secret = false, ReadOnly = true };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IApplicationInsightsService applicationInsightsService) : SubscriptionCommand<RecommendationListOptions, RecommendationListCommand.RecommendationListCommandResult>()
+{
+    private readonly ILogger<RecommendationListCommand> _logger = logger;
+    private readonly IApplicationInsightsService _applicationInsightsService = applicationInsightsService;
 
     protected override JsonTypeInfo<RecommendationListCommandResult> ResultTypeInfo => ApplicationInsightsJsonContext.Default.RecommendationListCommandResult;
 
@@ -68,14 +67,9 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 options.RetryPolicy,
                 cancellationToken);
 
-            if (insights?.Count() > 0)
-            {
-                SetResult(context, new(insights));
-            }
-            else
-            {
-                context.Response.Results = null;
-            }
+            context.Response.Results = insights?.Count() > 0 ?
+                ResponseResult.Create(new(insights), ApplicationInsightsJsonContext.Default.RecommendationListCommandResult) :
+                null;
         }
         catch (Exception ex)
         {

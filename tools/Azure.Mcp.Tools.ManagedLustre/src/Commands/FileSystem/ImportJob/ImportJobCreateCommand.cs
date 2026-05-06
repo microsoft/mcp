@@ -6,28 +6,18 @@ using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 
-public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogger<ImportJobCreateCommand> logger)
-    : BaseManagedLustreCommand<ImportJobCreateOptions, ImportJobCreateCommand.ImportJobCreateResult>(logger)
-{
-    protected override JsonTypeInfo<ImportJobCreateResult> ResultTypeInfo => ManagedLustreJsonContext.Default.ImportJobCreateResult;
-    private const string CommandTitle = "Create Azure Managed Lustre Import Job";
-
-    private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<ImportJobCreateCommand> _logger = logger;
-
-    public override string Id => "b1f3c5e7-9d2a-4b8f-6c3e-1a7b9d2f5e8c";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "b1f3c5e7-9d2a-4b8f-6c3e-1a7b9d2f5e8c",
+    Name = "create",
+    Title = "Create Azure Managed Lustre Import Job",
+    Description = """
         Creates a one-time import job for an Azure Managed Lustre filesystem to import files from the linked blob storage container. The import job performs a one-time sync of data from the configured HSM blob container to the Lustre filesystem. Use this to import specific prefixes or all data from blob storage into the filesystem at a point in time.
         Required options:
         - filesystem-name: The name of the AMLFS filesystem
@@ -36,19 +26,21 @@ public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogge
         - conflict-resolution-mode: How to handle conflicting files (Fail, Skip, OverwriteIfDirty, OverwriteAlways, default: Fail)
         - import-prefixes: Blob prefixes to import (default: imports all data from root '/')
         - maximum-errors: Maximum errors allowed before job failure (-1: infinite, 0: fail on first error, default: use service default)
-        """;
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogger<ImportJobCreateCommand> logger)
+    : BaseManagedLustreCommand<ImportJobCreateOptions, ImportJobCreateCommand.ImportJobCreateResult>(logger)
+{
 
-    public override string Title => CommandTitle;
+    private readonly IManagedLustreService _service = service;
+    private new readonly ILogger<ImportJobCreateCommand> _logger = logger;
 
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<ImportJobCreateResult> ResultTypeInfo => ManagedLustreJsonContext.Default.ImportJobCreateResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -107,7 +99,7 @@ public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogge
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(job));
+            context.Response.Results = ResponseResult.Create(new(job), ManagedLustreJsonContext.Default.ImportJobCreateResult);
         }
         catch (Exception ex)
         {

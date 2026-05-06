@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Options.Database;
@@ -10,38 +9,30 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Database;
 
-public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger, IAppServiceService appServiceService)
-    : BaseAppServiceCommand<DatabaseAddOptions, DatabaseAddCommand.DatabaseAddResult>(resourceGroupRequired: true, appRequired: true)
-{
-    private const string CommandTitle = "Add Database to App Service";
-    private readonly ILogger<DatabaseAddCommand> _logger = logger;
-    private readonly IAppServiceService _appServiceService = appServiceService;
-
-    public override string Id => "14be1264-82c8-4a4c-8271-7cfe1fbebbc8";
-
-    public override string Name => "add";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "14be1264-82c8-4a4c-8271-7cfe1fbebbc8",
+    Name = "add",
+    Title = "Add Database to App Service",
+    Description = """
         Add a database connection for an App Service using connection string for an existing database. This command configures database connection
         settings for the specified App Service, allowing it to connect to a database server name. You must specify the App Service name, database name,
         database type, database server name, connection string, resource group name and subscription.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = true,
-        ReadOnly = false,
-        Secret = false,
-        LocalRequired = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = true,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger, IAppServiceService appServiceService)
+    : BaseAppServiceCommand<DatabaseAddOptions, DatabaseAddCommand.DatabaseAddResult>(resourceGroupRequired: true, appRequired: true)
+{
+    private readonly ILogger<DatabaseAddCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
 
     protected override JsonTypeInfo<DatabaseAddResult> ResultTypeInfo => AppServiceJsonContext.Default.DatabaseAddResult;
 
@@ -90,7 +81,7 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger, IAppS
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(connectionInfo));
+            context.Response.Results = ResponseResult.Create(new(connectionInfo), AppServiceJsonContext.Default.DatabaseAddResult);
         }
         catch (Exception ex)
         {

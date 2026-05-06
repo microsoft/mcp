@@ -14,18 +14,23 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 
+[CommandMetadata(
+    Id = "917b66e5-483f-43ac-9620-9403e1689dbe",
+    Name = "enable-crr",
+    Title = "Enable Cross-Region Restore",
+    Description = "Enables Cross-Region Restore on a GRS-enabled vault.",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEnableCrrCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<BaseAzureBackupOptions, DisasterRecoveryEnableCrrCommand.DisasterRecoveryEnableCrrCommandResult>()
 {
-    protected override JsonTypeInfo<DisasterRecoveryEnableCrrCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.DisasterRecoveryEnableCrrCommandResult;
-    private const string CommandTitle = "Enable Cross-Region Restore";
     private readonly ILogger<DisasterRecoveryEnableCrrCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    public override string Id => "917b66e5-483f-43ac-9620-9403e1689dbe";
-    public override string Name => "enable-crr";
-    public override string Description => "Enables Cross-Region Restore on a GRS-enabled vault.";
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = true, Idempotent = true, OpenWorld = false, ReadOnly = false, LocalRequired = false, Secret = false };
+    protected override JsonTypeInfo<DisasterRecoveryEnableCrrCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.DisasterRecoveryEnableCrrCommandResult;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -35,6 +40,8 @@ public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEna
         }
 
         var options = BindOptions(parseResult);
+
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
         try
         {
@@ -47,7 +54,9 @@ public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEna
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(result));
+            context.Response.Results = ResponseResult.Create(
+                new(result),
+                AzureBackupJsonContext.Default.DisasterRecoveryEnableCrrCommandResult);
         }
         catch (Exception ex)
         {

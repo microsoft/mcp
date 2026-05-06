@@ -7,37 +7,30 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
 
+[CommandMetadata(
+    Id = "df0d4ae3-519a-44f1-ad30-d25a0985e9c2",
+    Name = "create",
+    Title = "Create Cloud Endpoint",
+    Description = "Add a cloud endpoint to a sync group by connecting an Azure File Share. Cloud endpoints represent the Azure storage side of the sync relationship.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CloudEndpointCreateCommand(ILogger<CloudEndpointCreateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<CloudEndpointCreateOptions, CloudEndpointCreateCommand.CloudEndpointCreateCommandResult>
 {
-    protected override JsonTypeInfo<CloudEndpointCreateCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.CloudEndpointCreateCommandResult;
-    private const string CommandTitle = "Create Cloud Endpoint";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<CloudEndpointCreateCommand> _logger = logger;
 
-    public override string Id => "df0d4ae3-519a-44f1-ad30-d25a0985e9c2";
-
-    public override string Name => "create";
-
-    public override string Description => "Add a cloud endpoint to a sync group by connecting an Azure File Share. Cloud endpoints represent the Azure storage side of the sync relationship.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<CloudEndpointCreateCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.CloudEndpointCreateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -89,7 +82,7 @@ public sealed class CloudEndpointCreateCommand(ILogger<CloudEndpointCreateComman
                 cancellationToken);
 
             var results = new CloudEndpointCreateCommandResult(endpoint);
-            SetResult(context, results);
+            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.CloudEndpointCreateCommandResult);
         }
         catch (Exception ex)
         {

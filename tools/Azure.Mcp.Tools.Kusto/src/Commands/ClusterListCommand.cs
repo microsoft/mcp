@@ -1,42 +1,48 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
+[CommandMetadata(
+    Id = "2cff1548-40c9-48ea-8548-6bfa91f2ea85",
+    Name = "list",
+    Title = "List Kusto Clusters",
+    Description = "List/enumerate all Azure Data Explorer/Kusto/KQL clusters in a subscription.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger, IKustoService kustoService) : SubscriptionCommand<ClusterListOptions, ClusterListCommand.ClusterListCommandResult>()
 {
-    private const string CommandTitle = "List Kusto Clusters";
     private readonly ILogger<ClusterListCommand> _logger = logger;
     private readonly IKustoService _kustoService = kustoService;
 
-    public override string Id => "2cff1548-40c9-48ea-8548-6bfa91f2ea85";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        "List/enumerate all Azure Data Explorer/Kusto/KQL clusters in a subscription.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
     protected override JsonTypeInfo<ClusterListCommandResult> ResultTypeInfo => KustoJsonContext.Default.ClusterListCommandResult;
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+    }
+
+    protected override ClusterListOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        return options;
+    }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -51,11 +57,12 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger, IKust
         {
             var clusterNames = await _kustoService.ListClustersAsync(
                 options.Subscription!,
+                options.ResourceGroup,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(clusterNames?.Results ?? [], clusterNames?.AreResultsTruncated ?? false));
+            context.Response.Results = ResponseResult.Create(new(clusterNames?.Results ?? [], clusterNames?.AreResultsTruncated ?? false), KustoJsonContext.Default.ClusterListCommandResult);
         }
         catch (Exception ex)
         {

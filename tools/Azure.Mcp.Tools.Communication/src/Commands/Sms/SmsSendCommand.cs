@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Communication.Models;
 using Azure.Mcp.Tools.Communication.Options;
 using Azure.Mcp.Tools.Communication.Options.Sms;
@@ -10,35 +9,28 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Communication.Commands.Sms;
 
-public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicationService communicationService) : BaseCommunicationCommand<SmsSendOptions, SmsSendCommandResult>
-{
-    private const string CommandTitle = "Send SMS Message";
-    private readonly ILogger<SmsSendCommand> _logger = logger;
-    private readonly ICommunicationService _communicationService = communicationService;
-    public override string Id => "a0dc94f3-25ac-4971-a552-0d90fd57e902";
-
-    public override string Name => "send";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a0dc94f3-25ac-4971-a552-0d90fd57e902",
+    Name = "send",
+    Title = "Send SMS Message",
+    Description = """
         Sends SMS messages to one or more recipients to the given phone-number. You can enable delivery reports and receipt tracking, broadcast SMS, and tag messages for easier tracking.
         Returns message IDs and delivery status for each sent message.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        ReadOnly = true,
-        OpenWorld = true,
-        Idempotent = false,
-        Secret = false,
-        LocalRequired = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = true,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicationService communicationService) : BaseCommunicationCommand<SmsSendOptions, SmsSendCommandResult>
+{
+    private readonly ILogger<SmsSendCommand> _logger = logger;
+    private readonly ICommunicationService _communicationService = communicationService;
 
     protected override JsonTypeInfo<SmsSendCommandResult> ResultTypeInfo => CommunicationJsonContext.Default.SmsSendCommandResult;
 
@@ -87,14 +79,11 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicatio
                 cancellationToken);
 
             // Set results
-            if (results?.Count > 0)
-            {
-                SetResult(context, new SmsSendCommandResult(results));
-            }
-            else
-            {
-                context.Response.Results = null;
-            }
+            context.Response.Results = results?.Count > 0 ?
+                ResponseResult.Create(
+                    new SmsSendCommandResult(results),
+                    CommunicationJsonContext.Default.SmsSendCommandResult) :
+                null;
         }
         catch (Exception ex)
         {

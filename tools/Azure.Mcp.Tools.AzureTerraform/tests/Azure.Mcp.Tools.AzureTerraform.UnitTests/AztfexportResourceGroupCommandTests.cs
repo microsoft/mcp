@@ -1,46 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Commands;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureTerraform.UnitTests;
 
-public class AztfexportResourceGroupCommandTests
+public class AztfexportResourceGroupCommandTests : CommandUnitTestsBase<AztfexportResourceGroupCommand, IAztfexportService>
 {
-    private readonly ILogger<AztfexportResourceGroupCommand> _logger;
-    private readonly IAztfexportService _aztfexportService;
-    private readonly CommandContext _context;
-    private readonly AztfexportResourceGroupCommand _command;
-    private readonly Command _commandDefinition;
-
-    public AztfexportResourceGroupCommandTests()
-    {
-        var collection = new ServiceCollection();
-        var serviceProvider = collection.BuildServiceProvider();
-        _context = new(serviceProvider);
-        _logger = Substitute.For<ILogger<AztfexportResourceGroupCommand>>();
-        _aztfexportService = Substitute.For<IAztfexportService>();
-        _command = new(_logger, _aztfexportService);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("resourcegroup", _command.Name);
-        Assert.NotEmpty(_command.Description);
-        Assert.True(_command.Metadata.LocalRequired);
+        Assert.Equal("resourcegroup", Command.Name);
+        Assert.NotEmpty(Command.Description);
+        Assert.True(Command.Metadata.LocalRequired);
     }
 
     [Fact]
@@ -54,13 +33,12 @@ public class AztfexportResourceGroupCommandTests
             Description = "Export Azure resource group: my-rg"
         };
 
-        _aztfexportService.IsAztfexportAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
-        _aztfexportService.GenerateResourceGroupCommand(
+        Service.IsAztfexportAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
+        Service.GenerateResourceGroupCommand(
             "my-rg", null, "azurerm", null, false, 10, true)
             .Returns(expectedResult);
 
-        var args = _commandDefinition.Parse(["--resource-group", "my-rg"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource-group", "my-rg");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -69,10 +47,9 @@ public class AztfexportResourceGroupCommandTests
     [Fact]
     public async Task ExecuteAsync_AztfexportNotAvailable_ReturnsInstallationHelp()
     {
-        _aztfexportService.IsAztfexportAvailableAsync(Arg.Any<CancellationToken>()).Returns(false);
+        Service.IsAztfexportAvailableAsync(Arg.Any<CancellationToken>()).Returns(false);
 
-        var args = _commandDefinition.Parse(["--resource-group", "my-rg"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource-group", "my-rg");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -81,8 +58,7 @@ public class AztfexportResourceGroupCommandTests
     [Fact]
     public async Task ExecuteAsync_MissingResourceGroup_ReturnsValidationError()
     {
-        var args = _commandDefinition.Parse([]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync([]);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
@@ -90,11 +66,10 @@ public class AztfexportResourceGroupCommandTests
     [Fact]
     public async Task ExecuteAsync_ServiceThrows_HandlesException()
     {
-        _aztfexportService.IsAztfexportAvailableAsync(Arg.Any<CancellationToken>())
+        Service.IsAztfexportAvailableAsync(Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Test error"));
 
-        var args = _commandDefinition.Parse(["--resource-group", "my-rg"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource-group", "my-rg");
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
@@ -106,15 +81,14 @@ public class AztfexportResourceGroupCommandTests
     {
         if (shouldSucceed)
         {
-            _aztfexportService.IsAztfexportAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
-            _aztfexportService.GenerateResourceGroupCommand(
+            Service.IsAztfexportAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
+            Service.GenerateResourceGroupCommand(
                 Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(),
                 Arg.Any<bool>(), Arg.Any<int>(), Arg.Any<bool>())
                 .Returns(new AztfexportCommandResult { AztfexportFound = true, Command = "aztfexport", Args = [], Description = "test" });
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         if (shouldSucceed)
         {
@@ -137,22 +111,16 @@ public class AztfexportResourceGroupCommandTests
             Description = "Export Azure resource group: my-rg"
         };
 
-        _aztfexportService.IsAztfexportAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
-        _aztfexportService.GenerateResourceGroupCommand(
+        Service.IsAztfexportAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
+        Service.GenerateResourceGroupCommand(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<bool>(), Arg.Any<int>(), Arg.Any<bool>())
             .Returns(expectedResult);
 
-        var args = _commandDefinition.Parse(["--resource-group", "my-rg"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource-group", "my-rg");
 
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AztfexportCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureTerraformJsonContext.Default.AztfexportCommandResult);
-
-        Assert.NotNull(result);
         Assert.True(result.AztfexportFound);
         Assert.Equal("aztfexport", result.Command);
         Assert.NotNull(result.Args);
@@ -161,7 +129,7 @@ public class AztfexportResourceGroupCommandTests
     [Fact]
     public void BindOptions_BindsOptionsCorrectly()
     {
-        var args = _commandDefinition.Parse([
+        var args = CommandDefinition.Parse([
             "--resource-group", "my-rg",
             "--output-folder", "./output",
             "--provider", "azapi"
@@ -170,8 +138,7 @@ public class AztfexportResourceGroupCommandTests
         Assert.NotNull(args);
         Assert.Empty(args.Errors);
 
-        var command = _command.GetCommand();
-        var options = command.Options;
+        var options = CommandDefinition.Options;
 
         Assert.Contains(options, o => o.Name == "--resource-group");
         Assert.Contains(options, o => o.Name == "--output-folder");

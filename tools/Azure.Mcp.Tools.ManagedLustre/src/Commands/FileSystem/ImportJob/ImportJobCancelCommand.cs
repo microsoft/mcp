@@ -6,45 +6,37 @@ using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 
-public sealed class ImportJobCancelCommand(IManagedLustreService service, ILogger<ImportJobCancelCommand> logger)
-    : BaseManagedLustreCommand<ImportJobCancelOptions, ImportJobCancelCommand.ImportJobCancelResult>(logger)
-{
-    protected override JsonTypeInfo<ImportJobCancelResult> ResultTypeInfo => ManagedLustreJsonContext.Default.ImportJobCancelResult;
-    private const string CommandTitle = "Cancel Azure Managed Lustre Import Job";
-
-    private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<ImportJobCancelCommand> _logger = logger;
-
-    public override string Id => "d3h5e7g9-1f4a-6d8e-0g2c-4f6a8d0f2e4g";
-
-    public override string Name => "cancel";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "d3h5e7g9-1f4a-6d8e-0g2c-4f6a8d0f2e4g",
+    Name = "cancel",
+    Title = "Cancel Azure Managed Lustre Import Job",
+    Description = """
         Cancels a running import job for an Azure Managed Lustre filesystem. This stops the import operation and prevents further processing. The job cannot be resumed after cancellation.
         Required options:
         - filesystem-name: The name of the AMLFS filesystem
         - job-name: Name of the import job to cancel
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ImportJobCancelCommand(IManagedLustreService service, ILogger<ImportJobCancelCommand> logger)
+    : BaseManagedLustreCommand<ImportJobCancelOptions, ImportJobCancelCommand.ImportJobCancelResult>(logger)
+{
 
-    public override string Title => CommandTitle;
+    private readonly IManagedLustreService _service = service;
+    private new readonly ILogger<ImportJobCancelCommand> _logger = logger;
 
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<ImportJobCancelResult> ResultTypeInfo => ManagedLustreJsonContext.Default.ImportJobCancelResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -84,7 +76,7 @@ public sealed class ImportJobCancelCommand(IManagedLustreService service, ILogge
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(options.JobName!, cancelledJob.Properties?.AdminStatus ?? "Unknown"));
+            context.Response.Results = ResponseResult.Create(new(options.JobName!, cancelledJob.Properties?.AdminStatus ?? "Unknown"), ManagedLustreJsonContext.Default.ImportJobCancelResult);
         }
         catch (Exception ex)
         {

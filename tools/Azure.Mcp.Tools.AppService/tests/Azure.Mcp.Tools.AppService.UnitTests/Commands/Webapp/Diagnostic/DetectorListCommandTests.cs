@@ -87,7 +87,7 @@ public class DetectorListCommandTests : CommandUnitTestsBase<DetectorListCommand
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
 
         await Service.Received(1).ListDetectorsAsync("sub123", "rg1", "test-app",
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());

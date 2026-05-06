@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Options.Webapp.Deployment;
@@ -10,37 +9,32 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Deployment;
 
-public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger)
-    : BaseAppServiceCommand<DeploymentGetOptions, DeploymentGetCommand.DeploymentGetResult>(resourceGroupRequired: true, appRequired: true)
-{
-    private const string CommandTitle = "Gets Azure App Service Web App Deployment Details";
-    private readonly ILogger<DeploymentGetCommand> _logger = logger;
-    public override string Id => "17c59409-5382-4419-aef4-0058ffe2c6ec";
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "17c59409-5382-4419-aef4-0058ffe2c6ec",
+    Name = "get",
+    Title = "Gets Azure App Service Web App Deployment Details",
+    Description = """
         Retrieves detailed information about Azure App Service web app deployments, including deployment name,
         if deployment is actively happening, when the deployment started and ended, who authored and deployed the
         deployment, and the type of deployment. If a specific deployment ID is not provided, the command will return
         details for all deployments in the web app. You can specify a deployment ID to get details for a specific
         deployment.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger, IAppServiceService appServiceService)
+    : BaseAppServiceCommand<DeploymentGetOptions, DeploymentGetCommand.DeploymentGetResult>(resourceGroupRequired: true, appRequired: true)
+{
+    private readonly ILogger<DeploymentGetCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
 
     protected override JsonTypeInfo<DeploymentGetResult> ResultTypeInfo => AppServiceJsonContext.Default.DeploymentGetResult;
 
@@ -71,8 +65,7 @@ public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger)
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var appServiceService = context.GetService<IAppServiceService>();
-            var deployments = await appServiceService.GetDeploymentsAsync(
+            var deployments = await _appServiceService.GetDeploymentsAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.AppName!,
@@ -81,7 +74,7 @@ public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(deployments));
+            context.Response.Results = ResponseResult.Create(new(deployments), AppServiceJsonContext.Default.DeploymentGetResult);
         }
         catch (Exception ex)
         {

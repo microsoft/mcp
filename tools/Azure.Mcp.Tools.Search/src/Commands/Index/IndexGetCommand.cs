@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;
@@ -11,37 +10,29 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Search.Commands.Index;
 
-public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchService searchService) : GlobalCommand<IndexGetOptions, IndexGetCommand.IndexGetCommandResult>()
-{
-    private const string CommandTitle = "Get Azure AI Search (formerly known as \"Azure Cognitive Search\") Index Details";
-    private readonly ILogger<IndexGetCommand> _logger = logger;
-    private readonly ISearchService _searchService = searchService;
-
-    public override string Id => "471292d0-4f6d-49d8-bf29-cbcb7b27dedb";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "471292d0-4f6d-49d8-bf29-cbcb7b27dedb",
+    Name = "get",
+    Title = "Get Azure AI Search (formerly known as \"Azure Cognitive Search\") Index Details",
+    Description = """
         List/get/show Azure AI Search indexes in a Search service. Returns index properties such as fields,
         description, and more. If a specific index name is not provided, the command will return details for all
         indexes.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchService searchService) : GlobalCommand<IndexGetOptions, IndexGetCommand.IndexGetCommandResult>()
+{
+    private readonly ILogger<IndexGetCommand> _logger = logger;
+    private readonly ISearchService _searchService = searchService;
 
     protected override JsonTypeInfo<IndexGetCommandResult> ResultTypeInfo => SearchJsonContext.Default.IndexGetCommandResult;
 
@@ -77,7 +68,7 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchServ
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(indexes ?? []));
+            context.Response.Results = ResponseResult.Create(new(indexes ?? []), SearchJsonContext.Default.IndexGetCommandResult);
         }
         catch (Exception ex)
         {

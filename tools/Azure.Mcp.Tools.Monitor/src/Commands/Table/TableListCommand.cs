@@ -5,40 +5,32 @@ using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Table;
 
+[CommandMetadata(
+    Id = "2b1ae0be-d6dd-4db9-9c58-fc4fcb3bf8e6",
+    Name = "list",
+    Title = "List Log Analytics Tables",
+    Description = """
+        List all tables in a Log Analytics workspace. Requires workspace.
+        Returns table names and schemas that can be used for constructing KQL queries.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class TableListCommand(ILogger<TableListCommand> logger, IMonitorService monitorService) : BaseWorkspaceMonitorCommand<TableListOptions, TableListCommand.TableListCommandResult>()
 {
-    protected override JsonTypeInfo<TableListCommandResult> ResultTypeInfo => MonitorJsonContext.Default.TableListCommandResult;
-    private const string CommandTitle = "List Log Analytics Tables";
     private readonly ILogger<TableListCommand> _logger = logger;
     private readonly IMonitorService _monitorService = monitorService;
 
-    public override string Id => "2b1ae0be-d6dd-4db9-9c58-fc4fcb3bf8e6";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        $"""
-        List all tables in a Log Analytics workspace. Requires {WorkspaceOptionDefinitions.WorkspaceIdOrName}.
-        Returns table names and schemas that can be used for constructing KQL queries.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<TableListCommandResult> ResultTypeInfo => MonitorJsonContext.Default.TableListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -73,7 +65,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IMonitorS
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(tables ?? []));
+            context.Response.Results = ResponseResult.Create(new(tables ?? []), MonitorJsonContext.Default.TableListCommandResult);
         }
         catch (Exception ex)
         {

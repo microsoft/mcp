@@ -15,24 +15,22 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 /// <summary>
 /// Deletes a file share snapshot.
 /// </summary>
+[CommandMetadata(
+    Id = "c7d8e9f0-a1b2-4c3d-4e5f-6a7b8c9d0e1f",
+    Name = "delete",
+    Title = "Delete File Share Snapshot",
+    Description = "Delete a file share snapshot permanently. This operation cannot be undone.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger, IFileSharesService fileSharesService)
     : BaseFileSharesCommand<SnapshotDeleteOptions, SnapshotDeleteCommand.SnapshotDeleteCommandResult>(logger, fileSharesService)
 {
-    protected override JsonTypeInfo<SnapshotDeleteCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.SnapshotDeleteCommandResult;
-    public override string Id => "c7d8e9f0-a1b2-4c3d-4e5f-6a7b8c9d0e1f";
-    public override string Name => "delete";
-    public override string Description => "Delete a file share snapshot permanently. This operation cannot be undone.";
-    public override string Title => "Delete File Share Snapshot";
 
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<SnapshotDeleteCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.SnapshotDeleteCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -73,7 +71,9 @@ public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(true, options.SnapshotName!));
+            context.Response.Results = ResponseResult.Create(
+                new(true, options.SnapshotName!),
+                FileSharesJsonContext.Default.SnapshotDeleteCommandResult);
 
             _logger.LogInformation(
                 "Successfully deleted snapshot {SnapshotName}",

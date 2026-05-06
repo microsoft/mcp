@@ -1,47 +1,39 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Options;
 using Azure.Mcp.Tools.AzureTerraform.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 
+[CommandMetadata(
+    Id = "e5f6a7b8-c9d0-1234-ef01-456789012cde",
+    Name = "get",
+    Title = "Get AVM Module Documentation",
+    Description = """
+        Retrieves the documentation (README.md) for a specific version of an Azure Verified Module (AVM).
+        Returns the full module documentation including usage examples, input variables,
+        output values, and resource descriptions. Use --module-name and --module-version
+        to specify the module and version (e.g., --module-name avm-res-storage-storageaccount --module-version 0.4.0).
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = true,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class AvmDocumentationGetCommand(
     ILogger<AvmDocumentationGetCommand> logger,
     IAvmDocsService avmDocsService) : BaseCommand<AvmDocumentationOptions, AvmDocumentationResult>
 {
     private readonly ILogger<AvmDocumentationGetCommand> _logger = logger;
     private readonly IAvmDocsService _avmDocsService = avmDocsService;
-
-    public override string Id => "e5f6a7b8-c9d0-1234-ef01-456789012cde";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Retrieves the documentation (README.md) for a specific version of an Azure Verified Module (AVM).
-        Returns the full module documentation including usage examples, input variables,
-        output values, and resource descriptions. Use --module-name and --module-version
-        to specify the module and version (e.g., --module-name avm-res-storage-storageaccount --module-version 0.4.0).
-        """;
-
-    public override string Title => "Get AVM Module Documentation";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = true,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<AvmDocumentationResult> ResultTypeInfo => AzureTerraformJsonContext.Default.AvmDocumentationResult;
 
@@ -88,7 +80,7 @@ public sealed class AvmDocumentationGetCommand(
             };
 
             context.Response.Status = HttpStatusCode.OK;
-            SetResult(context, result);
+            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AvmDocumentationResult);
             context.Response.Message = string.Empty;
 
             context.Activity

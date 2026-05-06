@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
@@ -10,35 +9,27 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 
+[CommandMetadata(
+    Id = "4ae12e3e-dee0-4d8d-ad34-ffeaf70c642b",
+    Name = "import",
+    Title = "Import Key Vault Certificate",
+    Description = "Imports/uploads an existing certificate (PFX or PEM with private key) into an Azure Key Vault without generating a new certificate or key material. This command accepts either a file path to a PFX/PEM file, a base64 encoded PFX, or raw PEM text starting with -----BEGIN. If the certificate is a password-protected PFX, a password must be provided. Required: --vault <vault>, --certificate <certificate>, --certificate-data <certificate-data>, --subscription <subscription>. Optional: --password <password-for-PFX>, --tenant <tenant>. Returns: name, id, keyId, secretId, cer (base64), thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuer. Creates a new certificate version if it already exists.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = true)]
 public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<CertificateImportOptions, CertificateImportCommand.CertificateImportCommandResult>
 {
-    private const string CommandTitle = "Import Key Vault Certificate";
     private readonly ILogger<CertificateImportCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
-    public override string Id => "4ae12e3e-dee0-4d8d-ad34-ffeaf70c642b";
-
-    public override string Name => "import";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = true,
-        Secret = false
-    };
-
     protected override JsonTypeInfo<CertificateImportCommandResult> ResultTypeInfo => KeyVaultJsonContext.Default.CertificateImportCommandResult;
-
-    public override string Description =>
-        "Imports/uploads an existing certificate (PFX or PEM with private key) into an Azure Key Vault without generating a new certificate or key material. This command accepts either a file path to a PFX/PEM file, a base64 encoded PFX, or raw PEM text starting with -----BEGIN. If the certificate is a password-protected PFX, a password must be provided. Required: --vault <vault>, --certificate <certificate>, --certificate-data <certificate-data>, --subscription <subscription>. Optional: --password <password-for-PFX>, --tenant <tenant>. Returns: name, id, keyId, secretId, cer (base64), thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuer. Creates a new certificate version if it already exists.";
 
     protected override void RegisterOptions(Command command)
     {
@@ -80,20 +71,22 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(
-                certificate.Name,
-                certificate.Id,
-                certificate.KeyId,
-                certificate.SecretId,
-                Convert.ToBase64String(certificate.Cer),
-                certificate.Properties.X509ThumbprintString,
-                certificate.Properties.Enabled,
-                certificate.Properties.NotBefore,
-                certificate.Properties.ExpiresOn,
-                certificate.Properties.CreatedOn,
-                certificate.Properties.UpdatedOn,
-                certificate.Policy.Subject,
-                certificate.Policy.IssuerName));
+            context.Response.Results = ResponseResult.Create(
+                new(
+                    certificate.Name,
+                    certificate.Id,
+                    certificate.KeyId,
+                    certificate.SecretId,
+                    Convert.ToBase64String(certificate.Cer),
+                    certificate.Properties.X509ThumbprintString,
+                    certificate.Properties.Enabled,
+                    certificate.Properties.NotBefore,
+                    certificate.Properties.ExpiresOn,
+                    certificate.Properties.CreatedOn,
+                    certificate.Properties.UpdatedOn,
+                    certificate.Policy.Subject,
+                    certificate.Policy.IssuerName),
+                KeyVaultJsonContext.Default.CertificateImportCommandResult);
         }
         catch (Exception ex)
         {

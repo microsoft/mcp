@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
@@ -10,40 +9,33 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
-public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
-    : BaseComputeCommand<VmssDeleteOptions, VmssDeleteCommand.VmssDeleteCommandResult>(true)
-{
-    private const string CommandTitle = "Delete Virtual Machine Scale Set";
-    private readonly ILogger<VmssDeleteCommand> _logger = logger;
-
-    public override string Id => "e5f3d9b2-7a4c-4e8f-c9d8-2b3f4a5e6d7c";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "e5f3d9b2-7a4c-4e8f-c9d8-2b3f4a5e6d7c",
+    Name = "delete",
+    Title = "Delete Virtual Machine Scale Set",
+    Description = """
         Delete, remove, or destroy an Azure Virtual Machine Scale Set (VMSS) and all its VM instances.
         Use this to permanently remove a scale set that is no longer needed.
         Equivalent to 'az vmss delete'. This operation is irreversible and all VMSS instances will be lost.
         Use --force-deletion to force delete the VMSS even if it is in a running or failed state
         (passes forceDeletion=true to the Azure API).
         Do not use this to delete a single VM (use VM delete instead).
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = true
-    };
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = true,
+    LocalRequired = false)]
+public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger, IComputeService computeService)
+    : BaseComputeCommand<VmssDeleteOptions, VmssDeleteCommand.VmssDeleteCommandResult>(true)
+{
+    private readonly ILogger<VmssDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override JsonTypeInfo<VmssDeleteCommandResult> ResultTypeInfo => ComputeJsonContext.Default.VmssDeleteCommandResult;
 
@@ -73,13 +65,11 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            await computeService.DeleteVmssAsync(
+            await _computeService.DeleteVmssAsync(
                 options.VmssName!,
                 options.ResourceGroup!,
                 options.Subscription!,
@@ -88,9 +78,11 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new VmssDeleteCommandResult(
-                $"Virtual machine scale set '{options.VmssName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
-                true));
+            context.Response.Results = ResponseResult.Create(
+                new VmssDeleteCommandResult(
+                    $"Virtual machine scale set '{options.VmssName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
+                    true),
+                ComputeJsonContext.Default.VmssDeleteCommandResult);
         }
         catch (Exception ex)
         {

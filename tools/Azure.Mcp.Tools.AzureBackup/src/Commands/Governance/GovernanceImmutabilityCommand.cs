@@ -15,30 +15,26 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
+[CommandMetadata(
+    Id = "a0ac7596-9a80-4b53-b459-06f27598a2e2",
+    Name = "immutability",
+    Title = "Configure Vault Immutability",
+    Description = """
+        Configures the immutability state for a backup vault. States include 'Disabled', 'Enabled',
+        or 'Locked'. Warning: 'Locked' state is irreversible.
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutabilityCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<GovernanceImmutabilityOptions, GovernanceImmutabilityCommand.GovernanceImmutabilityCommandResult>()
 {
-    protected override JsonTypeInfo<GovernanceImmutabilityCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.GovernanceImmutabilityCommandResult;
-    private const string CommandTitle = "Configure Vault Immutability";
     private readonly ILogger<GovernanceImmutabilityCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    public override string Id => "a0ac7596-9a80-4b53-b459-06f27598a2e2";
-    public override string Name => "immutability";
-    public override string Description =>
-        """
-        Configures the immutability state for a backup vault. States include 'Disabled', 'Enabled',
-        or 'Locked'. Warning: 'Locked' state is irreversible.
-        """;
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<GovernanceImmutabilityCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.GovernanceImmutabilityCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -76,6 +72,8 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+
         try
         {
             var result = await _azureBackupService.ConfigureImmutabilityAsync(
@@ -88,7 +86,9 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(result));
+            context.Response.Results = ResponseResult.Create(
+                new(result),
+                AzureBackupJsonContext.Default.GovernanceImmutabilityCommandResult);
         }
         catch (Exception ex)
         {

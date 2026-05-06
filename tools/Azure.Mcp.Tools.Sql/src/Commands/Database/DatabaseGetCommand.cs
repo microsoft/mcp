@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Database;
@@ -12,40 +11,33 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
 
-public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseGetCommand> logger)
-    : BaseSqlCommand<DatabaseGetOptions, DatabaseGetCommand.DatabaseGetListResult>(logger)
-{
-    protected override JsonTypeInfo<DatabaseGetListResult> ResultTypeInfo => SqlJsonContext.Default.DatabaseGetListResult;
-    private readonly ISqlService _sqlService = sqlService;
-    private const string CommandTitle = "Get SQL Database";
-
-    public override string Id => "2c4e6a8b-1d3f-4e5a-b6c7-8d9e0f1a2b3c";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "2c4e6a8b-1d3f-4e5a-b6c7-8d9e0f1a2b3c",
+    Name = "get",
+    Title = "Get SQL Database",
+    Description = """
         Show, get, or list Azure SQL databases in a SQL Server. Shows details for a specific Azure SQL database
         by name, or lists all Azure SQL databases in the specified SQL Server. Use to show or retrieve Azure SQL
         database information. Equivalent to 'az sql db show' (show one Azure SQL database) or 'az sql db list'
         (list all Azure SQL databases in a server). Returns database information including configuration details
         and current status.
-        """;
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseGetCommand> logger)
+    : BaseSqlCommand<DatabaseGetOptions, DatabaseGetCommand.DatabaseGetListResult>(logger)
+{
+    private readonly ISqlService _sqlService = sqlService;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<DatabaseGetListResult> ResultTypeInfo => SqlJsonContext.Default.DatabaseGetListResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -81,7 +73,9 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new([database], false));
+                context.Response.Results = ResponseResult.Create(
+                    new([database], false),
+                    SqlJsonContext.Default.DatabaseGetListResult);
             }
             else
             {
@@ -92,7 +86,9 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new(result?.Results ?? [], result?.AreResultsTruncated ?? false));
+                context.Response.Results = ResponseResult.Create(
+                    new(result?.Results ?? [], result?.AreResultsTruncated ?? false),
+                    SqlJsonContext.Default.DatabaseGetListResult);
             }
         }
         catch (Exception ex)

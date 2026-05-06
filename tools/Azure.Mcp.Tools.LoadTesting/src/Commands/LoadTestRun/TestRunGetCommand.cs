@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
@@ -11,34 +10,30 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
-public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTestingService loadTestingService)
-    : BaseLoadTestingCommand<TestRunGetOptions, TestRunGetCommand.TestRunGetCommandResult>
-{
-    private const string _commandTitle = "Test Run Get";
-    private readonly ILogger<TestRunGetCommand> _logger = logger;
-    private readonly ILoadTestingService _loadTestingService = loadTestingService;
-    public override string Id => "713313ec-b9a5-4a71-9953-5b2d4a7b5d7b";
-    public override string Name => "get";
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "713313ec-b9a5-4a71-9953-5b2d4a7b5d7b",
+    Name = "get",
+    Title = "Test Run Get",
+    Description = """
         Get load test run details by testrun ID, or list all test runs by test ID.
         Returns execution details including status, start/end times, progress, metrics, and artifacts.
         Does not return test configuration or resource details.
-        """;
-    public override string Title => _commandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTestingService loadTestingService)
+    : BaseLoadTestingCommand<TestRunGetOptions, TestRunGetCommand.TestRunGetCommandResult>
+{
+    private readonly ILogger<TestRunGetCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
 
     protected override JsonTypeInfo<TestRunGetCommandResult> ResultTypeInfo => LoadTestJsonContext.Default.TestRunGetCommandResult;
 
@@ -98,10 +93,9 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
                     options.RetryPolicy,
                     cancellationToken);
                 // Set results if any were returned
-                if (result != null)
-                {
-                    SetResult(context, new([result]));
-                }
+                context.Response.Results = result != null
+                    ? ResponseResult.Create(new([result]), LoadTestJsonContext.Default.TestRunGetCommandResult)
+                    : null;
             }
             // Otherwise if TestId is provided, list all test runs for that test
             else if (!string.IsNullOrEmpty(options.TestId))
@@ -114,7 +108,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
-                SetResult(context, new(results ?? []));
+                context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestRunGetCommandResult);
             }
             // If neither is provided, that's ok - validation will catch it
         }

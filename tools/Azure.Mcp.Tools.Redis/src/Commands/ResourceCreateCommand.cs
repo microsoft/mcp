@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Redis.Models;
 using Azure.Mcp.Tools.Redis.Options;
@@ -11,39 +10,29 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Redis.Commands;
 
 /// <summary>
 /// Creates a new Azure Managed Redis resource.
 /// </summary>
+[CommandMetadata(
+    Id = "750133dd-d57f-4ed4-9488-c1d406ad4a83",
+    Name = "create",
+    Title = "Create Redis Resource",
+    Description = "Create a new Azure Managed Redis resource in Azure. Use this command to provision a new Redis resource in your subscription.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ResourceCreateCommand(IRedisService redisService, ILogger<ResourceCreateCommand> logger)
     : SubscriptionCommand<ResourceCreateOptions, ResourceCreateCommand.ResourceCreateCommandResult>()
 {
-    private const string CommandTitle = "Create Redis Resource";
     private readonly IRedisService _redisService = redisService;
     private readonly ILogger<ResourceCreateCommand> _logger = logger;
-
-    public override string Id => "750133dd-d57f-4ed4-9488-c1d406ad4a83";
-
-    public override string Name => "create";
-
-    public override string Description =>
-       """
-       Create a new Azure Managed Redis resource in Azure. Use this command to provision a new Redis resource in your subscription.
-       """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<ResourceCreateCommandResult> ResultTypeInfo => RedisJsonContext.Default.ResourceCreateCommandResult;
 
@@ -97,7 +86,9 @@ public sealed class ResourceCreateCommand(IRedisService redisService, ILogger<Re
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(resource));
+            context.Response.Results = ResponseResult.Create(
+                new(resource),
+                RedisJsonContext.Default.ResourceCreateCommandResult);
         }
         catch (Exception ex)
         {

@@ -19,31 +19,27 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Job;
 /// Consolidated job command: when --job is supplied returns a single job's details;
 /// otherwise lists all jobs in the vault.
 /// </summary>
-public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<JobGetOptions, JobGetCommand.JobGetCommandResult>()
-{
-    protected override JsonTypeInfo<JobGetCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.JobGetCommandResult;
-    private const string CommandTitle = "Get Backup Job";
-    private readonly ILogger<JobGetCommand> _logger = logger;
-    private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override string Id => "f1291650-8ff2-413c-8001-e4b33f157a3b";
-    public override string Name => "get";
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "f1291650-8ff2-413c-8001-e4b33f157a3b",
+    Name = "get",
+    Title = "Get Backup Job",
+    Description = """
         Retrieves backup job information. When --job is specified, returns detailed information
         about a single job including operation type, status, start/end times, error codes, and
         datasource details. When omitted, lists all backup jobs in the vault.
-        """;
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<JobGetOptions, JobGetCommand.JobGetCommandResult>()
+{
+    private readonly ILogger<JobGetCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
+
+    protected override JsonTypeInfo<JobGetCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.JobGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -67,6 +63,9 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, string.IsNullOrEmpty(options.Job) ? "list" : "single");
+
         try
         {
             if (!string.IsNullOrEmpty(options.Job))
@@ -81,7 +80,9 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new([job]));
+                context.Response.Results = ResponseResult.Create(
+                    new([job]),
+                    AzureBackupJsonContext.Default.JobGetCommandResult);
             }
             else
             {
@@ -94,7 +95,9 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new(jobs));
+                context.Response.Results = ResponseResult.Create(
+                    new(jobs),
+                    AzureBackupJsonContext.Default.JobGetCommandResult);
             }
         }
         catch (Exception ex)

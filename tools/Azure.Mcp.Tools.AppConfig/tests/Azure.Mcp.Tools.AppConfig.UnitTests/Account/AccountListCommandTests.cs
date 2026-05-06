@@ -29,6 +29,7 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
         Service.GetAppConfigAccounts(
             "sub123",
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
@@ -50,6 +51,7 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
         // Arrange
         Service.GetAppConfigAccounts(
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -68,11 +70,7 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
     public async Task ExecuteAsync_Returns500_WhenServiceThrowsException()
     {
         // Arrange
-        Service.GetAppConfigAccounts(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
         // Act
@@ -98,7 +96,7 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
     public async Task ExecuteAsync_Returns503_WhenServiceIsUnavailable()
     {
         // Arrange
-        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Service Unavailable", null, HttpStatusCode.ServiceUnavailable));
 
         // Act
@@ -107,5 +105,21 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
         // Assert
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);
         Assert.Contains("Service Unavailable", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithResourceGroup_ForwardsResourceGroupToService()
+    {
+        // Arrange
+        const string resourceGroup = "test-rg";
+        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<AppConfigurationAccount>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", resourceGroup);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).GetAppConfigAccounts(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 }

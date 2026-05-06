@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Server;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -10,32 +9,24 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 
+[CommandMetadata(
+    Id = "2134621b-518f-48ac-a66a-82c40fcb58bb",
+    Name = "set",
+    Title = "Set PostgreSQL Server Parameter",
+    Description = "Configures PostgreSQL server settings including replication, connection limits, and other parameters.",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServerParamSetCommand(IPostgresService postgresService, ILogger<ServerParamSetCommand> logger) : BaseServerCommand<ServerParamSetOptions, ServerParamSetCommand.ServerParamSetCommandResult>(logger)
 {
     private readonly IPostgresService _postgresService = postgresService;
-    private const string CommandTitle = "Set PostgreSQL Server Parameter";
-
-    public override string Id => "2134621b-518f-48ac-a66a-82c40fcb58bb";
-
-    public override string Name => "set";
-
-    public override string Description =>
-        "Configures PostgreSQL server settings including replication, connection limits, and other parameters.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<ServerParamSetCommandResult> ResultTypeInfo => PostgresJsonContext.Default.ServerParamSetCommandResult;
 
@@ -68,10 +59,9 @@ public sealed class ServerParamSetCommand(IPostgresService postgresService, ILog
             ServerParameterValidator.EnsureParameterAllowed(options.Param);
 
             var result = await _postgresService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, options.Value!, cancellationToken);
-            if (!string.IsNullOrEmpty(result))
-            {
-                SetResult(context, new(result, options.Param!, options.Value!));
-            }
+            context.Response.Results = !string.IsNullOrEmpty(result) ?
+                ResponseResult.Create(new(result, options.Param!, options.Value!), PostgresJsonContext.Default.ServerParamSetCommandResult) :
+                null;
         }
         catch (Exception ex)
         {

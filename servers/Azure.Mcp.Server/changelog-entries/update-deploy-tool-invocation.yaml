@@ -1,5 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Rewrote deploy tool descriptions and relaxed required options to defaults to improve invocation hit rate"
-  - section: "Other Changes"
-    description: "Set `LocalRequired=true` on `deploy_app_logs_get`; no longer available in HTTP/remote mode"

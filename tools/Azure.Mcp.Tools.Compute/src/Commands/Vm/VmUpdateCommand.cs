@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
@@ -11,38 +10,31 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
-public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
-    : BaseComputeCommand<VmUpdateOptions, VmUpdateCommand.VmUpdateCommandResult>(true)
-{
-    private const string CommandTitle = "Update Virtual Machine";
-    private readonly ILogger<VmUpdateCommand> _logger = logger;
-
-    public override string Id => "f330138e-8048-4a4a-8170-d8b6f958eaa4";
-
-    public override string Name => "update";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "f330138e-8048-4a4a-8170-d8b6f958eaa4",
+    Name = "update",
+    Title = "Update Virtual Machine",
+    Description = """
         Update, modify, or reconfigure an existing Azure Virtual Machine (VM).
         Use this to resize a VM, update tags, configure boot diagnostics, or change user data.
         Equivalent to 'az vm update'. The VM may need to be deallocated before resizing to certain sizes.
         Do not use this to create a new VM (use VM create) or to update Virtual Machine Scale Sets (use VMSS update).
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger, IComputeService computeService)
+    : BaseComputeCommand<VmUpdateOptions, VmUpdateCommand.VmUpdateCommandResult>(true)
+{
+    private readonly ILogger<VmUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override JsonTypeInfo<VmUpdateCommandResult> ResultTypeInfo => ComputeJsonContext.Default.VmUpdateCommandResult;
 
@@ -96,13 +88,12 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
 
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var result = await computeService.UpdateVmAsync(
+            var result = await _computeService.UpdateVmAsync(
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,
@@ -115,7 +106,7 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(result));
+            context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmUpdateCommandResult);
         }
         catch (Exception ex)
         {

@@ -13,26 +13,22 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
+[CommandMetadata(
+    Id = "b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e",
+    Name = "create",
+    Title = "Create File Share",
+    Description = "Create a new Azure managed file share resource in a resource group. This creates a high-performance, fully managed file share accessible via NFS protocol.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logger, IFileSharesService service)
     : BaseFileSharesCommand<FileShareCreateOrUpdateOptions, FileShareCreateCommand.FileShareCreateCommandResult>(logger, service)
 {
+
     protected override JsonTypeInfo<FileShareCreateCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.FileShareCreateCommandResult;
-    private const string CommandTitle = "Create File Share";
-
-    public override string Id => "b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e";
-    public override string Name => "create";
-    public override string Description => "Create a new Azure managed file share resource in a resource group. This creates a high-performance, fully managed file share accessible via NFS protocol.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -128,7 +124,7 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(fileShare));
+            context.Response.Results = ResponseResult.Create(new(fileShare), FileSharesJsonContext.Default.FileShareCreateCommandResult);
 
             _logger.LogInformation("File share created successfully. FileShare: {FileShareName}", options.FileShareName);
         }

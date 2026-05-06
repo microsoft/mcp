@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
@@ -10,22 +9,15 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 
-public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<ConsumerGroupGetOptions, ConsumerGroupGetCommand.ConsumerGroupGetCommandResult>
-{
-    private const string CommandTitle = "Get Event Hubs Consumer Groups";
-
-    private readonly IEventHubsService _service = service;
-    private readonly ILogger<ConsumerGroupGetCommand> _logger = logger;
-    public override string Id => "604fda48-2438-419d-a819-5f9d2f3b21f8";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "604fda48-2438-419d-a819-5f9d2f3b21f8",
+    Name = "get",
+    Title = "Get Event Hubs Consumer Groups",
+    Description = """
         Get consumer groups from Azure Event Hub. This command can either:
 
         1) List all consumer groups in an Event Hub
@@ -34,19 +26,19 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
         The EventHub, Namespace, and ResourceGroup parameters are required (for both get and list)
         The Consumer Group parameter is only required for getting a specific consumer-group
         When retrieving a single consumer group and when listing all available consumer groups, return all available metadata on the consumer group.
-        """;
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> logger, IEventHubsService service)
+    : BaseEventHubsCommand<ConsumerGroupGetOptions, ConsumerGroupGetCommand.ConsumerGroupGetCommandResult>
+{
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        OpenWorld = false,       // Queries Azure resources
-        Destructive = false,    // Read-only operation
-        Idempotent = true,      // Same parameters produce same results
-        ReadOnly = true,        // Only reads data
-        Secret = false,         // Returns non-sensitive information
-        LocalRequired = false   // Pure cloud API calls
-    };
+    private readonly IEventHubsService _service = service;
+    private readonly ILogger<ConsumerGroupGetCommand> _logger = logger;
 
     protected override JsonTypeInfo<ConsumerGroupGetCommandResult> ResultTypeInfo => EventHubsJsonContext.Default.ConsumerGroupGetCommandResult;
 
@@ -94,7 +86,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
                     cancellationToken);
 
                 var singleResult = consumerGroup != null ? new List<Models.ConsumerGroup> { consumerGroup } : new List<Models.ConsumerGroup>();
-                SetResult(context, new(singleResult));
+                context.Response.Results = ResponseResult.Create(new(singleResult), EventHubsJsonContext.Default.ConsumerGroupGetCommandResult);
             }
             else
             {
@@ -108,7 +100,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new(consumerGroups ?? []));
+                context.Response.Results = ResponseResult.Create(new(consumerGroups ?? []), EventHubsJsonContext.Default.ConsumerGroupGetCommandResult);
             }
         }
         catch (Exception ex)

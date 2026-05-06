@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Options;
@@ -11,34 +10,25 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Region;
 
+[CommandMetadata(
+    Id = "0b8902f5-3fd4-49d9-b73e-4cea88afdd62",
+    Name = "list",
+    Title = "Get available regions for Azure resource types",
+    Description = "Given a list of Azure resource types, this tool will return a list of regions where the resource types are available. Always get the user's subscription ID before calling this tool.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> logger, IQuotaService quotaService) : SubscriptionCommand<AvailabilityListOptions, AvailabilityListCommand.RegionCheckCommandResult>()
 {
-    private const string CommandTitle = "Get available regions for Azure resource types";
     private readonly ILogger<AvailabilityListCommand> _logger = logger;
     private readonly IQuotaService _quotaService = quotaService;
-
-    public override string Id => "0b8902f5-3fd4-49d9-b73e-4cea88afdd62";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        Given a list of Azure resource types, this tool will return a list of regions where the resource types are available. Always get the user's subscription ID before calling this tool.
-        """;
-
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<RegionCheckCommandResult> ResultTypeInfo => QuotaJsonContext.Default.RegionCheckCommandResult;
 
@@ -97,7 +87,7 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
 
             _logger.LogInformation("Region check result: {ToolResult}", toolResult);
 
-            SetResult(context, new(toolResult ?? []));
+            context.Response.Results = ResponseResult.Create(new(toolResult ?? []), QuotaJsonContext.Default.RegionCheckCommandResult);
         }
         catch (Exception ex)
         {

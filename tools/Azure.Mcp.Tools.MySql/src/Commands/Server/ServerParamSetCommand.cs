@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Options.Server;
 using Azure.Mcp.Tools.MySql.Services;
@@ -9,31 +8,24 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Server;
 
+[CommandMetadata(
+    Id = "8d086e44-8c8a-4649-a282-38f775704595",
+    Name = "set",
+    Title = "Set MySQL Server Parameter",
+    Description = "Sets/updates a single MySQL server configuration setting/parameter.",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger, IMySqlService mysqlService) : BaseServerCommand<ServerParamSetOptions, ServerParamSetCommand.ServerParamSetCommandResult>(logger)
 {
-    private const string CommandTitle = "Set MySQL Server Parameter";
     private readonly IMySqlService _mysqlService = mysqlService;
-
-    public override string Id => "8d086e44-8c8a-4649-a282-38f775704595";
-
-    public override string Name => "set";
-
-    public override string Description => "Sets/updates a single MySQL server configuration setting/parameter.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<ServerParamSetCommandResult> ResultTypeInfo => MySqlJsonContext.Default.ServerParamSetCommandResult;
 
@@ -64,10 +56,9 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger,
         try
         {
             var result = await _mysqlService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, options.Value!, cancellationToken);
-            if (!string.IsNullOrEmpty(result))
-            {
-                SetResult(context, new(options.Param!, result));
-            }
+            context.Response.Results = !string.IsNullOrEmpty(result) ?
+                ResponseResult.Create(new(options.Param!, result), MySqlJsonContext.Default.ServerParamSetCommandResult) :
+                null;
         }
         catch (Exception ex)
         {

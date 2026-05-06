@@ -13,26 +13,22 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
+[CommandMetadata(
+    Id = "d7e8f9a0-b1c2-4d3e-4f5a-6b7c8d9e0f1a",
+    Name = "update",
+    Title = "Update File Share",
+    Description = "Update an existing Azure managed file share resource. Allows updating mutable properties like provisioned storage, IOPS, throughput, and network access settings.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logger, IFileSharesService service)
     : BaseFileSharesCommand<FileShareCreateOrUpdateOptions, FileShareUpdateCommand.FileShareUpdateCommandResult>(logger, service)
 {
+
     protected override JsonTypeInfo<FileShareUpdateCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.FileShareUpdateCommandResult;
-    private const string CommandTitle = "Update File Share";
-
-    public override string Id => "d7e8f9a0-b1c2-4d3e-4f5a-6b7c8d9e0f1a";
-    public override string Name => "update";
-    public override string Description => "Update an existing Azure managed file share resource. Allows updating mutable properties like provisioned storage, IOPS, throughput, and network access settings.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -113,7 +109,7 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(fileShare));
+            context.Response.Results = ResponseResult.Create(new(fileShare), FileSharesJsonContext.Default.FileShareUpdateCommandResult);
 
             _logger.LogInformation("File share updated successfully. FileShare: {FileShareName}", options.FileShareName);
         }

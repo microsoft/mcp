@@ -1,44 +1,48 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Search.Options.Service;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Search.Commands.Service;
 
+[CommandMetadata(
+    Id = "b0684f8c-20de-4bc0-bbc3-982575c8441f",
+    Name = "list",
+    Title = "List Azure AI Search (formerly known as \"Azure Cognitive Search\") Services",
+    Description = "List/show Azure AI Search services in a subscription, returning details about each service.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger, ISearchService searchService) : SubscriptionCommand<ServiceListOptions, ServiceListCommand.ServiceListCommandResult>()
 {
-    private const string CommandTitle = "List Azure AI Search (formerly known as \"Azure Cognitive Search\") Services";
     private readonly ILogger<ServiceListCommand> _logger = logger;
     private readonly ISearchService _searchService = searchService;
 
-    public override string Id => "b0684f8c-20de-4bc0-bbc3-982575c8441f";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        List/show Azure AI Search services in a subscription, returning details about each service.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
     protected override JsonTypeInfo<ServiceListCommandResult> ResultTypeInfo => SearchJsonContext.Default.ServiceListCommandResult;
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+    }
+
+    protected override ServiceListOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        return options;
+    }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -53,11 +57,12 @@ public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger, ISear
         {
             var services = await _searchService.ListServices(
                 options.Subscription!,
+                options.ResourceGroup,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(services ?? []));
+            context.Response.Results = ResponseResult.Create(new(services ?? []), SearchJsonContext.Default.ServiceListCommandResult);
         }
         catch (Exception ex)
         {

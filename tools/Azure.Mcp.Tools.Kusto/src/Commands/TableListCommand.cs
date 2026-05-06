@@ -1,39 +1,30 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
+[CommandMetadata(
+    Id = "3cd1e5f1-3353-4029-99f8-1aaa566d05e4",
+    Name = "list",
+    Title = "List Kusto Tables",
+    Description = "List/enumerate all tables in a specific Azure Data Explorer/Kusto/KQL database. Required: --cluster-uri (or --cluster and --subscription), --database.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class TableListCommand(ILogger<TableListCommand> logger, IKustoService kustoService) : BaseDatabaseCommand<TableListOptions, TableListCommand.TableListCommandResult>
 {
-    private const string CommandTitle = "List Kusto Tables";
     private readonly ILogger<TableListCommand> _logger = logger;
     private readonly IKustoService _kustoService = kustoService;
-
-    public override string Id => "3cd1e5f1-3353-4029-99f8-1aaa566d05e4";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        "List/enumerate all tables in a specific Azure Data Explorer/Kusto/KQL database. Required: --cluster-uri (or --cluster and --subscription), --database.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<TableListCommandResult> ResultTypeInfo => KustoJsonContext.Default.TableListCommandResult;
 
@@ -72,7 +63,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IKustoSer
                     cancellationToken);
             }
 
-            SetResult(context, new(tableNames ?? []));
+            context.Response.Results = ResponseResult.Create(new(tableNames ?? []), KustoJsonContext.Default.TableListCommandResult);
         }
         catch (Exception ex)
         {

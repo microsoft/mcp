@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Fabric.Mcp.Tools.Docs.Options;
 using Fabric.Mcp.Tools.Docs.Options.BestPractices;
 using Fabric.Mcp.Tools.Docs.Services;
@@ -10,33 +9,24 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
 
+[CommandMetadata(
+    Id = "0a73ecc9-d257-4ff3-8e05-fd3158c2cd31",
+    Name = "best-practices",
+    Title = "Best Practices",
+    Description = "Retrieves embedded best practice documentation for a specific Fabric topic. Use this when the user needs guidance, recommendations, or implementation patterns for Fabric features. Returns detailed best practice content.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false)]
 public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> logger) : GlobalCommand<GetBestPracticesOptions, IEnumerable<string>>()
 {
-    private const string CommandTitle = "Best Practices";
-
     private readonly ILogger<GetBestPracticesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    public override string Id => "0a73ecc9-d257-4ff3-8e05-fd3158c2cd31";
-
-    public override string Name => "best-practices";
-
-    public override string Description =>
-        "Retrieves embedded best practice documentation for a specific Fabric topic. Use this when the user needs guidance, recommendations, or implementation patterns for Fabric features. Returns detailed best practice content.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<IEnumerable<string>> ResultTypeInfo => FabricJsonContext.Default.IEnumerableString;
 
@@ -67,7 +57,7 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
             var fabricService = context.GetService<IFabricPublicApiService>();
             var bestPractices = fabricService.GetTopicBestPractices(options.Topic!);
 
-            SetResult(context, bestPractices);
+            context.Response.Results = ResponseResult.Create(bestPractices, FabricJsonContext.Default.IEnumerableString);
         }
         catch (ArgumentException argEx)
         {

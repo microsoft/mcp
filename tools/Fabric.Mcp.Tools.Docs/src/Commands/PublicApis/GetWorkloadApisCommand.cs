@@ -1,9 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
-using Fabric.Mcp.Tools.Docs.Models;
 using Fabric.Mcp.Tools.Docs.Options;
 using Fabric.Mcp.Tools.Docs.Options.PublicApis;
 using Fabric.Mcp.Tools.Docs.Services;
@@ -11,32 +9,25 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
+using Fabric.Mcp.Tools.Docs.Models;
 
 namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
 
+[CommandMetadata(
+    Id = "97229a98-c1ae-4255-a6e2-07631c2a42c5",
+    Name = "workload-api-spec",
+    Title = "Workload API Specification",
+    Description = "Retrieves the complete OpenAPI specification for a specific Fabric workload. Use this when the user needs detailed API documentation for a workload like notebooks or reports. Returns full API spec in JSON format.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false)]
 public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logger) : GlobalCommand<WorkloadCommandOptions, FabricWorkloadPublicApi>()
 {
-    private const string CommandTitle = "Workload API Specification";
     private readonly ILogger<GetWorkloadApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    public override string Id => "97229a98-c1ae-4255-a6e2-07631c2a42c5";
-
-    public override string Name => "workload-api-spec";
-
-    public override string Description =>
-        "Retrieves the complete OpenAPI specification for a specific Fabric workload. Use this when the user needs detailed API documentation for a workload like notebooks or reports. Returns full API spec in JSON format.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<FabricWorkloadPublicApi> ResultTypeInfo => FabricJsonContext.Default.FabricWorkloadPublicApi;
 
@@ -74,7 +65,7 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
             var fabricService = context.GetService<IFabricPublicApiService>();
             var apis = await fabricService.GetWorkloadPublicApis(options.WorkloadType, cancellationToken);
 
-            SetResult(context, apis);
+            context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
         }
         catch (HttpRequestException httpEx)
         {

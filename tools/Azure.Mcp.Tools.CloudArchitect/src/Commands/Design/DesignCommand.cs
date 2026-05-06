@@ -1,9 +1,8 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
 using System.Reflection;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.CloudArchitect.Models;
 using Azure.Mcp.Tools.CloudArchitect.Options;
 using Microsoft.Extensions.Logging;
@@ -11,24 +10,15 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.CloudArchitect.Commands.Design;
 
-public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand<ArchitectureDesignToolOptions, CloudArchitectDesignResponse>
-{
-    private const string CommandTitle = "Design Azure cloud architectures through guided questions";
-    private readonly ILogger<DesignCommand> _logger = logger;
-
-    private static readonly string s_designArchitectureText = LoadArchitectureDesignText();
-
-    private static string GetArchitectureDesignText() => s_designArchitectureText;
-
-    public override string Id => "aa7c2a8b-c664-423b-8fb5-8edfbdadc783";
-
-    public override string Name => "design";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "aa7c2a8b-c664-423b-8fb5-8edfbdadc783",
+    Name = "design",
+    Title = "Design Azure cloud architectures through guided questions",
+    Description = """
         Recommends architecture design for cloud services/apps/solutions, such as: file storage, banking, video streaming, e-commerce, SaaS, and more. Use as follows:
         1. Ask about user role, business goals, etc (1-2 questions at a time).
         2. Track confidence returned by service and update requirements (explicit/implicit/assumed).
@@ -37,21 +27,20 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
         5. Follow Azure Well-Architected Framework principles.
         6. Cover all tiers: infrastructure, platform, application, data, security, operations.
         7. Provide actionable advice and high-level overview. Note: State tracks components, requirements by category, and confidence factors. Be conservative with suggestions.
-        """;
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand<ArchitectureDesignToolOptions, CloudArchitectDesignResponse>
+{
+    private readonly ILogger<DesignCommand> _logger = logger;
 
-    public override string Title => CommandTitle;
+    private static readonly string s_designArchitectureText = LoadArchitectureDesignText();
 
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override JsonTypeInfo<CloudArchitectDesignResponse> ResultTypeInfo => CloudArchitectJsonContext.Default.CloudArchitectDesignResponse;
+    private static string GetArchitectureDesignText() => s_designArchitectureText;
 
     private static string LoadArchitectureDesignText()
     {
@@ -59,6 +48,8 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
         string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly, "azure-architecture-design.txt");
         return EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
     }
+
+    protected override JsonTypeInfo<CloudArchitectDesignResponse> ResultTypeInfo => CloudArchitectJsonContext.Default.CloudArchitectDesignResponse;
 
     protected override void RegisterOptions(Command command)
     {
@@ -160,7 +151,7 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
             };
 
             context.Response.Status = HttpStatusCode.OK;
-            SetResult(context, result);
+            context.Response.Results = ResponseResult.Create(result, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)

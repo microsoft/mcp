@@ -6,25 +6,17 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
-public sealed class PathListCommand(ILogger<PathListCommand> logger)
-    : GlobalCommand<PathListOptions, PathListCommand.PathListResult>()
-{
-    protected override JsonTypeInfo<PathListResult> ResultTypeInfo => MinimalJsonContext.Default.PathListResult;
-    private const string CommandTitle = "List OneLake Path Structure";
-    private readonly ILogger<PathListCommand> _logger = logger;
-
-    public override string Id => "3bf1b82d-ff44-4984-9b97-0e6d9e4917a3";
-
-    public override string Name => "list_files";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "3bf1b82d-ff44-4984-9b97-0e6d9e4917a3",
+    Name = "list_files",
+    Title = "List OneLake Path Structure",
+    Description = """
         List files and directories in OneLake storage using a filesystem-style hierarchical view, similar to Azure Data Lake Storage Gen2. 
         Shows directory structure with paths, sizes, timestamps, and metadata. Use this to explore OneLake content in a filesystem format 
         rather than flat blob listing. Supports optional path filtering and recursive directory traversal.
@@ -33,19 +25,19 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
         providing comprehensive visibility across all top-level OneLake folders.
         
         Use --format=raw to get the unprocessed OneLake DFS API response for debugging and analysis.
-        """;
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false)]
+public sealed class PathListCommand(ILogger<PathListCommand> logger)
+    : GlobalCommand<PathListOptions, PathListCommand.PathListResult>()
+{
+    private readonly ILogger<PathListCommand> _logger = logger;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<PathListResult> ResultTypeInfo => MinimalJsonContext.Default.PathListResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -120,7 +112,9 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
                     options.Recursive,
                     cancellationToken: cancellationToken);
 
-                SetResult(context, new() { RawResponse = rawResponse });
+                context.Response.Results = ResponseResult.Create(
+                    new() { RawResponse = rawResponse },
+                    MinimalJsonContext.Default.PathListResult);
                 return context.Response;
             }
 
@@ -145,7 +139,9 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
                     cancellationToken: cancellationToken);
             }
 
-            SetResult(context, new(fileSystemItems));
+            context.Response.Results = ResponseResult.Create(
+                new(fileSystemItems),
+                MinimalJsonContext.Default.PathListResult);
         }
         catch (Exception ex)
         {

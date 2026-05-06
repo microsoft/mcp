@@ -8,37 +8,30 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
 
+[CommandMetadata(
+    Id = "25dd8bb3-5ba3-4c0d-993d-54917f63d52e",
+    Name = "get",
+    Title = "Get Cloud Endpoint",
+    Description = "List all cloud endpoints in a sync group or retrieve details about a specific cloud endpoint. Returns cloud endpoint properties including Azure File Share configuration, storage account details, and provisioning state. Use --cloud-endpoint-name for a specific endpoint.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<CloudEndpointGetOptions, CloudEndpointGetCommand.CloudEndpointGetCommandResult>
 {
-    protected override JsonTypeInfo<CloudEndpointGetCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.CloudEndpointGetCommandResult;
-    private const string CommandTitle = "Get Cloud Endpoint";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<CloudEndpointGetCommand> _logger = logger;
 
-    public override string Id => "25dd8bb3-5ba3-4c0d-993d-54917f63d52e";
-
-    public override string Name => "get";
-
-    public override string Description => "List all cloud endpoints in a sync group or retrieve details about a specific cloud endpoint. Returns cloud endpoint properties including Azure File Share configuration, storage account details, and provisioning state. Use --cloud-endpoint-name for a specific endpoint.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<CloudEndpointGetCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.CloudEndpointGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -93,7 +86,7 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
                     return context.Response;
                 }
 
-                SetResult(context, new([endpoint]));
+                context.Response.Results = ResponseResult.Create(new([endpoint]), StorageSyncJsonContext.Default.CloudEndpointGetCommandResult);
             }
             else
             {
@@ -110,7 +103,7 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new(endpoints ?? []));
+                context.Response.Results = ResponseResult.Create(new(endpoints ?? []), StorageSyncJsonContext.Default.CloudEndpointGetCommandResult);
             }
         }
         catch (Exception ex)

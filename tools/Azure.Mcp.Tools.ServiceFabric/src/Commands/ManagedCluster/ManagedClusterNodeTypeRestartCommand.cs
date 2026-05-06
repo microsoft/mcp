@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.ServiceFabric.Options;
 using Azure.Mcp.Tools.ServiceFabric.Options.ManagedCluster;
 using Azure.Mcp.Tools.ServiceFabric.Services;
@@ -11,34 +10,26 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
 
+[CommandMetadata(
+    Id = "b4f2c3d5-e6f7-48a9-8b1c-2d3e4f5a6b7c",
+    Name = "restart",
+    Title = "Restart Service Fabric Managed Cluster Nodes",
+    Description = "Restart nodes of a specific node type in a Service Fabric managed cluster. Requires the cluster name, node type, and list of node names to restart. Optionally specify the update type (Default or ByUpgradeDomain).",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterNodeTypeRestartCommand> logger, IServiceFabricService serviceFabricService)
     : BaseServiceFabricCommand<ManagedClusterNodeTypeRestartOptions, ManagedClusterNodeTypeRestartCommand.ManagedClusterNodeTypeRestartCommandResult>
 {
-    private const string CommandTitle = "Restart Service Fabric Managed Cluster Nodes";
     private readonly ILogger<ManagedClusterNodeTypeRestartCommand> _logger = logger;
     private readonly IServiceFabricService _serviceFabricService = serviceFabricService;
-
-    public override string Id => "b4f2c3d5-e6f7-48a9-8b1c-2d3e4f5a6b7c";
-
-    public override string Name => "restart";
-
-    public override string Description =>
-        "Restart nodes of a specific node type in a Service Fabric managed cluster. Requires the cluster name, node type, and list of node names to restart. Optionally specify the update type (Default or ByUpgradeDomain).";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<ManagedClusterNodeTypeRestartCommandResult> ResultTypeInfo => ServiceFabricJsonContext.Default.ManagedClusterNodeTypeRestartCommandResult;
 
@@ -85,7 +76,9 @@ public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterN
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(response));
+            context.Response.Results = ResponseResult.Create(
+                new(response),
+                ServiceFabricJsonContext.Default.ManagedClusterNodeTypeRestartCommandResult);
         }
         catch (Exception ex)
         {

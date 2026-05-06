@@ -55,7 +55,7 @@ public class ListWorkloadCommandTests : CommandUnitTestsBase<ListWorkloadsComman
         var result = await ExecuteCommandAsync([]);
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, result.Status);
         Assert.NotEmpty(result.Message);
     }
 }

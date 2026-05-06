@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
@@ -11,38 +10,31 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
-public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
-    : BaseComputeCommand<VmssUpdateOptions, VmssUpdateCommand.VmssUpdateCommandResult>(true)
-{
-    private const string CommandTitle = "Update Virtual Machine Scale Set";
-    private readonly ILogger<VmssUpdateCommand> _logger = logger;
-
-    public override string Id => "aaa0ad51-3c16-4ec2-99e2-b24f28a1e7d0";
-
-    public override string Name => "update";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "aaa0ad51-3c16-4ec2-99e2-b24f28a1e7d0",
+    Name = "update",
+    Title = "Update Virtual Machine Scale Set",
+    Description = """
         Update, modify, or reconfigure an existing Azure Virtual Machine Scale Set (VMSS).
         Use this to scale instance count, resize VMs, change upgrade policy, or update tags on a scale set.
         Equivalent to 'az vmss update'. Changes may require 'update-instances' to roll out to existing VMs.
         Do not use this to create a new VMSS (use VMSS create) or to update a single VM (use VM update).
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger, IComputeService computeService)
+    : BaseComputeCommand<VmssUpdateOptions, VmssUpdateCommand.VmssUpdateCommandResult>(true)
+{
+    private readonly ILogger<VmssUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override JsonTypeInfo<VmssUpdateCommandResult> ResultTypeInfo => ComputeJsonContext.Default.VmssUpdateCommandResult;
 
@@ -103,13 +95,12 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
 
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var result = await computeService.UpdateVmssAsync(
+            var result = await _computeService.UpdateVmssAsync(
                 options.VmssName!,
                 options.ResourceGroup!,
                 options.Subscription!,
@@ -124,7 +115,7 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(result));
+            context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmssUpdateCommandResult);
         }
         catch (Exception ex)
         {

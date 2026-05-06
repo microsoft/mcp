@@ -19,33 +19,29 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 /// Consolidated vault command: when --vault is supplied returns a single vault's details;
 /// otherwise lists all vaults in the subscription (optionally filtered by --vault-type).
 /// </summary>
-public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<BaseAzureBackupOptions, VaultGetCommand.VaultGetCommandResult>()
-{
-    protected override JsonTypeInfo<VaultGetCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.VaultGetCommandResult;
-    private const string CommandTitle = "Get Backup Vault";
-    private readonly ILogger<VaultGetCommand> _logger = logger;
-    private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override string Id => "4a1084d5-50d9-489f-9e4c-acc594441b1f";
-    public override string Name => "get";
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "4a1084d5-50d9-489f-9e4c-acc594441b1f",
+    Name = "get",
+    Title = "Get Backup Vault",
+    Description = """
         Retrieves backup vault information. When --vault and --resource-group are specified,
         returns detailed information about a single vault including type, location, SKU, and
         storage redundancy. When omitted, lists all backup vaults (RSV and Backup vaults) in
         the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or
         --resource-group to narrow the listing results.
-        """;
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<BaseAzureBackupOptions, VaultGetCommand.VaultGetCommandResult>()
+{
+    private readonly ILogger<VaultGetCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
+
+    protected override JsonTypeInfo<VaultGetCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.VaultGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -92,6 +88,9 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, string.IsNullOrEmpty(options.Vault) ? "list" : "single");
+
         try
         {
             if (!string.IsNullOrEmpty(options.Vault))
@@ -105,7 +104,9 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new([vault]));
+                context.Response.Results = ResponseResult.Create(
+                    new([vault]),
+                    AzureBackupJsonContext.Default.VaultGetCommandResult);
             }
             else
             {
@@ -117,7 +118,9 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new(vaults));
+                context.Response.Results = ResponseResult.Create(
+                    new(vaults),
+                    AzureBackupJsonContext.Default.VaultGetCommandResult);
             }
         }
         catch (Exception ex)

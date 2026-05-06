@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.FirewallRule;
 using Azure.Mcp.Tools.Sql.Services;
@@ -10,39 +9,32 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 
-public sealed class FirewallRuleDeleteCommand(ISqlService sqlService, ILogger<FirewallRuleDeleteCommand> logger)
-    : BaseSqlCommand<FirewallRuleDeleteOptions, FirewallRuleDeleteCommand.FirewallRuleDeleteResult>(logger)
-{
-    protected override JsonTypeInfo<FirewallRuleDeleteResult> ResultTypeInfo => SqlJsonContext.Default.FirewallRuleDeleteResult;
-    private readonly ISqlService _sqlService = sqlService;
-    private const string CommandTitle = "Delete SQL Server Firewall Rule";
-
-    public override string Id => "f13fc5d2-7547-480b-a704-36120e2e9b92";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "f13fc5d2-7547-480b-a704-36120e2e9b92",
+    Name = "delete",
+    Title = "Delete SQL Server Firewall Rule",
+    Description = """
         Deletes a firewall rule from a SQL server. This operation removes the specified
         firewall rule, potentially restricting access for the IP addresses that were
         previously allowed by this rule. The operation is idempotent - if the rule
         doesn't exist, no error is returned.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class FirewallRuleDeleteCommand(ISqlService sqlService, ILogger<FirewallRuleDeleteCommand> logger)
+    : BaseSqlCommand<FirewallRuleDeleteOptions, FirewallRuleDeleteCommand.FirewallRuleDeleteResult>(logger)
+{
+    private readonly ISqlService _sqlService = sqlService;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<FirewallRuleDeleteResult> ResultTypeInfo => SqlJsonContext.Default.FirewallRuleDeleteResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -76,7 +68,7 @@ public sealed class FirewallRuleDeleteCommand(ISqlService sqlService, ILogger<Fi
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(deleted, options.FirewallRuleName!));
+            context.Response.Results = ResponseResult.Create(new(deleted, options.FirewallRuleName!), SqlJsonContext.Default.FirewallRuleDeleteResult);
         }
         catch (Exception ex)
         {

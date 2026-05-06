@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Aks.Options;
 using Azure.Mcp.Tools.Aks.Options.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
@@ -10,33 +9,25 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Cluster;
 
+[CommandMetadata(
+    Id = "34e0d3d3-cbc5-4df8-8244-1439b97f3de5",
+    Name = "get",
+    Title = "Get Azure Kubernetes Service (AKS) Cluster Details",
+    Description = "List/enumerate all AKS (Azure Kubernetes Service) clusters in a subscription. Get/retrieve/show the details of a specific cluster if a name is provided.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksService aksService) : BaseAksCommand<ClusterGetOptions, ClusterGetCommand.ClusterGetCommandResult>
 {
-    private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
     private readonly IAksService _aksService = aksService;
-
-    public override string Id => "34e0d3d3-cbc5-4df8-8244-1439b97f3de5";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "List/enumerate all AKS (Azure Kubernetes Service) clusters in a subscription. Get/retrieve/show the details of a specific cluster if a name is provided.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<ClusterGetCommandResult> ResultTypeInfo => AksJsonContext.Default.ClusterGetCommandResult;
 
@@ -83,7 +74,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksSer
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(clusters ?? []));
+            context.Response.Results = ResponseResult.Create(new(clusters ?? []), AksJsonContext.Default.ClusterGetCommandResult);
         }
         catch (Exception ex)
         {

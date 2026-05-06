@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.DeviceRegistry.Models;
 using Azure.Mcp.Tools.DeviceRegistry.Options.Namespace;
 using Azure.Mcp.Tools.DeviceRegistry.Services;
@@ -11,37 +10,30 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.DeviceRegistry.Commands.Namespace;
 
-public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger)
-    : BaseDeviceRegistryCommand<NamespaceListOptions, NamespaceListCommand.NamespaceListCommandResult>()
-{
-    private const string CommandTitle = "List Device Registry Namespaces";
-    private readonly ILogger<NamespaceListCommand> _logger = logger;
-
-    public override string Id => "9c42f93b-2d4e-4fb3-b98b-2ef119b46c94";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "9c42f93b-2d4e-4fb3-b98b-2ef119b46c94",
+    Name = "list",
+    Title = "List Device Registry Namespaces",
+    Description = """
         Lists Azure Device Registry namespaces in a subscription or resource group. Returns namespace details including
         name, location, provisioning state, and UUID. If a resource group is specified, only namespaces within that
         resource group are returned. Otherwise, all namespaces in the subscription are listed.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger, IDeviceRegistryService deviceRegistryService)
+    : BaseDeviceRegistryCommand<NamespaceListOptions, NamespaceListCommand.NamespaceListCommandResult>()
+{
+    private readonly ILogger<NamespaceListCommand> _logger = logger;
+    private readonly IDeviceRegistryService _deviceRegistryService = deviceRegistryService;
 
     protected override JsonTypeInfo<NamespaceListCommandResult> ResultTypeInfo => DeviceRegistryJsonContext.Default.NamespaceListCommandResult;
 
@@ -72,15 +64,15 @@ public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger)
 
         try
         {
-            var service = context.GetService<IDeviceRegistryService>();
-
-            var namespaces = await service.ListNamespacesAsync(
+            var namespaces = await _deviceRegistryService.ListNamespacesAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(namespaces?.Results ?? [], namespaces?.AreResultsTruncated ?? false));
+            context.Response.Results = ResponseResult.Create(
+                new(namespaces?.Results ?? [], namespaces?.AreResultsTruncated ?? false),
+                DeviceRegistryJsonContext.Default.NamespaceListCommandResult);
         }
         catch (Exception ex)
         {

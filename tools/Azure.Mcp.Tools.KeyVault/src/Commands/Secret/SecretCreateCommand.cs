@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Secret;
@@ -10,35 +9,27 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
 
+[CommandMetadata(
+    Id = "fb1322cd-05b0-4264-9e96-6a9b3d9291a0",
+    Name = "create",
+    Title = "Create Key Vault Secret",
+    Description = "Create/set a secret in an Azure Key Vault with the specified name and value. Required: --vault <vault>, --secret <secret>, --subscription <subscription>. Optional: --tenant <tenant>. Creates a new secret version if it already exists.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = true,
+    LocalRequired = false)]
 public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<SecretCreateOptions, SecretCreateCommand.SecretCreateCommandResult>
 {
-    private const string CommandTitle = "Create Key Vault Secret";
     private readonly ILogger<SecretCreateCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
-    public override string Id => "fb1322cd-05b0-4264-9e96-6a9b3d9291a0";
-
-    public override string Name => "create";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = true
-    };
-
     protected override JsonTypeInfo<SecretCreateCommandResult> ResultTypeInfo => KeyVaultJsonContext.Default.SecretCreateCommandResult;
-
-    public override string Description =>
-        "Create/set a secret in an Azure Key Vault with the specified name and value. Required: --vault <vault>, --secret <secret>, --subscription <subscription>. Optional: --tenant <tenant>. Creates a new secret version if it already exists.";
 
     protected override void RegisterOptions(Command command)
     {
@@ -77,14 +68,16 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger, IKe
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(
-                secret.Name,
-                secret.Value,
-                secret.Properties.Enabled,
-                secret.Properties.NotBefore,
-                secret.Properties.ExpiresOn,
-                secret.Properties.CreatedOn,
-                secret.Properties.UpdatedOn));
+            context.Response.Results = ResponseResult.Create(
+                new(
+                    secret.Name,
+                    secret.Value,
+                    secret.Properties.Enabled,
+                    secret.Properties.NotBefore,
+                    secret.Properties.ExpiresOn,
+                    secret.Properties.CreatedOn,
+                    secret.Properties.UpdatedOn),
+                KeyVaultJsonContext.Default.SecretCreateCommandResult);
         }
         catch (Exception ex)
         {

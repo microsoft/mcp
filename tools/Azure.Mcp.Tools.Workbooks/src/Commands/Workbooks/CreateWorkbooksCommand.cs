@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
@@ -12,36 +11,29 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logger, IWorkbooksService workbooksService) : SubscriptionCommand<CreateWorkbookOptions, CreateWorkbooksCommand.CreateWorkbooksCommandResult>
-{
-    private const string CommandTitle = "Create Workbook";
-    private readonly ILogger<CreateWorkbooksCommand> _logger = logger;
-    private readonly IWorkbooksService _workbooksService = workbooksService;
-    public override string Id => "a49c650d-8568-4b63-8bad-35eb6d9ab0a7";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a49c650d-8568-4b63-8bad-35eb6d9ab0a7",
+    Name = "create",
+    Title = "Create Workbook",
+    Description = """
         Create a new workbook in the specified resource group and subscription.
         You can set the display name and serialized data JSON content for the workbook.
         Returns the created workbook information upon successful completion.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logger, IWorkbooksService workbooksService) : SubscriptionCommand<CreateWorkbookOptions, CreateWorkbooksCommand.CreateWorkbooksCommandResult>
+{
+    private readonly ILogger<CreateWorkbooksCommand> _logger = logger;
+    private readonly IWorkbooksService _workbooksService = workbooksService;
 
     protected override JsonTypeInfo<CreateWorkbooksCommandResult> ResultTypeInfo => WorkbooksJsonContext.Default.CreateWorkbooksCommandResult;
 
@@ -90,7 +82,7 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
                 options.Tenant,
                 cancellationToken) ?? throw new InvalidOperationException("Failed to create workbook");
 
-            SetResult(context, new(createdWorkbook));
+            context.Response.Results = ResponseResult.Create(new(createdWorkbook), WorkbooksJsonContext.Default.CreateWorkbooksCommandResult);
         }
         catch (Exception ex)
         {

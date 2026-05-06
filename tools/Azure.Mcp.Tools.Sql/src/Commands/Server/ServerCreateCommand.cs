@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Server;
@@ -11,39 +10,32 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
-public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCreateCommand> logger)
-    : BaseSqlCommand<ServerCreateOptions, ServerCreateCommand.ServerCreateResult>(logger)
-{
-    protected override JsonTypeInfo<ServerCreateResult> ResultTypeInfo => SqlJsonContext.Default.ServerCreateResult;
-    private readonly ISqlService _sqlService = sqlService;
-    private const string CommandTitle = "Create SQL Server";
-
-    public override string Id => "43f5f55d-2f21-47ac-b7f3-53f5d51b5218";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "43f5f55d-2f21-47ac-b7f3-53f5d51b5218",
+    Name = "create",
+    Title = "Create SQL Server",
+    Description = """
         Creates a new Azure SQL server in the specified resource group and location.
         The server will be created with the specified administrator credentials and
         optional configuration settings. Returns the created server with its properties
         including the fully qualified domain name.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCreateCommand> logger)
+    : BaseSqlCommand<ServerCreateOptions, ServerCreateCommand.ServerCreateResult>(logger)
+{
+    private readonly ISqlService _sqlService = sqlService;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<ServerCreateResult> ResultTypeInfo => SqlJsonContext.Default.ServerCreateResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -89,7 +81,7 @@ public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCr
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(server));
+            context.Response.Results = ResponseResult.Create(new(server), SqlJsonContext.Default.ServerCreateResult);
         }
         catch (Exception ex)
         {

@@ -6,45 +6,37 @@ using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 
-public sealed class ImportJobDeleteCommand(IManagedLustreService service, ILogger<ImportJobDeleteCommand> logger)
-    : BaseManagedLustreCommand<ImportJobDeleteOptions, ImportJobDeleteCommand.ImportJobDeleteResult>(logger)
-{
-    protected override JsonTypeInfo<ImportJobDeleteResult> ResultTypeInfo => ManagedLustreJsonContext.Default.ImportJobDeleteResult;
-    private const string CommandTitle = "Delete Azure Managed Lustre Import Job";
-
-    private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<ImportJobDeleteCommand> _logger = logger;
-
-    public override string Id => "e4i6f8h0-2g5b-7e9f-1h3d-5g7b9e1g3f5h";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "e4i6f8h0-2g5b-7e9f-1h3d-5g7b9e1g3f5h",
+    Name = "delete",
+    Title = "Delete Azure Managed Lustre Import Job",
+    Description = """
         Deletes an import job for an Azure Managed Lustre filesystem. This removes the job record and history. The job must be completed or cancelled before it can be deleted.
         Required options:
         - filesystem-name: The name of the AMLFS filesystem
         - job-name: Name of the import job to delete
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ImportJobDeleteCommand(IManagedLustreService service, ILogger<ImportJobDeleteCommand> logger)
+    : BaseManagedLustreCommand<ImportJobDeleteOptions, ImportJobDeleteCommand.ImportJobDeleteResult>(logger)
+{
 
-    public override string Title => CommandTitle;
+    private readonly IManagedLustreService _service = service;
+    private new readonly ILogger<ImportJobDeleteCommand> _logger = logger;
 
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<ImportJobDeleteResult> ResultTypeInfo => ManagedLustreJsonContext.Default.ImportJobDeleteResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -84,7 +76,7 @@ public sealed class ImportJobDeleteCommand(IManagedLustreService service, ILogge
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(options.JobName!));
+            context.Response.Results = ResponseResult.Create(new(options.JobName!), ManagedLustreJsonContext.Default.ImportJobDeleteResult);
         }
         catch (Exception ex)
         {

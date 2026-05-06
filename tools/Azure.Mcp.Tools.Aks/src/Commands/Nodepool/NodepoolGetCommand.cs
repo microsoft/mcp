@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Aks.Options;
 using Azure.Mcp.Tools.Aks.Options.Nodepool;
 using Azure.Mcp.Tools.Aks.Services;
@@ -10,33 +9,25 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Nodepool;
 
+[CommandMetadata(
+    Id = "9abb0904-2ffc-4aab-b4ea-fc454b6351b1",
+    Name = "get",
+    Title = "Get Azure Kubernetes Service (AKS) Node Pool Details",
+    Description = "List/enumerate all AKS (Azure Kubernetes Service) node pools in a cluster. Get/retrieve/show the details of a specific node pool if a name is provided.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksService aksService) : BaseAksCommand<NodepoolGetOptions, NodepoolGetCommand.NodepoolGetCommandResult>
 {
-    private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Node Pool Details";
     private readonly ILogger<NodepoolGetCommand> _logger = logger;
     private readonly IAksService _aksService = aksService;
-
-    public override string Id => "9abb0904-2ffc-4aab-b4ea-fc454b6351b1";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "List/enumerate all AKS (Azure Kubernetes Service) node pools in a cluster. Get/retrieve/show the details of a specific node pool if a name is provided.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<NodepoolGetCommandResult> ResultTypeInfo => AksJsonContext.Default.NodepoolGetCommandResult;
 
@@ -77,7 +68,7 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksS
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(nodePools ?? []));
+            context.Response.Results = ResponseResult.Create(new(nodePools ?? []), AksJsonContext.Default.NodepoolGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -92,4 +83,3 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksS
 
     public record NodepoolGetCommandResult(List<Models.NodePool> NodePools);
 }
-

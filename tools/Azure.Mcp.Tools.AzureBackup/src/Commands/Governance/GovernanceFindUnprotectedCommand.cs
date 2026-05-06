@@ -15,30 +15,26 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
+[CommandMetadata(
+    Id = "73b050ca-2e20-448c-a76c-08e8cd5bbe25",
+    Name = "find-unprotected",
+    Title = "Find Unprotected Resources",
+    Description = """
+        Scans the subscription to find Azure resources that are not currently protected by any
+        backup policy. Optionally filter by resource type, resource group, or tags.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnprotectedCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<GovernanceFindUnprotectedOptions, GovernanceFindUnprotectedCommand.GovernanceFindUnprotectedCommandResult>()
 {
-    protected override JsonTypeInfo<GovernanceFindUnprotectedCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.GovernanceFindUnprotectedCommandResult;
-    private const string CommandTitle = "Find Unprotected Resources";
     private readonly ILogger<GovernanceFindUnprotectedCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    public override string Id => "73b050ca-2e20-448c-a76c-08e8cd5bbe25";
-    public override string Name => "find-unprotected";
-    public override string Description =>
-        """
-        Scans the subscription to find Azure resources that are not currently protected by any
-        backup policy. Optionally filter by resource type, resource group, or tags.
-        """;
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<GovernanceFindUnprotectedCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.GovernanceFindUnprotectedCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -66,6 +62,8 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
 
         var options = BindOptions(parseResult);
 
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, "scan");
+
         try
         {
             var resources = await _azureBackupService.FindUnprotectedResourcesAsync(
@@ -77,7 +75,9 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(resources));
+            context.Response.Results = ResponseResult.Create(
+                new(resources),
+                AzureBackupJsonContext.Default.GovernanceFindUnprotectedCommandResult);
         }
         catch (Exception ex)
         {

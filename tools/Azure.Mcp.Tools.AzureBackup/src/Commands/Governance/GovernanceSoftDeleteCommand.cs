@@ -14,30 +14,26 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
+[CommandMetadata(
+    Id = "b3f1ea2d-5535-4155-849c-61f2fc49f1d9",
+    Name = "soft-delete",
+    Title = "Configure Soft Delete",
+    Description = """
+        Configures the soft delete settings for a backup vault. Set the state to 'AlwaysOn', 'On',
+        or 'Off', and optionally specify the retention period in days (14-180).
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<GovernanceSoftDeleteOptions, GovernanceSoftDeleteCommand.GovernanceSoftDeleteCommandResult>()
 {
-    protected override JsonTypeInfo<GovernanceSoftDeleteCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.GovernanceSoftDeleteCommandResult;
-    private const string CommandTitle = "Configure Soft Delete";
     private readonly ILogger<GovernanceSoftDeleteCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    public override string Id => "b3f1ea2d-5535-4155-849c-61f2fc49f1d9";
-    public override string Name => "soft-delete";
-    public override string Description =>
-        """
-        Configures the soft delete settings for a backup vault. Set the state to 'AlwaysOn', 'On',
-        or 'Off', and optionally specify the retention period in days (14-180).
-        """;
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<GovernanceSoftDeleteCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.GovernanceSoftDeleteCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -89,6 +85,8 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+
         try
         {
             var result = await _azureBackupService.ConfigureSoftDeleteAsync(
@@ -102,7 +100,9 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(result));
+            context.Response.Results = ResponseResult.Create(
+                new(result),
+                AzureBackupJsonContext.Default.GovernanceSoftDeleteCommandResult);
         }
         catch (Exception ex)
         {

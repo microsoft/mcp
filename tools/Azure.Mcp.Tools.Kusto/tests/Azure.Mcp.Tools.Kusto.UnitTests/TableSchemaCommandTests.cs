@@ -4,10 +4,7 @@
 using System.Net;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;

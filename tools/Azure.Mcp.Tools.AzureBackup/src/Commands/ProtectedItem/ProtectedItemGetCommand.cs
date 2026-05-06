@@ -18,33 +18,29 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 /// Consolidated protected item command: when --protected-item is supplied returns a single
 /// item's details; otherwise lists all protected items in the vault.
 /// </summary>
-public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<BaseProtectedItemOptions, ProtectedItemGetCommand.ProtectedItemGetCommandResult>()
-{
-    protected override JsonTypeInfo<ProtectedItemGetCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.ProtectedItemGetCommandResult;
-    private const string CommandTitle = "Get Protected Item";
-    private readonly ILogger<ProtectedItemGetCommand> _logger = logger;
-    private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override string Id => "bc985e4f-8945-447a-9aba-ef13df309001";
-    public override string Name => "get";
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "bc985e4f-8945-447a-9aba-ef13df309001",
+    Name = "get",
+    Title = "Get Protected Item",
+    Description = """
         Retrieves protected item information. When --protected-item is specified, returns
         detailed information about a single backup instance including protection status,
         datasource details, policy assignment, and last backup time. Specify --container
         for RSV workload items. When --protected-item is omitted, lists all protected items
         (backup instances) in the vault.
-        """;
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<BaseProtectedItemOptions, ProtectedItemGetCommand.ProtectedItemGetCommandResult>()
+{
+    private readonly ILogger<ProtectedItemGetCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
+
+    protected override JsonTypeInfo<ProtectedItemGetCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.ProtectedItemGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -70,6 +66,9 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, string.IsNullOrEmpty(options.ProtectedItem) ? "list" : "single");
+
         try
         {
             if (!string.IsNullOrEmpty(options.ProtectedItem))
@@ -85,7 +84,9 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new([item]));
+                context.Response.Results = ResponseResult.Create(
+                    new([item]),
+                    AzureBackupJsonContext.Default.ProtectedItemGetCommandResult);
             }
             else
             {
@@ -98,7 +99,9 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new(items));
+                context.Response.Results = ResponseResult.Create(
+                    new(items),
+                    AzureBackupJsonContext.Default.ProtectedItemGetCommandResult);
             }
         }
         catch (Exception ex)

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Options;
 using Azure.Mcp.Tools.Speech.Options.Stt;
@@ -11,40 +10,32 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Speech.Commands.Stt;
 
-public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISpeechService speechService) : BaseSpeechCommand<SttRecognizeOptions, SttRecognizeCommand.SttRecognizeCommandResult>()
-{
-    public record SttRecognizeCommandResult(SpeechRecognitionResult Result);
-
-    private const string CommandTitle = "Recognize Speech from Audio File";
-    private readonly ILogger<SttRecognizeCommand> _logger = logger;
-    private readonly ISpeechService _speechService = speechService;
-
-    public override string Id => "c725eb52-ca2c-4fe4-9422-935e7557b701";
-
-    public override string Name => "recognize";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "c725eb52-ca2c-4fe4-9422-935e7557b701",
+    Name = "recognize",
+    Title = "Recognize Speech from Audio File",
+    Description = """
         Recognize speech from an audio file using Azure AI Services Speech. This command takes an audio file and converts it to text using advanced speech recognition capabilities.
         You must provide an Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/) and a path to the audio file.
         Supported audio formats include WAV, MP3, OPUS/OGG, FLAC, ALAW, MULAW, MP4, M4A, and AAC. Compressed formats require GStreamer to be installed on the system.
         Optional parameters include language specification, phrase hints for better accuracy, output format (simple or detailed), and profanity filtering.
-        """;
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = true)]
+public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISpeechService speechService) : BaseSpeechCommand<SttRecognizeOptions, SttRecognizeCommand.SttRecognizeCommandResult>()
+{
+    public record SttRecognizeCommandResult(SpeechRecognitionResult Result);
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = true, // Requires local audio file access
-        Secret = false
-    };
+    private readonly ILogger<SttRecognizeCommand> _logger = logger;
+    private readonly ISpeechService _speechService = speechService;
 
     protected override JsonTypeInfo<SttRecognizeCommandResult> ResultTypeInfo => SpeechJsonContext.Default.SttRecognizeCommandResult;
 
@@ -177,7 +168,9 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISp
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Message = "Speech recognition completed successfully.";
-            SetResult(context, new(result));
+            context.Response.Results = ResponseResult.Create(
+                new(result),
+                SpeechJsonContext.Default.SttRecognizeCommandResult);
         }
         catch (Exception ex)
         {

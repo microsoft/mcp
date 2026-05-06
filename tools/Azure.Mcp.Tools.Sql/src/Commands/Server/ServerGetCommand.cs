@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -16,39 +16,30 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
-public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCommand> logger)
-    : SubscriptionCommand<ServerGetOptions, ServerGetCommand.ServerGetCommandResult>
-{
-    protected override JsonTypeInfo<ServerGetCommandResult> ResultTypeInfo => SqlJsonContext.Default.ServerGetCommandResult;
-
-    private const string CommandTitle = "Get SQL Server";
-    private readonly ISqlService _sqlService = sqlService;
-    private readonly ILogger<ServerGetCommand> _logger = logger;
-
-    public override string Id => "7f9a1c3e-5b7d-4a6c-8e0f-2b4d6a8c0e1f";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "7f9a1c3e-5b7d-4a6c-8e0f-2b4d6a8c0e1f",
+    Name = "get",
+    Title = "Get SQL Server",
+    Description = """
         Show, get, or list Azure SQL servers in a resource group. Shows details for a specific Azure SQL server
         by name, or lists all Azure SQL servers in the specified resource group. Use to show, display, or
         retrieve Azure SQL server information. Equivalent to 'az sql server show' (show one Azure SQL server) or
         'az sql server list' (list all Azure SQL servers in a resource group). Returns server information
         including configuration details and current state.
-        """;
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCommand> logger)
+    : SubscriptionCommand<ServerGetOptions, ServerGetCommand.ServerGetCommandResult>
+{
+    protected override JsonTypeInfo<ServerGetCommandResult> ResultTypeInfo => SqlJsonContext.Default.ServerGetCommandResult;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<ServerGetCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {

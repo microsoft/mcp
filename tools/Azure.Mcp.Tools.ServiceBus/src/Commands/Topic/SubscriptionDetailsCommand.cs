@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Options;
@@ -13,40 +12,32 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 
-public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<SubscriptionDetailsOptions, SubscriptionDetailsCommand.SubscriptionDetailsCommandResult>
-{
-    private const string CommandTitle = "Get Service Bus Topic Subscription Details";
-    private readonly ILogger<SubscriptionDetailsCommand> _logger = logger;
-    private readonly IServiceBusService _serviceBusService = serviceBusService;
-
-    public override string Id => "578edf30-01f3-45da-b451-3932dcce7cc5";
-
-    public override string Name => "details";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "578edf30-01f3-45da-b451-3932dcce7cc5",
+    Name = "details",
+    Title = "Get Service Bus Topic Subscription Details",
+    Description = """
         Get details about a Service Bus subscription. Returns subscription runtime properties including message counts, delivery settings, and other metadata.
 
         Required arguments:
         - namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)
         - topic: Topic name containing the subscription
         - subscription-name: Name of the subscription to get details for
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<SubscriptionDetailsOptions, SubscriptionDetailsCommand.SubscriptionDetailsCommandResult>
+{
+    private readonly ILogger<SubscriptionDetailsCommand> _logger = logger;
+    private readonly IServiceBusService _serviceBusService = serviceBusService;
 
     protected override JsonTypeInfo<SubscriptionDetailsCommandResult> ResultTypeInfo => ServiceBusJsonContext.Default.SubscriptionDetailsCommandResult;
 
@@ -86,7 +77,7 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(details));
+            context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.SubscriptionDetailsCommandResult);
         }
         catch (Exception ex)
         {

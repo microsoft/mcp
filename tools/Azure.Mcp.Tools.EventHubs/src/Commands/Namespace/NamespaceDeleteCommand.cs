@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
@@ -11,45 +10,37 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
-public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<NamespaceDeleteOptions, NamespaceDeleteCommand.NamespaceDeleteCommandResult>
-{
-    private const string CommandTitle = "Delete Event Hubs Namespace";
-
-    private readonly IEventHubsService _service = service;
-    private readonly ILogger<NamespaceDeleteCommand> _logger = logger;
-
-    public override string Id => "187ffc25-1e32-4e39-a7d4-94859852ac50";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "187ffc25-1e32-4e39-a7d4-94859852ac50",
+    Name = "delete",
+    Title = "Delete Event Hubs Namespace",
+    Description = """
         Delete Event Hubs namespace. This tool will delete a pre-existing Namespace from the 
         specified resource group. This tool will remove existing configurations, and is 
         considered to be destructive.
 
         WARNING: This operation is irreversible. All Event Hubs, Consumer Groups, and
         configurations within the namespace will be permanently deleted.
-        
+
         The namespace must exist in the specified resource group. If the namespace is not found,
         an error will be returned.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logger, IEventHubsService service)
+    : BaseEventHubsCommand<NamespaceDeleteOptions, NamespaceDeleteCommand.NamespaceDeleteCommandResult>
+{
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        OpenWorld = false,
-        Destructive = true,    // Permanently deletes resources
-        Idempotent = true,     // Deleting same resource multiple times has same effect
-        ReadOnly = false,      // Modifies cloud state
-        Secret = false,        // Returns non-sensitive information
-        LocalRequired = false  // Pure cloud API calls
-    };
+    private readonly IEventHubsService _service = service;
+    private readonly ILogger<NamespaceDeleteCommand> _logger = logger;
 
     protected override JsonTypeInfo<NamespaceDeleteCommandResult> ResultTypeInfo => EventHubsJsonContext.Default.NamespaceDeleteCommandResult;
 
@@ -87,7 +78,9 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(success, $"Namespace '{options.Namespace}' deleted successfully"));
+            context.Response.Results = ResponseResult.Create(
+                new(success, $"Namespace '{options.Namespace}' deleted successfully"),
+                EventHubsJsonContext.Default.NamespaceDeleteCommandResult);
             context.Response.Status = HttpStatusCode.OK;
         }
         catch (Exception ex)

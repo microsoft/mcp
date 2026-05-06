@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
@@ -9,21 +8,24 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Postgres.Commands;
 
+[CommandMetadata(
+    Id = "8a12c3f4-2e5d-4b3a-9f2c-5e6d7f8a9b0c",
+    Name = "list",
+    Title = "List PostgreSQL Resources",
+    Description = "List PostgreSQL servers, databases, or tables. Returns all servers in the subscription by default (optionally scoped to a --resource-group). Specify --server to list databases on that server, or --server and --database to list tables in a specific database. --user is required when --server is provided.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class PostgresListCommand(IPostgresService postgresService, ILogger<PostgresListCommand> logger) : BasePostgresCommand<BasePostgresOptions, PostgresListCommand.PostgresListCommandResult>(logger)
 {
     private readonly IPostgresService _postgresService = postgresService;
-    public override string Id => "8a12c3f4-2e5d-4b3a-9f2c-5e6d7f8a9b0c";
-
-    public override string Name => "list";
-
-    public override string Description => "List PostgreSQL servers, databases, or tables. Returns all servers in the subscription by default (optionally scoped to a --resource-group). Specify --server to list databases on that server, or --server and --database to list tables in a specific database. --user is required when --server is provided.";
-
-    public override string Title => "List PostgreSQL Resources";
-
-    public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false };
 
     protected override JsonTypeInfo<PostgresListCommandResult> ResultTypeInfo => PostgresJsonContext.Default.PostgresListCommandResult;
 
@@ -91,7 +93,9 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                     options.Database!,
                     cancellationToken);
 
-                SetResult(context, new(null, null, tables ?? []));
+                context.Response.Results = ResponseResult.Create(
+                    new(null, null, tables ?? []),
+                    PostgresJsonContext.Default.PostgresListCommandResult);
             }
             else if (!string.IsNullOrEmpty(options.Server))
             {
@@ -105,7 +109,9 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                     options.Server!,
                     cancellationToken);
 
-                SetResult(context, new(null, databases ?? [], null));
+                context.Response.Results = ResponseResult.Create(
+                    new(null, databases ?? [], null),
+                    PostgresJsonContext.Default.PostgresListCommandResult);
             }
             else
             {
@@ -115,7 +121,9 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                     options.ResourceGroup,
                     cancellationToken);
 
-                SetResult(context, new(servers ?? [], null, null));
+                context.Response.Results = ResponseResult.Create(
+                    new(servers ?? [], null, null),
+                    PostgresJsonContext.Default.PostgresListCommandResult);
             }
         }
         catch (Exception ex)

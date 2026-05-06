@@ -1,44 +1,35 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 
+[CommandMetadata(
+    Id = "bf0ae005-7dfd-4f96-8f45-3d0ba07f81ed",
+    Name = "list",
+    Title = "List hostpools",
+    Description = """
+        List all hostpools in a subscription or resource group. This command retrieves all Azure Virtual Desktop hostpool objects available
+        in the specified --subscription. If a resource group is specified, only hostpools in that resource group are returned.
+        Results include hostpool names and are returned as a JSON array.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVirtualDesktopService virtualDesktopService) : BaseVirtualDesktopCommand<HostpoolListOptions, HostpoolListCommand.HostPoolListCommandResult>
 {
-    private const string CommandTitle = "List hostpools";
     private readonly ILogger<HostpoolListCommand> _logger = logger;
     private readonly IVirtualDesktopService _virtualDesktopService = virtualDesktopService;
-
-    public override string Id => "bf0ae005-7dfd-4f96-8f45-3d0ba07f81ed";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        $"""
-		List all hostpools in a subscription or resource group. This command retrieves all Azure Virtual Desktop hostpool objects available
-		in the specified {OptionDefinitions.Common.Subscription.Name}. If a resource group is specified, only hostpools in that resource group are returned.
-		Results include hostpool names and are returned as a JSON array.
-		""";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<HostPoolListCommandResult> ResultTypeInfo => VirtualDesktopJsonContext.Default.HostPoolListCommandResult;
 
@@ -73,7 +64,7 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVi
                     cancellationToken);
             }
 
-            SetResult(context, new([.. hostpools ?? []]));
+            context.Response.Results = ResponseResult.Create(new([.. hostpools ?? []]), VirtualDesktopJsonContext.Default.HostPoolListCommandResult);
         }
         catch (Exception ex)
         {

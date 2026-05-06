@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
@@ -11,39 +10,31 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 
-public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppConfigService appConfigService)
-    : BaseAppConfigCommand<KeyValueGetOptions, KeyValueGetCommand.KeyValueGetCommandResult>()
-{
-    private const string CommandTitle = "Gets App Configuration Key-Value Settings";
-    private readonly ILogger<KeyValueGetCommand> _logger = logger;
-    private readonly IAppConfigService _appConfigService = appConfigService;
-
-    public override string Id => "abc28800-ae4a-4369-9ec0-2653a578e82a";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "abc28800-ae4a-4369-9ec0-2653a578e82a",
+    Name = "get",
+    Title = "Gets App Configuration Key-Value Settings",
+    Description = """
         Gets key-values in an App Configuration store. This command can either retrieve a specific key-value by its key
         and optional label, or list key-values if no key is provided. Listing key-values can optionally be filtered by a
         key filter and label filter. Each key-value includes its key, value, label, content type, ETag, last modified time,
         and lock status.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppConfigService appConfigService)
+    : BaseAppConfigCommand<KeyValueGetOptions, KeyValueGetCommand.KeyValueGetCommandResult>()
+{
+    private readonly ILogger<KeyValueGetCommand> _logger = logger;
+    private readonly IAppConfigService _appConfigService = appConfigService;
 
     protected override JsonTypeInfo<KeyValueGetCommandResult> ResultTypeInfo => AppConfigJsonContext.Default.KeyValueGetCommandResult;
 
@@ -97,7 +88,7 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppC
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(settings ?? []));
+            context.Response.Results = ResponseResult.Create(new(settings ?? []), AppConfigJsonContext.Default.KeyValueGetCommandResult);
         }
         catch (Exception ex)
         {

@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppLens.Models;
 using Azure.Mcp.Tools.AppLens.Options;
 using Azure.Mcp.Tools.AppLens.Options.Resource;
@@ -10,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AppLens.Commands.Resource;
 
@@ -18,33 +18,22 @@ namespace Azure.Mcp.Tools.AppLens.Commands.Resource;
 /// Subscription, resource group, and resource type are optional - the service uses
 /// Azure Resource Graph to discover the resource by name when they are not provided.
 /// </summary>
+[CommandMetadata(
+    Id = "92fb5b7d-f1d7-4834-a61a-e170ad8594ac",
+    Name = "diagnose",
+    Title = "Diagnose Azure Resource Issues",
+    Description = "Get diagnostic help from App Lens for Azure application and service issues to identify what's wrong with a service. Ask questions about performance, slowness, failures, errors, application state, availability to receive expert analysis and solutions which can help when performing diagnostics and to address issues about performance and failures. Returns analysis, insights, and recommended solutions. Always use this tool before manually checking metrics or logs when users report performance or functionality issues. Only the resource name and question are required - subscription, resource group, and resource type are optional and used to narrow down results when multiple resources share the same name.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> logger, IAppLensService appLensService)
     : GlobalCommand<ResourceDiagnoseOptions, ResourceDiagnoseCommandResult>
 {
-    private const string CommandTitle = "Diagnose Azure Resource Issues";
     private readonly ILogger<ResourceDiagnoseCommand> _logger = logger;
     private readonly IAppLensService _appLensService = appLensService;
-
-    public override string Id => "92fb5b7d-f1d7-4834-a61a-e170ad8594ac";
-
-    public override string Name => "diagnose";
-
-    public override string Description =>
-    "Get diagnostic help from App Lens for Azure application and service issues to identify what's wrong with a service. Ask questions about performance, slowness, failures, errors, application state, availability to receive expert analysis and solutions which can help when performing diagnostics and to address issues about performance and failures. " +
-    "Returns analysis, insights, and recommended solutions. " +
-    "Always use this tool before manually checking metrics or logs when users report performance or functionality issues. " +
-    "Only the resource name and question are required - subscription, resource group, and resource type are optional and used to narrow down results when multiple resources share the same name.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<ResourceDiagnoseCommandResult> ResultTypeInfo => AppLensJsonContext.Default.ResourceDiagnoseCommandResult;
 
@@ -92,7 +81,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
                 options.Tenant,
                 cancellationToken);
 
-            SetResult(context, new(result));
+            context.Response.Results = ResponseResult.Create(new(result), AppLensJsonContext.Default.ResourceDiagnoseCommandResult);
         }
         catch (Exception ex)
         {

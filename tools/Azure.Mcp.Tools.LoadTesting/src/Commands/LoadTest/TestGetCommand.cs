@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTest;
@@ -11,34 +10,29 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 
+[CommandMetadata(
+    Id = "be7c3864-0713-42f8-8eb7-b7ca28a951fb",
+    Name = "get",
+    Title = "Test Get",
+    Description = """
+        Get the configuration and setup details for a load test by its test ID in a Load Testing resource.
+        Returns only the test definition, including duration, ramp-up, virtual users, and endpoint. Does not return any test run results or execution data. Also does NOT return and resource details. Only the test configuration is fetched.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class TestGetCommand(ILogger<TestGetCommand> logger, ILoadTestingService loadTestingService)
     : BaseLoadTestingCommand<TestGetOptions, TestGetCommand.TestGetCommandResult>
 {
-    private const string _commandTitle = "Test Get";
     private readonly ILogger<TestGetCommand> _logger = logger;
     private readonly ILoadTestingService _loadTestingService = loadTestingService;
-
-    public override string Id => "be7c3864-0713-42f8-8eb7-b7ca28a951fb";
-    public override string Name => "get";
-    public override string Description =>
-        $"""
-        Get the configuration and setup details for a load test by its test ID in a Load Testing resource.
-        Returns only the test definition, including duration, ramp-up, virtual users, and endpoint. Does not return any test run results or execution data. Also does NOT return and resource details. Only the test configuration is fetched.
-        """;
-    public override string Title => _commandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<TestGetCommandResult> ResultTypeInfo => LoadTestJsonContext.Default.TestGetCommandResult;
 
@@ -79,10 +73,9 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger, ILoadTestingS
                 cancellationToken);
 
             // Set results if any were returned
-            if (results != null)
-            {
-                SetResult(context, new(results));
-            }
+            context.Response.Results = results != null ?
+                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestGetCommandResult) :
+                null;
         }
         catch (Exception ex)
         {

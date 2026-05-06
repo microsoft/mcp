@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
@@ -12,31 +11,18 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 
 /// <summary>
 /// Command to generate and download platform landing zone configurations, update parameters, check existing platform landing zones, and view status.
 /// </summary>
-public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLandingZoneService platformLandingZoneService, AzureMigrateProjectHelper azureMigrateProjectHelper)
-    : SubscriptionCommand<RequestOptions, RequestCommand.RequestCommandResult>()
-{
-    private readonly IPlatformLandingZoneService _platformLandingZoneService = platformLandingZoneService;
-    private readonly AzureMigrateProjectHelper _azureMigrateProjectHelper = azureMigrateProjectHelper;
-    private const string CommandTitle = "Platform Landing Zone Management";
-
-    /// <inheritdoc/>
-    public override string Id => "a7f3b8c1-9e2d-4f6a-8b3c-5d1e7f9a2c4b";
-
-    /// <inheritdoc/>
-    public override string Name => "request";
-
-    /// <inheritdoc/>
-    public override string Title => CommandTitle;
-
-    /// <inheritdoc/>
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a7f3b8c1-9e2d-4f6a-8b3c-5d1e7f9a2c4b",
+    Name = "request",
+    Title = "Platform Landing Zone Management",
+    Description = """
         Generate and download platform landing zone configurations for Azure Migrate projects.
         Updates parameters, check existing landing zones, and view parameters status.
 
@@ -79,23 +65,32 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
 
         **IMPORTANT:** When using 'update', collect ALL parameters from the user in ONE call.
         Show them the defaults and ask which ones they want to change.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = true)]
+public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLandingZoneService platformLandingZoneService, AzureMigrateProjectHelper azureMigrateProjectHelper)
+    : SubscriptionCommand<RequestOptions, RequestCommand.RequestCommandResult>()
+{
+    private readonly IPlatformLandingZoneService _platformLandingZoneService = platformLandingZoneService;
+    private readonly AzureMigrateProjectHelper _azureMigrateProjectHelper = azureMigrateProjectHelper;
 
     /// <inheritdoc/>
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        ReadOnly = false,
-        LocalRequired = true,
-        Idempotent = true,
-        OpenWorld = false,
-        Secret = false
-    };
+
+    /// <inheritdoc/>
+
+    /// <inheritdoc/>
+
+    /// <inheritdoc/>
+
+    /// <inheritdoc/>
 
     /// <inheritdoc/>
     protected override JsonTypeInfo<RequestCommandResult> ResultTypeInfo => AzureMigrateJsonContext.Default.RequestCommandResult;
 
-    /// <inheritdoc/>
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
@@ -173,7 +168,7 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
                 _ => throw new ArgumentException($"Invalid action '{options.Action}'. Valid actions are: createmigrateproject, update, check, generate, download, status.")
             };
 
-            SetResult(context, new(result));
+            context.Response.Results = ResponseResult.Create(new(result), AzureMigrateJsonContext.Default.RequestCommandResult);
         }
         catch (Exception ex)
         {

@@ -1,49 +1,42 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
 using System.Reflection;
 using System.Text;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AzureBestPractices.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
 
-public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand<BestPracticesOptions, List<string>>
-{
-    private const string CommandTitle = "Get Azure Best Practices";
-    private readonly ILogger<BestPracticesCommand> _logger = logger;
-    private static readonly Dictionary<string, string> s_bestPracticesCache = new();
-
-    public override string Id => "ff12e8fb-f7ce-446a-884b-996dac118b83";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        @"This tool returns a list of best practices for code generation, operations and deployment
+[CommandMetadata(
+    Id = "ff12e8fb-f7ce-446a-884b-996dac118b83",
+    Name = "get",
+    Title = "Get Azure Best Practices",
+    Description = """
+        This tool returns a list of best practices for code generation, operations and deployment
         when working with Azure services. It should be called for any code generation, deployment or
         operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container
         Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory,
         Azure App Services, or any other Azure technology or programming language. Only call this function
         when you are confident the user is discussing Azure. If this tool needs to be categorized,
-        it belongs to the Azure Best Practices category.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        it belongs to the Azure Best Practices category.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand<BestPracticesOptions, List<string>>
+{
+    private readonly ILogger<BestPracticesCommand> _logger = logger;
+    private static readonly Dictionary<string, string> s_bestPracticesCache = new();
 
     protected override JsonTypeInfo<List<string>> ResultTypeInfo => AzureBestPracticesJsonContext.Default.ListString;
 
@@ -109,7 +102,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
             var bestPractices = GetBestPracticesText(resourceFileName);
 
             context.Response.Status = HttpStatusCode.OK;
-            SetResult(context, [bestPractices]);
+            context.Response.Results = ResponseResult.Create([bestPractices], AzureBestPracticesJsonContext.Default.ListString);
             context.Response.Message = string.Empty;
 
             context.Activity?.AddTag("BestPractices_Resource", options.Resource);

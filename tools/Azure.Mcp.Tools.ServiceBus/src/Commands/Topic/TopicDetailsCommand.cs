@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Options;
@@ -13,37 +12,29 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 
-public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<BaseTopicOptions, TopicDetailsCommand.TopicDetailsCommandResult>
-{
-    private const string CommandTitle = "Get Service Bus Topic Details";
-    private readonly ILogger<TopicDetailsCommand> _logger = logger;
-    private readonly IServiceBusService _serviceBusService = serviceBusService;
-
-    public override string Id => "c2487c40-58d0-40f7-98f1-105744865a11";
-
-    public override string Name => "details";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "c2487c40-58d0-40f7-98f1-105744865a11",
+    Name = "details",
+    Title = "Get Service Bus Topic Details",
+    Description = """
         Retrieves details about a Service Bus topic. Returns runtime information and topic properties including number of subscriptions, max message size, max topic size, number of scheduled messages, etc.
         Required arguments are namespace: The fully qualified Service Bus namespace host name (usually in the form <namespace>.servicebus.windows.net) and topic: Topic name to get information about.
         Do not use this to get details on Service Bus subscription- instead use servicebus_topic_subscription_details.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<BaseTopicOptions, TopicDetailsCommand.TopicDetailsCommandResult>
+{
+    private readonly ILogger<TopicDetailsCommand> _logger = logger;
+    private readonly IServiceBusService _serviceBusService = serviceBusService;
 
     protected override JsonTypeInfo<TopicDetailsCommandResult> ResultTypeInfo => ServiceBusJsonContext.Default.TopicDetailsCommandResult;
 
@@ -80,7 +71,7 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, ISe
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(details));
+            context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.TopicDetailsCommandResult);
         }
         catch (Exception ex)
         {

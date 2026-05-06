@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
@@ -10,20 +9,15 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logger, IWorkbooksService workbooksService) : GlobalCommand<DeleteWorkbookOptions, DeleteWorkbooksCommand.DeleteWorkbooksCommandResult>
-{
-    private const string CommandTitle = "Delete Workbook";
-    private readonly ILogger<DeleteWorkbooksCommand> _logger = logger;
-    private readonly IWorkbooksService _workbooksService = workbooksService;
-    public override string Id => "17bb94ef-9df1-45d2-a1a0-ed57656ca067";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "17bb94ef-9df1-45d2-a1a0-ed57656ca067",
+    Name = "delete",
+    Title = "Delete Workbook",
+    Description = """
         Delete one or more workbooks by their Azure resource IDs.
         This command soft deletes workbooks: they will be retained for 90 days.
         If needed, you can restore them from the Recycle Bin through the Azure Portal.
@@ -32,19 +26,17 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
         Individual failures do not fail the entire batch operation.
 
         To learn more, visit: https://learn.microsoft.com/azure/azure-monitor/visualize/workbooks-manage
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logger, IWorkbooksService workbooksService) : GlobalCommand<DeleteWorkbookOptions, DeleteWorkbooksCommand.DeleteWorkbooksCommandResult>
+{
+    private readonly ILogger<DeleteWorkbooksCommand> _logger = logger;
+    private readonly IWorkbooksService _workbooksService = workbooksService;
 
     protected override JsonTypeInfo<DeleteWorkbooksCommandResult> ResultTypeInfo => WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult;
 
@@ -86,7 +78,9 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
                 options.Tenant,
                 cancellationToken);
 
-            SetResult(context, new(result.Succeeded.ToList(), result.Failed.ToList()));
+            context.Response.Results = ResponseResult.Create(
+                new(result.Succeeded.ToList(), result.Failed.ToList()),
+                WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
         }
         catch (Exception ex)
         {

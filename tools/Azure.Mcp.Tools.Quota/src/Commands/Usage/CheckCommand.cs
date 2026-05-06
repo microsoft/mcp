@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Options;
@@ -12,34 +11,25 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Usage;
 
+[CommandMetadata(
+    Id = "81f64603-5a56-4f74-90f8-395da69a99d3",
+    Name = "check",
+    Title = "Check Azure resources usage and quota in a region",
+    Description = "This tool will check the usage and quota information for Azure resources in a region.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CheckCommand(ILogger<CheckCommand> logger, IQuotaService quotaService) : SubscriptionCommand<CheckOptions, CheckCommand.UsageCheckCommandResult>()
 {
-    private const string CommandTitle = "Check Azure resources usage and quota in a region";
     private readonly ILogger<CheckCommand> _logger = logger;
     private readonly IQuotaService _quotaService = quotaService;
-
-    public override string Id => "81f64603-5a56-4f74-90f8-395da69a99d3";
-
-    public override string Name => "check";
-
-    public override string Description =>
-        """
-        This tool will check the usage and quota information for Azure resources in a region.
-        """;
-
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<UsageCheckCommandResult> ResultTypeInfo => QuotaJsonContext.Default.UsageCheckCommandResult;
 
@@ -85,7 +75,7 @@ public sealed class CheckCommand(ILogger<CheckCommand> logger, IQuotaService quo
 
             _logger.LogInformation("Quota check result: {ToolResult}", toolResult);
 
-            SetResult(context, new(toolResult ?? []));
+            context.Response.Results = ResponseResult.Create(new(toolResult ?? []), QuotaJsonContext.Default.UsageCheckCommandResult);
         }
         catch (Exception ex)
         {

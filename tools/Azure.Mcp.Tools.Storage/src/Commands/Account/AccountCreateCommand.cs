@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
@@ -13,36 +12,28 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Account;
 
-public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, IStorageService storageService) : SubscriptionCommand<AccountCreateOptions, AccountCreateCommand.AccountCreateCommandResult>()
-{
-    private const string CommandTitle = "Create Storage Account";
-    private readonly ILogger<AccountCreateCommand> _logger = logger;
-    private readonly IStorageService _storageService = storageService;
-
-    public override string Id => "a2cf843a-57f2-45ea-8078-59b0be0805e6";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a2cf843a-57f2-45ea-8078-59b0be0805e6",
+    Name = "create",
+    Title = "Create Storage Account",
+    Description = """
         Creates an Azure Storage account in the specified resource group and location and returns the created storage account
         information including name, location, SKU, access settings, and configuration details.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, IStorageService storageService) : SubscriptionCommand<AccountCreateOptions, AccountCreateCommand.AccountCreateCommandResult>()
+{
+    private readonly ILogger<AccountCreateCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     protected override JsonTypeInfo<AccountCreateCommandResult> ResultTypeInfo => StorageJsonContext.Default.AccountCreateCommandResult;
 
@@ -95,7 +86,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, I
                 cancellationToken);
 
             // Set results
-            SetResult(context, new(account));
+            context.Response.Results = ResponseResult.Create(new(account), StorageJsonContext.Default.AccountCreateCommandResult);
         }
         catch (Exception ex)
         {

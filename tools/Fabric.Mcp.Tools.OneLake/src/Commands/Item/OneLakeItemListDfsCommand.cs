@@ -17,6 +17,17 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 /// <summary>
 /// Command to list OneLake items in a workspace using the OneLake DFS (Data Lake File System) API.
 /// </summary>
+[CommandMetadata(
+    Id = "7e7566ab-0984-4f1e-a8be-45a0184a59e5",
+    Name = "onelake-item-list-dfs",
+    Title = "List OneLake Items (DFS)",
+    Description = "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) API",
+    Destructive = false,
+    Idempotent = true,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false)]
 public sealed class OneLakeItemListDfsCommand(
     ILogger<OneLakeItemListDfsCommand> logger,
     IOneLakeService oneLakeService) : GlobalCommand<OneLakeItemListDfsOptions, OneLakeItemListDfsCommand.OneLakeItemListDfsCommandResult>()
@@ -24,21 +35,6 @@ public sealed class OneLakeItemListDfsCommand(
     protected override JsonTypeInfo<OneLakeItemListDfsCommandResult> ResultTypeInfo => OneLakeJsonContext.Default.OneLakeItemListDfsCommandResult;
     private readonly ILogger<OneLakeItemListDfsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "7e7566ab-0984-4f1e-a8be-45a0184a59e5";
-    public override string Name => "onelake-item-list-dfs";
-    public override string Title => "List OneLake Items (DFS)";
-    public override string Description => "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) API";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
 using Azure.Mcp.Tools.Compute.Services;
@@ -10,21 +9,15 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
-public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
-    : BaseComputeCommand<VmDeleteOptions, VmDeleteCommand.VmDeleteCommandResult>(true)
-{
-    private const string CommandTitle = "Delete Virtual Machine";
-    private readonly ILogger<VmDeleteCommand> _logger = logger;
-
-    public override string Id => "d4e2c8a1-6f3b-4d9e-b8c7-1a2e3f4d5e6f";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "d4e2c8a1-6f3b-4d9e-b8c7-1a2e3f4d5e6f",
+    Name = "delete",
+    Title = "Delete Virtual Machine",
+    Description = """
         Delete, remove, or destroy an Azure Virtual Machine (VM).
         Use this to permanently remove a VM that is no longer needed.
         Equivalent to 'az vm delete'. This operation is irreversible and the VM data will be lost.
@@ -32,19 +25,18 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
         (passes forceDeletion=true to the Azure API).
         Associated resources like disks, NICs, and public IPs are NOT automatically deleted.
         Do not use this to delete Virtual Machine Scale Sets (use VMSS delete instead).
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = true
-    };
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = true,
+    LocalRequired = false)]
+public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger, IComputeService computeService)
+    : BaseComputeCommand<VmDeleteOptions, VmDeleteCommand.VmDeleteCommandResult>(true)
+{
+    private readonly ILogger<VmDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override JsonTypeInfo<VmDeleteCommandResult> ResultTypeInfo => ComputeJsonContext.Default.VmDeleteCommandResult;
 
@@ -74,13 +66,11 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            await computeService.DeleteVmAsync(
+            await _computeService.DeleteVmAsync(
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,
@@ -89,9 +79,11 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new VmDeleteCommandResult(
-                $"Virtual machine '{options.VmName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
-                true));
+            context.Response.Results = ResponseResult.Create(
+                new VmDeleteCommandResult(
+                    $"Virtual machine '{options.VmName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
+                    true),
+                ComputeJsonContext.Default.VmDeleteCommandResult);
         }
         catch (Exception ex)
         {

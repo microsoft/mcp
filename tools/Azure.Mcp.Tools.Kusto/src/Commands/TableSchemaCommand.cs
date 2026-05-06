@@ -1,39 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
+[CommandMetadata(
+    Id = "9a972c48-6797-49bb-9784-8063ad1f7e96",
+    Name = "schema",
+    Title = "Get Kusto Table Schema",
+    Description = "Get/retrieve/show the schema of a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger, IKustoService kustoService) : BaseTableCommand<TableSchemaOptions, TableSchemaCommand.TableSchemaCommandResult>
 {
-    private const string CommandTitle = "Get Kusto Table Schema";
     private readonly ILogger<TableSchemaCommand> _logger = logger;
     private readonly IKustoService _kustoService = kustoService;
-
-    public override string Id => "9a972c48-6797-49bb-9784-8063ad1f7e96";
-
-    public override string Name => "schema";
-
-    public override string Description =>
-        "Get/retrieve/show the schema of a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<TableSchemaCommandResult> ResultTypeInfo => KustoJsonContext.Default.TableSchemaCommandResult;
 
@@ -74,7 +65,7 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger, IKust
                     cancellationToken);
             }
 
-            SetResult(context, new(tableSchema));
+            context.Response.Results = ResponseResult.Create(new(tableSchema), KustoJsonContext.Default.TableSchemaCommandResult);
         }
         catch (Exception ex)
         {

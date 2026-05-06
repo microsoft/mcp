@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Server;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -9,32 +8,24 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 
+[CommandMetadata(
+    Id = "af3a581d-ab64-4939-9765-974815d9c7be",
+    Name = "get",
+    Title = "Get PostgreSQL Server Parameter",
+    Description = "Retrieves a specific parameter of a PostgreSQL server.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServerParamGetCommand(IPostgresService postgresService, ILogger<ServerParamGetCommand> logger) : BaseServerCommand<ServerParamGetOptions, ServerParamGetCommand.ServerParamGetCommandResult>(logger)
 {
     private readonly IPostgresService _postgresService = postgresService;
-    private const string CommandTitle = "Get PostgreSQL Server Parameter";
-
-    public override string Id => "af3a581d-ab64-4939-9765-974815d9c7be";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "Retrieves a specific parameter of a PostgreSQL server.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<ServerParamGetCommandResult> ResultTypeInfo => PostgresJsonContext.Default.ServerParamGetCommandResult;
 
@@ -63,10 +54,9 @@ public sealed class ServerParamGetCommand(IPostgresService postgresService, ILog
         try
         {
             var parameterValue = await _postgresService.GetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, cancellationToken);
-            if (parameterValue?.Length > 0)
-            {
-                SetResult(context, new(parameterValue));
-            }
+            context.Response.Results = parameterValue?.Length > 0 ?
+                ResponseResult.Create(new(parameterValue), PostgresJsonContext.Default.ServerParamGetCommandResult) :
+                null;
         }
         catch (Exception ex)
         {

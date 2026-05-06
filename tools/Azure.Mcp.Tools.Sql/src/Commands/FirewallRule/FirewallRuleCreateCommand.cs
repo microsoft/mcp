@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Net.Sockets;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.FirewallRule;
@@ -12,39 +11,32 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 
-public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<FirewallRuleCreateCommand> logger)
-    : BaseSqlCommand<FirewallRuleCreateOptions, FirewallRuleCreateCommand.FirewallRuleCreateResult>(logger)
-{
-    protected override JsonTypeInfo<FirewallRuleCreateResult> ResultTypeInfo => SqlJsonContext.Default.FirewallRuleCreateResult;
-    private readonly ISqlService _sqlService = sqlService;
-    private const string CommandTitle = "Create SQL Server Firewall Rule";
-
-    public override string Id => "37c43190-c3f5-4cd2-beda-3ecc2e3ec049";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "37c43190-c3f5-4cd2-beda-3ecc2e3ec049",
+    Name = "create",
+    Title = "Create SQL Server Firewall Rule",
+    Description = """
         Creates a firewall rule for a SQL server. Firewall rules control which IP addresses
         are allowed to connect to the SQL server. You can specify either a single IP address
         (by setting start and end IP to the same value) or a range of IP addresses. Returns
         the created firewall rule with its properties.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<FirewallRuleCreateCommand> logger)
+    : BaseSqlCommand<FirewallRuleCreateOptions, FirewallRuleCreateCommand.FirewallRuleCreateResult>(logger)
+{
+    private readonly ISqlService _sqlService = sqlService;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<FirewallRuleCreateResult> ResultTypeInfo => SqlJsonContext.Default.FirewallRuleCreateResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -132,7 +124,7 @@ public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<Fi
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(firewallRule));
+            context.Response.Results = ResponseResult.Create(new(firewallRule), SqlJsonContext.Default.FirewallRuleCreateResult);
         }
         catch (Exception ex)
         {

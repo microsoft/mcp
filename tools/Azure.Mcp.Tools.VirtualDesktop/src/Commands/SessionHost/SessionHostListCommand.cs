@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 using Azure.Mcp.Tools.VirtualDesktop.Options.SessionHost;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
@@ -10,37 +9,29 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 
+[CommandMetadata(
+    Id = "6f543101-3c70-41bd-a6ed-5cc4af716081",
+    Name = "list",
+    Title = "List SessionHosts",
+    Description = """
+        List all SessionHosts in a hostpool. This command retrieves all Azure Virtual Desktop SessionHost objects available
+        in the specified --subscription and hostpool. Results include SessionHost details and are
+        returned as a JSON array.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logger, IVirtualDesktopService virtualDesktopService) : BaseHostPoolCommand<SessionHostListOptions, SessionHostListCommand.SessionHostListCommandResult>
 {
-    private const string CommandTitle = "List SessionHosts";
     private readonly ILogger<SessionHostListCommand> _logger = logger;
     private readonly IVirtualDesktopService _virtualDesktopService = virtualDesktopService;
-
-    public override string Name => "list";
-
-    public override string Description =>
-        $"""
-		List all SessionHosts in a hostpool. This command retrieves all Azure Virtual Desktop SessionHost objects available
-		in the specified {OptionDefinitions.Common.Subscription.Name} and hostpool. Results include SessionHost details and are
-		returned as a JSON array.
-		""";
-
-    public override string Id => "6f543101-3c70-41bd-a6ed-5cc4af716081";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<SessionHostListCommandResult> ResultTypeInfo => VirtualDesktopJsonContext.Default.SessionHostListCommandResult;
 
@@ -86,7 +77,7 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
                     cancellationToken);
             }
 
-            SetResult(context, new([.. sessionHosts ?? []]));
+            context.Response.Results = ResponseResult.Create(new([.. sessionHosts ?? []]), VirtualDesktopJsonContext.Default.SessionHostListCommandResult);
         }
         catch (Exception ex)
         {

@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Azure.Mcp.Tools.Cosmos.Validation;
@@ -10,32 +9,26 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
 
-public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseContainerCommand<ItemQueryOptions, ItemQueryCommand.ItemQueryCommandResult>()
+[CommandMetadata(
+    Id = "5c19a92a-4e0c-44dc-b1e7-5560a0d277b5",
+    Name = "query",
+    Title = "Query Cosmos DB Container",
+    Description = "List items from a Cosmos DB container by specifying the account name, database name, and container name, optionally providing a custom SQL query to filter results.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger, ICosmosService cosmosService) : BaseContainerCommand<ItemQueryOptions, ItemQueryCommand.ItemQueryCommandResult>()
 {
-    private const string CommandTitle = "Query Cosmos DB Container";
     private readonly ILogger<ItemQueryCommand> _logger = logger;
+    private readonly ICosmosService _cosmosService = cosmosService;
     private const string DefaultQuery = "SELECT * FROM c";
-    public override string Id => "5c19a92a-4e0c-44dc-b1e7-5560a0d277b5";
-
-    public override string Name => "query";
-
-    public override string Description =>
-    "List items from a Cosmos DB container by specifying the account name, database name, and container name, optionally providing a custom SQL query to filter results.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<ItemQueryCommandResult> ResultTypeInfo => CosmosJsonContext.Default.ItemQueryCommandResult;
 
@@ -75,10 +68,9 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
 
         try
         {
-            var cosmosService = context.GetService<ICosmosService>();
             var queryToRun = options.Query ?? DefaultQuery;
 
-            var items = await cosmosService.QueryItems(
+            var items = await _cosmosService.QueryItems(
                 options.Account!,
                 options.Database!,
                 options.Container!,
@@ -89,7 +81,7 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(items ?? []));
+            context.Response.Results = ResponseResult.Create(new(items ?? []), CosmosJsonContext.Default.ItemQueryCommandResult);
         }
         catch (Exception ex)
         {

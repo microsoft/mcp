@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Options.Webapp.Diagnostic;
@@ -11,36 +10,31 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 
-public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> logger)
-    : BaseAppServiceCommand<DetectorDiagnoseOptions, DetectorDiagnoseCommand.DetectorDiagnoseResult>(resourceGroupRequired: true, appRequired: true)
-{
-    private const string CommandTitle = "Diagnose an App Service Web App";
-    private readonly ILogger<DetectorDiagnoseCommand> _logger = logger;
-    public override string Id => "a8aa0966-4c0c-4e22-8854-cced583f0fb2";
-    public override string Name => "diagnose";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a8aa0966-4c0c-4e22-8854-cced583f0fb2",
+    Name = "diagnose",
+    Title = "Diagnose an App Service Web App",
+    Description = """
         Runs a specific diagnostic detector on an App Service Web App to troubleshoot issues with performance, availability,
         configuration, or errors. Returns detailed analysis results including insights and recommendations. Use this to investigate
         why a web app is slow, failing, restarting, or unhealthy. Requires a detector ID from 'azmcp appservice webapp diagnostic list'.
         Supports optional time range filtering for historical analysis.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> logger, IAppServiceService appServiceService)
+    : BaseAppServiceCommand<DetectorDiagnoseOptions, DetectorDiagnoseCommand.DetectorDiagnoseResult>(resourceGroupRequired: true, appRequired: true)
+{
+    private readonly ILogger<DetectorDiagnoseCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
 
     protected override JsonTypeInfo<DetectorDiagnoseResult> ResultTypeInfo => AppServiceJsonContext.Default.DetectorDiagnoseResult;
 
@@ -109,8 +103,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var appServiceService = context.GetService<IAppServiceService>();
-            var diagnoses = await appServiceService.DiagnoseDetectorAsync(
+            var diagnoses = await _appServiceService.DiagnoseDetectorAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.AppName!,
@@ -122,7 +115,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(diagnoses));
+            context.Response.Results = ResponseResult.Create(new(diagnoses), AppServiceJsonContext.Default.DetectorDiagnoseResult);
         }
         catch (Exception ex)
         {

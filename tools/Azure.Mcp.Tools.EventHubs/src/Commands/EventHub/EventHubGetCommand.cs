@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Identity;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.EventHub;
@@ -12,41 +11,33 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.EventHub;
 
-public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<EventHubGetOptions, EventHubGetCommand.EventHubGetCommandResult>
-{
-    private const string CommandTitle = "Get Event Hubs from Namespace";
-    private readonly IEventHubsService _service = service;
-    private readonly ILogger<EventHubGetCommand> _logger = logger;
-
-    public override string Id => "ab774777-76ac-4e24-ba19-da67254441a9";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "ab774777-76ac-4e24-ba19-da67254441a9",
+    Name = "get",
+    Title = "Get Event Hubs from Namespace",
+    Description = """
         Get Event Hubs from Azure namespace. This command can either:
         1. List all Event Hubs in a namespace
         2. Get a single Event Hub by name
 
         When retrieving a single Event Hub or listing multiple Event Hubs, detailed information including
         partition count, settings, and metadata is returned for all Event Hubs.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        OpenWorld = false,
-        Destructive = false,
-        Idempotent = true,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEventHubsService service)
+    : BaseEventHubsCommand<EventHubGetOptions, EventHubGetCommand.EventHubGetCommandResult>
+{
+    private readonly IEventHubsService _service = service;
+    private readonly ILogger<EventHubGetCommand> _logger = logger;
 
     protected override JsonTypeInfo<EventHubGetCommandResult> ResultTypeInfo => EventHubsJsonContext.Default.EventHubGetCommandResult;
 
@@ -92,7 +83,7 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
                     cancellationToken);
 
                 var results = eventHub != null ? new List<Models.EventHub> { eventHub } : new List<Models.EventHub>();
-                SetResult(context, new(results));
+                context.Response.Results = ResponseResult.Create(new(results), EventHubsJsonContext.Default.EventHubGetCommandResult);
             }
             else
             {
@@ -104,7 +95,7 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new(eventHubs ?? []));
+                context.Response.Results = ResponseResult.Create(new(eventHubs ?? []), EventHubsJsonContext.Default.EventHubGetCommandResult);
             }
         }
         catch (Exception ex)

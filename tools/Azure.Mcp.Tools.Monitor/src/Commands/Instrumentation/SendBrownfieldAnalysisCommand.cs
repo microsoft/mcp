@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -8,38 +8,35 @@ using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Tools;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
-public sealed class SendBrownfieldAnalysisCommand(ILogger<SendBrownfieldAnalysisCommand> logger)
+[CommandMetadata(
+    Id = "8f69c45b-7e4f-4ea7-9a7d-58fa7fc0897e",
+    Name = "send-brownfield-analysis",
+    Title = "Send Brownfield Analysis",
+    Description = """
+        Send brownfield code analysis findings after orchestrator-start returned status 'analysis_needed'.
+        You must have scanned the workspace source files and filled in the analysis template.
+        For sections that do not exist in the codebase, pass an empty/default object (e.g. found: false, hasCustomSampling: false) rather than null.
+        After this call succeeds, continue with orchestrator-next as usual.
+        """,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = true)]
+public sealed class SendBrownfieldAnalysisCommand(ILogger<SendBrownfieldAnalysisCommand> logger, SendBrownfieldAnalysisTool sendBrownfieldAnalysisTool)
     : BaseCommand<SendBrownfieldAnalysisOptions, string>
 {
-    protected override JsonTypeInfo<string> ResultTypeInfo => MonitorInstrumentationJsonContext.Default.String;
     private readonly ILogger<SendBrownfieldAnalysisCommand> _logger = logger;
+    private readonly SendBrownfieldAnalysisTool _sendBrownfieldAnalysisTool = sendBrownfieldAnalysisTool;
 
-    public override string Id => "8f69c45b-7e4f-4ea7-9a7d-58fa7fc0897e";
-
-    public override string Name => "send-brownfield-analysis";
-
-    public override string Description => @"Send brownfield code analysis findings after orchestrator-start returned status 'analysis_needed'.
-You must have scanned the workspace source files and filled in the analysis template.
-For sections that do not exist in the codebase, pass an empty/default object (e.g. found: false, hasCustomSampling: false) rather than null.
-After this call succeeds, continue with orchestrator-next as usual.";
-
-    public override string Title => "Send Brownfield Analysis";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = true,
-        Secret = false
-    };
+    protected override JsonTypeInfo<string> ResultTypeInfo => MonitorInstrumentationJsonContext.Default.String;
 
     protected override void RegisterOptions(Command command)
     {
@@ -75,8 +72,7 @@ After this call succeeds, continue with orchestrator-next as usual.";
                 return Task.FromResult(context.Response);
             }
 
-            var tool = context.GetService<SendBrownfieldAnalysisTool>();
-            var result = tool.Submit(
+            var result = _sendBrownfieldAnalysisTool.Submit(
                 options.SessionId!,
                 findings.ServiceOptions,
                 findings.Initializers,
@@ -87,7 +83,7 @@ After this call succeeds, continue with orchestrator-next as usual.";
                 findings.Logging);
 
             context.Response.Status = HttpStatusCode.OK;
-            SetResult(context, result);
+            context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
             context.Response.Message = string.Empty;
         }
         catch (JsonException ex)

@@ -1,43 +1,34 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.ContainerApps.Options.ContainerApp;
 using Azure.Mcp.Tools.ContainerApps.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ContainerApps.Commands.ContainerApp;
 
-public sealed class ContainerAppListCommand(ILogger<ContainerAppListCommand> logger, IContainerAppsService containerAppsService) : BaseContainerAppsCommand<ContainerAppListOptions, ContainerAppListCommand.ContainerAppListCommandResult>
-{
-    private const string CommandTitle = "List Container Apps";
-    private readonly ILogger<ContainerAppListCommand> _logger = logger;
-    private readonly IContainerAppsService _containerAppsService = containerAppsService;
-
-    public override string Id => "d4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f90";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "d4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f90",
+    Name = "list",
+    Title = "List Container Apps",
+    Description = """
         List Azure Container Apps in a subscription. Optionally filter by resource group. Each container app result
         includes: name, location, resourceGroup, managedEnvironmentId, provisioningState. If no container apps are
         found the tool returns an empty list of results (consistent with other list commands).
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ContainerAppListCommand(ILogger<ContainerAppListCommand> logger, IContainerAppsService containerAppsService) : BaseContainerAppsCommand<ContainerAppListOptions, ContainerAppListCommand.ContainerAppListCommandResult>
+{
+    private readonly ILogger<ContainerAppListCommand> _logger = logger;
+    private readonly IContainerAppsService _containerAppsService = containerAppsService;
 
     protected override JsonTypeInfo<ContainerAppListCommandResult> ResultTypeInfo => ContainerAppsJsonContext.Default.ContainerAppListCommandResult;
 
@@ -58,7 +49,7 @@ public sealed class ContainerAppListCommand(ILogger<ContainerAppListCommand> log
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(containerApps?.Results ?? [], containerApps?.AreResultsTruncated ?? false));
+            context.Response.Results = ResponseResult.Create(new(containerApps?.Results ?? [], containerApps?.AreResultsTruncated ?? false), ContainerAppsJsonContext.Default.ContainerAppListCommandResult);
         }
         catch (Exception ex)
         {

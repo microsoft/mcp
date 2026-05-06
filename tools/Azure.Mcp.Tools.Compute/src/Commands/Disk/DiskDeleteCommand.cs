@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Disk;
 using Azure.Mcp.Tools.Compute.Services;
@@ -10,42 +9,32 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 
 /// <summary>
 /// Command to delete an Azure managed disk.
 /// </summary>
+[CommandMetadata(
+    Id = "a7c3e9f1-4b82-4d5a-9e6c-1f3d8b2a7c4e",
+    Name = "delete",
+    Title = "Delete Managed Disk",
+    Description = "Deletes an Azure managed disk from the specified resource group. This is an idempotent operation that returns Deleted = true if the disk was successfully removed, or Deleted = false if the disk was not found. The disk must not be attached to a virtual machine; detach it first before deleting.",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = true,
+    LocalRequired = false)]
 public sealed class DiskDeleteCommand(
-    ILogger<DiskDeleteCommand> logger)
+    ILogger<DiskDeleteCommand> logger,
+    IComputeService computeService)
     : BaseComputeCommand<DiskDeleteOptions, DiskDeleteCommand.DiskDeleteCommandResult>(true)
 {
-    private const string CommandTitle = "Delete Managed Disk";
-    private const string CommandDescription =
-        "Deletes an Azure managed disk from the specified resource group. "
-        + "This is an idempotent operation that returns Deleted = true if the disk was successfully removed, "
-        + "or Deleted = false if the disk was not found. "
-        + "The disk must not be attached to a virtual machine; detach it first before deleting.";
 
     private readonly ILogger<DiskDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    public override string Id => "a7c3e9f1-4b82-4d5a-9e6c-1f3d8b2a7c4e";
-
-    public override string Name => "delete";
-
-    public override string Title => CommandTitle;
-
-    public override string Description => CommandDescription;
-
-    public override ToolMetadata Metadata => new()
-    {
-        OpenWorld = false,
-        Destructive = true,
-        Idempotent = true,
-        ReadOnly = false,
-        Secret = true,
-        LocalRequired = false
-    };
+    private readonly IComputeService _computeService = computeService;
 
     protected override JsonTypeInfo<DiskDeleteCommandResult> ResultTypeInfo => ComputeJsonContext.Default.DiskDeleteCommandResult;
 
@@ -77,8 +66,7 @@ public sealed class DiskDeleteCommand(
                 "Deleting disk {DiskName} in resource group {ResourceGroup}",
                 options.DiskName, options.ResourceGroup);
 
-            var computeService = context.GetService<IComputeService>();
-            var deleted = await computeService.DeleteDiskAsync(
+            var deleted = await _computeService.DeleteDiskAsync(
                 options.DiskName!,
                 options.ResourceGroup!,
                 options.Subscription!,
@@ -86,7 +74,9 @@ public sealed class DiskDeleteCommand(
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new DiskDeleteCommandResult(deleted, options.DiskName!));
+            context.Response.Results = ResponseResult.Create(
+                new DiskDeleteCommandResult(deleted, options.DiskName!),
+                ComputeJsonContext.Default.DiskDeleteCommandResult);
         }
         catch (Exception ex)
         {

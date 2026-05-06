@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Azure.Mcp.Tools.Cosmos.Services;
@@ -12,33 +11,25 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
 
-public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : SubscriptionCommand<CosmosListOptions, CosmosListCommand.CosmosListCommandResult>()
+[CommandMetadata(
+    Id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    Name = "list",
+    Title = "List Cosmos DB Resources",
+    Description = "List Cosmos DB accounts, databases, or containers. Returns all accounts in the subscription by default. Specify --account to list databases in that account, or --account and --database to list containers in a specific database.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmosService cosmosService) : SubscriptionCommand<CosmosListOptions, CosmosListCommand.CosmosListCommandResult>()
 {
-    private const string CommandTitle = "List Cosmos DB Resources";
     private readonly ILogger<CosmosListCommand> _logger = logger;
-
-    public override string Id => "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        "List Cosmos DB accounts, databases, or containers. Returns all accounts in the subscription by default. " +
-        "Specify --account to list databases in that account, or --account and --database to list containers in a specific database.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly ICosmosService _cosmosService = cosmosService;
 
     protected override JsonTypeInfo<CosmosListCommandResult> ResultTypeInfo => CosmosJsonContext.Default.CosmosListCommandResult;
 
@@ -77,12 +68,10 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
 
         try
         {
-            var cosmosService = context.GetService<ICosmosService>() ?? throw new InvalidOperationException("Cosmos DB service is not available.");
-
             if (!string.IsNullOrEmpty(options.Database))
             {
                 // List containers in the specified database
-                var containers = await cosmosService.ListContainers(
+                var containers = await _cosmosService.ListContainers(
                     options.Account!,
                     options.Database!,
                     options.Subscription!,
@@ -91,12 +80,14 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new(null, null, containers ?? []));
+                context.Response.Results = ResponseResult.Create(
+                    new(null, null, containers ?? []),
+                    CosmosJsonContext.Default.CosmosListCommandResult);
             }
             else if (!string.IsNullOrEmpty(options.Account))
             {
                 // List databases in the specified account
-                var databases = await cosmosService.ListDatabases(
+                var databases = await _cosmosService.ListDatabases(
                     options.Account!,
                     options.Subscription!,
                     options.AuthMethod ?? AuthMethod.Credential,
@@ -104,18 +95,22 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new(null, databases ?? [], null));
+                context.Response.Results = ResponseResult.Create(
+                    new(null, databases ?? [], null),
+                    CosmosJsonContext.Default.CosmosListCommandResult);
             }
             else
             {
                 // List all accounts in the subscription
-                var accounts = await cosmosService.GetCosmosAccounts(
+                var accounts = await _cosmosService.GetCosmosAccounts(
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new(accounts ?? [], null, null));
+                context.Response.Results = ResponseResult.Create(
+                    new(accounts ?? [], null, null),
+                    CosmosJsonContext.Default.CosmosListCommandResult);
             }
         }
         catch (Exception ex)

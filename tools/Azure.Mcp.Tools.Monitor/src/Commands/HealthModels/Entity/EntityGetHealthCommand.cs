@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -6,46 +6,37 @@ using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 using System.Text.Json.Serialization.Metadata;
 using System.Text.Json.Nodes;
-using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 
+[CommandMetadata(
+    Id = "80b23546-a6ac-4f0c-ad70-f51d6dff5543",
+    Name = "get",
+    Title = "Get the health of an entity in a health model",
+    Description = """
+        Retrieve the health status of an entity for a given Azure Monitor Health Model. Use this tool ONLY when the user mentions a specific health model name and asks for health status, health events. This provides application-level health monitoring with custom health models, not basic Azure resource availability.
+        For basic Azure resource availability status, use Resource Health tool instead `azmcp_resourcehealth_availability-status_get`.  
+        For querying logs from a Log Analystics workspace, use `azmcp_monitor_workspace_log_query`.  
+        For querying logs of a specific Azure resource, use `azmcp_monitor_resource_log_query`. 
+        Required arguments:
+            - --entity: The entity to get health for
+            - --health-model: The health model name
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logger, IMonitorHealthModelService healthModelService) : BaseMonitorHealthModelsCommand<BaseMonitorHealthModelsOptions, JsonNode>
 {
-    protected override JsonTypeInfo<JsonNode> ResultTypeInfo => MonitorJsonContext.Default.JsonNode;
-    private const string CommandTitle = "Get the health of an entity in a health model";
-    private const string CommandName = "get";
     private readonly ILogger<EntityGetHealthCommand> _logger = logger;
     private readonly IMonitorHealthModelService _healthModelService = healthModelService;
 
-    public override string Id => "80b23546-a6ac-4f0c-ad70-f51d6dff5543";
-
-    public override string Name => CommandName;
-
-    public override string Description =>
-    $"""
-    Retrieve the health status of an entity for a given Azure Monitor Health Model. Use this tool ONLY when the user mentions a specific health model name and asks for health status, health events. This provides application-level health monitoring with custom health models, not basic Azure resource availability.
-    For basic Azure resource availability status, use Resource Health tool instead `azmcp_resourcehealth_availability-status_get`.  
-    For querying logs from a Log Analystics workspace, use `azmcp_monitor_workspace_log_query`.  
-    For querying logs of a specific Azure resource, use `azmcp_monitor_resource_log_query`. 
-    Required arguments:
-        - {MonitorOptionDefinitions.Health.Entity.Name}: The entity to get health for
-        - {MonitorOptionDefinitions.Health.HealthModel.Name}: The health model name
-    """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<JsonNode> ResultTypeInfo => MonitorJsonContext.Default.JsonNode;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -68,7 +59,7 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, result);
+            context.Response.Results = ResponseResult.Create(result, MonitorJsonContext.Default.JsonNode);
         }
         catch (Exception ex)
         {

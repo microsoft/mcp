@@ -1,23 +1,33 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
+[CommandMetadata(
+    Id = "d1e22074-53ce-4eef-8596-0ea134a9e317",
+    Name = "query",
+    Title = "Query Kusto Database",
+    Description = "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class QueryCommand(ILogger<QueryCommand> logger, IKustoService kustoService) : BaseDatabaseCommand<QueryOptions, QueryCommand.QueryCommandResult>()
 {
-    private const string CommandTitle = "Query Kusto Database";
     private readonly ILogger<QueryCommand> _logger = logger;
     private readonly IKustoService _kustoService = kustoService;
 
-    public override string Id => "d1e22074-53ce-4eef-8596-0ea134a9e317";
+    protected override JsonTypeInfo<QueryCommandResult> ResultTypeInfo => KustoJsonContext.Default.QueryCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -31,25 +41,6 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger, IKustoService kus
         options.Query = parseResult.GetValueOrDefault<string>(KustoOptionDefinitions.Query.Name);
         return options;
     }
-
-    public override string Name => "query";
-
-    public override string Description =>
-        "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override JsonTypeInfo<QueryCommandResult> ResultTypeInfo => KustoJsonContext.Default.QueryCommandResult;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -88,7 +79,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger, IKustoService kus
                     cancellationToken);
             }
 
-            SetResult(context, new(results ?? []));
+            context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.QueryCommandResult);
         }
         catch (Exception ex)
         {

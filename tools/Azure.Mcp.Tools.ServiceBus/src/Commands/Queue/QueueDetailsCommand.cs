@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Options;
@@ -13,40 +12,32 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 
-public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<BaseQueueOptions, QueueDetailsCommand.QueueDetailsCommandResult>
-{
-    private const string CommandTitle = "Get Service Bus Queue Details";
-    private readonly ILogger<QueueDetailsCommand> _logger = logger;
-    private readonly IServiceBusService _serviceBusService = serviceBusService;
-
-    public override string Id => "a02c58ce-e89f-4303-ac4a-c9dfb118e761";
-
-    public override string Name => "details";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a02c58ce-e89f-4303-ac4a-c9dfb118e761",
+    Name = "details",
+    Title = "Get Service Bus Queue Details",
+    Description = """
         Get details about a Service Bus queue. Returns queue properties and runtime information. Properties returned include
         lock duration, max message size, queue size, creation date, status, current message counts, etc.
 
         Required arguments:
         - namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)
         - queue: Queue name to get details and runtime information for.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<BaseQueueOptions, QueueDetailsCommand.QueueDetailsCommandResult>
+{
+    private readonly ILogger<QueueDetailsCommand> _logger = logger;
+    private readonly IServiceBusService _serviceBusService = serviceBusService;
 
     protected override JsonTypeInfo<QueueDetailsCommandResult> ResultTypeInfo => ServiceBusJsonContext.Default.QueueDetailsCommandResult;
 
@@ -83,7 +74,7 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger, ISe
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(details));
+            context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.QueueDetailsCommandResult);
         }
         catch (Exception ex)
         {

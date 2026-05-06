@@ -15,30 +15,30 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 
+[CommandMetadata(
+    Id = "1dccdb24-d81c-4bde-9437-577a7bd0cf09",
+    Name = "create",
+    Title = "Create Backup Vault",
+    Description = """
+        Creates a new backup vault. Specify --vault-type as 'rsv' for a Recovery Services vault
+        or 'dpp' for a Backup vault (Data Protection). For DPP vaults a System-Assigned
+        Managed Identity is enabled by default so the vault can authenticate to protected
+        datasources (storage accounts, disks, PG Flex, etc.) - change later with
+        'azurebackup vault update --identity-type ...' if needed. Returns the created
+        vault details.
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<VaultCreateOptions, VaultCreateCommand.VaultCreateCommandResult>()
 {
-    protected override JsonTypeInfo<VaultCreateCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.VaultCreateCommandResult;
-    private const string CommandTitle = "Create Backup Vault";
     private readonly ILogger<VaultCreateCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    public override string Id => "1dccdb24-d81c-4bde-9437-577a7bd0cf09";
-    public override string Name => "create";
-    public override string Description =>
-        """
-        Creates a new backup vault. Specify --vault-type as 'rsv' for a Recovery Services vault
-        or 'dpp' for a Backup vault (Data Protection). Returns the created vault details.
-        """;
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<VaultCreateCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.VaultCreateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -98,6 +98,8 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+
         try
         {
             var result = await _azureBackupService.CreateVaultAsync(
@@ -112,7 +114,9 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(result));
+            context.Response.Results = ResponseResult.Create(
+                new(result),
+                AzureBackupJsonContext.Default.VaultCreateCommandResult);
         }
         catch (Exception ex)
         {

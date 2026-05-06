@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Knowledge;
@@ -12,23 +11,15 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
-public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeBaseRetrieveOptions, KnowledgeBaseRetrieveCommand.KnowledgeBaseRetrieveCommandResult>()
-{
-    private const string CommandTitle = "Execute retrieval using a knowledge base in Azure AI Search";
-    private readonly ILogger<KnowledgeBaseRetrieveCommand> _logger = logger;
-    private readonly ISearchService _searchService = searchService;
-
-    public override string Id => "dcd2952d-02af-4ffc-a7a2-3c6d04251f66";
-
-    public override string Name => "retrieve";
-
-    public override string Title => CommandTitle;
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "dcd2952d-02af-4ffc-a7a2-3c6d04251f66",
+    Name = "retrieve",
+    Title = "Execute retrieval using a knowledge base in Azure AI Search",
+    Description = """
         Execute a retrieval operation using a specific Azure AI Search knowledge base, effectively searching and querying the underlying
         data sources as needed to find relevant information. Provide either a --query for single-turn retrieval or one or more
         conversational --messages in role:content form (e.g. user:What policies apply?). Specifying both --query and --messages is not
@@ -37,17 +28,17 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
         Required arguments:
         - service
         - knowledge-base
-        """;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        ReadOnly = true,
-        OpenWorld = true, // possibly interacts with Web content and federated data sources
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = true,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeBaseRetrieveOptions, KnowledgeBaseRetrieveCommand.KnowledgeBaseRetrieveCommandResult>()
+{
+    private readonly ILogger<KnowledgeBaseRetrieveCommand> _logger = logger;
+    private readonly ISearchService _searchService = searchService;
 
     protected override JsonTypeInfo<KnowledgeBaseRetrieveCommandResult> ResultTypeInfo => SearchJsonContext.Default.KnowledgeBaseRetrieveCommandResult;
 
@@ -126,7 +117,7 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
         try
         {
             var result = await _searchService.RetrieveFromKnowledgeBase(options.Service!, options.KnowledgeBase!, options.Query, parsedMessages, options.RetryPolicy, cancellationToken);
-            SetResult(context, new(result));
+            context.Response.Results = ResponseResult.Create(new(result), SearchJsonContext.Default.KnowledgeBaseRetrieveCommandResult);
         }
         catch (Exception ex)
         {

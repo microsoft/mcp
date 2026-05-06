@@ -1,19 +1,33 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
 using System.Reflection;
-using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureTerraformBestPractices.Commands;
 
+[CommandMetadata(
+    Id = "5bd36575-6313-4bf4-aa26-a79fe0fa32a8",
+    Name = "get",
+    Title = "Get Terraform Best Practices for Azure",
+    Description = """
+        Returns Terraform best practices for Azure. Call this command and follow its guidance before
+        generating or suggesting any Terraform code specific to Azure. If this tool needs to be categorized, it belongs to
+        the Azure Best Practices category.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraformBestPracticesGetCommand> logger) : BaseCommand<EmptyOptions, List<string>>
 {
-    private const string CommandTitle = "Get Terraform Best Practices for Azure";
     private readonly ILogger<AzureTerraformBestPracticesGetCommand> _logger = logger;
     private static readonly string s_bestPracticesText = LoadBestPracticesText();
 
@@ -26,27 +40,6 @@ public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraform
         return EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
     }
 
-    public override string Id => "5bd36575-6313-4bf4-aa26-a79fe0fa32a8";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        @"Returns Terraform best practices for Azure. Call this command and follow its guidance before
-        generating or suggesting any Terraform code specific to Azure. If this tool needs to be categorized, it belongs to
-        the Azure Best Practices category.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
     protected override JsonTypeInfo<List<string>> ResultTypeInfo => AzureTerraformBestPracticesJsonContext.Default.ListString;
 
     protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
@@ -55,7 +48,7 @@ public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraform
     {
         var bestPractices = GetBestPracticesText();
         context.Response.Status = HttpStatusCode.OK;
-        SetResult(context, [bestPractices]);
+        context.Response.Results = ResponseResult.Create([bestPractices], AzureTerraformBestPracticesJsonContext.Default.ListString);
         context.Response.Message = string.Empty;
         return Task.FromResult(context.Response);
     }

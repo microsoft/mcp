@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
@@ -9,39 +8,32 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 
+[CommandMetadata(
+    Id = "a89086eb-acf4-4168-9d32-de5cd7384030",
+    Name = "set",
+    Title = "Set App Configuration Key-Value Setting",
+    Description = """
+        Set a key-value setting in an App Configuration store. This command creates or updates a key-value setting
+        with the specified value. You must specify an account name, key, and value. Optionally, you can specify a
+        label otherwise the default label will be used. You can also specify a content type to indicate how the value
+        should be interpreted. You can add tags in the format 'key=value' to associate metadata with the setting.
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger, IAppConfigService appConfigService)
     : BaseKeyValueCommand<KeyValueSetOptions, KeyValueSetCommand.KeyValueSetCommandResult>()
 {
     private const string CommandTitle = "Set App Configuration Key-Value Setting";
     private readonly ILogger<KeyValueSetCommand> _logger = logger;
     private readonly IAppConfigService _appConfigService = appConfigService;
-
-    public override string Id => "a89086eb-acf4-4168-9d32-de5cd7384030";
-
-    public override string Name => "set";
-
-    public override string Description =>
-        """
-        Set a key-value setting in an App Configuration store. This command creates or updates a key-value setting
-        with the specified value. You must specify an account name, key, and value. Optionally, you can specify a
-        label otherwise the default label will be used. You can also specify a content type to indicate how the value
-        should be interpreted. You can add tags in the format 'key=value' to associate metadata with the setting.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<KeyValueSetCommandResult> ResultTypeInfo => AppConfigJsonContext.Default.KeyValueSetCommandResult;
 
@@ -83,7 +75,10 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger, IAppC
                 options.ContentType,
                 options.Tags,
                 cancellationToken);
-            SetResult(context, new(options.Key, options.Value, options.Label, options.ContentType, options.Tags));
+            context.Response.Results = ResponseResult.Create(
+                new(options.Key, options.Value, options.Label, options.ContentType, options.Tags),
+                AppConfigJsonContext.Default.KeyValueSetCommandResult
+            );
         }
         catch (Exception ex)
         {

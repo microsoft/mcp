@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.ManagedLustre.Options;
@@ -13,39 +13,29 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 
-public sealed class ImportJobGetCommand(IManagedLustreService service, ILogger<ImportJobGetCommand> logger)
-    : BaseManagedLustreCommand<ImportJobGetOptions, ImportJobGetCommand.ImportJobGetCommandResult>(logger)
-{
-    protected override JsonTypeInfo<ImportJobGetCommandResult> ResultTypeInfo => ManagedLustreJsonContext.Default.ImportJobGetCommandResult;
-    private const string CommandTitle = "Get Azure Managed Lustre Import Job";
-
-    private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<ImportJobGetCommand> _logger = logger;
-
-    public override string Id => "c2g4d6f8-0e3a-5c7d-9f1b-3e5a7c9f1d3f";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "c2g4d6f8-0e3a-5c7d-9f1b-3e5a7c9f1d3f",
+    Name = "get",
+    Title = "Get Azure Managed Lustre Import Job",
+    Description = """
         Gets import job details or lists all import jobs for an Azure Managed Lustre filesystem. If job-name is provided, returns details for that specific job. If job-name is omitted, returns a list of all import jobs for the filesystem.
         Required options:
         - filesystem-name: The name of the AMLFS filesystem
         Optional options:
         - job-name: Name of specific import job to get (omit to list all jobs)
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ImportJobGetCommand(IManagedLustreService service, ILogger<ImportJobGetCommand> logger)
+    : BaseManagedLustreCommand<ImportJobGetOptions, ImportJobGetCommand.ImportJobGetCommandResult>(logger)
+{
+    protected override JsonTypeInfo<ImportJobGetCommandResult> ResultTypeInfo => ManagedLustreJsonContext.Default.ImportJobGetCommandResult;
+    private readonly IManagedLustreService _service = service;
+    private new readonly ILogger<ImportJobGetCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {

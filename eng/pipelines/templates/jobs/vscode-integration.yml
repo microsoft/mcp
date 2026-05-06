@@ -1,0 +1,28 @@
+jobs:
+- job: VSCodeIntegration
+  displayName: "VS Code Integration (Outerloop Playwright)"
+  condition: and(succeeded(), ne(variables['NoPackagesChanged'], 'true'))
+  pool:
+    name: $(WINDOWSPOOL)
+    image: $(WINDOWSVMIMAGE)
+    os: windows
+  steps:
+  - checkout: self
+
+  - task: NodeTool@0
+    displayName: "Use Node.js 20.x"
+    inputs:
+      versionSpec: 20.x
+
+  - task: PowerShell@2
+    displayName: "Run VS Code elicitation outerloop test"
+    timeoutInMinutes: 45
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Test-VSCodeIntegration.ps1
+
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.SourcesDirectory)/servers/Azure.Mcp.Server/vscode/test-results
+      ArtifactName: vscode_outerloop_artifacts
+      CustomCondition: succeededOrFailed()

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
@@ -10,20 +9,15 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger, IWorkbooksService workbooksService) : BaseWorkbooksCommand<ShowWorkbooksOptions, ShowWorkbooksCommand.ShowWorkbooksCommandResult>
-{
-    private const string CommandTitle = "Get Workbook";
-    private readonly ILogger<ShowWorkbooksCommand> _logger = logger;
-    private readonly IWorkbooksService _workbooksService = workbooksService;
-    public override string Id => "a7a882cd-1729-49ed-b349-2a79f8c7de56";
-
-    public override string Name => "show";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a7a882cd-1729-49ed-b349-2a79f8c7de56",
+    Name = "show",
+    Title = "Get Workbook",
+    Description = """
         Retrieve full workbook details via ARM API (includes serializedData content).
 
         USE FOR: Getting complete workbook definition including visualization JSON.
@@ -31,19 +25,17 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger, I
 
         BATCH: Accepts multiple --workbook-ids values. Partial failures reported per-workbook.
         PERFORMANCE: Use 'list' first for discovery, then 'show' for specific workbooks.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger, IWorkbooksService workbooksService) : BaseWorkbooksCommand<ShowWorkbooksOptions, ShowWorkbooksCommand.ShowWorkbooksCommandResult>
+{
+    private readonly ILogger<ShowWorkbooksCommand> _logger = logger;
+    private readonly IWorkbooksService _workbooksService = workbooksService;
 
     protected override JsonTypeInfo<ShowWorkbooksCommandResult> ResultTypeInfo => WorkbooksJsonContext.Default.ShowWorkbooksCommandResult;
 
@@ -85,7 +77,9 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger, I
                 options.Tenant,
                 cancellationToken);
 
-            SetResult(context, new(result.Succeeded.ToList(), result.Failed.ToList()));
+            context.Response.Results = ResponseResult.Create(
+                new(result.Succeeded.ToList(), result.Failed.ToList()),
+                WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
         }
         catch (Exception ex)
         {

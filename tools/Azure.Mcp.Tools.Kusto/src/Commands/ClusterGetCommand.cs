@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Options;
@@ -12,33 +11,25 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
+[CommandMetadata(
+    Id = "5fc5a42b-a7f6-4d4a-9517-a8e119752b7a",
+    Name = "get",
+    Title = "Get Kusto Cluster Details",
+    Description = "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IKustoService kustoService) : SubscriptionCommand<ClusterGetOptions, ClusterGetCommand.ClusterGetCommandResult>
 {
-    private const string CommandTitle = "Get Kusto Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
     private readonly IKustoService _kustoService = kustoService;
-
-    public override string Id => "5fc5a42b-a7f6-4d4a-9517-a8e119752b7a";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<ClusterGetCommandResult> ResultTypeInfo => KustoJsonContext.Default.ClusterGetCommandResult;
 
@@ -74,10 +65,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IKustoS
                 options.RetryPolicy,
                 cancellationToken);
 
-            if (cluster is not null)
-            {
-                SetResult(context, new(cluster));
-            }
+            context.Response.Results = cluster is null ?
+                null : ResponseResult.Create(new(cluster), KustoJsonContext.Default.ClusterGetCommandResult);
         }
         catch (Exception ex)
         {

@@ -952,12 +952,19 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Delete application setting 'LogLevel' from my 'my-webapp' in 'my-resource-group'"
 * "List the deployments for web app 'my-webapp' in 'my-resource-group'"
 * "Get the deployment 'deployment-id' for web app 'my-webapp' in 'my-resource-group'"
+* "List the diagnostic detectors for web app 'my-webapp' in 'my-resource-group'"
+* "Diagnose the web app 'my-webapp' with detector 'detector-name' in 'my-resource-group'"
+* "Start the web app 'my-webapp' in 'my-resource-group'"
+* "Stop the web app 'my-webapp' in 'my-resource-group'"
+* "Restart the web app 'my-webapp' in 'my-resource-group'"
+* "Soft restart the web app 'my-webapp' in 'my-resource-group' waiting for restart to complete"
 
 ### 🛡️ Azure Backup
 
 * "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus with vault-type 'rsv'"
 * "Get details of backup vault 'myvault' in resource group 'myRG'"
 * "Create a backup policy for Azure VMs in vault 'myvault'"
+* "Update backup policy schedule time to 04:00 in vault 'myvault'"
 * "List protectable items in my backup vault"
 * "Check backup status for my Azure resource in eastus"
 * "Get recovery points for a protected item"

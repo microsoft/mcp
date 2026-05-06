@@ -13,26 +13,22 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
+[CommandMetadata(
+    Id = "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
+    Name = "create",
+    Title = "Create File Share Snapshot",
+    Description = "Create a snapshot of an Azure managed file share. Snapshots are read-only point-in-time copies used for backup and recovery.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger, IFileSharesService service)
     : BaseFileSharesCommand<SnapshotCreateOptions, SnapshotCreateCommand.SnapshotCreateCommandResult>(logger, service)
 {
+
     protected override JsonTypeInfo<SnapshotCreateCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.SnapshotCreateCommandResult;
-    private const string CommandTitle = "Create File Share Snapshot";
-
-    public override string Id => "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c";
-    public override string Name => "create";
-    public override string Description => "Create a snapshot of an Azure managed file share. Snapshots are read-only point-in-time copies used for backup and recovery.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -91,7 +87,7 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(snapshot));
+            context.Response.Results = ResponseResult.Create(new(snapshot), FileSharesJsonContext.Default.SnapshotCreateCommandResult);
 
             _logger.LogInformation("Snapshot created successfully. SnapshotName: {SnapshotName}", options.SnapshotName);
         }

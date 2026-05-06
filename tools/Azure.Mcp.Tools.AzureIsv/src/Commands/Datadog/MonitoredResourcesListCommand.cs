@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.AzureIsv.Options;
 using Azure.Mcp.Tools.AzureIsv.Options.Datadog;
@@ -11,38 +10,30 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
 
-public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesListCommand> logger, IDatadogService datadogService) : SubscriptionCommand<MonitoredResourcesListOptions, MonitoredResourcesListCommand.MonitoredResourcesListResult>
-{
-    private const string _commandTitle = "List Monitored Resources in a Datadog Monitor";
-    private readonly ILogger<MonitoredResourcesListCommand> _logger = logger;
-    private readonly IDatadogService _datadogService = datadogService;
-
-    public override string Id => "bbd026b6-df96-4c52-8b72-13734984a600";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "bbd026b6-df96-4c52-8b72-13734984a600",
+    Name = "list",
+    Title = "List Monitored Resources in a Datadog Monitor",
+    Description = """
         List monitored resources in Datadog for a datadog resource taken as input from the user.
         This command retrieves all monitored azure resources available.
         Requires `datadog-resource`, `resource-group` and `subscription`.
         Result is a list of monitored resources as a JSON array.
-        """;
-
-    public override string Title => _commandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesListCommand> logger, IDatadogService datadogService) : SubscriptionCommand<MonitoredResourcesListOptions, MonitoredResourcesListCommand.MonitoredResourcesListResult>
+{
+    private readonly ILogger<MonitoredResourcesListCommand> _logger = logger;
+    private readonly IDatadogService _datadogService = datadogService;
 
     protected override JsonTypeInfo<MonitoredResourcesListResult> ResultTypeInfo => DatadogJsonContext.Default.MonitoredResourcesListResult;
 
@@ -77,9 +68,9 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
                 options.Subscription!,
                 options.DatadogResource!,
                 cancellationToken);
-            SetResult(context, results?.Count > 0
-                ? new(results)
-                : new(["No monitored resources found for the specified Datadog resource."]));
+            context.Response.Results = results?.Count > 0
+                ? ResponseResult.Create(new(results), DatadogJsonContext.Default.MonitoredResourcesListResult)
+                : ResponseResult.Create(new(["No monitored resources found for the specified Datadog resource."]), DatadogJsonContext.Default.MonitoredResourcesListResult);
         }
         catch (Exception ex)
         {

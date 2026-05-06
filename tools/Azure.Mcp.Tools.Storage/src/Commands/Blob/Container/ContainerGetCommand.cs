@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
@@ -12,43 +10,35 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 
-public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IStorageService storageService) : BaseStorageCommand<ContainerGetOptions, ContainerGetCommand.ContainerGetCommandResult>()
-{
-    private const string CommandTitle = "Get Storage Container Details";
-    private readonly ILogger<ContainerGetCommand> _logger = logger;
-    private readonly IStorageService _storageService = storageService;
-
-    public override string Id => "e96eb850-abb8-431d-bdc6-7ccd0a24838e";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "e96eb850-abb8-431d-bdc6-7ccd0a24838e",
+    Name = "get",
+    Title = "Get Storage Container Details",
+    Description = """
         Show/list containers in a storage account. Use this tool to list all blob containers in the storage account or
         show details for a specific Storage container. If no container specified, shows all containers in the storage
         account, optionally filtering on a prefix. The prefix is ignored if a container is specified.
-        
+
         Required: --account, --subscription
         Optional: --container, --tenant, --prefix
 
         Returns: container name, lastModified, leaseStatus, publicAccess, metadata, and container properties.
         Do not use this tool to list blobs in a container.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IStorageService storageService) : BaseStorageCommand<ContainerGetOptions, ContainerGetCommand.ContainerGetCommandResult>()
+{
+    private readonly ILogger<ContainerGetCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     protected override JsonTypeInfo<ContainerGetCommandResult> ResultTypeInfo => StorageJsonContext.Default.ContainerGetCommandResult;
 
@@ -88,7 +78,7 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
                 cancellationToken
             );
 
-            SetResult(context, new(containers ?? []));
+            context.Response.Results = ResponseResult.Create(new(containers ?? []), StorageJsonContext.Default.ContainerGetCommandResult);
             return context.Response;
         }
         catch (Exception ex)

@@ -1,51 +1,40 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.ResourceHealth.Options.ServiceHealthEvents;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
 
 /// <summary>
 /// Lists Azure service health events for a subscription, providing insights into ongoing or past service issues.
 /// </summary>
+[CommandMetadata(
+    Id = "c3211c73-af20-4d8d-bed2-4f181e0e4c92",
+    Name = "list",
+    Title = "List Service Health Events",
+    Description = "List Azure service health events to track service issues that occurred in recent timeframes (last 30 days, weeks, months). Query subscription for planned maintenance, past or ongoing service incidents, advisories, and security events. Provides detailed information about resource availability state, potential issues, and timestamps. Returns: trackingId, title, summary, eventType, status, startTime, endTime, impactedServices. Access Azure Service Health portal data programmatically.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsListCommand> logger, IResourceHealthService resourceHealthService)
     : BaseResourceHealthCommand<ServiceHealthEventsListOptions, ServiceHealthEventsListCommand.ServiceHealthEventsListCommandResult>()
 {
-    private const string CommandTitle = "List Service Health Events";
     private readonly ILogger<ServiceHealthEventsListCommand> _logger = logger;
     private readonly IResourceHealthService _resourceHealthService = resourceHealthService;
 
-    public override string Id => "c3211c73-af20-4d8d-bed2-4f181e0e4c92";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        List Azure service health events to track service issues that occurred in recent timeframes (last 30 days, weeks, months). Query subscription for planned maintenance, past or ongoing service incidents, advisories, and security events. Provides detailed information about resource availability state, potential issues, and timestamps. Returns: trackingId, title, summary, eventType, status, startTime, endTime, impactedServices. Access Azure Service Health portal data programmatically.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override JsonTypeInfo<ServiceHealthEventsListCommandResult> ResultTypeInfo => ResourceHealthJsonContext.Default.ServiceHealthEventsListCommandResult;
-
     private static readonly HashSet<string> validEventTypes = new(StringComparer.OrdinalIgnoreCase) { "ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security" };
     private static readonly HashSet<string> validStatuses = new(StringComparer.OrdinalIgnoreCase) { "Active", "Resolved" };
+
+    protected override JsonTypeInfo<ServiceHealthEventsListCommandResult> ResultTypeInfo => ResourceHealthJsonContext.Default.ServiceHealthEventsListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -115,7 +104,7 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(events ?? []));
+            context.Response.Results = ResponseResult.Create(new(events ?? []), ResourceHealthJsonContext.Default.ServiceHealthEventsListCommandResult);
         }
         catch (Exception ex)
         {

@@ -6,47 +6,39 @@ using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 
-public sealed class AutoexportJobDeleteCommand(IManagedLustreService service, ILogger<AutoexportJobDeleteCommand> logger)
-    : BaseManagedLustreCommand<AutoexportJobDeleteOptions, AutoexportJobDeleteCommand.AutoexportJobDeleteResult>(logger)
-{
-    protected override JsonTypeInfo<AutoexportJobDeleteResult> ResultTypeInfo => ManagedLustreJsonContext.Default.AutoexportJobDeleteResult;
-    private const string CommandTitle = "Delete Azure Managed Lustre Autoexport Job";
-
-    private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<AutoexportJobDeleteCommand> _logger = logger;
-
-    public override string Id => "4c7a8e3d-9f2b-5a6e-c1d4-8b3e9a2f7c5d";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "4c7a8e3d-9f2b-5a6e-c1d4-8b3e9a2f7c5d",
+    Name = "delete",
+    Title = "Delete Azure Managed Lustre Autoexport Job",
+    Description = """
         Deletes an auto export job for an Azure Managed Lustre filesystem. This permanently removes the job record from the filesystem. Use this to clean up completed, failed, or cancelled autoexport jobs.
         Required options:
         - filesystem-name: The name of the AMLFS filesystem
         - job-name: The name of the autoexport job to delete
         - resource-group: The resource group containing the filesystem
         - subscription: The subscription containing the filesystem
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AutoexportJobDeleteCommand(IManagedLustreService service, ILogger<AutoexportJobDeleteCommand> logger)
+    : BaseManagedLustreCommand<AutoexportJobDeleteOptions, AutoexportJobDeleteCommand.AutoexportJobDeleteResult>(logger)
+{
 
-    public override string Title => CommandTitle;
+    private readonly IManagedLustreService _service = service;
+    private new readonly ILogger<AutoexportJobDeleteCommand> _logger = logger;
 
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<AutoexportJobDeleteResult> ResultTypeInfo => ManagedLustreJsonContext.Default.AutoexportJobDeleteResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -86,7 +78,7 @@ public sealed class AutoexportJobDeleteCommand(IManagedLustreService service, IL
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(options.JobName!, "Deleted"));
+            context.Response.Results = ResponseResult.Create(new(options.JobName!, "Deleted"), ManagedLustreJsonContext.Default.AutoexportJobDeleteResult);
         }
         catch (Exception ex)
         {

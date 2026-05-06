@@ -1,28 +1,30 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.MySql.Commands;
 
+[CommandMetadata(
+    Id = "77e60b50-5c16-4879-96b1-6a40d9c08a37",
+    Name = "list",
+    Title = "List MySQL Resources",
+    Description = "List MySQL servers, databases, or tables in your subscription. Returns all servers by default. Specify --server to list databases on that server, or --server and --database to list tables in a specific database.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlService mysqlService) : BaseMySqlCommand<MySqlDatabaseOptions, MySqlListCommand.MySqlListCommandResult>(logger)
 {
     private readonly IMySqlService _mysqlService = mysqlService;
-    public override string Id => "77e60b50-5c16-4879-96b1-6a40d9c08a37";
-
-    public override string Name => "list";
-
-    public override string Description => "List MySQL servers, databases, or tables in your subscription. Returns all servers by default. Specify --server to list databases on that server, or --server and --database to list tables in a specific database.";
-
-    public override string Title => "List MySQL Resources";
-
-    public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false };
 
     protected override JsonTypeInfo<MySqlListCommandResult> ResultTypeInfo => MySqlJsonContext.Default.MySqlListCommandResult;
 
@@ -75,7 +77,9 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                     options.Database!,
                     cancellationToken);
 
-                SetResult(context, new(null, null, tables ?? []));
+                context.Response.Results = ResponseResult.Create(
+                    new(null, null, tables ?? []),
+                    MySqlJsonContext.Default.MySqlListCommandResult);
             }
             else if (!string.IsNullOrEmpty(options.Server))
             {
@@ -87,7 +91,9 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                     options.Server!,
                     cancellationToken);
 
-                SetResult(context, new(null, databases ?? [], null));
+                context.Response.Results = ResponseResult.Create(
+                    new(null, databases ?? [], null),
+                    MySqlJsonContext.Default.MySqlListCommandResult);
             }
             else
             {
@@ -98,7 +104,9 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                     options.User!,
                     cancellationToken);
 
-                SetResult(context, new(servers ?? [], null, null));
+                context.Response.Results = ResponseResult.Create(
+                    new(servers ?? [], null, null),
+                    MySqlJsonContext.Default.MySqlListCommandResult);
             }
         }
         catch (Exception ex)

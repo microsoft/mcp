@@ -1,43 +1,37 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 
-public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger)
-    : BaseAppServiceCommand<BaseAppServiceOptions, DetectorListCommand.DetectorListResult>(resourceGroupRequired: true, appRequired: true)
-{
-    private const string CommandTitle = "List the Diagnostic Detectors for an App Service Web App";
-    private readonly ILogger<DetectorListCommand> _logger = logger;
-    public override string Id => "7807fdb6-4b92-4361-8042-be61dd342e17";
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "7807fdb6-4b92-4361-8042-be61dd342e17",
+    Name = "list",
+    Title = "List the Diagnostic Detectors for an App Service Web App",
+    Description = """
         Lists all available diagnostic detectors for an App Service Web App. Use this to discover which diagnostics
         are available before running a specific detector. Returns the detector ID, name, type, description, category,
         and analysis types for each detector. Useful for troubleshooting app service issues, checking available
         health checks, and finding the right detector for performance, availability, or configuration analysis.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger, IAppServiceService appServiceService)
+    : BaseAppServiceCommand<BaseAppServiceOptions, DetectorListCommand.DetectorListResult>(resourceGroupRequired: true, appRequired: true)
+{
+    private readonly ILogger<DetectorListCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
 
     protected override JsonTypeInfo<DetectorListResult> ResultTypeInfo => AppServiceJsonContext.Default.DetectorListResult;
 
@@ -59,8 +53,7 @@ public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger)
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var appServiceService = context.GetService<IAppServiceService>();
-            var detectors = await appServiceService.ListDetectorsAsync(
+            var detectors = await _appServiceService.ListDetectorsAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.AppName!,
@@ -68,7 +61,7 @@ public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(detectors));
+            context.Response.Results = ResponseResult.Create(new(detectors), AppServiceJsonContext.Default.DetectorListResult);
         }
         catch (Exception ex)
         {

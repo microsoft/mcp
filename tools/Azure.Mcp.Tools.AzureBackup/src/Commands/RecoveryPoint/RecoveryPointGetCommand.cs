@@ -19,31 +19,27 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
 /// Consolidated recovery point command: when --recovery-point is supplied returns a single
 /// recovery point's details; otherwise lists all recovery points for the protected item.
 /// </summary>
-public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> logger, IAzureBackupService azureBackupService) : BaseProtectedItemCommand<RecoveryPointGetOptions, RecoveryPointGetCommand.RecoveryPointGetCommandResult>()
-{
-    protected override JsonTypeInfo<RecoveryPointGetCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.RecoveryPointGetCommandResult;
-    private const string CommandTitle = "Get Recovery Point";
-    private readonly ILogger<RecoveryPointGetCommand> _logger = logger;
-    private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override string Id => "e930bbb6-b495-454b-bae4-46b9da14eb1c";
-    public override string Name => "get";
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "e930bbb6-b495-454b-bae4-46b9da14eb1c",
+    Name = "get",
+    Title = "Get Recovery Point",
+    Description = """
         Retrieves recovery point information for a protected item. When --recovery-point is
         specified, returns detailed information about a single recovery point including time
         and type. When omitted, lists all available recovery points for the protected item.
-        """;
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> logger, IAzureBackupService azureBackupService) : BaseProtectedItemCommand<RecoveryPointGetOptions, RecoveryPointGetCommand.RecoveryPointGetCommandResult>()
+{
+    private readonly ILogger<RecoveryPointGetCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
+
+    protected override JsonTypeInfo<RecoveryPointGetCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.RecoveryPointGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -67,6 +63,9 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, string.IsNullOrEmpty(options.RecoveryPoint) ? "list" : "single");
+
         try
         {
             if (!string.IsNullOrEmpty(options.RecoveryPoint))
@@ -83,7 +82,9 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new([rp]));
+                context.Response.Results = ResponseResult.Create(
+                    new([rp]),
+                    AzureBackupJsonContext.Default.RecoveryPointGetCommandResult);
             }
             else
             {
@@ -98,7 +99,9 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new(points));
+                context.Response.Results = ResponseResult.Create(
+                    new(points),
+                    AzureBackupJsonContext.Default.RecoveryPointGetCommandResult);
             }
         }
         catch (Exception ex)

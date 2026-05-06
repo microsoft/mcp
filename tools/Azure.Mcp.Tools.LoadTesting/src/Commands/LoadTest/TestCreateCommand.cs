@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTest;
@@ -11,36 +10,31 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 
-public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger, ILoadTestingService loadTestingService)
-    : BaseLoadTestingCommand<TestCreateOptions, TestCreateCommand.TestCreateCommandResult>
-{
-    private const string _commandTitle = "Test Create";
-    private readonly ILogger<TestCreateCommand> _logger = logger;
-    private readonly ILoadTestingService _loadTestingService = loadTestingService;
-
-    public override string Id => "2153384b-02ea-47b3-a069-7f5f9a709d66";
-    public override string Name => "create";
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "2153384b-02ea-47b3-a069-7f5f9a709d66",
+    Name = "create",
+    Title = "Test Create",
+    Description = """
         Creates a new load test plan or configuration for performance testing scenarios. This command creates a basic URL-based load test that can be used to evaluate the performance
         and scalability of web applications and APIs. The test configuration defines target endpoint, load parameters, and test duration. Once we create a test plan, we can use that to trigger test runs to test the endpoints set using the 'azmcp loadtesting testrun create' command.
         This is NOT going to trigger or create any test runs and only will setup your test plan. Also, this is NOT going to create any test resource in azure. 
         It will only create a test in an already existing load test resource.
-        """;
-    public override string Title => _commandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger, ILoadTestingService loadTestingService)
+    : BaseLoadTestingCommand<TestCreateOptions, TestCreateCommand.TestCreateCommandResult>
+{
+    private readonly ILogger<TestCreateCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
 
     protected override JsonTypeInfo<TestCreateCommandResult> ResultTypeInfo => LoadTestJsonContext.Default.TestCreateCommandResult;
 
@@ -99,10 +93,9 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger, ILoadTe
                 cancellationToken);
 
             // Set results if any were returned
-            if (results != null)
-            {
-                SetResult(context, new(results));
-            }
+            context.Response.Results = results != null ?
+                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestCreateCommandResult) :
+                null;
         }
         catch (Exception ex)
         {

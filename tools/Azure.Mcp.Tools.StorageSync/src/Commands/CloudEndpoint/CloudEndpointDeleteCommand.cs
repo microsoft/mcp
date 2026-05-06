@@ -6,37 +6,30 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
 
+[CommandMetadata(
+    Id = "f5e76906-cc2a-41a4-b4f9-498221aaaf2e",
+    Name = "delete",
+    Title = "Delete Cloud Endpoint",
+    Description = "Delete a cloud endpoint from a sync group.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CloudEndpointDeleteCommand(ILogger<CloudEndpointDeleteCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<CloudEndpointDeleteOptions, CloudEndpointDeleteCommand.CloudEndpointDeleteCommandResult>
 {
-    protected override JsonTypeInfo<CloudEndpointDeleteCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.CloudEndpointDeleteCommandResult;
-    private const string CommandTitle = "Delete Cloud Endpoint";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<CloudEndpointDeleteCommand> _logger = logger;
 
-    public override string Id => "f5e76906-cc2a-41a4-b4f9-498221aaaf2e";
-
-    public override string Name => "delete";
-
-    public override string Description => "Delete a cloud endpoint from a sync group.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<CloudEndpointDeleteCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.CloudEndpointDeleteCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -82,7 +75,7 @@ public sealed class CloudEndpointDeleteCommand(ILogger<CloudEndpointDeleteComman
                 cancellationToken);
 
             context.Response.Message = "Cloud endpoint deleted successfully";
-            SetResult(context, new("Cloud endpoint deleted successfully"));
+            context.Response.Results = ResponseResult.Create(new("Cloud endpoint deleted successfully"), StorageSyncJsonContext.Default.CloudEndpointDeleteCommandResult);
         }
         catch (Exception ex)
         {

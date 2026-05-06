@@ -13,26 +13,22 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
+[CommandMetadata(
+    Id = "b5c6d7e8-f9a0-4b1c-2d3e-4f5a6b7c8d9e",
+    Name = "update",
+    Title = "Update File Share Snapshot",
+    Description = "Update properties and metadata of an Azure managed file share snapshot, such as tags or retention policies.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger, IFileSharesService service)
     : BaseFileSharesCommand<SnapshotUpdateOptions, SnapshotUpdateCommand.SnapshotUpdateCommandResult>(logger, service)
 {
+
     protected override JsonTypeInfo<SnapshotUpdateCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.SnapshotUpdateCommandResult;
-    private const string CommandTitle = "Update File Share Snapshot";
-
-    public override string Id => "b5c6d7e8-f9a0-4b1c-2d3e-4f5a6b7c8d9e";
-    public override string Name => "update";
-    public override string Description => "Update properties and metadata of an Azure managed file share snapshot, such as tags or retention policies.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -91,7 +87,7 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(snapshot));
+            context.Response.Results = ResponseResult.Create(new(snapshot), FileSharesJsonContext.Default.SnapshotUpdateCommandResult);
 
             _logger.LogInformation("Snapshot updated successfully. SnapshotName: {SnapshotName}", options.SnapshotName);
         }

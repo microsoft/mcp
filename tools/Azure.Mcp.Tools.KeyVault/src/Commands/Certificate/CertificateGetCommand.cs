@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
@@ -11,35 +10,27 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 
+[CommandMetadata(
+    Id = "0e898126-0c5e-44b8-9eef-51ddeed6327f",
+    Name = "get",
+    Title = "Get Key Vault Certificate",
+    Description = "List all certificates in your Key Vault or get a specific certificate by name. Shows all certificate names in the vault, or retrieves full certificate details including key ID, secret ID, thumbprint, and policy information.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<CertificateGetOptions, CertificateGetCommand.CertificateGetCommandResult>
 {
-    private const string CommandTitle = "Get Key Vault Certificate";
     private readonly ILogger<CertificateGetCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
-    public override string Id => "0e898126-0c5e-44b8-9eef-51ddeed6327f";
-
-    public override string Name => "get";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
     protected override JsonTypeInfo<CertificateGetCommandResult> ResultTypeInfo => KeyVaultJsonContext.Default.CertificateGetCommandResult;
-
-    public override string Description =>
-        """List all certificates in your Key Vault or get a specific certificate by name. Shows all certificate names in the vault, or retrieves full certificate details including key ID, secret ID, thumbprint, and policy information.""";
 
     protected override void RegisterOptions(Command command)
     {
@@ -77,7 +68,7 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger,
                     options.RetryPolicy,
                     cancellationToken);
 
-                SetResult(context, new(Certificates: certificates ?? [], Certificate: null));
+                context.Response.Results = ResponseResult.Create(new(Certificates: certificates ?? [], Certificate: null), KeyVaultJsonContext.Default.CertificateGetCommandResult);
             }
             else
             {
@@ -105,7 +96,7 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger,
                     certificate.Policy.Subject,
                     certificate.Policy.IssuerName);
 
-                SetResult(context, new(Certificates: null, Certificate: certificateDetails));
+                context.Response.Results = ResponseResult.Create(new(Certificates: null, Certificate: certificateDetails), KeyVaultJsonContext.Default.CertificateGetCommandResult);
             }
         }
         catch (Exception ex)

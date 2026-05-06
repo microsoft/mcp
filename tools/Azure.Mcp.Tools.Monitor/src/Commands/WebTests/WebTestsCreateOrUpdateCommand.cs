@@ -7,44 +7,36 @@ using Azure.Mcp.Tools.Monitor.Options.WebTests;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
+[CommandMetadata(
+    Id = "aa5a22bc-6a04-4bc0-a963-b6e462b5cdc4",
+    Name = "createorupdate",
+    Title = "Create or update a web test in Azure Monitor",
+    Description = """
+        Create or update a standard web test in Azure Monitor to monitor endpoint availability.
+        Use this to set up new web tests or modify existing ones with monitoring configurations like URL, frequency, locations, and expected responses.
+        Automatically creates a new test if it doesn't exist, or updates an existing test with new settings.
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdateCommand> logger, IMonitorWebTestService monitorWebTestService) : BaseMonitorWebTestsCommand<WebTestsCreateOrUpdateOptions, WebTestsCreateOrUpdateCommand.WebTestsCreateOrUpdateCommandResult>
 {
-    protected override JsonTypeInfo<WebTestsCreateOrUpdateCommandResult> ResultTypeInfo => MonitorJsonContext.Default.WebTestsCreateOrUpdateCommandResult;
-    private const string CommandTitle = "Create or update a web test in Azure Monitor";
 
     private readonly ILogger<WebTestsCreateOrUpdateCommand> _logger = logger;
     private readonly IMonitorWebTestService _monitorWebTestService = monitorWebTestService;
 
-    public override string Id => "aa5a22bc-6a04-4bc0-a963-b6e462b5cdc4";
-
-    public override string Name => "createorupdate";
-
-    public override string Description =>
-        """
-        Create or update a standard web test in Azure Monitor to monitor endpoint availability.
-        Use this to set up new web tests or modify existing ones with monitoring configurations like URL, frequency, locations, and expected responses.
-        Automatically creates a new test if it doesn't exist, or updates an existing test with new settings.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<WebTestsCreateOrUpdateCommandResult> ResultTypeInfo => MonitorJsonContext.Default.WebTestsCreateOrUpdateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -239,7 +231,9 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
                     cancellationToken: cancellationToken);
             }
 
-            SetResult(context, new(webTest));
+            context.Response.Results = ResponseResult.Create(
+                new(webTest),
+                MonitorJsonContext.Default.WebTestsCreateOrUpdateCommandResult);
         }
         catch (Exception ex)
         {

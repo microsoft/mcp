@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
@@ -12,43 +11,35 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob;
 
-public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageService storageService) : BaseContainerCommand<BlobGetOptions, BlobGetCommand.BlobGetCommandResult>()
-{
-    private const string CommandTitle = "Get Storage Blob Details";
-    private readonly ILogger<BlobGetCommand> _logger = logger;
-    private readonly IStorageService _storageService = storageService;
-
-    public override string Id => "d6bdc190-e68f-49af-82e7-9cf6ec9b8183";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "d6bdc190-e68f-49af-82e7-9cf6ec9b8183",
+    Name = "get",
+    Title = "Get Storage Blob Details",
+    Description = """
         List/get/show blobs in a blob container in Storage account. Use this tool to list the blobs in a container or
         get details for a specific blob. If no blob specified, lists all blobs present in the container, optionally
         filtering on a prefix. The prefix is ignored if a blob is specified.
 
         Required: --account, --container, --subscription
         Optional: --blob, --tenant, --prefix
-        
+
         Returns: blob name, size, lastModified, contentType, contentHash, metadata, and blob properties.
         Do not use this tool to list containers in the storage account.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageService storageService) : BaseContainerCommand<BlobGetOptions, BlobGetCommand.BlobGetCommandResult>()
+{
+    private readonly ILogger<BlobGetCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     protected override JsonTypeInfo<BlobGetCommandResult> ResultTypeInfo => StorageJsonContext.Default.BlobGetCommandResult;
 
@@ -89,7 +80,7 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
                 cancellationToken
             );
 
-            SetResult(context, new(details ?? []));
+            context.Response.Results = ResponseResult.Create(new(details ?? []), StorageJsonContext.Default.BlobGetCommandResult);
             return context.Response;
         }
         catch (Exception ex)

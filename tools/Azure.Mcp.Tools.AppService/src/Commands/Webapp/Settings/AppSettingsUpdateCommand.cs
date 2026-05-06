@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Options.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
@@ -9,42 +8,36 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 
-public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> logger, IAppServiceService appServiceService)
-    : BaseAppServiceCommand<AppSettingsUpdateOptions, AppSettingsUpdateCommand.AppSettingsUpdateResult>(resourceGroupRequired: true, appRequired: true)
-{
-    private const string CommandTitle = "Updates Azure App Service Web App Application Settings";
-    private readonly ILogger<AppSettingsUpdateCommand> _logger = logger;
-    private readonly IAppServiceService _appServiceService = appServiceService;
-    public override string Id => "08ca52a3-f766-4c62-9597-702f629efaf6";
-    public override string Name => "update-appsettings";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "08ca52a3-f766-4c62-9597-702f629efaf6",
+    Name = "update-appsettings",
+    Title = "Updates Azure App Service Web App Application Settings",
+    Description = """
         Updates the application setting for an App Service web app. Three types of updating are available:
-        
+
         - Add: adds a new application setting with the specified name and value. If the application setting already exists, the operation will fail and return an error message.
         - Set: sets the value of an application setting. If the application setting does not exist, this is equivalent to add. If the application setting already exists, the value will be overwritten.
         - Delete: deletes an application setting with the specified name. If the application setting does not exist, nothing happens.
 
         For add and set update types, both the application setting name and value are required. For delete update type, only the application setting name is required.
-        """;
-
-    public override string Title => CommandTitle;
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> logger, IAppServiceService appServiceService)
+    : BaseAppServiceCommand<AppSettingsUpdateOptions, AppSettingsUpdateCommand.AppSettingsUpdateResult>(resourceGroupRequired: true, appRequired: true)
+{
+    private readonly ILogger<AppSettingsUpdateCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
 
     private static readonly HashSet<string> ValidUpdateTypes = ["add", "set", "delete"];
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        Secret = false,
-        LocalRequired = false
-    };
 
     protected override JsonTypeInfo<AppSettingsUpdateResult> ResultTypeInfo => AppServiceJsonContext.Default.AppSettingsUpdateResult;
 
@@ -128,7 +121,7 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(updateResult));
+            context.Response.Results = ResponseResult.Create(new(updateResult), AppServiceJsonContext.Default.AppSettingsUpdateResult);
         }
         catch (Exception ex)
         {

@@ -1,23 +1,33 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
+[CommandMetadata(
+    Id = "41daed5c-bf44-4cdf-9f3c-1df775465e53",
+    Name = "sample",
+    Title = "Sample Kusto Table Data",
+    Description = "Return a sample of rows from a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService kustoService) : BaseTableCommand<SampleOptions, SampleCommand.SampleCommandResult>
 {
-    private const string CommandTitle = "Sample Kusto Table Data";
     private readonly ILogger<SampleCommand> _logger = logger;
     private readonly IKustoService _kustoService = kustoService;
 
-    public override string Id => "41daed5c-bf44-4cdf-9f3c-1df775465e53";
+    protected override JsonTypeInfo<SampleCommandResult> ResultTypeInfo => KustoJsonContext.Default.SampleCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -31,25 +41,6 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService k
         options.Limit = parseResult.GetValueOrDefault<int>(KustoOptionDefinitions.Limit.Name);
         return options;
     }
-
-    public override string Name => "sample";
-
-    public override string Description =>
-        "Return a sample of rows from a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override JsonTypeInfo<SampleCommandResult> ResultTypeInfo => KustoJsonContext.Default.SampleCommandResult;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -92,7 +83,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService k
                     cancellationToken);
             }
 
-            SetResult(context, new(results ?? []));
+            context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.SampleCommandResult);
         }
         catch (Exception ex)
         {

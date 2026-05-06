@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Options;
@@ -12,36 +11,28 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
 
+[CommandMetadata(
+    Id = "729a12ee-9c63-4a31-b1b8-4a81ad093564",
+    Name = "get",
+    Title = "Get Marketplace Product",
+    Description = """
+        Retrieves detailed information about a specific Azure Marketplace product (offer) for a given subscription,
+        including available plans, pricing, and product metadata.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarketplaceService marketplaceService) : SubscriptionCommand<ProductGetOptions, ProductGetCommand.ProductGetCommandResult>
 {
-    private const string CommandTitle = "Get Marketplace Product";
     private readonly ILogger<ProductGetCommand> _logger = logger;
     private readonly IMarketplaceService _marketplaceService = marketplaceService;
-
-    public override string Id => "729a12ee-9c63-4a31-b1b8-4a81ad093564";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Retrieves detailed information about a specific Azure Marketplace product (offer) for a given subscription,
-         including available plans, pricing, and product metadata.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override JsonTypeInfo<ProductGetCommandResult> ResultTypeInfo => MarketplaceJsonContext.Default.ProductGetCommandResult;
 
@@ -51,12 +42,10 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarket
         command.Options.Add(MarketplaceOptionDefinitions.ProductId);
         command.Options.Add(MarketplaceOptionDefinitions.IncludeStopSoldPlans);
         command.Options.Add(MarketplaceOptionDefinitions.Language);
-        command.Options.Add(MarketplaceOptionDefinitions.Market);
         command.Options.Add(MarketplaceOptionDefinitions.LookupOfferInTenantLevel);
         command.Options.Add(MarketplaceOptionDefinitions.PlanId);
         command.Options.Add(MarketplaceOptionDefinitions.SkuId);
         command.Options.Add(MarketplaceOptionDefinitions.IncludeServiceInstructionTemplates);
-        command.Options.Add(MarketplaceOptionDefinitions.PricingAudience);
     }
 
     protected override ProductGetOptions BindOptions(ParseResult parseResult)
@@ -65,12 +54,10 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarket
         options.ProductId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.ProductId.Name);
         options.IncludeStopSoldPlans = parseResult.GetValueOrDefault<bool>(MarketplaceOptionDefinitions.IncludeStopSoldPlans.Name);
         options.Language = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Language.Name);
-        options.Market = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Market.Name);
         options.LookupOfferInTenantLevel = parseResult.GetValueOrDefault<bool>(MarketplaceOptionDefinitions.LookupOfferInTenantLevel.Name);
         options.PlanId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.PlanId.Name);
         options.SkuId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.SkuId.Name);
         options.IncludeServiceInstructionTemplates = parseResult.GetValueOrDefault<bool>(MarketplaceOptionDefinitions.IncludeServiceInstructionTemplates.Name);
-        options.PricingAudience = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.PricingAudience.Name);
         return options;
     }
 
@@ -91,25 +78,18 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarket
                 options.Subscription!,
                 options.IncludeStopSoldPlans,
                 options.Language,
-                options.Market,
                 options.LookupOfferInTenantLevel,
                 options.PlanId,
                 options.SkuId,
                 options.IncludeServiceInstructionTemplates,
-                options.PricingAudience,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
             // Set results
-            if (result != null)
-            {
-                SetResult(context, new(result));
-            }
-            else
-            {
-                context.Response.Results = null;
-            }
+            context.Response.Results = result != null ?
+                ResponseResult.Create(new(result), MarketplaceJsonContext.Default.ProductGetCommandResult) :
+                null;
         }
         catch (Exception ex)
         {

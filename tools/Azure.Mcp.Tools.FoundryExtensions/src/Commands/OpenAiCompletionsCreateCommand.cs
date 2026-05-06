@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
@@ -11,39 +10,30 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class OpenAiCompletionsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiCompletionsCreateOptions, OpenAiCompletionsCreateCommand.OpenAiCompletionsCreateCommandResult>
-{
-    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
-
-    private const string CommandTitle = "Create OpenAI Completion";
-
-    public override string Id => "e5f6a7b8-5678-9abc-ef01-234567890123";
-
-    public override string Name => "create-completion";
-
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "e5f6a7b8-5678-9abc-ef01-234567890123",
+    Name = "create-completion",
+    Title = "Create OpenAI Completion",
+    Description = """
         Create text completions using Azure OpenAI in Microsoft Foundry. Send a prompt or question to Azure OpenAI models
         deployed in your Microsoft Foundry resource and receive generated text answers. Use this when you need to create
         completions, get AI-generated content, generate answers to questions, or produce text completions from Azure
         OpenAI based on any input prompt. Supports customization with temperature and max tokens.
         Requires resource-name, deployment-name, and prompt-text.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class OpenAiCompletionsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiCompletionsCreateOptions, OpenAiCompletionsCreateCommand.OpenAiCompletionsCreateCommandResult>
+{
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
     protected override JsonTypeInfo<OpenAiCompletionsCreateCommandResult> ResultTypeInfo => FoundryExtensionsJsonContext.Default.OpenAiCompletionsCreateCommandResult;
 
@@ -95,7 +85,9 @@ public sealed class OpenAiCompletionsCreateCommand(IFoundryExtensionsService fou
                 options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
-            SetResult(context, new(result.CompletionText, result.UsageInfo));
+            context.Response.Results = ResponseResult.Create(
+                new(result.CompletionText, result.UsageInfo),
+                FoundryExtensionsJsonContext.Default.OpenAiCompletionsCreateCommandResult);
         }
         catch (Exception ex)
         {

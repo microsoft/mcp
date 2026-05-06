@@ -523,7 +523,9 @@ public class BaseToolLoaderTests
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            return HandleElicitationAsync(request, toolName, metadata, dangerouslyDisableElicitation, logger, cancellationToken);
+            var baseCommand = Substitute.For<IBaseCommand>();
+            baseCommand.Metadata.Returns(metadata);
+            return HandleElicitationAsync(request, toolName, baseCommand, dangerouslyDisableElicitation, logger, cancellationToken);
         }
 
         public override ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)

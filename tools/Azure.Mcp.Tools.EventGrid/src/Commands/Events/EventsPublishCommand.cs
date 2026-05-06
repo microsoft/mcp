@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Events;
 using Azure.Mcp.Tools.EventGrid.Services;
@@ -10,40 +9,33 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Events;
 
-public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> logger, IEventGridService eventGridService) : BaseEventGridCommand<EventsPublishOptions, EventGridPublishCommand.EventGridPublishCommandResult>
-{
-    private const string CommandTitle = "Publish Events to Event Grid Topic";
-    private readonly ILogger<EventGridPublishCommand> _logger = logger;
-    private readonly IEventGridService _eventGridService = eventGridService;
-    public override string Id => "d5f216a4-c45e-4c29-a414-d3feaa5929e2";
-
-    public override string Name => "publish";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "d5f216a4-c45e-4c29-a414-d3feaa5929e2",
+    Name = "publish",
+    Title = "Publish Events to Event Grid Topic",
+    Description = """
         Publish custom events to Event Grid topics for event-driven architectures. This tool sends structured event data to 
         Event Grid topics with schema validation and delivery guarantees for downstream subscribers. Returns publish operation 
         status. Requires topic, data, and optional schema.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override JsonTypeInfo<EventGridPublishCommandResult> ResultTypeInfo => EventGridJsonContext.Default.EventGridPublishCommandResult;
+        """,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> logger, IEventGridService eventGridService) : BaseEventGridCommand<EventsPublishOptions, EventGridPublishCommand.EventGridPublishCommandResult>
+{
+    private readonly ILogger<EventGridPublishCommand> _logger = logger;
+    private readonly IEventGridService _eventGridService = eventGridService;
 
     private static readonly string[] s_item = ["cloudevents", "eventgrid", "custom"];
+
+    protected override JsonTypeInfo<EventGridPublishCommandResult> ResultTypeInfo => EventGridJsonContext.Default.EventGridPublishCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -97,7 +89,9 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(result));
+            context.Response.Results = ResponseResult.Create(
+                new(result),
+                EventGridJsonContext.Default.EventGridPublishCommandResult);
         }
         catch (Exception ex)
         {

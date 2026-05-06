@@ -6,40 +6,28 @@ using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
+[CommandMetadata(
+    Id = "3d3f6f27-218b-4915-9c1e-243dd53b16da",
+    Name = "ask",
+    Title = "Calculate AMLFS Subnet Size required number of IP Addresses",
+    Description = "Calculates the required subnet size for an Azure Managed Lustre file system given a SKU and size. Use to plan network deployment for AMLFS. Returns the number of required IPs.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<SubnetSizeAskCommand> logger)
     : BaseManagedLustreCommand<SubnetSizeAskOptions, SubnetSizeAskCommand.FileSystemSubnetSizeResult>(logger)
 {
-    protected override JsonTypeInfo<FileSystemSubnetSizeResult> ResultTypeInfo => ManagedLustreJsonContext.Default.FileSystemSubnetSizeResult;
-    private const string CommandTitle = "Calculate AMLFS Subnet Size required number of IP Addresses";
 
     private readonly IManagedLustreService _service = service;
-
-    public override string Id => "3d3f6f27-218b-4915-9c1e-243dd53b16da";
-
-    public override string Name => "ask";
-
-    public override string Description =>
-        """
-        Calculates the required subnet size for an Azure Managed Lustre file system given a SKU and size. Use to plan network deployment for AMLFS. Returns the number of required IPs.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     private static readonly string[] AllowedSkus = [
         "AMLFS-Durable-Premium-40",
@@ -47,6 +35,8 @@ public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<
         "AMLFS-Durable-Premium-250",
         "AMLFS-Durable-Premium-500"
     ];
+
+    protected override JsonTypeInfo<FileSystemSubnetSizeResult> ResultTypeInfo => ManagedLustreJsonContext.Default.FileSystemSubnetSizeResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -87,7 +77,7 @@ public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
-            SetResult(context, new(result));
+            context.Response.Results = ResponseResult.Create(new(result), ManagedLustreJsonContext.Default.FileSystemSubnetSizeResult);
         }
         catch (Exception ex)
         {

@@ -15,24 +15,22 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 /// <summary>
 /// Checks if a file share name is available.
 /// </summary>
+[CommandMetadata(
+    Id = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+    Name = "check-name-availability",
+    Title = "Check File Share Name Availability",
+    Description = "Check if a file share name is available",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheckNameAvailabilityCommand> logger, IFileSharesService fileSharesService)
     : BaseFileSharesCommand<FileShareCheckNameAvailabilityOptions, FileShareCheckNameAvailabilityCommand.FileShareCheckNameAvailabilityCommandResult>(logger, fileSharesService)
 {
-    protected override JsonTypeInfo<FileShareCheckNameAvailabilityCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.FileShareCheckNameAvailabilityCommandResult;
-    public override string Id => "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-    public override string Name => "check-name-availability";
-    public override string Description => "Check if a file share name is available";
-    public override string Title => "Check File Share Name Availability";
 
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    protected override JsonTypeInfo<FileShareCheckNameAvailabilityCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.FileShareCheckNameAvailabilityCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -68,7 +66,9 @@ public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheck
                 options.RetryPolicy,
                 cancellationToken);
 
-            SetResult(context, new(availabilityResult.IsAvailable, availabilityResult.Reason, availabilityResult.Message));
+            context.Response.Results = ResponseResult.Create(
+                new(availabilityResult.IsAvailable, availabilityResult.Reason, availabilityResult.Message),
+                FileSharesJsonContext.Default.FileShareCheckNameAvailabilityCommandResult);
 
             _logger.LogInformation(
                 "Name availability check completed. File share name {FileShareName} is {Status}",
