@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using global::DataFactory.MCP.Abstractions.Interfaces;
 using Fabric.Mcp.Tools.DataFactory.Models;
 using Fabric.Mcp.Tools.DataFactory.Options;
 using Fabric.Mcp.Tools.DataFactory.Options.Pipeline;
-using global::DataFactory.MCP.Models.Pipeline;
+using global::DataFactory.MCP.Handlers.Pipeline;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
@@ -26,10 +25,10 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
     OpenWorld = false)]
 public sealed class CreatePipelineCommand(
     ILogger<CreatePipelineCommand> logger,
-    IFabricPipelineService pipelineService) : GlobalCommand<CreatePipelineOptions>()
+    PipelineHandler handler) : GlobalCommand<CreatePipelineOptions>()
 {
     private readonly ILogger<CreatePipelineCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IFabricPipelineService _pipelineService = pipelineService ?? throw new ArgumentNullException(nameof(pipelineService));
+    private readonly PipelineHandler _handler = handler ?? throw new ArgumentNullException(nameof(handler));
 
     protected override void RegisterOptions(Command command)
     {
@@ -56,20 +55,14 @@ public sealed class CreatePipelineCommand(
         }
 
         var options = BindOptions(parseResult);
-        try
+        var result = await _handler.CreateAsync(options.WorkspaceId, options.DisplayName, options.Description);
+        if (result.IsSuccess)
         {
-            var request = new CreatePipelineRequest
-            {
-                DisplayName = options.DisplayName,
-                Description = options.Description
-            };
-
-            var response = await _pipelineService.CreatePipelineAsync(options.WorkspaceId, request);
-
             _logger.LogInformation("Successfully created pipeline '{DisplayName}' in workspace {WorkspaceId}",
                 options.DisplayName, options.WorkspaceId);
 
             // Map CreatePipelineResponse to Pipeline for the result
+            var response = result.Value!.Pipeline;
             var pipeline = new global::DataFactory.MCP.Models.Pipeline.Pipeline
             {
                 Id = response.Id,
@@ -80,14 +73,14 @@ public sealed class CreatePipelineCommand(
                 FolderId = response.FolderId
             };
 
-            var result = new CreatePipelineCommandResult(pipeline);
-            context.Response.Results = ResponseResult.Create(result, DataFactoryJsonContext.Default.CreatePipelineCommandResult);
+            var commandResult = new CreatePipelineCommandResult(pipeline);
+            context.Response.Results = ResponseResult.Create(commandResult, DataFactoryJsonContext.Default.CreatePipelineCommandResult);
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex, "Error creating pipeline '{DisplayName}' in workspace {WorkspaceId}",
-                options.DisplayName, options.WorkspaceId);
-            HandleException(context, ex);
+            _logger.LogError("Error creating pipeline '{DisplayName}' in workspace {WorkspaceId}: {Error}",
+                options.DisplayName, options.WorkspaceId, result.Error);
+            HandleException(context, new Exception(result.Error));
         }
 
         return context.Response;

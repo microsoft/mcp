@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using global::DataFactory.MCP.Abstractions.Interfaces;
 using Fabric.Mcp.Tools.DataFactory.Models;
 using Fabric.Mcp.Tools.DataFactory.Options;
 using Fabric.Mcp.Tools.DataFactory.Options.Dataflow;
+using global::DataFactory.MCP.Handlers.Dataflow;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
@@ -25,10 +25,10 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
     OpenWorld = false)]
 public sealed class ListDataflowsCommand(
     ILogger<ListDataflowsCommand> logger,
-    IFabricDataflowService dataflowService) : GlobalCommand<ListDataflowsOptions>()
+    DataflowHandler handler) : GlobalCommand<ListDataflowsOptions>()
 {
     private readonly ILogger<ListDataflowsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IFabricDataflowService _dataflowService = dataflowService ?? throw new ArgumentNullException(nameof(dataflowService));
+    private readonly DataflowHandler _handler = handler ?? throw new ArgumentNullException(nameof(handler));
 
     protected override void RegisterOptions(Command command)
     {
@@ -52,20 +52,19 @@ public sealed class ListDataflowsCommand(
 
         var options = BindOptions(parseResult);
 
-        try
+        var result = await _handler.ListAsync(options.WorkspaceId);
+        if (result.IsSuccess)
         {
-            var response = await _dataflowService.ListDataflowsAsync(options.WorkspaceId);
-
             _logger.LogInformation("Successfully listed {Count} dataflows in workspace {WorkspaceId}",
-                response.Value.Count, options.WorkspaceId);
+                result.Value!.DataflowCount, options.WorkspaceId);
 
-            var commandResult = new ListDataflowsCommandResult(response.Value, response.Value.Count);
+            var commandResult = new ListDataflowsCommandResult(result.Value.Dataflows.ToList(), result.Value.DataflowCount);
             context.Response.Results = ResponseResult.Create(commandResult, DataFactoryJsonContext.Default.ListDataflowsCommandResult);
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex, "Error listing dataflows in workspace {WorkspaceId}", options.WorkspaceId);
-            HandleException(context, ex);
+            _logger.LogError("Error listing dataflows in workspace {WorkspaceId}: {Error}", options.WorkspaceId, result.Error);
+            HandleException(context, new Exception(result.Error));
         }
 
         return context.Response;

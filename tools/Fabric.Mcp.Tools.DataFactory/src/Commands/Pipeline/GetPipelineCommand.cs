@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using global::DataFactory.MCP.Abstractions.Interfaces;
 using Fabric.Mcp.Tools.DataFactory.Models;
 using Fabric.Mcp.Tools.DataFactory.Options;
 using Fabric.Mcp.Tools.DataFactory.Options.Pipeline;
+using global::DataFactory.MCP.Handlers.Pipeline;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
@@ -25,10 +25,10 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
     OpenWorld = false)]
 public sealed class GetPipelineCommand(
     ILogger<GetPipelineCommand> logger,
-    IFabricPipelineService pipelineService) : GlobalCommand<GetPipelineOptions>()
+    PipelineHandler handler) : GlobalCommand<GetPipelineOptions>()
 {
     private readonly ILogger<GetPipelineCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IFabricPipelineService _pipelineService = pipelineService ?? throw new ArgumentNullException(nameof(pipelineService));
+    private readonly PipelineHandler _handler = handler ?? throw new ArgumentNullException(nameof(handler));
 
     protected override void RegisterOptions(Command command)
     {
@@ -53,21 +53,20 @@ public sealed class GetPipelineCommand(
         }
 
         var options = BindOptions(parseResult);
-        try
+        var result = await _handler.GetAsync(options.WorkspaceId, options.PipelineId);
+        if (result.IsSuccess)
         {
-            var pipeline = await _pipelineService.GetPipelineAsync(options.WorkspaceId, options.PipelineId);
-
             _logger.LogInformation("Successfully retrieved pipeline {PipelineId} from workspace {WorkspaceId}",
                 options.PipelineId, options.WorkspaceId);
 
-            var result = new GetPipelineCommandResult(pipeline);
-            context.Response.Results = ResponseResult.Create(result, DataFactoryJsonContext.Default.GetPipelineCommandResult);
+            var commandResult = new GetPipelineCommandResult(result.Value!.Pipeline);
+            context.Response.Results = ResponseResult.Create(commandResult, DataFactoryJsonContext.Default.GetPipelineCommandResult);
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex, "Error getting pipeline {PipelineId} from workspace {WorkspaceId}",
-                options.PipelineId, options.WorkspaceId);
-            HandleException(context, ex);
+            _logger.LogError("Error getting pipeline {PipelineId} from workspace {WorkspaceId}: {Error}",
+                options.PipelineId, options.WorkspaceId, result.Error);
+            HandleException(context, new Exception(result.Error));
         }
 
         return context.Response;

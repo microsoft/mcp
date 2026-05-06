@@ -25,10 +25,10 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
     OpenWorld = false)]
 public sealed class ListPipelinesCommand(
     ILogger<ListPipelinesCommand> logger,
-    ListPipelinesHandler handler) : GlobalCommand<ListPipelinesOptions>()
+    PipelineHandler handler) : GlobalCommand<ListPipelinesOptions>()
 {
     private readonly ILogger<ListPipelinesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly ListPipelinesHandler _handler = handler ?? throw new ArgumentNullException(nameof(handler));
+    private readonly PipelineHandler _handler = handler ?? throw new ArgumentNullException(nameof(handler));
 
     protected override void RegisterOptions(Command command)
     {
@@ -52,13 +52,13 @@ public sealed class ListPipelinesCommand(
 
         var options = BindOptions(parseResult);
 
-        var result = await _handler.ExecuteAsync(options.WorkspaceId);
+        var result = await _handler.ListAsync(options.WorkspaceId);
         if (result.IsSuccess)
         {
             _logger.LogInformation("Successfully listed {Count} pipelines in workspace {WorkspaceId}",
                 result.Value!.PipelineCount, options.WorkspaceId);
 
-            var commandResult = new ListPipelinesCommandResult(result.Value.RawPipelines, result.Value.PipelineCount);
+            var commandResult = new ListPipelinesCommandResult(result.Value.Pipelines.ToList(), result.Value.PipelineCount);
             context.Response.Results = ResponseResult.Create(commandResult, DataFactoryJsonContext.Default.ListPipelinesCommandResult);
         }
         else

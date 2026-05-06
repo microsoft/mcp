@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using global::DataFactory.MCP.Abstractions.Interfaces;
 using Fabric.Mcp.Tools.DataFactory.Models;
 using Fabric.Mcp.Tools.DataFactory.Options;
 using Fabric.Mcp.Tools.DataFactory.Options.Dataflow;
-using global::DataFactory.MCP.Models.Dataflow;
+using global::DataFactory.MCP.Handlers.Dataflow;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
@@ -26,10 +25,10 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
     OpenWorld = false)]
 public sealed class CreateDataflowCommand(
     ILogger<CreateDataflowCommand> logger,
-    IFabricDataflowService dataflowService) : GlobalCommand<CreateDataflowOptions>()
+    DataflowHandler handler) : GlobalCommand<CreateDataflowOptions>()
 {
     private readonly ILogger<CreateDataflowCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IFabricDataflowService _dataflowService = dataflowService ?? throw new ArgumentNullException(nameof(dataflowService));
+    private readonly DataflowHandler _handler = handler ?? throw new ArgumentNullException(nameof(handler));
 
     protected override void RegisterOptions(Command command)
     {
@@ -56,20 +55,14 @@ public sealed class CreateDataflowCommand(
         }
 
         var options = BindOptions(parseResult);
-        try
+        var result = await _handler.CreateAsync(options.WorkspaceId, options.DisplayName, options.Description);
+        if (result.IsSuccess)
         {
-            var request = new CreateDataflowRequest
-            {
-                DisplayName = options.DisplayName,
-                Description = options.Description
-            };
-
-            var response = await _dataflowService.CreateDataflowAsync(options.WorkspaceId, request);
-
             _logger.LogInformation("Successfully created dataflow '{DisplayName}' in workspace {WorkspaceId}",
                 options.DisplayName, options.WorkspaceId);
 
             // Map CreateDataflowResponse to Dataflow for the result
+            var response = result.Value!.Dataflow;
             var dataflow = new global::DataFactory.MCP.Models.Dataflow.Dataflow
             {
                 Id = response.Id,
@@ -80,14 +73,14 @@ public sealed class CreateDataflowCommand(
                 FolderId = response.FolderId
             };
 
-            var result = new CreateDataflowCommandResult(dataflow);
-            context.Response.Results = ResponseResult.Create(result, DataFactoryJsonContext.Default.CreateDataflowCommandResult);
+            var commandResult = new CreateDataflowCommandResult(dataflow);
+            context.Response.Results = ResponseResult.Create(commandResult, DataFactoryJsonContext.Default.CreateDataflowCommandResult);
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex, "Error creating dataflow '{DisplayName}' in workspace {WorkspaceId}",
-                options.DisplayName, options.WorkspaceId);
-            HandleException(context, ex);
+            _logger.LogError("Error creating dataflow '{DisplayName}' in workspace {WorkspaceId}: {Error}",
+                options.DisplayName, options.WorkspaceId, result.Error);
+            HandleException(context, new Exception(result.Error));
         }
 
         return context.Response;
