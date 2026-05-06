@@ -414,24 +414,20 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
     }
 
     [Theory]
-    [InlineData("microsoft.web/sites", "app", true)]
-    [InlineData("microsoft.web/sites", "linux", true)]
-    [InlineData("microsoft.web/sites", "functionapp", true)]
-    [InlineData("microsoft.web/sites", "container", true)]
-    [InlineData("microsoft.web/sites", "", true)]
-    [InlineData("Microsoft.Web/Sites", "App", true)]
-    [InlineData("MICROSOFT.WEB/SITES", "APP", true)]
-    [InlineData("microsoft.containerservice/managedclusters", "", true)]
-    [InlineData("Microsoft.ContainerService/managedClusters", "", true)]
-    [InlineData("microsoft.apimanagement/service", "", true)]
-    [InlineData("Microsoft.ApiManagement/service", "", true)]
-    [InlineData("microsoft.compute/virtualmachines", "", false)]
-    [InlineData("microsoft.storage/storageaccounts", "", false)]
-    [InlineData("microsoft.sql/servers", "", false)]
-    public void IsResourceTypeSupported_ReturnsCorrectResult(string resourceType, string resourceKind, bool expected)
+    [InlineData("microsoft.web/sites", true)]
+    [InlineData("Microsoft.Web/Sites", true)]
+    [InlineData("MICROSOFT.WEB/SITES", true)]
+    [InlineData("microsoft.containerservice/managedclusters", true)]
+    [InlineData("Microsoft.ContainerService/managedClusters", true)]
+    [InlineData("microsoft.apimanagement/service", true)]
+    [InlineData("Microsoft.ApiManagement/service", true)]
+    [InlineData("microsoft.compute/virtualmachines", false)]
+    [InlineData("microsoft.storage/storageaccounts", false)]
+    [InlineData("microsoft.sql/servers", false)]
+    public void IsResourceTypeSupported_ReturnsCorrectResult(string resourceType, bool expected)
     {
         // Act
-        var result = AppLensService.IsResourceTypeSupported(resourceType, resourceKind);
+        var result = AppLensService.IsResourceTypeSupported(resourceType);
 
         // Assert
         Assert.Equal(expected, result);

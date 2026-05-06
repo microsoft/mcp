@@ -147,7 +147,7 @@ public class AppLensService(
 
         // Filter to supported resource types
         var supportedResults = filteredResults
-            .Where(r => IsResourceTypeSupported(r.ResourceType, r.ResourceKind))
+            .Where(r => IsResourceTypeSupported(r.ResourceType))
             .ToImmutableArray();
 
         if (supportedResults.Length == 0)
@@ -257,7 +257,7 @@ public class AppLensService(
     /// <summary>
     /// Checks whether a resource type is supported by AppLens diagnostics.
     /// </summary>
-    internal static bool IsResourceTypeSupported(string resourceType, string resourceKind)
+    internal static bool IsResourceTypeSupported(string resourceType)
     {
         if (resourceType.Equals("microsoft.web/sites", StringComparison.OrdinalIgnoreCase))
         {
