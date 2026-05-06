@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Xunit;
@@ -240,6 +241,7 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output, TestProxyFixt
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_handle_empty_subscription_gracefully()
     {
         var result = await CallToolAsync(

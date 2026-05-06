@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Helpers;
@@ -94,6 +95,7 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_handle_empty_subscription_gracefully()
     {
         // Empty subscription falls back to default subscription from CLI profile
@@ -128,6 +130,7 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_validate_required_subscription_parameter()
     {
         // When subscription is omitted, falls back to default subscription from CLI profile
@@ -228,6 +231,7 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_validate_required_parameters_for_get_command()
     {
         // Test missing resource-group when cluster is specified - validation catches it
