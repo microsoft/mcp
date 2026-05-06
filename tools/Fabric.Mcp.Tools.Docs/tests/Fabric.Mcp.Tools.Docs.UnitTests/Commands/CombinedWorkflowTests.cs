@@ -9,7 +9,6 @@ using Fabric.Mcp.Tools.Docs.Commands.BestPractices;
 using Fabric.Mcp.Tools.Docs.Commands.PublicApis;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.Docs.UnitTests.Commands;
@@ -30,7 +29,7 @@ public class CombinedWorkflowTests : IDisposable
     public CombinedWorkflowTests()
     {
         var services = new ServiceCollection();
-        services.AddLogging(configure => configure.ClearProviders());
+        services.AddLogging();
         services.AddSingleton<IResourceProviderService, EmbeddedResourceProviderService>();
         services.AddSingleton<IFabricPublicApiService, FabricPublicApiService>();
         services.AddSingleton<ListWorkloadsCommand>();
@@ -47,8 +46,8 @@ public class CombinedWorkflowTests : IDisposable
 
     public void Dispose()
     {
-        GC.SuppressFinalize(this);
         _serviceProvider.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     [Fact]
