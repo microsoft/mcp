@@ -15,49 +15,41 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Fabric.Mcp.Tools.Docs.UnitTests.Commands;
 
 /// <summary>
-/// Shared fixture for combined workflow tests. Creates the service provider
-/// and command instances once, shared across all tests in the class.
+/// Combined workflow tests that exercise real service implementations (no mocks).
+/// Commands use the real EmbeddedResourceProviderService and FabricPublicApiService
+/// backed by assembly-embedded resources.
 /// </summary>
-public sealed class CombinedWorkflowFixture : IDisposable
+public class CombinedWorkflowTests : IDisposable
 {
-    public ServiceProvider ServiceProvider { get; }
-    public ListWorkloadsCommand ListWorkloadsCommand { get; }
-    public GetWorkloadApisCommand GetWorkloadApisCommand { get; }
-    public GetWorkloadDefinitionCommand GetWorkloadDefinitionCommand { get; }
-    public GetExamplesCommand GetExamplesCommand { get; }
+    private readonly ServiceProvider _serviceProvider;
+    private readonly ListWorkloadsCommand _listWorkloadsCommand;
+    private readonly GetWorkloadApisCommand _getWorkloadApisCommand;
+    private readonly GetWorkloadDefinitionCommand _getWorkloadDefinitionCommand;
+    private readonly GetExamplesCommand _getExamplesCommand;
 
-    public CombinedWorkflowFixture()
+    public CombinedWorkflowTests()
     {
         var services = new ServiceCollection();
         services.AddLogging(configure => configure.ClearProviders());
         services.AddSingleton<IResourceProviderService, EmbeddedResourceProviderService>();
         services.AddSingleton<IFabricPublicApiService, FabricPublicApiService>();
-        ServiceProvider = services.BuildServiceProvider();
+        services.AddSingleton<ListWorkloadsCommand>();
+        services.AddSingleton<GetWorkloadApisCommand>();
+        services.AddSingleton<GetWorkloadDefinitionCommand>();
+        services.AddSingleton<GetExamplesCommand>();
+        _serviceProvider = services.BuildServiceProvider();
 
-        ListWorkloadsCommand = ServiceProvider.GetRequiredService<ListWorkloadsCommand>();
-        GetWorkloadApisCommand = ServiceProvider.GetRequiredService<GetWorkloadApisCommand>();
-        GetWorkloadDefinitionCommand = ServiceProvider.GetRequiredService<GetWorkloadDefinitionCommand>();
-        GetExamplesCommand = ServiceProvider.GetRequiredService<GetExamplesCommand>();
+        _listWorkloadsCommand = _serviceProvider.GetRequiredService<ListWorkloadsCommand>();
+        _getWorkloadApisCommand = _serviceProvider.GetRequiredService<GetWorkloadApisCommand>();
+        _getWorkloadDefinitionCommand = _serviceProvider.GetRequiredService<GetWorkloadDefinitionCommand>();
+        _getExamplesCommand = _serviceProvider.GetRequiredService<GetExamplesCommand>();
     }
 
     public void Dispose()
     {
-        ServiceProvider.Dispose();
+        GC.SuppressFinalize(this);
+        _serviceProvider.Dispose();
     }
-}
-
-/// <summary>
-/// Combined workflow tests that exercise real service implementations (no mocks).
-/// Commands use the real EmbeddedResourceProviderService and FabricPublicApiService
-/// backed by assembly-embedded resources.
-/// </summary>
-public class CombinedWorkflowTests(CombinedWorkflowFixture fixture) : IClassFixture<CombinedWorkflowFixture>
-{
-    private readonly ServiceProvider _serviceProvider = fixture.ServiceProvider;
-    private readonly ListWorkloadsCommand _listWorkloadsCommand = fixture.ListWorkloadsCommand;
-    private readonly GetWorkloadApisCommand _getWorkloadApisCommand = fixture.GetWorkloadApisCommand;
-    private readonly GetWorkloadDefinitionCommand _getWorkloadDefinitionCommand = fixture.GetWorkloadDefinitionCommand;
-    private readonly GetExamplesCommand _getExamplesCommand = fixture.GetExamplesCommand;
 
     [Fact]
     public async Task ListWorkloads_ThenGetApisForEach_ReturnsApiSpecsForAllWorkloads()
