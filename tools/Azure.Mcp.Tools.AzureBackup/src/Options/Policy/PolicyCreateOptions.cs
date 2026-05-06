@@ -30,23 +30,23 @@ public class PolicyCreateOptions : BaseAzureBackupOptions
     public string? ScheduleDaysOfWeek { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.HourlyIntervalHoursName)]
-    public string? HourlyIntervalHours { get; set; }
+    public int HourlyIntervalHours { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.HourlyWindowStartTimeName)]
     public string? HourlyWindowStartTime { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.HourlyWindowDurationHoursName)]
-    public string? HourlyWindowDurationHours { get; set; }
+    public int HourlyWindowDurationHours { get; set; }
 
     // Retention flags (new in policy create overhaul; not yet consumed by builders).
     [JsonPropertyName(AzureBackupOptionDefinitions.WeeklyRetentionWeeksName)]
-    public string? WeeklyRetentionWeeks { get; set; }
+    public int WeeklyRetentionWeeks { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.WeeklyRetentionDaysOfWeekName)]
     public string? WeeklyRetentionDaysOfWeek { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.MonthlyRetentionMonthsName)]
-    public string? MonthlyRetentionMonths { get; set; }
+    public int MonthlyRetentionMonths { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.MonthlyRetentionWeekOfMonthName)]
     public string? MonthlyRetentionWeekOfMonth { get; set; }
@@ -58,7 +58,7 @@ public class PolicyCreateOptions : BaseAzureBackupOptions
     public string? MonthlyRetentionDaysOfMonth { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.YearlyRetentionYearsName)]
-    public string? YearlyRetentionYears { get; set; }
+    public int YearlyRetentionYears { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.YearlyRetentionMonthsName)]
     public string? YearlyRetentionMonths { get; set; }
@@ -102,34 +102,34 @@ public class PolicyCreateOptions : BaseAzureBackupOptions
     public string? DifferentialScheduleDaysOfWeek { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.DifferentialRetentionDaysName)]
-    public string? DifferentialRetentionDays { get; set; }
+    public int DifferentialRetentionDays { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.IncrementalScheduleDaysOfWeekName)]
     public string? IncrementalScheduleDaysOfWeek { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.IncrementalRetentionDaysName)]
-    public string? IncrementalRetentionDays { get; set; }
+    public int IncrementalRetentionDays { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.LogFrequencyMinutesName)]
-    public string? LogFrequencyMinutes { get; set; }
+    public int LogFrequencyMinutes { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.LogRetentionDaysName)]
-    public string? LogRetentionDays { get; set; }
+    public int LogRetentionDays { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.IsCompressionName)]
-    public string? IsCompression { get; set; }
+    public bool IsCompression { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.IsSqlCompressionName)]
-    public string? IsSqlCompression { get; set; }
+    public bool IsSqlCompression { get; set; }
 
     // ===== Stage 2 expansion =====
 
 
     [JsonPropertyName(AzureBackupOptionDefinitions.SmartTierName)]
-    public string? SmartTier { get; set; }
+    public bool SmartTier { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.EnableSnapshotBackupName)]
-    public string? EnableSnapshotBackup { get; set; }
+    public bool EnableSnapshotBackup { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.SnapshotInstantRpRetentionDaysName)]
     public string? SnapshotInstantRpRetentionDays { get; set; }
@@ -138,32 +138,17 @@ public class PolicyCreateOptions : BaseAzureBackupOptions
     public string? SnapshotInstantRpResourceGroup { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.EnableVaultTierCopyName)]
-    public string? EnableVaultTierCopy { get; set; }
+    public bool EnableVaultTierCopy { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.VaultTierCopyAfterDaysName)]
-    public string? VaultTierCopyAfterDays { get; set; }
+    public int VaultTierCopyAfterDays { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.BackupModeName)]
     public string? BackupMode { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.PitrRetentionDaysName)]
-    public string? PitrRetentionDays { get; set; }
+    public int PitrRetentionDays { get; set; }
 
     [JsonPropertyName(AzureBackupOptionDefinitions.PolicyTagsName)]
     public string? PolicyTags { get; set; }
-
-    [JsonPropertyName(AzureBackupOptionDefinitions.AksSnapshotResourceGroupName)]
-    public string? AksSnapshotResourceGroup { get; set; }
-
-    [JsonPropertyName(AzureBackupOptionDefinitions.AksIncludedNamespacesName)]
-    public string? AksIncludedNamespaces { get; set; }
-
-    [JsonPropertyName(AzureBackupOptionDefinitions.AksExcludedNamespacesName)]
-    public string? AksExcludedNamespaces { get; set; }
-
-    [JsonPropertyName(AzureBackupOptionDefinitions.AksLabelSelectorsName)]
-    public string? AksLabelSelectors { get; set; }
-
-    [JsonPropertyName(AzureBackupOptionDefinitions.AksIncludeClusterScopeResourcesName)]
-    public string? AksIncludeClusterScopeResources { get; set; }
 }

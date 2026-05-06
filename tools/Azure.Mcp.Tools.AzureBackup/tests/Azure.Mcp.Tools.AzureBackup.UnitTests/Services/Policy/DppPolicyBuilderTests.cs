@@ -58,9 +58,9 @@ public class DppPolicyBuilderTests
             Policy = "p",
             WorkloadType = "AzureDisk",
             DailyRetentionDays = "7",
-            WeeklyRetentionWeeks = "8",
-            MonthlyRetentionMonths = "12",
-            YearlyRetentionYears = "5",
+            WeeklyRetentionWeeks = 8,
+            MonthlyRetentionMonths = 12,
+            YearlyRetentionYears = 5,
             ArchiveTierAfterDays = "90",
             ArchiveTierMode = "TierAfter",
         };
@@ -147,8 +147,8 @@ public class DppPolicyBuilderTests
         {
             Policy = "p",
             WorkloadType = "AzureDisk",
-            EnableVaultTierCopy = "true",
-            VaultTierCopyAfterDays = "7",
+            EnableVaultTierCopy = true,
+            VaultTierCopyAfterDays = 7,
         };
 
         var policy = DppPolicyBuilder.Build(req, profile);
@@ -200,7 +200,7 @@ public class DppPolicyBuilderTests
         {
             Policy = "p",
             WorkloadType = "AzureBlob",
-            PitrRetentionDays = "60",
+            PitrRetentionDays = 60,
         };
 
         var policy = DppPolicyBuilder.Build(req, profile);

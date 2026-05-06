@@ -75,9 +75,9 @@ public static class PolicyCreateValidator
         // A.3  -  Hourly schedule requires all three hourly inputs.
         if (IsRsvHourly(options.ScheduleFrequency))
         {
-            if (string.IsNullOrWhiteSpace(options.HourlyIntervalHours) ||
+            if (options.HourlyIntervalHours <= 0 ||
                 string.IsNullOrWhiteSpace(options.HourlyWindowStartTime) ||
-                string.IsNullOrWhiteSpace(options.HourlyWindowDurationHours))
+                options.HourlyWindowDurationHours <= 0)
             {
                 issues.Add(new PolicyValidationIssue(
                     $"--{AzureBackupOptionDefinitions.ScheduleFrequencyName}",
@@ -190,7 +190,7 @@ public static class PolicyCreateValidator
                 $"--{AzureBackupOptionDefinitions.IncrementalScheduleDaysOfWeekName}",
                 "--incremental-schedule-days-of-week is supported only for SAPHANA / SAPASE workloads."));
         }
-        if (!string.IsNullOrWhiteSpace(options.IncrementalRetentionDays) &&
+        if (options.IncrementalRetentionDays > 0 &&
             !IsSapWorkload(options.WorkloadType))
         {
             issues.Add(new PolicyValidationIssue(
@@ -199,7 +199,7 @@ public static class PolicyCreateValidator
         }
 
         // --is-sql-compression is SQL-only.
-        if (!string.IsNullOrWhiteSpace(options.IsSqlCompression) &&
+        if (options.IsSqlCompression &&
             !IsSqlWorkload(options.WorkloadType))
         {
             issues.Add(new PolicyValidationIssue(
@@ -247,21 +247,21 @@ public static class PolicyCreateValidator
         //   * Must be less than Differential retention (UserErrorLogRetentionMoreThanDiffRetentionInPolicy).
         if (IsSqlWorkload(options.WorkloadType))
         {
-            if (TryParsePositiveInt(options.LogRetentionDays, out var logDays) && logDays < 7)
+            if (options.LogRetentionDays > 0 && options.LogRetentionDays < 7)
             {
                 issues.Add(new PolicyValidationIssue(
                     $"--{AzureBackupOptionDefinitions.LogRetentionDaysName}",
                     "SQL Log retention minimum is 7 days."));
             }
 
-            if (TryParsePositiveInt(options.LogRetentionDays, out var logRet) &&
-                TryParsePositiveInt(options.DifferentialRetentionDays, out var diffRet) &&
-                logRet >= diffRet)
+            if (options.LogRetentionDays > 0 &&
+                options.DifferentialRetentionDays > 0 &&
+                options.LogRetentionDays >= options.DifferentialRetentionDays)
             {
                 issues.Add(new PolicyValidationIssue(
                     $"--{AzureBackupOptionDefinitions.LogRetentionDaysName}",
                     "SQL Log retention must be less than Differential retention. " +
-                    $"Current: log={logRet} days, differential={diffRet} days."));
+                    $"Current: log={options.LogRetentionDays} days, differential={options.DifferentialRetentionDays} days."));
             }
         }
 
@@ -299,7 +299,7 @@ public static class PolicyCreateValidator
         // ===== Stage 2 shape rules =====
 
         // --smart-tier is RSV VM only.
-        if (!string.IsNullOrWhiteSpace(options.SmartTier) && family != WorkloadFamily.RsvVm)
+        if (options.SmartTier && family != WorkloadFamily.RsvVm)
         {
             issues.Add(new PolicyValidationIssue(
                 $"--{AzureBackupOptionDefinitions.SmartTierName}",
@@ -307,9 +307,12 @@ public static class PolicyCreateValidator
         }
 
         // Snapshot/instance backup flags are SAPHANA only.
+        if (options.EnableSnapshotBackup && !IsHanaWorkload(options.WorkloadType))
+        {
+            issues.Add(new PolicyValidationIssue($"--{AzureBackupOptionDefinitions.EnableSnapshotBackupName}", $"--{AzureBackupOptionDefinitions.EnableSnapshotBackupName} is supported only for SAPHANA workloads."));
+        }
         var snapshotFlags = new (string? value, string flag)[]
         {
-            (options.EnableSnapshotBackup, $"--{AzureBackupOptionDefinitions.EnableSnapshotBackupName}"),
             (options.SnapshotInstantRpRetentionDays, $"--{AzureBackupOptionDefinitions.SnapshotInstantRpRetentionDaysName}"),
             (options.SnapshotInstantRpResourceGroup, $"--{AzureBackupOptionDefinitions.SnapshotInstantRpResourceGroupName}"),
         };
@@ -322,23 +325,17 @@ public static class PolicyCreateValidator
         }
 
         // Vault-tier copy flags are DPP AzureDisk only.
-        var vaultCopyFlags = new (string? value, string flag)[]
+        if (options.EnableVaultTierCopy && !IsAzureDiskWorkload(options.WorkloadType))
         {
-            (options.EnableVaultTierCopy, $"--{AzureBackupOptionDefinitions.EnableVaultTierCopyName}"),
-            (options.VaultTierCopyAfterDays, $"--{AzureBackupOptionDefinitions.VaultTierCopyAfterDaysName}"),
-        };
-        foreach (var (value, flag) in vaultCopyFlags)
+            issues.Add(new PolicyValidationIssue($"--{AzureBackupOptionDefinitions.EnableVaultTierCopyName}", $"--{AzureBackupOptionDefinitions.EnableVaultTierCopyName} is supported only for DPP AzureDisk workloads."));
+        }
+        if (options.VaultTierCopyAfterDays > 0 && !IsAzureDiskWorkload(options.WorkloadType))
         {
-            if (!string.IsNullOrWhiteSpace(value) && !IsAzureDiskWorkload(options.WorkloadType))
-            {
-                issues.Add(new PolicyValidationIssue(flag, $"{flag} is supported only for DPP AzureDisk workloads."));
-            }
+            issues.Add(new PolicyValidationIssue($"--{AzureBackupOptionDefinitions.VaultTierCopyAfterDaysName}", $"--{AzureBackupOptionDefinitions.VaultTierCopyAfterDaysName} is supported only for DPP AzureDisk workloads."));
         }
 
         // Vault-tier copy partial input check.
-        var hasVaultCopyToggle = ParseBool(options.EnableVaultTierCopy);
-        var hasVaultCopyDays = !string.IsNullOrWhiteSpace(options.VaultTierCopyAfterDays);
-        if (hasVaultCopyToggle && !hasVaultCopyDays)
+        if (options.EnableVaultTierCopy && options.VaultTierCopyAfterDays <= 0)
         {
             issues.Add(new PolicyValidationIssue(
                 $"--{AzureBackupOptionDefinitions.VaultTierCopyAfterDaysName}",
@@ -354,7 +351,7 @@ public static class PolicyCreateValidator
         }
 
         // --pitr-retention-days is DPP storage continuous only.
-        if (!string.IsNullOrWhiteSpace(options.PitrRetentionDays) &&
+        if (options.PitrRetentionDays > 0 &&
             family != WorkloadFamily.DppStorageBackupMode &&
             family != WorkloadFamily.DppContinuous)
         {
@@ -372,35 +369,6 @@ public static class PolicyCreateValidator
                 "--policy-tags is supported only for Recovery Services vault (RSV) policies."));
         }
 
-        // AKS-specific flags. AKS policy create itself takes only schedule + retention + datastore; the
-        // namespace/label/hook selectors live on the backup INSTANCE, not the policy. Surface a clear
-        // error guiding the user to 'azurebackup protecteditem protect' for those flags, while still
-        // allowing AKS policy create to flow through the normal DPP discrete validation.
-        var aksScopingFlags = new (string? value, string flag)[]
-        {
-            (options.AksIncludedNamespaces, $"--{AzureBackupOptionDefinitions.AksIncludedNamespacesName}"),
-            (options.AksExcludedNamespaces, $"--{AzureBackupOptionDefinitions.AksExcludedNamespacesName}"),
-            (options.AksLabelSelectors, $"--{AzureBackupOptionDefinitions.AksLabelSelectorsName}"),
-            (options.AksIncludeClusterScopeResources, $"--{AzureBackupOptionDefinitions.AksIncludeClusterScopeResourcesName}"),
-            (options.AksSnapshotResourceGroup, $"--{AzureBackupOptionDefinitions.AksSnapshotResourceGroupName}"),
-        };
-        foreach (var (value, flag) in aksScopingFlags)
-        {
-            if (!string.IsNullOrWhiteSpace(value))
-            {
-                if (family != WorkloadFamily.DppAks && family != WorkloadFamily.Aks)
-                {
-                    issues.Add(new PolicyValidationIssue(flag, $"{flag} is supported only for DPP AKS workloads."));
-                }
-                else
-                {
-                    issues.Add(new PolicyValidationIssue(
-                        flag,
-                        $"{flag} is a per-backup-instance setting, not a policy-level setting. " +
-                        "Supply it to 'azmcp azurebackup protecteditem protect' when enabling protection for an AKS cluster."));
-                }
-            }
-        }
     }
 
     // ----- Helpers -----
@@ -496,9 +464,6 @@ public static class PolicyCreateValidator
         !string.IsNullOrWhiteSpace(backupMode) &&
         backupMode.Trim().Equals("Vaulted", StringComparison.OrdinalIgnoreCase);
 
-    private static bool ParseBool(string? value) =>
-        !string.IsNullOrWhiteSpace(value) && bool.TryParse(value, out var b) && b;
-
     private static bool IsRsvWeekly(string? frequency) =>
         string.Equals(frequency, "Weekly", StringComparison.OrdinalIgnoreCase);
 
@@ -528,14 +493,14 @@ public static class PolicyCreateValidator
 
     private static bool IsPartialWeeklyRetention(PolicyCreateOptions o)
     {
-        var weeks = !string.IsNullOrWhiteSpace(o.WeeklyRetentionWeeks);
+        var weeks = o.WeeklyRetentionWeeks > 0;
         var days = !string.IsNullOrWhiteSpace(o.WeeklyRetentionDaysOfWeek);
         return weeks ^ days;
     }
 
     private static void ValidateMonthlyRetention(PolicyCreateOptions o, List<PolicyValidationIssue> issues)
     {
-        var months = !string.IsNullOrWhiteSpace(o.MonthlyRetentionMonths);
+        var months = o.MonthlyRetentionMonths > 0;
         var weekOf = !string.IsNullOrWhiteSpace(o.MonthlyRetentionWeekOfMonth);
         var daysOfWeek = !string.IsNullOrWhiteSpace(o.MonthlyRetentionDaysOfWeek);
         var daysOfMonth = !string.IsNullOrWhiteSpace(o.MonthlyRetentionDaysOfMonth);
@@ -578,7 +543,7 @@ public static class PolicyCreateValidator
 
     private static void ValidateYearlyRetention(PolicyCreateOptions o, List<PolicyValidationIssue> issues)
     {
-        var years = !string.IsNullOrWhiteSpace(o.YearlyRetentionYears);
+        var years = o.YearlyRetentionYears > 0;
         var months = !string.IsNullOrWhiteSpace(o.YearlyRetentionMonths);
         var weekOf = !string.IsNullOrWhiteSpace(o.YearlyRetentionWeekOfMonth);
         var daysOfWeek = !string.IsNullOrWhiteSpace(o.YearlyRetentionDaysOfWeek);
@@ -631,17 +596,17 @@ public static class PolicyCreateValidator
         !string.IsNullOrWhiteSpace(o.ScheduleFrequency) ||
         !string.IsNullOrWhiteSpace(o.ScheduleTimes) ||
         !string.IsNullOrWhiteSpace(o.ScheduleDaysOfWeek) ||
-        !string.IsNullOrWhiteSpace(o.HourlyIntervalHours) ||
+        o.HourlyIntervalHours > 0 ||
         !string.IsNullOrWhiteSpace(o.HourlyWindowStartTime) ||
-        !string.IsNullOrWhiteSpace(o.HourlyWindowDurationHours) ||
+        o.HourlyWindowDurationHours > 0 ||
         !string.IsNullOrWhiteSpace(o.DailyRetentionDays) ||
-        !string.IsNullOrWhiteSpace(o.WeeklyRetentionWeeks) ||
+        o.WeeklyRetentionWeeks > 0 ||
         !string.IsNullOrWhiteSpace(o.WeeklyRetentionDaysOfWeek) ||
-        !string.IsNullOrWhiteSpace(o.MonthlyRetentionMonths) ||
+        o.MonthlyRetentionMonths > 0 ||
         !string.IsNullOrWhiteSpace(o.MonthlyRetentionWeekOfMonth) ||
         !string.IsNullOrWhiteSpace(o.MonthlyRetentionDaysOfWeek) ||
         !string.IsNullOrWhiteSpace(o.MonthlyRetentionDaysOfMonth) ||
-        !string.IsNullOrWhiteSpace(o.YearlyRetentionYears) ||
+        o.YearlyRetentionYears > 0 ||
         !string.IsNullOrWhiteSpace(o.YearlyRetentionMonths) ||
         !string.IsNullOrWhiteSpace(o.YearlyRetentionWeekOfMonth) ||
         !string.IsNullOrWhiteSpace(o.YearlyRetentionDaysOfWeek) ||
@@ -649,13 +614,13 @@ public static class PolicyCreateValidator
         !string.IsNullOrWhiteSpace(o.ArchiveTierAfterDays) ||
         !string.IsNullOrWhiteSpace(o.ArchiveTierMode) ||
         !string.IsNullOrWhiteSpace(o.FullScheduleFrequency) ||
-        !string.IsNullOrWhiteSpace(o.LogFrequencyMinutes);
+        o.LogFrequencyMinutes > 0;
 
     private static bool HasAnyScheduleRetentionOrArchiveInput(PolicyCreateOptions o) =>
         HasAnyScheduleOrRetentionInput(o);
 
     private static bool HasAnyYearlyRetentionInput(PolicyCreateOptions o) =>
-        !string.IsNullOrWhiteSpace(o.YearlyRetentionYears) ||
+        o.YearlyRetentionYears > 0 ||
         !string.IsNullOrWhiteSpace(o.YearlyRetentionMonths) ||
         !string.IsNullOrWhiteSpace(o.YearlyRetentionWeekOfMonth) ||
         !string.IsNullOrWhiteSpace(o.YearlyRetentionDaysOfWeek) ||
@@ -669,21 +634,27 @@ public static class PolicyCreateValidator
         }
     }
 
+    private static void EnsureFamily(int value, string flag, WorkloadFamily actual, WorkloadFamily required, string requiredLabel, List<PolicyValidationIssue> issues)
+    {
+        if (value > 0 && actual != required)
+        {
+            issues.Add(new PolicyValidationIssue(flag, $"{flag} is supported only for {requiredLabel} workloads."));
+        }
+    }
+
+    private static void EnsureFamily(bool value, string flag, WorkloadFamily actual, WorkloadFamily required, string requiredLabel, List<PolicyValidationIssue> issues)
+    {
+        if (value && actual != required)
+        {
+            issues.Add(new PolicyValidationIssue(flag, $"{flag} is supported only for {requiredLabel} workloads."));
+        }
+    }
+
     private static void EnsureDpp(string? value, string flag, WorkloadFamily actual, List<PolicyValidationIssue> issues)
     {
         if (!string.IsNullOrWhiteSpace(value) && IsRsvFamily(actual))
         {
             issues.Add(new PolicyValidationIssue(flag, $"{flag} is supported only for DPP (Backup vault) workloads."));
         }
-    }
-
-    private static bool TryParsePositiveInt(string? text, out int value)
-    {
-        if (int.TryParse(text, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out value) && value > 0)
-        {
-            return true;
-        }
-        value = 0;
-        return false;
     }
 }

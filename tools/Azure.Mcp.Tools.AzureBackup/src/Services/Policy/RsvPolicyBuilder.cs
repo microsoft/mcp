@@ -86,7 +86,7 @@ public static class RsvPolicyBuilder
 
         // Smart tier (ML-recommended archive) overrides any explicit archive flag for VM workloads.
         // Backend requires Duration=0 + DurationType=Invalid when TieringMode is TierRecommended (matches Az CLI shape).
-        if (ParseBoolOrFalse(req.SmartTier))
+        if (req.SmartTier)
         {
             policy.TieringPolicy["ArchivedRP"] = new BackupTieringPolicy
             {
@@ -132,8 +132,8 @@ public static class RsvPolicyBuilder
             Settings = new BackupCommonSettings
             {
                 TimeZone = timeZone,
-                IsCompression = ParseBoolOrFalse(req.IsCompression),
-                IsSqlCompression = ParseBoolOrFalse(req.IsSqlCompression),
+                IsCompression = req.IsCompression,
+                IsSqlCompression = req.IsSqlCompression,
             },
         };
 
@@ -141,13 +141,13 @@ public static class RsvPolicyBuilder
         policy.SubProtectionPolicy.Add(BuildVmWorkloadFullSubPolicy(req, scheduleTimes));
 
         // Differential is opt-in.
-        if (HasAnyText(req.DifferentialScheduleDaysOfWeek, req.DifferentialRetentionDays))
+        if (!string.IsNullOrWhiteSpace(req.DifferentialScheduleDaysOfWeek) || req.DifferentialRetentionDays > 0)
         {
             policy.SubProtectionPolicy.Add(BuildVmWorkloadDifferentialSubPolicy(req, scheduleTimes));
         }
 
         // Incremental is opt-in.
-        if (HasAnyText(req.IncrementalScheduleDaysOfWeek, req.IncrementalRetentionDays))
+        if (!string.IsNullOrWhiteSpace(req.IncrementalScheduleDaysOfWeek) || req.IncrementalRetentionDays > 0)
         {
             policy.SubProtectionPolicy.Add(BuildVmWorkloadIncrementalSubPolicy(req, scheduleTimes));
         }
@@ -158,7 +158,7 @@ public static class RsvPolicyBuilder
         // SAPHANA snapshot/instance backup is enabled by attaching SnapshotBackupAdditionalDetails
         // to the Full sub-policy (matches Az CLI behavior for `az backup policy set` with
         // --snapshot-instant-rp-retention-days). Not a separate sub-policy.
-        if (ParseBoolOrFalse(req.EnableSnapshotBackup))
+        if (req.EnableSnapshotBackup)
         {
             AttachSnapshotDetailsToFullSubPolicy(policy, req);
         }
@@ -257,7 +257,7 @@ public static class RsvPolicyBuilder
             schedule.ScheduleRunTimes.Add(t);
         }
 
-        var days = TryParsePositiveInt(req.DifferentialRetentionDays, out var d) ? d : DefaultDailyRetentionDays;
+        var days = req.DifferentialRetentionDays > 0 ? req.DifferentialRetentionDays : DefaultDailyRetentionDays;
         var retention = new SimpleRetentionPolicy
         {
             RetentionDuration = new RetentionDuration { Count = days, DurationType = RetentionDurationType.Days },
@@ -283,7 +283,7 @@ public static class RsvPolicyBuilder
             schedule.ScheduleRunTimes.Add(t);
         }
 
-        var days = TryParsePositiveInt(req.IncrementalRetentionDays, out var d) ? d : DefaultDailyRetentionDays;
+        var days = req.IncrementalRetentionDays > 0 ? req.IncrementalRetentionDays : DefaultDailyRetentionDays;
         var retention = new SimpleRetentionPolicy
         {
             RetentionDuration = new RetentionDuration { Count = days, DurationType = RetentionDurationType.Days },
@@ -299,8 +299,8 @@ public static class RsvPolicyBuilder
 
     private static SubProtectionPolicy BuildVmWorkloadLogSubPolicy(PolicyCreateRequest req)
     {
-        var freq = TryParsePositiveInt(req.LogFrequencyMinutes, out var lf) ? lf : DefaultLogFrequencyMinutes;
-        var retentionDays = TryParsePositiveInt(req.LogRetentionDays, out var lr) ? lr : DefaultLogRetentionDays;
+        var freq = req.LogFrequencyMinutes > 0 ? req.LogFrequencyMinutes : DefaultLogFrequencyMinutes;
+        var retentionDays = req.LogRetentionDays > 0 ? req.LogRetentionDays : DefaultLogRetentionDays;
 
         return new SubProtectionPolicy
         {
@@ -415,17 +415,17 @@ public static class RsvPolicyBuilder
     private static BackupHourlySchedule BuildHourlySchedule(PolicyCreateRequest req)
     {
         var hs = new BackupHourlySchedule();
-        if (TryParsePositiveInt(req.HourlyIntervalHours, out var interval))
+        if (req.HourlyIntervalHours > 0)
         {
-            hs.Interval = interval;
+            hs.Interval = req.HourlyIntervalHours;
         }
         if (DateTimeOffset.TryParseExact(req.HourlyWindowStartTime ?? string.Empty, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var startTime))
         {
             hs.ScheduleWindowStartOn = NormalizeToHourMinute(startTime);
         }
-        if (TryParsePositiveInt(req.HourlyWindowDurationHours, out var duration))
+        if (req.HourlyWindowDurationHours > 0)
         {
-            hs.ScheduleWindowDuration = duration;
+            hs.ScheduleWindowDuration = req.HourlyWindowDurationHours;
         }
         return hs;
     }
@@ -472,11 +472,11 @@ public static class RsvPolicyBuilder
             retention.DailySchedule = daily;
         }
 
-        if (TryParsePositiveInt(req.WeeklyRetentionWeeks, out var weeks))
+        if (req.WeeklyRetentionWeeks > 0)
         {
             var weekly = new WeeklyRetentionSchedule
             {
-                RetentionDuration = new RetentionDuration { Count = weeks, DurationType = RetentionDurationType.Weeks },
+                RetentionDuration = new RetentionDuration { Count = req.WeeklyRetentionWeeks, DurationType = RetentionDurationType.Weeks },
             };
             var dow = ParseDaysOfWeek(req.WeeklyRetentionDaysOfWeek);
             if (dow.Count == 0)
@@ -499,14 +499,14 @@ public static class RsvPolicyBuilder
             retention.WeeklySchedule = weekly;
         }
 
-        if (TryParsePositiveInt(req.MonthlyRetentionMonths, out var months))
+        if (req.MonthlyRetentionMonths > 0)
         {
-            retention.MonthlySchedule = BuildMonthlyRetention(req, scheduleTimes, months);
+            retention.MonthlySchedule = BuildMonthlyRetention(req, scheduleTimes, req.MonthlyRetentionMonths);
         }
 
-        if (TryParsePositiveInt(req.YearlyRetentionYears, out var years))
+        if (req.YearlyRetentionYears > 0)
         {
-            retention.YearlySchedule = BuildYearlyRetention(req, scheduleTimes, years);
+            retention.YearlySchedule = BuildYearlyRetention(req, scheduleTimes, req.YearlyRetentionYears);
         }
 
         return retention;
@@ -810,9 +810,6 @@ public static class RsvPolicyBuilder
         value = 0;
         return false;
     }
-
-    private static bool ParseBoolOrFalse(string? text)
-        => bool.TryParse(text, out var b) && b;
 
     private static bool IsWeeklyFrequency(ScheduleRunType? frequency)
         => frequency == ScheduleRunType.Weekly;

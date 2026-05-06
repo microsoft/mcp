@@ -54,7 +54,7 @@ public static class DppPolicyBuilder
         // Vault tier copy on AzureDisk emits a SEPARATE named retention rule ("Daily")
         // pointing at VaultStore, plus a matching tagging criterion in the BackupRule.
         // This mirrors what `az dataprotection backup-policy retention-rule set` produces.
-        var vaultTierEnabled = ParseBool(request.EnableVaultTierCopy);
+        var vaultTierEnabled = request.EnableVaultTierCopy;
         if (vaultTierEnabled)
         {
             rules.Add(BuildVaultTierCopyRetentionRule(request));
@@ -66,17 +66,19 @@ public static class DppPolicyBuilder
         // does not accept multi-tier (weekly/monthly/yearly) retention rules. The matching tagging
         // criteria on the AzureBackupRule lifecycle direct the service to copy tagged RPs to vault.
         var tierStore = vaultTierEnabled ? DataStoreType.VaultStore : dataStoreType;
-        if (TryParsePositiveInt(request.WeeklyRetentionWeeks, out var weeks))
+        if (request.WeeklyRetentionWeeks > 0)
         {
-            rules.Add(BuildTierRetentionRule("Weekly", TimeSpan.FromDays(weeks * 7), tierStore, request));
+            // DPP API requires ISO 8601 durations expressed as days (TimeSpan). 30 days/month
+            // and 365 days/year are the standard approximations used by Azure CLI and Portal.
+            rules.Add(BuildTierRetentionRule("Weekly", TimeSpan.FromDays(request.WeeklyRetentionWeeks * 7), tierStore, request));
         }
-        if (TryParsePositiveInt(request.MonthlyRetentionMonths, out var months))
+        if (request.MonthlyRetentionMonths > 0)
         {
-            rules.Add(BuildTierRetentionRule("Monthly", TimeSpan.FromDays(months * 30), tierStore, request));
+            rules.Add(BuildTierRetentionRule("Monthly", TimeSpan.FromDays(request.MonthlyRetentionMonths * 30), tierStore, request));
         }
-        if (TryParsePositiveInt(request.YearlyRetentionYears, out var years))
+        if (request.YearlyRetentionYears > 0)
         {
-            rules.Add(BuildTierRetentionRule("Yearly", TimeSpan.FromDays(years * 365), tierStore, request));
+            rules.Add(BuildTierRetentionRule("Yearly", TimeSpan.FromDays(request.YearlyRetentionYears * 365), tierStore, request));
         }
 
         if (!isContinuous && !isVaultedStorage)
@@ -95,10 +97,12 @@ public static class DppPolicyBuilder
     {
         // For continuous (PITR) backups, --pitr-retention-days takes precedence over --daily-retention-days,
         // matching the CLI's `--retention-duration-in-days` behaviour for Blob/ADLS continuous policies.
-        var retentionDays = isContinuous && TryParsePositiveInt(request.PitrRetentionDays, out var pitr)
-            ? pitr
+        var retentionDays = isContinuous && request.PitrRetentionDays > 0
+            ? request.PitrRetentionDays
             : TryParsePositiveInt(request.DailyRetentionDays, out var dd)
                 ? dd
+                // DPP API requires a concrete retention duration; null is not accepted. The profile's
+                // DefaultRetentionDays value is the service-documented default for each datasource.
                 : profile.DefaultRetentionDays;
 
         var lifeCycle = new SourceLifeCycle(
@@ -116,7 +120,7 @@ public static class DppPolicyBuilder
     private static DataProtectionRetentionRule BuildVaultTierCopyRetentionRule(PolicyCreateRequest request)
     {
         // Default retention for the vault-tier rule is 30 days unless --vault-tier-copy-after-days specified.
-        var retentionDays = TryParsePositiveInt(request.VaultTierCopyAfterDays, out var d) ? d : 30;
+        var retentionDays = request.VaultTierCopyAfterDays > 0 ? request.VaultTierCopyAfterDays : 30;
 
         var lifeCycle = new SourceLifeCycle(
             new DataProtectionBackupAbsoluteDeleteSetting(TimeSpan.FromDays(retentionDays)),
@@ -174,9 +178,6 @@ public static class DppPolicyBuilder
         !string.IsNullOrWhiteSpace(backupMode) &&
         backupMode.Trim().Equals("Vaulted", StringComparison.OrdinalIgnoreCase);
 
-    private static bool ParseBool(string? value) =>
-        !string.IsNullOrWhiteSpace(value) && bool.TryParse(value, out var b) && b;
-
     private static DataProtectionBackupRule BuildBackupRule(
         PolicyCreateRequest request,
         DppDatasourceProfile profile,
@@ -224,17 +225,17 @@ public static class DppPolicyBuilder
             priority -= 5;
         }
 
-        if (TryParsePositiveInt(request.WeeklyRetentionWeeks, out _))
+        if (request.WeeklyRetentionWeeks > 0)
         {
             list.Add(BuildTierTagging("Weekly", priority, BackupAbsoluteMarker.FirstOfWeek));
             priority -= 5;
         }
-        if (TryParsePositiveInt(request.MonthlyRetentionMonths, out _))
+        if (request.MonthlyRetentionMonths > 0)
         {
             list.Add(BuildTierTagging("Monthly", priority, BackupAbsoluteMarker.FirstOfMonth));
             priority -= 5;
         }
-        if (TryParsePositiveInt(request.YearlyRetentionYears, out _))
+        if (request.YearlyRetentionYears > 0)
         {
             list.Add(BuildTierTagging("Yearly", priority, BackupAbsoluteMarker.FirstOfYear));
         }

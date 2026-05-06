@@ -33,40 +33,7 @@ public class PolicyCreateValidatorTests
         Assert.True(result.IsValid);
     }
 
-    [Theory]
-    [InlineData("AKS", "--aks-included-namespaces", "ns1,ns2")]
-    [InlineData("AKS", "--aks-excluded-namespaces", "kube-system")]
-    [InlineData("AKS", "--aks-label-selectors", "env=prod")]
-    [InlineData("AKS", "--aks-include-cluster-scope-resources", "true")]
-    [InlineData("AKS", "--aks-snapshot-resource-group", "snapshots-rg")]
-    public void Validate_Aks_PerInstanceFlagsOnPolicyCreate_AreRejectedWithGuidance(string workload, string flag, string value)
-    {
-        var options = BaseOptions(workload);
-        options.DailyRetentionDays = "30";
-        switch (flag)
-        {
-            case "--aks-included-namespaces":
-                options.AksIncludedNamespaces = value;
-                break;
-            case "--aks-excluded-namespaces":
-                options.AksExcludedNamespaces = value;
-                break;
-            case "--aks-label-selectors":
-                options.AksLabelSelectors = value;
-                break;
-            case "--aks-include-cluster-scope-resources":
-                options.AksIncludeClusterScopeResources = value;
-                break;
-            case "--aks-snapshot-resource-group":
-                options.AksSnapshotResourceGroup = value;
-                break;
-        }
 
-        var result = PolicyCreateValidator.Validate(options);
-
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Issues, i => i.Flag == flag && i.Message.Contains("per-backup-instance setting"));
-    }
 
     // ----- Rule D: CosmosDB pass-through -----
 
@@ -138,11 +105,11 @@ public class PolicyCreateValidatorTests
     // ----- Rule A.3: Hourly requires all three hourly inputs -----
 
     [Theory]
-    [InlineData(null, "08:00", "12")]
-    [InlineData("4", null, "12")]
-    [InlineData("4", "08:00", null)]
-    [InlineData(null, null, null)]
-    public void Validate_HourlyWithMissingInputs_Fails(string? interval, string? start, string? duration)
+    [InlineData(0, "08:00", 12)]
+    [InlineData(4, null, 12)]
+    [InlineData(4, "08:00", 0)]
+    [InlineData(0, null, 0)]
+    public void Validate_HourlyWithMissingInputs_Fails(int interval, string? start, int duration)
     {
         var options = BaseOptions("VM");
         options.ScheduleFrequency = "Hourly";
@@ -163,9 +130,9 @@ public class PolicyCreateValidatorTests
         var options = BaseOptions("VM");
         options.PolicySubType = "Enhanced";
         options.ScheduleFrequency = "Hourly";
-        options.HourlyIntervalHours = "4";
+        options.HourlyIntervalHours = 4;
         options.HourlyWindowStartTime = "08:00";
-        options.HourlyWindowDurationHours = "12";
+        options.HourlyWindowDurationHours = 12;
         options.DailyRetentionDays = "7";
 
         var result = PolicyCreateValidator.Validate(options);
@@ -176,9 +143,9 @@ public class PolicyCreateValidatorTests
     // ----- Rule A.4: Weekly retention partial -----
 
     [Theory]
-    [InlineData("4", null)]
-    [InlineData(null, "Sunday")]
-    public void Validate_PartialWeeklyRetention_Fails(string? weeks, string? days)
+    [InlineData(4, null)]
+    [InlineData(0, "Sunday")]
+    public void Validate_PartialWeeklyRetention_Fails(int weeks, string? days)
     {
         var options = BaseOptions("VM");
         options.WeeklyRetentionWeeks = weeks;
@@ -194,7 +161,7 @@ public class PolicyCreateValidatorTests
     public void Validate_FullWeeklyRetention_Passes()
     {
         var options = BaseOptions("VM");
-        options.WeeklyRetentionWeeks = "12";
+        options.WeeklyRetentionWeeks = 12;
         options.WeeklyRetentionDaysOfWeek = "Sunday";
 
         var result = PolicyCreateValidator.Validate(options);
@@ -208,7 +175,7 @@ public class PolicyCreateValidatorTests
     public void Validate_MonthlyMonthsAlone_Fails()
     {
         var options = BaseOptions("VM");
-        options.MonthlyRetentionMonths = "12";
+        options.MonthlyRetentionMonths = 12;
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -232,7 +199,7 @@ public class PolicyCreateValidatorTests
     public void Validate_MonthlyMixedRelativeAndAbsolute_Fails()
     {
         var options = BaseOptions("VM");
-        options.MonthlyRetentionMonths = "12";
+        options.MonthlyRetentionMonths = 12;
         options.MonthlyRetentionDaysOfMonth = "1";
         options.MonthlyRetentionWeekOfMonth = "First";
         options.MonthlyRetentionDaysOfWeek = "Sunday";
@@ -247,7 +214,7 @@ public class PolicyCreateValidatorTests
     public void Validate_MonthlyPartialRelative_Fails()
     {
         var options = BaseOptions("VM");
-        options.MonthlyRetentionMonths = "12";
+        options.MonthlyRetentionMonths = 12;
         options.MonthlyRetentionWeekOfMonth = "First";
 
         var result = PolicyCreateValidator.Validate(options);
@@ -260,7 +227,7 @@ public class PolicyCreateValidatorTests
     public void Validate_MonthlyAbsolute_Passes()
     {
         var options = BaseOptions("VM");
-        options.MonthlyRetentionMonths = "12";
+        options.MonthlyRetentionMonths = 12;
         options.MonthlyRetentionDaysOfMonth = "1,15,Last";
 
         var result = PolicyCreateValidator.Validate(options);
@@ -272,7 +239,7 @@ public class PolicyCreateValidatorTests
     public void Validate_MonthlyRelative_Passes()
     {
         var options = BaseOptions("VM");
-        options.MonthlyRetentionMonths = "12";
+        options.MonthlyRetentionMonths = 12;
         options.MonthlyRetentionWeekOfMonth = "First";
         options.MonthlyRetentionDaysOfWeek = "Sunday";
 
@@ -287,7 +254,7 @@ public class PolicyCreateValidatorTests
     public void Validate_YearlyYearsAlone_Fails()
     {
         var options = BaseOptions("VM");
-        options.YearlyRetentionYears = "5";
+        options.YearlyRetentionYears = 5;
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -299,7 +266,7 @@ public class PolicyCreateValidatorTests
     public void Validate_YearlyAbsolute_Passes()
     {
         var options = BaseOptions("VM");
-        options.YearlyRetentionYears = "5";
+        options.YearlyRetentionYears = 5;
         options.YearlyRetentionMonths = "January";
         options.YearlyRetentionDaysOfMonth = "1";
 
@@ -312,7 +279,7 @@ public class PolicyCreateValidatorTests
     public void Validate_YearlyRelative_Passes()
     {
         var options = BaseOptions("VM");
-        options.YearlyRetentionYears = "5";
+        options.YearlyRetentionYears = 5;
         options.YearlyRetentionMonths = "January";
         options.YearlyRetentionWeekOfMonth = "First";
         options.YearlyRetentionDaysOfWeek = "Sunday";
@@ -399,16 +366,16 @@ public class PolicyCreateValidatorTests
         switch (flag)
         {
             case "--log-frequency-minutes":
-                options.LogFrequencyMinutes = value;
+                options.LogFrequencyMinutes = int.Parse(value);
                 break;
             case "--full-schedule-frequency":
                 options.FullScheduleFrequency = value;
                 break;
             case "--differential-retention-days":
-                options.DifferentialRetentionDays = value;
+                options.DifferentialRetentionDays = int.Parse(value);
                 break;
             case "--is-compression":
-                options.IsCompression = value;
+                options.IsCompression = bool.Parse(value);
                 break;
         }
 
@@ -439,7 +406,7 @@ public class PolicyCreateValidatorTests
         var options = BaseOptions("SAPHANA");
         options.DailyRetentionDays = "7";
         options.IncrementalScheduleDaysOfWeek = "Tuesday";
-        options.IncrementalRetentionDays = "15";
+        options.IncrementalRetentionDays = 15;
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -453,7 +420,7 @@ public class PolicyCreateValidatorTests
     {
         var options = BaseOptions(workload);
         options.DailyRetentionDays = "7";
-        options.IsSqlCompression = "true";
+        options.IsSqlCompression = true;
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -468,9 +435,9 @@ public class PolicyCreateValidatorTests
     {
         var options = BaseOptions(workload);
         options.ScheduleFrequency = "Hourly";
-        options.HourlyIntervalHours = "4";
+        options.HourlyIntervalHours = 4;
         options.HourlyWindowStartTime = "08:00";
-        options.HourlyWindowDurationHours = "12";
+        options.HourlyWindowDurationHours = 12;
         options.DailyRetentionDays = "7";
 
         var result = PolicyCreateValidator.Validate(options);
@@ -512,9 +479,9 @@ public class PolicyCreateValidatorTests
     {
         var options = BaseOptions("VM");
         options.ScheduleFrequency = "Weekly";          // missing --schedule-days-of-week
-        options.WeeklyRetentionWeeks = "4";             // missing --weekly-retention-days-of-week
+        options.WeeklyRetentionWeeks = 4;             // missing --weekly-retention-days-of-week
         options.ArchiveTierAfterDays = "60";            // missing --archive-tier-mode
-        options.LogFrequencyMinutes = "60";             // RSV VmWorkload only
+        options.LogFrequencyMinutes = 60;             // RSV VmWorkload only
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -533,7 +500,7 @@ public class PolicyCreateValidatorTests
     {
         var options = BaseOptions("MSSQL");
         options.DailyRetentionDays = "30";
-        options.SmartTier = "true";
+        options.SmartTier = true;
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -546,7 +513,7 @@ public class PolicyCreateValidatorTests
     {
         var options = BaseOptions("VM");
         options.DailyRetentionDays = "30";
-        options.SmartTier = "true";
+        options.SmartTier = true;
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -558,7 +525,7 @@ public class PolicyCreateValidatorTests
     {
         var options = BaseOptions("MSSQL");
         options.DailyRetentionDays = "30";
-        options.EnableSnapshotBackup = "true";
+        options.EnableSnapshotBackup = true;
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -571,7 +538,7 @@ public class PolicyCreateValidatorTests
     {
         var options = BaseOptions("SAPHANA");
         options.DailyRetentionDays = "30";
-        options.EnableSnapshotBackup = "true";
+        options.EnableSnapshotBackup = true;
         options.SnapshotInstantRpRetentionDays = "5";
         options.SnapshotInstantRpResourceGroup = "snapRG";
 
@@ -586,8 +553,8 @@ public class PolicyCreateValidatorTests
         var options = BaseOptions("AzureBlob");
         options.BackupMode = "Vaulted";
         options.DailyRetentionDays = "30";
-        options.EnableVaultTierCopy = "true";
-        options.VaultTierCopyAfterDays = "7";
+        options.EnableVaultTierCopy = true;
+        options.VaultTierCopyAfterDays = 7;
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -599,7 +566,7 @@ public class PolicyCreateValidatorTests
     public void Validate_VaultTierCopy_PartialInput_Fails()
     {
         var options = BaseOptions("AzureDisk");
-        options.EnableVaultTierCopy = "true";
+        options.EnableVaultTierCopy = true;
         // Missing --vault-tier-copy-after-days.
 
         var result = PolicyCreateValidator.Validate(options);
@@ -613,8 +580,8 @@ public class PolicyCreateValidatorTests
     {
         var options = BaseOptions("AzureDisk");
         options.DailyRetentionDays = "30";
-        options.EnableVaultTierCopy = "true";
-        options.VaultTierCopyAfterDays = "7";
+        options.EnableVaultTierCopy = true;
+        options.VaultTierCopyAfterDays = 7;
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -650,7 +617,7 @@ public class PolicyCreateValidatorTests
     public void Validate_PitrRetentionDays_RequiresStorageWorkload()
     {
         var options = BaseOptions("AzureDisk");
-        options.PitrRetentionDays = "60";
+        options.PitrRetentionDays = 60;
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -662,7 +629,7 @@ public class PolicyCreateValidatorTests
     public void Validate_PitrRetentionDays_OnBlob_PassesThrough()
     {
         var options = BaseOptions("AzureBlob");
-        options.PitrRetentionDays = "60";
+        options.PitrRetentionDays = 60;
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -761,9 +728,9 @@ public class PolicyCreateValidatorTests
     // ----- SQL Log retention constraints -----
 
     [Theory]
-    [InlineData("3")]
-    [InlineData("6")]
-    public void Validate_SqlLogRetentionBelowMinimum_Fails(string logDays)
+    [InlineData(3)]
+    [InlineData(6)]
+    public void Validate_SqlLogRetentionBelowMinimum_Fails(int logDays)
     {
         var options = BaseOptions("SQL");
         options.DailyRetentionDays = "30";
@@ -782,7 +749,7 @@ public class PolicyCreateValidatorTests
     {
         var options = BaseOptions("SQL");
         options.DailyRetentionDays = "30";
-        options.LogRetentionDays = "7";
+        options.LogRetentionDays = 7;
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -794,8 +761,8 @@ public class PolicyCreateValidatorTests
     {
         var options = BaseOptions("SQL");
         options.DailyRetentionDays = "30";
-        options.LogRetentionDays = "15";
-        options.DifferentialRetentionDays = "10";
+        options.LogRetentionDays = 15;
+        options.DifferentialRetentionDays = 10;
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -810,8 +777,8 @@ public class PolicyCreateValidatorTests
     {
         var options = BaseOptions("SQL");
         options.DailyRetentionDays = "30";
-        options.LogRetentionDays = "10";
-        options.DifferentialRetentionDays = "10";
+        options.LogRetentionDays = 10;
+        options.DifferentialRetentionDays = 10;
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -826,8 +793,8 @@ public class PolicyCreateValidatorTests
     {
         var options = BaseOptions("SQL");
         options.DailyRetentionDays = "30";
-        options.LogRetentionDays = "7";
-        options.DifferentialRetentionDays = "15";
+        options.LogRetentionDays = 7;
+        options.DifferentialRetentionDays = 15;
 
         var result = PolicyCreateValidator.Validate(options);
 
@@ -862,7 +829,7 @@ public class PolicyCreateValidatorTests
     {
         var options = BaseOptions("AzureDisk");
         options.DailyRetentionDays = "30";
-        options.YearlyRetentionYears = "5";
+        options.YearlyRetentionYears = 5;
         options.YearlyRetentionMonths = "January";
         options.YearlyRetentionDaysOfMonth = "1";
 

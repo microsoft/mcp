@@ -246,7 +246,7 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> ScheduleTimes = new($"--{ScheduleTimesName}")
     {
-        Description = "Comma-separated list of backup times in 24h HH:mm format (e.g., '02:00' or '02:00,14:00'). Interpreted in --time-zone.",
+        Description = "Comma-separated list of backup times in 24h HH:mm format (e.g., '02:00' or '02:00,14:00'). Interpreted in --time-zone. Defaults to 02:00 UTC if not specified. Only the first time is used as the schedule start time.",
         Required = false
     };
 
@@ -256,9 +256,9 @@ public static class AzureBackupOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> HourlyIntervalHours = new($"--{HourlyIntervalHoursName}")
+    public static readonly Option<int> HourlyIntervalHours = new($"--{HourlyIntervalHoursName}")
     {
-        Description = "Interval in hours between hourly backups (e.g., 4, 6, 8, 12). Used only when --schedule-frequency is 'Hourly' (RSV).",
+        Description = "Interval in hours between hourly backups. Valid values: 4, 6, 8, 12. Used only when --schedule-frequency is 'Hourly' (RSV).",
         Required = false
     };
 
@@ -268,25 +268,25 @@ public static class AzureBackupOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> HourlyWindowDurationHours = new($"--{HourlyWindowDurationHoursName}")
+    public static readonly Option<int> HourlyWindowDurationHours = new($"--{HourlyWindowDurationHoursName}")
     {
         Description = "Duration of the hourly backup window in hours (e.g., 12). Used only when --schedule-frequency is 'Hourly' (RSV).",
         Required = false
     };
 
-    public static readonly Option<string> WeeklyRetentionWeeks = new($"--{WeeklyRetentionWeeksName}")
+    public static readonly Option<int> WeeklyRetentionWeeks = new($"--{WeeklyRetentionWeeksName}")
     {
-        Description = "Number of weeks to keep weekly recovery points. Pair with --weekly-retention-days-of-week.",
+        Description = "Number of weeks to keep weekly recovery points. Required alongside --weekly-retention-days-of-week.",
         Required = false
     };
 
     public static readonly Option<string> WeeklyRetentionDaysOfWeek = new($"--{WeeklyRetentionDaysOfWeekName}")
     {
-        Description = "Comma-separated days of the week tagged for weekly retention (e.g., 'Sunday' or 'Saturday,Sunday'). Pair with --weekly-retention-weeks.",
+        Description = "Comma-separated days of the week tagged for weekly retention (e.g., 'Sunday' or 'Saturday,Sunday'). Required alongside --weekly-retention-weeks.",
         Required = false
     };
 
-    public static readonly Option<string> MonthlyRetentionMonths = new($"--{MonthlyRetentionMonthsName}")
+    public static readonly Option<int> MonthlyRetentionMonths = new($"--{MonthlyRetentionMonthsName}")
     {
         Description = "Number of months to keep monthly recovery points. Combine with either --monthly-retention-days-of-month (absolute) OR --monthly-retention-week-of-month + --monthly-retention-days-of-week (relative).",
         Required = false
@@ -310,7 +310,7 @@ public static class AzureBackupOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> YearlyRetentionYears = new($"--{YearlyRetentionYearsName}")
+    public static readonly Option<int> YearlyRetentionYears = new($"--{YearlyRetentionYearsName}")
     {
         Description = "Number of years to keep yearly recovery points. Combine with --yearly-retention-months and either --yearly-retention-days-of-month (absolute) OR --yearly-retention-week-of-month + --yearly-retention-days-of-week (relative).",
         Required = false
@@ -394,7 +394,7 @@ public static class AzureBackupOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> DifferentialRetentionDays = new($"--{DifferentialRetentionDaysName}")
+    public static readonly Option<int> DifferentialRetentionDays = new($"--{DifferentialRetentionDaysName}")
     {
         Description = "Retention period in days for Differential backups. RSV VmWorkload only.",
         Required = false
@@ -406,48 +406,48 @@ public static class AzureBackupOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> IncrementalRetentionDays = new($"--{IncrementalRetentionDaysName}")
+    public static readonly Option<int> IncrementalRetentionDays = new($"--{IncrementalRetentionDaysName}")
     {
         Description = "Retention period in days for Incremental backups. RSV SAPHANA / SAPASE only.",
         Required = false
     };
 
-    public static readonly Option<string> LogFrequencyMinutes = new($"--{LogFrequencyMinutesName}")
+    public static readonly Option<int> LogFrequencyMinutes = new($"--{LogFrequencyMinutesName}")
     {
         Description = "Transaction log backup frequency in minutes (e.g., 15, 30, 60). RSV VmWorkload only.",
         Required = false
     };
 
-    public static readonly Option<string> LogRetentionDays = new($"--{LogRetentionDaysName}")
+    public static readonly Option<int> LogRetentionDays = new($"--{LogRetentionDaysName}")
     {
         Description = "Retention period in days for transaction log backups. RSV VmWorkload only.",
         Required = false
     };
 
-    public static readonly Option<string> IsCompression = new($"--{IsCompressionName}")
+    public static readonly Option<bool> IsCompression = new($"--{IsCompressionName}")
     {
-        Description = "Enable backup compression at the policy level: 'true' or 'false'. RSV VmWorkload only.",
+        Description = "Enable backup compression at the policy level. RSV VmWorkload only.",
         Required = false
     };
 
-    public static readonly Option<string> IsSqlCompression = new($"--{IsSqlCompressionName}")
+    public static readonly Option<bool> IsSqlCompression = new($"--{IsSqlCompressionName}")
     {
-        Description = "Enable SQL-native backup compression: 'true' or 'false'. RSV SQL only.",
+        Description = "Enable SQL Server on VM native backup compression. RSV SQL only.",
         Required = false
     };
 
     // ===== Stage 2 expansion =====
 
 
-    public static readonly Option<string> SmartTier = new($"--{SmartTierName}")
+    public static readonly Option<bool> SmartTier = new($"--{SmartTierName}")
     {
-        Description = "Enable smart-tiering (ML-based archive recommendation): 'true' or 'false'. RSV VM only  -  equivalent to TieringMode=TierRecommended.",
+        Description = "Enable smart-tiering (ML-based archive recommendation). RSV VM only - equivalent to TieringMode=TierRecommended. Kept separate from --archive-tier-mode because it emits a structurally different tiering shape (Duration=0, DurationType=Invalid).",
         Required = false
     };
 
-    public static readonly Option<string> EnableSnapshotBackup = new($"--{EnableSnapshotBackupName}")
+    public static readonly Option<bool> EnableSnapshotBackup = new($"--{EnableSnapshotBackupName}")
     {
-        Description = "Enable snapshot/instance backups (HANA System Replication snapshot RPs): 'true' or 'false'. RSV SAPHANA only.",
+        Description = "Enable snapshot/instance backups (HANA System Replication snapshot RPs). RSV SAPHANA only.",
         Required = false
     };
 
@@ -463,13 +463,13 @@ public static class AzureBackupOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> EnableVaultTierCopy = new($"--{EnableVaultTierCopyName}")
+    public static readonly Option<bool> EnableVaultTierCopy = new($"--{EnableVaultTierCopyName}")
     {
-        Description = "Enable vault-tier copy of operational store backups: 'true' or 'false'. DPP AzureDisk only.",
+        Description = "Enable vault-tier copy of operational store backups. DPP AzureDisk only.",
         Required = false
     };
 
-    public static readonly Option<string> VaultTierCopyAfterDays = new($"--{VaultTierCopyAfterDaysName}")
+    public static readonly Option<int> VaultTierCopyAfterDays = new($"--{VaultTierCopyAfterDaysName}")
     {
         Description = "Days after which an operational backup is copied to the vault tier. DPP AzureDisk only.",
         Required = false
@@ -481,7 +481,7 @@ public static class AzureBackupOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> PitrRetentionDays = new($"--{PitrRetentionDaysName}")
+    public static readonly Option<int> PitrRetentionDays = new($"--{PitrRetentionDaysName}")
     {
         Description = "Point-in-time restore retention in days for continuous backups. DPP AzureBlob, AzureDataLakeStorage.",
         Required = false
@@ -517,9 +517,9 @@ public static class AzureBackupOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> AksIncludeClusterScopeResources = new($"--{AksIncludeClusterScopeResourcesName}")
+    public static readonly Option<bool> AksIncludeClusterScopeResources = new($"--{AksIncludeClusterScopeResourcesName}")
     {
-        Description = "Include cluster-scoped resources in the AKS backup policy: 'true' or 'false'. DPP AKS only.",
+        Description = "Include cluster-scoped resources in the AKS backup policy. DPP AKS only.",
         Required = false
     };
 }

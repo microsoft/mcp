@@ -133,14 +133,18 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     public async Task<ProtectResult> ProtectItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string policyName, string? vaultType,
-        string? containerName, string? datasourceType, string? tenant,
+        string? containerName, string? datasourceType,
+        string? aksIncludedNamespaces, string? aksExcludedNamespaces,
+        string? aksLabelSelectors, string? aksIncludeClusterScopeResources,
+        string? aksSnapshotResourceGroup,
+        string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
 
         return VaultTypeResolver.IsRsv(resolvedType)
             ? await rsvOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, containerName, datasourceType, tenant, retryPolicy, cancellationToken)
-            : await dppOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, datasourceType, tenant, retryPolicy, cancellationToken);
+            : await dppOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, datasourceType, aksIncludedNamespaces, aksExcludedNamespaces, aksLabelSelectors, aksIncludeClusterScopeResources, aksSnapshotResourceGroup, tenant, retryPolicy, cancellationToken);
     }
 
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(

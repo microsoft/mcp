@@ -10,8 +10,8 @@ namespace Azure.Mcp.Tools.AzureBackup.Services.Policy;
 /// passed as separate parameters to the service methods.
 /// </summary>
 /// <remarks>
-/// All fields are nullable strings  -  the service layer is responsible for parsing,
-/// validating, and translating them into SDK objects via the policy builders.
+/// All numeric fields use <c>int</c> (0 = not set) and boolean fields use <c>bool</c>
+/// (false = not set). String fields remain nullable.
 /// This decoupling keeps the System.CommandLine option-binding concerns out of the
 /// service layer and makes builder unit tests easy to write.
 /// </remarks>
@@ -29,18 +29,18 @@ public sealed class PolicyCreateRequest
     public string? ScheduleFrequency { get; set; }
     public string? ScheduleTimes { get; set; }
     public string? ScheduleDaysOfWeek { get; set; }
-    public string? HourlyIntervalHours { get; set; }
+    public int HourlyIntervalHours { get; set; }
     public string? HourlyWindowStartTime { get; set; }
-    public string? HourlyWindowDurationHours { get; set; }
+    public int HourlyWindowDurationHours { get; set; }
 
     // Retention flags
-    public string? WeeklyRetentionWeeks { get; set; }
+    public int WeeklyRetentionWeeks { get; set; }
     public string? WeeklyRetentionDaysOfWeek { get; set; }
-    public string? MonthlyRetentionMonths { get; set; }
+    public int MonthlyRetentionMonths { get; set; }
     public string? MonthlyRetentionWeekOfMonth { get; set; }
     public string? MonthlyRetentionDaysOfWeek { get; set; }
     public string? MonthlyRetentionDaysOfMonth { get; set; }
-    public string? YearlyRetentionYears { get; set; }
+    public int YearlyRetentionYears { get; set; }
     public string? YearlyRetentionMonths { get; set; }
     public string? YearlyRetentionWeekOfMonth { get; set; }
     public string? YearlyRetentionDaysOfWeek { get; set; }
@@ -58,28 +58,23 @@ public sealed class PolicyCreateRequest
     public string? FullScheduleFrequency { get; set; }
     public string? FullScheduleDaysOfWeek { get; set; }
     public string? DifferentialScheduleDaysOfWeek { get; set; }
-    public string? DifferentialRetentionDays { get; set; }
+    public int DifferentialRetentionDays { get; set; }
     public string? IncrementalScheduleDaysOfWeek { get; set; }
-    public string? IncrementalRetentionDays { get; set; }
-    public string? LogFrequencyMinutes { get; set; }
-    public string? LogRetentionDays { get; set; }
-    public string? IsCompression { get; set; }
-    public string? IsSqlCompression { get; set; }
+    public int IncrementalRetentionDays { get; set; }
+    public int LogFrequencyMinutes { get; set; }
+    public int LogRetentionDays { get; set; }
+    public bool IsCompression { get; set; }
+    public bool IsSqlCompression { get; set; }
 
     // ===== Stage 2 expansion =====
 
-    public string? SmartTier { get; set; }
-    public string? EnableSnapshotBackup { get; set; }
+    public bool SmartTier { get; set; }
+    public bool EnableSnapshotBackup { get; set; }
     public string? SnapshotInstantRpRetentionDays { get; set; }
     public string? SnapshotInstantRpResourceGroup { get; set; }
-    public string? EnableVaultTierCopy { get; set; }
-    public string? VaultTierCopyAfterDays { get; set; }
+    public bool EnableVaultTierCopy { get; set; }
+    public int VaultTierCopyAfterDays { get; set; }
     public string? BackupMode { get; set; }
-    public string? PitrRetentionDays { get; set; }
+    public int PitrRetentionDays { get; set; }
     public string? PolicyTags { get; set; }
-    public string? AksSnapshotResourceGroup { get; set; }
-    public string? AksIncludedNamespaces { get; set; }
-    public string? AksExcludedNamespaces { get; set; }
-    public string? AksLabelSelectors { get; set; }
-    public string? AksIncludeClusterScopeResources { get; set; }
 }

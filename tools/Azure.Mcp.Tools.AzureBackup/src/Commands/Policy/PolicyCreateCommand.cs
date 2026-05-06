@@ -80,11 +80,6 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         command.Options.Add(AzureBackupOptionDefinitions.BackupMode);
         command.Options.Add(AzureBackupOptionDefinitions.PitrRetentionDays);
         command.Options.Add(AzureBackupOptionDefinitions.PolicyTags);
-        command.Options.Add(AzureBackupOptionDefinitions.AksSnapshotResourceGroup);
-        command.Options.Add(AzureBackupOptionDefinitions.AksIncludedNamespaces);
-        command.Options.Add(AzureBackupOptionDefinitions.AksExcludedNamespaces);
-        command.Options.Add(AzureBackupOptionDefinitions.AksLabelSelectors);
-        command.Options.Add(AzureBackupOptionDefinitions.AksIncludeClusterScopeResources);
     }
 
     protected override PolicyCreateOptions BindOptions(ParseResult parseResult)
@@ -97,16 +92,16 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         options.ScheduleFrequency = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ScheduleFrequency.Name);
         options.ScheduleTimes = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ScheduleTimes.Name);
         options.ScheduleDaysOfWeek = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ScheduleDaysOfWeek.Name);
-        options.HourlyIntervalHours = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.HourlyIntervalHours.Name);
+        options.HourlyIntervalHours = parseResult.GetValueOrDefault<int>(AzureBackupOptionDefinitions.HourlyIntervalHours.Name);
         options.HourlyWindowStartTime = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.HourlyWindowStartTime.Name);
-        options.HourlyWindowDurationHours = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.HourlyWindowDurationHours.Name);
-        options.WeeklyRetentionWeeks = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.WeeklyRetentionWeeks.Name);
+        options.HourlyWindowDurationHours = parseResult.GetValueOrDefault<int>(AzureBackupOptionDefinitions.HourlyWindowDurationHours.Name);
+        options.WeeklyRetentionWeeks = parseResult.GetValueOrDefault<int>(AzureBackupOptionDefinitions.WeeklyRetentionWeeks.Name);
         options.WeeklyRetentionDaysOfWeek = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.WeeklyRetentionDaysOfWeek.Name);
-        options.MonthlyRetentionMonths = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.MonthlyRetentionMonths.Name);
+        options.MonthlyRetentionMonths = parseResult.GetValueOrDefault<int>(AzureBackupOptionDefinitions.MonthlyRetentionMonths.Name);
         options.MonthlyRetentionWeekOfMonth = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.MonthlyRetentionWeekOfMonth.Name);
         options.MonthlyRetentionDaysOfWeek = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.MonthlyRetentionDaysOfWeek.Name);
         options.MonthlyRetentionDaysOfMonth = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.MonthlyRetentionDaysOfMonth.Name);
-        options.YearlyRetentionYears = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.YearlyRetentionYears.Name);
+        options.YearlyRetentionYears = parseResult.GetValueOrDefault<int>(AzureBackupOptionDefinitions.YearlyRetentionYears.Name);
         options.YearlyRetentionMonths = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.YearlyRetentionMonths.Name);
         options.YearlyRetentionWeekOfMonth = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.YearlyRetentionWeekOfMonth.Name);
         options.YearlyRetentionDaysOfWeek = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.YearlyRetentionDaysOfWeek.Name);
@@ -120,27 +115,22 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         options.FullScheduleFrequency = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.FullScheduleFrequency.Name);
         options.FullScheduleDaysOfWeek = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.FullScheduleDaysOfWeek.Name);
         options.DifferentialScheduleDaysOfWeek = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DifferentialScheduleDaysOfWeek.Name);
-        options.DifferentialRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DifferentialRetentionDays.Name);
+        options.DifferentialRetentionDays = parseResult.GetValueOrDefault<int>(AzureBackupOptionDefinitions.DifferentialRetentionDays.Name);
         options.IncrementalScheduleDaysOfWeek = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.IncrementalScheduleDaysOfWeek.Name);
-        options.IncrementalRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.IncrementalRetentionDays.Name);
-        options.LogFrequencyMinutes = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.LogFrequencyMinutes.Name);
-        options.LogRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.LogRetentionDays.Name);
-        options.IsCompression = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.IsCompression.Name);
-        options.IsSqlCompression = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.IsSqlCompression.Name);
-        options.SmartTier = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.SmartTier.Name);
-        options.EnableSnapshotBackup = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.EnableSnapshotBackup.Name);
+        options.IncrementalRetentionDays = parseResult.GetValueOrDefault<int>(AzureBackupOptionDefinitions.IncrementalRetentionDays.Name);
+        options.LogFrequencyMinutes = parseResult.GetValueOrDefault<int>(AzureBackupOptionDefinitions.LogFrequencyMinutes.Name);
+        options.LogRetentionDays = parseResult.GetValueOrDefault<int>(AzureBackupOptionDefinitions.LogRetentionDays.Name);
+        options.IsCompression = parseResult.GetValueOrDefault<bool>(AzureBackupOptionDefinitions.IsCompression.Name);
+        options.IsSqlCompression = parseResult.GetValueOrDefault<bool>(AzureBackupOptionDefinitions.IsSqlCompression.Name);
+        options.SmartTier = parseResult.GetValueOrDefault<bool>(AzureBackupOptionDefinitions.SmartTier.Name);
+        options.EnableSnapshotBackup = parseResult.GetValueOrDefault<bool>(AzureBackupOptionDefinitions.EnableSnapshotBackup.Name);
         options.SnapshotInstantRpRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.SnapshotInstantRpRetentionDays.Name);
         options.SnapshotInstantRpResourceGroup = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.SnapshotInstantRpResourceGroup.Name);
-        options.EnableVaultTierCopy = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.EnableVaultTierCopy.Name);
-        options.VaultTierCopyAfterDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.VaultTierCopyAfterDays.Name);
+        options.EnableVaultTierCopy = parseResult.GetValueOrDefault<bool>(AzureBackupOptionDefinitions.EnableVaultTierCopy.Name);
+        options.VaultTierCopyAfterDays = parseResult.GetValueOrDefault<int>(AzureBackupOptionDefinitions.VaultTierCopyAfterDays.Name);
         options.BackupMode = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.BackupMode.Name);
-        options.PitrRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.PitrRetentionDays.Name);
+        options.PitrRetentionDays = parseResult.GetValueOrDefault<int>(AzureBackupOptionDefinitions.PitrRetentionDays.Name);
         options.PolicyTags = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.PolicyTags.Name);
-        options.AksSnapshotResourceGroup = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksSnapshotResourceGroup.Name);
-        options.AksIncludedNamespaces = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksIncludedNamespaces.Name);
-        options.AksExcludedNamespaces = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksExcludedNamespaces.Name);
-        options.AksLabelSelectors = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksLabelSelectors.Name);
-        options.AksIncludeClusterScopeResources = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksIncludeClusterScopeResources.Name);
         return options;
     }
 
@@ -213,11 +203,6 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
                 BackupMode = options.BackupMode,
                 PitrRetentionDays = options.PitrRetentionDays,
                 PolicyTags = options.PolicyTags,
-                AksSnapshotResourceGroup = options.AksSnapshotResourceGroup,
-                AksIncludedNamespaces = options.AksIncludedNamespaces,
-                AksExcludedNamespaces = options.AksExcludedNamespaces,
-                AksLabelSelectors = options.AksLabelSelectors,
-                AksIncludeClusterScopeResources = options.AksIncludeClusterScopeResources,
             };
 
             var result = await _azureBackupService.CreatePolicyAsync(

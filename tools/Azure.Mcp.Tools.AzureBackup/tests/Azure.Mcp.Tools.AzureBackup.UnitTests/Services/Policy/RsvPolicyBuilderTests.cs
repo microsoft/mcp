@@ -45,9 +45,9 @@ public class RsvPolicyBuilderTests
             WorkloadType = "AzureIaasVM",
             PolicySubType = "Enhanced",
             ScheduleFrequency = "Hourly",
-            HourlyIntervalHours = "4",
+            HourlyIntervalHours = 4,
             HourlyWindowStartTime = "08:00",
-            HourlyWindowDurationHours = "12",
+            HourlyWindowDurationHours = 12,
             DailyRetentionDays = "7",
         };
 
@@ -73,11 +73,11 @@ public class RsvPolicyBuilderTests
             ScheduleDaysOfWeek = "Monday,Wednesday",
             ScheduleTimes = "03:00",
             DailyRetentionDays = "10",
-            WeeklyRetentionWeeks = "8",
+            WeeklyRetentionWeeks = 8,
             WeeklyRetentionDaysOfWeek = "Monday",
-            MonthlyRetentionMonths = "12",
+            MonthlyRetentionMonths = 12,
             MonthlyRetentionDaysOfMonth = "1,15",
-            YearlyRetentionYears = "5",
+            YearlyRetentionYears = 5,
             YearlyRetentionMonths = "January,July",
             YearlyRetentionWeekOfMonth = "First",
             YearlyRetentionDaysOfWeek = "Sunday",
@@ -128,8 +128,8 @@ public class RsvPolicyBuilderTests
             WorkloadType = "MSSQL",
             ScheduleTimes = "01:30",
             DailyRetentionDays = "20",
-            LogFrequencyMinutes = "30",
-            LogRetentionDays = "10",
+            LogFrequencyMinutes = 30,
+            LogRetentionDays = 10,
         };
 
         var policy = (VmWorkloadProtectionPolicy)RsvPolicyBuilder.Build(req);
@@ -152,9 +152,9 @@ public class RsvPolicyBuilderTests
             FullScheduleFrequency = "Weekly",
             FullScheduleDaysOfWeek = "Sunday",
             DifferentialScheduleDaysOfWeek = "Wednesday",
-            DifferentialRetentionDays = "30",
+            DifferentialRetentionDays = 30,
             IncrementalScheduleDaysOfWeek = "Monday,Tuesday",
-            IncrementalRetentionDays = "7",
+            IncrementalRetentionDays = 7,
         };
 
         var policy = (VmWorkloadProtectionPolicy)RsvPolicyBuilder.Build(req);
@@ -197,7 +197,7 @@ public class RsvPolicyBuilderTests
         {
             Policy = "p",
             WorkloadType = "AzureIaasVM",
-            MonthlyRetentionMonths = "6",
+            MonthlyRetentionMonths = 6,
             MonthlyRetentionWeekOfMonth = "Last",
             MonthlyRetentionDaysOfWeek = "Friday",
         };
@@ -221,7 +221,7 @@ public class RsvPolicyBuilderTests
             Policy = "p",
             WorkloadType = "AzureIaasVM",
             DailyRetentionDays = "30",
-            SmartTier = "true",
+            SmartTier = true,
         };
 
         var policy = (IaasVmProtectionPolicy)RsvPolicyBuilder.Build(req);
@@ -239,7 +239,7 @@ public class RsvPolicyBuilderTests
             WorkloadType = "AzureIaasVM",
             DailyRetentionDays = "30",
             ArchiveTierAfterDays = "60",
-            SmartTier = "true",
+            SmartTier = true,
         };
 
         var policy = (IaasVmProtectionPolicy)RsvPolicyBuilder.Build(req);
@@ -255,7 +255,7 @@ public class RsvPolicyBuilderTests
             Policy = "p",
             WorkloadType = "SAPHANA",
             DailyRetentionDays = "30",
-            EnableSnapshotBackup = "true",
+            EnableSnapshotBackup = true,
             SnapshotInstantRpRetentionDays = "5",
             SnapshotInstantRpResourceGroup = "snapRG",
         };
@@ -314,9 +314,9 @@ public class RsvPolicyBuilderTests
             Policy = "p",
             WorkloadType = "AzureFileShare",
             ScheduleFrequency = "Hourly",
-            HourlyIntervalHours = "6",
+            HourlyIntervalHours = 6,
             HourlyWindowStartTime = "09:00",
-            HourlyWindowDurationHours = "12",
+            HourlyWindowDurationHours = 12,
             DailyRetentionDays = "30",
         };
 
@@ -336,11 +336,11 @@ public class RsvPolicyBuilderTests
             Policy = "p",
             WorkloadType = "AzureFileShare",
             DailyRetentionDays = "30",
-            WeeklyRetentionWeeks = "12",
+            WeeklyRetentionWeeks = 12,
             WeeklyRetentionDaysOfWeek = "Sunday",
-            MonthlyRetentionMonths = "12",
+            MonthlyRetentionMonths = 12,
             MonthlyRetentionDaysOfMonth = "1",
-            YearlyRetentionYears = "5",
+            YearlyRetentionYears = 5,
             YearlyRetentionMonths = "January",
             YearlyRetentionDaysOfMonth = "1",
         };

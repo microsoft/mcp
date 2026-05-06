@@ -30,7 +30,7 @@ public class ProtectedItemProtectCommandTests : CommandUnitTestsBase<ProtectedIt
         // Arrange
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../vm1"), Arg.Is("DefaultPolicy"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(new ProtectResult("Succeeded", "vm1-backup", "job123", "Protection enabled"));
 
         // Act
@@ -53,7 +53,7 @@ public class ProtectedItemProtectCommandTests : CommandUnitTestsBase<ProtectedIt
         // Arrange
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../vm1"), Arg.Is("DefaultPolicy"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -78,7 +78,7 @@ public class ProtectedItemProtectCommandTests : CommandUnitTestsBase<ProtectedIt
         {
             Service.ProtectItemAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("ds1"), Arg.Is("pol1"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
                 .Returns(new ProtectResult("Succeeded", "item1", "job1", null));
         }
 
@@ -102,7 +102,7 @@ public class ProtectedItemProtectCommandTests : CommandUnitTestsBase<ProtectedIt
         // Arrange
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../vm1"), Arg.Is("DefaultPolicy"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
         // Act
@@ -143,7 +143,7 @@ public class ProtectedItemProtectCommandTests : CommandUnitTestsBase<ProtectedIt
         // (read back from the backup instance) and leave JobId null.
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../disks/d1"), Arg.Is("policy-disk"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(new ProtectResult(
                 Status: "Succeeded",
                 ProtectedItemName: "rg-mydisk-abcd1234",
@@ -174,7 +174,7 @@ public class ProtectedItemProtectCommandTests : CommandUnitTestsBase<ProtectedIt
         // carry Status="Failed" + ErrorMessage rather than a misleading "Accepted".
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../sa1"), Arg.Is("policy-blob"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(new ProtectResult(
                 Status: "Failed",
                 ProtectedItemName: "rg-blob-xyz",
@@ -205,7 +205,7 @@ public class ProtectedItemProtectCommandTests : CommandUnitTestsBase<ProtectedIt
         // terminal status (Completed, CompletedWithWarnings, Failed) along with the job id.
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../vms/myvm"), Arg.Is("policy-vm"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(new ProtectResult(
                 Status: "Completed",
                 ProtectedItemName: "vm;iaasvmcontainerv2;rg;myvm",
@@ -233,7 +233,7 @@ public class ProtectedItemProtectCommandTests : CommandUnitTestsBase<ProtectedIt
         // and ErrorMessage from the job rather than the previous "Accepted".
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../sa/fileServices/default/shares/share"), Arg.Is("policy-afs"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(new ProtectResult(
                 Status: "Failed",
                 ProtectedItemName: "afsfileshare;sa;share",
@@ -263,7 +263,7 @@ public class ProtectedItemProtectCommandTests : CommandUnitTestsBase<ProtectedIt
         // should return InProgress with the job id so the caller can keep monitoring.
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../vms/slowvm"), Arg.Is("policy-vm"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(new ProtectResult(
                 Status: "InProgress",
                 ProtectedItemName: "vm;iaasvmcontainerv2;rg;slowvm",

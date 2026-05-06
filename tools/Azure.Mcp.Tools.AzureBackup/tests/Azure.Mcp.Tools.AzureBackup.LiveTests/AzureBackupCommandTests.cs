@@ -675,31 +675,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact]
-    public async Task PolicyCreate_DppVault_AksWithPerInstanceFlag_ReturnsValidationError()
-    {
-        var vaultName = $"{Settings.ResourceBaseName}-dpp";
-        var policyName = $"test-aks-bad-{Random.Shared.NextInt64()}";
-
-        // AKS namespace selectors are per-backup-instance, not per-policy. The validator should reject them with guidance.
-        var status = await CallToolAsync(
-            "azurebackup_policy_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "vault", vaultName },
-                { "policy", policyName },
-                { "workload-type", "AKS" },
-                { "daily-retention-days", "30" },
-                { "aks-included-namespaces", "ns1,ns2" }
-            },
-            mcpClient: null,
-            resultProcessor: elem => elem.TryGetProperty("status", out var s) ? s : null);
-
-        Assert.NotNull(status);
-        Assert.Equal(400, status!.Value.GetInt32());
-    }
+    
 
     [Fact]
     public async Task PolicyCreate_DppVault_CreatesPgFlexPolicy_Successfully()

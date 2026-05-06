@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Core;
@@ -125,6 +125,9 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
     public async Task<ProtectResult> ProtectItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string policyName, string? datasourceType,
+        string? aksIncludedNamespaces, string? aksExcludedNamespaces,
+        string? aksLabelSelectors, string? aksIncludeClusterScopeResources,
+        string? aksSnapshotResourceGroup,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -152,7 +155,10 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
 
         if (profile.RequiresSnapshotResourceGroup)
         {
-            var snapshotRgId = ResourceGroupResource.CreateResourceIdentifier(subscription, datasourceResourceId.ResourceGroupName ?? resourceGroup);
+            var snapshotRg = !string.IsNullOrWhiteSpace(aksSnapshotResourceGroup)
+                ? aksSnapshotResourceGroup
+                : datasourceResourceId.ResourceGroupName ?? resourceGroup;
+            var snapshotRgId = ResourceGroupResource.CreateResourceIdentifier(subscription, snapshotRg);
             var opStoreSettings = new OperationalDataStoreSettings(DataStoreType.OperationalStore)
             {
                 ResourceGroupId = snapshotRgId,
@@ -164,9 +170,48 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         if (profile.BackupParametersMode == DppBackupParametersMode.KubernetesCluster)
         {
             policyInfo.PolicyParameters ??= new BackupInstancePolicySettings();
+
+            var includeClusterScope = string.IsNullOrWhiteSpace(aksIncludeClusterScopeResources)
+                || aksIncludeClusterScopeResources.Equals("true", StringComparison.OrdinalIgnoreCase);
+
             var aksSettings = new KubernetesClusterBackupDataSourceSettings(
                 isSnapshotVolumesEnabled: true,
-                isClusterScopeResourcesIncluded: true);
+                isClusterScopeResourcesIncluded: includeClusterScope);
+
+            // AKS namespace scoping (--aks-included-namespaces / --aks-excluded-namespaces):
+            // NOT YET FUNCTIONAL due to Azure SDK serialization bug.
+            //
+            // Problem: KubernetesClusterBackupDataSourceSettings (Azure.ResourceManager.DataProtectionBackup
+            // v1.7.1) initializes both IncludedNamespaces and ExcludedNamespaces as empty IList<string>.
+            // The serializer always emits both as [] even when only one is populated. The DPP API rejects
+            // with UserErrorInvalidIncludedExcludedNamespacesList: "Include and Exclude list for Namespaces
+            // cannot be used together."
+            //
+            // How the CLI works around this: az dataprotection backup-instance initialize-backupconfig
+            // outputs JSON with null for unused fields (e.g. "excluded_namespaces": null). The CLI never
+            // uses the .NET SDK type for serialization — it constructs the JSON directly.
+            //
+            // Workarounds attempted and why they failed:
+            //   1. Clear() on unused list → still serializes as []
+            //   2. Reflection to null backing field → NullReferenceException in JsonModelWriteCore
+            //   3. ModelReaderWriter.Read from JSON with null → re-initializes empty list on deserialize
+            //
+            // Fix required: Azure REST API specs (Azure/azure-rest-api-specs) should add x-nullable: true
+            // to includedNamespaces and excludedNamespaces in KubernetesClusterBackupDatasourceParameters.
+            // This would generate nullable IList<string>? properties that the serializer can omit when null.
+            // Path: specification/dataprotection/resource-manager/Microsoft.DataProtection/stable/2023-11-01/dataprotection.json
+            //
+            // What works: --aks-label-selectors, --aks-include-cluster-scope-resources, --aks-snapshot-resource-group
+            // What doesn't: --aks-included-namespaces, --aks-excluded-namespaces (params accepted but ignored)
+
+            if (!string.IsNullOrWhiteSpace(aksLabelSelectors))
+            {
+                foreach (var label in aksLabelSelectors.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    aksSettings.LabelSelectors.Add(label);
+                }
+            }
+
             policyInfo.PolicyParameters.BackupDataSourceParametersList.Add(aksSettings);
         }
 
