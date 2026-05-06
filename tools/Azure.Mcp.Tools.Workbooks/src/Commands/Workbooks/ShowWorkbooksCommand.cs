@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger, IWorkbooksService workbooksService) : BaseWorkbooksCommand<ShowWorkbooksOptions>
+public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger, IWorkbooksService workbooksService) : BaseWorkbooksCommand<ShowWorkbooksOptions, ShowWorkbooksCommand.ShowWorkbooksCommandResult>
 {
     private const string CommandTitle = "Get Workbook";
     private readonly ILogger<ShowWorkbooksCommand> _logger = logger;
@@ -43,6 +44,8 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger, I
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ShowWorkbooksCommandResult> ResultTypeInfo => WorkbooksJsonContext.Default.ShowWorkbooksCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -82,9 +85,7 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger, I
                 options.Tenant,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result.Succeeded.ToList(), result.Failed.ToList()),
-                WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
+            SetResult(context, new(result.Succeeded.ToList(), result.Failed.ToList()));
         }
         catch (Exception ex)
         {
@@ -95,5 +96,5 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger, I
         return context.Response;
     }
 
-    internal record ShowWorkbooksCommandResult(List<WorkbookInfo> Workbooks, List<WorkbookError> Errors);
+    public record ShowWorkbooksCommandResult(List<WorkbookInfo> Workbooks, List<WorkbookError> Errors);
 }

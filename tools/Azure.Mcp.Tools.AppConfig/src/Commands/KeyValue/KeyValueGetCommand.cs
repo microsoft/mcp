@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 
 public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppConfigService appConfigService)
-    : BaseAppConfigCommand<KeyValueGetOptions>()
+    : BaseAppConfigCommand<KeyValueGetOptions, KeyValueGetCommand.KeyValueGetCommandResult>()
 {
     private const string CommandTitle = "Gets App Configuration Key-Value Settings";
     private readonly ILogger<KeyValueGetCommand> _logger = logger;
@@ -43,6 +44,8 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppC
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<KeyValueGetCommandResult> ResultTypeInfo => AppConfigJsonContext.Default.KeyValueGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -94,7 +97,7 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppC
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(settings ?? []), AppConfigJsonContext.Default.KeyValueGetCommandResult);
+            SetResult(context, new(settings ?? []));
         }
         catch (Exception ex)
         {
@@ -105,5 +108,5 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppC
         return context.Response;
     }
 
-    internal record KeyValueGetCommandResult(List<KeyValueSetting> Settings);
+    public record KeyValueGetCommandResult(List<KeyValueSetting> Settings);
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Options;
@@ -15,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 
-public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<BaseTopicOptions>
+public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<BaseTopicOptions, TopicDetailsCommand.TopicDetailsCommandResult>
 {
     private const string CommandTitle = "Get Service Bus Topic Details";
     private readonly ILogger<TopicDetailsCommand> _logger = logger;
@@ -43,6 +44,8 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, ISe
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<TopicDetailsCommandResult> ResultTypeInfo => ServiceBusJsonContext.Default.TopicDetailsCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -77,7 +80,7 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, ISe
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.TopicDetailsCommandResult);
+            SetResult(context, new(details));
         }
         catch (Exception ex)
         {
@@ -101,5 +104,5 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, ISe
         _ => base.GetStatusCode(ex)
     };
 
-    internal record TopicDetailsCommandResult(TopicDetails TopicDetails);
+    public record TopicDetailsCommandResult(TopicDetails TopicDetails);
 }

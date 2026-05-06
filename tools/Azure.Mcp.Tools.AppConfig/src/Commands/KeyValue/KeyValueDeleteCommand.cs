@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 
 public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger, IAppConfigService appConfigService)
-    : BaseKeyValueCommand<KeyValueDeleteOptions>()
+    : BaseKeyValueCommand<KeyValueDeleteOptions, KeyValueDeleteCommand.KeyValueDeleteCommandResult>()
 {
     private const string CommandTitle = "Delete App Configuration Key-Value Setting";
     private readonly ILogger<KeyValueDeleteCommand> _logger = logger;
@@ -39,6 +40,8 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger,
         Secret = false
     };
 
+    protected override JsonTypeInfo<KeyValueDeleteCommandResult> ResultTypeInfo => AppConfigJsonContext.Default.KeyValueDeleteCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -59,7 +62,7 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger,
                 options.Label,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(options.Key, options.Label), AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
+            SetResult(context, new(options.Key, options.Label));
         }
         catch (Exception ex)
         {
@@ -70,5 +73,5 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger,
         return context.Response;
     }
 
-    internal record KeyValueDeleteCommandResult(string? Key, string? Label);
+    public record KeyValueDeleteCommandResult(string? Key, string? Label);
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Events;
 using Azure.Mcp.Tools.EventGrid.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Events;
 
-public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> logger, IEventGridService eventGridService) : BaseEventGridCommand<EventsPublishOptions>
+public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> logger, IEventGridService eventGridService) : BaseEventGridCommand<EventsPublishOptions, EventGridPublishCommand.EventGridPublishCommandResult>
 {
     private const string CommandTitle = "Publish Events to Event Grid Topic";
     private readonly ILogger<EventGridPublishCommand> _logger = logger;
@@ -39,6 +40,8 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<EventGridPublishCommandResult> ResultTypeInfo => EventGridJsonContext.Default.EventGridPublishCommandResult;
 
     private static readonly string[] s_item = ["cloudevents", "eventgrid", "custom"];
 
@@ -94,9 +97,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result),
-                EventGridJsonContext.Default.EventGridPublishCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -128,5 +129,5 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         _ => base.GetStatusCode(ex)
     };
 
-    internal record EventGridPublishCommandResult(EventPublishResult Result);
+    public record EventGridPublishCommandResult(EventPublishResult Result);
 }

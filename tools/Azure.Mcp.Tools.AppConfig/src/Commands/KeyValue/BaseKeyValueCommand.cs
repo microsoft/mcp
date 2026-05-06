@@ -10,8 +10,9 @@ using Microsoft.Mcp.Core.Extensions;
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 
 public abstract class BaseKeyValueCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
-    : BaseAppConfigCommand<T> where T : BaseKeyValueOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T,
+    TResult>
+    : BaseAppConfigCommand<T, TResult> where T : BaseKeyValueOptions, new()
 {
     protected override void RegisterOptions(Command command)
     {

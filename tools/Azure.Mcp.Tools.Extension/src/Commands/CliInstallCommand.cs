@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Tools.Extension.Models;
 using Azure.Mcp.Tools.Extension.Options;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.Logging;
@@ -10,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
-public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliInstallService cliInstallService) : GlobalCommand<CliInstallOptions>
+public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliInstallService cliInstallService) : GlobalCommand<CliInstallOptions, CliInstallResult>
 {
     private const string CommandTitle = "Get CLI installation instructions";
     private readonly ILogger<CliInstallCommand> _logger = logger;
@@ -37,6 +39,8 @@ public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliIns
         Secret = false,
         LocalRequired = true
     };
+
+    protected override JsonTypeInfo<CliInstallResult> ResultTypeInfo => ExtensionJsonContext.Default.CliInstallResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -81,7 +85,7 @@ public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliIns
             responseMessage.EnsureSuccessStatusCode();
 
             var responseBody = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-            context.Response.Results = ResponseResult.Create(new(responseBody, cliType), ExtensionJsonContext.Default.CliInstallResult);
+            SetResult(context, new(responseBody, cliType));
 
         }
         catch (Exception ex)

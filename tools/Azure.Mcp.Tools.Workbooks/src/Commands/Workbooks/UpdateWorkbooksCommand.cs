@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logger, IWorkbooksService workbooksService) : BaseWorkbooksCommand<UpdateWorkbooksOptions>
+public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logger, IWorkbooksService workbooksService) : BaseWorkbooksCommand<UpdateWorkbooksOptions, UpdateWorkbooksCommand.UpdateWorkbooksCommandResult>
 {
     private const string CommandTitle = "Update Workbook";
     private readonly ILogger<UpdateWorkbooksCommand> _logger = logger;
@@ -37,6 +38,8 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<UpdateWorkbooksCommandResult> ResultTypeInfo => WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -74,7 +77,7 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
                 options.Tenant,
                 cancellationToken) ?? throw new InvalidOperationException("Failed to update workbook");
 
-            context.Response.Results = ResponseResult.Create(new(updatedWorkbook), WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
+            SetResult(context, new(updatedWorkbook));
         }
         catch (Exception ex)
         {
@@ -85,5 +88,5 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
         return context.Response;
     }
 
-    internal record UpdateWorkbooksCommandResult(WorkbookInfo Workbook);
+    public record UpdateWorkbooksCommandResult(WorkbookInfo Workbook);
 }

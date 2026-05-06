@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Topic;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 
-public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<SubscriptionPeekOptions>
+public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<SubscriptionPeekOptions, SubscriptionPeekCommand.SubscriptionPeekCommandResult>
 {
     private const string CommandTitle = "Peek Messages from Service Bus Topic Subscription";
     private readonly ILogger<SubscriptionPeekCommand> _logger = logger;
@@ -49,6 +50,8 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<SubscriptionPeekCommandResult> ResultTypeInfo => ServiceBusJsonContext.Default.SubscriptionPeekCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -90,7 +93,7 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(messages ?? []), ServiceBusJsonContext.Default.SubscriptionPeekCommandResult);
+            SetResult(context, new(messages ?? []));
         }
         catch (Exception ex)
         {
@@ -114,5 +117,5 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
         _ => base.GetStatusCode(ex)
     };
 
-    internal record SubscriptionPeekCommandResult(List<ServiceBusReceivedMessage> Messages);
+    public record SubscriptionPeekCommandResult(List<ServiceBusReceivedMessage> Messages);
 }

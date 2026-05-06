@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.VirtualDesktop.Models;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.Logging;
@@ -11,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 
 public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSessionListCommand> logger, IVirtualDesktopService virtualDesktopService)
-    : BaseSessionHostCommand
+    : BaseSessionHostCommand<SessionHostUserSessionListCommand.SessionHostUserSessionListCommandResult>
 {
     private const string CommandTitle = "List User Sessions on Session Host";
     private readonly ILogger<SessionHostUserSessionListCommand> _logger = logger;
@@ -38,6 +39,8 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<SessionHostUserSessionListCommandResult> ResultTypeInfo => VirtualDesktopJsonContext.Default.SessionHostUserSessionListCommandResult;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -84,7 +87,7 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                     cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(new([.. userSessions ?? []]), VirtualDesktopJsonContext.Default.SessionHostUserSessionListCommandResult);
+            SetResult(context, new([.. userSessions ?? []]));
         }
         catch (Exception ex)
         {
@@ -106,5 +109,5 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record SessionHostUserSessionListCommandResult(List<UserSession> UserSessions);
+    public record SessionHostUserSessionListCommandResult(List<UserSession> UserSessions);
 }

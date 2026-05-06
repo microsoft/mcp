@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Subscription;
 using Azure.Mcp.Tools.EventGrid.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 
-public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger, IEventGridService eventGridService, ISubscriptionService subscriptionService) : GlobalCommand<SubscriptionListOptions>
+public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger, IEventGridService eventGridService, ISubscriptionService subscriptionService) : GlobalCommand<SubscriptionListOptions, SubscriptionListCommand.SubscriptionListCommandResult>
 {
     private const string CommandTitle = "List Event Grid Subscriptions";
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
@@ -38,6 +39,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<SubscriptionListCommandResult> ResultTypeInfo => EventGridJsonContext.Default.SubscriptionListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -123,7 +126,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                         continue;
                     }
                 }
-                context.Response.Results = ResponseResult.Create(new(aggregate), EventGridJsonContext.Default.SubscriptionListCommandResult);
+                SetResult(context, new(aggregate));
             }
             else
             {
@@ -136,7 +139,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(subscriptions ?? []), EventGridJsonContext.Default.SubscriptionListCommandResult);
+                SetResult(context, new(subscriptions ?? []));
             }
         }
         catch (Exception ex)
@@ -150,5 +153,5 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         return context.Response;
     }
 
-    internal record SubscriptionListCommandResult(List<EventGridSubscriptionInfo> Subscriptions);
+    public record SubscriptionListCommandResult(List<EventGridSubscriptionInfo> Subscriptions);
 }

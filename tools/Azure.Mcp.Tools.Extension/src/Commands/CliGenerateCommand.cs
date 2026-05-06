@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Tools.Extension.Models;
 using Azure.Mcp.Tools.Extension.Options;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.Logging;
@@ -10,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
-public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliGenerateService cliGenerateService) : GlobalCommand<CliGenerateOptions>
+public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliGenerateService cliGenerateService) : GlobalCommand<CliGenerateOptions, CliGenerateResult>
 {
     private const string CommandTitle = "Generate CLI Command";
     private readonly ILogger<CliGenerateCommand> _logger = logger;
@@ -37,6 +39,8 @@ public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliG
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<CliGenerateResult> ResultTypeInfo => ExtensionJsonContext.Default.CliGenerateResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -87,7 +91,7 @@ public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliG
                 responseMessage.EnsureSuccessStatusCode();
 
                 var responseBody = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-                context.Response.Results = ResponseResult.Create(new(responseBody, cliType), ExtensionJsonContext.Default.CliGenerateResult);
+                SetResult(context, new(responseBody, cliType));
             }
         }
         catch (Exception ex)

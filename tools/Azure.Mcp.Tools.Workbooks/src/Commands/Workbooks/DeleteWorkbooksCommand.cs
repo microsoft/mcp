@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logger, IWorkbooksService workbooksService) : GlobalCommand<DeleteWorkbookOptions>
+public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logger, IWorkbooksService workbooksService) : GlobalCommand<DeleteWorkbookOptions, DeleteWorkbooksCommand.DeleteWorkbooksCommandResult>
 {
     private const string CommandTitle = "Delete Workbook";
     private readonly ILogger<DeleteWorkbooksCommand> _logger = logger;
@@ -44,6 +45,8 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<DeleteWorkbooksCommandResult> ResultTypeInfo => WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -83,9 +86,7 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
                 options.Tenant,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result.Succeeded.ToList(), result.Failed.ToList()),
-                WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
+            SetResult(context, new(result.Succeeded.ToList(), result.Failed.ToList()));
         }
         catch (Exception ex)
         {

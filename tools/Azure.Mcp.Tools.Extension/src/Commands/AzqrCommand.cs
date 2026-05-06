@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Extension.Options;
@@ -16,7 +17,7 @@ using Microsoft.Mcp.Core.Services.Time;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
-public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionService subscriptionService, IDateTimeProvider dateTimeProvider, IExternalProcessService processService, int processTimeoutSeconds = 300) : SubscriptionCommand<AzqrOptions>()
+public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionService subscriptionService, IDateTimeProvider dateTimeProvider, IExternalProcessService processService, int processTimeoutSeconds = 300) : SubscriptionCommand<AzqrOptions, AzqrReportResult>()
 {
     private const string CommandTitle = "Azure Quick Review CLI Command";
     private readonly ILogger<AzqrCommand> _logger = logger;
@@ -45,6 +46,8 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionServic
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<AzqrReportResult> ResultTypeInfo => ExtensionJsonContext.Default.AzqrReportResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -112,7 +115,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionServic
                 return response;
             }
             var resultObj = new AzqrReportResult(xlsxReportFilePath, jsonReportFilePath, result.Output);
-            response.Results = ResponseResult.Create(resultObj, ExtensionJsonContext.Default.AzqrReportResult);
+            SetResult(context, resultObj);
             response.Message = "azqr report generated successfully.";
             return response;
         }

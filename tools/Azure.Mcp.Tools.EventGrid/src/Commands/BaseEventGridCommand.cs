@@ -9,5 +9,6 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.EventGrid.Commands;
 
 public abstract class BaseEventGridCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions> where TOptions : BaseEventGridOptions, new();
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions,
+    TResult>
+    : SubscriptionCommand<TOptions, TResult> where TOptions : BaseEventGridOptions, new();

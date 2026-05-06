@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
@@ -13,9 +14,9 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Functions.Commands.Template;
 
-internal record TemplateGetCommandResult(TemplateListResult? TemplateList, FunctionTemplateResult? FunctionTemplate);
+public record TemplateGetCommandResult(TemplateListResult? TemplateList, FunctionTemplateResult? FunctionTemplate);
 
-public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : BaseCommand<TemplateGetOptions>
+public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : BaseCommand<TemplateGetOptions, TemplateGetCommandResult>
 {
     private readonly ILogger<TemplateGetCommand> _logger = logger;
 
@@ -42,6 +43,8 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<TemplateGetCommandResult> ResultTypeInfo => FunctionsJsonContext.Default.TemplateGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -98,9 +101,7 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
                 var templateList = await service.GetTemplateListAsync(options.Language!, cancellationToken);
 
                 context.Response.Status = HttpStatusCode.OK;
-                context.Response.Results = ResponseResult.Create(
-                    new(TemplateList: templateList, FunctionTemplate: null),
-                    FunctionsJsonContext.Default.TemplateGetCommandResult);
+                SetResult(context, new(TemplateList: templateList, FunctionTemplate: null));
                 context.Response.Message = string.Empty;
             }
             else
@@ -110,9 +111,7 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
                     options.Language!, options.Template, options.RuntimeVersion, options.Output, cancellationToken);
 
                 context.Response.Status = HttpStatusCode.OK;
-                context.Response.Results = ResponseResult.Create(
-                    new(TemplateList: null, FunctionTemplate: functionTemplate),
-                    FunctionsJsonContext.Default.TemplateGetCommandResult);
+                SetResult(context, new(TemplateList: null, FunctionTemplate: functionTemplate));
                 context.Response.Message = string.Empty;
             }
         }

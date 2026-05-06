@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 using Azure.Mcp.Tools.VirtualDesktop.Options.SessionHost;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 
-public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logger, IVirtualDesktopService virtualDesktopService) : BaseHostPoolCommand<SessionHostListOptions>
+public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logger, IVirtualDesktopService virtualDesktopService) : BaseHostPoolCommand<SessionHostListOptions, SessionHostListCommand.SessionHostListCommandResult>
 {
     private const string CommandTitle = "List SessionHosts";
     private readonly ILogger<SessionHostListCommand> _logger = logger;
@@ -40,6 +41,8 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<SessionHostListCommandResult> ResultTypeInfo => VirtualDesktopJsonContext.Default.SessionHostListCommandResult;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -83,7 +86,7 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
                     cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(new([.. sessionHosts ?? []]), VirtualDesktopJsonContext.Default.SessionHostListCommandResult);
+            SetResult(context, new([.. sessionHosts ?? []]));
         }
         catch (Exception ex)
         {
@@ -105,5 +108,5 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record SessionHostListCommandResult(List<Models.SessionHost> SessionHosts);
+    public record SessionHostListCommandResult(List<Models.SessionHost> SessionHosts);
 }

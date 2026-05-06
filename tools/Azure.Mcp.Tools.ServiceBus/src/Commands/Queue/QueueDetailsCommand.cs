@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Options;
@@ -15,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 
-public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<BaseQueueOptions>
+public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<BaseQueueOptions, QueueDetailsCommand.QueueDetailsCommandResult>
 {
     private const string CommandTitle = "Get Service Bus Queue Details";
     private readonly ILogger<QueueDetailsCommand> _logger = logger;
@@ -46,6 +47,8 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger, ISe
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<QueueDetailsCommandResult> ResultTypeInfo => ServiceBusJsonContext.Default.QueueDetailsCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -80,7 +83,7 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger, ISe
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.QueueDetailsCommandResult);
+            SetResult(context, new(details));
         }
         catch (Exception ex)
         {
@@ -103,5 +106,5 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger, ISe
         ServiceBusException sbEx when sbEx.Reason == ServiceBusFailureReason.MessagingEntityNotFound => HttpStatusCode.NotFound,
         _ => base.GetStatusCode(ex)
     };
-    internal record QueueDetailsCommandResult(QueueDetails QueueDetails);
+    public record QueueDetailsCommandResult(QueueDetails QueueDetails);
 }

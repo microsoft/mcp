@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Queue;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 
-public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<QueuePeekOptions>
+public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<QueuePeekOptions, QueuePeekCommand.QueuePeekCommandResult>
 {
     private const string CommandTitle = "Peek Messages from Service Bus Queue";
     private readonly ILogger<QueuePeekCommand> _logger = logger;
@@ -48,6 +49,8 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger, IServiceB
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<QueuePeekCommandResult> ResultTypeInfo => ServiceBusJsonContext.Default.QueuePeekCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -85,7 +88,7 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger, IServiceB
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(messages ?? []), ServiceBusJsonContext.Default.QueuePeekCommandResult);
+            SetResult(context, new(messages ?? []));
         }
         catch (Exception ex)
         {
@@ -109,5 +112,5 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger, IServiceB
         _ => base.GetStatusCode(ex)
     };
 
-    internal record QueuePeekCommandResult(List<ServiceBusReceivedMessage> Messages);
+    public record QueuePeekCommandResult(List<ServiceBusReceivedMessage> Messages);
 }

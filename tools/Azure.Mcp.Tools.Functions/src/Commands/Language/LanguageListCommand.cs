@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -9,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Functions.Commands.Language;
 
-public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger) : BaseCommand<EmptyOptions>
+public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger) : BaseCommand<EmptyOptions, List<LanguageListResult>>
 {
     private readonly ILogger<LanguageListCommand> _logger = logger;
 
@@ -35,6 +37,8 @@ public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger) : B
         Secret = false
     };
 
+    protected override JsonTypeInfo<List<LanguageListResult>> ResultTypeInfo => FunctionsJsonContext.Default.ListLanguageListResult;
+
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
@@ -53,9 +57,7 @@ public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger) : B
             var result = await service.GetLanguageListAsync(cancellationToken);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(
-                [result],
-                FunctionsJsonContext.Default.ListLanguageListResult);
+            SetResult(context, [result]);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)

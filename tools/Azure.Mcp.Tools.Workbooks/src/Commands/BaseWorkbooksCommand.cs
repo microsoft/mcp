@@ -8,6 +8,7 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.Workbooks.Commands;
 
 public abstract class BaseWorkbooksCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
-    : GlobalCommand<T>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T,
+    TResult>
+    : GlobalCommand<T, TResult>
     where T : BaseWorkbooksOptions, new();

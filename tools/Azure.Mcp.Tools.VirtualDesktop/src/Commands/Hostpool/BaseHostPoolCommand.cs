@@ -10,8 +10,9 @@ using Microsoft.Mcp.Core.Extensions;
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 
 public abstract class BaseHostPoolCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
-    : BaseVirtualDesktopCommand<T>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T,
+    TResult>
+    : BaseVirtualDesktopCommand<T, TResult>
     where T : BaseHostPoolOptions, new()
 {
 

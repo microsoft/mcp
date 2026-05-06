@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.EventGrid.Options.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Mcp.Core.Commands;
@@ -10,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Topic;
 
-public sealed class TopicListCommand(ILogger<TopicListCommand> logger, IEventGridService eventGridService) : BaseEventGridCommand<TopicListOptions>
+public sealed class TopicListCommand(ILogger<TopicListCommand> logger, IEventGridService eventGridService) : BaseEventGridCommand<TopicListOptions, TopicListCommand.TopicListCommandResult>
 {
     private const string CommandTitle = "List Event Grid Topics";
     private readonly ILogger<TopicListCommand> _logger = logger;
@@ -35,6 +36,8 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger, IEventGri
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<TopicListCommandResult> ResultTypeInfo => EventGridJsonContext.Default.TopicListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -67,7 +70,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger, IEventGri
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(topics ?? []), EventGridJsonContext.Default.TopicListCommandResult);
+            SetResult(context, new(topics ?? []));
         }
         catch (Exception ex)
         {
@@ -80,5 +83,5 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger, IEventGri
         return context.Response;
     }
 
-    internal record TopicListCommandResult(List<EventGridTopicInfo> Topics);
+    public record TopicListCommandResult(List<EventGridTopicInfo> Topics);
 }

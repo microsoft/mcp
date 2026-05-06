@@ -10,8 +10,9 @@ using Microsoft.Mcp.Core.Extensions;
 namespace Azure.Mcp.Tools.AppConfig.Commands;
 
 public abstract class BaseAppConfigCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
-    : SubscriptionCommand<T> where T : BaseAppConfigOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T,
+    TResult>
+    : SubscriptionCommand<T, TResult> where T : BaseAppConfigOptions, new()
 {
     protected override void RegisterOptions(Command command)
     {

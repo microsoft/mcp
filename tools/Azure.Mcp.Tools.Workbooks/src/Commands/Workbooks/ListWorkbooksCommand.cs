@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, IWorkbooksService workbooksService) : SubscriptionCommand<ListWorkbooksOptions>
+public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, IWorkbooksService workbooksService) : SubscriptionCommand<ListWorkbooksOptions, ListWorkbooksCommand.ListWorkbooksCommandResult>
 {
     private const string CommandTitle = "List Workbooks";
     private readonly ILogger<ListWorkbooksCommand> _logger = logger;
@@ -50,6 +51,8 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, I
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<ListWorkbooksCommandResult> ResultTypeInfo => WorkbooksJsonContext.Default.ListWorkbooksCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -119,9 +122,7 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, I
                 options.Tenant,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result.Workbooks.ToList(), result.TotalCount, result.Workbooks.Count),
-                WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
+            SetResult(context, new(result.Workbooks.ToList(), result.TotalCount, result.Workbooks.Count));
         }
         catch (Exception ex)
         {
@@ -142,5 +143,5 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, I
         };
     }
 
-    internal record ListWorkbooksCommandResult(List<WorkbookInfo> Workbooks, int? TotalCount, int Returned);
+    public record ListWorkbooksCommandResult(List<WorkbookInfo> Workbooks, int? TotalCount, int Returned);
 }

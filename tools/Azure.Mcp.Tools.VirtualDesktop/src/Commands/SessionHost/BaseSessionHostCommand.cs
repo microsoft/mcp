@@ -8,8 +8,8 @@ using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 
-public abstract class BaseSessionHostCommand
-    : BaseHostPoolCommand<SessionHostUserSessionListOptions>
+public abstract class BaseSessionHostCommand<TResult>
+    : BaseHostPoolCommand<SessionHostUserSessionListOptions, TResult>
 {
 
     protected override void RegisterOptions(Command command)

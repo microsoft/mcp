@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Options;
@@ -15,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 
-public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<SubscriptionDetailsOptions>
+public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<SubscriptionDetailsOptions, SubscriptionDetailsCommand.SubscriptionDetailsCommandResult>
 {
     private const string CommandTitle = "Get Service Bus Topic Subscription Details";
     private readonly ILogger<SubscriptionDetailsCommand> _logger = logger;
@@ -46,6 +47,8 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<SubscriptionDetailsCommandResult> ResultTypeInfo => ServiceBusJsonContext.Default.SubscriptionDetailsCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -83,7 +86,7 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.SubscriptionDetailsCommandResult);
+            SetResult(context, new(details));
         }
         catch (Exception ex)
         {
@@ -107,5 +110,5 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
         _ => base.GetStatusCode(ex)
     };
 
-    internal record SubscriptionDetailsCommandResult(SubscriptionDetails SubscriptionDetails);
+    public record SubscriptionDetailsCommandResult(SubscriptionDetails SubscriptionDetails);
 }

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 
 public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger, IAppConfigService appConfigService)
-    : BaseKeyValueCommand<KeyValueSetOptions>()
+    : BaseKeyValueCommand<KeyValueSetOptions, KeyValueSetCommand.KeyValueSetCommandResult>()
 {
     private const string CommandTitle = "Set App Configuration Key-Value Setting";
     private readonly ILogger<KeyValueSetCommand> _logger = logger;
@@ -41,6 +42,8 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger, IAppC
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<KeyValueSetCommandResult> ResultTypeInfo => AppConfigJsonContext.Default.KeyValueSetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -80,10 +83,7 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger, IAppC
                 options.ContentType,
                 options.Tags,
                 cancellationToken);
-            context.Response.Results = ResponseResult.Create(
-                new(options.Key, options.Value, options.Label, options.ContentType, options.Tags),
-                AppConfigJsonContext.Default.KeyValueSetCommandResult
-            );
+            SetResult(context, new(options.Key, options.Value, options.Label, options.ContentType, options.Tags));
         }
         catch (Exception ex)
         {
@@ -94,5 +94,5 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger, IAppC
         return context.Response;
     }
 
-    internal record KeyValueSetCommandResult(string? Key, string? Value, string? Label, string? ContentType = null, string[]? Tags = null);
+    public record KeyValueSetCommandResult(string? Key, string? Value, string? Label, string? ContentType = null, string[]? Tags = null);
 }

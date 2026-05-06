@@ -14,8 +14,9 @@ namespace Azure.Mcp.Tools.VirtualDesktop.Commands;
 /// Base command for all Virtual Desktop commands
 /// </summary>
 public abstract class BaseVirtualDesktopCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions,
+    TResult>
+    : SubscriptionCommand<TOptions, TResult>
     where TOptions : SubscriptionOptions, new()
 {
     protected override void RegisterOptions(Command command)

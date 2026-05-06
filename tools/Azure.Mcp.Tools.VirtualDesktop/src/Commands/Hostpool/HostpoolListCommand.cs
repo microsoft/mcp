@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 
-public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVirtualDesktopService virtualDesktopService) : BaseVirtualDesktopCommand<HostpoolListOptions>
+public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVirtualDesktopService virtualDesktopService) : BaseVirtualDesktopCommand<HostpoolListOptions, HostpoolListCommand.HostPoolListCommandResult>
 {
     private const string CommandTitle = "List hostpools";
     private readonly ILogger<HostpoolListCommand> _logger = logger;
@@ -38,6 +39,8 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVi
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<HostPoolListCommandResult> ResultTypeInfo => VirtualDesktopJsonContext.Default.HostPoolListCommandResult;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -70,7 +73,7 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVi
                     cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(new([.. hostpools ?? []]), VirtualDesktopJsonContext.Default.HostPoolListCommandResult);
+            SetResult(context, new([.. hostpools ?? []]));
         }
         catch (Exception ex)
         {
@@ -83,5 +86,5 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVi
         return context.Response;
     }
 
-    internal record HostPoolListCommandResult(List<Models.HostPool> hostpools);
+    public record HostPoolListCommandResult(List<Models.HostPool> hostpools);
 }

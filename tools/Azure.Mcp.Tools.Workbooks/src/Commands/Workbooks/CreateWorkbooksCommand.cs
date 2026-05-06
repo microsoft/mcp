@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logger, IWorkbooksService workbooksService) : SubscriptionCommand<CreateWorkbookOptions>
+public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logger, IWorkbooksService workbooksService) : SubscriptionCommand<CreateWorkbookOptions, CreateWorkbooksCommand.CreateWorkbooksCommandResult>
 {
     private const string CommandTitle = "Create Workbook";
     private readonly ILogger<CreateWorkbooksCommand> _logger = logger;
@@ -41,6 +42,8 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<CreateWorkbooksCommandResult> ResultTypeInfo => WorkbooksJsonContext.Default.CreateWorkbooksCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -87,7 +90,7 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
                 options.Tenant,
                 cancellationToken) ?? throw new InvalidOperationException("Failed to create workbook");
 
-            context.Response.Results = ResponseResult.Create(new(createdWorkbook), WorkbooksJsonContext.Default.CreateWorkbooksCommandResult);
+            SetResult(context, new(createdWorkbook));
         }
         catch (Exception ex)
         {

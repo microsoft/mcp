@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue.Lock;
 using Azure.Mcp.Tools.AppConfig.Services;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
 
 public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logger, IAppConfigService appConfigService)
-    : BaseKeyValueCommand<KeyValueLockSetOptions>()
+    : BaseKeyValueCommand<KeyValueLockSetOptions, KeyValueLockSetCommand.KeyValueLockSetCommandResult>()
 {
     private const string CommandTitle = "Sets the lock state of an App Configuration Key-Value Setting";
     private readonly ILogger<KeyValueLockSetCommand> _logger = logger;
@@ -42,6 +43,8 @@ public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logge
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<KeyValueLockSetCommandResult> ResultTypeInfo => AppConfigJsonContext.Default.KeyValueLockSetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -77,7 +80,7 @@ public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logge
                 options.Label,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(options.Key!, options.Label, options.Lock), AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
+            SetResult(context, new(options.Key!, options.Label, options.Lock));
         }
         catch (Exception ex)
         {
@@ -89,5 +92,5 @@ public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logge
         return context.Response;
     }
 
-    internal record KeyValueLockSetCommandResult(string Key, string? Label, bool Locked);
+    public record KeyValueLockSetCommandResult(string Key, string? Label, bool Locked);
 }

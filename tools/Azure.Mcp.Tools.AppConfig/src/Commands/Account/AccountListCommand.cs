@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Tools.AppConfig.Options.Account;
@@ -11,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.Account;
 
-public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppConfigService appConfigService) : SubscriptionCommand<AccountListOptions>()
+public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppConfigService appConfigService) : SubscriptionCommand<AccountListOptions, AccountListCommand.AccountListCommandResult>()
 {
     private const string CommandTitle = "List App Configuration Stores";
     private readonly ILogger<AccountListCommand> _logger = logger;
@@ -39,6 +40,8 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppC
         Secret = false
     };
 
+    protected override JsonTypeInfo<AccountListCommandResult> ResultTypeInfo => AppConfigJsonContext.Default.AccountListCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -56,7 +59,7 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppC
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false), AppConfigJsonContext.Default.AccountListCommandResult);
+            SetResult(context, new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false));
         }
         catch (Exception ex)
         {
@@ -67,5 +70,5 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppC
         return context.Response;
     }
 
-    internal record AccountListCommandResult(List<AppConfigurationAccount> Accounts, bool AreResultsTruncated);
+    public record AccountListCommandResult(List<AppConfigurationAccount> Accounts, bool AreResultsTruncated);
 }

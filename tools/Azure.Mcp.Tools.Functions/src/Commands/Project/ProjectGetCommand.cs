@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Extensions.Logging;
@@ -11,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Functions.Commands.Project;
 
-public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger) : BaseCommand<ProjectGetOptions>
+public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger) : BaseCommand<ProjectGetOptions, List<ProjectTemplateResult>>
 {
     private readonly ILogger<ProjectGetCommand> _logger = logger;
 
@@ -36,6 +38,8 @@ public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger) : BaseC
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<List<ProjectTemplateResult>> ResultTypeInfo => FunctionsJsonContext.Default.ListProjectTemplateResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -82,9 +86,7 @@ public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger) : BaseC
             var result = await service.GetProjectTemplateAsync(options.Language!, cancellationToken);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(
-                [result],
-                FunctionsJsonContext.Default.ListProjectTemplateResult);
+            SetResult(context, [result]);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
