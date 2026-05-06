@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text.Json.Nodes;
 using Azure;
 using Azure.Mcp.Core.Areas.Server;
+using Microsoft.Identity.Client;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
@@ -91,21 +92,29 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
             response.Results = null;
             return;
         }
-        else if (ex is RequestFailedException failedException)
+
+        // Start with adding the status code of the exception.
+        var exceptionDetails = new JsonObject([new("StatusCode", (int)GetStatusCode(ex))]);
+        if (ex is RequestFailedException failedException)
         {
             // For RequestFailedException, we can include the error code and request ID.
-            context.Activity?.SetTag(TagName.ExceptionMessage, new JsonObject([
-                new("StatusCode", failedException.Status),
-                new("ErrorCode", failedException.ErrorCode),
-                new("RequestId", failedException.GetRawResponse()?.ClientRequestId)
-            ]));
+            exceptionDetails.Add("ErrorCode", failedException.ErrorCode);
+            exceptionDetails.Add("RequestId", failedException.GetRawResponse()?.ClientRequestId);
         }
-        else
+        else if (ex is MsalServiceException msalServiceException)
         {
-            // All other cases, include the status code for now until we can determine a better way to capture error
-            // details without risking PII leakage.
-            context.Activity?.SetTag(TagName.ExceptionMessage, new JsonObject([new("StatusCode", (int)GetStatusCode(ex))]));
+            // For MsalServiceException, we can include the error code and correlation ID.
+            exceptionDetails.Add("ErrorCode", msalServiceException.ErrorCode);
+            exceptionDetails.Add("CorrelationId", msalServiceException.CorrelationId);
         }
+        else if (ex is MsalClientException msalClientException)
+        {
+            // For MsalClientException, we can include the error code and correlation ID.
+            exceptionDetails.Add("ErrorCode", msalClientException.ErrorCode);
+            exceptionDetails.Add("CorrelationId", msalClientException.CorrelationId);
+        }
+
+        context.Activity?.SetTag(TagName.ExceptionMessage, exceptionDetails);
 
         var result = new ExceptionResult(
             Message: ex.Message ?? string.Empty,
@@ -128,6 +137,8 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
         ArgumentException => HttpStatusCode.BadRequest,  // Bad Request for invalid arguments
         InvalidOperationException => HttpStatusCode.UnprocessableEntity,  // Unprocessable Entity for configuration errors
         HttpRequestException httpEx => httpEx.StatusCode ?? HttpStatusCode.ServiceUnavailable,
+        RequestFailedException reqFailedEx => (HttpStatusCode)reqFailedEx.Status,
+        MsalServiceException msalServiceEx => (HttpStatusCode)msalServiceEx.StatusCode,
         _ => HttpStatusCode.InternalServerError  // Internal Server Error for unexpected errors
     };
 
