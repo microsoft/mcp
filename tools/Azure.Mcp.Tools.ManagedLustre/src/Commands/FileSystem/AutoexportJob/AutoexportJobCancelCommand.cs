@@ -12,39 +12,30 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 
-public sealed class AutoexportJobCancelCommand(IManagedLustreService service, ILogger<AutoexportJobCancelCommand> logger)
-    : BaseManagedLustreCommand<AutoexportJobCancelOptions>(logger)
-{
-    private const string CommandTitle = "Cancel Azure Managed Lustre Autoexport Job";
-
-    private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<AutoexportJobCancelCommand> _logger = logger;
-
-    public override string Id => "8e2f6d1b-3c9a-4f7e-b2d5-7a8c3e4f5b6d";
-
-    public override string Name => "cancel";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "8e2f6d1b-3c9a-4f7e-b2d5-7a8c3e4f5b6d",
+    Name = "cancel",
+    Title = "Cancel Azure Managed Lustre Autoexport Job",
+    Description = """
         Cancels a running auto export job for an Azure Managed Lustre filesystem. This stops the ongoing sync operation from the Lustre filesystem to the linked blob storage container. Use this to terminate an autoexport job that is in progress.
         Required options:
         - filesystem-name: The name of the AMLFS filesystem
         - job-name: The name of the autoexport job to cancel
         - resource-group: The resource group containing the filesystem
         - subscription: The subscription containing the filesystem
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AutoexportJobCancelCommand(IManagedLustreService service, ILogger<AutoexportJobCancelCommand> logger)
+    : BaseManagedLustreCommand<AutoexportJobCancelOptions>(logger)
+{
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IManagedLustreService _service = service;
+    private new readonly ILogger<AutoexportJobCancelCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {

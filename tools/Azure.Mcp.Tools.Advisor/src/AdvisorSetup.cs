@@ -30,7 +30,7 @@ public class AdvisorSetup : IAreaSetup
         advisor.AddSubGroup(recommendation);
 
         // Register Advisor commands
-        recommendation.AddCommand(serviceProvider.GetRequiredService<RecommendationListCommand>());
+        recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
 
         return advisor;
     }

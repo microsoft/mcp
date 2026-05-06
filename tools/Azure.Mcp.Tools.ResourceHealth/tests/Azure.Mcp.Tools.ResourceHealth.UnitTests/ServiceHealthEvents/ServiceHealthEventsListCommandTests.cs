@@ -118,8 +118,34 @@ public class ServiceHealthEventsListCommandTests : CommandUnitTestsBase<ServiceH
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
         Assert.Contains(expectedError, response.Message ?? "");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsBadRequest_WhenSubscriptionLookupFails()
+    {
+        var subscription = "missing-subscription";
+        var expectedError = $"Could not find subscription with name {subscription} (Parameter 'subscriptionName'). To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
+
+        Service.ListServiceHealthEventsAsync(
+            subscription,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException($"Could not find subscription with name {subscription}", "subscriptionName"));
+
+        var response = await ExecuteCommandAsync("--subscription", subscription);
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal(expectedError, response.Message);
     }
 
     [Theory]

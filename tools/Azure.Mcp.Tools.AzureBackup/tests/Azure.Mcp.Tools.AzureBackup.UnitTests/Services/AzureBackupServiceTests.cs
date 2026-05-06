@@ -394,7 +394,6 @@ public class AzureBackupServiceTests
     [Theory]
     [InlineData("Invalid")]
     [InlineData("Enable")]
-    [InlineData("")]
     public async Task ConfigureImmutabilityAsync_InvalidState_ThrowsArgumentException(string inputState)
     {
         // RSV vault probe succeeds
@@ -405,6 +404,17 @@ public class AzureBackupServiceTests
             _service.ConfigureImmutabilityAsync("vault", "rg", "sub", inputState, null, null, null, CancellationToken.None));
 
         Assert.Contains("Invalid immutability state", ex.Message);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    public async Task ConfigureImmutabilityAsync_EmptyOrWhitespace_ThrowsArgumentException(string inputState)
+    {
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.ConfigureImmutabilityAsync("vault", "rg", "sub", inputState, null, null, null, CancellationToken.None));
+
+        Assert.Contains("immutabilityState", ex.Message);
     }
 
     #endregion

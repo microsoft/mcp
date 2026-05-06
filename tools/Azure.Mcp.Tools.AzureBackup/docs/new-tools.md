@@ -141,28 +141,23 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 
+[CommandMetadata(
+    Id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    Name = "delete",
+    Title = "Delete Backup Vault",
+    Description = "Deletes a backup vault (RSV or DPP).",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false)]
 public sealed class VaultDeleteCommand(
     ILogger<VaultDeleteCommand> logger,
     IAzureBackupService azureBackupService) : BaseAzureBackupCommand<VaultDeleteOptions>()
 {
-    private const string CommandTitle = "Delete Backup Vault";
     private readonly ILogger<VaultDeleteCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    // Generate a new GUID for the command ID
-    public override string Id => "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
-    public override string Name => "delete";
-    public override string Description => "Deletes a backup vault (RSV or DPP).";
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
@@ -443,28 +438,21 @@ resource testVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
 Create a test class in `tests/Azure.Mcp.Tools.AzureBackup.UnitTests/{Group}/`:
 
 ```csharp
-public class VaultDeleteCommandTests
+public class VaultDeleteCommandTests : CommandUnitTestsBase<VaultDeleteCommand, IAzureBackupService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var logger = Substitute.For<ILogger<VaultDeleteCommand>>();
-        var service = Substitute.For<IAzureBackupService>();
-        var command = new VaultDeleteCommand(logger, service);
-
-        Assert.Equal("delete", command.Name);
-        Assert.True(command.Metadata.Destructive);
+        Assert.Equal("delete", Command.Name);
+        Assert.True(Command.Metadata.Destructive);
     }
 
     [Fact]
     public async Task ExecuteAsync_DeletesVault_Successfully()
     {
-        var logger = Substitute.For<ILogger<VaultDeleteCommand>>();
-        var service = Substitute.For<IAzureBackupService>();
-        service.DeleteVaultAsync(Arg.Any<string>(), /* ... */)
+        Service.DeleteVaultAsync(Arg.Any<string>(), /* ... */)
             .Returns(new OperationResult("Succeeded", null, "Deleted."));
 
-        var command = new VaultDeleteCommand(logger, service);
         // ... invoke and assert
     }
 

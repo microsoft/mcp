@@ -14,16 +14,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 
-public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectedItemProtectOptions>()
-{
-    private const string CommandTitle = "Protect Resource";
-    private readonly ILogger<ProtectedItemProtectCommand> _logger = logger;
-    private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override string Id => "7a6fc193-ca3c-4309-97c5-ee1e7fe90e69";
-    public override string Name => "protect";
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "7a6fc193-ca3c-4309-97c5-ee1e7fe90e69",
+    Name = "protect",
+    Title = "Protect Resource",
+    Description = """
         Enables or configures backup protection for an Azure resource by creating a
         protected item or backup instance. Protects VMs, disks, file shares, SQL databases,
         SAP HANA databases, and other supported datasources.
@@ -32,17 +27,17 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
         as --datasource-id (e.g., 'SAPHanaDatabase;instance;dbname'), and specify --container.
         Requires a backup policy name via --policy. The operation is asynchronous;
         use 'azurebackup job get' to monitor the protection job progress.
-        """;
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectedItemProtectOptions>()
+{
+    private readonly ILogger<ProtectedItemProtectCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     protected override void RegisterOptions(Command command)
     {

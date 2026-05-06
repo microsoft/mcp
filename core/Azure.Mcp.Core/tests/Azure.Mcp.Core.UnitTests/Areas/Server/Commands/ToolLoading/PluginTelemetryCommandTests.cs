@@ -27,7 +27,7 @@ public class PluginTelemetryCommandTests
 
     public PluginTelemetryCommandTests()
     {
-        var serverAssembly = typeof(Azure.Mcp.Server.Program).Assembly;
+        var serverAssembly = typeof(Mcp.Server.Program).Assembly;
 
         _fileReferenceProvider = new ResourcePluginFileReferenceAllowlistProvider(
             NullLogger<ResourcePluginFileReferenceAllowlistProvider>.Instance,
@@ -63,10 +63,7 @@ public class PluginTelemetryCommandTests
         var serviceProvider = services.BuildServiceProvider();
         _commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
 
-        _command = new PluginTelemetryCommand(
-            _fileReferenceProvider,
-            _skillNameProvider,
-            serviceProvider);
+        _command = new PluginTelemetryCommand(_fileReferenceProvider, _skillNameProvider);
     }
 
     [Theory]

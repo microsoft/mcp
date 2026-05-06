@@ -12,32 +12,23 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
 
 [HiddenCommand]
-public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCommand<ToolsListOptions>
-{
-    private const string CommandTitle = "List Available Tools";
-
-    public override string Id => "63de05a7-047d-4f8a-86ea-cebd64527e2b";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "63de05a7-047d-4f8a-86ea-cebd64527e2b",
+    Name = "list",
+    Title = "List Available Tools",
+    Description = """
         List all available commands and their tools in a hierarchical structure. This command returns detailed information
         about each command, including its name, description, full command path, available subcommands, and all supported
         arguments. Use --name-only to return only tool names, and --namespace to filter by specific namespaces.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false)]
+public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCommand<ToolsListOptions>
+{
 
     protected override void RegisterOptions(Command command)
     {

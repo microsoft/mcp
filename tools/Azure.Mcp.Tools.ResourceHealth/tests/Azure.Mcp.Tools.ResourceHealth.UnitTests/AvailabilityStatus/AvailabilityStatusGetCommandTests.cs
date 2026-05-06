@@ -61,6 +61,43 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
         Assert.Equal(expectedError, response.Message);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_ReturnsBadRequest_WhenResourceIdIsInvalid()
+    {
+        var resourceId = "not-a-resource-id";
+        var subscriptionId = "12345678-1234-1234-1234-123456789012";
+        var expectedError = "Invalid Azure resource ID. Provide a resource ID in the format /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/<provider>/<type>/<name>. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
+
+        Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new FormatException("Invalid resource ID format."));
+
+        var response = await ExecuteCommandAsync("--resourceId", resourceId, "--subscription", subscriptionId);
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal(expectedError, response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsHelpfulError_WhenResourceHealthReturnsUnprocessableEntity()
+    {
+        var resourceId = "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet";
+        var subscriptionId = "12345678-1234-1234-1234-123456789012";
+        var resourceType = "Microsoft.Network/virtualNetworks";
+        var errorCode = "UnsupportedResourceType";
+        var errorMessage = "Resource type is not supported.";
+        var expectedError = $"Azure Resource Health could not process availability status for resource type '{resourceType}'. Error code: {errorCode}. Details: {errorMessage}. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
+
+        Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ResourceHealthUnprocessableEntityException(resourceId, resourceType, errorCode, errorMessage));
+
+        var response = await ExecuteCommandAsync("--resourceId", resourceId, "--subscription", subscriptionId);
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
+        Assert.Equal(expectedError, response.Message);
+    }
+
     #endregion
 
     #region List (Multiple Resources) Tests
@@ -141,6 +178,22 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(expectedError, response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsBadRequest_WhenSubscriptionLookupFails()
+    {
+        var subscription = "missing-subscription";
+        var expectedError = $"Could not find subscription with name {subscription} (Parameter 'subscriptionName'). To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
+
+        Service.ListAvailabilityStatusesAsync(subscription, null, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException($"Could not find subscription with name {subscription}", "subscriptionName"));
+
+        var response = await ExecuteCommandAsync("--subscription", subscription);
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Equal(expectedError, response.Message);
     }
 

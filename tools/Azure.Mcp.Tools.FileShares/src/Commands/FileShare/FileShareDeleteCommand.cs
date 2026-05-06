@@ -14,22 +14,20 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 /// <summary>
 /// Deletes a file share.
 /// </summary>
+[CommandMetadata(
+    Id = "e9f0a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b",
+    Name = "delete",
+    Title = "Delete File Share",
+    Description = "Delete a file share",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logger, IFileSharesService fileSharesService)
     : BaseFileSharesCommand<FileShareDeleteOptions>(logger, fileSharesService)
 {
-    public override string Id => "e9f0a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b";
-    public override string Name => "delete";
-    public override string Description => "Delete a file share";
-    public override string Title => "Delete File Share";
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

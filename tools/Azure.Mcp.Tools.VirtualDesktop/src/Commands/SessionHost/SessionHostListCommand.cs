@@ -12,34 +12,25 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 
+[CommandMetadata(
+    Id = "6f543101-3c70-41bd-a6ed-5cc4af716081",
+    Name = "list",
+    Title = "List SessionHosts",
+    Description = """
+        List all SessionHosts in a hostpool. This command retrieves all Azure Virtual Desktop SessionHost objects available
+        in the specified --subscription and hostpool. Results include SessionHost details and are
+        returned as a JSON array.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logger, IVirtualDesktopService virtualDesktopService) : BaseHostPoolCommand<SessionHostListOptions>
 {
-    private const string CommandTitle = "List SessionHosts";
     private readonly ILogger<SessionHostListCommand> _logger = logger;
     private readonly IVirtualDesktopService _virtualDesktopService = virtualDesktopService;
-
-    public override string Name => "list";
-
-    public override string Description =>
-        $"""
-		List all SessionHosts in a hostpool. This command retrieves all Azure Virtual Desktop SessionHost objects available
-		in the specified {OptionDefinitions.Common.Subscription.Name} and hostpool. Results include SessionHost details and are
-		returned as a JSON array.
-		""";
-
-    public override string Id => "6f543101-3c70-41bd-a6ed-5cc4af716081";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

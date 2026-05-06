@@ -14,40 +14,31 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob;
 
-public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageService storageService) : BaseContainerCommand<BlobGetOptions>()
-{
-    private const string CommandTitle = "Get Storage Blob Details";
-    private readonly ILogger<BlobGetCommand> _logger = logger;
-    private readonly IStorageService _storageService = storageService;
-
-    public override string Id => "d6bdc190-e68f-49af-82e7-9cf6ec9b8183";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "d6bdc190-e68f-49af-82e7-9cf6ec9b8183",
+    Name = "get",
+    Title = "Get Storage Blob Details",
+    Description = """
         List/get/show blobs in a blob container in Storage account. Use this tool to list the blobs in a container or
         get details for a specific blob. If no blob specified, lists all blobs present in the container, optionally
         filtering on a prefix. The prefix is ignored if a blob is specified.
 
         Required: --account, --container, --subscription
         Optional: --blob, --tenant, --prefix
-        
+
         Returns: blob name, size, lastModified, contentType, contentHash, metadata, and blob properties.
         Do not use this tool to list containers in the storage account.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageService storageService) : BaseContainerCommand<BlobGetOptions>()
+{
+    private readonly ILogger<BlobGetCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     protected override void RegisterOptions(Command command)
     {

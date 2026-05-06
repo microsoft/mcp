@@ -400,7 +400,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
     }
 
     [Fact]

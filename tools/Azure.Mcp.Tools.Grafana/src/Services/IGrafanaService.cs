@@ -19,6 +19,7 @@ public interface IGrafanaService
     /// <exception cref="Exception">When the service request fails</exception>
     Task<ResourceQueryResults<GrafanaWorkspace>> ListWorkspacesAsync(
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

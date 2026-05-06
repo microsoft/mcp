@@ -14,34 +14,25 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
-public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger, IMonitorWebTestService monitorWebTestService) : BaseMonitorWebTestsCommand<WebTestsGetOptions>
-{
-    private const string CommandTitle = "Get or list web tests";
-    private readonly ILogger<WebTestsGetCommand> _logger = logger;
-    private readonly IMonitorWebTestService _monitorWebTestService = monitorWebTestService;
-
-    public override string Id => "c9897ba5-445c-43dc-9902-e8454dbdc243";
-
-    public override string Name => "get";
-
-    public override string Description =>
-         $"""
+[CommandMetadata(
+    Id = "c9897ba5-445c-43dc-9902-e8454dbdc243",
+    Name = "get",
+    Title = "Get or list web tests",
+    Description = """
         Gets details for a specific web test or lists all web tests.
         When --webtest-resource is provided, returns detailed information about a single web test.
         When --webtest-resource is omitted, returns a list of all web tests in the subscription (optionally filtered by resource group).
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger, IMonitorWebTestService monitorWebTestService) : BaseMonitorWebTestsCommand<WebTestsGetOptions>
+{
+    private readonly ILogger<WebTestsGetCommand> _logger = logger;
+    private readonly IMonitorWebTestService _monitorWebTestService = monitorWebTestService;
 
     protected override void RegisterOptions(Command command)
     {

@@ -81,7 +81,7 @@ public class GetBestPracticesCommandTests : CommandUnitTestsBase<GetBestPractice
         var result = await ExecuteCommandAsync("--topic", "pagination");
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, result.Status);
         Assert.NotEmpty(result.Message);
     }
 }

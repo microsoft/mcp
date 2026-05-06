@@ -12,27 +12,23 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
+[CommandMetadata(
+    Id = "86991cd6-75fa-4870-9d99-f986ba9f5f73",
+    Name = "delete_directory",
+    Title = "Delete OneLake Directory",
+    Description = "Deletes a directory from OneLake storage. Use this when the user wants to remove a folder. Use recursive flag to delete non-empty directories.",
+    Destructive = true,
+    Idempotent = true,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false)]
 public sealed class DirectoryDeleteCommand(
     ILogger<DirectoryDeleteCommand> logger,
     IOneLakeService oneLakeService) : GlobalCommand<DirectoryDeleteOptions>()
 {
     private readonly ILogger<DirectoryDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "86991cd6-75fa-4870-9d99-f986ba9f5f73";
-    public override string Name => "delete_directory";
-    public override string Title => "Delete OneLake Directory";
-    public override string Description => "Deletes a directory from OneLake storage. Use this when the user wants to remove a folder. Use recursive flag to delete non-empty directories.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
