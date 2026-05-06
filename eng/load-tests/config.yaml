@@ -15,8 +15,8 @@
 # Reference: https://learn.microsoft.com/azure/load-testing/how-to-create-manage-test#locust
 
 version: v0.1
-testId: mcp-server-storage-account-load-test
-displayName: MCP Server - Storage Account Get Load Test
+testId: mcp-server-storage-account-load-test-${BUILD_ID}
+displayName: MCP Server - Storage Account Get Load Test (build ${BUILD_ID})
 description: >
   Locust-based load test that exercises the azmcp_storage_account_get tool
   via the MCP Streamable HTTP protocol on an ephemeral Azure MCP Server

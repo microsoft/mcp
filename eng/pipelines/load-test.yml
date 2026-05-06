@@ -120,6 +120,7 @@ stages:
               scriptLocation: inlineScript
               inlineScript: |
                 FQDN=$(az deployment group create \
+                  --name mcp-loadtest-$(Build.BuildId) \
                   --resource-group $(AZURE_LOAD_TEST_RESOURCE_GROUP) \
                   --template-file eng/load-tests/load-test-resources.bicep \
                   --parameters \
@@ -171,9 +172,10 @@ stages:
               export DURATION='${{ parameters.duration }}'
               export MCP_SERVER_ENDPOINT='$(mcpServerEndpoint)'
               export MCP_SUBSCRIPTION='$(MCP_SUBSCRIPTION)'
+              export BUILD_ID='$(Build.BuildId)'
               # Substitute only the variables we explicitly export so unrelated
               # `$VAR` strings in the template are left intact.
-              envsubst '$ENGINE_INSTANCES $USERS $SPAWN_RATE $DURATION $MCP_SERVER_ENDPOINT $MCP_SUBSCRIPTION' \
+              envsubst '$ENGINE_INSTANCES $USERS $SPAWN_RATE $DURATION $MCP_SERVER_ENDPOINT $MCP_SUBSCRIPTION $BUILD_ID' \
                 < eng/load-tests/config.yaml \
                 > eng/load-tests/config.rendered.yaml
               echo "----- rendered config.yaml -----"
