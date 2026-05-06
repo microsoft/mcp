@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
 using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
@@ -25,9 +26,12 @@ namespace Azure.Mcp.Tools.Deploy.Commands.Architecture;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logger) : BaseCommand<DiagramGenerateOptions>
+public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logger) : BaseCommand<DiagramGenerateOptions, DiagramGenerateCommand.DiagramGenerateCommandResult>
 {
     private readonly ILogger<DiagramGenerateCommand> _logger = logger;
+
+    protected override JsonTypeInfo<DiagramGenerateCommandResult> ResultTypeInfo
+        => DeployJsonContext.Default.DiagramGenerateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -72,7 +76,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
             {
                 _logger.LogWarning("No services detected in the app topology.");
                 context.Response.Status = HttpStatusCode.OK;
-                context.Response.Message = "No service detected.";
+                SetResult(context, new DiagramGenerateCommandResult("No service detected."));
                 return Task.FromResult(context.Response);
             }
 
@@ -96,12 +100,14 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
                 : null;
 
             var response = TemplateService.LoadTemplate("Architecture/architecture-diagram");
-            context.Response.Message = response.Replace("{{chart}}", chart)
+            var diagram = response.Replace("{{chart}}", chart)
                 .Replace("{{hostings}}", string.Join(", ", Enum.GetNames<AzureServiceConstants.AzureComputeServiceType>()));
             if (!string.IsNullOrWhiteSpace(usedServiceTypesString))
             {
-                context.Response.Message += $"Here is the full list of supported component service types for the topology: {usedServiceTypesString}.";
+                diagram += $"Here is the full list of supported component service types for the topology: {usedServiceTypesString}.";
             }
+
+            SetResult(context, new DiagramGenerateCommandResult(diagram));
         }
         catch (Exception ex)
         {
@@ -117,4 +123,10 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
         JsonException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)
     };
+
+    /// <summary>
+    /// Result payload for <see cref="DiagramGenerateCommand"/>. <see cref="Diagram"/> contains the rendered
+    /// Mermaid architecture diagram (or a short notice when no services were detected in the input topology).
+    /// </summary>
+    public record DiagramGenerateCommandResult(string Diagram);
 }

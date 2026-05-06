@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Commands;
@@ -25,20 +26,21 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class ServiceInfoCommand(IOptions<McpServerConfiguration> serverOptions, ILogger<ServiceInfoCommand> logger) : BaseCommand<EmptyOptions>
+public sealed class ServiceInfoCommand(IOptions<McpServerConfiguration> serverOptions, ILogger<ServiceInfoCommand> logger) : BaseCommand<EmptyOptions, ServiceInfoCommand.ServiceInfoCommandResult>
 {
     private static readonly EmptyOptions EmptyOptions = new();
 
     private readonly IOptions<McpServerConfiguration> _serverOptions = serverOptions;
     private readonly ILogger<ServiceInfoCommand> _logger = logger;
 
+    protected override JsonTypeInfo<ServiceInfoCommandResult> ResultTypeInfo
+        => ServiceInfoJsonContext.Default.ServiceInfoCommandResult;
+
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
-            context.Response.Results = ResponseResult.Create(
-                new(_serverOptions.Value.Name, _serverOptions.Value.Version),
-                ServiceInfoJsonContext.Default.ServiceInfoCommandResult);
+            SetResult(context, new ServiceInfoCommandResult(_serverOptions.Value.Name, _serverOptions.Value.Version));
         }
         catch (Exception ex)
         {
@@ -54,5 +56,5 @@ public sealed class ServiceInfoCommand(IOptions<McpServerConfiguration> serverOp
         return EmptyOptions;
     }
 
-    internal record ServiceInfoCommandResult(string Name, string Version);
+    public record ServiceInfoCommandResult(string Name, string Version);
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tools.Deploy.Commands;
 using Azure.Mcp.Tools.Deploy.Commands.Plan;
 using Microsoft.Mcp.Tests.Client;
 using Xunit;
@@ -23,11 +24,9 @@ public class GetCommandTests : CommandUnitTestsBase<GetCommand, object>
             "--iac-options", "bicep");
 
         // assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Message);
-        Assert.Contains("# Azure Deployment Plan for django Project", result.Message);
-        Assert.Contains("Azure Container Apps", result.Message);
+        var plan = ValidateAndDeserializeResponse(result, DeployJsonContext.Default.GetCommandResult);
+        Assert.Contains("# Azure Deployment Plan for django Project", plan.Plan);
+        Assert.Contains("Azure Container Apps", plan.Plan);
     }
 
     [Fact]
@@ -41,11 +40,9 @@ public class GetCommandTests : CommandUnitTestsBase<GetCommand, object>
             "--provisioning-tool", "azd");
 
         // assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Message);
-        Assert.Contains("# Azure Deployment Plan for myapp Project", result.Message);
-        Assert.Contains("Azure Web App Service", result.Message);
+        var plan = ValidateAndDeserializeResponse(result, DeployJsonContext.Default.GetCommandResult);
+        Assert.Contains("# Azure Deployment Plan for myapp Project", plan.Plan);
+        Assert.Contains("Azure Web App Service", plan.Plan);
     }
 
     [Fact]
@@ -59,14 +56,12 @@ public class GetCommandTests : CommandUnitTestsBase<GetCommand, object>
             "--provisioning-tool", "azcli");
 
         // assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Message);
-        Assert.Contains("# Azure Deployment Plan for k8s-app Project", result.Message);
-        Assert.Contains("Azure Kubernetes Service", result.Message);
-        Assert.Contains("Provision Azure Infrastructure with Azure CLI", result.Message);
-        Assert.Contains("terraform", result.Message); // Default IaC option for aks
-        Assert.Contains("Azure Kubernetes Service Deployment", result.Message);
+        var plan = ValidateAndDeserializeResponse(result, DeployJsonContext.Default.GetCommandResult);
+        Assert.Contains("# Azure Deployment Plan for k8s-app Project", plan.Plan);
+        Assert.Contains("Azure Kubernetes Service", plan.Plan);
+        Assert.Contains("Provision Azure Infrastructure with Azure CLI", plan.Plan);
+        Assert.Contains("terraform", plan.Plan); // Default IaC option for aks
+        Assert.Contains("Azure Kubernetes Service Deployment", plan.Plan);
     }
 
     [Fact]
@@ -80,11 +75,9 @@ public class GetCommandTests : CommandUnitTestsBase<GetCommand, object>
             "--provisioning-tool", "AZD");
 
         // assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Message);
-        Assert.Contains("# Azure Deployment Plan for default-app Project", result.Message);
-        Assert.Contains("Azure Container Apps", result.Message); // Should default to Container Apps
+        var plan = ValidateAndDeserializeResponse(result, DeployJsonContext.Default.GetCommandResult);
+        Assert.Contains("# Azure Deployment Plan for default-app Project", plan.Plan);
+        Assert.Contains("Azure Container Apps", plan.Plan); // Should default to Container Apps
     }
 
     [Fact]
@@ -100,14 +93,12 @@ public class GetCommandTests : CommandUnitTestsBase<GetCommand, object>
             "--resource-group", "DefaultRG");
 
         // assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Message);
-        Assert.Contains("# Azure Deployment Plan for default-app Project", result.Message);
-        Assert.Contains("Azure Container Apps", result.Message); // Should default to Container Apps
-        Assert.Contains("Containerization", result.Message);
-        Assert.Contains("Check Azure resources existence", result.Message);
-        Assert.Contains("Azure Container Registry", result.Message);
-        Assert.Contains("**Existing Azure Resources**", result.Message);
+        var plan = ValidateAndDeserializeResponse(result, DeployJsonContext.Default.GetCommandResult);
+        Assert.Contains("# Azure Deployment Plan for default-app Project", plan.Plan);
+        Assert.Contains("Azure Container Apps", plan.Plan); // Should default to Container Apps
+        Assert.Contains("Containerization", plan.Plan);
+        Assert.Contains("Check Azure resources existence", plan.Plan);
+        Assert.Contains("Azure Container Registry", plan.Plan);
+        Assert.Contains("**Existing Azure Resources**", plan.Plan);
     }
 }

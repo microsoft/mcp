@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.Infrastructure;
@@ -24,9 +25,12 @@ namespace Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
     Secret = false,
     LocalRequired = false)]
 public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
-    : BaseCommand<RulesGetOptions>
+    : BaseCommand<RulesGetOptions, RulesGetCommand.RulesGetCommandResult>
 {
     private readonly ILogger<RulesGetCommand> _logger = logger;
+
+    protected override JsonTypeInfo<RulesGetCommandResult> ResultTypeInfo
+        => DeployJsonContext.Default.RulesGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -71,7 +75,7 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
                 options.IacType,
                 resourceTypes);
 
-            context.Response.Message = iacRules;
+            SetResult(context, new RulesGetCommandResult(iacRules));
         }
         catch (Exception ex)
         {
@@ -80,4 +84,9 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
         }
         return Task.FromResult(context.Response);
     }
+
+    /// <summary>
+    /// Result payload for <see cref="RulesGetCommand"/>. <see cref="Rules"/> contains the formatted IaC rules document.
+    /// </summary>
+    public record RulesGetCommandResult(string Rules);
 }

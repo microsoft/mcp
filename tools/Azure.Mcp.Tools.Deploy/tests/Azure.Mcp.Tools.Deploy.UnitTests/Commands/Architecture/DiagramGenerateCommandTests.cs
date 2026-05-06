@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tools.Deploy.Commands;
 using Azure.Mcp.Tools.Deploy.Commands.Architecture;
 using Azure.Mcp.Tools.Deploy.Options;
 using Microsoft.Mcp.Tests.Client;
@@ -19,9 +20,8 @@ public class DiagramGenerateCommandTests : CommandUnitTestsBase<DiagramGenerateC
         var response = await ExecuteCommandAsync(
             "--raw-mcp-tool-input", "{\"projectName\": \"test\",\"services\": []}");
 
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Contains("No service detected", response.Message);
+        var result = ValidateAndDeserializeResponse(response, DeployJsonContext.Default.DiagramGenerateCommandResult);
+        Assert.Contains("No service detected", result.Diagram);
     }
 
     [Fact]
@@ -108,21 +108,20 @@ public class DiagramGenerateCommandTests : CommandUnitTestsBase<DiagramGenerateC
 
         var response = await ExecuteCommandAsync("--raw-mcp-tool-input", JsonSerializer.Serialize(appTopology));
 
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, DeployJsonContext.Default.DiagramGenerateCommandResult);
         // Extract the URL from the response message
         var graphStartPattern = "```mermaid";
-        var graphStartIndex = response.Message.IndexOf(graphStartPattern);
+        var graphStartIndex = result.Diagram.IndexOf(graphStartPattern);
         Assert.True(graphStartIndex >= 0, "Graph data starting with '```mermaid' should be present in the response");
 
         // Extract the full graph (assuming it ends at whitespace or end of string)
         var graphStartPosition = graphStartIndex;
-        var graphEndPosition = response.Message.IndexOf("```", graphStartIndex + 1);
+        var graphEndPosition = result.Diagram.IndexOf("```", graphStartIndex + 1);
 
         if (graphEndPosition == -1)
-            graphEndPosition = response.Message.Length;
+            graphEndPosition = result.Diagram.Length;
 
-        var extractedGraph = response.Message.Substring(graphStartPosition, graphEndPosition - graphStartPosition);
+        var extractedGraph = result.Diagram.Substring(graphStartPosition, graphEndPosition - graphStartPosition);
         Assert.StartsWith(graphStartPattern, extractedGraph);
         Assert.NotEmpty(extractedGraph);
         Assert.Contains("website", extractedGraph);

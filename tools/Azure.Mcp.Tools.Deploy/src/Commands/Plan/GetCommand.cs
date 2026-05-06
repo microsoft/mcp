@@ -4,6 +4,7 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.Plan;
@@ -28,9 +29,12 @@ namespace Azure.Mcp.Tools.Deploy.Commands.Plan;
     Secret = false,
     LocalRequired = false)]
 public sealed class GetCommand(ILogger<GetCommand> logger)
-    : BaseCommand<GetOptions>
+    : BaseCommand<GetOptions, GetCommand.GetCommandResult>
 {
     private readonly ILogger<GetCommand> _logger = logger;
+
+    protected override JsonTypeInfo<GetCommandResult> ResultTypeInfo
+        => DeployJsonContext.Default.GetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -82,7 +86,7 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
 
             var planTemplate = DeploymentPlanTemplateUtil.GetPlanTemplate(options.ProjectName, options.TargetAppService, options.ProvisioningTool, options.SourceType ?? string.Empty, options.DeployOption ?? string.Empty, options.IacOptions, options.Subscription, options.ResourceGroup);
 
-            context.Response.Message = planTemplate;
+            SetResult(context, new GetCommandResult(planTemplate));
             context.Response.Status = HttpStatusCode.OK;
         }
         catch (Exception ex)
@@ -94,4 +98,8 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
 
     }
 
+    /// <summary>
+    /// Result payload for the deploy plan get command. <see cref="Plan"/> contains the rendered deployment-plan template.
+    /// </summary>
+    public record GetCommandResult(string Plan);
 }

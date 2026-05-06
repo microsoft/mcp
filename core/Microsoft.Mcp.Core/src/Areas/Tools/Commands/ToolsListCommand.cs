@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Tools.Options;
 using Microsoft.Mcp.Core.Commands;
@@ -27,8 +28,10 @@ namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCommand<ToolsListOptions>
+public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCommand<ToolsListOptions, ToolsListCommand.ToolsListCommandResult>
 {
+    protected override JsonTypeInfo<ToolsListCommandResult> ResultTypeInfo
+        => ModelsJsonContext.Default.ToolsListCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -98,12 +101,11 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                 if (options.NameOnly)
                 {
                     var namespaceNames = namespaceCommands.Select(nc => nc.Command).ToList();
-                    var result = new ToolNamesResult(namespaceNames);
-                    context.Response.Results = ResponseResult.Create(result, ModelsJsonContext.Default.ToolNamesResult);
+                    SetResult(context, new ToolsListCommandResult(Names: namespaceNames));
                     return context.Response;
                 }
 
-                context.Response.Results = ResponseResult.Create(namespaceCommands, ModelsJsonContext.Default.ListCommandInfo);
+                SetResult(context, new ToolsListCommandResult(Tools: namespaceCommands));
                 return context.Response;
             }
 
@@ -122,8 +124,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                     .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
                     .ToList());
 
-                var result = new ToolNamesResult(toolNames);
-                context.Response.Results = ResponseResult.Create(result, ModelsJsonContext.Default.ToolNamesResult);
+                SetResult(context, new ToolsListCommandResult(Names: toolNames));
                 return context.Response;
             }
 
@@ -138,7 +139,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
 
             var tools = await Task.Run(() => allTools.ToList());
 
-            context.Response.Results = ResponseResult.Create(tools, ModelsJsonContext.Default.ListCommandInfo);
+            SetResult(context, new ToolsListCommandResult(Tools: tools));
             return context.Response;
         }
         catch (Exception ex)
@@ -187,7 +188,15 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         };
     }
 
-    public record ToolNamesResult(List<string> Names);
+    /// <summary>
+    /// Result payload for <see cref="ToolsListCommand"/>. Exactly one of <see cref="Names"/> or <see cref="Tools"/>
+    /// is populated depending on the command flags: <c>--name-only</c> populates <see cref="Names"/>; otherwise
+    /// <see cref="Tools"/> contains the full <see cref="CommandInfo"/> entries.
+    /// </summary>
+    public record ToolsListCommandResult(
+        List<string>? Names = null,
+        List<CommandInfo>? Tools = null);
+
     private void searchCommandInCommandGroup(string commandPrefix, CommandGroup searchedGroup, List<CommandInfo> foundCommands)
     {
         var commands = CommandFactory.GetVisibleCommands(searchedGroup.Commands).Select(kvp =>

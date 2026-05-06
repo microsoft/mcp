@@ -47,9 +47,11 @@ public interface IBaseCommand
     /// generate the MCP <c>outputSchema</c> and to populate <c>structuredContent</c> on successful tool calls.
     /// </summary>
     /// <remarks>
-    /// Default returns <see langword="null"/> for transitional source-compat with commands not yet reparented
-    /// onto <see cref="BaseCommand{TOptions, TResult}"/>. The default is removed once every command is on the
-    /// generic base.
+    /// Defaults to <see langword="null"/> for commands that don't write a structured payload to
+    /// <see cref="CommandResponse.Results"/> — typically text-only / passthrough commands that only
+    /// populate <see cref="CommandResponse.Message"/>. Commands with a structured result should derive from
+    /// <see cref="BaseCommand{TOptions, TResult}"/>, which overrides this with the source-generated
+    /// <see cref="JsonTypeInfo{T}"/> for the declared <c>TResult</c>.
     /// </remarks>
     JsonTypeInfo? ResultTypeInfo => null;
 

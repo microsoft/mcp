@@ -46,25 +46,33 @@ public class ToolsListCommandTests
     }
 
     /// <summary>
-    /// Helper method to deserialize response results to CommandInfo list
+    /// Helper method to deserialize response results to CommandInfo list.
     /// </summary>
     private static List<CommandInfo> DeserializeResults(object results)
     {
-        var json = JsonSerializer.Serialize(results);
-        return JsonSerializer.Deserialize<List<CommandInfo>>(json) ?? new List<CommandInfo>();
+        return DeserializeToolsListResult(results).Tools ?? new List<CommandInfo>();
     }
 
     /// <summary>
-    /// Helper method to deserialize response results to ToolNamesResult
+    /// Helper method to deserialize response results to a list of tool names.
     /// </summary>
-    private static ToolsListCommand.ToolNamesResult DeserializeToolNamesResult(object results)
+    private static ToolsListCommand.ToolsListCommandResult DeserializeToolNamesResult(object results)
+    {
+        return DeserializeToolsListResult(results);
+    }
+
+    /// <summary>
+    /// Helper method to deserialize response results to the merged ToolsListCommandResult.
+    /// </summary>
+    private static ToolsListCommand.ToolsListCommandResult DeserializeToolsListResult(object results)
     {
         var json = JsonSerializer.Serialize(results);
         var options = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
-        return JsonSerializer.Deserialize<ToolsListCommand.ToolNamesResult>(json, options) ?? new ToolsListCommand.ToolNamesResult(new List<string>());
+        return JsonSerializer.Deserialize<ToolsListCommand.ToolsListCommandResult>(json, options)
+            ?? new ToolsListCommand.ToolsListCommandResult();
     }
 
     /// <summary>
@@ -128,11 +136,12 @@ public class ToolsListCommandTests
 
         var json = JsonSerializer.Serialize(response.Results);
 
-        var result = DeserializeResults(response.Results);
+        var result = DeserializeToolsListResult(response.Results);
         Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
 
         // Verify JSON round-trip preserves all data
-        var serializedJson = JsonSerializer.Serialize(result);
+        var serializedJson = JsonSerializer.Serialize(result, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         Assert.Equal(json, serializedJson);
     }
 
@@ -343,8 +352,7 @@ public class ToolsListCommandTests
         Assert.NotNull(response.Results);
 
         // Serialize then deserialize as list of CommandInfo
-        var json = JsonSerializer.Serialize(response.Results);
-        var namespaces = JsonSerializer.Deserialize<List<CommandInfo>>(json);
+        var namespaces = DeserializeResults(response.Results);
 
         Assert.NotNull(namespaces);
         Assert.NotEmpty(namespaces);
@@ -511,9 +519,8 @@ public class ToolsListCommandTests
         // Verify that only the "names" property exists
         Assert.True(jsonElement.TryGetProperty("names", out _), "Response should contain 'names' property");
 
-        // Count the number of properties - should only be 1 (names)
-        var propertyCount = jsonElement.EnumerateObject().Count();
-        Assert.Equal(1, propertyCount);
+        // Verify that the merged result only populated the 'names' field (the 'tools' field should be null).
+        Assert.True(!jsonElement.TryGetProperty("tools", out var toolsProp) || toolsProp.ValueKind == JsonValueKind.Null, "Response 'tools' field should be null when using --name-only option");
 
         // Explicitly verify that description and command fields are not present
         Assert.False(jsonElement.TryGetProperty("description", out _), "Response should not contain 'description' property when using --name-only option");
@@ -629,9 +636,8 @@ public class ToolsListCommandTests
         // Verify that only the "names" property exists
         Assert.True(jsonElement.TryGetProperty("names", out _), "Response should contain 'names' property");
 
-        // Count the number of properties - should only be 1 (names)
-        var propertyCount = jsonElement.EnumerateObject().Count();
-        Assert.Equal(1, propertyCount);
+        // Verify that the merged result only populated the 'names' field (the 'tools' field should be null).
+        Assert.True(!jsonElement.TryGetProperty("tools", out var toolsProp) || toolsProp.ValueKind == JsonValueKind.Null, "Response 'tools' field should be null when using --name-only option");
 
         // All names should be from the storage namespace
         foreach (var name in result.Names)
@@ -672,9 +678,8 @@ public class ToolsListCommandTests
         // Verify that only the "names" property exists
         Assert.True(jsonElement.TryGetProperty("names", out _), "Response should contain 'names' property");
 
-        // Count the number of properties - should only be 1 (names)
-        var propertyCount = jsonElement.EnumerateObject().Count();
-        Assert.Equal(1, propertyCount);
+        // Verify that the merged result only populated the 'names' field (the 'tools' field should be null).
+        Assert.True(!jsonElement.TryGetProperty("tools", out var toolsProp) || toolsProp.ValueKind == JsonValueKind.Null, "Response 'tools' field should be null when using --name-only option");
 
         // All names should be from either storage or keyvault namespaces
         foreach (var name in result.Names)
@@ -776,9 +781,8 @@ public class ToolsListCommandTests
         // Verify that only the "names" property exists
         Assert.True(jsonElement.TryGetProperty("names", out _), "Response should contain 'names' property");
 
-        // Count the number of properties - should only be 1 (names)
-        var propertyCount = jsonElement.EnumerateObject().Count();
-        Assert.Equal(1, propertyCount);
+        // Verify that the merged result only populated the 'names' field (the 'tools' field should be null).
+        Assert.True(!jsonElement.TryGetProperty("tools", out var toolsProp) || toolsProp.ValueKind == JsonValueKind.Null, "Response 'tools' field should be null when using --name-only option");
 
         // Should contain only namespace names (not individual commands)
         Assert.Contains(result.Names, name => name.Equals("subscription", StringComparison.OrdinalIgnoreCase));
@@ -815,9 +819,8 @@ public class ToolsListCommandTests
         // Verify that only the "names" property exists
         Assert.True(jsonElement.TryGetProperty("names", out _), "Response should contain 'names' property");
 
-        // Count the number of properties - should only be 1 (names)
-        var propertyCount = jsonElement.EnumerateObject().Count();
-        Assert.Equal(1, propertyCount);
+        // Verify that the merged result only populated the 'names' field (the 'tools' field should be null).
+        Assert.True(!jsonElement.TryGetProperty("tools", out var toolsProp) || toolsProp.ValueKind == JsonValueKind.Null, "Response 'tools' field should be null when using --name-only option");
 
         // Should contain only storage namespace (and possibly surfaced storage-related commands)
         foreach (var name in result.Names)
