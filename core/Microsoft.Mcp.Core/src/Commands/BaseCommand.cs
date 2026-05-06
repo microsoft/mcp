@@ -93,7 +93,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
             return;
         }
 
-        // Start with adding the status code of the exception, this is the only PII safe property.
+        // Start with adding the status code of the exception.
         var exceptionDetails = new JsonObject([new("StatusCode", (int)GetStatusCode(ex))]);
         if (ex is RequestFailedException failedException)
         {
@@ -103,15 +103,15 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
         }
         else if (ex is MsalServiceException msalServiceException)
         {
-            // For MSAL exceptions, we can include the error code and correlation ID.
+            // For MsalServiceException, we can include the error code and correlation ID.
             exceptionDetails.Add("ErrorCode", msalServiceException.ErrorCode);
-            exceptionDetails.Add("RequestId", msalServiceException.CorrelationId);
+            exceptionDetails.Add("CorrelationId", msalServiceException.CorrelationId);
         }
         else if (ex is MsalClientException msalClientException)
         {
-            // For MSAL client exceptions, we can include the error code.
+            // For MsalClientException, we can include the correlation code.
             exceptionDetails.Add("ErrorCode", msalClientException.ErrorCode);
-            exceptionDetails.Add("RequestId", msalClientException.CorrelationId);
+            exceptionDetails.Add("CorrelationId", msalClientException.CorrelationId);
         }
 
         context.Activity?.SetTag(TagName.ExceptionMessage, exceptionDetails);
