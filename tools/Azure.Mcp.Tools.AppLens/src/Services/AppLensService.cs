@@ -261,7 +261,6 @@ public class AppLensService(
     {
         if (resourceType.Equals("microsoft.web/sites", StringComparison.OrdinalIgnoreCase))
         {
-            _ = resourceKind;
             return true;
         }
 
