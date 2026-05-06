@@ -8,14 +8,16 @@ using Azure.Mcp.Tools.Monitor.Options.WebTests;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
-public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger, IMonitorWebTestService monitorWebTestService) : BaseMonitorWebTestsCommand<WebTestsGetOptions>
+public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger, IMonitorWebTestService monitorWebTestService) : BaseMonitorWebTestsCommand<WebTestsGetOptions, WebTestsGetCommand.WebTestsGetCommandResult>
 {
+    protected override JsonTypeInfo<WebTestsGetCommandResult> ResultTypeInfo => MonitorJsonContext.Default.WebTestsGetCommandResult;
     private const string CommandTitle = "Get or list web tests";
     private readonly ILogger<WebTestsGetCommand> _logger = logger;
     private readonly IMonitorWebTestService _monitorWebTestService = monitorWebTestService;
@@ -92,9 +94,7 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger, IMoni
 
                 if (webTest != null)
                 {
-                    context.Response.Results = ResponseResult.Create(
-                        new WebTestsGetCommandResult(WebTest: webTest),
-                        MonitorJsonContext.Default.WebTestsGetCommandResult);
+                    SetResult(context, new WebTestsGetCommandResult(WebTest: webTest));
                 }
                 else
                 {
@@ -109,9 +109,7 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger, IMoni
                     ? await _monitorWebTestService.ListWebTests(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken)
                     : await _monitorWebTestService.ListWebTests(options.Subscription!, options.ResourceGroup, options.Tenant, options.RetryPolicy, cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new WebTestsGetCommandResult(WebTests: webTests ?? []),
-                    MonitorJsonContext.Default.WebTestsGetCommandResult);
+                SetResult(context, new WebTestsGetCommandResult(WebTests: webTests ?? []));
             }
         }
         catch (Exception ex)

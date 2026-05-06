@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.FirewallRule;
 using Azure.Mcp.Tools.Sql.Services;
@@ -12,8 +13,9 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 
 public sealed class FirewallRuleListCommand(ISqlService sqlService, ILogger<FirewallRuleListCommand> logger)
-    : BaseSqlCommand<FirewallRuleListOptions>(logger)
+    : BaseSqlCommand<FirewallRuleListOptions, FirewallRuleListCommand.FirewallRuleListResult>(logger)
 {
+    protected override JsonTypeInfo<FirewallRuleListResult> ResultTypeInfo => SqlJsonContext.Default.FirewallRuleListResult;
     private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "List SQL Server Firewall Rules";
 
@@ -58,7 +60,7 @@ public sealed class FirewallRuleListCommand(ISqlService sqlService, ILogger<Fire
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(firewallRules ?? []), SqlJsonContext.Default.FirewallRuleListResult);
+            SetResult(context, new(firewallRules ?? []));
         }
         catch (Exception ex)
         {
@@ -81,5 +83,5 @@ public sealed class FirewallRuleListCommand(ISqlService sqlService, ILogger<Fire
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record FirewallRuleListResult(List<SqlServerFirewallRule> FirewallRules);
+    public record FirewallRuleListResult(List<SqlServerFirewallRule> FirewallRules);
 }

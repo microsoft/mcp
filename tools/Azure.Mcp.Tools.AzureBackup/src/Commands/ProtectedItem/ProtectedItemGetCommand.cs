@@ -10,6 +10,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 
@@ -17,8 +18,9 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 /// Consolidated protected item command: when --protected-item is supplied returns a single
 /// item's details; otherwise lists all protected items in the vault.
 /// </summary>
-public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<BaseProtectedItemOptions>()
+public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<BaseProtectedItemOptions, ProtectedItemGetCommand.ProtectedItemGetCommandResult>()
 {
+    protected override JsonTypeInfo<ProtectedItemGetCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.ProtectedItemGetCommandResult;
     private const string CommandTitle = "Get Protected Item";
     private readonly ILogger<ProtectedItemGetCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -83,9 +85,7 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new([item]),
-                    AzureBackupJsonContext.Default.ProtectedItemGetCommandResult);
+                SetResult(context, new([item]));
             }
             else
             {
@@ -98,9 +98,7 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(items),
-                    AzureBackupJsonContext.Default.ProtectedItemGetCommandResult);
+                SetResult(context, new(items));
             }
         }
         catch (Exception ex)
@@ -122,5 +120,5 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record ProtectedItemGetCommandResult(List<ProtectedItemInfo> ProtectedItems);
+    public record ProtectedItemGetCommandResult(List<ProtectedItemInfo> ProtectedItems);
 }

@@ -6,14 +6,16 @@ using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Tools;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
 public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> logger)
-    : BaseCommand<OrchestratorNextOptions>
+    : BaseCommand<OrchestratorNextOptions, string>
 {
+    protected override JsonTypeInfo<string> ResultTypeInfo => MonitorInstrumentationJsonContext.Default.String;
     private readonly ILogger<OrchestratorNextCommand> _logger = logger;
 
     public override string Id => "dd7d9a59-fb6d-436a-9e08-8bbdf6d5f9d5";
@@ -73,7 +75,7 @@ Returns: The next action to execute, or 'complete' status when all steps are don
             var result = tool.Next(options.SessionId!, options.CompletionNote!);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
+            SetResult(context, result);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)

@@ -8,14 +8,16 @@ using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Tools;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
 public sealed class SendBrownfieldAnalysisCommand(ILogger<SendBrownfieldAnalysisCommand> logger)
-    : BaseCommand<SendBrownfieldAnalysisOptions>
+    : BaseCommand<SendBrownfieldAnalysisOptions, string>
 {
+    protected override JsonTypeInfo<string> ResultTypeInfo => MonitorInstrumentationJsonContext.Default.String;
     private readonly ILogger<SendBrownfieldAnalysisCommand> _logger = logger;
 
     public override string Id => "8f69c45b-7e4f-4ea7-9a7d-58fa7fc0897e";
@@ -85,7 +87,7 @@ After this call succeeds, continue with orchestrator-next as usual.";
                 findings.Logging);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
+            SetResult(context, result);
             context.Response.Message = string.Empty;
         }
         catch (JsonException ex)

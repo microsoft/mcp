@@ -11,11 +11,13 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 
-public sealed class ProtectedItemUndeleteCommand(ILogger<ProtectedItemUndeleteCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectedItemUndeleteOptions>()
+public sealed class ProtectedItemUndeleteCommand(ILogger<ProtectedItemUndeleteCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectedItemUndeleteOptions, ProtectedItemUndeleteCommand.ProtectedItemUndeleteCommandResult>()
 {
+    protected override JsonTypeInfo<ProtectedItemUndeleteCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.ProtectedItemUndeleteCommandResult;
     private const string CommandTitle = "Undelete Protected Item";
     private readonly ILogger<ProtectedItemUndeleteCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -79,9 +81,7 @@ public sealed class ProtectedItemUndeleteCommand(ILogger<ProtectedItemUndeleteCo
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result),
-                AzureBackupJsonContext.Default.ProtectedItemUndeleteCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -107,5 +107,5 @@ public sealed class ProtectedItemUndeleteCommand(ILogger<ProtectedItemUndeleteCo
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record ProtectedItemUndeleteCommandResult(OperationResult Result);
+    public record ProtectedItemUndeleteCommandResult(OperationResult Result);
 }

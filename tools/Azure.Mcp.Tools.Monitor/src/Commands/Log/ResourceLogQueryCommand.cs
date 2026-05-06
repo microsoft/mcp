@@ -6,13 +6,16 @@ using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
+using System.Text.Json.Nodes;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Log;
 
-public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> logger, IMonitorService monitorService) : SubscriptionCommand<ResourceLogQueryOptions>()
+public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> logger, IMonitorService monitorService) : SubscriptionCommand<ResourceLogQueryOptions, List<JsonNode>>()
 {
+    protected override JsonTypeInfo<List<JsonNode>> ResultTypeInfo => MonitorJsonContext.Default.ListJsonNode;
     private const string CommandTitle = "Query Logs for Azure Resource";
     private readonly ILogger<ResourceLogQueryCommand> _logger = logger;
     private readonly IMonitorService _monitorService = monitorService;
@@ -89,7 +92,7 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(results, MonitorJsonContext.Default.ListJsonNode);
+            SetResult(context, results);
         }
         catch (Exception ex)
         {

@@ -7,6 +7,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
@@ -15,8 +16,9 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 public sealed class FileDeleteCommand(
     ILogger<FileDeleteCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<FileDeleteOptions>()
+    IOneLakeService oneLakeService) : GlobalCommand<FileDeleteOptions, FileDeleteCommand.FileDeleteCommandResult>()
 {
+    protected override JsonTypeInfo<FileDeleteCommandResult> ResultTypeInfo => OneLakeJsonContext.Default.FileDeleteCommandResult;
     private readonly ILogger<FileDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
@@ -98,7 +100,7 @@ public sealed class FileDeleteCommand(
                 cancellationToken);
 
             var result = new FileDeleteCommandResult(options.FilePath, "File deleted successfully");
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.FileDeleteCommandResult);
+            SetResult(context, result);
         }
         catch (Exception ex)
         {

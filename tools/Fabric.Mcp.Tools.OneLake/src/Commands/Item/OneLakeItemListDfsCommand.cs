@@ -7,6 +7,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
@@ -18,8 +19,9 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 /// </summary>
 public sealed class OneLakeItemListDfsCommand(
     ILogger<OneLakeItemListDfsCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<OneLakeItemListDfsOptions>()
+    IOneLakeService oneLakeService) : GlobalCommand<OneLakeItemListDfsOptions, OneLakeItemListDfsCommand.OneLakeItemListDfsCommandResult>()
 {
+    protected override JsonTypeInfo<OneLakeItemListDfsCommandResult> ResultTypeInfo => OneLakeJsonContext.Default.OneLakeItemListDfsCommandResult;
     private readonly ILogger<OneLakeItemListDfsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
@@ -87,7 +89,7 @@ public sealed class OneLakeItemListDfsCommand(
                 cancellationToken);
 
             var result = new OneLakeItemListDfsCommandResult { JsonResponse = jsonResponse };
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeItemListDfsCommandResult);
+            SetResult(context, result);
         }
         catch (Exception ex)
         {

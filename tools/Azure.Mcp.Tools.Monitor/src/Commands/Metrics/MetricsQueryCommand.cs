@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Monitor.Options.Metrics;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -17,8 +18,9 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
 /// Command for querying Azure Monitor metrics
 /// </summary>
 public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger, IMonitorMetricsService metricsService)
-    : BaseMetricsCommand<MetricsQueryOptions>
+    : BaseMetricsCommand<MetricsQueryOptions, MetricsQueryCommand.MetricsQueryCommandResult>
 {
+    protected override JsonTypeInfo<MetricsQueryCommandResult> ResultTypeInfo => MonitorJsonContext.Default.MetricsQueryCommandResult;
     private const string CommandTitle = "Query Azure Monitor Metrics";
     private readonly ILogger<MetricsQueryCommand> _logger = logger;
     private readonly IMonitorMetricsService _metricsService = metricsService;
@@ -159,7 +161,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger, IMo
             }
 
             // Set results
-            context.Response.Results = ResponseResult.Create(new(results ?? []), MonitorJsonContext.Default.MetricsQueryCommandResult);
+            SetResult(context, new(results ?? []));
         }
         catch (Exception ex)
         {            // Log error with all relevant context
@@ -173,5 +175,5 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger, IMo
     }
 
     // Strongly-typed result records
-    internal record MetricsQueryCommandResult(List<MetricResult> Results);
+    public record MetricsQueryCommandResult(List<MetricResult> Results);
 }

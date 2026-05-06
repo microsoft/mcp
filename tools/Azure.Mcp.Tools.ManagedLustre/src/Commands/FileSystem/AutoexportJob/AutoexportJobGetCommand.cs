@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -13,8 +14,9 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 
 public sealed class AutoexportJobGetCommand(IManagedLustreService service, ILogger<AutoexportJobGetCommand> logger)
-    : BaseManagedLustreCommand<AutoexportJobGetOptions>(logger)
+    : BaseManagedLustreCommand<AutoexportJobGetOptions, AutoexportJobGetCommand.AutoexportJobGetCommandResult>(logger)
 {
+    protected override JsonTypeInfo<AutoexportJobGetCommandResult> ResultTypeInfo => ManagedLustreJsonContext.Default.AutoexportJobGetCommandResult;
     private const string CommandTitle = "Get Azure Managed Lustre Autoexport Job";
 
     private readonly IManagedLustreService _service = service;
@@ -89,7 +91,7 @@ public sealed class AutoexportJobGetCommand(IManagedLustreService service, ILogg
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(Job: result), ManagedLustreJsonContext.Default.AutoexportJobGetCommandResult);
+                SetResult(context, new(Job: result));
             }
             else
             {
@@ -102,7 +104,7 @@ public sealed class AutoexportJobGetCommand(IManagedLustreService service, ILogg
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(Jobs: results ?? []), ManagedLustreJsonContext.Default.AutoexportJobGetCommandResult);
+                SetResult(context, new(Jobs: results ?? []));
             }
         }
         catch (Exception ex)

@@ -7,14 +7,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
 
-public sealed class ServerEndpointCreateCommand(ILogger<ServerEndpointCreateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<ServerEndpointCreateOptions>
+public sealed class ServerEndpointCreateCommand(ILogger<ServerEndpointCreateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<ServerEndpointCreateOptions, ServerEndpointCreateCommand.ServerEndpointCreateCommandResult>
 {
+    protected override JsonTypeInfo<ServerEndpointCreateCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.ServerEndpointCreateCommandResult;
     private const string CommandTitle = "Create Server Endpoint";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<ServerEndpointCreateCommand> _logger = logger;
@@ -98,7 +100,7 @@ public sealed class ServerEndpointCreateCommand(ILogger<ServerEndpointCreateComm
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(endpoint), StorageSyncJsonContext.Default.ServerEndpointCreateCommandResult);
+            SetResult(context, new(endpoint));
         }
         catch (Exception ex)
         {
@@ -110,5 +112,5 @@ public sealed class ServerEndpointCreateCommand(ILogger<ServerEndpointCreateComm
     }
 
     [JsonSerializable(typeof(ServerEndpointCreateCommandResult))]
-    internal record ServerEndpointCreateCommandResult(ServerEndpointDataSchema Result);
+    public record ServerEndpointCreateCommandResult(ServerEndpointDataSchema Result);
 }

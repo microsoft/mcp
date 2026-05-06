@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
@@ -15,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
 public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
-    : BaseComputeCommand<VmCreateOptions>(true)
+    : BaseComputeCommand<VmCreateOptions, VmCreateCommand.VmCreateCommandResult>(true)
 {
     private const string CommandTitle = "Create Virtual Machine";
     private readonly ILogger<VmCreateCommand> _logger = logger;
@@ -45,6 +46,8 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
         LocalRequired = false,
         Secret = true
     };
+
+    protected override JsonTypeInfo<VmCreateCommandResult> ResultTypeInfo => ComputeJsonContext.Default.VmCreateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -174,7 +177,7 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmCreateCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -201,5 +204,5 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmCreateCommandResult(VmCreateResult Vm);
+    public record VmCreateCommandResult(VmCreateResult Vm);
 }

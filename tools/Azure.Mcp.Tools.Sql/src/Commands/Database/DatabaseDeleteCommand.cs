@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Options.Database;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
@@ -11,8 +12,9 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
 
 public sealed class DatabaseDeleteCommand(ISqlService sqlService, ILogger<DatabaseDeleteCommand> logger)
-    : BaseDatabaseCommand<DatabaseDeleteOptions>(logger)
+    : BaseDatabaseCommand<DatabaseDeleteOptions, DatabaseDeleteCommand.DatabaseDeleteResult>(logger)
 {
+    protected override JsonTypeInfo<DatabaseDeleteResult> ResultTypeInfo => SqlJsonContext.Default.DatabaseDeleteResult;
     private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Delete SQL Database";
 
@@ -56,7 +58,7 @@ public sealed class DatabaseDeleteCommand(ISqlService sqlService, ILogger<Databa
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(deleted, options.Database!), SqlJsonContext.Default.DatabaseDeleteResult);
+            SetResult(context, new(deleted, options.Database!));
         }
         catch (Exception ex)
         {
@@ -79,6 +81,6 @@ public sealed class DatabaseDeleteCommand(ISqlService sqlService, ILogger<Databa
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseDeleteResult(bool Deleted, string DatabaseName);
+    public record DatabaseDeleteResult(bool Deleted, string DatabaseName);
 }
 

@@ -11,8 +11,8 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.AzureBackup.Commands;
 
 public abstract class BaseAzureBackupCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
-    : SubscriptionCommand<T>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T, TResult>
+    : SubscriptionCommand<T, TResult>
     where T : BaseAzureBackupOptions, new()
 {
     protected override void RegisterOptions(Command command)

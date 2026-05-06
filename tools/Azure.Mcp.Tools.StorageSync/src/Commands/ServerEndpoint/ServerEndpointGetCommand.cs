@@ -8,14 +8,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
 
-public sealed class ServerEndpointGetCommand(ILogger<ServerEndpointGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<ServerEndpointGetOptions>
+public sealed class ServerEndpointGetCommand(ILogger<ServerEndpointGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<ServerEndpointGetOptions, ServerEndpointGetCommand.ServerEndpointGetCommandResult>
 {
+    protected override JsonTypeInfo<ServerEndpointGetCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.ServerEndpointGetCommandResult;
     private const string CommandTitle = "Get Server Endpoint";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<ServerEndpointGetCommand> _logger = logger;
@@ -91,7 +93,7 @@ public sealed class ServerEndpointGetCommand(ILogger<ServerEndpointGetCommand> l
                     return context.Response;
                 }
 
-                context.Response.Results = ResponseResult.Create(new([endpoint]), StorageSyncJsonContext.Default.ServerEndpointGetCommandResult);
+                SetResult(context, new([endpoint]));
             }
             else
             {
@@ -108,7 +110,7 @@ public sealed class ServerEndpointGetCommand(ILogger<ServerEndpointGetCommand> l
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(endpoints ?? []), StorageSyncJsonContext.Default.ServerEndpointGetCommandResult);
+                SetResult(context, new(endpoints ?? []));
             }
         }
         catch (Exception ex)
@@ -121,5 +123,5 @@ public sealed class ServerEndpointGetCommand(ILogger<ServerEndpointGetCommand> l
     }
 
     [JsonSerializable(typeof(ServerEndpointGetCommandResult))]
-    internal record ServerEndpointGetCommandResult(List<ServerEndpointDataSchema> Results);
+    public record ServerEndpointGetCommandResult(List<ServerEndpointDataSchema> Results);
 }

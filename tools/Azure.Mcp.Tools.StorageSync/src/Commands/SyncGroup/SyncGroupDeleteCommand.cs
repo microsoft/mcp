@@ -6,14 +6,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.SyncGroup;
 
-public sealed class SyncGroupDeleteCommand(ILogger<SyncGroupDeleteCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<SyncGroupDeleteOptions>
+public sealed class SyncGroupDeleteCommand(ILogger<SyncGroupDeleteCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<SyncGroupDeleteOptions, SyncGroupDeleteCommand.SyncGroupDeleteCommandResult>
 {
+    protected override JsonTypeInfo<SyncGroupDeleteCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.SyncGroupDeleteCommandResult;
     private const string CommandTitle = "Delete Sync Group";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<SyncGroupDeleteCommand> _logger = logger;
@@ -77,7 +79,7 @@ public sealed class SyncGroupDeleteCommand(ILogger<SyncGroupDeleteCommand> logge
                 cancellationToken);
 
             context.Response.Message = "Sync group deleted successfully";
-            context.Response.Results = ResponseResult.Create(new("Sync group deleted successfully"), StorageSyncJsonContext.Default.SyncGroupDeleteCommandResult);
+            SetResult(context, new("Sync group deleted successfully"));
         }
         catch (Exception ex)
         {
@@ -89,5 +91,5 @@ public sealed class SyncGroupDeleteCommand(ILogger<SyncGroupDeleteCommand> logge
     }
 
     [JsonSerializable(typeof(SyncGroupDeleteCommandResult))]
-    internal record SyncGroupDeleteCommandResult(string Message);
+    public record SyncGroupDeleteCommandResult(string Message);
 }

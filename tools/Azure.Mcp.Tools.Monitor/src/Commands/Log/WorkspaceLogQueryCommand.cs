@@ -5,13 +5,16 @@ using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
+using System.Text.Json.Nodes;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Log;
 
-public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> logger, IMonitorService monitorService) : BaseWorkspaceMonitorCommand<WorkspaceLogQueryOptions>()
+public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> logger, IMonitorService monitorService) : BaseWorkspaceMonitorCommand<WorkspaceLogQueryOptions, List<JsonNode>>()
 {
+    protected override JsonTypeInfo<List<JsonNode>> ResultTypeInfo => MonitorJsonContext.Default.ListJsonNode;
     private const string CommandTitle = "Query Log Analytics Workspace";
     private readonly ILogger<WorkspaceLogQueryCommand> _logger = logger;
     private readonly IMonitorService _monitorService = monitorService;
@@ -88,7 +91,7 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(results, MonitorJsonContext.Default.ListJsonNode);
+            SetResult(context, results);
         }
         catch (Exception ex)
         {

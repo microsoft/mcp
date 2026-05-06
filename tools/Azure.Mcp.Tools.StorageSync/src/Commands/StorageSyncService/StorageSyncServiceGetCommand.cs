@@ -8,14 +8,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
-public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceGetOptions>
+public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceGetOptions, StorageSyncServiceGetCommand.StorageSyncServiceGetCommandResult>
 {
+    protected override JsonTypeInfo<StorageSyncServiceGetCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult;
     private const string CommandTitle = "Get Storage Sync Service";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceGetCommand> _logger = logger;
@@ -92,7 +94,7 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
                     return context.Response;
                 }
 
-                context.Response.Results = ResponseResult.Create(new([service]), StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);
+                SetResult(context, new([service]));
             }
             else
             {
@@ -107,7 +109,7 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(services ?? []), StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);
+                SetResult(context, new(services ?? []));
             }
         }
         catch (Exception ex)
@@ -120,5 +122,5 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
     }
 
     [JsonSerializable(typeof(StorageSyncServiceGetCommandResult))]
-    internal record StorageSyncServiceGetCommandResult(List<StorageSyncServiceDataSchema> Results);
+    public record StorageSyncServiceGetCommandResult(List<StorageSyncServiceDataSchema> Results);
 }

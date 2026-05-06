@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Server;
 using Azure.Mcp.Tools.Sql.Services;
@@ -13,8 +14,9 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
 public sealed class ServerDeleteCommand(ISqlService sqlService, ILogger<ServerDeleteCommand> logger)
-    : BaseSqlCommand<ServerDeleteOptions>(logger)
+    : BaseSqlCommand<ServerDeleteOptions, ServerDeleteCommand.ServerDeleteResult>(logger)
 {
+    protected override JsonTypeInfo<ServerDeleteResult> ResultTypeInfo => SqlJsonContext.Default.ServerDeleteResult;
     private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Delete SQL Server";
 
@@ -85,7 +87,7 @@ public sealed class ServerDeleteCommand(ISqlService sqlService, ILogger<ServerDe
 
             if (deleted)
             {
-                context.Response.Results = ResponseResult.Create(new($"SQL server '{options.Server}' was successfully deleted.", true), SqlJsonContext.Default.ServerDeleteResult);
+                SetResult(context, new($"SQL server '{options.Server}' was successfully deleted.", true));
             }
             else
             {
@@ -124,5 +126,5 @@ public sealed class ServerDeleteCommand(ISqlService sqlService, ILogger<ServerDe
         _ => base.GetStatusCode(ex)
     };
 
-    internal record ServerDeleteResult(string Message, bool Success);
+    public record ServerDeleteResult(string Message, bool Success);
 }

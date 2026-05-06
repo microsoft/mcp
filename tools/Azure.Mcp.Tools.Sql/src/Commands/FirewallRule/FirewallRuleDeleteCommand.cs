@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.FirewallRule;
 using Azure.Mcp.Tools.Sql.Services;
@@ -13,8 +14,9 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 
 public sealed class FirewallRuleDeleteCommand(ISqlService sqlService, ILogger<FirewallRuleDeleteCommand> logger)
-    : BaseSqlCommand<FirewallRuleDeleteOptions>(logger)
+    : BaseSqlCommand<FirewallRuleDeleteOptions, FirewallRuleDeleteCommand.FirewallRuleDeleteResult>(logger)
 {
+    protected override JsonTypeInfo<FirewallRuleDeleteResult> ResultTypeInfo => SqlJsonContext.Default.FirewallRuleDeleteResult;
     private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Delete SQL Server Firewall Rule";
 
@@ -74,7 +76,7 @@ public sealed class FirewallRuleDeleteCommand(ISqlService sqlService, ILogger<Fi
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(deleted, options.FirewallRuleName!), SqlJsonContext.Default.FirewallRuleDeleteResult);
+            SetResult(context, new(deleted, options.FirewallRuleName!));
         }
         catch (Exception ex)
         {
@@ -105,5 +107,5 @@ public sealed class FirewallRuleDeleteCommand(ISqlService sqlService, ILogger<Fi
         _ => base.GetStatusCode(ex)
     };
 
-    internal record FirewallRuleDeleteResult(bool Deleted, string RuleName);
+    public record FirewallRuleDeleteResult(bool Deleted, string RuleName);
 }

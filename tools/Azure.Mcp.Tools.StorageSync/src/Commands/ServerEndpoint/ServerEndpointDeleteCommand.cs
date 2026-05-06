@@ -6,14 +6,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
 
-public sealed class ServerEndpointDeleteCommand(ILogger<ServerEndpointDeleteCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<ServerEndpointDeleteOptions>
+public sealed class ServerEndpointDeleteCommand(ILogger<ServerEndpointDeleteCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<ServerEndpointDeleteOptions, ServerEndpointDeleteCommand.ServerEndpointDeleteCommandResult>
 {
+    protected override JsonTypeInfo<ServerEndpointDeleteCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.ServerEndpointDeleteCommandResult;
     private const string CommandTitle = "Delete Server Endpoint";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<ServerEndpointDeleteCommand> _logger = logger;
@@ -80,7 +82,7 @@ public sealed class ServerEndpointDeleteCommand(ILogger<ServerEndpointDeleteComm
                 cancellationToken);
 
             context.Response.Message = "Server endpoint deleted successfully";
-            context.Response.Results = ResponseResult.Create(new("Server endpoint deleted successfully"), StorageSyncJsonContext.Default.ServerEndpointDeleteCommandResult);
+            SetResult(context, new("Server endpoint deleted successfully"));
         }
         catch (Exception ex)
         {
@@ -92,5 +94,5 @@ public sealed class ServerEndpointDeleteCommand(ILogger<ServerEndpointDeleteComm
     }
 
     [JsonSerializable(typeof(ServerEndpointDeleteCommandResult))]
-    internal record ServerEndpointDeleteCommandResult(string Message);
+    public record ServerEndpointDeleteCommandResult(string Message);
 }

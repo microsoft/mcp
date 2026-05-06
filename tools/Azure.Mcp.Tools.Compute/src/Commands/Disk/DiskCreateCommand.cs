@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Security;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Disk;
@@ -19,7 +20,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 /// </summary>
 public sealed class DiskCreateCommand(
     ILogger<DiskCreateCommand> logger)
-    : BaseComputeCommand<DiskCreateOptions>(true)
+    : BaseComputeCommand<DiskCreateOptions, DiskCreateCommand.DiskCreateCommandResult>(true)
 {
     private const string CommandTitle = "Create Managed Disk";
     private const string CommandDescription =
@@ -55,6 +56,8 @@ public sealed class DiskCreateCommand(
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<DiskCreateCommandResult> ResultTypeInfo => ComputeJsonContext.Default.DiskCreateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -200,7 +203,7 @@ public sealed class DiskCreateCommand(
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(disk), ComputeJsonContext.Default.DiskCreateCommandResult);
+            SetResult(context, new(disk));
         }
         catch (Exception ex)
         {

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
 using Azure.Mcp.Tools.Compute.Services;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
 public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
-    : BaseComputeCommand<VmDeleteOptions>(true)
+    : BaseComputeCommand<VmDeleteOptions, VmDeleteCommand.VmDeleteCommandResult>(true)
 {
     private const string CommandTitle = "Delete Virtual Machine";
     private readonly ILogger<VmDeleteCommand> _logger = logger;
@@ -44,6 +45,8 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
         LocalRequired = false,
         Secret = true
     };
+
+    protected override JsonTypeInfo<VmDeleteCommandResult> ResultTypeInfo => ComputeJsonContext.Default.VmDeleteCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -86,11 +89,9 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new VmDeleteCommandResult(
-                    $"Virtual machine '{options.VmName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
-                    true),
-                ComputeJsonContext.Default.VmDeleteCommandResult);
+            SetResult(context, new VmDeleteCommandResult(
+                $"Virtual machine '{options.VmName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
+                true));
         }
         catch (Exception ex)
         {
@@ -113,5 +114,5 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmDeleteCommandResult(string Message, bool Success);
+    public record VmDeleteCommandResult(string Message, bool Success);
 }

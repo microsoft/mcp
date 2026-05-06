@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.ElasticPool;
 using Azure.Mcp.Tools.Sql.Services;
@@ -12,8 +13,9 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Sql.Commands.ElasticPool;
 
 public sealed class ElasticPoolListCommand(ISqlService sqlService, ILogger<ElasticPoolListCommand> logger)
-    : BaseElasticPoolCommand<ElasticPoolListOptions>(logger)
+    : BaseElasticPoolCommand<ElasticPoolListOptions, ElasticPoolListCommand.ElasticPoolListResult>(logger)
 {
+    protected override JsonTypeInfo<ElasticPoolListResult> ResultTypeInfo => SqlJsonContext.Default.ElasticPoolListResult;
     private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "List SQL Elastic Pools";
 
@@ -61,7 +63,7 @@ public sealed class ElasticPoolListCommand(ISqlService sqlService, ILogger<Elast
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(elasticPools?.Results ?? [], elasticPools?.AreResultsTruncated ?? false), SqlJsonContext.Default.ElasticPoolListResult);
+            SetResult(context, new(elasticPools?.Results ?? [], elasticPools?.AreResultsTruncated ?? false));
         }
         catch (Exception ex)
         {
@@ -84,5 +86,5 @@ public sealed class ElasticPoolListCommand(ISqlService sqlService, ILogger<Elast
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record ElasticPoolListResult(List<SqlElasticPool> ElasticPools, bool AreResultsTruncated);
+    public record ElasticPoolListResult(List<SqlElasticPool> ElasticPools, bool AreResultsTruncated);
 }

@@ -8,14 +8,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
 
-public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<RegisteredServerGetOptions>
+public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<RegisteredServerGetOptions, RegisteredServerGetCommand.RegisteredServerGetCommandResult>
 {
+    protected override JsonTypeInfo<RegisteredServerGetCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.RegisteredServerGetCommandResult;
     private const string CommandTitle = "Get Registered Server";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<RegisteredServerGetCommand> _logger = logger;
@@ -88,7 +90,7 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
                     return context.Response;
                 }
 
-                context.Response.Results = ResponseResult.Create(new([server]), StorageSyncJsonContext.Default.RegisteredServerGetCommandResult);
+                SetResult(context, new([server]));
             }
             else
             {
@@ -104,7 +106,7 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(servers ?? []), StorageSyncJsonContext.Default.RegisteredServerGetCommandResult);
+                SetResult(context, new(servers ?? []));
             }
         }
         catch (Exception ex)
@@ -117,5 +119,5 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
     }
 
     [JsonSerializable(typeof(RegisteredServerGetCommandResult))]
-    internal record RegisteredServerGetCommandResult(List<RegisteredServerDataSchema> Results);
+    public record RegisteredServerGetCommandResult(List<RegisteredServerDataSchema> Results);
 }

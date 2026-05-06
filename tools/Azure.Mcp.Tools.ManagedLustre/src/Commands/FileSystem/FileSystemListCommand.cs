@@ -5,6 +5,7 @@ using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -12,8 +13,9 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
 public sealed class FileSystemListCommand(IManagedLustreService service, ILogger<FileSystemListCommand> logger)
-    : BaseManagedLustreCommand<FileSystemListOptions>(logger)
+    : BaseManagedLustreCommand<FileSystemListOptions, FileSystemListCommand.FileSystemListResult>(logger)
 {
+    protected override JsonTypeInfo<FileSystemListResult> ResultTypeInfo => ManagedLustreJsonContext.Default.FileSystemListResult;
     private readonly IManagedLustreService _service = service;
     private const string CommandTitle = "List Azure Managed Lustre File Systems";
 
@@ -70,7 +72,7 @@ public sealed class FileSystemListCommand(IManagedLustreService service, ILogger
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(fileSystems ?? []), ManagedLustreJsonContext.Default.FileSystemListResult);
+            SetResult(context, new(fileSystems ?? []));
         }
         catch (Exception ex)
         {
@@ -83,5 +85,5 @@ public sealed class FileSystemListCommand(IManagedLustreService service, ILogger
         return context.Response;
     }
 
-    internal record FileSystemListResult(List<Models.LustreFileSystem> FileSystems);
+    public record FileSystemListResult(List<Models.LustreFileSystem> FileSystems);
 }

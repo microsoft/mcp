@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
 public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeService computeService)
-    : BaseComputeCommand<VmssGetOptions>(false)
+    : BaseComputeCommand<VmssGetOptions, VmssGetCommand.VmssGetCommandResult>(false)
 {
     private const string CommandTitle = "Get Virtual Machine Scale Set(s)";
     private readonly ILogger<VmssGetCommand> _logger = logger;
@@ -40,6 +41,8 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<VmssGetCommandResult> ResultTypeInfo => ComputeJsonContext.Default.VmssGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -100,9 +103,7 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new VmssGetCommandResult(VmInstance: vmInstance),
-                    ComputeJsonContext.Default.VmssGetCommandResult);
+                SetResult(context, new VmssGetCommandResult(VmInstance: vmInstance));
             }
             // Scenario 2: Get specific VMSS
             else if (!string.IsNullOrEmpty(options.VmssName))
@@ -115,9 +116,7 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new VmssGetCommandResult(Vmss: vmss),
-                    ComputeJsonContext.Default.VmssGetCommandResult);
+                SetResult(context, new VmssGetCommandResult(Vmss: vmss));
             }
             // Scenario 3: List VMSS in resource group
             else
@@ -129,9 +128,7 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new VmssGetCommandResult(VmssList: vmssList ?? []),
-                    ComputeJsonContext.Default.VmssGetCommandResult);
+                SetResult(context, new VmssGetCommandResult(VmssList: vmssList ?? []));
             }
         }
         catch (Exception ex)

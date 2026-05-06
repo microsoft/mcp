@@ -9,12 +9,14 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
 
 public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointConnectionGetCommand> logger, IFileSharesService service)
-    : BaseFileSharesCommand<PrivateEndpointConnectionGetOptions>(logger, service)
+    : BaseFileSharesCommand<PrivateEndpointConnectionGetOptions, PrivateEndpointConnectionGetCommand.PrivateEndpointConnectionGetCommandResult>(logger, service)
 {
+    protected override JsonTypeInfo<PrivateEndpointConnectionGetCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.PrivateEndpointConnectionGetCommandResult;
     private const string CommandTitle = "Get Private Endpoint Connection";
 
     public override string Id => "a8e9f7d6-c5b4-4a3d-9e2f-1c0b8a7d6e5f";
@@ -77,7 +79,7 @@ public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointC
                     cancellationToken);
 
                 var singleResult = new PrivateEndpointConnectionGetCommandResult([connection]);
-                context.Response.Results = ResponseResult.Create(singleResult, FileSharesJsonContext.Default.PrivateEndpointConnectionGetCommandResult);
+                SetResult(context, singleResult);
 
                 _logger.LogInformation("Successfully retrieved private endpoint connection. Connection: {ConnectionName}", options.ConnectionName);
             }
@@ -97,7 +99,7 @@ public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointC
                     cancellationToken);
 
                 var result = new PrivateEndpointConnectionGetCommandResult(connections ?? []);
-                context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.PrivateEndpointConnectionGetCommandResult);
+                SetResult(context, result);
 
                 _logger.LogInformation("Successfully listed private endpoint connections. Count: {Count}", connections?.Count ?? 0);
             }
@@ -111,5 +113,5 @@ public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointC
         return context.Response;
     }
 
-    internal record PrivateEndpointConnectionGetCommandResult([property: JsonPropertyName("connections")] List<PrivateEndpointConnectionInfo> Connections);
+    public record PrivateEndpointConnectionGetCommandResult([property: JsonPropertyName("connections")] List<PrivateEndpointConnectionInfo> Connections);
 }

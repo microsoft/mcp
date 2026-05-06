@@ -11,11 +11,13 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
-public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutabilityCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<GovernanceImmutabilityOptions>()
+public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutabilityCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<GovernanceImmutabilityOptions, GovernanceImmutabilityCommand.GovernanceImmutabilityCommandResult>()
 {
+    protected override JsonTypeInfo<GovernanceImmutabilityCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.GovernanceImmutabilityCommandResult;
     private const string CommandTitle = "Configure Vault Immutability";
     private readonly ILogger<GovernanceImmutabilityCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -86,9 +88,7 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result),
-                AzureBackupJsonContext.Default.GovernanceImmutabilityCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -111,5 +111,5 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record GovernanceImmutabilityCommandResult(OperationResult Result);
+    public record GovernanceImmutabilityCommandResult(OperationResult Result);
 }

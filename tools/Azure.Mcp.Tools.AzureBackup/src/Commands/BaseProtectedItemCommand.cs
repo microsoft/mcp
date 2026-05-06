@@ -10,8 +10,8 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.AzureBackup.Commands;
 
 public abstract class BaseProtectedItemCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
-    : BaseAzureBackupCommand<T>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T, TResult>
+    : BaseAzureBackupCommand<T, TResult>
     where T : BaseProtectedItemOptions, new()
 {
     protected override void RegisterOptions(Command command)

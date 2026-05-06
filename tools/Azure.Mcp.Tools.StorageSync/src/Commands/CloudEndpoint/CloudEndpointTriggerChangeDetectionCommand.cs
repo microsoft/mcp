@@ -6,14 +6,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
 
-public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndpointTriggerChangeDetectionCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<CloudEndpointTriggerChangeDetectionOptions>
+public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndpointTriggerChangeDetectionCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<CloudEndpointTriggerChangeDetectionOptions, CloudEndpointTriggerChangeDetectionCommand.CloudEndpointTriggerChangeDetectionCommandResult>
 {
+    protected override JsonTypeInfo<CloudEndpointTriggerChangeDetectionCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.CloudEndpointTriggerChangeDetectionCommandResult;
     private const string CommandTitle = "Trigger Change Detection";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<CloudEndpointTriggerChangeDetectionCommand> _logger = logger;
@@ -89,7 +91,7 @@ public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndp
                 cancellationToken);
 
             context.Response.Message = "Change detection triggered successfully";
-            context.Response.Results = ResponseResult.Create(new("Change detection triggered successfully"), StorageSyncJsonContext.Default.CloudEndpointTriggerChangeDetectionCommandResult);
+            SetResult(context, new("Change detection triggered successfully"));
         }
         catch (Exception ex)
         {
@@ -101,5 +103,5 @@ public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndp
     }
 
     [JsonSerializable(typeof(CloudEndpointTriggerChangeDetectionCommandResult))]
-    internal record CloudEndpointTriggerChangeDetectionCommandResult(string Message);
+    public record CloudEndpointTriggerChangeDetectionCommandResult(string Message);
 }

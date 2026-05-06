@@ -12,11 +12,13 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Backup;
 
-public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<BackupStatusOptions>()
+public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<BackupStatusOptions, BackupStatusCommand.BackupStatusCommandResult>()
 {
+    protected override JsonTypeInfo<BackupStatusCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.BackupStatusCommandResult;
     private const string CommandTitle = "Check Backup Status";
     private readonly ILogger<BackupStatusCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -67,9 +69,7 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result),
-                AzureBackupJsonContext.Default.BackupStatusCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -91,5 +91,5 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record BackupStatusCommandResult(BackupStatusResult Status);
+    public record BackupStatusCommandResult(BackupStatusResult Status);
 }

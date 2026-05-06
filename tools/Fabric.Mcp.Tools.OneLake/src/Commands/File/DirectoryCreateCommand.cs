@@ -7,6 +7,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
@@ -18,8 +19,9 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 /// </summary>
 public sealed class DirectoryCreateCommand(
     ILogger<DirectoryCreateCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<DirectoryCreateOptions>()
+    IOneLakeService oneLakeService) : GlobalCommand<DirectoryCreateOptions, DirectoryCreateCommand.DirectoryCreateCommandResult>()
 {
+    protected override JsonTypeInfo<DirectoryCreateCommandResult> ResultTypeInfo => OneLakeJsonContext.Default.DirectoryCreateCommandResult;
     private readonly ILogger<DirectoryCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
@@ -110,7 +112,7 @@ public sealed class DirectoryCreateCommand(
                 Message = $"Directory '{options.DirectoryPath}' created successfully"
             };
 
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DirectoryCreateCommandResult);
+            SetResult(context, result);
         }
         catch (Exception ex)
         {

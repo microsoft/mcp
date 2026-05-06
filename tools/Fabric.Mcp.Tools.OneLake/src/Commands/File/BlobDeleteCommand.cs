@@ -7,6 +7,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
@@ -17,8 +18,9 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 [HiddenCommand]
 public sealed class BlobDeleteCommand(
     ILogger<BlobDeleteCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<BlobDeleteOptions>()
+    IOneLakeService oneLakeService) : GlobalCommand<BlobDeleteOptions, BlobDeleteCommand.BlobDeleteCommandResult>()
 {
+    protected override JsonTypeInfo<BlobDeleteCommandResult> ResultTypeInfo => OneLakeJsonContext.Default.BlobDeleteCommandResult;
     private readonly ILogger<BlobDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
@@ -105,7 +107,7 @@ public sealed class BlobDeleteCommand(
                 "Blob deleted successfully.");
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(commandResult, OneLakeJsonContext.Default.BlobDeleteCommandResult);
+            SetResult(context, commandResult);
         }
         catch (Exception ex)
         {

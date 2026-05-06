@@ -6,6 +6,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -13,8 +14,9 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
 
 public sealed class TableListCommand(
     ILogger<TableListCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<TableListOptions>()
+    IOneLakeService oneLakeService) : GlobalCommand<TableListOptions, TableListCommand.TableListCommandResult>()
 {
+    protected override JsonTypeInfo<TableListCommandResult> ResultTypeInfo => OneLakeJsonContext.Default.TableListCommandResult;
     private readonly ILogger<TableListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
@@ -93,7 +95,7 @@ public sealed class TableListCommand(
 
             var tablesResult = await _oneLakeService.ListTablesAsync(workspaceIdentifier!, itemIdentifier!, options.Namespace!, cancellationToken);
             var result = new TableListCommandResult(tablesResult.Workspace, tablesResult.Item, tablesResult.Namespace, tablesResult.Tables, tablesResult.RawResponse);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.TableListCommandResult);
+            SetResult(context, result);
         }
         catch (Exception ex)
         {

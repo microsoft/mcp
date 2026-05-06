@@ -9,12 +9,15 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Tools.FileShares.Models;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Informational;
 
 public sealed class FileShareGetLimitsCommand(ILogger<FileShareGetLimitsCommand> logger, IFileSharesService service)
-    : SubscriptionCommand<FileShareGetLimitsOptions>()
+    : SubscriptionCommand<FileShareGetLimitsOptions, FileShareLimitsResult>()
 {
+    protected override JsonTypeInfo<FileShareLimitsResult> ResultTypeInfo => FileSharesJsonContext.Default.FileShareLimitsResult;
     private readonly ILogger<FileShareGetLimitsCommand> _logger = logger;
     private readonly IFileSharesService _service = service;
 
@@ -67,7 +70,7 @@ public sealed class FileShareGetLimitsCommand(ILogger<FileShareGetLimitsCommand>
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareLimitsResult);
+            SetResult(context, result);
         }
         catch (Exception ex)
         {

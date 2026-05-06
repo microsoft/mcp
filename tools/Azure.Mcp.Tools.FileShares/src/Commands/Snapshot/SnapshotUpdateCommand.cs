@@ -9,12 +9,14 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
 public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger, IFileSharesService service)
-    : BaseFileSharesCommand<SnapshotUpdateOptions>(logger, service)
+    : BaseFileSharesCommand<SnapshotUpdateOptions, SnapshotUpdateCommand.SnapshotUpdateCommandResult>(logger, service)
 {
+    protected override JsonTypeInfo<SnapshotUpdateCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.SnapshotUpdateCommandResult;
     private const string CommandTitle = "Update File Share Snapshot";
 
     public override string Id => "b5c6d7e8-f9a0-4b1c-2d3e-4f5a6b7c8d9e";
@@ -89,7 +91,7 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(snapshot), FileSharesJsonContext.Default.SnapshotUpdateCommandResult);
+            SetResult(context, new(snapshot));
 
             _logger.LogInformation("Snapshot updated successfully. SnapshotName: {SnapshotName}", options.SnapshotName);
         }
@@ -102,5 +104,5 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
         return context.Response;
     }
 
-    internal record SnapshotUpdateCommandResult(FileShareSnapshotInfo Snapshot);
+    public record SnapshotUpdateCommandResult(FileShareSnapshotInfo Snapshot);
 }

@@ -8,12 +8,14 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
 public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFileSharesService service)
-    : BaseFileSharesCommand<SnapshotGetOptions>(logger, service)
+    : BaseFileSharesCommand<SnapshotGetOptions, SnapshotGetCommand.SnapshotGetCommandResult>(logger, service)
 {
+    protected override JsonTypeInfo<SnapshotGetCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.SnapshotGetCommandResult;
     private const string CommandTitle = "Get File Share Snapshot";
 
     public override string Id => "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d";
@@ -74,7 +76,7 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFile
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new([snapshot]), FileSharesJsonContext.Default.SnapshotGetCommandResult);
+                SetResult(context, new([snapshot]));
 
                 _logger.LogInformation("Successfully retrieved snapshot. SnapshotName: {SnapshotName}", options.SnapshotName);
             }
@@ -92,7 +94,7 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFile
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(snapshots ?? []), FileSharesJsonContext.Default.SnapshotGetCommandResult);
+                SetResult(context, new(snapshots ?? []));
 
                 _logger.LogInformation("Successfully listed {Count} snapshots for file share {FileShareName}", snapshots?.Count ?? 0, options.FileShareName);
             }
@@ -106,5 +108,5 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFile
         return context.Response;
     }
 
-    internal record SnapshotGetCommandResult(List<FileShareSnapshotInfo> Snapshots);
+    public record SnapshotGetCommandResult(List<FileShareSnapshotInfo> Snapshots);
 }

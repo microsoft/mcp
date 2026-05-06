@@ -14,10 +14,10 @@ namespace Azure.Mcp.Tools.FileShares.Commands;
 /// Provides common command infrastructure and option registration.
 /// </summary>
 public abstract class BaseFileSharesCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>(
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(
     ILogger logger,
     IFileSharesService fileSharesService)
-    : SubscriptionCommand<TOptions> where TOptions : BaseFileSharesOptions, new()
+    : SubscriptionCommand<TOptions, TResult> where TOptions : BaseFileSharesOptions, new()
 {
     protected readonly ILogger _logger = logger;
     protected readonly IFileSharesService _fileSharesService = fileSharesService;

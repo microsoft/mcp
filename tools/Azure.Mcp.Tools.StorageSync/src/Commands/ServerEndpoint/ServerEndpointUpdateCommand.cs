@@ -7,14 +7,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
 
-public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<ServerEndpointUpdateOptions>
+public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<ServerEndpointUpdateOptions, ServerEndpointUpdateCommand.ServerEndpointUpdateCommandResult>
 {
+    protected override JsonTypeInfo<ServerEndpointUpdateCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.ServerEndpointUpdateCommandResult;
     private const string CommandTitle = "Update Server Endpoint";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<ServerEndpointUpdateCommand> _logger = logger;
@@ -92,7 +94,7 @@ public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateComm
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(endpoint), StorageSyncJsonContext.Default.ServerEndpointUpdateCommandResult);
+            SetResult(context, new(endpoint));
         }
         catch (Exception ex)
         {
@@ -104,5 +106,5 @@ public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateComm
     }
 
     [JsonSerializable(typeof(ServerEndpointUpdateCommandResult))]
-    internal record ServerEndpointUpdateCommandResult(ServerEndpointDataSchema Result);
+    public record ServerEndpointUpdateCommandResult(ServerEndpointDataSchema Result);
 }

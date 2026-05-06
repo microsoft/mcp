@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Monitor.Options.Metrics;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -17,8 +18,9 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
 /// Command for listing Azure Monitor metric definitions
 /// </summary>
 public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand> logger, IMonitorMetricsService metricsService)
-    : BaseMetricsCommand<MetricsDefinitionsOptions>
+    : BaseMetricsCommand<MetricsDefinitionsOptions, MetricsDefinitionsCommand.MetricsDefinitionsCommandResult>
 {
+    protected override JsonTypeInfo<MetricsDefinitionsCommandResult> ResultTypeInfo => MonitorJsonContext.Default.MetricsDefinitionsCommandResult;
     private const string CommandTitle = "List Azure Monitor Metric Definitions";
     private readonly ILogger<MetricsDefinitionsCommand> _logger = logger;
     private readonly IMonitorMetricsService _metricsService = metricsService;
@@ -103,7 +105,7 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
 
                 // Set response message and results
                 context.Response.Message = status;
-                context.Response.Results = ResponseResult.Create(new(limitedResults, status), MonitorJsonContext.Default.MetricsDefinitionsCommandResult);
+                SetResult(context, new(limitedResults, status));
             }
             else
             {
@@ -122,5 +124,5 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
     }
 
     // Strongly-typed result record
-    internal record MetricsDefinitionsCommandResult(List<MetricDefinition> Results, string Status);
+    public record MetricsDefinitionsCommandResult(List<MetricDefinition> Results, string Status);
 }

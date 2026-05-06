@@ -10,14 +10,16 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
 
 public sealed class BlobGetCommand(
     ILogger<BlobGetCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<BlobGetOptions>()
+    IOneLakeService oneLakeService) : GlobalCommand<BlobGetOptions, BlobGetCommand.BlobGetCommandResult>()
 {
+    protected override JsonTypeInfo<BlobGetCommandResult> ResultTypeInfo => OneLakeJsonContext.Default.BlobGetCommandResult;
     private readonly ILogger<BlobGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
@@ -163,7 +165,7 @@ public sealed class BlobGetCommand(
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Message = finalMessage;
-            context.Response.Results = ResponseResult.Create(commandResult, OneLakeJsonContext.Default.BlobGetCommandResult);
+            SetResult(context, commandResult);
         }
         catch (Exception ex)
         {

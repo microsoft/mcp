@@ -8,14 +8,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.SyncGroup;
 
-public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<SyncGroupGetOptions>
+public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<SyncGroupGetOptions, SyncGroupGetCommand.SyncGroupGetCommandResult>
 {
+    protected override JsonTypeInfo<SyncGroupGetCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.SyncGroupGetCommandResult;
     private const string CommandTitle = "Get Sync Group";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<SyncGroupGetCommand> _logger = logger;
@@ -88,7 +90,7 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
                     return context.Response;
                 }
 
-                context.Response.Results = ResponseResult.Create(new([syncGroup]), StorageSyncJsonContext.Default.SyncGroupGetCommandResult);
+                SetResult(context, new([syncGroup]));
             }
             else
             {
@@ -104,7 +106,7 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(syncGroups ?? []), StorageSyncJsonContext.Default.SyncGroupGetCommandResult);
+                SetResult(context, new(syncGroups ?? []));
             }
         }
         catch (Exception ex)
@@ -117,5 +119,5 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
     }
 
     [JsonSerializable(typeof(SyncGroupGetCommandResult))]
-    internal record SyncGroupGetCommandResult(List<SyncGroupDataSchema> Results);
+    public record SyncGroupGetCommandResult(List<SyncGroupDataSchema> Results);
 }

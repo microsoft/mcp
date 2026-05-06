@@ -11,8 +11,8 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
 public abstract class BaseMonitorCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>
+    : SubscriptionCommand<TOptions, TResult>
     where TOptions : SubscriptionOptions, new()
 {
     protected override void RegisterOptions(Command command)

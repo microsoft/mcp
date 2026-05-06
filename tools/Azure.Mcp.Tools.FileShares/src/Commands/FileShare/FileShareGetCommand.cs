@@ -8,12 +8,14 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
 public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFileSharesService service)
-    : BaseFileSharesCommand<FileShareGetOptions>(logger, service)
+    : BaseFileSharesCommand<FileShareGetOptions, FileShareGetCommand.FileShareGetCommandResult>(logger, service)
 {
+    protected override JsonTypeInfo<FileShareGetCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.FileShareGetCommandResult;
     private const string CommandTitle = "Get File Share";
     public override string Id => "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f";
     public override string Name => "get";
@@ -70,7 +72,7 @@ public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFi
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new([fileShare]), FileSharesJsonContext.Default.FileShareGetCommandResult);
+                SetResult(context, new([fileShare]));
 
                 _logger.LogInformation("Successfully retrieved file share. FileShareName: {FileShareName}", options.FileShareName);
             }
@@ -87,7 +89,7 @@ public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFi
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(fileShares ?? []), FileSharesJsonContext.Default.FileShareGetCommandResult);
+                SetResult(context, new(fileShares ?? []));
 
                 _logger.LogInformation("Successfully listed {Count} file shares", fileShares?.Count ?? 0);
             }
@@ -101,5 +103,5 @@ public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFi
         return context.Response;
     }
 
-    internal record FileShareGetCommandResult(List<FileShareInfo> FileShares);
+    public record FileShareGetCommandResult(List<FileShareInfo> FileShares);
 }

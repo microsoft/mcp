@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
@@ -20,8 +21,9 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 [HiddenCommand]
 public sealed class FileReadCommand(
     ILogger<FileReadCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<FileReadOptions>()
+    IOneLakeService oneLakeService) : GlobalCommand<FileReadOptions, FileReadCommand.FileReadCommandResult>()
 {
+    protected override JsonTypeInfo<FileReadCommandResult> ResultTypeInfo => OneLakeJsonContext.Default.FileReadCommandResult;
     private readonly ILogger<FileReadCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
@@ -186,7 +188,7 @@ public sealed class FileReadCommand(
                 blobResult.Charset);
 
             context.Response.Message = finalMessage;
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.FileReadCommandResult);
+            SetResult(context, result);
         }
         catch (Exception ex)
         {

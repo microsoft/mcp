@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
@@ -16,8 +17,10 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
 public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCommand> logger)
-    : SubscriptionCommand<ServerGetOptions>
+    : SubscriptionCommand<ServerGetOptions, ServerGetCommand.ServerGetCommandResult>
 {
+    protected override JsonTypeInfo<ServerGetCommandResult> ResultTypeInfo => SqlJsonContext.Default.ServerGetCommandResult;
+
     private const string CommandTitle = "Get SQL Server";
     private readonly ISqlService _sqlService = sqlService;
     private readonly ILogger<ServerGetCommand> _logger = logger;
@@ -82,9 +85,7 @@ public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCo
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new ServerGetCommandResult([server]),
-                    SqlJsonContext.Default.ServerGetCommandResult);
+                SetResult(context, new ServerGetCommandResult([server]));
             }
             else
             {
@@ -94,9 +95,7 @@ public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCo
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new ServerGetCommandResult(servers ?? []),
-                    SqlJsonContext.Default.ServerGetCommandResult);
+                SetResult(context, new ServerGetCommandResult(servers ?? []));
             }
         }
         catch (Exception ex)

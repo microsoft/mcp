@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Monitor.Options.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -15,12 +16,13 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 
 public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logger, IMonitorService monitorService)
-    : SubscriptionCommand<ActivityLogListOptions>
+    : SubscriptionCommand<ActivityLogListOptions, ActivityLogListCommand.ActivityLogListCommandResult>
 {
+    protected override JsonTypeInfo<ActivityLogListCommandResult> ResultTypeInfo => MonitorJsonContext.Default.ActivityLogListCommandResult;
     private const string CommandTitle = "List Activity Logs";
     private readonly ILogger<ActivityLogListCommand> _logger = logger;
     private readonly IMonitorService _monitorService = monitorService;
-    internal record ActivityLogListCommandResult(List<ActivityLogEventData> ActivityLogs);
+    public record ActivityLogListCommandResult(List<ActivityLogEventData> ActivityLogs);
 
     public override string Id => "ffc0ed72-0622-4a27-bfd8-6df9b83adce8";
 
@@ -95,7 +97,7 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
                 cancellationToken);
 
             // Return empty array if no results
-            context.Response.Results = ResponseResult.Create(new(results ?? []), MonitorJsonContext.Default.ActivityLogListCommandResult);
+            SetResult(context, new(results ?? []));
         }
         catch (Exception ex)
         {

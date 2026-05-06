@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using System.Text.RegularExpressions;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Disk;
@@ -18,7 +19,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 /// </summary>
 public sealed class DiskGetCommand(
     ILogger<DiskGetCommand> logger)
-    : BaseComputeCommand<DiskGetOptions>(false)
+    : BaseComputeCommand<DiskGetOptions, DiskGetCommand.DiskGetCommandResult>(false)
 {
     private const string CommandTitle = "Get Disk Details";
     private const string CommandDescription = "Lists available Azure managed disks or retrieves detailed information about a specific disk. Shows all disks in a subscription or resource group, including disk size, SKU, provisioning state, and OS type. Supports wildcard patterns in disk names (e.g., 'win_OsDisk*'). When disk name is provided without resource group, searches across the entire subscription. When resource group is specified, scopes the search to that resource group. Both parameters are optional.";
@@ -42,6 +43,8 @@ public sealed class DiskGetCommand(
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<DiskGetCommandResult> ResultTypeInfo => ComputeJsonContext.Default.DiskGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -84,7 +87,7 @@ public sealed class DiskGetCommand(
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new([disk]), ComputeJsonContext.Default.DiskGetCommandResult);
+                SetResult(context, new([disk]));
             }
             else
             {
@@ -106,7 +109,7 @@ public sealed class DiskGetCommand(
                     disks = disks?.Where(d => Regex.IsMatch(d.Name ?? string.Empty, pattern, RegexOptions.IgnoreCase)).ToList();
                 }
 
-                context.Response.Results = ResponseResult.Create(new(disks ?? []), ComputeJsonContext.Default.DiskGetCommandResult);
+                SetResult(context, new(disks ?? []));
             }
         }
         catch (Exception ex)

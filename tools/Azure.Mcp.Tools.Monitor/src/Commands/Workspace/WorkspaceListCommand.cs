@@ -7,12 +7,14 @@ using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Workspace;
 
-public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger, IMonitorService monitorService) : SubscriptionCommand<WorkspaceListOptions>()
+public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger, IMonitorService monitorService) : SubscriptionCommand<WorkspaceListOptions, WorkspaceListCommand.WorkspaceListCommandResult>()
 {
+    protected override JsonTypeInfo<WorkspaceListCommandResult> ResultTypeInfo => MonitorJsonContext.Default.WorkspaceListCommandResult;
     private const string CommandTitle = "List Log Analytics Workspaces";
     private readonly ILogger<WorkspaceListCommand> _logger = logger;
     private readonly IMonitorService _monitorService = monitorService;
@@ -57,7 +59,7 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger, I
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(workspaces ?? []), MonitorJsonContext.Default.WorkspaceListCommandResult);
+            SetResult(context, new(workspaces ?? []));
         }
         catch (Exception ex)
         {
@@ -68,5 +70,5 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger, I
         return context.Response;
     }
 
-    internal record WorkspaceListCommandResult(List<WorkspaceInfo> Workspaces);
+    public record WorkspaceListCommandResult(List<WorkspaceInfo> Workspaces);
 }

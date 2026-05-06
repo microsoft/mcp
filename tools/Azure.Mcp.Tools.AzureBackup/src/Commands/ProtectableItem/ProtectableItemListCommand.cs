@@ -9,11 +9,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectableItem;
 
-public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectableItemListOptions>()
+public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectableItemListOptions, ProtectableItemListCommand.ProtectableItemListCommandResult>()
 {
+    protected override JsonTypeInfo<ProtectableItemListCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.ProtectableItemListCommandResult;
     private const string CommandTitle = "List Protectable Items";
     private readonly ILogger<ProtectableItemListCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -76,9 +78,7 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result),
-                AzureBackupJsonContext.Default.ProtectableItemListCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -96,5 +96,5 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record ProtectableItemListCommandResult(List<ProtectableItemInfo> Items);
+    public record ProtectableItemListCommandResult(List<ProtectableItemInfo> Items);
 }

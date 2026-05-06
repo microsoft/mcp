@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Database;
@@ -14,8 +15,9 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
 
 public sealed class DatabaseRenameCommand(ISqlService sqlService, ILogger<DatabaseRenameCommand> logger)
-    : BaseDatabaseCommand<DatabaseRenameOptions>(logger)
+    : BaseDatabaseCommand<DatabaseRenameOptions, DatabaseRenameCommand.DatabaseRenameResult>(logger)
 {
+    protected override JsonTypeInfo<DatabaseRenameResult> ResultTypeInfo => SqlJsonContext.Default.DatabaseRenameResult;
     private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Rename SQL Database";
 
@@ -75,7 +77,7 @@ public sealed class DatabaseRenameCommand(ISqlService sqlService, ILogger<Databa
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseRenameResult);
+            SetResult(context, new(database));
         }
         catch (Exception ex)
         {
@@ -102,5 +104,5 @@ public sealed class DatabaseRenameCommand(ISqlService sqlService, ILogger<Databa
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseRenameResult(SqlDatabase Database);
+    public record DatabaseRenameResult(SqlDatabase Database);
 }

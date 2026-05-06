@@ -7,14 +7,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
-public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCreateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceCreateOptions>
+public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCreateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceCreateOptions, StorageSyncServiceCreateCommand.StorageSyncServiceCreateCommandResult>
 {
+    protected override JsonTypeInfo<StorageSyncServiceCreateCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.StorageSyncServiceCreateCommandResult;
     private const string CommandTitle = "Create Storage Sync Service";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceCreateCommand> _logger = logger;
@@ -78,7 +80,7 @@ public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCr
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(service), StorageSyncJsonContext.Default.StorageSyncServiceCreateCommandResult);
+            SetResult(context, new(service));
         }
         catch (Exception ex)
         {
@@ -90,5 +92,5 @@ public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCr
     }
 
     [JsonSerializable(typeof(StorageSyncServiceCreateCommandResult))]
-    internal record StorageSyncServiceCreateCommandResult(StorageSyncServiceDataSchema Result);
+    public record StorageSyncServiceCreateCommandResult(StorageSyncServiceDataSchema Result);
 }

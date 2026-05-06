@@ -6,12 +6,15 @@ using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
+using System.Text.Json.Nodes;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 
-public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logger, IMonitorHealthModelService healthModelService) : BaseMonitorHealthModelsCommand<BaseMonitorHealthModelsOptions>
+public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logger, IMonitorHealthModelService healthModelService) : BaseMonitorHealthModelsCommand<BaseMonitorHealthModelsOptions, JsonNode>
 {
+    protected override JsonTypeInfo<JsonNode> ResultTypeInfo => MonitorJsonContext.Default.JsonNode;
     private const string CommandTitle = "Get the health of an entity in a health model";
     private const string CommandName = "get";
     private readonly ILogger<EntityGetHealthCommand> _logger = logger;
@@ -65,7 +68,7 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(result, MonitorJsonContext.Default.JsonNode);
+            SetResult(context, result);
         }
         catch (Exception ex)
         {

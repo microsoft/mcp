@@ -12,11 +12,11 @@ using Microsoft.Mcp.Core.Extensions;
 namespace Azure.Mcp.Tools.ManagedLustre.Commands;
 
 public abstract class BaseManagedLustreCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>(ILogger<BaseManagedLustreCommand<TOptions>> logger)
-    : SubscriptionCommand<TOptions> where TOptions : BaseManagedLustreOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(ILogger<BaseManagedLustreCommand<TOptions, TResult>> logger)
+    : SubscriptionCommand<TOptions, TResult> where TOptions : BaseManagedLustreOptions, new()
 {
     // Currently no additional options beyond subscription + resource group
-    protected readonly ILogger<BaseManagedLustreCommand<TOptions>> _logger = logger;
+    protected readonly ILogger<BaseManagedLustreCommand<TOptions, TResult>> _logger = logger;
 
     public void ValidateRootSquashOptions(CommandResult commandResult)
     {

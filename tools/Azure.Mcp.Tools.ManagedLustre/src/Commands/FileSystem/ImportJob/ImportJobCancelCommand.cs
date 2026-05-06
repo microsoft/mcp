@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -13,8 +14,9 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 
 public sealed class ImportJobCancelCommand(IManagedLustreService service, ILogger<ImportJobCancelCommand> logger)
-    : BaseManagedLustreCommand<ImportJobCancelOptions>(logger)
+    : BaseManagedLustreCommand<ImportJobCancelOptions, ImportJobCancelCommand.ImportJobCancelResult>(logger)
 {
+    protected override JsonTypeInfo<ImportJobCancelResult> ResultTypeInfo => ManagedLustreJsonContext.Default.ImportJobCancelResult;
     private const string CommandTitle = "Cancel Azure Managed Lustre Import Job";
 
     private readonly IManagedLustreService _service = service;
@@ -82,7 +84,7 @@ public sealed class ImportJobCancelCommand(IManagedLustreService service, ILogge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(options.JobName!, cancelledJob.Properties?.AdminStatus ?? "Unknown"), ManagedLustreJsonContext.Default.ImportJobCancelResult);
+            SetResult(context, new(options.JobName!, cancelledJob.Properties?.AdminStatus ?? "Unknown"));
         }
         catch (Exception ex)
         {
@@ -94,5 +96,5 @@ public sealed class ImportJobCancelCommand(IManagedLustreService service, ILogge
         return context.Response;
     }
 
-    internal record ImportJobCancelResult(string JobName, string Status);
+    public record ImportJobCancelResult(string JobName, string Status);
 }

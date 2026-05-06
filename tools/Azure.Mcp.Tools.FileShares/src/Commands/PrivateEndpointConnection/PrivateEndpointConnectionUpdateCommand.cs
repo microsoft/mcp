@@ -8,12 +8,14 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
 
 public sealed class PrivateEndpointConnectionUpdateCommand(ILogger<PrivateEndpointConnectionUpdateCommand> logger, IFileSharesService service)
-    : BaseFileSharesCommand<PrivateEndpointConnectionUpdateOptions>(logger, service)
+    : BaseFileSharesCommand<PrivateEndpointConnectionUpdateOptions, PrivateEndpointConnectionUpdateCommand.PrivateEndpointConnectionUpdateCommandResult>(logger, service)
 {
+    protected override JsonTypeInfo<PrivateEndpointConnectionUpdateCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.PrivateEndpointConnectionUpdateCommandResult;
     private const string CommandTitle = "Update Private Endpoint Connection";
 
     public override string Id => "c6d7e8f9-a0b1-4c2d-3e4f-5a6b7c8d9e0f";
@@ -78,7 +80,7 @@ public sealed class PrivateEndpointConnectionUpdateCommand(ILogger<PrivateEndpoi
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(connection), FileSharesJsonContext.Default.PrivateEndpointConnectionUpdateCommandResult);
+            SetResult(context, new(connection));
 
             _logger.LogInformation(
                 "Successfully updated private endpoint connection. Connection: {ConnectionName}, Status: {Status}",
@@ -93,5 +95,5 @@ public sealed class PrivateEndpointConnectionUpdateCommand(ILogger<PrivateEndpoi
         return context.Response;
     }
 
-    internal record PrivateEndpointConnectionUpdateCommandResult(PrivateEndpointConnectionInfo Connection);
+    public record PrivateEndpointConnectionUpdateCommandResult(PrivateEndpointConnectionInfo Connection);
 }

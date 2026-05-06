@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Net.Sockets;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.FirewallRule;
@@ -15,8 +16,9 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 
 public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<FirewallRuleCreateCommand> logger)
-    : BaseSqlCommand<FirewallRuleCreateOptions>(logger)
+    : BaseSqlCommand<FirewallRuleCreateOptions, FirewallRuleCreateCommand.FirewallRuleCreateResult>(logger)
 {
+    protected override JsonTypeInfo<FirewallRuleCreateResult> ResultTypeInfo => SqlJsonContext.Default.FirewallRuleCreateResult;
     private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Create SQL Server Firewall Rule";
 
@@ -130,7 +132,7 @@ public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<Fi
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(firewallRule), SqlJsonContext.Default.FirewallRuleCreateResult);
+            SetResult(context, new(firewallRule));
         }
         catch (Exception ex)
         {
@@ -163,5 +165,5 @@ public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<Fi
         _ => base.GetStatusCode(ex)
     };
 
-    internal record FirewallRuleCreateResult(SqlServerFirewallRule FirewallRule);
+    public record FirewallRuleCreateResult(SqlServerFirewallRule FirewallRule);
 }

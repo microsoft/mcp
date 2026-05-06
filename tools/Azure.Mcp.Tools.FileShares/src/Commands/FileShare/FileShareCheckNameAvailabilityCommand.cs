@@ -8,6 +8,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
@@ -15,8 +16,9 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 /// Checks if a file share name is available.
 /// </summary>
 public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheckNameAvailabilityCommand> logger, IFileSharesService fileSharesService)
-    : BaseFileSharesCommand<FileShareCheckNameAvailabilityOptions>(logger, fileSharesService)
+    : BaseFileSharesCommand<FileShareCheckNameAvailabilityOptions, FileShareCheckNameAvailabilityCommand.FileShareCheckNameAvailabilityCommandResult>(logger, fileSharesService)
 {
+    protected override JsonTypeInfo<FileShareCheckNameAvailabilityCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.FileShareCheckNameAvailabilityCommandResult;
     public override string Id => "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
     public override string Name => "check-name-availability";
     public override string Description => "Check if a file share name is available";
@@ -66,9 +68,7 @@ public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheck
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(availabilityResult.IsAvailable, availabilityResult.Reason, availabilityResult.Message),
-                FileSharesJsonContext.Default.FileShareCheckNameAvailabilityCommandResult);
+            SetResult(context, new(availabilityResult.IsAvailable, availabilityResult.Reason, availabilityResult.Message));
 
             _logger.LogInformation(
                 "Name availability check completed. File share name {FileShareName} is {Status}",
@@ -84,5 +84,5 @@ public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheck
         return context.Response;
     }
 
-    internal record FileShareCheckNameAvailabilityCommandResult(bool IsAvailable, string? Reason, string? Message);
+    public record FileShareCheckNameAvailabilityCommandResult(bool IsAvailable, string? Reason, string? Message);
 }

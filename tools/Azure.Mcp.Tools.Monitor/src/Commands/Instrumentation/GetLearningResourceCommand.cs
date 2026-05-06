@@ -6,14 +6,16 @@ using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Tools;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
 public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceCommand> logger)
-    : BaseCommand<GetLearningResourceOptions>
+    : BaseCommand<GetLearningResourceOptions, GetLearningResourceCommand.GetLearningResourceCommandResult>
 {
+    protected override JsonTypeInfo<GetLearningResourceCommandResult> ResultTypeInfo => MonitorInstrumentationJsonContext.Default.GetLearningResourceCommandResult;
     private readonly ILogger<GetLearningResourceCommand> _logger = logger;
 
     public override string Id => "2c9f3785-4b97-4dd6-8489-af515638f0d5";
@@ -66,9 +68,7 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
                 var resources = GetLearningResourceTool.ListLearningResources();
 
                 context.Response.Status = HttpStatusCode.OK;
-                context.Response.Results = ResponseResult.Create(
-                    new GetLearningResourceCommandResult(Resources: resources ?? [], Content: null),
-                    MonitorInstrumentationJsonContext.Default.GetLearningResourceCommandResult);
+                SetResult(context, new GetLearningResourceCommandResult(Resources: resources ?? [], Content: null));
             }
             else
             {
@@ -76,9 +76,7 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
                 var content = GetLearningResourceTool.GetLearningResource(options.Path);
 
                 context.Response.Status = HttpStatusCode.OK;
-                context.Response.Results = ResponseResult.Create(
-                    new GetLearningResourceCommandResult(Resources: null, Content: content),
-                    MonitorInstrumentationJsonContext.Default.GetLearningResourceCommandResult);
+                SetResult(context, new GetLearningResourceCommandResult(Resources: null, Content: content));
             }
 
             context.Response.Message = string.Empty;
@@ -92,6 +90,6 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
         return Task.FromResult(context.Response);
     }
 
-    internal record GetLearningResourceCommandResult(List<string>? Resources, string? Content);
+    public record GetLearningResourceCommandResult(List<string>? Resources, string? Content);
 
 }

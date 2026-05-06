@@ -6,6 +6,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
@@ -15,8 +16,9 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 [HiddenCommand]
 public sealed class BlobListCommand(
     ILogger<BlobListCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<BlobListOptions>()
+    IOneLakeService oneLakeService) : GlobalCommand<BlobListOptions, BlobListCommand.BlobListCommandResult>()
 {
+    protected override JsonTypeInfo<BlobListCommandResult> ResultTypeInfo => MinimalJsonContext.Default.BlobListCommandResult;
     private readonly ILogger<BlobListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
@@ -106,7 +108,7 @@ public sealed class BlobListCommand(
                     cancellationToken);
 
                 var rawResult = new BlobListCommandResult { RawResponse = rawResponse };
-                context.Response.Results = ResponseResult.Create(rawResult, MinimalJsonContext.Default.BlobListCommandResult);
+                SetResult(context, rawResult);
                 return context.Response;
             }
 
@@ -132,7 +134,7 @@ public sealed class BlobListCommand(
             }
 
             var result = new BlobListCommandResult(files, options.Path ?? "");
-            context.Response.Results = ResponseResult.Create(result, MinimalJsonContext.Default.BlobListCommandResult);
+            SetResult(context, result);
         }
         catch (Exception ex)
         {

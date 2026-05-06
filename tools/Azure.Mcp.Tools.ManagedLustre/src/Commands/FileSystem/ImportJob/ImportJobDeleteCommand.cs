@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -13,8 +14,9 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 
 public sealed class ImportJobDeleteCommand(IManagedLustreService service, ILogger<ImportJobDeleteCommand> logger)
-    : BaseManagedLustreCommand<ImportJobDeleteOptions>(logger)
+    : BaseManagedLustreCommand<ImportJobDeleteOptions, ImportJobDeleteCommand.ImportJobDeleteResult>(logger)
 {
+    protected override JsonTypeInfo<ImportJobDeleteResult> ResultTypeInfo => ManagedLustreJsonContext.Default.ImportJobDeleteResult;
     private const string CommandTitle = "Delete Azure Managed Lustre Import Job";
 
     private readonly IManagedLustreService _service = service;
@@ -82,7 +84,7 @@ public sealed class ImportJobDeleteCommand(IManagedLustreService service, ILogge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(options.JobName!), ManagedLustreJsonContext.Default.ImportJobDeleteResult);
+            SetResult(context, new(options.JobName!));
         }
         catch (Exception ex)
         {
@@ -94,5 +96,5 @@ public sealed class ImportJobDeleteCommand(IManagedLustreService service, ILogge
         return context.Response;
     }
 
-    internal record ImportJobDeleteResult(string JobName);
+    public record ImportJobDeleteResult(string JobName);
 }

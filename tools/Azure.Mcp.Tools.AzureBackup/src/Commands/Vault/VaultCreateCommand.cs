@@ -11,11 +11,13 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 
-public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<VaultCreateOptions>()
+public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<VaultCreateOptions, VaultCreateCommand.VaultCreateCommandResult>()
 {
+    protected override JsonTypeInfo<VaultCreateCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.VaultCreateCommandResult;
     private const string CommandTitle = "Create Backup Vault";
     private readonly ILogger<VaultCreateCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -110,9 +112,7 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result),
-                AzureBackupJsonContext.Default.VaultCreateCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -135,5 +135,5 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VaultCreateCommandResult(VaultCreateResult Vault);
+    public record VaultCreateCommandResult(VaultCreateResult Vault);
 }

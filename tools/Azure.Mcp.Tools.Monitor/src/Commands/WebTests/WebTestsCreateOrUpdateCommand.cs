@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Monitor.Options.WebTests;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
@@ -14,8 +15,9 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
-public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdateCommand> logger, IMonitorWebTestService monitorWebTestService) : BaseMonitorWebTestsCommand<WebTestsCreateOrUpdateOptions>
+public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdateCommand> logger, IMonitorWebTestService monitorWebTestService) : BaseMonitorWebTestsCommand<WebTestsCreateOrUpdateOptions, WebTestsCreateOrUpdateCommand.WebTestsCreateOrUpdateCommandResult>
 {
+    protected override JsonTypeInfo<WebTestsCreateOrUpdateCommandResult> ResultTypeInfo => MonitorJsonContext.Default.WebTestsCreateOrUpdateCommandResult;
     private const string CommandTitle = "Create or update a web test in Azure Monitor";
 
     private readonly ILogger<WebTestsCreateOrUpdateCommand> _logger = logger;
@@ -237,9 +239,7 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
                     cancellationToken: cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(
-                new(webTest),
-                MonitorJsonContext.Default.WebTestsCreateOrUpdateCommandResult);
+            SetResult(context, new(webTest));
         }
         catch (Exception ex)
         {
@@ -251,5 +251,5 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
         return context.Response;
     }
 
-    internal record WebTestsCreateOrUpdateCommandResult(WebTestDetailedInfo WebTest);
+    public record WebTestsCreateOrUpdateCommandResult(WebTestDetailedInfo WebTest);
 }

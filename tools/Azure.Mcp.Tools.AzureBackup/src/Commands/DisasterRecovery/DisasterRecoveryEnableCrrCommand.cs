@@ -10,11 +10,13 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 
-public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEnableCrrCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<BaseAzureBackupOptions>()
+public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEnableCrrCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<BaseAzureBackupOptions, DisasterRecoveryEnableCrrCommand.DisasterRecoveryEnableCrrCommandResult>()
 {
+    protected override JsonTypeInfo<DisasterRecoveryEnableCrrCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.DisasterRecoveryEnableCrrCommandResult;
     private const string CommandTitle = "Enable Cross-Region Restore";
     private readonly ILogger<DisasterRecoveryEnableCrrCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -45,9 +47,7 @@ public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEna
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result),
-                AzureBackupJsonContext.Default.DisasterRecoveryEnableCrrCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -74,5 +74,5 @@ public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEna
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DisasterRecoveryEnableCrrCommandResult(OperationResult Result);
+    public record DisasterRecoveryEnableCrrCommandResult(OperationResult Result);
 }

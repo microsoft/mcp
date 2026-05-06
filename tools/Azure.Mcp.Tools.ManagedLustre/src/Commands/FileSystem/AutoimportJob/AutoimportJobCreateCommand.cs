@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -13,8 +14,9 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 
 public sealed class AutoimportJobCreateCommand(IManagedLustreService service, ILogger<AutoimportJobCreateCommand> logger)
-    : BaseManagedLustreCommand<AutoimportJobCreateOptions>(logger)
+    : BaseManagedLustreCommand<AutoimportJobCreateOptions, AutoimportJobCreateCommand.AutoimportJobCreateResult>(logger)
 {
+    protected override JsonTypeInfo<AutoimportJobCreateResult> ResultTypeInfo => ManagedLustreJsonContext.Default.AutoimportJobCreateResult;
     private const string CommandTitle = "Create Azure Managed Lustre Autoimport Job";
 
     private readonly IManagedLustreService _service = service;
@@ -116,7 +118,7 @@ public sealed class AutoimportJobCreateCommand(IManagedLustreService service, IL
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(job), ManagedLustreJsonContext.Default.AutoimportJobCreateResult);
+            SetResult(context, new(job));
         }
         catch (Exception ex)
         {
@@ -128,5 +130,5 @@ public sealed class AutoimportJobCreateCommand(IManagedLustreService service, IL
         return context.Response;
     }
 
-    internal record AutoimportJobCreateResult(string JobName);
+    public record AutoimportJobCreateResult(string JobName);
 }

@@ -11,6 +11,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
 
@@ -18,8 +19,9 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
 /// Consolidated recovery point command: when --recovery-point is supplied returns a single
 /// recovery point's details; otherwise lists all recovery points for the protected item.
 /// </summary>
-public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> logger, IAzureBackupService azureBackupService) : BaseProtectedItemCommand<RecoveryPointGetOptions>()
+public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> logger, IAzureBackupService azureBackupService) : BaseProtectedItemCommand<RecoveryPointGetOptions, RecoveryPointGetCommand.RecoveryPointGetCommandResult>()
 {
+    protected override JsonTypeInfo<RecoveryPointGetCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.RecoveryPointGetCommandResult;
     private const string CommandTitle = "Get Recovery Point";
     private readonly ILogger<RecoveryPointGetCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -81,9 +83,7 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new([rp]),
-                    AzureBackupJsonContext.Default.RecoveryPointGetCommandResult);
+                SetResult(context, new([rp]));
             }
             else
             {
@@ -98,9 +98,7 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(points),
-                    AzureBackupJsonContext.Default.RecoveryPointGetCommandResult);
+                SetResult(context, new(points));
             }
         }
         catch (Exception ex)
@@ -121,5 +119,5 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record RecoveryPointGetCommandResult(List<RecoveryPointInfo> RecoveryPoints);
+    public record RecoveryPointGetCommandResult(List<RecoveryPointInfo> RecoveryPoints);
 }

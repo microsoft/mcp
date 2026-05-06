@@ -9,8 +9,8 @@ using Microsoft.Mcp.Core.Extensions;
 namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels;
 
 public abstract class BaseMonitorHealthModelsCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : BaseMonitorCommand<TOptions>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>
+    : BaseMonitorCommand<TOptions, TResult>
     where TOptions : BaseMonitorHealthModelsOptions, new()
 {
     protected override void RegisterOptions(Command command)

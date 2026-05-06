@@ -10,11 +10,13 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
-public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<GovernanceSoftDeleteOptions>()
+public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<GovernanceSoftDeleteOptions, GovernanceSoftDeleteCommand.GovernanceSoftDeleteCommandResult>()
 {
+    protected override JsonTypeInfo<GovernanceSoftDeleteCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.GovernanceSoftDeleteCommandResult;
     private const string CommandTitle = "Configure Soft Delete";
     private readonly ILogger<GovernanceSoftDeleteCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -100,9 +102,7 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result),
-                AzureBackupJsonContext.Default.GovernanceSoftDeleteCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -114,5 +114,5 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
         return context.Response;
     }
 
-    internal record GovernanceSoftDeleteCommandResult(OperationResult Result);
+    public record GovernanceSoftDeleteCommandResult(OperationResult Result);
 }

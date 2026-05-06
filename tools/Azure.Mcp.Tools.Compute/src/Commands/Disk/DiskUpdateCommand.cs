@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Disk;
@@ -18,7 +19,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 /// </summary>
 public sealed class DiskUpdateCommand(
     ILogger<DiskUpdateCommand> logger)
-    : BaseComputeCommand<DiskUpdateOptions>(false)
+    : BaseComputeCommand<DiskUpdateOptions, DiskUpdateCommand.DiskUpdateCommandResult>(false)
 {
     private const string CommandTitle = "Update Managed Disk";
     private const string CommandDescription =
@@ -49,6 +50,8 @@ public sealed class DiskUpdateCommand(
         Secret = false,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<DiskUpdateCommandResult> ResultTypeInfo => ComputeJsonContext.Default.DiskUpdateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -197,7 +200,7 @@ public sealed class DiskUpdateCommand(
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(disk), ComputeJsonContext.Default.DiskUpdateCommandResult);
+            SetResult(context, new(disk));
         }
         catch (Exception ex)
         {

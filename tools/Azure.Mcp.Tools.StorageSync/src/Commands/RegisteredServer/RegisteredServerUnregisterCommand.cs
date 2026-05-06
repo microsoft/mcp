@@ -6,14 +6,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
 
-public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUnregisterCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<RegisteredServerUnregisterOptions>
+public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUnregisterCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<RegisteredServerUnregisterOptions, RegisteredServerUnregisterCommand.RegisteredServerUnregisterCommandResult>
 {
+    protected override JsonTypeInfo<RegisteredServerUnregisterCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.RegisteredServerUnregisterCommandResult;
     private const string CommandTitle = "Unregister Server";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<RegisteredServerUnregisterCommand> _logger = logger;
@@ -77,7 +79,7 @@ public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUn
                 cancellationToken);
 
             context.Response.Message = "Server unregistered successfully";
-            context.Response.Results = ResponseResult.Create(new("Server unregistered successfully"), StorageSyncJsonContext.Default.RegisteredServerUnregisterCommandResult);
+            SetResult(context, new("Server unregistered successfully"));
         }
         catch (Exception ex)
         {
@@ -89,5 +91,5 @@ public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUn
     }
 
     [JsonSerializable(typeof(RegisteredServerUnregisterCommandResult))]
-    internal record RegisteredServerUnregisterCommandResult(string Message);
+    public record RegisteredServerUnregisterCommandResult(string Message);
 }

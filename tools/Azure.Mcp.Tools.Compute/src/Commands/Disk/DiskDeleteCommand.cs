@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Disk;
 using Azure.Mcp.Tools.Compute.Services;
@@ -17,7 +18,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 /// </summary>
 public sealed class DiskDeleteCommand(
     ILogger<DiskDeleteCommand> logger)
-    : BaseComputeCommand<DiskDeleteOptions>(true)
+    : BaseComputeCommand<DiskDeleteOptions, DiskDeleteCommand.DiskDeleteCommandResult>(true)
 {
     private const string CommandTitle = "Delete Managed Disk";
     private const string CommandDescription =
@@ -45,6 +46,8 @@ public sealed class DiskDeleteCommand(
         Secret = true,
         LocalRequired = false
     };
+
+    protected override JsonTypeInfo<DiskDeleteCommandResult> ResultTypeInfo => ComputeJsonContext.Default.DiskDeleteCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -83,9 +86,7 @@ public sealed class DiskDeleteCommand(
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new DiskDeleteCommandResult(deleted, options.DiskName!),
-                ComputeJsonContext.Default.DiskDeleteCommandResult);
+            SetResult(context, new DiskDeleteCommandResult(deleted, options.DiskName!));
         }
         catch (Exception ex)
         {

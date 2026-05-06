@@ -6,14 +6,16 @@ using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
 public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<SubnetSizeAskCommand> logger)
-    : BaseManagedLustreCommand<SubnetSizeAskOptions>(logger)
+    : BaseManagedLustreCommand<SubnetSizeAskOptions, SubnetSizeAskCommand.FileSystemSubnetSizeResult>(logger)
 {
+    protected override JsonTypeInfo<FileSystemSubnetSizeResult> ResultTypeInfo => ManagedLustreJsonContext.Default.FileSystemSubnetSizeResult;
     private const string CommandTitle = "Calculate AMLFS Subnet Size required number of IP Addresses";
 
     private readonly IManagedLustreService _service = service;
@@ -85,7 +87,7 @@ public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
-            context.Response.Results = ResponseResult.Create(new(result), ManagedLustreJsonContext.Default.FileSystemSubnetSizeResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -95,5 +97,5 @@ public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<
         return context.Response;
     }
 
-    internal record FileSystemSubnetSizeResult(int NumberOfRequiredIPs);
+    public record FileSystemSubnetSizeResult(int NumberOfRequiredIPs);
 }

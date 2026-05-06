@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
 public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService computeService)
-    : BaseComputeCommand<VmGetOptions>(false)
+    : BaseComputeCommand<VmGetOptions, VmGetCommand.VmGetCommandResult>(false)
 {
     private const string CommandTitle = "Get Virtual Machine(s)";
     private readonly ILogger<VmGetCommand> _logger = logger;
@@ -40,6 +41,8 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<VmGetCommandResult> ResultTypeInfo => ComputeJsonContext.Default.VmGetCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -102,9 +105,7 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
                         options.RetryPolicy,
                         cancellationToken);
 
-                    context.Response.Results = ResponseResult.Create(
-                        new VmGetCommandResult(Vm: vmWithInstanceView.VmInfo, InstanceView: vmWithInstanceView.InstanceView),
-                        ComputeJsonContext.Default.VmGetCommandResult);
+                    SetResult(context, new VmGetCommandResult(Vm: vmWithInstanceView.VmInfo, InstanceView: vmWithInstanceView.InstanceView));
                 }
                 else
                 {
@@ -116,9 +117,7 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
                         options.RetryPolicy,
                         cancellationToken);
 
-                    context.Response.Results = ResponseResult.Create(
-                        new VmGetCommandResult(Vm: vm),
-                        ComputeJsonContext.Default.VmGetCommandResult);
+                    SetResult(context, new VmGetCommandResult(Vm: vm));
                 }
             }
             // Scenario 2: List VMs in resource group
@@ -131,9 +130,7 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new VmGetCommandResult(VmList: vmList),
-                    ComputeJsonContext.Default.VmGetCommandResult);
+                SetResult(context, new VmGetCommandResult(VmList: vmList));
             }
         }
         catch (Exception ex)

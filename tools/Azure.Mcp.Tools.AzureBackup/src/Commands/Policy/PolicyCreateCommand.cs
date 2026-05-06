@@ -11,11 +11,13 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 
-public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<PolicyCreateOptions>()
+public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<PolicyCreateOptions, PolicyCreateCommand.PolicyCreateCommandResult>()
 {
+    protected override JsonTypeInfo<PolicyCreateCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.PolicyCreateCommandResult;
     private const string CommandTitle = "Create Backup Policy";
     private readonly ILogger<PolicyCreateCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -69,9 +71,7 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result),
-                AzureBackupJsonContext.Default.PolicyCreateCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -96,5 +96,5 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record PolicyCreateCommandResult(OperationResult Result);
+    public record PolicyCreateCommandResult(OperationResult Result);
 }

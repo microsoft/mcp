@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -13,8 +14,9 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 
 public sealed class AutoexportJobDeleteCommand(IManagedLustreService service, ILogger<AutoexportJobDeleteCommand> logger)
-    : BaseManagedLustreCommand<AutoexportJobDeleteOptions>(logger)
+    : BaseManagedLustreCommand<AutoexportJobDeleteOptions, AutoexportJobDeleteCommand.AutoexportJobDeleteResult>(logger)
 {
+    protected override JsonTypeInfo<AutoexportJobDeleteResult> ResultTypeInfo => ManagedLustreJsonContext.Default.AutoexportJobDeleteResult;
     private const string CommandTitle = "Delete Azure Managed Lustre Autoexport Job";
 
     private readonly IManagedLustreService _service = service;
@@ -84,7 +86,7 @@ public sealed class AutoexportJobDeleteCommand(IManagedLustreService service, IL
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(options.JobName!, "Deleted"), ManagedLustreJsonContext.Default.AutoexportJobDeleteResult);
+            SetResult(context, new(options.JobName!, "Deleted"));
         }
         catch (Exception ex)
         {
@@ -96,5 +98,5 @@ public sealed class AutoexportJobDeleteCommand(IManagedLustreService service, IL
         return context.Response;
     }
 
-    internal record AutoexportJobDeleteResult(string JobName, string Status);
+    public record AutoexportJobDeleteResult(string JobName, string Status);
 }

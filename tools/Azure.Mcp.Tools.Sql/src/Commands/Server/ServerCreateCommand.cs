@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Server;
@@ -14,8 +15,9 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
 public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCreateCommand> logger)
-    : BaseSqlCommand<ServerCreateOptions>(logger)
+    : BaseSqlCommand<ServerCreateOptions, ServerCreateCommand.ServerCreateResult>(logger)
 {
+    protected override JsonTypeInfo<ServerCreateResult> ResultTypeInfo => SqlJsonContext.Default.ServerCreateResult;
     private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Create SQL Server";
 
@@ -87,7 +89,7 @@ public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCr
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(server), SqlJsonContext.Default.ServerCreateResult);
+            SetResult(context, new(server));
         }
         catch (Exception ex)
         {
@@ -120,5 +122,5 @@ public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCr
         _ => base.GetStatusCode(ex)
     };
 
-    internal record ServerCreateResult(SqlServer Server);
+    public record ServerCreateResult(SqlServer Server);
 }

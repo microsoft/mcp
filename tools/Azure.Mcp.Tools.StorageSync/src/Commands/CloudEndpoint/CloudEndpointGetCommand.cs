@@ -8,14 +8,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
 
-public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<CloudEndpointGetOptions>
+public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<CloudEndpointGetOptions, CloudEndpointGetCommand.CloudEndpointGetCommandResult>
 {
+    protected override JsonTypeInfo<CloudEndpointGetCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.CloudEndpointGetCommandResult;
     private const string CommandTitle = "Get Cloud Endpoint";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<CloudEndpointGetCommand> _logger = logger;
@@ -91,7 +93,7 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
                     return context.Response;
                 }
 
-                context.Response.Results = ResponseResult.Create(new([endpoint]), StorageSyncJsonContext.Default.CloudEndpointGetCommandResult);
+                SetResult(context, new([endpoint]));
             }
             else
             {
@@ -108,7 +110,7 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(endpoints ?? []), StorageSyncJsonContext.Default.CloudEndpointGetCommandResult);
+                SetResult(context, new(endpoints ?? []));
             }
         }
         catch (Exception ex)
@@ -121,5 +123,5 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
     }
 
     [JsonSerializable(typeof(CloudEndpointGetCommandResult))]
-    internal record CloudEndpointGetCommandResult(List<CloudEndpointDataSchema> Results);
+    public record CloudEndpointGetCommandResult(List<CloudEndpointDataSchema> Results);
 }

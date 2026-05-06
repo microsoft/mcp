@@ -11,6 +11,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 
@@ -18,8 +19,9 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 /// Consolidated vault command: when --vault is supplied returns a single vault's details;
 /// otherwise lists all vaults in the subscription (optionally filtered by --vault-type).
 /// </summary>
-public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<BaseAzureBackupOptions>()
+public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<BaseAzureBackupOptions, VaultGetCommand.VaultGetCommandResult>()
 {
+    protected override JsonTypeInfo<VaultGetCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.VaultGetCommandResult;
     private const string CommandTitle = "Get Backup Vault";
     private readonly ILogger<VaultGetCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -103,9 +105,7 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new([vault]),
-                    AzureBackupJsonContext.Default.VaultGetCommandResult);
+                SetResult(context, new([vault]));
             }
             else
             {
@@ -117,9 +117,7 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(vaults),
-                    AzureBackupJsonContext.Default.VaultGetCommandResult);
+                SetResult(context, new(vaults));
             }
         }
         catch (Exception ex)
@@ -141,5 +139,5 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VaultGetCommandResult(List<BackupVaultInfo> Vaults);
+    public record VaultGetCommandResult(List<BackupVaultInfo> Vaults);
 }

@@ -9,12 +9,15 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Tools.FileShares.Models;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Informational;
 
 public sealed class FileShareGetProvisioningRecommendationCommand(ILogger<FileShareGetProvisioningRecommendationCommand> logger, IFileSharesService service)
-    : SubscriptionCommand<FileShareGetProvisioningRecommendationOptions>()
+    : SubscriptionCommand<FileShareGetProvisioningRecommendationOptions, FileShareProvisioningRecommendationResult>()
 {
+    protected override JsonTypeInfo<FileShareProvisioningRecommendationResult> ResultTypeInfo => FileSharesJsonContext.Default.FileShareProvisioningRecommendationResult;
     private readonly ILogger<FileShareGetProvisioningRecommendationCommand> _logger = logger;
     private readonly IFileSharesService _service = service;
 
@@ -70,7 +73,7 @@ public sealed class FileShareGetProvisioningRecommendationCommand(ILogger<FileSh
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareProvisioningRecommendationResult);
+            SetResult(context, result);
         }
         catch (Exception ex)
         {

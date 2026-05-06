@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Database;
@@ -14,8 +15,9 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
 
 public sealed class DatabaseUpdateCommand(ISqlService sqlService, ILogger<DatabaseUpdateCommand> logger)
-    : BaseDatabaseCommand<DatabaseUpdateOptions>(logger)
+    : BaseDatabaseCommand<DatabaseUpdateOptions, DatabaseUpdateCommand.DatabaseUpdateResult>(logger)
 {
+    protected override JsonTypeInfo<DatabaseUpdateResult> ResultTypeInfo => SqlJsonContext.Default.DatabaseUpdateResult;
     private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Update SQL Database";
 
@@ -97,7 +99,7 @@ public sealed class DatabaseUpdateCommand(ISqlService sqlService, ILogger<Databa
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseUpdateResult);
+            SetResult(context, new(database));
         }
         catch (Exception ex)
         {
@@ -122,5 +124,5 @@ public sealed class DatabaseUpdateCommand(ISqlService sqlService, ILogger<Databa
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseUpdateResult(SqlDatabase Database);
+    public record DatabaseUpdateResult(SqlDatabase Database);
 }

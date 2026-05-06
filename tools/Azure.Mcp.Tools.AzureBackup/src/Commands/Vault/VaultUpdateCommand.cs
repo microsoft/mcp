@@ -11,11 +11,13 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 
-public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<VaultUpdateOptions>()
+public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<VaultUpdateOptions, VaultUpdateCommand.VaultUpdateCommandResult>()
 {
+    protected override JsonTypeInfo<VaultUpdateCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.VaultUpdateCommandResult;
     private const string CommandTitle = "Update Backup Vault";
     private readonly ILogger<VaultUpdateCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -116,9 +118,7 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(result),
-                AzureBackupJsonContext.Default.VaultUpdateCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -143,5 +143,5 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VaultUpdateCommandResult(OperationResult Result);
+    public record VaultUpdateCommandResult(OperationResult Result);
 }

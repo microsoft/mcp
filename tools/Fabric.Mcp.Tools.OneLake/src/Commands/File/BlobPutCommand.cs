@@ -8,6 +8,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
@@ -16,8 +17,9 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 public sealed class BlobPutCommand(
     ILogger<BlobPutCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<BlobPutOptions>()
+    IOneLakeService oneLakeService) : GlobalCommand<BlobPutOptions, BlobPutCommand.BlobPutCommandResult>()
 {
+    protected override JsonTypeInfo<BlobPutCommandResult> ResultTypeInfo => OneLakeJsonContext.Default.BlobPutCommandResult;
     private readonly ILogger<BlobPutCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
@@ -135,7 +137,7 @@ public sealed class BlobPutCommand(
                 options.Overwrite ? "File uploaded successfully (overwritten)." : "File uploaded successfully.");
 
             context.Response.Status = HttpStatusCode.Created;
-            context.Response.Results = ResponseResult.Create(commandResult, OneLakeJsonContext.Default.BlobPutCommandResult);
+            SetResult(context, commandResult);
         }
         catch (Exception ex)
         {

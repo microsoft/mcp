@@ -9,12 +9,14 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
 public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logger, IFileSharesService service)
-    : BaseFileSharesCommand<FileShareCreateOrUpdateOptions>(logger, service)
+    : BaseFileSharesCommand<FileShareCreateOrUpdateOptions, FileShareCreateCommand.FileShareCreateCommandResult>(logger, service)
 {
+    protected override JsonTypeInfo<FileShareCreateCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.FileShareCreateCommandResult;
     private const string CommandTitle = "Create File Share";
 
     public override string Id => "b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e";
@@ -126,7 +128,7 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(fileShare), FileSharesJsonContext.Default.FileShareCreateCommandResult);
+            SetResult(context, new(fileShare));
 
             _logger.LogInformation("File share created successfully. FileShare: {FileShareName}", options.FileShareName);
         }
@@ -139,5 +141,5 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
         return context.Response;
     }
 
-    internal record FileShareCreateCommandResult(FileShareInfo FileShare);
+    public record FileShareCreateCommandResult(FileShareInfo FileShare);
 }

@@ -7,14 +7,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
-public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUpdateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceUpdateOptions>
+public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUpdateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceUpdateOptions, StorageSyncServiceUpdateCommand.StorageSyncServiceUpdateCommandResult>
 {
+    protected override JsonTypeInfo<StorageSyncServiceUpdateCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.StorageSyncServiceUpdateCommandResult;
     private const string CommandTitle = "Update Storage Sync Service";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceUpdateCommand> _logger = logger;
@@ -99,7 +101,7 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(service), StorageSyncJsonContext.Default.StorageSyncServiceUpdateCommandResult);
+            SetResult(context, new(service));
         }
         catch (Exception ex)
         {
@@ -111,5 +113,5 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
     }
 
     [JsonSerializable(typeof(StorageSyncServiceUpdateCommandResult))]
-    internal record StorageSyncServiceUpdateCommandResult(StorageSyncServiceDataSchema Result);
+    public record StorageSyncServiceUpdateCommandResult(StorageSyncServiceDataSchema Result);
 }

@@ -6,14 +6,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
-public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDeleteCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceDeleteOptions>
+public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDeleteCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceDeleteOptions, StorageSyncServiceDeleteCommand.StorageSyncServiceDeleteCommandResult>
 {
+    protected override JsonTypeInfo<StorageSyncServiceDeleteCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.StorageSyncServiceDeleteCommandResult;
     private const string CommandTitle = "Delete Storage Sync Service";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceDeleteCommand> _logger = logger;
@@ -74,7 +76,7 @@ public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDe
                 cancellationToken);
 
             context.Response.Message = "Storage sync service deleted successfully";
-            context.Response.Results = ResponseResult.Create(new("Storage sync service deleted successfully"), StorageSyncJsonContext.Default.StorageSyncServiceDeleteCommandResult);
+            SetResult(context, new("Storage sync service deleted successfully"));
         }
         catch (Exception ex)
         {
@@ -86,5 +88,5 @@ public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDe
     }
 
     [JsonSerializable(typeof(StorageSyncServiceDeleteCommandResult))]
-    internal record StorageSyncServiceDeleteCommandResult(string Message);
+    public record StorageSyncServiceDeleteCommandResult(string Message);
 }

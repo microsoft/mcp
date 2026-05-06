@@ -12,10 +12,10 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Sql.Commands;
 
 public abstract class BaseSqlCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>(ILogger<BaseSqlCommand<TOptions>> logger)
-    : SubscriptionCommand<TOptions> where TOptions : BaseSqlOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(ILogger<BaseSqlCommand<TOptions, TResult>> logger)
+    : SubscriptionCommand<TOptions, TResult> where TOptions : BaseSqlOptions, new()
 {
-    protected readonly ILogger<BaseSqlCommand<TOptions>> _logger = logger;
+    protected readonly ILogger<BaseSqlCommand<TOptions, TResult>> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {

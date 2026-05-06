@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -14,8 +15,9 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
 public sealed class SkuGetCommand(IManagedLustreService service, ILogger<SkuGetCommand> logger)
-    : BaseManagedLustreCommand<SkuGetOptions>(logger)
+    : BaseManagedLustreCommand<SkuGetOptions, SkuGetCommand.SkuGetResult>(logger)
 {
+    protected override JsonTypeInfo<SkuGetResult> ResultTypeInfo => ManagedLustreJsonContext.Default.SkuGetResult;
     private const string CommandTitle = "Get AMLFS SKU information";
 
     private readonly IManagedLustreService _service = service;
@@ -63,7 +65,7 @@ public sealed class SkuGetCommand(IManagedLustreService service, ILogger<SkuGetC
             var options = BindOptions(parseResult);
             var skus = await _service.SkuGetInfoAsync(options.Subscription!, options.Tenant, options.Location, options.RetryPolicy, cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(skus ?? []), ManagedLustreJsonContext.Default.SkuGetResult);
+            SetResult(context, new(skus ?? []));
         }
         catch (Exception ex)
         {
@@ -73,5 +75,5 @@ public sealed class SkuGetCommand(IManagedLustreService service, ILogger<SkuGetC
         return context.Response;
     }
 
-    internal record SkuGetResult(List<Models.ManagedLustreSkuInfo> Skus);
+    public record SkuGetResult(List<Models.ManagedLustreSkuInfo> Skus);
 }

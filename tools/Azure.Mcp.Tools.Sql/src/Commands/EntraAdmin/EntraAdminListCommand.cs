@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.EntraAdmin;
 using Azure.Mcp.Tools.Sql.Services;
@@ -12,8 +13,9 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Sql.Commands.EntraAdmin;
 
 public sealed class EntraAdminListCommand(ISqlService sqlService, ILogger<EntraAdminListCommand> logger)
-    : BaseSqlCommand<EntraAdminListOptions>(logger)
+    : BaseSqlCommand<EntraAdminListOptions, EntraAdminListCommand.EntraAdminListResult>(logger)
 {
+    protected override JsonTypeInfo<EntraAdminListResult> ResultTypeInfo => SqlJsonContext.Default.EntraAdminListResult;
     private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "List SQL Server Entra ID Administrators";
 
@@ -58,7 +60,7 @@ public sealed class EntraAdminListCommand(ISqlService sqlService, ILogger<EntraA
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(administrators ?? []), SqlJsonContext.Default.EntraAdminListResult);
+            SetResult(context, new(administrators ?? []));
         }
         catch (Exception ex)
         {
@@ -81,5 +83,5 @@ public sealed class EntraAdminListCommand(ISqlService sqlService, ILogger<EntraA
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record EntraAdminListResult(List<SqlServerEntraAdministrator> Administrators);
+    public record EntraAdminListResult(List<SqlServerEntraAdministrator> Administrators);
 }

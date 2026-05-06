@@ -6,6 +6,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
@@ -16,8 +17,9 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 [HiddenCommand]
 public sealed class FileWriteCommand(
     ILogger<FileWriteCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<FileWriteOptions>()
+    IOneLakeService oneLakeService) : GlobalCommand<FileWriteOptions, FileWriteCommand.FileWriteCommandResult>()
 {
+    protected override JsonTypeInfo<FileWriteCommandResult> ResultTypeInfo => OneLakeJsonContext.Default.FileWriteCommandResult;
     private readonly ILogger<FileWriteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
@@ -149,7 +151,7 @@ public sealed class FileWriteCommand(
                 contentLength,
                 options.Overwrite ? "File written successfully (overwritten)" : "File written successfully");
 
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.FileWriteCommandResult);
+            SetResult(context, result);
         }
         catch (Exception ex)
         {

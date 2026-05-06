@@ -11,8 +11,8 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Compute.Commands;
 
 public abstract class BaseComputeCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>(bool resourceGroupRequired)
-    : SubscriptionCommand<T>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T, TResult>(bool resourceGroupRequired)
+    : SubscriptionCommand<T, TResult>
     where T : BaseComputeOptions, new()
 {
     protected override void RegisterOptions(Command command)

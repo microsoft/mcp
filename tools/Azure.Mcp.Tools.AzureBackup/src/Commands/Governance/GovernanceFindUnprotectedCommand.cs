@@ -11,11 +11,13 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
-public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnprotectedCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<GovernanceFindUnprotectedOptions>()
+public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnprotectedCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<GovernanceFindUnprotectedOptions, GovernanceFindUnprotectedCommand.GovernanceFindUnprotectedCommandResult>()
 {
+    protected override JsonTypeInfo<GovernanceFindUnprotectedCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.GovernanceFindUnprotectedCommandResult;
     private const string CommandTitle = "Find Unprotected Resources";
     private readonly ILogger<GovernanceFindUnprotectedCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -75,9 +77,7 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(resources),
-                AzureBackupJsonContext.Default.GovernanceFindUnprotectedCommandResult);
+            SetResult(context, new(resources));
         }
         catch (Exception ex)
         {
@@ -88,5 +88,5 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
         return context.Response;
     }
 
-    internal record GovernanceFindUnprotectedCommandResult(List<UnprotectedResourceInfo> Resources);
+    public record GovernanceFindUnprotectedCommandResult(List<UnprotectedResourceInfo> Resources);
 }

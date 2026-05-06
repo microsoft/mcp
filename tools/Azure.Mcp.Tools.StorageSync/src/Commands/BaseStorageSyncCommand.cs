@@ -13,8 +13,8 @@ namespace Azure.Mcp.Tools.StorageSync.Commands;
 /// Provides common command infrastructure and option registration.
 /// </summary>
 public abstract class BaseStorageSyncCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions> where TOptions : BaseStorageSyncOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>
+    : SubscriptionCommand<TOptions, TResult> where TOptions : BaseStorageSyncOptions, new()
 {
     protected override void RegisterOptions(Command command)
     {

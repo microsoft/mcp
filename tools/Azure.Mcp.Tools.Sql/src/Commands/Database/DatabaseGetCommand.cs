@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Database;
@@ -15,8 +16,9 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
 
 public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseGetCommand> logger)
-    : BaseSqlCommand<DatabaseGetOptions>(logger)
+    : BaseSqlCommand<DatabaseGetOptions, DatabaseGetCommand.DatabaseGetListResult>(logger)
 {
+    protected override JsonTypeInfo<DatabaseGetListResult> ResultTypeInfo => SqlJsonContext.Default.DatabaseGetListResult;
     private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Get SQL Database";
 
@@ -79,9 +81,7 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new([database], false),
-                    SqlJsonContext.Default.DatabaseGetListResult);
+                SetResult(context, new([database], false));
             }
             else
             {
@@ -92,9 +92,7 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(result?.Results ?? [], result?.AreResultsTruncated ?? false),
-                    SqlJsonContext.Default.DatabaseGetListResult);
+                SetResult(context, new(result?.Results ?? [], result?.AreResultsTruncated ?? false));
             }
         }
         catch (Exception ex)
@@ -118,5 +116,5 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseGetListResult(List<SqlDatabase> Databases, bool AreResultsTruncated);
+    public record DatabaseGetListResult(List<SqlDatabase> Databases, bool AreResultsTruncated);
 }

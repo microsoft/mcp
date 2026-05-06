@@ -6,14 +6,16 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 public sealed class PathListCommand(ILogger<PathListCommand> logger)
-    : GlobalCommand<PathListOptions>()
+    : GlobalCommand<PathListOptions, PathListCommand.PathListResult>()
 {
+    protected override JsonTypeInfo<PathListResult> ResultTypeInfo => MinimalJsonContext.Default.PathListResult;
     private const string CommandTitle = "List OneLake Path Structure";
     private readonly ILogger<PathListCommand> _logger = logger;
 
@@ -118,9 +120,7 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
                     options.Recursive,
                     cancellationToken: cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new() { RawResponse = rawResponse },
-                    MinimalJsonContext.Default.PathListResult);
+                SetResult(context, new() { RawResponse = rawResponse });
                 return context.Response;
             }
 
@@ -145,9 +145,7 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
                     cancellationToken: cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(
-                new(fileSystemItems),
-                MinimalJsonContext.Default.PathListResult);
+            SetResult(context, new(fileSystemItems));
         }
         catch (Exception ex)
         {
@@ -159,7 +157,7 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
         return context.Response;
     }
 
-    internal record PathListResult
+    public record PathListResult
     {
         public List<FileSystemItem>? Items { get; init; }
         public string? RawResponse { get; init; }

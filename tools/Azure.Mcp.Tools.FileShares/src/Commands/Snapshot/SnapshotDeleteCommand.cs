@@ -8,6 +8,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
@@ -15,8 +16,9 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 /// Deletes a file share snapshot.
 /// </summary>
 public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger, IFileSharesService fileSharesService)
-    : BaseFileSharesCommand<SnapshotDeleteOptions>(logger, fileSharesService)
+    : BaseFileSharesCommand<SnapshotDeleteOptions, SnapshotDeleteCommand.SnapshotDeleteCommandResult>(logger, fileSharesService)
 {
+    protected override JsonTypeInfo<SnapshotDeleteCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.SnapshotDeleteCommandResult;
     public override string Id => "c7d8e9f0-a1b2-4c3d-4e5f-6a7b8c9d0e1f";
     public override string Name => "delete";
     public override string Description => "Delete a file share snapshot permanently. This operation cannot be undone.";
@@ -71,9 +73,7 @@ public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(true, options.SnapshotName!),
-                FileSharesJsonContext.Default.SnapshotDeleteCommandResult);
+            SetResult(context, new(true, options.SnapshotName!));
 
             _logger.LogInformation(
                 "Successfully deleted snapshot {SnapshotName}",
@@ -88,5 +88,5 @@ public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger,
         return context.Response;
     }
 
-    internal record SnapshotDeleteCommandResult(bool Deleted, string SnapshotName);
+    public record SnapshotDeleteCommandResult(bool Deleted, string SnapshotName);
 }

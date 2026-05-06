@@ -5,12 +5,14 @@ using Azure.Mcp.Tools.Monitor.Options.TableType;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.TableType;
 
-public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger, IMonitorService monitorService) : BaseWorkspaceMonitorCommand<TableTypeListOptions>()
+public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger, IMonitorService monitorService) : BaseWorkspaceMonitorCommand<TableTypeListOptions, TableTypeListCommand.TableTypeListCommandResult>()
 {
+    protected override JsonTypeInfo<TableTypeListCommandResult> ResultTypeInfo => MonitorJsonContext.Default.TableTypeListCommandResult;
     private const string CommandTitle = "List Log Analytics Table Types";
     private readonly ILogger<TableTypeListCommand> _logger = logger;
     private readonly IMonitorService _monitorService = monitorService;
@@ -53,7 +55,7 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger, I
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(tableTypes ?? []), MonitorJsonContext.Default.TableTypeListCommandResult);
+            SetResult(context, new(tableTypes ?? []));
         }
         catch (Exception ex)
         {
@@ -64,5 +66,5 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger, I
         return context.Response;
     }
 
-    internal record TableTypeListCommandResult(List<string> TableTypes);
+    public record TableTypeListCommandResult(List<string> TableTypes);
 }

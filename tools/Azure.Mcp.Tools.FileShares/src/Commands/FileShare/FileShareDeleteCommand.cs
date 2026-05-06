@@ -8,6 +8,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
@@ -15,8 +16,9 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 /// Deletes a file share.
 /// </summary>
 public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logger, IFileSharesService fileSharesService)
-    : BaseFileSharesCommand<FileShareDeleteOptions>(logger, fileSharesService)
+    : BaseFileSharesCommand<FileShareDeleteOptions, FileShareDeleteCommand.FileShareDeleteCommandResult>(logger, fileSharesService)
 {
+    protected override JsonTypeInfo<FileShareDeleteCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.FileShareDeleteCommandResult;
     public override string Id => "e9f0a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b";
     public override string Name => "delete";
     public override string Description => "Delete a file share";
@@ -66,9 +68,7 @@ public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(true, options.FileShareName!),
-                FileSharesJsonContext.Default.FileShareDeleteCommandResult);
+            SetResult(context, new(true, options.FileShareName!));
 
             _logger.LogInformation(
                 "Successfully deleted file share {FileShareName}",
@@ -83,5 +83,5 @@ public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logge
         return context.Response;
     }
 
-    internal record FileShareDeleteCommandResult(bool Deleted, string FileShareName);
+    public record FileShareDeleteCommandResult(bool Deleted, string FileShareName);
 }

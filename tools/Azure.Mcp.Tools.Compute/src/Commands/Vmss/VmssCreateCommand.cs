@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
@@ -15,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
 public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
-    : BaseComputeCommand<VmssCreateOptions>(true)
+    : BaseComputeCommand<VmssCreateOptions, VmssCreateCommand.VmssCreateCommandResult>(true)
 {
     private const string CommandTitle = "Create Virtual Machine Scale Set";
     private readonly ILogger<VmssCreateCommand> _logger = logger;
@@ -44,6 +45,8 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
         LocalRequired = false,
         Secret = true
     };
+
+    protected override JsonTypeInfo<VmssCreateCommandResult> ResultTypeInfo => ComputeJsonContext.Default.VmssCreateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -171,7 +174,7 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmssCreateCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -198,5 +201,5 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmssCreateCommandResult(VmssCreateResult Vmss);
+    public record VmssCreateCommandResult(VmssCreateResult Vmss);
 }

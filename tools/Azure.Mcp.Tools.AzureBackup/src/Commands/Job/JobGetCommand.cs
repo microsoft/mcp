@@ -11,6 +11,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Job;
 
@@ -18,8 +19,9 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Job;
 /// Consolidated job command: when --job is supplied returns a single job's details;
 /// otherwise lists all jobs in the vault.
 /// </summary>
-public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<JobGetOptions>()
+public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<JobGetOptions, JobGetCommand.JobGetCommandResult>()
 {
+    protected override JsonTypeInfo<JobGetCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.JobGetCommandResult;
     private const string CommandTitle = "Get Backup Job";
     private readonly ILogger<JobGetCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -79,9 +81,7 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new([job]),
-                    AzureBackupJsonContext.Default.JobGetCommandResult);
+                SetResult(context, new([job]));
             }
             else
             {
@@ -94,9 +94,7 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(jobs),
-                    AzureBackupJsonContext.Default.JobGetCommandResult);
+                SetResult(context, new(jobs));
             }
         }
         catch (Exception ex)
@@ -116,5 +114,5 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record JobGetCommandResult(List<BackupJobInfo> Jobs);
+    public record JobGetCommandResult(List<BackupJobInfo> Jobs);
 }

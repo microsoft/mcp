@@ -6,14 +6,16 @@ using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Tools;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
 public sealed class SendEnhancementSelectCommand(ILogger<SendEnhancementSelectCommand> logger)
-    : BaseCommand<SendEnhancementSelectOptions>
+    : BaseCommand<SendEnhancementSelectOptions, string>
 {
+    protected override JsonTypeInfo<string> ResultTypeInfo => MonitorInstrumentationJsonContext.Default.String;
     private readonly ILogger<SendEnhancementSelectCommand> _logger = logger;
 
     public override string Id => "8fd4eb5f-14d1-450f-982c-82d761f0f7d6";
@@ -67,7 +69,7 @@ After this call succeeds, continue with orchestrator-next as usual.";
             var result = tool.Send(options.SessionId!, options.EnhancementKeys!);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
+            SetResult(context, result);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)

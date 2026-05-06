@@ -11,6 +11,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 
@@ -18,8 +19,9 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 /// Consolidated policy command: when --policy is supplied returns a single policy's details;
 /// otherwise lists all policies in the vault.
 /// </summary>
-public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<PolicyGetOptions>()
+public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<PolicyGetOptions, PolicyGetCommand.PolicyGetCommandResult>()
 {
+    protected override JsonTypeInfo<PolicyGetCommandResult> ResultTypeInfo => AzureBackupJsonContext.Default.PolicyGetCommandResult;
     private const string CommandTitle = "Get Backup Policy";
     private readonly ILogger<PolicyGetCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -79,9 +81,7 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBac
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new([policy]),
-                    AzureBackupJsonContext.Default.PolicyGetCommandResult);
+                SetResult(context, new([policy]));
             }
             else
             {
@@ -94,9 +94,7 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBac
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new(policies),
-                    AzureBackupJsonContext.Default.PolicyGetCommandResult);
+                SetResult(context, new(policies));
             }
         }
         catch (Exception ex)
@@ -116,5 +114,5 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBac
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record PolicyGetCommandResult(List<BackupPolicyInfo> Policies);
+    public record PolicyGetCommandResult(List<BackupPolicyInfo> Policies);
 }

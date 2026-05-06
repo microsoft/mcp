@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
@@ -13,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
 public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
-    : BaseComputeCommand<VmssDeleteOptions>(true)
+    : BaseComputeCommand<VmssDeleteOptions, VmssDeleteCommand.VmssDeleteCommandResult>(true)
 {
     private const string CommandTitle = "Delete Virtual Machine Scale Set";
     private readonly ILogger<VmssDeleteCommand> _logger = logger;
@@ -43,6 +44,8 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
         LocalRequired = false,
         Secret = true
     };
+
+    protected override JsonTypeInfo<VmssDeleteCommandResult> ResultTypeInfo => ComputeJsonContext.Default.VmssDeleteCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -85,11 +88,9 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new VmssDeleteCommandResult(
-                    $"Virtual machine scale set '{options.VmssName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
-                    true),
-                ComputeJsonContext.Default.VmssDeleteCommandResult);
+            SetResult(context, new VmssDeleteCommandResult(
+                $"Virtual machine scale set '{options.VmssName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
+                true));
         }
         catch (Exception ex)
         {
@@ -112,5 +113,5 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmssDeleteCommandResult(string Message, bool Success);
+    public record VmssDeleteCommandResult(string Message, bool Success);
 }

@@ -16,8 +16,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
 /// Base command for all metrics operations
 /// </summary>
 public abstract class BaseMetricsCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>
+    : SubscriptionCommand<TOptions, TResult>
     where TOptions : SubscriptionOptions, IMetricsOptions, new()
 {
     protected override void RegisterOptions(Command command)

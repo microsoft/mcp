@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Database;
@@ -14,8 +15,9 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
 
 public sealed class DatabaseCreateCommand(ISqlService sqlService, ILogger<DatabaseCreateCommand> logger)
-    : BaseDatabaseCommand<DatabaseCreateOptions>(logger)
+    : BaseDatabaseCommand<DatabaseCreateOptions, DatabaseCreateCommand.DatabaseCreateResult>(logger)
 {
+    protected override JsonTypeInfo<DatabaseCreateResult> ResultTypeInfo => SqlJsonContext.Default.DatabaseCreateResult;
     private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Create SQL Database";
 
@@ -96,7 +98,7 @@ public sealed class DatabaseCreateCommand(ISqlService sqlService, ILogger<Databa
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseCreateResult);
+            SetResult(context, new(database));
         }
         catch (Exception ex)
         {
@@ -123,5 +125,5 @@ public sealed class DatabaseCreateCommand(ISqlService sqlService, ILogger<Databa
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseCreateResult(SqlDatabase Database);
+    public record DatabaseCreateResult(SqlDatabase Database);
 }

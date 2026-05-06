@@ -6,14 +6,16 @@ using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
 public sealed class SubnetSizeValidateCommand(IManagedLustreService service, ILogger<SubnetSizeValidateCommand> logger)
-    : BaseManagedLustreCommand<SubnetSizeValidateOptions>(logger)
+    : BaseManagedLustreCommand<SubnetSizeValidateOptions, SubnetSizeValidateCommand.FileSystemCheckSubnetResult>(logger)
 {
+    protected override JsonTypeInfo<FileSystemCheckSubnetResult> ResultTypeInfo => ManagedLustreJsonContext.Default.FileSystemCheckSubnetResult;
     private const string CommandTitle = "Validate AMLFS subnet against SKU and size";
 
     private readonly IManagedLustreService _service = service;
@@ -90,7 +92,7 @@ public sealed class SubnetSizeValidateCommand(IManagedLustreService service, ILo
                                 options.RetryPolicy,
                                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(subnetIsValid), ManagedLustreJsonContext.Default.FileSystemCheckSubnetResult);
+            SetResult(context, new(subnetIsValid));
         }
         catch (Exception ex)
         {
@@ -100,5 +102,5 @@ public sealed class SubnetSizeValidateCommand(IManagedLustreService service, ILo
         return context.Response;
     }
 
-    internal record FileSystemCheckSubnetResult(bool Valid);
+    public record FileSystemCheckSubnetResult(bool Valid);
 }

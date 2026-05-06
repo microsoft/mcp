@@ -6,14 +6,16 @@ using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Tools;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
 public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> logger)
-    : BaseCommand<OrchestratorStartOptions>
+    : BaseCommand<OrchestratorStartOptions, string>
 {
+    protected override JsonTypeInfo<string> ResultTypeInfo => MonitorInstrumentationJsonContext.Default.String;
     private readonly ILogger<OrchestratorStartCommand> _logger = logger;
 
     public override string Id => "35f577d9-6378-4d34-b822-111ff6e8957c";
@@ -63,7 +65,7 @@ public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> l
             var result = tool.Start(options.WorkspacePath!);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
+            SetResult(context, result);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)

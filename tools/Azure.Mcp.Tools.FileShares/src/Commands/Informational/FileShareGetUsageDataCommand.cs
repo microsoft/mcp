@@ -9,12 +9,15 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Tools.FileShares.Models;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Informational;
 
 public sealed class FileShareGetUsageDataCommand(ILogger<FileShareGetUsageDataCommand> logger, IFileSharesService service)
-    : SubscriptionCommand<FileShareGetUsageDataOptions>()
+    : SubscriptionCommand<FileShareGetUsageDataOptions, FileShareUsageDataResult>()
 {
+    protected override JsonTypeInfo<FileShareUsageDataResult> ResultTypeInfo => FileSharesJsonContext.Default.FileShareUsageDataResult;
     private readonly ILogger<FileShareGetUsageDataCommand> _logger = logger;
     private readonly IFileSharesService _service = service;
 
@@ -67,7 +70,7 @@ public sealed class FileShareGetUsageDataCommand(ILogger<FileShareGetUsageDataCo
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareUsageDataResult);
+            SetResult(context, result);
         }
         catch (Exception ex)
         {

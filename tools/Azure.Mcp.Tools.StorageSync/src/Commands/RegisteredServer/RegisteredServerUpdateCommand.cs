@@ -7,14 +7,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
 
-public sealed class RegisteredServerUpdateCommand(ILogger<RegisteredServerUpdateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<RegisteredServerUpdateOptions>
+public sealed class RegisteredServerUpdateCommand(ILogger<RegisteredServerUpdateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<RegisteredServerUpdateOptions, RegisteredServerUpdateCommand.RegisteredServerUpdateCommandResult>
 {
+    protected override JsonTypeInfo<RegisteredServerUpdateCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.RegisteredServerUpdateCommandResult;
     private const string CommandTitle = "Update Registered Server";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<RegisteredServerUpdateCommand> _logger = logger;
@@ -78,7 +80,7 @@ public sealed class RegisteredServerUpdateCommand(ILogger<RegisteredServerUpdate
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(server), StorageSyncJsonContext.Default.RegisteredServerUpdateCommandResult);
+            SetResult(context, new(server));
         }
         catch (Exception ex)
         {
@@ -90,5 +92,5 @@ public sealed class RegisteredServerUpdateCommand(ILogger<RegisteredServerUpdate
     }
 
     [JsonSerializable(typeof(RegisteredServerUpdateCommandResult))]
-    internal record RegisteredServerUpdateCommandResult(RegisteredServerDataSchema Result);
+    public record RegisteredServerUpdateCommandResult(RegisteredServerDataSchema Result);
 }

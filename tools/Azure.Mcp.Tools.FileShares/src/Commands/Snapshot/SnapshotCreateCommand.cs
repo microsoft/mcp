@@ -9,12 +9,14 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
 public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger, IFileSharesService service)
-    : BaseFileSharesCommand<SnapshotCreateOptions>(logger, service)
+    : BaseFileSharesCommand<SnapshotCreateOptions, SnapshotCreateCommand.SnapshotCreateCommandResult>(logger, service)
 {
+    protected override JsonTypeInfo<SnapshotCreateCommandResult> ResultTypeInfo => FileSharesJsonContext.Default.SnapshotCreateCommandResult;
     private const string CommandTitle = "Create File Share Snapshot";
 
     public override string Id => "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c";
@@ -89,7 +91,7 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(snapshot), FileSharesJsonContext.Default.SnapshotCreateCommandResult);
+            SetResult(context, new(snapshot));
 
             _logger.LogInformation("Snapshot created successfully. SnapshotName: {SnapshotName}", options.SnapshotName);
         }
@@ -102,5 +104,5 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
         return context.Response;
     }
 
-    internal record SnapshotCreateCommandResult(FileShareSnapshotInfo Snapshot);
+    public record SnapshotCreateCommandResult(FileShareSnapshotInfo Snapshot);
 }

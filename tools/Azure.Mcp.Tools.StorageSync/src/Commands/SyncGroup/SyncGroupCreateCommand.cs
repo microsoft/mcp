@@ -7,14 +7,16 @@ using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.SyncGroup;
 
-public sealed class SyncGroupCreateCommand(ILogger<SyncGroupCreateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<SyncGroupCreateOptions>
+public sealed class SyncGroupCreateCommand(ILogger<SyncGroupCreateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<SyncGroupCreateOptions, SyncGroupCreateCommand.SyncGroupCreateCommandResult>
 {
+    protected override JsonTypeInfo<SyncGroupCreateCommandResult> ResultTypeInfo => StorageSyncJsonContext.Default.SyncGroupCreateCommandResult;
     private const string CommandTitle = "Create Sync Group";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<SyncGroupCreateCommand> _logger = logger;
@@ -77,7 +79,7 @@ public sealed class SyncGroupCreateCommand(ILogger<SyncGroupCreateCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(syncGroup), StorageSyncJsonContext.Default.SyncGroupCreateCommandResult);
+            SetResult(context, new(syncGroup));
         }
         catch (Exception ex)
         {
@@ -89,5 +91,5 @@ public sealed class SyncGroupCreateCommand(ILogger<SyncGroupCreateCommand> logge
     }
 
     [JsonSerializable(typeof(SyncGroupCreateCommandResult))]
-    internal record SyncGroupCreateCommandResult(SyncGroupDataSchema Result);
+    public record SyncGroupCreateCommandResult(SyncGroupDataSchema Result);
 }

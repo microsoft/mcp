@@ -10,8 +10,8 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
 public abstract class BaseWorkspaceMonitorCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : BaseMonitorCommand<TOptions>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>
+    : BaseMonitorCommand<TOptions, TResult>
     where TOptions : SubscriptionOptions, IWorkspaceOptions, new()
 {
     protected override void RegisterOptions(Command command)

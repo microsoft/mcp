@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
@@ -14,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
 public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
-    : BaseComputeCommand<VmUpdateOptions>(true)
+    : BaseComputeCommand<VmUpdateOptions, VmUpdateCommand.VmUpdateCommandResult>(true)
 {
     private const string CommandTitle = "Update Virtual Machine";
     private readonly ILogger<VmUpdateCommand> _logger = logger;
@@ -42,6 +43,8 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
         LocalRequired = false,
         Secret = false
     };
+
+    protected override JsonTypeInfo<VmUpdateCommandResult> ResultTypeInfo => ComputeJsonContext.Default.VmUpdateCommandResult;
 
     protected override void RegisterOptions(Command command)
     {
@@ -112,7 +115,7 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmUpdateCommandResult);
+            SetResult(context, new(result));
         }
         catch (Exception ex)
         {
@@ -139,5 +142,5 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmUpdateCommandResult(VmUpdateResult Vm);
+    public record VmUpdateCommandResult(VmUpdateResult Vm);
 }
