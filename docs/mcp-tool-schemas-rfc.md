@@ -1,6 +1,6 @@
 # Aligning MCP tool schemas with the protocol — `inputSchema` cleanup + `outputSchema` support
 
-> **Status:** Phases 1–4 implemented on branch `vcolin7/input-output-schema`. This RFC remains the design reference; the companion prompts ([`modernize-input-schema.prompt.md`](modernize-input-schema.prompt.md), [`add-output-schema-support.prompt.md`](add-output-schema-support.prompt.md)) document the executable plan and can be replayed on a fresh `main` if the merge approach in this branch is abandoned.
+> **Status:** Phases 1–5 implemented on branch `vcolin7/input-output-schema`. This RFC remains the design reference; the companion prompts ([`modernize-input-schema.prompt.md`](modernize-input-schema.prompt.md), [`add-output-schema-support.prompt.md`](add-output-schema-support.prompt.md)) document the executable plan and can be replayed on a fresh `main` if the merge approach in this branch is abandoned.
 > **Audience:** engineers and PMs on the MCP team
 > **TL;DR:** The MCP spec's optional `outputSchema` lets servers tell clients exactly what shape their tools' results will have. We don't advertise it today. While we're in the area, our hand-rolled `inputSchema` generator predates `System.Text.Json.Schema.JsonSchemaExporter` and the maturity of the `ModelContextProtocol` C# SDK — it's missing several spec features and duplicates code the platform now provides for free. This doc proposes (1) replacing the homegrown schema generator with `JsonSchemaExporter`, then (2) layering `outputSchema` on top of the same pipeline.
 
@@ -271,7 +271,7 @@ Two objections to address head-on:
 
 #### Cost: the cascade refactor
 
-The honest cost of this design is that `TResult` has to thread through every intermediate base class — `SubscriptionCommand<TOptions>` becomes `SubscriptionCommand<TOptions, TResult>`, `BaseStorageCommand<TOptions>` becomes `BaseStorageCommand<TOptions, TResult>`, and so on for every per-toolset base. Each layer either pins `TResult` to a concrete type or stays generic. That's a large, mechanical, repo-wide refactor — larger than the schema work itself.
+The honest cost of this design is that `TResult` has to thread through every intermediate base class — `SubscriptionCommand<TOptions>` becomes `SubscriptionCommand<TOptions, TResult>`, `BaseStorageCommand<TOptions>` becomes `BaseStorageCommand<TOptions, TResult>`, and so on for every per-namespace base. Each layer either pins `TResult` to a concrete type or stays generic. That's a large, mechanical, repo-wide refactor — larger than the schema work itself.
 
 We accept it because the safety guarantee is permanent and the refactor is one-time. The discovery-test alternative would re-encode the same invariant in test code that any future contributor can forget to extend, and would leave the next author of a command-base class wondering why options got generics but results didn't.
 
@@ -348,9 +348,28 @@ A small number of commands today return more than one distinct result record dep
 | `ImportJobGetCommand` (ManagedLustre) | `ImportJobGetResult` + `ImportJobListResult` | 1 record with optional `Job?`, `Jobs?` |
 | `AutoimportJobGetCommand` (ManagedLustre) | `AutoimportJobGetResult` + `AutoimportJobListResult` | 1 record with optional `Job?`, `Jobs?` |
 | `AutoexportJobGetCommand` (ManagedLustre) | `AutoexportJobGetResult` + `AutoexportJobListResult` | 1 record with optional `Job?`, `Jobs?` |
-| `BlobUploadCommand` | `BlobUploadResult` (already an object) | rename to `BlobUploadCommandResult` for naming consistency (optional) |
+| `ToolsListCommand` | `ToolNamesResult` + `List<CommandInfo>` | 1 record `ToolsListCommandResult` with optional `Names?`, `Tools?` |
 
-Going-forward rule: every command's `ResponseResult.Create<T>` call site writes a `*CommandResult` record root — no raw lists or primitives.
+### Non-standard result normalization
+
+Some commands today return a single result record but don't wrap it in a `*CommandResult` record root. Each gets wrapped in a new record type.
+
+| Command | Today | After |
+| --- | --- | --- |
+| `BlobUploadCommand` | `BlobUploadResult` (already an object) | wraped in `BlobUploadCommandResult(BlobUploadResult Result)` |
+| `DiagramGenerateCommand` (Deploy) | sets `Response.Message` only | wrapped in `DiagramGenerateCommandResult(string Diagram)` |
+| `GetCommand` (Deploy) | sets `Response.Message` only | wrapped in `GetCommandResult(string Plan)` |
+| `RulesGetCommand` (Deploy) | sets `Response.Message` only | wrapped in `RulesGetCommandResult(string Rules)` |
+| `ServiceInfoCommand` | sets `Response.Message` only | wrapped in `ServiceInfoCommandResult` |
+
+### Core commands that won't be normalized
+
+| Command | Today | After |
+| --- | --- | --- |
+| `ServiceStartCommand` | sets `Response.Message` only | keeps the same behavior; no structured payload |
+| `PluginTelemetryCommand` | sets `Response.Message` only | keeps the same behavior; no structured payload |
+
+Going-forward rule: every `ResponseResult.Create<T>` call writes a `*CommandResult` record root — never a raw list or primitive — unless the command falls into the "won't be normalized" category above. We can reconsider refactoring these in the future.
 
 ### Example: consolidating `VmGetCommand`
 
@@ -405,9 +424,9 @@ Suggested sequencing (each numbered item is one or more PRs):
 
 1. **Modernize `inputSchema`.** Single PR. Includes the discovery test. Behavior diff documented in PR description; new `format` keywords and nullable unions are intentional.
 2. **`outputSchema` core infra + base-class generics + Storage pilot.** Single PR. Introduces `BaseCommand<TOptions, TResult>`, threads `TResult` through the intermediate base classes used by Storage (`SubscriptionCommand`, `BaseStorageCommand`, …), adds the `JsonSchemaExporter` post-processor, populates `StructuredContent`, and migrates every Storage command end-to-end as proof.
-3. **Phase 2 result-shape normalization.** One PR per command in the table below.
-4. **Phase 3 per-toolset wiring.** One PR per toolset (~25 PRs). Each PR (a) widens that toolset's intermediate base classes to take `TResult`, then (b) reparents every command in the toolset onto `BaseCommand<TOptions, TResult>` (or the toolset-specific equivalent), supplies `ResultTypeInfo`, and verifies `*JsonContext` registrations. Compilation alone proves coverage — once a command derives from the generic base, omitting `ResultTypeInfo` is a compile error.
-5. **Tighten and document.** Remove the temporary `ResultTypeInfo => null` default on `IBaseCommand` once every command derives from the generic base. Update changelog and `azmcp-commands.md`.
+3. **Result-shape normalization.** Two PRs. one for multi-result commands and one for non-standard single-result commands. Each PR (a) renames the result record(s) to `*CommandResult`, (b) consolidates multiple result records into one with optional fields where necessary, and (c) updates the command to derive from `BaseCommand<TOptions, TResult>` and call `SetResult(context, new TResult(...))`.
+4. **Per-namespace wiring.** Multiple PRs. Each PR (a) widens a namespace's intermediate base classes to take `TResult`, then (b) reparents every command in the namespace onto `BaseCommand<TOptions, TResult>` (or the namespace-specific equivalent), supplies `ResultTypeInfo`, and verifies `*JsonContext` registrations. Compilation alone proves coverage — once a command derives from the generic base, omitting `ResultTypeInfo` is a compile error.
+5. **Document and finalize.** Update the `IBaseCommand.ResultTypeInfo` xml-doc to describe the default `null` as the supported escape hatch for text-only / passthrough commands that populate only `CommandResponse.Message` (e.g. `ServiceStartCommand`, `PluginTelemetryCommand`).
 
 Estimated review surface: items 1 and 2 are the substantive infra PRs; items 3 and 4 are mechanical (rote rename + rote reparent) but unavoidable given the cascade.
 
@@ -420,16 +439,7 @@ Estimated review surface: items 1 and 2 are the substantive infra PRs; items 3 a
 - **Non-object output roots.** `JsonSchemaExporter` emits non-object roots (`{type: "array"}`, `{type: "string"}`) for commands whose `JsonTypeInfo` describes `List<T>` or a scalar. The MCP SDK's `IsValidMcpToolSchema` requires the root to be `"object"`. **Resolution (implemented):** `OptionSchemaGenerator.CreateOutputSchema` detects any root whose `type` isn't `"object"` and wraps the inner schema under `{type: "object", properties: {value: <inner>}, required: ["value"]}`. The same wrapping is applied to `CallToolResult.StructuredContent` in `CommandFactoryToolLoader.CallToolHandler` so the runtime payload validates against the advertised schema. Affected today: `List<string>` / `string` / `List<JsonNode>` payloads on a handful of `azureterraformbestpractices`, `azurebestpractices`, and `monitor` commands. Going forward, prefer wrapping in a `*CommandResult` record at the source — the loader-side fallback is defense-in-depth.
 - **`additionalProperties` on outputs.** Inputs use `false` for OpenAI strict mode. We intentionally leave it **unset** on outputs so the server can add fields later without breaking strict-mode clients consuming `structuredContent`. Documented in the changelog.
 - **Result-record renames in Phase 2.** Eight commands change result-record names. The JSON shape is a strict superset, so existing clients reading the text content keep working. Anyone depending on a specific record type-name in the JSON would break — none observed today.
-- **Generic-parameter cascade through intermediate base classes.** Adding `TResult` forces every per-toolset base (`SubscriptionCommand`, `BaseStorageCommand`, `BaseSqlCommand`, …) to either widen to `<TOptions, TResult>` or pin `TResult` to a concrete type. This is the largest single mechanical change in the rollout. Mitigation: do the widening per-toolset in Phase 3 so each PR stays scoped to one base hierarchy; the change is a pure type-parameter add that the compiler verifies exhaustively.
-
----
-
-## Open questions for the team
-
-1. Do we want the inputSchema modernization and outputSchema core infra in **one PR** or **two**? The plan defaults to two for review-ability; combining them halves the test churn on `ToolInputSchemaTests`.
-2. Should we add **golden-file snapshot tests** for `inputSchema` of a few stable commands to catch unintended drift across future `System.Text.Json` updates? Cheap to add, ongoing maintenance cost.
-3. Do PMs want anything called out about `structuredContent` in user-facing release notes? It unlocks better client UX (validation, structured rendering) but is invisible if the client doesn't ask for it.
-4. Is "one toolset per PR" still the right cadence for Phase 3 given how mechanical it is? Could reasonably batch 3–5 small toolsets per PR to cut review overhead.
+- **Generic-parameter cascade through intermediate base classes.** Adding `TResult` forces every per-namespace base (`SubscriptionCommand`, `BaseStorageCommand`, `BaseSqlCommand`, …) to either widen to `<TOptions, TResult>` or pin `TResult` to a concrete type. This is the largest single mechanical change in the rollout. Mitigation: do the widening per-namespace in Phase 3 so each PR stays scoped to one base hierarchy; the change is a pure type-parameter add that the compiler verifies exhaustively.
 
 ---
 
