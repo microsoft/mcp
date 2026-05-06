@@ -225,11 +225,16 @@ public sealed class CommandFactoryToolLoader(
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
             // Populate structuredContent from the typed payload when the command advertises an outputSchema
-            // and the call succeeded. Clients can validate this against tool.OutputSchema.
+            // and the call succeeded. Clients can validate this against tool.OutputSchema. The MCP spec
+            // requires the structuredContent root to be an object, matching the wrapping done by
+            // OptionSchemaGenerator.CreateOutputSchema for non-object return types.
             JsonElement? structuredContent = null;
             if (!isError && command.ResultTypeInfo is not null && commandResponse.Results is not null)
             {
-                structuredContent = commandResponse.Results.AsStructuredContent();
+                var raw = commandResponse.Results.AsStructuredContent();
+                structuredContent = raw.ValueKind == JsonValueKind.Object
+                    ? raw
+                    : JsonSerializer.SerializeToElement(new JsonObject { ["value"] = JsonNode.Parse(raw.GetRawText()) }, ServerJsonContext.Default.JsonObject);
             }
 
             return McpHelper.InjectToolIdMetadata(new CallToolResult

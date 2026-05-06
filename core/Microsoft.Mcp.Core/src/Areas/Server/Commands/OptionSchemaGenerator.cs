@@ -132,9 +132,23 @@ internal static class OptionSchemaGenerator
 
         var schema = JsonSchemaExporter.GetJsonSchemaAsNode(typeInfo.Options, typeInfo.Type, s_exporterOptions);
 
-        // The exporter may emit a non-object root for primitives/arrays. The MCP SDK's IsValidMcpToolSchema
-        // requires an object schema at the root, so wrap such payloads.
-        JsonObject root = schema as JsonObject ?? new JsonObject { ["type"] = "object", ["properties"] = new JsonObject { ["value"] = schema } };
+        // The MCP SDK's IsValidMcpToolSchema requires the root to be {"type":"object"}. Wrap any
+        // non-object root (primitive, array, $ref, anyOf without "object") under a single "value" property
+        // so list/scalar return types still produce a valid output schema.
+        JsonObject root;
+        if (schema is JsonObject obj && obj["type"]?.GetValue<string>() == "object")
+        {
+            root = obj;
+        }
+        else
+        {
+            root = new JsonObject
+            {
+                ["type"] = "object",
+                ["properties"] = new JsonObject { ["value"] = schema?.DeepClone() },
+                ["required"] = new JsonArray("value"),
+            };
+        }
 
         StripUnsupportedKeywords(root);
 
