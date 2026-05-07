@@ -36,7 +36,7 @@ internal class Program
 
             services.AddLogging(builder =>
             {
-                builder.AddConsole();
+                builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
                 builder.SetMinimumLevel(LogLevel.Information);
             });
 
