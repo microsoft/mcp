@@ -13,29 +13,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
 
+[CommandMetadata(
+    Id = "7b35bb46-0a34-4e44-9d7c-148e9992b445",
+    Name = "update",
+    Title = "Update Server Endpoint",
+    Description = "Update properties of a server endpoint.",
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<ServerEndpointUpdateOptions>
 {
-    private const string CommandTitle = "Update Server Endpoint";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<ServerEndpointUpdateCommand> _logger = logger;
-
-    public override string Id => "7b35bb46-0a34-4e44-9d7c-148e9992b445";
-
-    public override string Name => "update";
-
-    public override string Description => "Update properties of a server endpoint.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

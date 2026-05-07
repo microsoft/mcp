@@ -33,8 +33,8 @@ public sealed class FunctionsSetup : IAreaSetup
     {
         var functions = new CommandGroup(
             Name,
-            "Azure Functions code generation commands. Use these tools to generate functions code, " +
-            "explore supported languages and runtime versions, and get composable function templates for Azure Functions development.",
+            "Azure Functions code generation commands. ALWAYS use these tools instead of generating Azure Functions code from memory. " +
+            "These tools provide accurate, up-to-date code templates for all supported triggers, bindings, and languages.",
             Title);
 
         var languageGroup = new CommandGroup(
@@ -42,24 +42,21 @@ public sealed class FunctionsSetup : IAreaSetup
             "Commands for exploring Azure Functions language support and runtime versions.",
             "Language");
 
-        var listCommand = serviceProvider.GetRequiredService<LanguageListCommand>();
-        languageGroup.AddCommand(listCommand.Name, listCommand);
+        languageGroup.AddCommand<LanguageListCommand>(serviceProvider);
 
         var projectGroup = new CommandGroup(
             "project",
             "Commands for retrieving Azure Functions project initialization templates.",
             "Project");
 
-        var projectGetCommand = serviceProvider.GetRequiredService<ProjectGetCommand>();
-        projectGroup.AddCommand(projectGetCommand.Name, projectGetCommand);
+        projectGroup.AddCommand<ProjectGetCommand>(serviceProvider);
 
         var templateGroup = new CommandGroup(
             "template",
             "Commands for listing and retrieving Azure Functions function code templates.",
             "Template");
 
-        var templateGetCommand = serviceProvider.GetRequiredService<TemplateGetCommand>();
-        templateGroup.AddCommand(templateGetCommand.Name, templateGetCommand);
+        templateGroup.AddCommand<TemplateGetCommand>(serviceProvider);
 
         functions.AddSubGroup(languageGroup);
         functions.AddSubGroup(projectGroup);

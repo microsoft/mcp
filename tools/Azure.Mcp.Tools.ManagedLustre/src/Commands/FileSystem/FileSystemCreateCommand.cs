@@ -12,35 +12,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
+[CommandMetadata(
+    Id = "814acadf-ee84-47f9-ad68-2d65ec7dbb07",
+    Name = "create",
+    Title = "Create Azure Managed Lustre FileSystem",
+    Description = """
+        Create an Azure Managed Lustre (AMLFS) file system using the specified network, capacity, maintenance window and availability zone.
+        Optionally provides possibility to define Blob Integration, customer managed key encryption and root squash configuration.
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class FileSystemCreateCommand(IManagedLustreService service, ILogger<FileSystemCreateCommand> logger)
     : BaseManagedLustreCommand<FileSystemCreateOptions>(logger)
 {
-    private const string CommandTitle = "Create Azure Managed Lustre FileSystem";
 
     private readonly IManagedLustreService _service = service;
     private new readonly ILogger<FileSystemCreateCommand> _logger = logger;
-
-    public override string Id => "814acadf-ee84-47f9-ad68-2d65ec7dbb07";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
-        Create an Azure Managed Lustre (AMLFS) file system using the specified network, capacity, maintenance window and availability zone.
-        Optionally provides possibility to define Blob Integration, customer managed key encryption and root squash configuration.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -97,7 +88,6 @@ public sealed class FileSystemCreateCommand(IManagedLustreService service, ILogg
         options.UserAssignedIdentityId = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.UserAssignedIdentityIdOption.Name);
         return options;
     }
-
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

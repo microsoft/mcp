@@ -10,34 +10,25 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 
+[CommandMetadata(
+    Id = "bf0ae005-7dfd-4f96-8f45-3d0ba07f81ed",
+    Name = "list",
+    Title = "List hostpools",
+    Description = """
+        List all hostpools in a subscription or resource group. This command retrieves all Azure Virtual Desktop hostpool objects available
+        in the specified --subscription. If a resource group is specified, only hostpools in that resource group are returned.
+        Results include hostpool names and are returned as a JSON array.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVirtualDesktopService virtualDesktopService) : BaseVirtualDesktopCommand<HostpoolListOptions>
 {
-    private const string CommandTitle = "List hostpools";
     private readonly ILogger<HostpoolListCommand> _logger = logger;
     private readonly IVirtualDesktopService _virtualDesktopService = virtualDesktopService;
-
-    public override string Id => "bf0ae005-7dfd-4f96-8f45-3d0ba07f81ed";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        $"""
-		List all hostpools in a subscription or resource group. This command retrieves all Azure Virtual Desktop hostpool objects available
-		in the specified {OptionDefinitions.Common.Subscription.Name}. If a resource group is specified, only hostpools in that resource group are returned.
-		Results include hostpool names and are returned as a JSON array.
-		""";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

@@ -2,6 +2,71 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
+## 3.0.0-beta.10 (Unreleased)
+
+### Features Added
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
+## 3.0.0-beta.9 (2026-05-05)
+
+### Features Added
+
+- Added `azurebackup security configure-mua` command to enable or disable Multi-User Authorization on Recovery Services vaults and Backup vaults. [[#2544](https://github.com/microsoft/mcp/pull/2544)]
+- Added `Win2022Datacenter1P` image alias for the first-party shared gallery Windows Server 2022 image (`/sharedGalleries/WINDOWSSERVER.1P/images/2022-DATACENTER-AZURE-EDITION/versions/latest`) that does not require a marketplace purchase plan. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+- Added `Ubuntu2604` image alias for `azmcp vm create` mapping to marketplace URN `Canonical:ubuntu-26_04-lts:server:latest`. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+
+### Breaking Changes
+
+- Updated `azmcp compute vm create` and `azmcp compute vmss create` to require the `--image` parameter, removing the default `Ubuntu 24.04 LTS` image when omitted. Users must now specify an alias, Marketplace URN, or shared gallery image ID. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+- Changed `Win2022Datacenter` image alias to use the `WindowsServer2022` marketplace offer instead of the deprecated `WindowsServer` offer. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+- Removed the `Win2019Datacenter` image alias, use the marketplace URN format (`MicrosoftWindowsServer:WindowsServer:2019-datacenter-gensecond:latest`) directly if Windows Server 2019 is needed. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+- Removed the `Ubuntu2004` image alias from `azmcp vm create`. `Ubuntu 20.04` LTS reached end of standard support on May 31, 2025 and is no longer recommended for new VMs. Use `Ubuntu2204` or `Ubuntu2404`, or specify the Marketplace URN (`Canonical:0001-com-ubuntu-server-focal:20_04-lts-gen2:latest`) if `Ubuntu 20.04` is still required. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+
+### Other Changes
+
+- Optimized CLI startup time for targeted command invocations by ~39% (945ms to 573ms). [[#2569](https://github.com/microsoft/mcp/pull/2569)]
+
+## 3.0.0-beta.8 (2026-05-01)
+
+### Features Added
+
+- Added `appservice_webapp_change-state` tool to change the running state of an App Service web app. [[#1934](https://github.com/microsoft/mcp/pull/1934)]
+
+### Bugs Fixed
+
+- Improved Resource Health availability status errors for unsupported resource types. [[#2554](https://github.com/microsoft/mcp/pull/2554)]
+- Fixed parameter handling to honor the optional `--resource-group` parameter, which was previously not passed through to the service layer, causing subscription-wide results to always be returned regardless of the specified resource group for the following tools: [[#2552](https://github.com/microsoft/mcp/pull/2552)]
+  - `appconfig_account_list`
+  - `grafana_list`
+  - `kusto_cluster_list`
+  - `monitor_workspace_list`
+  - `search_service_list`
+  - `storage_account_get`
+- Fixed issue where exceptions written to stdout were incorrectly interpreted as JSON RPC response. [[#2559](https://github.com/microsoft/mcp/pull/2559)]
+
+### Other Changes
+
+- Improved Azure Functions tool descriptions and prompts for better AI agent tool selection and invocation. [[#2517](https://github.com/microsoft/mcp/pull/2517)]
+
+## 3.0.0-beta.7 (2026-04-30)
+
+### Features Added
+
+- Added `azurebackup_policy_update` command for modifying RSV backup policy schedule and retention settings. [[#2452](https://github.com/microsoft/mcp/pull/2452)]
+
+### Bugs Fixed
+
+- Fixed CLI mode log messages being written to stdout instead of stderr, ensuring agents and pipelines consuming stdout receive clean JSON only. Logs can be viewed with `2>&1` or captured separately using `2> file.log`. [[#2535](https://github.com/microsoft/mcp/pull/2535)]
+
+### Other Changes
+
+- Fixed telemetry-triaged failures by hardening input validation and null handling as well as by migrating RSV soft-delete and cross-region restore to supported Vault Patch APIs. [[#2518](https://github.com/microsoft/mcp/pull/2518)]
+
 ## 3.0.0-beta.6 (2026-04-28)
 
 ### Features Added
@@ -35,6 +100,30 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added an automated end-to-end (E2E) testing tool that uses the GitHub Copilot SDK to validate Azure MCP tool invocations from prompt fixtures. [[#1830](https://github.com/microsoft/mcp/pull/1830)]
 - Improved deploy tool invocation by rewriting tool descriptions and defaulting previously required options, and restricted `deploy_app_logs_get` to local-only mode (`LocalRequired=true`). [[#2418](https://github.com/microsoft/mcp/pull/2418)]
 - Added custom telemetry dimensions to Azure Backup MCP commands. [[#2505](https://github.com/microsoft/mcp/pull/2505)]
+
+## 2.0.2 (2026-04-24)
+
+### Breaking Changes
+
+- Renamed `--detector-name` parameter to `--detector-id` in `appservice_webapp_diagnostic_diagnose` command to accurately reflect that the parameter expects a detector ID, not a display name. [[#2469](https://github.com/microsoft/mcp/pull/2469)]
+
+### Bugs Fixed
+
+- Fixed App Service `diagnostic_list` returning detector display names instead of detector IDs, causing `diagnostic_diagnose` to fail with 404 Not Found errors. [[#2469](https://github.com/microsoft/mcp/pull/2469)]
+
+### Other Changes
+
+- Fixed MCPB packaging to only include the platform a bundle was created for. Also updated the descriptions in `manifest.json`, as well as its list of keywords to reflect new namespace additions. [[#2461](https://github.com/microsoft/mcp/pull/2461)]
+
+#### Dependency Updates
+
+- Updated the following `System` dependencies: [[#2461](https://github.com/microsoft/mcp/pull/2461)]
+  - `System.CommandLine`: `2.0.1` → `2.0.6`
+  - `System.Formats.Asn1`: `10.0.2` → `10.0.6`
+  - `System.IdentityModel.Tokens.Jwt`: `8.15.0` → `8.17.0`
+  - `System.Net.ServerSentEvents`: `10.0.2` → `10.0.6`
+  - `System.Numerics.Tensors`: `10.0.2` → `10.0.6`
+  - `System.Text.Json`: `10.0.2` → `10.0.6`
 
 ## 3.0.0-beta.5 (2026-04-23)
 

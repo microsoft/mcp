@@ -28,8 +28,10 @@ public static class AzureBackupOptionDefinitions
     public const string VmResourceIdName = "vm-resource-id";
     public const string ResourceTypeFilterName = "resource-type-filter";
     public const string TagFilterName = "tag-filter";
+    public const string ResourceGuardIdName = "resource-guard-id";
 
     // Policy create  -  common schedule flags (new in policy create overhaul)
+    public const string ScheduleTimeName = "schedule-time";
     public const string TimeZoneName = "time-zone";
     public const string ScheduleFrequencyName = "schedule-frequency";
     public const string ScheduleTimesName = "schedule-times";
@@ -235,6 +237,12 @@ public static class AzureBackupOptionDefinitions
     public static readonly Option<string> TimeZone = new($"--{TimeZoneName}")
     {
         Description = "Windows time-zone identifier for the backup schedule (e.g., 'UTC', 'Pacific Standard Time', 'India Standard Time'). If omitted, the schedule runs in UTC.",
+        Required = false
+    };
+
+    public static readonly Option<string> ScheduleTime = new($"--{ScheduleTimeName}")
+    {
+        Description = "Backup schedule time in 24h HH:mm format (e.g., '02:00'). Used for policy update.",
         Required = false
     };
 
@@ -520,6 +528,12 @@ public static class AzureBackupOptionDefinitions
     public static readonly Option<bool> AksIncludeClusterScopeResources = new($"--{AksIncludeClusterScopeResourcesName}")
     {
         Description = "Include cluster-scoped resources in the AKS backup policy. DPP AKS only.",
+        Required = false
+    };
+
+    public static readonly Option<string> ResourceGuardId = new($"--{ResourceGuardIdName}")
+    {
+        Description = "ARM resource ID of the Resource Guard to link for Multi-User Authorization (e.g., '/subscriptions/.../resourceGroups/.../providers/Microsoft.DataProtection/resourceGuards/myGuard').",
         Required = false
     };
 }

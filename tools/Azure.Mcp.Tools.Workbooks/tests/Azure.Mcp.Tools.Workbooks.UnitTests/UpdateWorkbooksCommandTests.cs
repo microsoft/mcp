@@ -241,7 +241,7 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
         var response = await ExecuteCommandAsync("--workbook-id", workbookId, "--display-name", "Test Name");
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
         Assert.Contains("Failed to update workbook", response.Message);
     }
 

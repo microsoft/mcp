@@ -16,33 +16,22 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
 /// <summary>
 /// Command for querying Azure Monitor metrics
 /// </summary>
+[CommandMetadata(
+    Id = "6e86ef31-04e1-4cec-8bda-5292d4bc3ad8",
+    Name = "query",
+    Title = "Query Azure Monitor Metrics",
+    Description = "Query Azure Monitor metrics for a resource. Returns time series data for the specified metrics.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger, IMonitorMetricsService metricsService)
     : BaseMetricsCommand<MetricsQueryOptions>
 {
-    private const string CommandTitle = "Query Azure Monitor Metrics";
     private readonly ILogger<MetricsQueryCommand> _logger = logger;
     private readonly IMonitorMetricsService _metricsService = metricsService;
-
-    public override string Id => "6e86ef31-04e1-4cec-8bda-5292d4bc3ad8";
-
-    public override string Name => "query";
-
-    public override string Description =>
-        """
-        Query Azure Monitor metrics for a resource. Returns time series data for the specified metrics.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

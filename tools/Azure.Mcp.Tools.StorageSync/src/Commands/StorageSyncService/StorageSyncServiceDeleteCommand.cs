@@ -12,29 +12,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
+[CommandMetadata(
+    Id = "a7dcf4e2-fd1d-4d0a-acd3-f56ea5eceef6",
+    Name = "delete",
+    Title = "Delete Storage Sync Service",
+    Description = "Delete an Azure Storage Sync service and all its associated resources.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDeleteCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceDeleteOptions>
 {
-    private const string CommandTitle = "Delete Storage Sync Service";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceDeleteCommand> _logger = logger;
-
-    public override string Id => "a7dcf4e2-fd1d-4d0a-acd3-f56ea5eceef6";
-
-    public override string Name => "delete";
-
-    public override string Description => "Delete an Azure Storage Sync service and all its associated resources.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

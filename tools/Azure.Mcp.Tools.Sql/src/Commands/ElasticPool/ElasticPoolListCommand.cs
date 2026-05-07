@@ -11,37 +11,28 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.ElasticPool;
 
-public sealed class ElasticPoolListCommand(ISqlService sqlService, ILogger<ElasticPoolListCommand> logger)
-    : BaseElasticPoolCommand<ElasticPoolListOptions>(logger)
-{
-    private readonly ISqlService _sqlService = sqlService;
-    private const string CommandTitle = "List SQL Elastic Pools";
-
-    public override string Id => "f980fda7-4bd6-4c24-b139-a091f088584f";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "f980fda7-4bd6-4c24-b139-a091f088584f",
+    Name = "list",
+    Title = "List SQL Elastic Pools",
+    Description = """
         Lists all SQL elastic pools in an Azure SQL Server with their SKU, capacity, state, and database limits.
         Use when you need to: view elastic pool inventory, check pool utilization, compare pool configurations,
         or find available pools for database placement.
         Requires: subscription ID, resource group name, server name.
         Returns: JSON array of elastic pools with complete configuration details.
         Equivalent to 'az sql elastic-pool list'.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ElasticPoolListCommand(ISqlService sqlService, ILogger<ElasticPoolListCommand> logger)
+    : BaseElasticPoolCommand<ElasticPoolListOptions>(logger)
+{
+    private readonly ISqlService _sqlService = sqlService;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

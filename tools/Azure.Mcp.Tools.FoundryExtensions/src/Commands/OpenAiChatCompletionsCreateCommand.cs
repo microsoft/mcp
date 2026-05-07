@@ -14,36 +14,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class OpenAiChatCompletionsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiChatCompletionsCreateOptions>
-{
-    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
-
-    private const string CommandTitle = "Create OpenAI Chat Completions";
-
-    public override string Id => "d4e5f6a7-4567-89ab-def0-123456789012";
-
-    public override string Name => "chat-completions-create";
-
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "d4e5f6a7-4567-89ab-def0-123456789012",
+    Name = "chat-completions-create",
+    Title = "Create OpenAI Chat Completions",
+    Description = """
         Create chat completions using Azure OpenAI in Microsoft Foundry. Send messages to Azure OpenAI chat models deployed
         in your Microsoft Foundry resource and receive AI-generated conversational responses. Supports multi-turn conversations
         with message history, system instructions, and response customization. Use this when you need to create chat
         completions, have AI conversations, get conversational responses, or build interactive dialogues with Azure OpenAI.
         Requires resource-name, deployment-name, and message-array.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class OpenAiChatCompletionsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiChatCompletionsCreateOptions>
+{
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
     protected override void RegisterOptions(Command command)
     {

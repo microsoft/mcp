@@ -12,28 +12,20 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Table;
 
+[CommandMetadata(
+    Id = "1c8d2584-fa52-4641-85f9-fb67a8f5c7c9",
+    Name = "get",
+    Title = "Get MySQL Table Schema",
+    Description = "Retrieves detailed schema information for a specific table within an Azure Database for MySQL Flexible Server database. This command provides comprehensive metadata including column definitions, data types, constraints, indexes, and relationships, essential for understanding table structure and supporting application development.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger, IMySqlService mysqlService) : BaseDatabaseCommand<TableSchemaGetOptions>(logger)
 {
-    private const string CommandTitle = "Get MySQL Table Schema";
     private readonly IMySqlService _mysqlService = mysqlService;
-
-    public override string Id => "1c8d2584-fa52-4641-85f9-fb67a8f5c7c9";
-
-    public override string Name => "get";
-
-    public override string Description => "Retrieves detailed schema information for a specific table within an Azure Database for MySQL Flexible Server database. This command provides comprehensive metadata including column definitions, data types, constraints, indexes, and relationships, essential for understanding table structure and supporting application development.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

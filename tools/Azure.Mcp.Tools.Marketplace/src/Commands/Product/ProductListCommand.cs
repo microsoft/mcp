@@ -14,32 +14,21 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
 
+[CommandMetadata(
+    Id = "0485e8f9-61bf-4baf-b914-7fa5530a6f78",
+    Name = "list",
+    Title = "List Marketplace Products",
+    Description = "Retrieves and lists all marketplace products (offers) available to a subscription in the Azure Marketplace. Use this tool to search, select, browse, or filter marketplace offers by product name, publisher, pricing, or metadata. Returns information for each product, including display name, publisher details, category, pricing data, and available plans.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMarketplaceService marketplaceService) : SubscriptionCommand<ProductListOptions>
 {
-    private const string CommandTitle = "List Marketplace Products";
     private readonly ILogger<ProductListCommand> _logger = logger;
     private readonly IMarketplaceService _marketplaceService = marketplaceService;
-
-    public override string Id => "0485e8f9-61bf-4baf-b914-7fa5530a6f78";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        Retrieves and lists all marketplace products (offers) available to a subscription in the Azure Marketplace. Use this tool to search, select, browse, or filter marketplace offers by product name, publisher, pricing, or metadata. Returns information for each product, including display name, publisher details, category, pricing data, and available plans.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

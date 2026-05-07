@@ -15,12 +15,6 @@ public abstract class BaseServerCommand<
     : BasePostgresCommand<TOptions>(logger) where TOptions : BasePostgresOptions, new()
 
 {
-
-    public override string Name => "server";
-
-    public override string Description =>
-        "Retrieves information about a PostgreSQL server.";
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);

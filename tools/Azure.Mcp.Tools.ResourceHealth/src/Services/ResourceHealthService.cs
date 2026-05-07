@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
@@ -48,11 +50,22 @@ public class ResourceHealthService(
         var relativePath = $"{parsedResourceId}/providers/Microsoft.ResourceHealth/availabilityStatuses/current?api-version={ResourceHealthApiVersion}";
         var requestUri = new Uri(managementEndpoint, relativePath);
 
-        using var response = await client.GetAsync(requestUri, cancellationToken);
+        using var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        if (response.StatusCode == HttpStatusCode.UnprocessableEntity)
+        {
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            var (errorCode, errorMessage) = ParseErrorResponse(responseContent);
+            throw new ResourceHealthUnprocessableEntityException(
+                resourceId,
+                parsedResourceId.ResourceType.ToString(),
+                errorCode,
+                errorMessage,
+                responseContent);
+        }
+
         response.EnsureSuccessStatusCode();
 
-        var content = await response.Content.ReadAsStringAsync(cancellationToken);
-        var apiResponse = JsonSerializer.Deserialize(content, ResourceHealthJsonContext.Default.AvailabilityStatusResponse)
+        var apiResponse = await response.Content.ReadFromJsonAsync(ResourceHealthJsonContext.Default.AvailabilityStatusResponse, cancellationToken)
             ?? throw new InvalidOperationException($"Failed to deserialize availability status response for resource '{resourceId}'");
 
         return apiResponse.ToAvailabilityStatus();
@@ -82,11 +95,10 @@ public class ResourceHealthService(
             : $"/subscriptions/{subscriptionId}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}";
         var requestUri = new Uri(managementEndpoint, relativePath);
 
-        using var response = await client.GetAsync(requestUri, cancellationToken);
+        using var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var content = await response.Content.ReadAsStringAsync(cancellationToken);
-        var apiResponse = JsonSerializer.Deserialize(content, ResourceHealthJsonContext.Default.AvailabilityStatusListResponse);
+        var apiResponse = await response.Content.ReadFromJsonAsync(ResourceHealthJsonContext.Default.AvailabilityStatusListResponse, cancellationToken);
 
         if (apiResponse?.Value == null)
         {
@@ -170,11 +182,10 @@ public class ResourceHealthService(
         // Construct URL safely using Uri to ensure path is relative to base
         var requestUri = new Uri(managementEndpoint, relativePath);
 
-        using var response = await client.GetAsync(requestUri, cancellationToken);
+        using var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
-        var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
-        var apiResponse = JsonSerializer.Deserialize(content, ResourceHealthJsonContext.Default.ServiceHealthEventListResponse);
+        var apiResponse = await response.Content.ReadFromJsonAsync(ResourceHealthJsonContext.Default.ServiceHealthEventListResponse, cancellationToken);
 
         if (apiResponse?.Value == null)
         {
@@ -185,5 +196,37 @@ public class ResourceHealthService(
             .Select(item => item.ToServiceHealthEvent(subscriptionId))
             .Where(evt => !string.IsNullOrEmpty(evt.Id)) // Filter out any invalid entries
             .ToList();
+    }
+
+    private static (string? Code, string? Message) ParseErrorResponse(string responseContent)
+    {
+        if (string.IsNullOrWhiteSpace(responseContent))
+        {
+            return (null, null);
+        }
+
+        try
+        {
+            using var jsonDoc = JsonDocument.Parse(responseContent);
+            var root = jsonDoc.RootElement;
+
+            if (root.TryGetProperty("error", out var errorElement) && errorElement.ValueKind == JsonValueKind.Object)
+            {
+                return (GetStringProperty(errorElement, "code"), GetStringProperty(errorElement, "message"));
+            }
+
+            return (GetStringProperty(root, "code"), GetStringProperty(root, "message"));
+        }
+        catch (JsonException)
+        {
+            return (null, null);
+        }
+    }
+
+    private static string? GetStringProperty(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String
+            ? property.GetString()
+            : null;
     }
 }

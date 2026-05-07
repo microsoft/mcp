@@ -14,17 +14,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 
+[CommandMetadata(
+    Id = "bc5e600b-c414-4bce-8b7d-a6021cfd3d23",
+    Name = "create",
+    Title = "Create Backup Policy",
+    Description = "Creates a backup policy for a specified workload type with schedule and retention rules.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<PolicyCreateOptions>()
 {
-    private const string CommandTitle = "Create Backup Policy";
     private readonly ILogger<PolicyCreateCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override string Id => "bc5e600b-c414-4bce-8b7d-a6021cfd3d23";
-    public override string Name => "create";
-    public override string Description => "Creates a backup policy for a specified workload type with schedule and retention rules.";
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = true, Idempotent = false, OpenWorld = false, ReadOnly = false, LocalRequired = false, Secret = false };
 
     protected override void RegisterOptions(Command command)
     {

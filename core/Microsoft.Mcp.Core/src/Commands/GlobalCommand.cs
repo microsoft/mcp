@@ -6,6 +6,7 @@ using System.Net;
 using Azure;
 using Azure.Core;
 using Azure.Identity;
+using Microsoft.Identity.Client;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
@@ -115,15 +116,24 @@ public abstract class GlobalCommand<
         RequestFailedException rfEx => HandleRequestFailedException(rfEx),
         HttpRequestException httpEx =>
             $"Service unavailable or network connectivity issues. Details: {httpEx.Message}",
+        TimeoutException timeoutEx =>
+            $"The operation timed out. Details: {timeoutEx.Message.TrimEnd('.')}",
+        TaskCanceledException canceledEx =>
+            $"The operation timed out or was canceled. Details: {canceledEx.Message.TrimEnd('.')}",
         _ => ex.Message  // Just return the actual exception message
     };
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
+        ArgumentException => HttpStatusCode.BadRequest,
         KeyNotFoundException => HttpStatusCode.NotFound,
         AuthenticationFailedException => HttpStatusCode.Unauthorized,
         RequestFailedException rfEx => (HttpStatusCode)rfEx.Status,
+        MsalServiceException msalServiceEx => (HttpStatusCode)msalServiceEx.StatusCode,
         HttpRequestException httpEx => httpEx.StatusCode ?? HttpStatusCode.ServiceUnavailable,
+        InvalidOperationException => HttpStatusCode.UnprocessableEntity,
+        TimeoutException => HttpStatusCode.GatewayTimeout,
+        TaskCanceledException => HttpStatusCode.GatewayTimeout,
         _ => HttpStatusCode.InternalServerError
     };
 

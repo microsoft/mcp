@@ -14,25 +14,15 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 /// <summary>
 /// Command to get platform landing zone modification guidance and recommendations.
 /// </summary>
-public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlatformLandingZoneGuidanceService guidanceService)
-    : BaseAzureMigrateCommand<GetGuidanceOptions>()
-{
-    private readonly IPlatformLandingZoneGuidanceService _guidanceService = guidanceService;
-    private const string CommandTitle = "Get Platform Landing Zone Modification Guidance";
-
-    /// <inheritdoc/>
-    public override string Id => "d4e8c9b2-5f3a-4d1c-8b7e-2a9f1c6d5e4b";
-
-    /// <inheritdoc/>
-    public override string Name => "getguidance";
-
-    /// <inheritdoc/>
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "d4e8c9b2-5f3a-4d1c-8b7e-2a9f1c6d5e4b",
+    Name = "getguidance",
+    Title = "Get Platform Landing Zone Modification Guidance",
+    Description = """
         Get how-to guidance for modifying, configuring, or customizing an existing Platform Landing Zone.
         Use this tool when user asks "how do I", "show me how to", "get guidance for", or asks about 
         disabling, enabling, turning off, changing, or modifying Landing Zone settings.
-        
+
         **Use this tool for questions about:**
         - How to turn off or disable Bastion, DDoS, DNS, gateways, Defender, or monitoring
         - How to change IP addresses, CIDR ranges, network topology, or regions
@@ -40,7 +30,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
         - How to change resource naming patterns or conventions
         - Finding or searching for specific policies within a Landing Zone
         - Listing all available policies by archetype
-        
+
         **Available scenarios:**
         - bastion: Turn off Bastion host
         - ddos: Enable or disable DDoS protection plan
@@ -57,25 +47,31 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
         - defender: Turn off Defender Plans
         - zero-trust: Implement Zero Trust Networking
         - slz: Implement Sovereign Landing Zone controls
-        
+
         **For policy searches:**
         - Use policy-name to search for a specific policy
         - Use list-policies=true to list ALL policies by archetype
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = true,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = true)]
+public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlatformLandingZoneGuidanceService guidanceService)
+    : BaseAzureMigrateCommand<GetGuidanceOptions>()
+{
+    private readonly IPlatformLandingZoneGuidanceService _guidanceService = guidanceService;
 
     /// <inheritdoc/>
-    public override string Title => CommandTitle;
 
     /// <inheritdoc/>
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = true,
-        ReadOnly = false,
-        LocalRequired = true,
-        Secret = false
-    };
+
+    /// <inheritdoc/>
+
+    /// <inheritdoc/>
+
+    /// <inheritdoc/>
 
     /// <inheritdoc/>
     protected override void RegisterOptions(Command command)
