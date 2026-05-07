@@ -215,7 +215,7 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> Image = new($"--{ImageName}")
     {
-        Description = "The OS image to use. Can be a URN (publisher:offer:sku:version), a shared gallery image ID (starting with '/sharedGalleries/'), or an alias like 'Ubuntu2404' or 'Win2022Datacenter'. There is no default; an image must be specified explicitly.",
+        Description = "The OS image to use. Can be a URN (publisher:offer:sku:version), a shared gallery image ID (starting with '/sharedGalleries/'), or an alias such as 'Ubuntu2404' or 'Win2022Datacenter'.",
         Required = false
     };
 

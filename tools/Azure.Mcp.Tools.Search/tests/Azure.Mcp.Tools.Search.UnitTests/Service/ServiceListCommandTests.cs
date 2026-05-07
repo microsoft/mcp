@@ -22,6 +22,7 @@ public class ServiceListCommandTests : CommandUnitTestsBase<ServiceListCommand, 
         var expectedServices = new List<string> { "service1", "service2" };
         Service.ListServices(
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -42,6 +43,7 @@ public class ServiceListCommandTests : CommandUnitTestsBase<ServiceListCommand, 
         // Arrange
         Service.ListServices(
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -65,6 +67,7 @@ public class ServiceListCommandTests : CommandUnitTestsBase<ServiceListCommand, 
 
         Service.ListServices(
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -77,5 +80,21 @@ public class ServiceListCommandTests : CommandUnitTestsBase<ServiceListCommand, 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithResourceGroup_ForwardsResourceGroupToService()
+    {
+        // Arrange
+        const string resourceGroup = "test-rg";
+        Service.ListServices(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", resourceGroup);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListServices(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 }

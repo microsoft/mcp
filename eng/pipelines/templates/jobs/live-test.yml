@@ -27,6 +27,7 @@ jobs:
 
   - pwsh: >
       ./eng/scripts/Build-Local.ps1
+      -ServerName $(ServerName)
       -VerifyNpx
     displayName: "Build local package"
     workingDirectory: $(Build.SourcesDirectory)
@@ -69,6 +70,10 @@ jobs:
       pwsh: true
       workingDirectory: $(Build.SourcesDirectory)
 
+  - template: /eng/common/TestResources/remove-test-resources.yml
+    parameters:
+      ServiceConnection: azure-sdk-tests-public
+
   - template: /eng/common/TestResources/deploy-test-resources.yml
     parameters:
       ServiceConnection: azure-sdk-tests-public
@@ -107,5 +112,3 @@ jobs:
   - template: /eng/common/TestResources/remove-test-resources.yml
     parameters:
       ServiceConnection: azure-sdk-tests-public
-      EnvVars:
-        Pool: $(Pool)

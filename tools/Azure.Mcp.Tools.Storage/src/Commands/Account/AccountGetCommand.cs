@@ -34,12 +34,14 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
     {
         base.RegisterOptions(command);
         command.Options.Add(StorageOptionDefinitions.Account.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
     }
 
     protected override AccountGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Account = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Account.Name);
+        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
 
@@ -58,6 +60,7 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
             var accounts = await _storageService.GetAccountDetails(
                 options.Account,
                 options.Subscription!,
+                options.ResourceGroup,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

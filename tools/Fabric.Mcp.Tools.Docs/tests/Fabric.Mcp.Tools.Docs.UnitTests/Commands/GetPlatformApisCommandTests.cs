@@ -56,7 +56,7 @@ public class GetPlatformApisCommandTests : CommandUnitTestsBase<GetPlatformApisC
         var result = await ExecuteCommandAsync([]);
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, result.Status);
         Assert.NotEmpty(result.Message);
     }
 }

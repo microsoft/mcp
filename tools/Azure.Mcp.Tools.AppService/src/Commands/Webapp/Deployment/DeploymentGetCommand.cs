@@ -29,10 +29,11 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Deployment;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger)
+public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger, IAppServiceService appServiceService)
     : BaseAppServiceCommand<DeploymentGetOptions>(resourceGroupRequired: true, appRequired: true)
 {
     private readonly ILogger<DeploymentGetCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -61,8 +62,7 @@ public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger)
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var appServiceService = context.GetService<IAppServiceService>();
-            var deployments = await appServiceService.GetDeploymentsAsync(
+            var deployments = await _appServiceService.GetDeploymentsAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.AppName!,

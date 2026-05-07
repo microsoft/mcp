@@ -46,7 +46,7 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
             "--query", "INVALID SQL");
 
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
         Assert.Contains("Syntax error", response.Message);
     }
 

@@ -26,10 +26,11 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger)
+public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger, IAppServiceService appServiceService)
     : BaseAppServiceCommand<BaseAppServiceOptions>(resourceGroupRequired: true, appRequired: true)
 {
     private readonly ILogger<DetectorListCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
 
     protected override void RegisterOptions(Command command) => base.RegisterOptions(command);
 
@@ -49,8 +50,7 @@ public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger)
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var appServiceService = context.GetService<IAppServiceService>();
-            var detectors = await appServiceService.ListDetectorsAsync(
+            var detectors = await _appServiceService.ListDetectorsAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.AppName!,

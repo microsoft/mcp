@@ -1,5 +1,57 @@
 # Release History
 
+## 3.0.9 (2026-05-05) (pre-release)
+
+### Added
+
+- Added `azurebackup security configure-mua` command to enable or disable Multi-User Authorization on Recovery Services vaults and Backup vaults. [[#2544](https://github.com/microsoft/mcp/pull/2544)]
+- Added `Win2022Datacenter1P` image alias for the first-party shared gallery Windows Server 2022 image (`/sharedGalleries/WINDOWSSERVER.1P/images/2022-DATACENTER-AZURE-EDITION/versions/latest`) that does not require a marketplace purchase plan. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+- Added `Ubuntu2604` image alias for `azmcp vm create` mapping to marketplace URN `Canonical:ubuntu-26_04-lts:server:latest`. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+
+### Changed
+
+- **Breaking:** Updated `azmcp compute vm create` and `azmcp compute vmss create` to require the `--image` parameter, removing the default `Ubuntu 24.04 LTS` image when omitted. Users must now specify an alias, Marketplace URN, or shared gallery image ID. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+- **Breaking:** Changed `Win2022Datacenter` image alias to use the `WindowsServer2022` marketplace offer instead of the deprecated `WindowsServer` offer. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+- **Breaking:** Removed the `Win2019Datacenter` image alias, use the marketplace URN format (`MicrosoftWindowsServer:WindowsServer:2019-datacenter-gensecond:latest`) directly if Windows Server 2019 is needed. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+- **Breaking:** Removed the `Ubuntu2004` image alias from `azmcp vm create`. `Ubuntu 20.04` LTS reached end of standard support on May 31, 2025 and is no longer recommended for new VMs. Use `Ubuntu2204` or `Ubuntu2404`, or specify the Marketplace URN (`Canonical:0001-com-ubuntu-server-focal:20_04-lts-gen2:latest`) if `Ubuntu 20.04` is still required. [[#2533](https://github.com/microsoft/mcp/pull/2533)]
+- Optimized CLI startup time for targeted command invocations by ~39% (945ms to 573ms). [[#2569](https://github.com/microsoft/mcp/pull/2569)]
+
+## 3.0.8 (2026-05-01) (pre-release)
+
+### Added
+
+- Added `appservice_webapp_change-state` tool to change the running state of an App Service web app. [[#1934](https://github.com/microsoft/mcp/pull/1934)]
+
+### Fixed
+
+- Improved Resource Health availability status errors for unsupported resource types. [[#2554](https://github.com/microsoft/mcp/pull/2554)]
+- Fixed parameter handling to honor the optional `--resource-group` parameter, which was previously not passed through to the service layer, causing subscription-wide results to always be returned regardless of the specified resource group for the following tools: [[#2552](https://github.com/microsoft/mcp/pull/2552)]
+  - `appconfig_account_list`
+  - `grafana_list`
+  - `kusto_cluster_list`
+  - `monitor_workspace_list`
+  - `search_service_list`
+  - `storage_account_get`
+- Fixed issue where exceptions written to stdout were incorrectly interpreted as JSON RPC response. [[#2559](https://github.com/microsoft/mcp/pull/2559)]
+
+### Changed
+
+- Improved Azure Functions tool descriptions and prompts for better AI agent tool selection and invocation. [[#2517](https://github.com/microsoft/mcp/pull/2517)]
+
+## 3.0.7 (2026-04-30) (pre-release)
+
+### Added
+
+- Added `azurebackup_policy_update` command for modifying RSV backup policy schedule and retention settings. [[#2452](https://github.com/microsoft/mcp/pull/2452)]
+
+### Fixed
+
+- Fixed CLI mode log messages being written to stdout instead of stderr, ensuring agents and pipelines consuming stdout receive clean JSON only. Logs can be viewed with `2>&1` or captured separately using `2> file.log`. [[#2535](https://github.com/microsoft/mcp/pull/2535)]
+
+### Changed
+
+- Fixed telemetry-triaged failures by hardening input validation and null handling as well as by migrating RSV soft-delete and cross-region restore to supported Vault Patch APIs. [[#2518](https://github.com/microsoft/mcp/pull/2518)]
+
 ## 3.0.6 (2026-04-28) (pre-release)
 
 ### Added
@@ -30,6 +82,16 @@
 - Added an automated end-to-end (E2E) testing tool that uses the GitHub Copilot SDK to validate Azure MCP tool invocations from prompt fixtures. [[#1830](https://github.com/microsoft/mcp/pull/1830)]
 - Improved deploy tool invocation by rewriting tool descriptions and defaulting previously required options, and restricted `deploy_app_logs_get` to local-only mode (`LocalRequired=true`). [[#2418](https://github.com/microsoft/mcp/pull/2418)]
 - Added custom telemetry dimensions to Azure Backup MCP commands. [[#2505](https://github.com/microsoft/mcp/pull/2505)]
+
+## 2.0.2 (2026-04-24)
+
+### Changed
+
+- **Breaking:** Renamed `--detector-name` parameter to `--detector-id` in `appservice_webapp_diagnostic_diagnose` command to accurately reflect that the parameter expects a detector ID, not a display name. [[#2469](https://github.com/microsoft/mcp/pull/2469)]
+
+### Fixed
+
+- Fixed App Service `diagnostic_list` returning detector display names instead of detector IDs, causing `diagnostic_diagnose` to fail with 404 Not Found errors. [[#2469](https://github.com/microsoft/mcp/pull/2469)]
 
 ## 3.0.5 (2026-04-23) (pre-release)
 

@@ -24,6 +24,9 @@ parameters:
 - name: PackageMCPB
   type: boolean
   default: false
+- name: RunVSCodeIntegrationTests
+  type: boolean
+  default: false
 - name: TestTimeoutInMinutes
   type: number
   default: 30
@@ -113,6 +116,22 @@ extends:
             Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.liveTestMatrix']
             MaxParallel: 10
             TimeoutInMinutes: 75
+
+    - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunVSCodeIntegrationTests, true)) }}:
+      - stage: VSCodeIntegration
+        displayName: 'VS Code integration test'
+        dependsOn:
+        - Initialize
+        - Build
+        pool:
+          name: $(WINDOWSPOOL)
+          image: $(WINDOWSVMIMAGE)
+          os: windows
+        variables:
+        - template: /eng/pipelines/templates/variables/image.yml
+        - template: /eng/pipelines/templates/variables/globals.yml
+        jobs:
+        - template: /eng/pipelines/templates/jobs/vscode-integration.yml
 
     - ${{ if ne(parameters.PublishTarget, 'none') }}:
       # We only sign if we're going to publish

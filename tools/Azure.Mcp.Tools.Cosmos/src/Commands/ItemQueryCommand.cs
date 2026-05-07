@@ -23,9 +23,10 @@ namespace Azure.Mcp.Tools.Cosmos.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseContainerCommand<ItemQueryOptions>()
+public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger, ICosmosService cosmosService) : BaseContainerCommand<ItemQueryOptions>()
 {
     private readonly ILogger<ItemQueryCommand> _logger = logger;
+    private readonly ICosmosService _cosmosService = cosmosService;
     private const string DefaultQuery = "SELECT * FROM c";
 
     protected override void RegisterOptions(Command command)
@@ -64,10 +65,9 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
 
         try
         {
-            var cosmosService = context.GetService<ICosmosService>();
             var queryToRun = options.Query ?? DefaultQuery;
 
-            var items = await cosmosService.QueryItems(
+            var items = await _cosmosService.QueryItems(
                 options.Account!,
                 options.Database!,
                 options.Container!,

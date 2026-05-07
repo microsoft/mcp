@@ -34,7 +34,7 @@ public sealed class DiskGetCommand(
 {
 
     private readonly ILogger<DiskGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
+    private readonly IComputeService _computeService = computeService;
 
     protected override void RegisterOptions(Command command)
     {

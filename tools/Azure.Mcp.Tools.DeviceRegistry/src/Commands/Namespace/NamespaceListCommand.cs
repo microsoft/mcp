@@ -28,10 +28,11 @@ namespace Azure.Mcp.Tools.DeviceRegistry.Commands.Namespace;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger)
+public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger, IDeviceRegistryService deviceRegistryService)
     : BaseDeviceRegistryCommand<NamespaceListOptions>()
 {
     private readonly ILogger<NamespaceListCommand> _logger = logger;
+    private readonly IDeviceRegistryService _deviceRegistryService = deviceRegistryService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -60,9 +61,7 @@ public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger)
 
         try
         {
-            var service = context.GetService<IDeviceRegistryService>();
-
-            var namespaces = await service.ListNamespacesAsync(
+            var namespaces = await _deviceRegistryService.ListNamespacesAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.RetryPolicy,

@@ -108,6 +108,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | appservice_webapp_diagnostic_diagnose | Diagnose web app <webapp> in <resource_group> with detector <detector_name> |
 | appservice_webapp_diagnostic_diagnose | Diagnose web app <webapp> in <resource_group> with detector <detector_name> between <start_time> and <end_time> with interval <interval> |
 | appservice_webapp_diagnostic_list | List the diagnostic detectors for web app <webapp> in <resource_group> |
+| appservice_webapp_change-state | Start the web app <app> in <resource_group> |
+| appservice_webapp_change-state | Stop the web app <app> in <resource_group> |
+| appservice_webapp_change-state | Restart the web app <app> in <resource_group> |
+| appservice_webapp_change-state | Soft restart the web app <app> in <resource_group> waiting for restart to complete |
 | appservice_webapp_get | List the web apps in my subscription |
 | appservice_webapp_get | Show me the web apps in my <resource_group> resource group |
 | appservice_webapp_get | Get the details for web app <webapp> in <resource_group> |
@@ -160,6 +164,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azurebackup_protecteditem_undelete | Undelete the accidentally deleted backup for VM <datasource_id> in vault <vault_name> under resource group <resource_group> |
 | azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> |
 | azurebackup_recoverypoint_get | List available recovery points for <item_name> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_security_configure-mua | Enable multi-user authorization on vault <vault_name> in resource group <resource_group> with resource guard <resource_guard_id> |
+| azurebackup_security_configure-mua | Disable MUA on vault <vault_name> in resource group <resource_group> |
 | azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' |
 | azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> |
@@ -527,17 +533,17 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| functions_language_list | What languages does Azure Functions support? |
+| functions_language_list | Check the available languages that Azure Functions supports. |
 | functions_language_list | Compare all Azure Functions languages side by side |
 | functions_language_list | What runtime versions are available for Azure Functions? |
 | functions_project_get | Set up a new Azure Functions project in Python |
 | functions_project_get | Generate the project files for a TypeScript Azure Functions app |
 | functions_project_get | Create the boilerplate for a Java Azure Functions app using JDK 21 |
-| functions_template_get | What triggers and bindings are available for C# Azure Functions? |
+| functions_template_get | Get the available triggers and bindings for C# Azure Functions. |
 | functions_template_get | Show me all the Python Azure Function templates |
 | functions_template_get | Create a Timer trigger function in C# that runs every 5 minutes |
 | functions_template_get | Show me a Cosmos DB trigger with an output binding in Java |
-| functions_template_get | I need a MCP Tool trigger in TypeScript for Node.js 22 |
+| functions_template_get | Generate a MCP Tool trigger in TypeScript for Node.js 22 |
 
 ## Azure Key Vault
 

@@ -33,8 +33,8 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmssDeleteOptions>(true)
 {
-    private readonly ILogger<VmssDeleteCommand> _logger = logger;
-    private readonly IComputeService _computeService = computeService;
+    private readonly ILogger<VmssDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override void RegisterOptions(Command command)
     {

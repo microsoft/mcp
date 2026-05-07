@@ -34,8 +34,8 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmDeleteOptions>(true)
 {
-    private readonly ILogger<VmDeleteCommand> _logger = logger;
-    private readonly IComputeService _computeService = computeService;
+    private readonly ILogger<VmDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override void RegisterOptions(Command command)
     {

@@ -20,9 +20,11 @@ namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logger) : GlobalCommand<BaseFabricOptions>()
+public sealed class GetPlatformApisCommand(IFabricPublicApiService service, ILogger<GetPlatformApisCommand> logger)
+    : GlobalCommand<BaseFabricOptions>()
 {
     private readonly ILogger<GetPlatformApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -35,8 +37,7 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
 
         try
         {
-            var fabricService = context.GetService<IFabricPublicApiService>();
-            var apis = await fabricService.GetWorkloadPublicApis("platform", cancellationToken);
+            var apis = await _service.GetWorkloadPublicApis("platform", cancellationToken);
 
             context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
         }

@@ -29,6 +29,7 @@ public static class AzureBackupOptionDefinitions
     public const string VmResourceIdName = "vm-resource-id";
     public const string ResourceTypeFilterName = "resource-type-filter";
     public const string TagFilterName = "tag-filter";
+    public const string ResourceGuardIdName = "resource-guard-id";
 
     public static readonly Option<string> Vault = new($"--{VaultName}")
     {
@@ -171,6 +172,12 @@ public static class AzureBackupOptionDefinitions
     public static readonly Option<string> TagFilter = new($"--{TagFilterName}")
     {
         Description = "Tag-based filter in key=value format (e.g., 'environment=production').",
+        Required = false
+    };
+
+    public static readonly Option<string> ResourceGuardId = new($"--{ResourceGuardIdName}")
+    {
+        Description = "ARM resource ID of the Resource Guard to link for Multi-User Authorization (e.g., '/subscriptions/.../resourceGroups/.../providers/Microsoft.DataProtection/resourceGuards/myGuard').",
         Required = false
     };
 }
