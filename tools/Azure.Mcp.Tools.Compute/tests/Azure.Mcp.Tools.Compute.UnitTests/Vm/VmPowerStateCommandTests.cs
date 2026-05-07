@@ -104,7 +104,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
             "--subscription", _knownSubscription,
             "--state", state);
 
-                var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmPowerStateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmPowerStateCommandResult);
         Assert.Equal(_knownVmName, result.PowerState.Name);
         Assert.Equal(state, result.PowerState.State);
         Assert.True(result.PowerState.Completed);
@@ -139,7 +139,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
             "--no-wait");
 
         // Assert
-       var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmPowerStateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmPowerStateCommandResult);
         Assert.False(result.PowerState.Completed);
 
         await Service.Received(1).ChangeVmPowerStateAsync(
