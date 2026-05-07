@@ -13,12 +13,16 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
-public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger)
+public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmPowerStateOptions>(true)
 {
     private const string CommandTitle = "Change Virtual Machine Power State";
-    private static readonly string[] s_validStates = ["start", "stop", "deallocate", "restart"];
+    private static readonly HashSet<string> s_validStates = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "start", "stop", "deallocate", "restart"
+    };
     private readonly ILogger<VmPowerStateCommand> _logger = logger;
+    private readonly IComputeService _computeService = computeService;
 
     public override string Id => "a7c1e4b2-9d3f-4e8a-b5c6-2f1d3e4a5b6c";
 
@@ -62,7 +66,7 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger)
         command.Validators.Add(commandResult =>
         {
             var state = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.State.Name);
-            if (!string.IsNullOrEmpty(state) && !s_validStates.Contains(state, StringComparer.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(state) && !s_validStates.Contains(state))
             {
                 commandResult.AddError($"Invalid --state value '{state}'. Accepted values: start, stop, deallocate, restart.");
             }
@@ -94,13 +98,11 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var result = await computeService.ChangeVmPowerStateAsync(
+            var result = await _computeService.ChangeVmPowerStateAsync(
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,
@@ -112,7 +114,7 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger)
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new VmPowerStateCommandResult(result),
+                new(result),
                 ComputeJsonContext.Default.VmPowerStateCommandResult);
         }
         catch (Exception ex)

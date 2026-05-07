@@ -28,10 +28,11 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
+public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmUpdateOptions>(true)
 {
     private readonly ILogger<VmUpdateCommand> _logger = logger;
+    private readonly IComputeService _computeService = computeService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -83,13 +84,11 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var result = await computeService.UpdateVmAsync(
+            var result = await _computeService.UpdateVmAsync(
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,

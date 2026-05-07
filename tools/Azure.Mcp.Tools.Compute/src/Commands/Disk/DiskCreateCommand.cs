@@ -29,11 +29,13 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
     Secret = false,
     LocalRequired = false)]
 public sealed class DiskCreateCommand(
-    ILogger<DiskCreateCommand> logger)
+    ILogger<DiskCreateCommand> logger,
+    IComputeService computeService)
     : BaseComputeCommand<DiskCreateOptions>(true)
 {
 
     private readonly ILogger<DiskCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override void RegisterOptions(Command command)
     {
@@ -148,8 +150,7 @@ public sealed class DiskCreateCommand(
                 "Creating disk {DiskName} in resource group {ResourceGroup}, location {Location}, source {Source}",
                 options.Disk, options.ResourceGroup, options.Location ?? "(default)", options.Source ?? "(none)");
 
-            var computeService = context.GetService<IComputeService>();
-            var disk = await computeService.CreateDiskAsync(
+            var disk = await _computeService.CreateDiskAsync(
                 options.Disk!,
                 options.ResourceGroup!,
                 options.Subscription!,
