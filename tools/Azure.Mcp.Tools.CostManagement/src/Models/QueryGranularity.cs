@@ -6,6 +6,5 @@ namespace Azure.Mcp.Tools.CostManagement.Models;
 public enum QueryGranularity
 {
     None,
-    Daily,
-    Monthly
+    Daily
 }

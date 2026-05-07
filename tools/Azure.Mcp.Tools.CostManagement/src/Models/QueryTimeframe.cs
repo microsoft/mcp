@@ -13,7 +13,6 @@ public enum QueryTimeframe
 {
     MonthToDate,
     BillingMonthToDate,
-    TheCurrentMonth,
     TheLastBillingMonth,
     WeekToDate,
     Custom

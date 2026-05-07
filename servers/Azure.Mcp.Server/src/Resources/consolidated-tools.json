@@ -771,7 +771,7 @@
     },
     {
       "name": "query_azure_costs",
-      "description": "Query actual Azure costs and usage data for a subscription or resource group over a time period. Returns aggregated costs in the billing currency. Supports common predefined timeframes (MonthToDate, BillingMonthToDate, TheCurrentMonth, TheLastBillingMonth, WeekToDate) and a Custom range. Optional Daily/Monthly granularity and grouping by a single dimension (ServiceName, ResourceGroupName, ResourceLocation, ResourceId, MeterCategory, MeterSubCategory, ChargeType, BillingPeriod). Caller must have 'Cost Management Reader' or 'Reader' role on the scope.",
+      "description": "Query actual Azure costs and usage data for a subscription or resource group over a time period. Returns aggregated costs in the billing currency. Supports common predefined timeframes (MonthToDate, BillingMonthToDate, TheLastBillingMonth, WeekToDate) and a Custom range. Optional Daily granularity and grouping by a single dimension (ServiceName, ResourceGroupName, ResourceLocation, ResourceId, MeterCategory, MeterSubCategory, ChargeType, BillingPeriod). Caller must have 'Cost Management Reader' or 'Reader' role on the scope.",
       "toolMetadata": {
         "destructive": {
           "value": false,

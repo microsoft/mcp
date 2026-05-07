@@ -1937,10 +1937,10 @@ azmcp acr registry repository list --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp costmanagement query run --subscription <subscription> \
                                [--resource-group <resource-group>] \
-                               [--timeframe <MonthToDate|BillingMonthToDate|TheCurrentMonth|TheLastBillingMonth|WeekToDate|Custom>] \
+                               [--timeframe <MonthToDate|BillingMonthToDate|TheLastBillingMonth|WeekToDate|Custom>] \
                                [--from <YYYY-MM-DD>] \
                                [--to <YYYY-MM-DD>] \
-                               [--granularity <None|Daily|Monthly>] \
+                               [--granularity <None|Daily>] \
                                [--group-by <ServiceName|ResourceGroupName|ResourceLocation|ResourceId|MeterCategory|MeterSubCategory|ChargeType|BillingPeriod>]
 ```
 

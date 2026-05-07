@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.CostManagement.Commands.Query;
     Title = "Query Azure Costs",
     Description = """
         Query actual Azure costs and usage data for a subscription or resource group over a time period.
-        Returns aggregated costs in the billing currency, optionally broken down by day/month and grouped by
+        Returns aggregated costs in the billing currency, optionally broken down daily and grouped by
         a single Azure dimension. Caller must have 'Cost Management Reader' or 'Reader' on the scope.
         """,
     Destructive = false,
@@ -125,7 +125,7 @@ public sealed class QueryRunCommand(ILogger<QueryRunCommand> logger, ICostManage
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.TooManyRequests =>
             $"Cost Management API throttled the request. Retry after the duration specified in the 'x-ms-ratelimit-microsoft.consumption-retry-after' response header. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
-            $"Cost Management API rejected the query. Common causes: unsupported --group-by dimension; --timeframe value not allowed at this scope (subscription/resource group accept MonthToDate, BillingMonthToDate, TheCurrentMonth, TheLastBillingMonth, WeekToDate, Custom); --from later than --to; date range too large. Details: {reqEx.Message}",
+            $"Cost Management API rejected the query. Common causes: unsupported --group-by dimension; --timeframe value not allowed at this scope (subscription/resource group accept MonthToDate, BillingMonthToDate, TheLastBillingMonth, WeekToDate, Custom); --from later than --to; date range too large. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         ArgumentException argEx => argEx.Message,
         _ => base.GetErrorMessage(ex)

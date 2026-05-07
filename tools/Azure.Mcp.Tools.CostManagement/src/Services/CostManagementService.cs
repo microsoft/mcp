@@ -68,11 +68,9 @@ public sealed class CostManagementService(
         var dataset = new QueryDataset();
         dataset.Aggregation["totalCost"] = new QueryAggregation(CostColumn, FunctionType.Sum);
 
-        if (granularity != QueryGranularity.None)
+        if (granularity == QueryGranularity.Daily)
         {
-            dataset.Granularity = granularity == QueryGranularity.Daily
-                ? GranularityType.Daily
-                : GranularityType.Monthly;
+            dataset.Granularity = GranularityType.Daily;
         }
 
         if (!string.IsNullOrWhiteSpace(groupBy))
@@ -98,7 +96,6 @@ public sealed class CostManagementService(
     {
         QueryTimeframe.MonthToDate => TimeframeType.MonthToDate,
         QueryTimeframe.BillingMonthToDate => TimeframeType.BillingMonthToDate,
-        QueryTimeframe.TheCurrentMonth => TimeframeType.TheCurrentMonth,
         QueryTimeframe.TheLastBillingMonth => TimeframeType.TheLastBillingMonth,
         QueryTimeframe.WeekToDate => TimeframeType.WeekToDate,
         QueryTimeframe.Custom => TimeframeType.Custom,

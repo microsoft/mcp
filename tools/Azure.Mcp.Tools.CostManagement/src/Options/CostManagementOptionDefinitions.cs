@@ -19,7 +19,7 @@ public static class CostManagementOptionDefinitions
         Description =
             "Predefined time range for the query. Defaults to MonthToDate. " +
             "Use 'Custom' together with --from and --to for a specific window. " +
-            "Allowed values: MonthToDate, BillingMonthToDate, TheCurrentMonth, TheLastBillingMonth, WeekToDate, Custom. " +
+            "Allowed values: MonthToDate, BillingMonthToDate, TheLastBillingMonth, WeekToDate, Custom. " +
             "Use TheLastBillingMonth for the previous full billing period.",
         Required = false
     };
@@ -40,7 +40,7 @@ public static class CostManagementOptionDefinitions
     {
         Description =
             "Row granularity. 'None' (default) returns a single aggregated total. " +
-            "'Daily' or 'Monthly' return one row per day or month. Allowed values: None, Daily, Monthly.",
+            "'Daily' returns one row per day. Allowed values: None, Daily.",
         Required = false
     };
 
