@@ -55,7 +55,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 
 ### <img height="18" width="18" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> Azure Management
 - **DOCUMENTATION**: [Azure/Azure-Management-MCP](https://github.com/Azure/Azure-Management-MCP)
-- **DESCRIPTION**: A Model Context Protocol server for Azure resource management, providing tools for generating and executing Azure Resource Graph queries to retrieve information of Azure resources, and tools to create, get and cancel ARM template deployments.
+- **DESCRIPTION**: A Model Context Protocol server for Azure resource management, providing tools for generating and executing Azure Resource Graph queries to retrieve information about Azure resources, and tools to create, get and cancel ARM template deployments.
 - **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
 - **TYPE**: `REMOTE` - `https://mcp.management.azure.com`
 - **INSTALL**: [![Install Azure Management MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode:mcp/install?%7B%22name%22:%22arm-mcp-remote%22,%22type%22:%22http%22,%22url%22:%22https://mcp.management.azure.com%22%7D) [![Install Azure Management MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode-insiders:mcp/install?%7B%22name%22:%22arm-mcp-remote%22,%22type%22:%22http%22,%22url%22:%22https://mcp.management.azure.com%22%7D)
