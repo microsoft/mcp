@@ -74,9 +74,6 @@ If you are contributing significant changes, or if the issue is already assigned
 
 This repository uses a single Azure DevOps package feed for all NuGet packages instead of nuget.org directly. The feed is configured in `nuget.config`.
 
-> [!IMPORTANT]
-> Do **not** add additional feeds to `nuget.config` or bypass the feed with `--source "https://api.nuget.org/v3/index.json"`. All CI builds pull packages exclusively from the DevOps feed, so local development should match this behavior.
-
 The feed has an **upstream** configured to nuget.org. When an authenticated user restores a package that is not yet cached in the feed, it is automatically ingested from nuget.org.  Unauthenticated users can only consume package versions that have already been ingested into the feed.
 
 You can browse the feed directly at: <https://dev.azure.com/azure-sdk/public/_artifacts/feed/azure-sdk-for-net>
@@ -95,7 +92,11 @@ The feed is **public**, so anyone can read packages that are already cached. The
 
 #### External Contributors
 
-External contributors will not be able to authenticate to the feed as **Collaborator**, but our Pull Request pipeline can.  External contributors should temporarily add nuget.org as an additional source in `nuget.config` to build locally with new packages, then revert that `nuget.config` change before submitting their pull request.  Our pipeline will authenticate to the feed, ingest the new package, and build normally.
+External contributors will not be able to authenticate to the feed as **Collaborator**, but our Pull Request pipeline can. External contributors should temporarily add nuget.org as an additional source in `nuget.config` to build locally with new packages, then revert that `nuget.config` change before submitting their pull request. Our pipeline will authenticate to the feed, ingest the new package, and build normally.
+
+If you need local-only NuGet configuration for development, use a user-level `NuGet.Config` and a temporary `--configfile` rather than editing this repository's tracked `nuget.config`. Do not commit local feed changes to the repo.
+
+Do not assume the Pull Request pipeline will always ingest a missing package automatically. Upstream ingestion can fail or be delayed. If your PR depends on a package/version that is not yet visible in the feed, ask a maintainer or Microsoft contributor to pre-ingest it by restoring against the feed first, then retry once the package appears in <https://dev.azure.com/azure-sdk/public/_artifacts/feed/azure-sdk-for-net>.
 
 ### Project Structure
 
