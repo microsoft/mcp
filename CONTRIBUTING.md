@@ -72,7 +72,7 @@ If you are contributing significant changes, or if the issue is already assigned
 
 ### Central NuGet Feed
 
-This repository uses a single Azure DevOps package feed for all NuGet packages instead of nuget.org directly. The feed is configured in [`nuget.config`](nuget.config).
+This repository uses a single Azure DevOps package feed for all NuGet packages instead of nuget.org directly. The feed is configured in `nuget.config`.
 
 > [!IMPORTANT]
 > Do **not** add additional feeds to `nuget.config` or bypass the feed with `--source "https://api.nuget.org/v3/index.json"`. All CI builds pull packages exclusively from the DevOps feed, so local development should match this behavior.
