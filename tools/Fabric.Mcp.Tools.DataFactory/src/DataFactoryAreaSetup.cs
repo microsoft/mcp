@@ -27,6 +27,7 @@ public class DataFactoryAreaSetup : IAreaSetup
         services.AddSingleton<RunPipelineCommand>();
         services.AddSingleton<ListDataflowsCommand>();
         services.AddSingleton<CreateDataflowCommand>();
+        services.AddSingleton<ExecuteQueryCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -38,6 +39,7 @@ public class DataFactoryAreaSetup : IAreaSetup
             - List and manage workspaces
             - Create, get, list, and run pipelines
             - Work with dataflows and data transformations
+            - Execute M (Power Query) expressions against dataflows
             """);
 
         group.AddCommand<ListPipelinesCommand>(serviceProvider);
@@ -46,6 +48,7 @@ public class DataFactoryAreaSetup : IAreaSetup
         group.AddCommand<RunPipelineCommand>(serviceProvider);
         group.AddCommand<ListDataflowsCommand>(serviceProvider);
         group.AddCommand<CreateDataflowCommand>(serviceProvider);
+        group.AddCommand<ExecuteQueryCommand>(serviceProvider);
 
         return group;
     }

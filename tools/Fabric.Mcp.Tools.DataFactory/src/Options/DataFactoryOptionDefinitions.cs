@@ -21,6 +21,27 @@ public static class DataFactoryOptionDefinitions
         Required = true
     };
 
+    public const string DataflowIdName = "dataflow-id";
+    public static readonly Option<string> DataflowId = new($"--{DataflowIdName}")
+    {
+        Description = "The ID of the dataflow.",
+        Required = true
+    };
+
+    public const string QueryNameName = "query-name";
+    public static readonly Option<string> QueryName = new($"--{QueryNameName}")
+    {
+        Description = "The name of the query to execute.",
+        Required = true
+    };
+
+    public const string QueryTextName = "query";
+    public static readonly Option<string> QueryText = new($"--{QueryTextName}")
+    {
+        Description = "The M (Power Query) expression to execute.",
+        Required = true
+    };
+
     public const string DisplayNameName = "display-name";
     public static readonly Option<string> DisplayName = new($"--{DisplayNameName}")
     {
