@@ -40,11 +40,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         })
     ];
 
-    public override CustomDefaultMatcher? TestMatcher => new()
-    {
-        CompareBodies = false
-    };
-
     // Sanitize resource group name, base name, and subscription ID everywhere
     public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
     [
