@@ -2,10 +2,6 @@
 See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate this README.md for package specific output
 -->
 # <!-- remove-section: start nuget;vsix remove_fabric_logo --><img height="36" width="36" src="https://learn.microsoft.com/fabric/media/fabric-icon.png" alt="Microsoft Fabric Logo" /> <!-- remove-section: end remove_fabric_logo -->Microsoft Fabric MCP Server <!-- insert-section: nuget;vsix;npm {{ToolTitle}} -->
-<!-- remove-section: start nuget;vsix;npm remove_note_preview -->
-> [!NOTE]
-> Microsoft Fabric MCP Server is currently in **Public Preview**.
-<!-- remove-section: end remove_note_preview -->
 
 <!-- insert-section: nuget;pypi {{MCPRepositoryMetadata}} -->
 
@@ -272,7 +268,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 ## Feedback and Support
 
-- The Microsoft Fabric MCP Server is an **open-source project in Public Preview**. Support for this server implementation is primarily provided through community channels and GitHub repositories. Customers with qualifying Microsoft enterprise support agreements may have access to limited support for broader Microsoft Fabric and platform scenarios; review the [Microsoft Support Policy](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/SUPPORT.md#microsoft-support-policy) section of this project for more details.
+- Support for this server implementation is primarily provided through community channels and GitHub repositories. Customers with qualifying Microsoft enterprise support agreements may have access to limited support for broader Microsoft Fabric and platform scenarios; review the [Microsoft Support Policy](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/SUPPORT.md#microsoft-support-policy) section of this project for more details.
 - Check the [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md) to diagnose and resolve common issues.
 - We're building this in the open. Your feedback is much appreciated!
     - [Open an issue](https://github.com/microsoft/mcp/issues) in the public GitHub repository — we'd love to hear from you!
