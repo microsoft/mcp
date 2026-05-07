@@ -1,4 +1,0 @@
-[submodule "external/Fabric.Mcp.Tools.DataFactory"]
-	path = external/Fabric.Mcp.Tools.DataFactory
-	url = https://github.com/microsoft/DataFactory.MCP.git
-	branch = fabric-mcp-tools-integration
