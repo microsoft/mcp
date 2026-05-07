@@ -15,7 +15,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
 
 [CommandMetadata(
-    Id = "a1b2c3d4-1001-4000-8000-000000000005",
+    Id = "be699abf-2297-4328-be8c-e93f045236f2",
     Name = "run-pipeline",
     Title = "Run Pipeline",
     Description = "Triggers a run of a specified pipeline in a Microsoft Fabric workspace. Requires workspace ID and pipeline ID. Returns the run instance ID.",

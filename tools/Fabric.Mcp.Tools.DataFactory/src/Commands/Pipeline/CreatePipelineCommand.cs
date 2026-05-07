@@ -15,7 +15,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
 
 [CommandMetadata(
-    Id = "a1b2c3d4-1001-4000-8000-000000000003",
+    Id = "faf493a8-0c7d-4347-854a-a85120dd8199",
     Name = "create-pipeline",
     Title = "Create Pipeline",
     Description = "Creates a new pipeline in a Microsoft Fabric workspace. Requires workspace ID and display name. Optionally provide a description.",

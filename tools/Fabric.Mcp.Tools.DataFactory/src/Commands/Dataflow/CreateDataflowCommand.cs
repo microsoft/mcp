@@ -15,7 +15,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
 
 [CommandMetadata(
-    Id = "a1b2c3d4-2001-4000-8000-000000000002",
+    Id = "98c74b3b-1813-40db-9abe-30ad90beb236",
     Name = "create-dataflow",
     Title = "Create Dataflow",
     Description = "Creates a new dataflow in a specified Microsoft Fabric workspace.",

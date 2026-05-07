@@ -15,7 +15,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
 
 [CommandMetadata(
-    Id = "a1b2c3d4-2001-4000-8000-000000000001",
+    Id = "07025647-7bd3-4e80-82eb-13bbd603d076",
     Name = "list-dataflows",
     Title = "List Dataflows",
     Description = "Lists all dataflows in a specified Microsoft Fabric workspace.",

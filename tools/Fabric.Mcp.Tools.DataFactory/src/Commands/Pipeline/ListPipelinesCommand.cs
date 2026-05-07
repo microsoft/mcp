@@ -15,7 +15,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
 
 [CommandMetadata(
-    Id = "a1b2c3d4-1001-4000-8000-000000000002",
+    Id = "365d2efc-ce25-4a32-afb1-294daf6e462b",
     Name = "list-pipelines",
     Title = "List Pipelines",
     Description = "Lists all pipelines in a specified Microsoft Fabric workspace. Requires the workspace ID.",
