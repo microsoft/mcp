@@ -1145,30 +1145,38 @@ public class ComputeService(
 
         var waitUntil = noWait ? WaitUntil.Started : WaitUntil.Completed;
 
-        switch (state.ToLowerInvariant())
+        ArmOperation operation = state.ToLowerInvariant() switch
         {
-            case "start":
-                await vmResource.PowerOnAsync(waitUntil, cancellationToken);
-                break;
-            case "stop":
-                await vmResource.PowerOffAsync(waitUntil, skipShutdown, cancellationToken);
-                break;
-            case "deallocate":
-                await vmResource.DeallocateAsync(waitUntil, cancellationToken: cancellationToken);
-                break;
-            case "restart":
-                await vmResource.RestartAsync(waitUntil, cancellationToken);
-                break;
-            default:
-                throw new ArgumentException($"Invalid state '{state}'. Accepted values: start, stop, deallocate, restart.", nameof(state));
-        }
+            "start" => await vmResource.PowerOnAsync(waitUntil, cancellationToken),
+            "stop" => await vmResource.PowerOffAsync(waitUntil, skipShutdown, cancellationToken),
+            "deallocate" => await vmResource.DeallocateAsync(waitUntil, cancellationToken: cancellationToken),
+            "restart" => await vmResource.RestartAsync(waitUntil, cancellationToken),
+            _ => throw new ArgumentException($"Invalid state '{state}'. Accepted values: start, stop, deallocate, restart.", nameof(state))
+        };
 
         var completed = !noWait;
+
+        // When --no-wait is used, surface the ARM long-running-operation tracking URL so callers
+        // can poll the status of the specific power-state request. Prefer Azure-AsyncOperation
+        // (returns a status document with InProgress/Succeeded/Failed) and fall back to Location.
+        string? statusUri = null;
+        if (noWait)
+        {
+            var rawResponse = operation.GetRawResponse();
+            if (rawResponse?.Headers != null &&
+                !rawResponse.Headers.TryGetValue("Azure-AsyncOperation", out statusUri))
+            {
+                rawResponse.Headers.TryGetValue("Location", out statusUri);
+            }
+        }
+
         var message = completed
             ? $"Virtual machine '{vmName}' {state} operation completed successfully."
-            : $"Virtual machine '{vmName}' {state} operation initiated. Use instance view to check status.";
+            : statusUri is not null
+                ? $"Virtual machine '{vmName}' {state} operation initiated. Poll 'statusUri' to track completion."
+                : $"Virtual machine '{vmName}' {state} operation initiated. Use instance view to check status.";
 
-        return new VmPowerStateResult(vmName, vmResource.Id.ToString(), resourceGroup, state, message, completed);
+        return new VmPowerStateResult(vmName, vmResource.Id.ToString(), resourceGroup, state, message, completed, statusUri);
     }
 
     public async Task<bool> DeleteVmssAsync(

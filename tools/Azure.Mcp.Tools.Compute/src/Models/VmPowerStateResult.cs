@@ -11,4 +11,5 @@ public sealed record VmPowerStateResult(
     [property: JsonPropertyName("resourceGroup")] string ResourceGroup,
     [property: JsonPropertyName("state")] string State,
     [property: JsonPropertyName("message")] string Message,
-    [property: JsonPropertyName("completed")] bool Completed);
+    [property: JsonPropertyName("completed")] bool Completed,
+    [property: JsonPropertyName("statusUri")] string? StatusUri = null);
