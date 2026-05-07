@@ -1143,16 +1143,19 @@ public class ComputeService(
         var vmResponse = await vmCollection.GetAsync(vmName, cancellationToken: cancellationToken);
         var vmResource = vmResponse.Value;
 
-        var waitUntil = noWait ? WaitUntil.Started : WaitUntil.Completed;
-
         ArmOperation operation = state.ToLowerInvariant() switch
         {
-            "start" => await vmResource.PowerOnAsync(waitUntil, cancellationToken),
-            "stop" => await vmResource.PowerOffAsync(waitUntil, skipShutdown, cancellationToken),
-            "deallocate" => await vmResource.DeallocateAsync(waitUntil, cancellationToken: cancellationToken),
-            "restart" => await vmResource.RestartAsync(waitUntil, cancellationToken),
+            "start" => await vmResource.PowerOnAsync(WaitUntil.Started, cancellationToken),
+            "stop" => await vmResource.PowerOffAsync(WaitUntil.Started, skipShutdown, cancellationToken),
+            "deallocate" => await vmResource.DeallocateAsync(WaitUntil.Started, cancellationToken: cancellationToken),
+            "restart" => await vmResource.RestartAsync(WaitUntil.Started, cancellationToken),
             _ => throw new ArgumentException($"Invalid state '{state}'. Accepted values: start, stop, deallocate, restart.", nameof(state))
         };
+
+        if (!noWait)
+        {
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+        }
 
         var completed = !noWait;
 

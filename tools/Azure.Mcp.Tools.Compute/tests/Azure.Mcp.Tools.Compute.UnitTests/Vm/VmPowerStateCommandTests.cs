@@ -1,52 +1,29 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.UnitTests.Vm;
 
-public class VmPowerStateCommandTests
+public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand, IComputeService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IComputeService _computeService;
-    private readonly ILogger<VmPowerStateCommand> _logger;
-    private readonly VmPowerStateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
     private readonly string _knownVmName = "test-vm";
 
-    public VmPowerStateCommandTests()
-    {
-        _computeService = Substitute.For<IComputeService>();
-        _logger = Substitute.For<ILogger<VmPowerStateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_computeService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _computeService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("power-state", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -69,7 +46,7 @@ public class VmPowerStateCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _computeService.ChangeVmPowerStateAsync(
+            Service.ChangeVmPowerStateAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -82,26 +59,17 @@ public class VmPowerStateCommandTests
                 .Returns(new VmPowerStateResult("test-vm", null, "test-rg", "start", "Operation completed.", true));
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act & Assert
+        var response = await ExecuteCommandAsync(args);
+
         if (shouldSucceed)
         {
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
         }
         else
         {
-            try
-            {
-                var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-                Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-            }
-            catch (Microsoft.Mcp.Core.Commands.CommandValidationException)
-            {
-                // Expected for validation failures
-            }
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         }
     }
 
@@ -117,7 +85,7 @@ public class VmPowerStateCommandTests
             _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup, state,
             $"Virtual machine '{_knownVmName}' {state} operation completed successfully.", true);
 
-        _computeService.ChangeVmPowerStateAsync(
+        Service.ChangeVmPowerStateAsync(
             Arg.Is(_knownVmName),
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
@@ -129,25 +97,14 @@ public class VmPowerStateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--state", state
-        ]);
+            "--state", state);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmPowerStateCommandResult);
-
-        Assert.NotNull(result);
+                var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmPowerStateCommandResult);
         Assert.Equal(_knownVmName, result.PowerState.Name);
         Assert.Equal(state, result.PowerState.State);
         Assert.True(result.PowerState.Completed);
@@ -161,7 +118,7 @@ public class VmPowerStateCommandTests
             _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup, "start",
             $"Virtual machine '{_knownVmName}' start operation initiated. Use instance view to check status.", false);
 
-        _computeService.ChangeVmPowerStateAsync(
+        Service.ChangeVmPowerStateAsync(
             Arg.Is(_knownVmName),
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
@@ -173,28 +130,19 @@ public class VmPowerStateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
             "--state", "start",
-            "--no-wait"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--no-wait");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmPowerStateCommandResult);
-
-        Assert.NotNull(result);
+       var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmPowerStateCommandResult);
         Assert.False(result.PowerState.Completed);
 
-        await _computeService.Received(1).ChangeVmPowerStateAsync(
+        await Service.Received(1).ChangeVmPowerStateAsync(
             _knownVmName,
             _knownResourceGroup,
             _knownSubscription,
@@ -214,7 +162,7 @@ public class VmPowerStateCommandTests
             _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup, "stop",
             $"Virtual machine '{_knownVmName}' stop operation completed successfully.", true);
 
-        _computeService.ChangeVmPowerStateAsync(
+        Service.ChangeVmPowerStateAsync(
             Arg.Is(_knownVmName),
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
@@ -226,21 +174,18 @@ public class VmPowerStateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
             "--state", "stop",
-            "--skip-shutdown"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--skip-shutdown");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmPowerStateCommandResult);
 
-        await _computeService.Received(1).ChangeVmPowerStateAsync(
+        await Service.Received(1).ChangeVmPowerStateAsync(
             _knownVmName,
             _knownResourceGroup,
             _knownSubscription,
@@ -258,7 +203,7 @@ public class VmPowerStateCommandTests
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "VM not found");
 
-        _computeService.ChangeVmPowerStateAsync(
+        Service.ChangeVmPowerStateAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -270,15 +215,12 @@ public class VmPowerStateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
-        var parseResult = _commandDefinition.Parse([
+        //Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--state", "start"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--state", "start");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -291,7 +233,7 @@ public class VmPowerStateCommandTests
         // Arrange
         var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Insufficient permissions");
 
-        _computeService.ChangeVmPowerStateAsync(
+        Service.ChangeVmPowerStateAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -303,15 +245,12 @@ public class VmPowerStateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--state", "start"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--state", "start");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -324,7 +263,7 @@ public class VmPowerStateCommandTests
         // Arrange
         var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "VM in conflicting state");
 
-        _computeService.ChangeVmPowerStateAsync(
+        Service.ChangeVmPowerStateAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -336,15 +275,11 @@ public class VmPowerStateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
 
-        var parseResult = _commandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--state", "restart"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--state", "restart");
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -359,7 +294,7 @@ public class VmPowerStateCommandTests
             _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup, "start",
             $"Virtual machine '{_knownVmName}' start operation completed successfully.", true);
 
-        _computeService.ChangeVmPowerStateAsync(
+        Service.ChangeVmPowerStateAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -371,22 +306,15 @@ public class VmPowerStateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--state", "start"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--state", "start");
 
         // Assert
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmPowerStateCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmPowerStateCommandResult);
         Assert.Equal(_knownVmName, result.PowerState.Name);
         Assert.Equal(_knownResourceGroup, result.PowerState.ResourceGroup);
         Assert.Equal("start", result.PowerState.State);
@@ -397,7 +325,7 @@ public class VmPowerStateCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange
-        var parseResult = _commandDefinition.Parse(
+        var parseResult = CommandDefinition.Parse(
             $"--vm-name {_knownVmName} --resource-group {_knownResourceGroup} --subscription {_knownSubscription} --state stop --no-wait --skip-shutdown");
 
         // Assert parse was successful

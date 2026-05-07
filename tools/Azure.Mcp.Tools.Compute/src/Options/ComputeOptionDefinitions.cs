@@ -215,7 +215,7 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> Image = new($"--{ImageName}")
     {
-        Description = "The OS image to use. Can be URN (publisher:offer:sku:version) or alias like 'Ubuntu2404', 'Win2022Datacenter'. Defaults to Ubuntu 24.04 LTS",
+        Description = "The OS image to use. Can be a URN (publisher:offer:sku:version), a shared gallery image ID (starting with '/sharedGalleries/'), or an alias like 'Ubuntu2404' or 'Win2022Datacenter'. There is no default; an image must be specified explicitly.",
         Required = false
     };
 
@@ -343,7 +343,7 @@ public static class ComputeOptionDefinitions
     public static readonly Option<string> State = new($"--{StateName}")
     {
         Description = "The power state change to apply to the VM. Accepted values: start, stop, deallocate, restart.",
-        Required = false
+        Required = true
     };
 
     public static readonly Option<bool> NoWait = new($"--{NoWaitName}")
@@ -354,7 +354,7 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<bool> SkipShutdown = new($"--{SkipShutdownName}")
     {
-        Description = "Skip the graceful guest OS shutdown and force power off. Only compatible with the 'stop' state.",
+        Description = "Skip the graceful OS shutdown and force power off. Only compatible with the 'stop' state.",
         Required = false
     };
 
