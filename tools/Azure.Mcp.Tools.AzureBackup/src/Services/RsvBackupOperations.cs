@@ -1002,6 +1002,13 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             var currentConfig = await configResource.GetAsync(cancellationToken);
 
             var data = currentConfig.Value.Data;
+
+            // The BackupResourceConfig GET reliably returns the CRR state even when the
+            // Vault GET RedundancySettings.CrossRegionRestore property is not populated.
+            if (data.Properties.EnableCrossRegionRestore == true)
+            {
+                return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
+            }
             data.Properties.EnableCrossRegionRestore = true;
 
             var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
