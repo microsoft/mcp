@@ -12,6 +12,7 @@ If you are contributing significant changes, or if the issue is already assigned
   - [Table of Contents](#table-of-contents)
   - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
+    - [Central NuGet Feed](#central-nuget-feed)
     - [Project Structure](#project-structure)
   - [Development Workflow](#development-workflow)
     - [Development Process](#development-process)
@@ -68,6 +69,33 @@ If you are contributing significant changes, or if the issue is already assigned
 2. **GitHub Copilot**: Install [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
 3. **Node.js**: Install [Node.js](https://nodejs.org/en/download) 20 or later (ensure `node` and `npm` are in your PATH)
 4. **PowerShell**: Install [PowerShell](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) 7.0 or later (required for build and test scripts)
+
+### Central NuGet Feed
+
+This repository uses a single Azure DevOps package feed for all NuGet packages instead of nuget.org directly. The feed is configured in [`nuget.config`](nuget.config).
+
+> [!IMPORTANT]
+> Do **not** add additional feeds to `nuget.config` or bypass the feed with `--source "https://api.nuget.org/v3/index.json"`. All CI builds pull packages exclusively from the DevOps feed, so local development should match this behavior.
+
+The feed has an **upstream** configured to nuget.org. When an authenticated user restores a package that is not yet cached in the feed, it is automatically ingested from nuget.org.  Unauthenticated users can only consume package versions that have already been ingested into the feed.
+
+You can browse the feed directly at: <https://dev.azure.com/azure-sdk/public/_artifacts/feed/azure-sdk-for-net>
+
+#### Installing the Azure Artifacts Credential Provider
+
+To authenticate with the feed you need the **Azure Artifacts Credential Provider**:
+
+1. Install it from <https://go.microsoft.com/fwlink/?linkid=2099625> (you can also find this link by clicking **Connect to Feed** from the feed page above).
+2. Once installed, the first `dotnet restore` (or any command with an implicit restore) will trigger an authentication prompt.
+3. Valid Users of the Azure DevOps project will be authenticated as a **Collaborator** on the feed, which allows you to:
+   - Pull any package already in the feed.
+   - Trigger the feed to query nuget.org and ingest new packages or versions that are not yet present.
+
+The feed is **public**, so anyone can read packages that are already cached. The credential provider is only needed to cause new packages to be ingested from the upstream.
+
+#### External Contributors
+
+External contributors will not be able to authenticate to the feed as **Collaborator**, but our Pull Request pipeline can.  External contributors should temporarily add nuget.org as an additional source in `nuget.config` to build locally with new packages, then revert that `nuget.config` change before submitting their pull request.  Our pipeline will authenticate to the feed, ingest the new package, and build normally.
 
 ### Project Structure
 
