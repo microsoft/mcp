@@ -74,7 +74,7 @@ If you are contributing significant changes, or if the issue is already assigned
 
 This repository uses a single Azure DevOps package feed for all NuGet packages instead of nuget.org directly. The feed is configured in `nuget.config`.
 
-The feed has an **upstream** configured to nuget.org. When an authenticated user restores a package that is not yet cached in the feed, it is automatically ingested from nuget.org.  Unauthenticated users can only consume package versions that have already been ingested into the feed.
+The feed has an **upstream** configured to nuget.org. When an authenticated user restores a package that is not yet cached in the feed, it is automatically ingested from nuget.org. Unauthenticated users can only consume package versions that have already been ingested into the feed.
 
 You can browse the feed directly at: <https://dev.azure.com/azure-sdk/public/_artifacts/feed/azure-sdk-for-net>
 
