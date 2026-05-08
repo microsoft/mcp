@@ -8,6 +8,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 
+using Azure.Mcp.Tools.SreAgent.Commands.Connectors;
+using Azure.Mcp.Tools.SreAgent.Commands.Hooks;
+using Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
+using Azure.Mcp.Tools.SreAgent.Commands.Threads;
+using Azure.Mcp.Tools.SreAgent.Commands.Architecture;
+using Azure.Mcp.Tools.SreAgent.Commands.Docs;
+using Azure.Mcp.Tools.SreAgent.Commands.Incidents;
+using Azure.Mcp.Tools.SreAgent.Commands.Workflows;
 namespace Azure.Mcp.Tools.SreAgent;
 
 public class SreAgentSetup : IAreaSetup
@@ -32,6 +40,53 @@ public class SreAgentSetup : IAreaSetup
         services.AddSingleton<SkillsDeleteCommand>();
         services.AddSingleton<SkillsListCommand>();
         services.AddSingleton<SkillsCreateCommand>();
+
+        // Connectors + Hooks (sub-agent B)
+        services.AddSingleton<ConnectorsListCommand>();
+        services.AddSingleton<ConnectorsGetCommand>();
+        services.AddSingleton<ConnectorsCreateKustoCommand>();
+        services.AddSingleton<ConnectorsCreateMcpCommand>();
+        services.AddSingleton<ConnectorsDeleteCommand>();
+        services.AddSingleton<ConnectorsTestCommand>();
+        services.AddSingleton<HooksListCommand>();
+        services.AddSingleton<HooksGetCommand>();
+        services.AddSingleton<HooksDeleteCommand>();
+        services.AddSingleton<HooksThreadListCommand>();
+        services.AddSingleton<HooksThreadActivateCommand>();
+        services.AddSingleton<HooksThreadDeactivateCommand>();
+
+        // Threads + ScheduledTasks (sub-agent C)
+        services.AddSingleton<ThreadsListCommand>();
+        services.AddSingleton<ThreadsGetCommand>();
+        services.AddSingleton<ThreadsCreateCommand>();
+        services.AddSingleton<ThreadsSendMessageCommand>();
+        services.AddSingleton<ThreadsDeleteCommand>();
+        services.AddSingleton<ThreadsInvestigateCommand>();
+        services.AddSingleton<ThreadsInvestigateYoloCommand>();
+        services.AddSingleton<ScheduledTasksListCommand>();
+        services.AddSingleton<ScheduledTasksGetCommand>();
+        services.AddSingleton<ScheduledTasksCreateCommand>();
+        services.AddSingleton<ScheduledTasksDeleteCommand>();
+        services.AddSingleton<ScheduledTasksPauseCommand>();
+        services.AddSingleton<ScheduledTasksResumeCommand>();
+
+        // Incidents + Workflows + Docs + Architecture (sub-agent D)
+        services.AddSingleton<IncidentsPlansListCommand>();
+        services.AddSingleton<IncidentsPlansCreateCommand>();
+        services.AddSingleton<IncidentsActiveListCommand>();
+        services.AddSingleton<IncidentsCreateCommand>();
+        services.AddSingleton<IncidentsSetupPagerdutyCommand>();
+        services.AddSingleton<IncidentsSetupServicenowCommand>();
+        services.AddSingleton<WorkflowsGenerateCommand>();
+        services.AddSingleton<WorkflowsApplyCommand>();
+        services.AddSingleton<WorkflowsValidateCommand>();
+        services.AddSingleton<DocsGetCommand>();
+        services.AddSingleton<MemoriesListCommand>();
+        services.AddSingleton<MemoriesSearchCommand>();
+        services.AddSingleton<MemoriesAddCommand>();
+        services.AddSingleton<MemoriesDeleteCommand>();
+        services.AddSingleton<MemoriesReindexCommand>();
+        services.AddSingleton<PlanCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -69,6 +124,41 @@ public class SreAgentSetup : IAreaSetup
         skills.AddCommand<SkillsListCommand>(serviceProvider);
         skills.AddCommand<SkillsCreateCommand>(serviceProvider);
 
-        return sreAgent;
+                // Connectors + Hooks (sub-agent B)
+        var connectors = new CommandGroup(
+            "connectors",
+            "SRE Agent connector operations - Commands for listing, creating, deleting, and testing SRE Agent connectors.");
+        sreAgent.AddSubGroup(connectors);
+        connectors.AddCommand<ConnectorsListCommand>(serviceProvider);
+        connectors.AddCommand<ConnectorsGetCommand>(serviceProvider);
+        connectors.AddCommand<ConnectorsCreateKustoCommand>(serviceProvider);
+        connectors.AddCommand<ConnectorsCreateMcpCommand>(serviceProvider);
+        connectors.AddCommand<ConnectorsDeleteCommand>(serviceProvider);
+        connectors.AddCommand<ConnectorsTestCommand>(serviceProvider);
+        
+        // Threads + ScheduledTasks (sub-agent C)
+        var threads = new CommandGroup(
+            "threads",
+            "SRE Agent thread operations - Commands for listing, reading, creating, messaging, deleting, and running investigations.");
+        sreAgent.AddSubGroup(threads);
+        threads.AddCommand<ThreadsListCommand>(serviceProvider);
+        threads.AddCommand<ThreadsGetCommand>(serviceProvider);
+        threads.AddCommand<ThreadsCreateCommand>(serviceProvider);
+        threads.AddCommand<ThreadsSendMessageCommand>(serviceProvider);
+        threads.AddCommand<ThreadsDeleteCommand>(serviceProvider);
+        threads.AddCommand<ThreadsInvestigateCommand>(serviceProvider);
+        threads.AddCommand<ThreadsInvestigateYoloCommand>(serviceProvider);
+        
+        // Incidents + Workflows + Docs + Architecture (sub-agent D)
+        var incidents = new CommandGroup("incidents", "Incident response planning, connector setup, and active incident operations.");
+        var workflows = new CommandGroup("workflows", "Generate, validate, and apply SRE Agent workflow YAML.");
+        var docs = new CommandGroup("docs", "SRE Agent documentation and knowledge memory operations.");
+        var architecture = new CommandGroup("architecture", "SRE Agent architecture planning commands.");
+        sreAgent.AddSubGroup(incidents);
+        sreAgent.AddSubGroup(workflows);
+        sreAgent.AddSubGroup(docs);
+        sreAgent.AddSubGroup(architecture);
+        
+return sreAgent;
     }
 }

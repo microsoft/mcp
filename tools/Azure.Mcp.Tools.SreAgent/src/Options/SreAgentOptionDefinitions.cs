@@ -102,4 +102,106 @@ public static class SreAgentOptionDefinitions
     {
         Description = "Optional sub-agent name to assign the skill to."
     };
+
+    // B
+    public static readonly Option<string> ClusterUrl = new(
+            $"--{ClusterUrlName}"
+        )
+        {
+            Description = "The Azure Data Explorer cluster URL."
+        };
+    public static readonly Option<string> Type = new(
+            $"--{TypeName}"
+        )
+        {
+            Description = "The MCP connector type: stdio or http."
+        };
+    public static readonly Option<string> Command = new(
+            $"--{CommandName}"
+        )
+        {
+            Description = "The command for stdio MCP connectors."
+        };
+    public static readonly Option<string[]> Args = new(
+            $"--{ArgsName}"
+        )
+        {
+            Description = "Arguments for stdio MCP connectors.",
+            Arity = ArgumentArity.ZeroOrMore
+        };
+    public static readonly Option<string> EnvsJson = new(
+            $"--{EnvsJsonName}"
+        )
+        {
+            Description = "JSON object of environment variables for stdio MCP connectors."
+        };
+    public static readonly Option<string> Endpoint = new(
+            $"--{EndpointName}"
+        )
+        {
+            Description = "The HTTP MCP connector endpoint."
+        };
+    public static readonly Option<string> AuthType = new(
+            $"--{AuthTypeName}"
+        )
+        {
+            Description = "The HTTP MCP connector authentication type."
+        };
+    public static readonly Option<string> BearerTokenEnv = new(
+            $"--{BearerTokenEnvName}"
+        )
+        {
+            Description = "Environment variable containing the bearer token."
+        };
+    public static readonly Option<string> HeadersJson = new(
+            $"--{HeadersJsonName}"
+        )
+        {
+            Description = "JSON object of HTTP headers."
+        };
+    public static readonly Option<string> ThreadId = new(
+            $"--{ThreadIdName}"
+        )
+        {
+            Description = "The SRE Agent thread ID."
+        };
+    public static readonly Option<string> HookName = new(
+            $"--{HookNameName}"
+        )
+        {
+            Description = "The hook name."
+        };
+
+    // C
+    public static readonly Option<string> ThreadId = new($"--{ThreadIdName}")
+        {
+            Description = "The thread ID.",
+            Required = true
+        };
+    public static readonly Option<string> TaskId = new($"--{TaskIdName}")
+        {
+            Description = "The scheduled task ID.",
+            Required = true
+        };
+    public static readonly Option<string> Message = new($"--{MessageName}")
+        {
+            Description = "The message to send.",
+            Required = true
+        };
+    public static readonly Option<string> CronExpression = new($"--{CronExpressionName}")
+        {
+            Description = "The cron expression for the schedule.",
+            Required = true
+        };
+    public static readonly Option<int> MaxIterations = new($"--{MaxIterationsName}")
+        {
+            Description = "The maximum number of automatic follow-up iterations.",
+            Required = false,
+            DefaultValueFactory = _ => 20
+        };
+    public static readonly Option<int> TimeoutSeconds = new($"--{TimeoutSecondsName}")
+        {
+            Description = "The investigation timeout in seconds.",
+            Required = false,
+            DefaultValueFactory = _ => 600
 }

@@ -1,0 +1,51 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Tools.SreAgent.Models;
+using Azure.Mcp.Tools.SreAgent.Options;
+using Azure.Mcp.Tools.SreAgent.Options.Incidents;
+using Azure.Mcp.Tools.SreAgent.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
+
+namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
+
+[CommandMetadata(Id = "659a3697-9c8c-46e1-b568-9b929d637cb4", Name = "active-list", Title = "List Active Incidents", Description = "List active incident-like threads.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+public sealed class IncidentsActiveListCommand(ILogger<IncidentsActiveListCommand> logger, ISreAgentService sreAgentService) : BaseSreAgentCommand<IncidentRemoteOptions>
+{
+    private readonly ILogger<IncidentsActiveListCommand> _logger = logger;
+    private readonly ISreAgentService _sreAgentService = sreAgentService;
+    protected override void RegisterOptions(Command command) { base.RegisterOptions(command); command.Options.Add(SreAgentPortedOptionDefinitions.Agent); }
+    protected override IncidentRemoteOptions BindOptions(ParseResult parseResult) { var o = base.BindOptions(parseResult); o.Agent = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.AgentNameName); return o; }
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid) return context.Response; var o = BindOptions(parseResult);
+        try
+        {
+            var json = await _sreAgentService.CallAgentDataPlaneAsync(o.Subscription!, o.Agent!, o.ResourceGroup, "/api/v1/threads", HttpMethod.Get, tenant: o.Tenant, retryPolicy: o.RetryPolicy, cancellationToken: cancellationToken);
+            var threads = SreAgentPortedCommandHelpers.DeserializeArray(json, SreAgentJsonContext.Default.ListThreadListItem);
+            var keywords = new[] { "incident", "🚨", "outage", "alert", "critical", "crash", "failure" };
+            var incidents = threads.Where(t => !string.IsNullOrWhiteSpace(t.Status?.IncidentStatus?.IncidentId) || !string.IsNullOrWhiteSpace(t.Status?.IncidentStatus?.Status) || t.Status?.ActionsStatus?.HasCriticalActions == true || keywords.Any(k => $"{t.Title ?? string.Empty} {t.StartMessage?.Text ?? string.Empty}".Contains(k, StringComparison.OrdinalIgnoreCase))).ToList();
+            if (incidents.Count == 0) { SreAgentPortedCommandHelpers.SetTextResult(context.Response, "No active incidents found. Use create_incident to start an incident investigation."); return context.Response; }
+            var lines = new List<string> { "# Active Incidents", string.Empty };
+            foreach (var t in incidents)
+            {
+                var title = t.Title ?? (t.StartMessage?.Text?.Length > 80 ? t.StartMessage.Text[..80] : t.StartMessage?.Text) ?? "Untitled";
+                var agent = t.StartMessage?.Author?.DisplayName ?? "unknown";
+                var parts = new List<string>();
+                if (t.Status?.ActionsStatus?.HasCriticalActions == true) parts.Add("⚠️ Critical");
+                if (t.Status?.ActionsStatus?.HasWarningActions == true) parts.Add("⚡ Warning");
+                if (!string.IsNullOrWhiteSpace(t.Status?.IncidentStatus?.Status)) parts.Add(t.Status.IncidentStatus.Status);
+                var modified = DateTimeOffset.TryParse(t.ModifiedTimestamp, out var dto) ? $" | Updated: {dto.LocalDateTime}" : string.Empty;
+                lines.Add($"- **{title}** ({t.Id})");
+                lines.Add($"  Status: {(parts.Count > 0 ? string.Join(", ", parts) : "Active")} | Agent: {agent}{modified}");
+            }
+            lines.Add(string.Empty); lines.Add("Use get_thread to see full details, or send_message to provide updates.");
+            SreAgentPortedCommandHelpers.SetTextResult(context.Response, string.Join('\n', lines));
+        }
+        catch (Exception ex) { _logger.LogError(ex, "Error listing active incidents"); HandleException(context, ex); }
+        return context.Response;
+    }
+}
