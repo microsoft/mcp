@@ -30,7 +30,7 @@ public sealed class SreAgentService(ISubscriptionService subscriptionService, IT
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters(("subscription", subscription));
 
         // Scaffolding placeholder. The real implementation will enumerate
         // Microsoft.App/sreAgents resources via Azure.ResourceManager and is added in a follow-up commit.
