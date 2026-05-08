@@ -59,6 +59,9 @@
   checkLinkGuidance is true. Relative links in matching files are still verified for correctness. One pattern per line;
   lines beginning with '#' are treated as comments.
 
+  .PARAMETER npmRegistryUrl
+  Registry URL to use when validating npmjs.com package links. Defaults to the public npm registry.
+
   .EXAMPLE
   PS> .\Verify-Links.ps1 C:\README.md
 
@@ -86,7 +89,8 @@ param (
   [string] $localBuildRepoName = "",
   [string] $localBuildRepoPath = "",
   [string] $requestTimeoutSec = 15,
-  [string] $allowRelativeLinksFile = (Join-Path $PSScriptRoot "allow-relative-links.txt")
+  [string] $allowRelativeLinksFile = (Join-Path $PSScriptRoot "allow-relative-links.txt"),
+  [string] $npmRegistryUrl = "https://registry.npmjs.org/"
 )
 
 Set-StrictMode -Version 3.0
@@ -94,6 +98,19 @@ Set-StrictMode -Version 3.0
 . "$PSScriptRoot/logging.ps1"
 
 $ProgressPreference = "SilentlyContinue"; # Disable invoke-webrequest progress dialog
+
+function GetAzureArtifactsHeaders([System.Uri]$linkUri) {
+  if ($linkUri.Host -ne "pkgs.dev.azure.com" -or !$env:SYSTEM_ACCESSTOKEN) {
+    return @{}
+  }
+
+  $tokenBytes = [System.Text.Encoding]::ASCII.GetBytes(":$env:SYSTEM_ACCESSTOKEN")
+  $basicToken = [Convert]::ToBase64String($tokenBytes)
+
+  return @{
+    Authorization = "Basic $basicToken"
+  }
+}
 
 function ProcessLink([System.Uri]$linkUri) {
   # To help improve performance and rate limiting issues with github links we try to resolve them based on a local clone if one exists.
@@ -175,13 +192,14 @@ function ProcessNpmLink([System.Uri]$linkUri) {
   # The regex captures the package name (which may contain a slash for scoped packages) and optionally the version.
   # Query parameters and URL fragments are excluded from the transformation.
   $urlString = $linkUri.ToString()
+  $registryUrl = $npmRegistryUrl.TrimEnd('/')
   if ($urlString -match '^https?://(?:www\.)?npmjs\.com/package/([^?#]+)/v/([^?#]+)') {
     # Versioned URL: remove the /v/ segment but keep the version
-    $apiUrl = "https://registry.npmjs.org/$($matches[1])/$($matches[2])"
+    $apiUrl = "$registryUrl/$($matches[1])/$($matches[2])"
   }
   elseif ($urlString -match '^https?://(?:www\.)?npmjs\.com/package/([^?#]+)') {
     # Non-versioned URL: just replace the domain
-    $apiUrl = "https://registry.npmjs.org/$($matches[1])"
+    $apiUrl = "$registryUrl/$($matches[1])"
   }
   else {
     # Fallback: use the original URL if it doesn't match expected patterns
@@ -193,16 +211,17 @@ function ProcessNpmLink([System.Uri]$linkUri) {
 
 function ProcessStandardLink([System.Uri]$linkUri) {
   $headRequestSucceeded = $true
+  $headers = GetAzureArtifactsHeaders $linkUri
   try {
     # Attempt HEAD request first
-    $response = Invoke-WebRequest -Uri $linkUri -Method HEAD -UserAgent $userAgent -TimeoutSec $requestTimeoutSec
+    $response = Invoke-WebRequest -Uri $linkUri -Method HEAD -Headers $headers -UserAgent $userAgent -TimeoutSec $requestTimeoutSec
   }
   catch {
     $headRequestSucceeded = $false
   }
   if (!$headRequestSucceeded) {
     # Attempt a GET request if the HEAD request failed.
-    $response = Invoke-WebRequest -Uri $linkUri -Method GET -UserAgent $userAgent -TimeoutSec $requestTimeoutSec
+    $response = Invoke-WebRequest -Uri $linkUri -Method GET -Headers $headers -UserAgent $userAgent -TimeoutSec $requestTimeoutSec
   }
   $statusCode = $response.StatusCode
   if ($statusCode -ne 200) {

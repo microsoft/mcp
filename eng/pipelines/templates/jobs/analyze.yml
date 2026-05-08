@@ -3,11 +3,17 @@ jobs:
   condition: and(succeededOrFailed(), ne(variables['Skip.Analyze'], 'true'))
   timeoutInMinutes: 120
   dependsOn: []
+  variables:
+    npm_config_userconfig: $(Agent.TempDirectory)/.npmrc
   steps:
   - checkout: self
     fetchDepth: 0
 
   - template: /eng/pipelines/templates/steps/install-dotnet.yml
+
+  - template: /eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml
+    parameters:
+      npmrcPath: $(npm_config_userconfig)
   
   - task: Powershell@2
     displayName: "Run source analysis"
@@ -22,12 +28,15 @@ jobs:
       sourceDirectory: $(Build.SourcesDirectory)
 
   - template: /eng/common/pipelines/templates/steps/check-spelling.yml
+    parameters:
+      NpmConfigUserConfig: $(npm_config_userconfig)
 
   - template: /eng/common/pipelines/templates/steps/verify-links.yml
     parameters:
       Condition: succeededOrFailed()
       Directory: ""
       CheckLinkGuidance: $true
+      NpmRegistryUrl: https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         Urls: (eng/common/scripts/get-markdown-files-from-changed-files.ps1)
 
