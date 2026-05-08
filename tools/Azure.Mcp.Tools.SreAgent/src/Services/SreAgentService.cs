@@ -4,6 +4,8 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -148,4 +150,159 @@ public sealed class SreAgentService(
     private static string Truncate(string? value, int max) =>
         string.IsNullOrEmpty(value) ? string.Empty :
         value.Length <= max ? value : value[..max] + "...";
+    #region Connectors + Hooks (sub-agent B)
+
+    public async Task<List<AgentConnector>> ListConnectorsAsync(
+        string endpoint,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        var body = await CallDataPlaneAsync(endpoint, "/api/v2/extendedAgent/connectors", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return [.. DeserializeArray(body, SreAgentJsonContext.Default.ListAgentConnectorEnvelope).Select(ToConnector)];
+    }
+
+    public async Task<AgentConnector> GetConnectorAsync(
+        string endpoint,
+        string name,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        var body = await CallDataPlaneAsync(endpoint, $"/api/v2/extendedAgent/connectors/{Uri.EscapeDataString(name)}", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        var envelope = JsonSerializer.Deserialize(body, SreAgentJsonContext.Default.AgentConnectorEnvelope)
+            ?? throw new InvalidOperationException($"Connector '{name}' returned an empty response.");
+        return ToConnector(envelope);
+    }
+
+    public async Task<AgentConnector> CreateOrUpdateConnectorAsync(
+        string endpoint,
+        string name,
+        AgentConnectorEnvelope connector,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        var jsonBody = JsonSerializer.Serialize(connector, SreAgentJsonContext.Default.AgentConnectorEnvelope);
+        var body = await CallDataPlaneAsync(endpoint, $"/api/v2/extendedAgent/connectors/{Uri.EscapeDataString(name)}", HttpMethod.Put, jsonBody, tenant, cancellationToken);
+        var envelope = JsonSerializer.Deserialize(body, SreAgentJsonContext.Default.AgentConnectorEnvelope);
+        return envelope is null ? connector.Properties ?? new AgentConnector { Name = name } : ToConnector(envelope);
+    }
+
+    public async Task DeleteConnectorAsync(
+        string endpoint,
+        string name,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        await CallDataPlaneAsync(endpoint, $"/api/v2/extendedAgent/connectors/{Uri.EscapeDataString(name)}", HttpMethod.Delete, tenant: tenant, cancellationToken: cancellationToken);
+    }
+
+    public async Task<ConnectorTestResult> TestConnectorAsync(
+        string endpoint,
+        string name,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        var encodedName = Uri.EscapeDataString(name);
+        var connectorBody = await CallDataPlaneAsync(endpoint, $"/api/v2/extendedAgent/connectors/{encodedName}", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        var body = await CallDataPlaneAsync(endpoint, $"/api/v2/extendedAgent/connectors/{encodedName}/testconnection", HttpMethod.Post, connectorBody, tenant, cancellationToken);
+        return JsonSerializer.Deserialize(body, SreAgentJsonContext.Default.ConnectorTestResult)
+            ?? throw new InvalidOperationException($"Connector '{name}' test returned an empty response.");
+    }
+
+    public async Task<List<HookEnvelope>> ListHooksAsync(
+        string endpoint,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        var body = await CallDataPlaneAsync(endpoint, "/api/v2/extendedAgent/hooks", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return DeserializeArray(body, SreAgentJsonContext.Default.ListHookEnvelope);
+    }
+
+    public async Task<HookEnvelope> GetHookAsync(
+        string endpoint,
+        string name,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        var body = await CallDataPlaneAsync(endpoint, $"/api/v2/extendedAgent/hooks/{Uri.EscapeDataString(name)}", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return JsonSerializer.Deserialize(body, SreAgentJsonContext.Default.HookEnvelope)
+            ?? throw new InvalidOperationException($"Hook '{name}' returned an empty response.");
+    }
+
+    public async Task DeleteHookAsync(
+        string endpoint,
+        string name,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        await CallDataPlaneAsync(endpoint, $"/api/v2/extendedAgent/hooks/{Uri.EscapeDataString(name)}", HttpMethod.Delete, tenant: tenant, cancellationToken: cancellationToken);
+    }
+
+    public async Task<ThreadHooksResponse> ListThreadHooksAsync(
+        string endpoint,
+        string threadId,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(threadId);
+        var body = await CallDataPlaneAsync(endpoint, $"/api/v1/threads/{Uri.EscapeDataString(threadId)}/hooks", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return JsonSerializer.Deserialize(body, SreAgentJsonContext.Default.ThreadHooksResponse) ?? new ThreadHooksResponse { Hooks = [] };
+    }
+
+    public async Task ActivateThreadHookAsync(
+        string endpoint,
+        string threadId,
+        string hookName,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(threadId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(hookName);
+        await CallDataPlaneAsync(endpoint, $"/api/v1/threads/{Uri.EscapeDataString(threadId)}/hooks/{Uri.EscapeDataString(hookName)}/activate", HttpMethod.Post, "{}", tenant, cancellationToken);
+    }
+
+    public async Task DeactivateThreadHookAsync(
+        string endpoint,
+        string threadId,
+        string hookName,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(threadId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(hookName);
+        await CallDataPlaneAsync(endpoint, $"/api/v1/threads/{Uri.EscapeDataString(threadId)}/hooks/{Uri.EscapeDataString(hookName)}/deactivate", HttpMethod.Post, "{}", tenant, cancellationToken);
+    }
+
+    private static AgentConnector ToConnector(AgentConnectorEnvelope envelope)
+    {
+        var connector = envelope.Properties ?? new AgentConnector();
+        connector.Name ??= envelope.Name;
+        return connector;
+    }
+    private static List<T> DeserializeArray<T>(string body, JsonTypeInfo<List<T>> jsonTypeInfo)
+    {
+        using var document = JsonDocument.Parse(body);
+        if (document.RootElement.ValueKind == JsonValueKind.Array)
+        {
+            return JsonSerializer.Deserialize(body, jsonTypeInfo) ?? [];
+        }
+
+        if (document.RootElement.ValueKind == JsonValueKind.Object &&
+            document.RootElement.TryGetProperty("value", out var valueElement) &&
+            valueElement.ValueKind == JsonValueKind.Array)
+        {
+            return JsonSerializer.Deserialize(valueElement.GetRawText(), jsonTypeInfo) ?? [];
+        }
+
+        return [];
+    }
+
+    #endregion
 }
+
+
