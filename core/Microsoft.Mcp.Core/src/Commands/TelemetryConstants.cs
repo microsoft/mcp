@@ -41,7 +41,6 @@ public class TagName
 
 public class ActivityName
 {
-    public const string CommandExecuted = "CommandExecuted";
     public const string ListToolsHandler = "ListToolsHandler";
     public const string ToolExecuted = "ToolExecuted";
     public const string ServerStarted = "ServerStarted";

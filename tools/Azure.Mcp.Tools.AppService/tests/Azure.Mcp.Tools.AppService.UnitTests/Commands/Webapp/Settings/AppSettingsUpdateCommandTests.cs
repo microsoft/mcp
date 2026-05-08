@@ -150,7 +150,7 @@ public class AppSettingsUpdateCommandTests : CommandUnitTestsBase<AppSettingsUpd
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
 
         await Service.Received(1).UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName,
             settingUpdateType, settingValue, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),

@@ -9,7 +9,7 @@
     <Project Path="../../core/Microsoft.Mcp.Core/src/Microsoft.Mcp.Core.csproj" />
   </Folder>
   <Folder Name="/core/Microsoft.Mcp.Core/tests/">
-    <Project Path="../../core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Core.UnitTests/Microsoft.Mcp.Core.UnitTests.csproj" />
+    <Project Path="../../core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Core.Tests/Microsoft.Mcp.Core.Tests.csproj" />
     <Project Path="../../core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Microsoft.Mcp.Tests.csproj" />
   </Folder>
   <Folder Name="/servers/" />

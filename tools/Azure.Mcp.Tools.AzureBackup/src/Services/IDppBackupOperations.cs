@@ -175,4 +175,21 @@ public interface IDppBackupOperations
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
+
+    Task<OperationResult> ConfigureMultiUserAuthorizationAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string resourceGuardId,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<OperationResult> DisableMultiUserAuthorizationAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
 }

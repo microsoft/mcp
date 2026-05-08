@@ -48,6 +48,7 @@ public class AzureBackupSetupTests
         Assert.Contains("recoverypoint", groupNames);
         Assert.Contains("governance", groupNames);
         Assert.Contains("disasterrecovery", groupNames);
+        Assert.Contains("security", groupNames);
     }
 
     [Fact]

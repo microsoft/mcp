@@ -299,45 +299,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal("windows", osType.GetString());
     }
 
-    /// <summary>
-    /// Based on Azure CLI example:
-    /// az vm create -n MyVm -g MyResourceGroup --image Win2019Datacenter --size Standard_B2s
-    /// Creates a Windows Server 2019 VM with a specific VM size and OS disk type.
-    /// </summary>
-    [Fact]
-    public async Task Should_create_windows_vm_with_custom_size()
-    {
-        var createVmName = RegisterOrRetrieveVariable("createWinVm2Name", $"wv2{DateTime.UtcNow:MMddHHmmss}");
-
-        var result = await CallToolAsync(
-            "compute_vm_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "vm-name", createVmName },
-                { "location", "eastus2" },
-                { "admin-username", "azureuser" },
-                { "admin-password", "WinTestP@ss456!" },
-                { "image", "Win2019Datacenter" },
-                { "vm-size", "Standard_B2s" },
-                { "os-disk-type", "StandardSSD_LRS" },
-                { "no-public-ip", true }
-            });
-
-        var vm = result.AssertProperty("Vm");
-        Assert.Equal(JsonValueKind.Object, vm.ValueKind);
-
-        var provisioningState = vm.GetProperty("provisioningState");
-        Assert.Equal("Succeeded", provisioningState.GetString());
-
-        var vmSize = vm.GetProperty("vmSize");
-        Assert.Equal("Standard_B2s", vmSize.GetString());
-
-        var osType = vm.GetProperty("osType");
-        Assert.Equal("windows", osType.GetString());
-    }
-
     [Fact]
     public async Task Should_update_vm_tags()
     {

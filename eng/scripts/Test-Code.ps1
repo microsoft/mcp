@@ -3,7 +3,7 @@
 
 [CmdletBinding()]
 param(
-    [string[]] $Paths,
+    [string[]] $Paths = @('core\Azure.Mcp.Core'),
     [string[]] $Members,
     [ValidateSet('Live', 'Unit', 'All', 'Recorded')]
     [string] $TestType = 'Unit',
@@ -43,14 +43,18 @@ Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 
 # Finds all test projects, then filters them based on the specified path filters.
 function FilterTestProjects {
-    $fileNameFilters = switch ($testType) {
-        'Live' { '*.LiveTests.csproj' }
-        'Unit' { '*.UnitTests.csproj' }
-        'Recorded' { '*.LiveTests.csproj' }
-        'All'  { '*.LiveTests.csproj', '*.UnitTests.csproj' }
+    $testProjects = Get-ChildItem -Path "$RepoRoot" -Recurse -Filter "*Tests.csproj" -File
+    | Where-Object {
+        if ($_.Name -like '*.LiveTests.csproj') {
+            return $TestType -in @('Live', 'Recorded', 'All')
+        } elseif ($_.Name -like '*.UnitTests.csproj') {
+            return $TestType -in @('Unit', 'All')
+        } elseif ($_.Name -like "*Tests.csproj") {
+            $testProjectDetails = & "$($PSScriptRoot)/Get-ProjectProperties.ps1" -Path $_.FullName
+            return ($testProjectDetails.HasLiveTests -and $TestType -in @('Live', 'Recorded', 'All')) -or
+                   ($testProjectDetails.HasUnitTests -and $TestType -in @('Unit', 'All'))
+        }
     }
-
-    $testProjects = Get-ChildItem -Path "$RepoRoot" -Recurse -Filter "*.csproj" -Include $fileNameFilters -File
     | ForEach-Object { @{
         FullName = $_.FullName
         Relative = (Resolve-Path -Path $_.FullName -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./')

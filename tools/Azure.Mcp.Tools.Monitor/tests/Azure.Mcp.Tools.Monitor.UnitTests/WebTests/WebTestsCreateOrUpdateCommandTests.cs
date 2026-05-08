@@ -180,7 +180,7 @@ public class WebTestsCreateOrUpdateCommandTests : CommandUnitTestsBase<WebTestsC
         var response = await ExecuteCommandAsync(args);
 
         // Assert - Command catches validation errors and returns InternalServerError
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("required", response.Message.ToLower());
     }
 

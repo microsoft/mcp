@@ -66,6 +66,7 @@ public sealed class KustoService(
 
     public async Task<ResourceQueryResults<string>> ListClustersAsync(
         string subscriptionId,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -74,7 +75,7 @@ public sealed class KustoService(
 
         var clusters = await ExecuteResourceQueryAsync(
             "Microsoft.Kusto/clusters",
-            resourceGroup: null, // all resource groups
+            resourceGroup: resourceGroup,
             subscriptionId,
             retryPolicy,
             item => ConvertToClusterModel(item).ClusterName,

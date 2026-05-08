@@ -29,10 +29,11 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> logger)
+public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> logger, IAppServiceService appServiceService)
     : BaseAppServiceCommand<DetectorDiagnoseOptions>(resourceGroupRequired: true, appRequired: true)
 {
     private readonly ILogger<DetectorDiagnoseCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -99,8 +100,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var appServiceService = context.GetService<IAppServiceService>();
-            var diagnoses = await appServiceService.DiagnoseDetectorAsync(
+            var diagnoses = await _appServiceService.DiagnoseDetectorAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.AppName!,
