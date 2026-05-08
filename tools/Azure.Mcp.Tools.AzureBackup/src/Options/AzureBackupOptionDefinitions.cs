@@ -31,6 +31,78 @@ public static class AzureBackupOptionDefinitions
     public const string TagFilterName = "tag-filter";
     public const string ResourceGuardIdName = "resource-guard-id";
 
+    // Security - CMK encryption
+    public const string KeyVaultUriName = "key-vault-uri";
+    public const string KeyNameOptionName = "key-name";
+    public const string KeyVersionName = "key-version";
+    public const string UserAssignedIdentityIdName = "user-assigned-identity-id";
+
+    // Policy create  -  common schedule flags (new in policy create overhaul)
+    public const string TimeZoneName = "time-zone";
+    public const string ScheduleFrequencyName = "schedule-frequency";
+    public const string ScheduleTimesName = "schedule-times";
+    public const string ScheduleDaysOfWeekName = "schedule-days-of-week";
+    public const string HourlyIntervalHoursName = "hourly-interval-hours";
+    public const string HourlyWindowStartTimeName = "hourly-window-start-time";
+    public const string HourlyWindowDurationHoursName = "hourly-window-duration-hours";
+
+    // Policy create  -  retention flags (new in policy create overhaul)
+    public const string WeeklyRetentionWeeksName = "weekly-retention-weeks";
+    public const string WeeklyRetentionDaysOfWeekName = "weekly-retention-days-of-week";
+    public const string MonthlyRetentionMonthsName = "monthly-retention-months";
+    public const string MonthlyRetentionWeekOfMonthName = "monthly-retention-week-of-month";
+    public const string MonthlyRetentionDaysOfWeekName = "monthly-retention-days-of-week";
+    public const string MonthlyRetentionDaysOfMonthName = "monthly-retention-days-of-month";
+    public const string YearlyRetentionYearsName = "yearly-retention-years";
+    public const string YearlyRetentionMonthsName = "yearly-retention-months";
+    public const string YearlyRetentionWeekOfMonthName = "yearly-retention-week-of-month";
+    public const string YearlyRetentionDaysOfWeekName = "yearly-retention-days-of-week";
+    public const string YearlyRetentionDaysOfMonthName = "yearly-retention-days-of-month";
+    public const string ArchiveTierAfterDaysName = "archive-tier-after-days";
+    public const string ArchiveTierModeName = "archive-tier-mode";
+
+    // Policy create  -  RSV-VM only flags
+    public const string PolicySubTypeName = "policy-sub-type";
+    public const string InstantRpRetentionDaysName = "instant-rp-retention-days";
+    public const string InstantRpResourceGroupName = "instant-rp-resource-group";
+    public const string SnapshotConsistencyName = "snapshot-consistency";
+
+    // Policy create  -  RSV-VmWorkload (SQL / SAPHANA / SAPASE) flags
+    public const string FullScheduleFrequencyName = "full-schedule-frequency";
+    public const string FullScheduleDaysOfWeekName = "full-schedule-days-of-week";
+    public const string DifferentialScheduleDaysOfWeekName = "differential-schedule-days-of-week";
+    public const string DifferentialRetentionDaysName = "differential-retention-days";
+    public const string IncrementalScheduleDaysOfWeekName = "incremental-schedule-days-of-week";
+    public const string IncrementalRetentionDaysName = "incremental-retention-days";
+    public const string LogFrequencyMinutesName = "log-frequency-minutes";
+    public const string LogRetentionDaysName = "log-retention-days";
+    public const string IsCompressionName = "is-compression";
+    public const string IsSqlCompressionName = "is-sql-compression";
+
+    // Policy create  -  Stage 2 expansion flags
+    // RSV VM Smart Tier (ML-based archive recommendation)
+    public const string SmartTierName = "smart-tier";
+    // RSV SAPHANA snapshot/instance backups
+    public const string EnableSnapshotBackupName = "enable-snapshot-backup";
+    public const string SnapshotInstantRpRetentionDaysName = "snapshot-instant-rp-retention-days";
+    public const string SnapshotInstantRpResourceGroupName = "snapshot-instant-rp-resource-group";
+    // DPP Disk vault tier copy
+    public const string EnableVaultTierCopyName = "enable-vault-tier-copy";
+    public const string VaultTierCopyAfterDaysName = "vault-tier-copy-after-days";
+    // DPP Blob/ADLS backup mode (Continuous vs Vaulted)
+    public const string BackupModeName = "backup-mode";
+    // DPP PITR retention for continuous Blob/ADLS
+    public const string PitrRetentionDaysName = "pitr-retention-days";
+    // RSV policy-level tags
+    public const string PolicyTagsName = "policy-tags";
+    // DPP AKS-specific
+    public const string AksSnapshotResourceGroupName = "aks-snapshot-resource-group";
+    public const string AksIncludedNamespacesName = "aks-included-namespaces";
+    public const string AksExcludedNamespacesName = "aks-excluded-namespaces";
+    public const string AksLabelSelectorsName = "aks-label-selectors";
+    public const string AksIncludeClusterScopeResourcesName = "aks-include-cluster-scope-resources";
+
+
     public static readonly Option<string> Vault = new($"--{VaultName}")
     {
         Description = "The name of the backup vault (Recovery Services vault or Backup vault).",
@@ -178,6 +250,30 @@ public static class AzureBackupOptionDefinitions
     public static readonly Option<string> ResourceGuardId = new($"--{ResourceGuardIdName}")
     {
         Description = "ARM resource ID of the Resource Guard to link for Multi-User Authorization (e.g., '/subscriptions/.../resourceGroups/.../providers/Microsoft.DataProtection/resourceGuards/myGuard').",
+        Required = false
+    };
+
+    public static readonly Option<string> KeyVaultUri = new($"--{KeyVaultUriName}")
+    {
+        Description = "Key Vault URI (e.g., 'https://kv-security-prod.vault.azure.net/').",
+        Required = true
+    };
+
+    public static readonly Option<string> KeyNameOption = new($"--{KeyNameOptionName}")
+    {
+        Description = "Name of the encryption key in the Key Vault.",
+        Required = true
+    };
+
+    public static readonly Option<string> KeyVersion = new($"--{KeyVersionName}")
+    {
+        Description = "Specific key version. Omit to always use the latest version.",
+        Required = false
+    };
+
+    public static readonly Option<string> UserAssignedIdentityId = new($"--{UserAssignedIdentityIdName}")
+    {
+        Description = "ARM resource ID of the user-assigned managed identity for Key Vault access. Required when --identity-type is 'UserAssigned'.",
         Required = false
     };
 }
