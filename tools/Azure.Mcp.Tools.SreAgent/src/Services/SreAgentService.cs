@@ -8,6 +8,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
@@ -148,4 +149,269 @@ public sealed class SreAgentService(
     private static string Truncate(string? value, int max) =>
         string.IsNullOrEmpty(value) ? string.Empty :
         value.Length <= max ? value : value[..max] + "...";
+
+    #region Agents + Skills (sub-agent A)
+
+    public async Task<SreSubAgent> GetSubAgentAsync(
+        string endpoint,
+        string name,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(name), name));
+
+        var body = await CallDataPlaneAsync(
+            endpoint,
+            $"/api/v2/extendedAgent/agents/{Uri.EscapeDataString(name)}",
+            HttpMethod.Get,
+            tenant: tenant,
+            cancellationToken: cancellationToken);
+
+        return DeserializeRequired(body, SreAgentJsonContext.Default.SreSubAgent, $"sub-agent '{name}'");
+    }
+
+    public async Task<SreSubAgent> CreateSubAgentAsync(
+        string endpoint,
+        SreSubAgentCreateRequest request,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(request.Name), request.Name));
+
+        var jsonBody = JsonSerializer.Serialize(request, SreAgentJsonContext.Default.SreSubAgentCreateRequest);
+        var body = await CallDataPlaneAsync(
+            endpoint,
+            $"/api/v2/extendedAgent/agents/{Uri.EscapeDataString(request.Name)}",
+            HttpMethod.Put,
+            jsonBody,
+            tenant,
+            cancellationToken);
+
+        return DeserializeOrDefault(
+            body,
+            SreAgentJsonContext.Default.SreSubAgent,
+            new SreSubAgent { Name = request.Name, Type = request.Type, Properties = request.Properties });
+    }
+
+    public async Task<SreAgentDeleteResult> DeleteSubAgentAsync(
+        string endpoint,
+        string name,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(name), name));
+
+        await CallDataPlaneAsync(
+            endpoint,
+            $"/api/v2/extendedAgent/agents/{Uri.EscapeDataString(name)}",
+            HttpMethod.Delete,
+            tenant: tenant,
+            cancellationToken: cancellationToken);
+
+        return new SreAgentDeleteResult(name, "ExtendedAgent", true);
+    }
+
+    public async Task<SreAgentTool> GetAgentToolAsync(
+        string endpoint,
+        string name,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(name), name));
+
+        var body = await CallDataPlaneAsync(
+            endpoint,
+            $"/api/v2/extendedAgent/tools/{Uri.EscapeDataString(name)}",
+            HttpMethod.Get,
+            tenant: tenant,
+            cancellationToken: cancellationToken);
+
+        return DeserializeRequired(body, SreAgentJsonContext.Default.SreAgentTool, $"agent tool '{name}'");
+    }
+
+    public async Task<SreAgentTool> CreateAgentToolAsync(
+        string endpoint,
+        SreAgentToolCreateRequest request,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(request.Name), request.Name));
+
+        var jsonBody = JsonSerializer.Serialize(request, SreAgentJsonContext.Default.SreAgentToolCreateRequest);
+        var body = await CallDataPlaneAsync(
+            endpoint,
+            $"/api/v2/extendedAgent/tools/{Uri.EscapeDataString(request.Name)}",
+            HttpMethod.Put,
+            jsonBody,
+            tenant,
+            cancellationToken);
+
+        return DeserializeOrDefault(
+            body,
+            SreAgentJsonContext.Default.SreAgentTool,
+            new SreAgentTool { Name = request.Name, Type = request.Type, Properties = request.Properties });
+    }
+
+    public async Task<List<SreAgentTool>> ListAgentToolsAsync(
+        string endpoint,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(endpoint), endpoint));
+
+        var body = await CallDataPlaneAsync(
+            endpoint,
+            "/api/v2/extendedAgent/tools",
+            HttpMethod.Get,
+            tenant: tenant,
+            cancellationToken: cancellationToken);
+
+        return DeserializeList(body, SreAgentJsonContext.Default.SreAgentTool);
+    }
+
+    public async Task<SreAgentDeleteResult> DeleteAgentToolAsync(
+        string endpoint,
+        string name,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(name), name));
+
+        await CallDataPlaneAsync(
+            endpoint,
+            $"/api/v2/extendedAgent/tools/{Uri.EscapeDataString(name)}",
+            HttpMethod.Delete,
+            tenant: tenant,
+            cancellationToken: cancellationToken);
+
+        return new SreAgentDeleteResult(name, "ExtendedAgentTool", true);
+    }
+
+    public async Task<List<SreSkill>> ListSkillsAsync(
+        string endpoint,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(endpoint), endpoint));
+
+        var body = await CallDataPlaneAsync(
+            endpoint,
+            "/api/v2/extendedAgent/skills",
+            HttpMethod.Get,
+            tenant: tenant,
+            cancellationToken: cancellationToken);
+
+        return DeserializeList(body, SreAgentJsonContext.Default.SreSkill);
+    }
+
+    public async Task<SreSkill> CreateSkillAsync(
+        string endpoint,
+        SreSkillCreateRequest request,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(request.Name), request.Name));
+
+        var jsonBody = JsonSerializer.Serialize(request, SreAgentJsonContext.Default.SreSkillCreateRequest);
+        var body = await CallDataPlaneAsync(
+            endpoint,
+            $"/api/v2/extendedAgent/skills/{Uri.EscapeDataString(request.Name)}",
+            HttpMethod.Put,
+            jsonBody,
+            tenant,
+            cancellationToken);
+
+        return DeserializeOrDefault(
+            body,
+            SreAgentJsonContext.Default.SreSkill,
+            new SreSkill { Name = request.Name, Type = request.Type, Properties = request.Properties });
+    }
+
+    private static T DeserializeRequired<T>(string body, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo, string resourceName)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            throw new InvalidOperationException($"The SRE Agent data-plane response for {resourceName} was empty.");
+        }
+
+        return JsonSerializer.Deserialize(body, jsonTypeInfo)
+            ?? throw new InvalidOperationException($"The SRE Agent data-plane response for {resourceName} could not be deserialized.");
+    }
+
+    private static T DeserializeOrDefault<T>(string body, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo, T defaultValue)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return defaultValue;
+        }
+
+        return JsonSerializer.Deserialize(body, jsonTypeInfo) ?? defaultValue;
+    }
+
+    private static List<T> DeserializeList<T>(string body, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return [];
+        }
+
+        using var document = JsonDocument.Parse(body);
+        if (!TryResolveArray(document.RootElement, out var arrayElement))
+        {
+            return [];
+        }
+
+        var results = new List<T>();
+        foreach (var item in arrayElement.EnumerateArray())
+        {
+            var value = JsonSerializer.Deserialize(item.GetRawText(), jsonTypeInfo);
+            if (value is not null)
+            {
+                results.Add(value);
+            }
+        }
+
+        return results;
+    }
+
+    private static bool TryResolveArray(JsonElement root, out JsonElement arrayElement)
+    {
+        if (root.ValueKind == JsonValueKind.Array)
+        {
+            arrayElement = root;
+            return true;
+        }
+
+        if (root.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var propertyName in new[] { "value", "data", "skills", "tools" })
+            {
+                if (root.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.Array)
+                {
+                    arrayElement = property;
+                    return true;
+                }
+            }
+
+            if (root.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var wrapperName in new[] { "tools", "skills", "agents" })
+                {
+                    if (data.TryGetProperty(wrapperName, out var wrapper) &&
+                        wrapper.ValueKind == JsonValueKind.Object &&
+                        wrapper.TryGetProperty("data", out var nestedData) &&
+                        nestedData.ValueKind == JsonValueKind.Array)
+                    {
+                        arrayElement = nestedData;
+                        return true;
+                    }
+                }
+            }
+        }
+
+        arrayElement = default;
+        return false;
+    }
+
+    #endregion
 }
