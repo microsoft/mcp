@@ -683,6 +683,20 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     }
 
 
+
+    public async Task<OperationResult> ConfigureEncryptionAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string keyVaultUri, string keyName, string identityType,
+        string? keyVersion, string? userAssignedIdentityId,
+        string? vaultType, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        return VaultTypeResolver.IsRsv(resolved)
+            ? await rsvOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, retryPolicy, cancellationToken)
+            : await dppOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, retryPolicy, cancellationToken);
+    }
+
     private async Task<string> ResolveVaultTypeAsync(
         string vaultName, string resourceGroup, string subscription,
         string? vaultType, string? tenant,

@@ -888,6 +888,19 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         return new OperationResult("Succeeded", null, $"Multi-User Authorization disabled on vault '{vaultName}'.");
     }
 
+    public Task<OperationResult> ConfigureEncryptionAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string keyVaultUri, string keyName, string identityType,
+        string? keyVersion, string? userAssignedIdentityId,
+        string? tenant, RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        throw new NotSupportedException(
+            "Customer-Managed Key (CMK) encryption configuration is only supported for Recovery Services vaults (RSV). " +
+            "For Backup vaults (DPP), CMK encryption must be configured at vault creation time. " +
+            "Use --vault-type rsv or create a new Backup vault with encryption settings.");
+    }
+
 
     private static BackupVaultInfo MapToVaultInfo(DataProtectionBackupVaultData data, string? resourceGroup)
     {

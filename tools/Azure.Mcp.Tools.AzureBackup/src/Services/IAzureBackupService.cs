@@ -49,5 +49,6 @@ public interface IAzureBackupService
     // Security
     Task<OperationResult> ConfigureMultiUserAuthorizationAsync(string vaultName, string resourceGroup, string subscription, string resourceGuardId, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> DisableMultiUserAuthorizationAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<OperationResult> ConfigureEncryptionAsync(string vaultName, string resourceGroup, string subscription, string keyVaultUri, string keyName, string identityType, string? keyVersion = null, string? userAssignedIdentityId = null, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
 }
