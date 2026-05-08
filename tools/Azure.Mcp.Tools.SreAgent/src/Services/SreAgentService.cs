@@ -148,4 +148,76 @@ public sealed class SreAgentService(
     private static string Truncate(string? value, int max) =>
         string.IsNullOrEmpty(value) ? string.Empty :
         value.Length <= max ? value : value[..max] + "...";
+
+    #region Incidents + Workflows + Docs + Architecture (sub-agent D)
+
+    public async Task<string> CallAgentDataPlaneAsync(
+        string subscription,
+        string agent,
+        string? resourceGroup,
+        string path,
+        HttpMethod method,
+        string? jsonBody = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var endpoint = await ResolveAgentEndpointAsync(subscription, agent, resourceGroup, tenant, retryPolicy, cancellationToken);
+        return await CallDataPlaneAsync(endpoint, path, method, jsonBody, tenant, cancellationToken);
+    }
+
+    public async Task<string> UploadMemoryAsync(
+        string subscription,
+        string agent,
+        string? resourceGroup,
+        string fileName,
+        string content,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var endpoint = await ResolveAgentEndpointAsync(subscription, agent, resourceGroup, tenant, retryPolicy, cancellationToken);
+        var endpointUri = new Uri(endpoint);
+        var requestUri = new Uri(endpointUri, "/api/v1/AgentMemory/upload");
+        var credential = await GetCredential(tenant, cancellationToken);
+        var token = await credential.GetTokenAsync(new TokenRequestContext(DataPlaneScopes), cancellationToken);
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+        using var multipartContent = new MultipartFormDataContent();
+        var fileContent = new StringContent(content, Encoding.UTF8, "text/markdown");
+        multipartContent.Add(fileContent, "files", fileName);
+        request.Content = multipartContent;
+
+        using var http = TenantService.GetClient();
+        using var response = await http.SendAsync(request, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException($"SRE Agent memory upload to {endpointUri.Host} failed with status {(int)response.StatusCode}: {Truncate(body, 300)}");
+        }
+
+        return body;
+    }
+
+    private async Task<string> ResolveAgentEndpointAsync(
+        string subscription,
+        string agent,
+        string? resourceGroup,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(agent), agent));
+        var agents = await ListAgentsAsync(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
+        var match = agents.FirstOrDefault(a => string.Equals(a.Name, agent, StringComparison.OrdinalIgnoreCase));
+        if (match?.Endpoint is not { Length: > 0 } endpoint)
+        {
+            throw new InvalidOperationException($"SRE Agent resource '{agent}' was not found or does not expose a data-plane endpoint.");
+        }
+
+        return endpoint;
+    }
+
+    #endregion
 }

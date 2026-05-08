@@ -17,4 +17,29 @@ public interface ISreAgentService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    #region Incidents + Workflows + Docs + Architecture (sub-agent D)
+
+    Task<string> CallAgentDataPlaneAsync(
+        string subscription,
+        string agent,
+        string? resourceGroup,
+        string path,
+        HttpMethod method,
+        string? jsonBody = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<string> UploadMemoryAsync(
+        string subscription,
+        string agent,
+        string? resourceGroup,
+        string fileName,
+        string content,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    #endregion
 }
