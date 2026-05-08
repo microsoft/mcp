@@ -414,6 +414,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.Speech/tests/">
     <Project Path="tools/Azure.Mcp.Tools.Speech/tests/Azure.Mcp.Tools.Speech.Tests/Azure.Mcp.Tools.Speech.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.SreAgent/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.SreAgent/src/">
+    <Project Path="tools/Azure.Mcp.Tools.SreAgent/src/Azure.Mcp.Tools.SreAgent.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.SreAgent/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.SreAgent/tests/Azure.Mcp.Tools.SreAgent.UnitTests/Azure.Mcp.Tools.SreAgent.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Sql/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Sql/src/">
     <Project Path="tools/Azure.Mcp.Tools.Sql/src/Azure.Mcp.Tools.Sql.csproj" />

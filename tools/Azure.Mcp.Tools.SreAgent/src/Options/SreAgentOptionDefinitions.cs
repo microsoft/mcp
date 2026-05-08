@@ -20,6 +20,22 @@ public static class SreAgentOptionDefinitions
     public const string ParametersName = "parameters";
     public const string ContentName = "content";
     public const string SkillAgentNameName = "agent-name";
+    public const string AuthTypeName = "auth-type";
+    public const string CommandName = "command";
+    public const string ClusterUrlName = "cluster-url";
+    public const string TimeoutSecondsName = "timeout-seconds";
+    public const string HeadersJsonName = "headers-json";
+    public const string EndpointName = "endpoint";
+    public const string MessageName = "message";
+    public const string ThreadIdName = "thread-id";
+    public const string TaskIdName = "task-id";
+    public const string TypeName = "type";
+    public const string EnvsJsonName = "envs-json";
+    public const string BearerTokenEnvName = "bearer-token-env";
+    public const string ArgsName = "args";
+    public const string HookNameName = "hook-name";
+    public const string MaxIterationsName = "max-iterations";
+    public const string CronExpressionName = "cron-expression";
 
     public static readonly Option<string> Agent = new(
         $"--{AgentNameName}"
@@ -173,11 +189,6 @@ public static class SreAgentOptionDefinitions
         };
 
     // C
-    public static readonly Option<string> ThreadId = new($"--{ThreadIdName}")
-        {
-            Description = "The thread ID.",
-            Required = true
-        };
     public static readonly Option<string> TaskId = new($"--{TaskIdName}")
         {
             Description = "The scheduled task ID.",
@@ -204,4 +215,5 @@ public static class SreAgentOptionDefinitions
             Description = "The investigation timeout in seconds.",
             Required = false,
             DefaultValueFactory = _ => 600
+        };
 }
