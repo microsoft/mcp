@@ -1,0 +1,22 @@
+{
+  "name": "mcp-startup-trigger",
+  "displayName": "MCP Startup Trigger (test only)",
+  "description": "Test-only extension that registers an MCP server definition provider and force-starts the server.",
+  "version": "0.0.1",
+  "publisher": "azure-mcp-tests",
+  "engines": {
+    "vscode": "^1.118.0"
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "azure-mcp-test-provider",
+        "label": "Azure MCP Test Provider"
+      }
+    ]
+  }
+}

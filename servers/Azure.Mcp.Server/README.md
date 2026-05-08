@@ -20,7 +20,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- remove-section: end remove_install_links -->
 ## Table of Contents
 - [Overview](#overview)
-- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm;pypi remove_installation_sub_sections -->
+- [Local Setup](#local-setup)<!-- remove-section: start nuget;vsix;npm;pypi remove_installation_sub_sections -->
     - [IDE](#ide)
         - [VS Code (Recommended)](#vs-code-recommended)
         - [Visual Studio 2026](#visual-studio-2026)
@@ -33,8 +33,8 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [NPM](#npm)
         - [PyPI](#pypi)
         - [Docker](#docker)
-        - [MCPB](#mcpb)
-    - [Remote MCP Server (preview)](#remote-mcp-server-preview)<!-- remove-section: end remove_installation_sub_sections -->
+        - [MCPB](#mcpb)<!-- remove-section: end remove_installation_sub_sections -->
+- [Remote Setup](#remote-setup)
 - [Usage](#usage)
     - [Getting Started](#getting-started)
     - [Sovereign Cloud Support](#sovereign-cloud-support)
@@ -57,7 +57,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 
 **Azure MCP Server** supercharges your agents with Azure context across **40+ different Azure services**.
 
-# Installation
+# Local Setup
 <!-- insert-section: vsix {{- Install the [Azure MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server)}} -->
 <!-- insert-section: vsix {{- Start (or Auto-Start) the MCP Server}} -->
 <!-- insert-section: vsix {{   > **VS Code (version 1.103 or above):** You can now configure MCP servers to start automatically using the `chat.mcp.autostart` setting, instead of manually restarting them after configuration changes.}} -->
@@ -838,14 +838,13 @@ class Program
 </details>
 
 <!-- remove-section: end remove_package_manager_section -->
-
-## Remote MCP Server (preview)
-
-Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To self-host the Azure MCP Server for use with these platforms, deploy it as a remote MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
-
-Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/README.md) for deployment options.
-
 <!-- remove-section: end remove_entire_installation_sub_section -->
+
+# Remote Setup
+
+Host the Azure MCP Server as a remote endpoint when your client requires HTTP-based MCP servers (for example, Microsoft Foundry and Microsoft Copilot Studio) or when you want to share a single deployment across users and environments. The server can be self-hosted on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
+
+See the remote hosting [azd templates](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/README.md) for deployment options.
 
 # Usage
 

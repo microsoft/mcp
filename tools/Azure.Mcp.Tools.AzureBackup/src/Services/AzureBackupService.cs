@@ -660,6 +660,29 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         return await dppOps.ConfigureCrossRegionRestoreAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
     }
 
+    public async Task<OperationResult> ConfigureMultiUserAuthorizationAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string resourceGuardId, string? vaultType, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        return VaultTypeResolver.IsRsv(resolved)
+            ? await rsvOps.ConfigureMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, resourceGuardId, tenant, retryPolicy, cancellationToken)
+            : await dppOps.ConfigureMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, resourceGuardId, tenant, retryPolicy, cancellationToken);
+    }
+
+    public async Task<OperationResult> DisableMultiUserAuthorizationAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? vaultType, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        return VaultTypeResolver.IsRsv(resolved)
+            ? await rsvOps.DisableMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken)
+            : await dppOps.DisableMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+    }
+
+
     private async Task<string> ResolveVaultTypeAsync(
         string vaultName, string resourceGroup, string subscription,
         string? vaultType, string? tenant,

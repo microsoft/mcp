@@ -107,12 +107,15 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
     {
         ResourceHealthUnprocessableEntityException unprocessableEx =>
             $"Azure Resource Health could not process availability status for resource type '{unprocessableEx.ResourceType}'. Error code: {unprocessableEx.ErrorCode ?? "UnprocessableEntity"}. Details: {unprocessableEx.ErrorDetails ?? unprocessableEx.Message}",
+        FormatException =>
+            "Invalid Azure resource ID. Provide a resource ID in the format /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/<provider>/<type>/<name>",
         _ => base.GetErrorMessage(ex)
     };
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ResourceHealthUnprocessableEntityException unprocessableEx => unprocessableEx.StatusCode,
+        FormatException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)
     };
 

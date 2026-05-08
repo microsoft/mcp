@@ -29,10 +29,11 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
     ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
-public sealed class SendBrownfieldAnalysisCommand(ILogger<SendBrownfieldAnalysisCommand> logger)
+public sealed class SendBrownfieldAnalysisCommand(ILogger<SendBrownfieldAnalysisCommand> logger, SendBrownfieldAnalysisTool sendBrownfieldAnalysisTool)
     : BaseCommand<SendBrownfieldAnalysisOptions>
 {
     private readonly ILogger<SendBrownfieldAnalysisCommand> _logger = logger;
+    private readonly SendBrownfieldAnalysisTool _sendBrownfieldAnalysisTool = sendBrownfieldAnalysisTool;
 
     protected override void RegisterOptions(Command command)
     {
@@ -68,8 +69,7 @@ public sealed class SendBrownfieldAnalysisCommand(ILogger<SendBrownfieldAnalysis
                 return Task.FromResult(context.Response);
             }
 
-            var tool = context.GetService<SendBrownfieldAnalysisTool>();
-            var result = tool.Submit(
+            var result = _sendBrownfieldAnalysisTool.Submit(
                 options.SessionId!,
                 findings.ServiceOptions,
                 findings.Initializers,

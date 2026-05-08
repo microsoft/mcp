@@ -22,9 +22,10 @@ namespace Azure.Mcp.Core.Areas.Subscription.Commands;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger) : GlobalCommand<SubscriptionListOptions>()
+public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger, ISubscriptionService subscriptionService) : GlobalCommand<SubscriptionListOptions>()
 {
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
+    private readonly ISubscriptionService _subscriptionService = subscriptionService;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -37,10 +38,9 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
         try
         {
-            var subscriptionService = context.GetService<ISubscriptionService>();
-            var subscriptions = await subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
+            var subscriptions = await _subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
 
-            var defaultSubscriptionId = subscriptionService.GetDefaultSubscriptionId();
+            var defaultSubscriptionId = _subscriptionService.GetDefaultSubscriptionId();
             var subscriptionInfos = MapToSubscriptionInfos(subscriptions, defaultSubscriptionId);
 
             context.Response.Results = ResponseResult.Create(

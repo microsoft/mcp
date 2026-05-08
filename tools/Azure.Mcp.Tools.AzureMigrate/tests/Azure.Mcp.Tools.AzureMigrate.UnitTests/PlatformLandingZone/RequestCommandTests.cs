@@ -442,7 +442,7 @@ public class RequestCommandTests : CommandUnitTestsBase<RequestCommand, IPlatfor
             "--migrate-project-name", projectName);
 
         // Assert
-        Assert.True(response.Status == HttpStatusCode.BadRequest || response.Status == HttpStatusCode.InternalServerError);
+        Assert.True(response.Status == HttpStatusCode.UnprocessableEntity || response.Status == HttpStatusCode.InternalServerError);
         Assert.Contains("Missing required parameters", response.Message);
     }
 

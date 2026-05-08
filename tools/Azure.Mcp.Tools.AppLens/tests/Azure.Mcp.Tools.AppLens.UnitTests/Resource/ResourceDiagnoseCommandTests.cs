@@ -258,7 +258,7 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             "--resource-type", "Microsoft.Web/sites");
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
         Assert.Contains("Resource not found", response.Message);
     }
 

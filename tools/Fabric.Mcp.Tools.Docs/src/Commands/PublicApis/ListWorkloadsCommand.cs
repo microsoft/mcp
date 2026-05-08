@@ -20,9 +20,11 @@ namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) : GlobalCommand<BaseFabricOptions>()
+public sealed class ListWorkloadsCommand(IFabricPublicApiService service, ILogger<ListWorkloadsCommand> logger)
+    : GlobalCommand<BaseFabricOptions>()
 {
     private readonly ILogger<ListWorkloadsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -33,8 +35,7 @@ public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) :
                 return context.Response;
             }
 
-            var fabricService = context.GetService<IFabricPublicApiService>();
-            var workloads = await fabricService.ListWorkloadsAsync(cancellationToken);
+            var workloads = await _service.ListWorkloadsAsync(cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(workloads), FabricJsonContext.Default.ItemListCommandResult);
         }
