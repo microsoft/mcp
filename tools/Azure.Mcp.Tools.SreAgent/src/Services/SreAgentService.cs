@@ -4,10 +4,12 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
@@ -148,4 +150,99 @@ public sealed class SreAgentService(
     private static string Truncate(string? value, int max) =>
         string.IsNullOrEmpty(value) ? string.Empty :
         value.Length <= max ? value : value[..max] + "...";
+
+    #region Threads + ScheduledTasks (sub-agent C)
+
+    public async Task<List<SreAgentThread>> ListThreadsAsync(string endpoint, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var body = await CallDataPlaneAsync(endpoint, "/api/v1/threads", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return DeserializeList(body, SreAgentJsonContext.Default.SreAgentPagedResponseSreAgentThread, SreAgentJsonContext.Default.ListSreAgentThread);
+    }
+
+    public async Task<SreAgentThread?> GetThreadAsync(string endpoint, string threadId, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var body = await CallDataPlaneAsync(endpoint, $"/api/v1/threads/{Uri.EscapeDataString(threadId)}", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return JsonSerializer.Deserialize(body, SreAgentJsonContext.Default.SreAgentThread);
+    }
+
+    public async Task<List<SreAgentThreadMessage>> GetThreadMessagesAsync(string endpoint, string threadId, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var body = await CallDataPlaneAsync(endpoint, $"/api/v1/threads/{Uri.EscapeDataString(threadId)}/messages", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return DeserializeList(body, SreAgentJsonContext.Default.SreAgentPagedResponseSreAgentThreadMessage, SreAgentJsonContext.Default.ListSreAgentThreadMessage);
+    }
+
+    public async Task<SreAgentThread?> CreateThreadAsync(string endpoint, SreAgentThreadCreateRequest request, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var json = JsonSerializer.Serialize(request, SreAgentJsonContext.Default.SreAgentThreadCreateRequest);
+        var body = await CallDataPlaneAsync(endpoint, "/api/v1/threads", HttpMethod.Post, json, tenant, cancellationToken);
+        return JsonSerializer.Deserialize(body, SreAgentJsonContext.Default.SreAgentThread);
+    }
+
+    public async Task<SreAgentThreadMessage?> SendThreadMessageAsync(string endpoint, string threadId, SreAgentThreadMessageRequest request, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var json = JsonSerializer.Serialize(request, SreAgentJsonContext.Default.SreAgentThreadMessageRequest);
+        var body = await CallDataPlaneAsync(endpoint, $"/api/v1/threads/{Uri.EscapeDataString(threadId)}/messages", HttpMethod.Post, json, tenant, cancellationToken);
+        return JsonSerializer.Deserialize(body, SreAgentJsonContext.Default.SreAgentThreadMessage);
+    }
+
+    public async Task DeleteThreadAsync(string endpoint, string threadId, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        await CallDataPlaneAsync(endpoint, $"/api/v1/threads/{Uri.EscapeDataString(threadId)}", HttpMethod.Delete, tenant: tenant, cancellationToken: cancellationToken);
+    }
+
+    public async Task ApproveApprovalAsync(string endpoint, string approvalId, SreAgentApprovalRequest request, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var json = JsonSerializer.Serialize(request, SreAgentJsonContext.Default.SreAgentApprovalRequest);
+        await CallDataPlaneAsync(endpoint, $"/api/v1/approvals/{Uri.EscapeDataString(approvalId)}/approve", HttpMethod.Post, json, tenant, cancellationToken);
+    }
+
+    public async Task<List<SreAgentScheduledTask>> ListScheduledTasksAsync(string endpoint, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var body = await CallDataPlaneAsync(endpoint, "/api/v1/scheduledtasks", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return DeserializeList(body, SreAgentJsonContext.Default.SreAgentPagedResponseSreAgentScheduledTask, SreAgentJsonContext.Default.ListSreAgentScheduledTask);
+    }
+
+    public async Task<SreAgentScheduledTask?> GetScheduledTaskAsync(string endpoint, string taskId, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var body = await CallDataPlaneAsync(endpoint, $"/api/v1/scheduledtasks/{Uri.EscapeDataString(taskId)}", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return JsonSerializer.Deserialize(body, SreAgentJsonContext.Default.SreAgentScheduledTask);
+    }
+
+    public async Task<SreAgentScheduledTask?> CreateScheduledTaskAsync(string endpoint, SreAgentScheduledTaskCreateRequest request, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var json = JsonSerializer.Serialize(request, SreAgentJsonContext.Default.SreAgentScheduledTaskCreateRequest);
+        var body = await CallDataPlaneAsync(endpoint, "/api/v1/scheduledtasks", HttpMethod.Post, json, tenant, cancellationToken);
+        return JsonSerializer.Deserialize(body, SreAgentJsonContext.Default.SreAgentScheduledTask);
+    }
+
+    public async Task DeleteScheduledTaskAsync(string endpoint, string taskId, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        await CallDataPlaneAsync(endpoint, $"/api/v1/scheduledtasks/{Uri.EscapeDataString(taskId)}", HttpMethod.Delete, tenant: tenant, cancellationToken: cancellationToken);
+    }
+
+    public async Task PauseScheduledTaskAsync(string endpoint, string taskId, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        await CallDataPlaneAsync(endpoint, $"/api/v1/scheduledtasks/{Uri.EscapeDataString(taskId)}/pause", HttpMethod.Post, tenant: tenant, cancellationToken: cancellationToken);
+    }
+
+    public async Task ResumeScheduledTaskAsync(string endpoint, string taskId, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        await CallDataPlaneAsync(endpoint, $"/api/v1/scheduledtasks/{Uri.EscapeDataString(taskId)}/resume", HttpMethod.Post, tenant: tenant, cancellationToken: cancellationToken);
+    }
+
+    private static List<T> DeserializeList<T>(string body, JsonTypeInfo<SreAgentPagedResponse<T>> pagedTypeInfo, JsonTypeInfo<List<T>> listTypeInfo)
+    {
+        using var document = JsonDocument.Parse(body);
+        if (document.RootElement.ValueKind == JsonValueKind.Object)
+        {
+            var paged = JsonSerializer.Deserialize(body, pagedTypeInfo);
+            return paged?.Value ?? [];
+        }
+
+        return document.RootElement.ValueKind == JsonValueKind.Array
+            ? JsonSerializer.Deserialize(body, listTypeInfo) ?? []
+            : [];
+    }
+
+    #endregion
 }
