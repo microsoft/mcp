@@ -122,7 +122,6 @@ internal sealed class TemporaryAssetsPathResolver : IRecordingPathResolver, IDis
     }
 }
 
-[Trait("Category", "Live")]
 public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
 {
     private string RecordingFileLocation = string.Empty;
@@ -140,6 +139,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         LiveServerFixture = new LiveServerFixture();
     }
 
+    [LiveTestOnly]
     [Fact]
     public async Task ProxyRecordProducesRecording()
     {
@@ -160,6 +160,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         Assert.Equal("sampleValue", variablesElement.GetProperty("sampleKey").GetString());
     }
 
+    [LiveTestOnly]
     [CustomMatcher(IgnoreQueryOrdering = true, CompareBodies = true)]
     [Fact]
     public async Task PerTestMatcherAttributeAppliesWhenPresent()
@@ -193,6 +194,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         CollectedOutput.Received().WriteLine(Arg.Is<string>(s => s.Contains($"Applying custom matcher to recordingId \"{recordingId}\"")));
     }
 
+    [LiveTestOnly]
     [Fact]
     public void CustomMatcherAttributeClearsAfterExecution()
     {
@@ -223,6 +225,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         return (CustomMatcherAttribute?)method?.Invoke(null, null);
     }
 
+    [LiveTestOnly]
     [Fact]
     public async Task GlobalMatcherAndSanitizerAppliesWhenPresent()
     {
@@ -249,6 +252,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         CollectedOutput.Received().WriteLine(Arg.Is<string>(s => s.Contains("Applying custom matcher to global settings")));
     }
 
+    [LiveTestOnly]
     [Fact]
     public async Task VariableSurvivesRecordPlaybackRoundtrip()
     {

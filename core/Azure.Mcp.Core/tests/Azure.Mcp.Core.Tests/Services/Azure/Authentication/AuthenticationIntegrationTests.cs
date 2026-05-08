@@ -14,12 +14,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Services.Azure.Authentication;
 
-[Trait("Category", "Live")]
 public class AuthenticationIntegrationTests : IAsyncLifetime
 {
     private readonly ServiceProvider _serviceProvider;
@@ -49,6 +49,7 @@ public class AuthenticationIntegrationTests : IAsyncLifetime
         await _serviceProvider.DisposeAsync();
     }
 
+    [LiveTestOnly]
     [Fact]
     public async Task LoginWithIdentityBroker_ThenListSubscriptions_ShouldSucceed()
     {

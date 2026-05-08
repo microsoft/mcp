@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests;
 
-[Trait("Category", "Live")]
 public class NpxTests
 {
     private readonly LiveTestSettings _settings;
@@ -24,6 +24,7 @@ public class NpxTests
         }
     }
 
+    [LiveTestOnly]
     [Fact]
     public async Task Help_command_should_return_help()
     {
