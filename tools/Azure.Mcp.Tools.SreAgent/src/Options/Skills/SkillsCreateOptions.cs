@@ -10,6 +10,4 @@ public class SkillsCreateOptions : BaseSreAgentOptions
     public string? Content { get; set; }
 
     public string? Description { get; set; }
-
-    public string? AgentName { get; set; }
 }

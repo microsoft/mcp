@@ -8,11 +8,11 @@ namespace Azure.Mcp.Tools.SreAgent.Models;
 
 public sealed class SreSkillProperties
 {
-    public string? Content { get; set; }
+    // Server expects this property to be serialized as "skillContent" (camelCase of SkillContent).
+    // Sending "content" causes the SRE Agent skills data-plane endpoint to reject the request.
+    public string? SkillContent { get; set; }
 
     public string? Description { get; set; }
-
-    public string? AgentName { get; set; }
 
     public string? SkillMdContent { get; set; }
 

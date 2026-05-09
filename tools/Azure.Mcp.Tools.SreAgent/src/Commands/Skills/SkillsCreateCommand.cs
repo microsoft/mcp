@@ -37,7 +37,6 @@ public sealed class SkillsCreateCommand(ILogger<SkillsCreateCommand> logger, ISr
         command.Options.Add(SreAgentOptionDefinitions.Name);
         command.Options.Add(SreAgentOptionDefinitions.Content);
         command.Options.Add(SreAgentOptionDefinitions.Description);
-        command.Options.Add(SreAgentOptionDefinitions.SkillAgentName);
     }
 
     protected override SkillsCreateOptions BindOptions(ParseResult parseResult)
@@ -47,7 +46,6 @@ public sealed class SkillsCreateCommand(ILogger<SkillsCreateCommand> logger, ISr
         options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
         options.Content = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Content.Name);
         options.Description = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Description.Name);
-        options.AgentName = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.SkillAgentName.Name);
         return options;
     }
 
@@ -76,9 +74,8 @@ public sealed class SkillsCreateCommand(ILogger<SkillsCreateCommand> logger, ISr
                 Name = options.Name!,
                 Properties = new SreSkillProperties
                 {
-                    Content = options.Content,
-                    Description = options.Description,
-                    AgentName = options.AgentName
+                    SkillContent = options.Content,
+                    Description = options.Description
                 }
             };
 

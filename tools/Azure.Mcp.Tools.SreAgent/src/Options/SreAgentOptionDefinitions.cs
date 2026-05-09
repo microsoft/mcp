@@ -19,7 +19,6 @@ public static class SreAgentOptionDefinitions
     public const string UrlTemplateName = "url-template";
     public const string ParametersName = "parameters";
     public const string ContentName = "content";
-    public const string SkillAgentNameName = "agent-name";
     public const string AuthTypeName = "auth-type";
     public const string CommandName = "command";
     public const string ClusterUrlName = "cluster-url";
@@ -112,11 +111,6 @@ public static class SreAgentOptionDefinitions
     {
         Description = "Skill content.",
         Required = true
-    };
-
-    public static readonly Option<string> SkillAgentName = new($"--{SkillAgentNameName}")
-    {
-        Description = "Optional sub-agent name to assign the skill to."
     };
 
     // B
