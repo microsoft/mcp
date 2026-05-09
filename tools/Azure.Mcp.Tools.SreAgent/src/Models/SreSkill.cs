@@ -14,10 +14,6 @@ public sealed class SreSkill
 
     public SreSkillProperties? Properties { get; set; }
 
-    public string? Description { get; set; }
-
-    public string? AgentName { get; set; }
-
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? AdditionalProperties { get; set; }
 }
