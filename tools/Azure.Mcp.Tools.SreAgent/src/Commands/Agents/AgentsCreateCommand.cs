@@ -78,7 +78,7 @@ public sealed class AgentsCreateCommand(ILogger<AgentsCreateCommand> logger, ISr
                 Name = options.Name!,
                 Properties = new SreSubAgentProperties
                 {
-                    Description = options.Description,
+                    HandoffDescription = options.Description,
                     Instructions = options.Instructions,
                     Tools = ToList(options.Tools),
                     Handoffs = ToList(options.Handoffs)

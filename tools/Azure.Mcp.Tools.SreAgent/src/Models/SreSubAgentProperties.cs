@@ -8,7 +8,10 @@ namespace Azure.Mcp.Tools.SreAgent.Models;
 
 public sealed class SreSubAgentProperties
 {
-    public string? Description { get; set; }
+    // Server-side ExtendedAgentView exposes `handoffDescription` as the sub-agent's
+    // description on the agent canvas. There is no plain `description` field on
+    // sub-agents — sending one would be silently dropped by the data plane.
+    public string? HandoffDescription { get; set; }
 
     public string? Instructions { get; set; }
 
