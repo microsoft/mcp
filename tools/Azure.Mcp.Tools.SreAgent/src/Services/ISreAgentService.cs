@@ -150,26 +150,41 @@ public interface ISreAgentService
 
     #region Incidents + Workflows + Docs + Architecture (sub-agent D)
 
-    Task<string> CallAgentDataPlaneAsync(
-        string subscription,
-        string agent,
-        string? resourceGroup,
-        string path,
-        HttpMethod method,
-        string? jsonBody = null,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+    Task<List<ThreadListItem>> ListIncidentThreadsAsync(string endpoint, string? tenant = null, CancellationToken cancellationToken = default);
 
-    Task<string> UploadMemoryAsync(
-        string subscription,
-        string agent,
-        string? resourceGroup,
-        string fileName,
-        string content,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+    Task<IncidentThreadResponse?> CreateIncidentThreadAsync(string endpoint, IncidentThreadCreateRequest request, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<List<IncidentFilter>> ListIncidentFiltersAsync(string endpoint, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<List<IncidentHandler>> ListIncidentHandlersAsync(string endpoint, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task CreateOrUpdateIncidentFilterAsync(string endpoint, string filterId, IncidentFilterPayload payload, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task DeleteIncidentFilterAsync(string endpoint, string filterId, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task EnableIncidentFilterAsync(string endpoint, string filterId, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task CreateOrUpdateIncidentHandlerAsync(string endpoint, string handlerId, IncidentHandler payload, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task ApplyExtendedAgentResourceAsync(string endpoint, string kind, string name, ExtendedAgentResourceEnvelope payload, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<List<DocumentInfo>> ListMemoriesAsync(string endpoint, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task DeleteMemoryAsync(string endpoint, string name, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<List<MemorySearchResult>> SearchMemoriesAsync(string endpoint, string query, int k = 10, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task ReindexMemoriesAsync(string endpoint, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task UploadMemoryAsync(string endpoint, string fileName, string content, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<List<CommonPromptEnvelope>> ListCommonPromptsAsync(string endpoint, string? search = null, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<CommonPromptEnvelope?> GetCommonPromptAsync(string endpoint, string name, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task CreateOrUpdateCommonPromptAsync(string endpoint, string name, string content, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task DeleteCommonPromptAsync(string endpoint, string name, string? tenant = null, CancellationToken cancellationToken = default);
 
     #endregion
 

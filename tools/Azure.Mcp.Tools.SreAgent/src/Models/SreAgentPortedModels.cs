@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.SreAgent.Models;
@@ -33,10 +34,85 @@ public sealed record IncidentHandler
     public string? Id { get; init; }
     [JsonPropertyName("name")]
     public string? Name { get; init; }
+    [JsonPropertyName("description")]
+    public string? Description { get; init; }
     [JsonPropertyName("incidentFilterId")]
     public string? IncidentFilterId { get; init; }
     [JsonPropertyName("incidentProcessingGuide")]
     public List<string>? IncidentProcessingGuide { get; init; }
+    [JsonPropertyName("tools")]
+    public List<string>? Tools { get; init; }
+    [JsonPropertyName("incidents")]
+    public List<string>? Incidents { get; init; }
+    [JsonPropertyName("customInstructions")]
+    public string? CustomInstructions { get; init; }
+}
+
+// Filter PUT body intentionally uses Pascal-case property names. The data-plane
+// handler reads the body as a raw JsonNode using nameof(...) lookups, so
+// camelCase keys silently miss and the filter is created with empty values.
+public sealed record IncidentFilterPayload
+{
+    [JsonPropertyName("Id")]
+    public string? Id { get; init; }
+    [JsonPropertyName("ImpactedService")]
+    public string? ImpactedService { get; init; }
+    [JsonPropertyName("Priorities")]
+    public List<string>? Priorities { get; init; }
+    [JsonPropertyName("TitleContains")]
+    public string? TitleContains { get; init; }
+    [JsonPropertyName("AgentMode")]
+    public string? AgentMode { get; init; }
+    [JsonPropertyName("HandlingAgent")]
+    public string? HandlingAgent { get; init; }
+}
+
+public sealed record IncidentThreadCreateRequest
+{
+    [JsonPropertyName("startMessage")]
+    public IncidentThreadStartMessage StartMessage { get; init; } = new();
+}
+
+public sealed record IncidentThreadStartMessage
+{
+    [JsonPropertyName("text")]
+    public string? Text { get; init; }
+    [JsonPropertyName("userId")]
+    public string? UserId { get; init; }
+    [JsonPropertyName("displayName")]
+    public string? DisplayName { get; init; }
+    [JsonPropertyName("agent")]
+    public string? Agent { get; init; }
+}
+
+public sealed record CommonPromptEnvelope
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+    [JsonPropertyName("type")]
+    public string? Type { get; init; }
+    [JsonPropertyName("properties")]
+    public CommonPromptProperties? Properties { get; init; }
+}
+
+public sealed record CommonPromptProperties
+{
+    [JsonPropertyName("prompt")]
+    public string? Prompt { get; init; }
+}
+
+public sealed record ExtendedAgentResourceEnvelope
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; init; }
+    [JsonPropertyName("type")]
+    public string? Type { get; init; }
+    [JsonPropertyName("tags")]
+    public List<string>? Tags { get; init; }
+    [JsonPropertyName("owner")]
+    public string? Owner { get; init; }
+    [JsonPropertyName("properties")]
+    public Dictionary<string, JsonElement>? Properties { get; init; }
 }
 
 public sealed record IncidentThreadResponse([property: JsonPropertyName("id")] string? Id, [property: JsonPropertyName("status")] string? Status);

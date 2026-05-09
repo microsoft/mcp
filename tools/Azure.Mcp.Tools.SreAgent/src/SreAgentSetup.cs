@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 
+using Azure.Mcp.Tools.SreAgent.Commands.CommonPrompts;
 using Azure.Mcp.Tools.SreAgent.Commands.Connectors;
 using Azure.Mcp.Tools.SreAgent.Commands.Hooks;
 using Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
@@ -87,6 +88,12 @@ public class SreAgentSetup : IAreaSetup
         services.AddSingleton<MemoriesDeleteCommand>();
         services.AddSingleton<MemoriesReindexCommand>();
         services.AddSingleton<PlanCommand>();
+
+        // Common Prompts
+        services.AddSingleton<CommonPromptsListCommand>();
+        services.AddSingleton<CommonPromptsGetCommand>();
+        services.AddSingleton<CommonPromptsCreateCommand>();
+        services.AddSingleton<CommonPromptsDeleteCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -158,7 +165,34 @@ public class SreAgentSetup : IAreaSetup
         sreAgent.AddSubGroup(workflows);
         sreAgent.AddSubGroup(docs);
         sreAgent.AddSubGroup(architecture);
-        
+
+        incidents.AddCommand<IncidentsActiveListCommand>(serviceProvider);
+        incidents.AddCommand<IncidentsCreateCommand>(serviceProvider);
+        incidents.AddCommand<IncidentsPlansListCommand>(serviceProvider);
+        incidents.AddCommand<IncidentsPlansCreateCommand>(serviceProvider);
+        incidents.AddCommand<IncidentsSetupPagerdutyCommand>(serviceProvider);
+        incidents.AddCommand<IncidentsSetupServicenowCommand>(serviceProvider);
+
+        workflows.AddCommand<WorkflowsGenerateCommand>(serviceProvider);
+        workflows.AddCommand<WorkflowsValidateCommand>(serviceProvider);
+        workflows.AddCommand<WorkflowsApplyCommand>(serviceProvider);
+
+        docs.AddCommand<DocsGetCommand>(serviceProvider);
+        docs.AddCommand<MemoriesListCommand>(serviceProvider);
+        docs.AddCommand<MemoriesSearchCommand>(serviceProvider);
+        docs.AddCommand<MemoriesAddCommand>(serviceProvider);
+        docs.AddCommand<MemoriesDeleteCommand>(serviceProvider);
+        docs.AddCommand<MemoriesReindexCommand>(serviceProvider);
+
+        architecture.AddCommand<PlanCommand>(serviceProvider);
+
+        var commonPrompts = new CommandGroup("commonprompts", "SRE Agent common prompts: list, get, create or update, and delete reusable prompts.");
+        sreAgent.AddSubGroup(commonPrompts);
+        commonPrompts.AddCommand<CommonPromptsListCommand>(serviceProvider);
+        commonPrompts.AddCommand<CommonPromptsGetCommand>(serviceProvider);
+        commonPrompts.AddCommand<CommonPromptsCreateCommand>(serviceProvider);
+        commonPrompts.AddCommand<CommonPromptsDeleteCommand>(serviceProvider);
+
 return sreAgent;
     }
 }

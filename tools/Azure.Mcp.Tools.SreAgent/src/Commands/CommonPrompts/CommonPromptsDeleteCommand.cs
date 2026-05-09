@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.SreAgent.Options;
-using Azure.Mcp.Tools.SreAgent.Options.Docs;
+using Azure.Mcp.Tools.SreAgent.Options.CommonPrompts;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
+namespace Azure.Mcp.Tools.SreAgent.Commands.CommonPrompts;
 
-[CommandMetadata(Id = "6fe4a44c-b9c5-44b1-b985-12f9043b1051", Name = "memories-delete", Title = "Delete Memory", Description = "Delete a knowledge base document after explicit confirmation.", Destructive = true, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
-public sealed class MemoriesDeleteCommand(ILogger<MemoriesDeleteCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<MemoriesDeleteOptions>
+[CommandMetadata(Id = "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f", Name = "delete", Title = "Delete Common Prompt", Description = "Delete a common prompt after explicit confirmation.", Destructive = true, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+public sealed class CommonPromptsDeleteCommand(ILogger<CommonPromptsDeleteCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<CommonPromptsDeleteOptions>
 {
-    private readonly ILogger<MemoriesDeleteCommand> _logger = logger;
+    private readonly ILogger<CommonPromptsDeleteCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
     protected override void RegisterOptions(Command command)
@@ -24,7 +24,7 @@ public sealed class MemoriesDeleteCommand(ILogger<MemoriesDeleteCommand> logger,
         command.Options.Add(SreAgentPortedOptionDefinitions.Confirm);
     }
 
-    protected override MemoriesDeleteOptions BindOptions(ParseResult parseResult)
+    protected override CommonPromptsDeleteOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
         o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.NameName);
@@ -40,14 +40,14 @@ public sealed class MemoriesDeleteCommand(ILogger<MemoriesDeleteCommand> logger,
         {
             if (!o.Confirm)
             {
-                SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"Error: Refusing to delete memory '{o.Name}': destructive operation requires 'confirm: true'. Ask the user to confirm, then retry with confirm=true.");
+                SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"Error: Refusing to delete common prompt '{o.Name}': destructive operation requires 'confirm: true'. Ask the user to confirm, then retry with confirm=true.");
                 return context.Response;
             }
             var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
-            await _sreAgentService.DeleteMemoryAsync(endpoint, o.Name!, o.Tenant, cancellationToken);
-            SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ Document '{o.Name}' deleted from knowledge base.");
+            await _sreAgentService.DeleteCommonPromptAsync(endpoint, o.Name!, o.Tenant, cancellationToken);
+            SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ Common prompt '{o.Name}' deleted.");
         }
-        catch (Exception ex) { _logger.LogError(ex, "Error deleting memory"); HandleException(context, ex); }
+        catch (Exception ex) { _logger.LogError(ex, "Error deleting common prompt"); HandleException(context, ex); }
         return context.Response;
     }
 }

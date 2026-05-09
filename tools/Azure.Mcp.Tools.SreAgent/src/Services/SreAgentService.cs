@@ -674,32 +674,99 @@ public sealed class SreAgentService(
 
     #region Incidents + Workflows + Docs + Architecture (sub-agent D)
 
-    public async Task<string> CallAgentDataPlaneAsync(
-        string subscription,
-        string agent,
-        string? resourceGroup,
-        string path,
-        HttpMethod method,
-        string? jsonBody = null,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+    public async Task<List<ThreadListItem>> ListIncidentThreadsAsync(string endpoint, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        var endpoint = await ResolveAgentEndpointAsync(subscription, agent, resourceGroup, tenant, retryPolicy, cancellationToken);
-        return await CallDataPlaneAsync(endpoint, path, method, jsonBody, tenant, cancellationToken);
+        var body = await CallDataPlaneAsync(endpoint, "/api/v1/threads", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return SreAgentPortedCommandHelpers.DeserializeArray(body, SreAgentJsonContext.Default.ListThreadListItem);
     }
 
-    public async Task<string> UploadMemoryAsync(
-        string subscription,
-        string agent,
-        string? resourceGroup,
-        string fileName,
-        string content,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
+    public async Task<IncidentThreadResponse?> CreateIncidentThreadAsync(string endpoint, IncidentThreadCreateRequest request, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        var endpoint = await ResolveAgentEndpointAsync(subscription, agent, resourceGroup, tenant, retryPolicy, cancellationToken);
+        var json = JsonSerializer.Serialize(request, SreAgentJsonContext.Default.IncidentThreadCreateRequest);
+        var body = await CallDataPlaneAsync(endpoint, "/api/v1/threads", HttpMethod.Post, json, tenant, cancellationToken);
+        return JsonSerializer.Deserialize(body, SreAgentJsonContext.Default.IncidentThreadResponse);
+    }
+
+    public async Task<List<IncidentFilter>> ListIncidentFiltersAsync(string endpoint, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var body = await CallDataPlaneAsync(endpoint, "/api/v1/incidentplayground/filters", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return SreAgentPortedCommandHelpers.DeserializeArray(body, SreAgentJsonContext.Default.ListIncidentFilter);
+    }
+
+    public async Task<List<IncidentHandler>> ListIncidentHandlersAsync(string endpoint, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var body = await CallDataPlaneAsync(endpoint, "/api/v1/incidentplayground/handlers", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return SreAgentPortedCommandHelpers.DeserializeArray(body, SreAgentJsonContext.Default.ListIncidentHandler);
+    }
+
+    public async Task CreateOrUpdateIncidentFilterAsync(string endpoint, string filterId, IncidentFilterPayload payload, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filterId);
+        var json = JsonSerializer.Serialize(payload, SreAgentJsonContext.Default.IncidentFilterPayload);
+        await CallDataPlaneAsync(endpoint, $"/api/v1/incidentplayground/filters/{Uri.EscapeDataString(filterId)}", HttpMethod.Put, json, tenant, cancellationToken);
+    }
+
+    public async Task DeleteIncidentFilterAsync(string endpoint, string filterId, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filterId);
+        await CallDataPlaneAsync(endpoint, $"/api/v1/incidentplayground/filters/{Uri.EscapeDataString(filterId)}", HttpMethod.Delete, tenant: tenant, cancellationToken: cancellationToken);
+    }
+
+    public async Task EnableIncidentFilterAsync(string endpoint, string filterId, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filterId);
+        await CallDataPlaneAsync(endpoint, $"/api/v1/incidentplayground/filters/{Uri.EscapeDataString(filterId)}/enable", HttpMethod.Post, tenant: tenant, cancellationToken: cancellationToken);
+    }
+
+    public async Task CreateOrUpdateIncidentHandlerAsync(string endpoint, string handlerId, IncidentHandler payload, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(handlerId);
+        var json = JsonSerializer.Serialize(payload, SreAgentJsonContext.Default.IncidentHandler);
+        await CallDataPlaneAsync(endpoint, $"/api/v1/incidentplayground/handlers/{Uri.EscapeDataString(handlerId)}", HttpMethod.Put, json, tenant, cancellationToken);
+    }
+
+    public async Task ApplyExtendedAgentResourceAsync(string endpoint, string kind, string name, ExtendedAgentResourceEnvelope payload, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(kind);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        var path = kind switch
+        {
+            "ExtendedAgentTool" => $"/api/v2/extendedAgent/tools/{Uri.EscapeDataString(name)}",
+            "ExtendedAgent" => $"/api/v2/extendedAgent/agents/{Uri.EscapeDataString(name)}",
+            _ => throw new ArgumentException($"Unsupported extended agent resource kind '{kind}'.", nameof(kind))
+        };
+        var json = JsonSerializer.Serialize(payload, SreAgentJsonContext.Default.ExtendedAgentResourceEnvelope);
+        await CallDataPlaneAsync(endpoint, path, HttpMethod.Put, json, tenant, cancellationToken);
+    }
+
+    public async Task<List<DocumentInfo>> ListMemoriesAsync(string endpoint, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var body = await CallDataPlaneAsync(endpoint, "/api/v1/AgentMemory/files", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return SreAgentPortedCommandHelpers.DeserializeArray(body, SreAgentJsonContext.Default.ListDocumentInfo);
+    }
+
+    public async Task DeleteMemoryAsync(string endpoint, string name, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        await CallDataPlaneAsync(endpoint, $"/api/v1/AgentMemory/document/{Uri.EscapeDataString(name)}", HttpMethod.Delete, tenant: tenant, cancellationToken: cancellationToken);
+    }
+
+    public async Task<List<MemorySearchResult>> SearchMemoriesAsync(string endpoint, string query, int k = 10, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(query);
+        var body = await CallDataPlaneAsync(endpoint, $"/api/v1/AgentMemory/documents?query={Uri.EscapeDataString(query)}&k={k}", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return SreAgentPortedCommandHelpers.DeserializeArray(body, SreAgentJsonContext.Default.ListMemorySearchResult);
+    }
+
+    public async Task ReindexMemoriesAsync(string endpoint, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        await CallDataPlaneAsync(endpoint, "/api/v1/AgentMemory/rebuildIndex", HttpMethod.Post, tenant: tenant, cancellationToken: cancellationToken);
+    }
+
+    public async Task UploadMemoryAsync(string endpoint, string fileName, string content, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(endpoint);
+        ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
         var endpointUri = new Uri(endpoint);
         var requestUri = new Uri(endpointUri, "/api/v1/AgentMemory/upload");
         var credential = await GetCredential(tenant, cancellationToken);
@@ -708,7 +775,7 @@ public sealed class SreAgentService(
         using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
         using var multipartContent = new MultipartFormDataContent();
-        var fileContent = new StringContent(content, Encoding.UTF8, "text/markdown");
+        var fileContent = new StringContent(content ?? string.Empty, Encoding.UTF8, "text/markdown");
         multipartContent.Add(fileContent, "files", fileName);
         request.Content = multipartContent;
 
@@ -719,27 +786,39 @@ public sealed class SreAgentService(
         {
             throw new HttpRequestException($"SRE Agent memory upload to {endpointUri.Host} failed with status {(int)response.StatusCode}: {Truncate(body, 300)}");
         }
-
-        return body;
     }
 
-    private async Task<string> ResolveAgentEndpointAsync(
-        string subscription,
-        string agent,
-        string? resourceGroup,
-        string? tenant,
-        RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken)
+    public async Task<List<CommonPromptEnvelope>> ListCommonPromptsAsync(string endpoint, string? search = null, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(agent), agent));
-        var agents = await ListAgentsAsync(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
-        var match = agents.FirstOrDefault(a => string.Equals(a.Name, agent, StringComparison.OrdinalIgnoreCase));
-        if (match?.Endpoint is not { Length: > 0 } endpoint)
-        {
-            throw new InvalidOperationException($"SRE Agent resource '{agent}' was not found or does not expose a data-plane endpoint.");
-        }
+        var query = string.IsNullOrWhiteSpace(search) ? string.Empty : $"?search={Uri.EscapeDataString(search)}";
+        var body = await CallDataPlaneAsync(endpoint, $"/api/v2/extendedAgent/commonprompts{query}", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return SreAgentPortedCommandHelpers.DeserializeArray(body, SreAgentJsonContext.Default.ListCommonPromptEnvelope);
+    }
 
-        return endpoint;
+    public async Task<CommonPromptEnvelope?> GetCommonPromptAsync(string endpoint, string name, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        var body = await CallDataPlaneAsync(endpoint, $"/api/v2/extendedAgent/commonprompts/{Uri.EscapeDataString(name)}", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return JsonSerializer.Deserialize(body, SreAgentJsonContext.Default.CommonPromptEnvelope);
+    }
+
+    public async Task CreateOrUpdateCommonPromptAsync(string endpoint, string name, string content, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        var envelope = new CommonPromptEnvelope
+        {
+            Name = name,
+            Type = "CommonPrompt",
+            Properties = new CommonPromptProperties { Prompt = content }
+        };
+        var json = JsonSerializer.Serialize(envelope, SreAgentJsonContext.Default.CommonPromptEnvelope);
+        await CallDataPlaneAsync(endpoint, $"/api/v2/extendedAgent/commonprompts/{Uri.EscapeDataString(name)}", HttpMethod.Put, json, tenant, cancellationToken);
+    }
+
+    public async Task DeleteCommonPromptAsync(string endpoint, string name, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        await CallDataPlaneAsync(endpoint, $"/api/v2/extendedAgent/commonprompts/{Uri.EscapeDataString(name)}", HttpMethod.Delete, tenant: tenant, cancellationToken: cancellationToken);
     }
 
     #endregion

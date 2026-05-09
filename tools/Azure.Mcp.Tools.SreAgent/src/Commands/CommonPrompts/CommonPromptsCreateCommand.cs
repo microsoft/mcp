@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.SreAgent.Options;
-using Azure.Mcp.Tools.SreAgent.Options.Docs;
+using Azure.Mcp.Tools.SreAgent.Options.CommonPrompts;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
+namespace Azure.Mcp.Tools.SreAgent.Commands.CommonPrompts;
 
-[CommandMetadata(Id = "06255dae-7848-45f9-8cfc-b48bed1fe763", Name = "memories-add", Title = "Add Memory", Description = "Upload markdown content to the SRE Agent knowledge base.", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
-public sealed class MemoriesAddCommand(ILogger<MemoriesAddCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<MemoriesAddOptions>
+[CommandMetadata(Id = "5d6e7f80-1a2b-4c3d-9e8f-7a6b5c4d3e2f", Name = "create", Title = "Create or Update Common Prompt", Description = "Create or update a named common prompt on the SRE Agent.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+public sealed class CommonPromptsCreateCommand(ILogger<CommonPromptsCreateCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<CommonPromptsCreateOptions>
 {
-    private readonly ILogger<MemoriesAddCommand> _logger = logger;
+    private readonly ILogger<CommonPromptsCreateCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
     protected override void RegisterOptions(Command command)
@@ -24,7 +24,7 @@ public sealed class MemoriesAddCommand(ILogger<MemoriesAddCommand> logger, ISreA
         command.Options.Add(SreAgentPortedOptionDefinitions.Content);
     }
 
-    protected override MemoriesAddOptions BindOptions(ParseResult parseResult)
+    protected override CommonPromptsCreateOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
         o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.NameName);
@@ -39,12 +39,10 @@ public sealed class MemoriesAddCommand(ILogger<MemoriesAddCommand> logger, ISreA
         try
         {
             var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
-            var safe = SreAgentPortedCommandHelpers.SanitizeFileName(o.Name!);
-            var file = safe.EndsWith(".md", StringComparison.OrdinalIgnoreCase) ? safe : $"{safe}.md";
-            await _sreAgentService.UploadMemoryAsync(endpoint, file, o.Content!, o.Tenant, cancellationToken);
-            SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ Memory '{file}' added to knowledge base. It will be available for RAG retrieval after indexing.");
+            await _sreAgentService.CreateOrUpdateCommonPromptAsync(endpoint, o.Name!, o.Content!, o.Tenant, cancellationToken);
+            SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ Common prompt '{o.Name}' saved.");
         }
-        catch (Exception ex) { _logger.LogError(ex, "Error adding memory"); HandleException(context, ex); }
+        catch (Exception ex) { _logger.LogError(ex, "Error creating common prompt"); HandleException(context, ex); }
         return context.Response;
     }
 }

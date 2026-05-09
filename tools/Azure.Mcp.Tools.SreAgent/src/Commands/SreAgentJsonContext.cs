@@ -106,6 +106,12 @@ namespace Azure.Mcp.Tools.SreAgent.Commands;
 [JsonSerializable(typeof(List<DocumentInfo>))]
 [JsonSerializable(typeof(MemorySearchResult))]
 [JsonSerializable(typeof(List<MemorySearchResult>))]
+[JsonSerializable(typeof(IncidentFilterPayload))]
+[JsonSerializable(typeof(IncidentThreadCreateRequest))]
+[JsonSerializable(typeof(CommonPromptEnvelope))]
+[JsonSerializable(typeof(List<CommonPromptEnvelope>))]
+[JsonSerializable(typeof(CommonPromptProperties))]
+[JsonSerializable(typeof(ExtendedAgentResourceEnvelope))]
 
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,

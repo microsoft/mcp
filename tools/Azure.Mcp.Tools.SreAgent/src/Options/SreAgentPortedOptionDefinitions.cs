@@ -39,6 +39,7 @@ public static partial class SreAgentPortedOptionDefinitions
     public const string RequirementsName = "requirements";
     public const string TriggerTypeName = "trigger-type";
     public const string KustoConnectorName = "kusto-connector";
+    public const string SearchName = "search";
 
     public static readonly Option<string> Agent = new($"--{SreAgentOptionDefinitions.AgentNameName}") { Description = "The SRE Agent resource name.", Required = true };
     public static readonly Option<string> Name = new($"--{NameName}") { Description = "Name for the resource.", Required = true };
@@ -75,4 +76,5 @@ public static partial class SreAgentPortedOptionDefinitions
     public static readonly Option<string> Requirements = new($"--{RequirementsName}") { Description = "Architecture requirements.", Required = true };
     public static readonly Option<string?> TriggerType = new($"--{TriggerTypeName}") { Description = "Trigger type, such as manual or scheduled." };
     public static readonly Option<string?> KustoConnector = new($"--{KustoConnectorName}") { Description = "Kusto connector name." };
+    public static readonly Option<string?> Search = new($"--{SearchName}") { Description = "Optional search filter." };
 }
