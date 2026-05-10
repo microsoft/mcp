@@ -1,6 +1,6 @@
 {
-  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/refs/heads/main/schemas/mcpb-manifest-v0.4.schema.json",
-  "manifest_version": "0.4",
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/refs/heads/main/schemas/mcpb-manifest-v0.3.schema.json",
+  "manifest_version": "0.3",
   "name": "Azure.Mcp.Server",
   "display_name": "Azure MCP Server",
   "version": "2.0.0-beta.17",
