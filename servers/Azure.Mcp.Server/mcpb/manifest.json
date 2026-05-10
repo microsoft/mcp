@@ -1,5 +1,6 @@
 {
-  "manifest_version": "0.3",
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/refs/heads/main/schemas/mcpb-manifest-v0.4.schema.json",
+  "manifest_version": "0.4",
   "name": "Azure.Mcp.Server",
   "display_name": "Azure MCP Server",
   "version": "2.0.0-beta.17",
@@ -28,8 +29,31 @@
         }
       },
       "command": "${__dirname}/server/azmcp",
-      "args": [ "server", "start" ],
-      "env": {}
+      "args": [
+        "server",
+        "start",
+        "--mode",
+        "${user_config.mode}",
+        "--debug",
+        "${user_config.debug}",
+        "--read-only",
+        "${user_config.read_only}",
+        "--dangerously-disable-elicitation",
+        "${user_config.dangerously_disable_elicitation}"
+      ],
+      "env": {
+        "AZURE_TENANT_ID": "${user_config.azure_tenant_id}",
+        "AZURE_CLIENT_ID": "${user_config.azure_client_id}",
+        "AZURE_CLIENT_SECRET": "${user_config.azure_client_secret}",
+        "AZURE_SUBSCRIPTION_ID": "${user_config.azure_subscription_id}",
+        "AZURE_CLOUD": "${user_config.azure_cloud}",
+        "AZURE_TOKEN_CREDENTIALS": "${user_config.azure_token_credentials}",
+        "AZURE_MCP_COLLECT_TELEMETRY": "${user_config.azure_mcp_collect_telemetry}",
+        "AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT": "${user_config.azure_mcp_collect_telemetry_microsoft}",
+        "AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL": "${user_config.azure_mcp_only_use_broker_credential}",
+        "AZURE_MCP_ENABLE_OTLP_EXPORTER": "${user_config.azure_mcp_enable_otlp_exporter}",
+        "APPLICATIONINSIGHTS_CONNECTION_STRING": "${user_config.applicationinsights_connection_string}"
+      }
     }
   },
   "tools": [],
@@ -94,6 +118,98 @@
     "quick reference",
     "cli"
   ],
+  "user_config": {
+    "azure_tenant_id": {
+      "type": "string",
+      "title": "Entra Tenant ID",
+      "description": "Entra tenant ID. Use this to authenticate against a specific tenant. Example: 00000000-0000-0000-0000-000000000000",
+      "default": ""
+    },
+    "azure_client_id": {
+      "type": "string",
+      "title": "Entra Client ID",
+      "description": "Client ID of a service principal or user-assigned managed identity. Example: 00000000-0000-0000-0000-000000000000",
+      "default": ""
+    },
+    "azure_client_secret": {
+      "type": "string",
+      "title": "Entra Client Secret",
+      "description": "Client secret for service principal authentication. Used together with AZURE_TENANT_ID and AZURE_CLIENT_ID for non-interactive environments.",
+      "default": ""
+    },
+    "azure_subscription_id": {
+      "type": "string",
+      "title": "Azure Subscription ID",
+      "description": "Default Azure subscription ID or name to use when no subscription is specified in a command. Example: 00000000-0000-0000-0000-000000000000",
+      "default": ""
+    },
+    "azure_cloud": {
+      "type": "string",
+      "title": "Azure Cloud Environment",
+      "description": "Azure cloud environment to connect to. Supported values: AzureCloud (default public cloud), AzureChinaCloud, AzureUSGovernment.",
+      "default": ""
+    },
+    "azure_token_credentials": {
+      "type": "string",
+      "title": "Azure Token Credentials",
+      "description": "Credential chain to use for authentication. Values: 'dev' (VS/VSCode/CLI/PowerShell/AzureDeveloperCLI + browser fallback), 'prod' (Workload Identity + Managed Identity, no interactive fallback), or a specific provider name such as 'AzureCliCredential' or 'ManagedIdentityCredential'.",
+      "default": ""
+    },
+    "azure_mcp_collect_telemetry": {
+      "type": "boolean",
+      "title": "Collect Telemetry",
+      "description": "Whether to allow Azure MCP Server to collect anonymous usage telemetry. Set to false to opt out.",
+      "default": true
+    },
+    "azure_mcp_collect_telemetry_microsoft": {
+      "type": "boolean",
+      "title": "Collect Microsoft Telemetry",
+      "description": "Whether to allow Azure MCP Server to send anonymous usage telemetry to Microsoft. Enabled by default in release builds. Set to false to opt out of Microsoft-owned telemetry while keeping other telemetry settings unchanged.",
+      "default": true
+    },
+    "azure_mcp_only_use_broker_credential": {
+      "type": "boolean",
+      "title": "Only Use Broker Credential",
+      "description": "When set to true, restricts authentication to the broker credential only (e.g. Windows Web Account Manager). Useful in environments where only broker-based authentication is permitted.",
+      "default": false
+    },
+    "azure_mcp_enable_otlp_exporter": {
+      "type": "boolean",
+      "title": "Enable OTLP Exporter",
+      "description": "When set to true, enables the OpenTelemetry Protocol (OTLP) exporter for traces, metrics, and logs. Configure the exporter endpoint via standard OTEL_EXPORTER_OTLP_ENDPOINT environment variables.",
+      "default": false
+    },
+    "applicationinsights_connection_string": {
+      "type": "string",
+      "title": "Application Insights Connection String",
+      "description": "Azure Application Insights connection string for custom telemetry reporting.",
+      "default": ""
+    },
+    "debug": {
+      "type": "boolean",
+      "title": "Debug",
+      "description": "Enable debug mode with verbose logging to stderr. Default: false.",
+      "default": false
+    },
+    "dangerously_disable_elicitation": {
+      "type": "boolean",
+      "title": "Disable User Confirmation (Not Recommended)",
+      "description": "Disable user confirmation (elicitation) before allowing high risk commands to run, such as returning secrets (passwords) from KeyVault. When enabled, tools that handle secrets, credentials, or sensitive data will execute without user confirmation. This removes an important security layer designed to prevent unauthorized access to sensitive information. Only use this option in trusted, automated environments where user interaction isn't possible. Never use this option in production environments or when handling untrusted input. Default: false.",
+      "default": false
+    },
+    "mode": {
+      "type": "string",
+      "title": "Mode",
+      "description": "Server mode: namespace, consolidated, all, or single. Default: namespace.",
+      "default": "namespace"
+    },
+    "read_only": {
+      "type": "boolean",
+      "title": "Read Only",
+      "description": "Whether the MCP server should be read-only. If true, no write operations are allowed. Default: false.",
+      "default": false
+    }
+  },
   "license": "MIT",
   "privacy_policies": [
     "https://www.microsoft.com/privacy/privacystatement"
