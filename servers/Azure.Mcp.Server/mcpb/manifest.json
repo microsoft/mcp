@@ -135,7 +135,8 @@
       "type": "string",
       "title": "Entra Client Secret",
       "description": "Client secret for service principal authentication. Used together with AZURE_TENANT_ID and AZURE_CLIENT_ID for non-interactive environments.",
-      "default": ""
+      "default": "",
+      "sensitive": true
     },
     "azure_subscription_id": {
       "type": "string",
@@ -146,7 +147,7 @@
     "azure_cloud": {
       "type": "string",
       "title": "Azure Cloud Environment",
-      "description": "Azure cloud environment to connect to. Supported values: AzureCloud (default public cloud), AzureChinaCloud, AzureUSGovernment.",
+      "description": "Azure cloud environment to connect to. Examples: AzureCloud (default public cloud), AzureChinaCloud, AzureUSGovernment.",
       "default": ""
     },
     "azure_token_credentials": {
@@ -183,7 +184,8 @@
       "type": "string",
       "title": "Application Insights Connection String",
       "description": "Azure Application Insights connection string for custom telemetry reporting.",
-      "default": ""
+      "default": "",
+      "sensitive": true
     },
     "debug": {
       "type": "boolean",
