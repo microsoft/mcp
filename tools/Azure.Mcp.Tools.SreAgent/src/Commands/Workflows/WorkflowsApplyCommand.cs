@@ -42,12 +42,29 @@ public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger,
         try
         {
             var yaml = o.YamlContent!;
-            if (string.IsNullOrWhiteSpace(yaml)) { SreAgentPortedCommandHelpers.SetTextResult(context.Response, "Error: YAML content is empty"); return context.Response; }
+            if (string.IsNullOrWhiteSpace(yaml))
+            {
+                SreAgentPortedCommandHelpers.SetTextResult(context.Response, "Error: YAML content is empty");
+                return context.Response;
+            }
             var parsed = ParseMinimalYaml(yaml);
-            var kind = parsed.Kind; var name = parsed.Name;
-            if (string.IsNullOrWhiteSpace(kind)) { SreAgentPortedCommandHelpers.SetTextResult(context.Response, "Error: YAML must contain a \"kind\" field (ExtendedAgent or ExtendedAgentTool)"); return context.Response; }
-            if (string.IsNullOrWhiteSpace(name)) { SreAgentPortedCommandHelpers.SetTextResult(context.Response, "Error: YAML must contain metadata.name"); return context.Response; }
-            if (kind != "ExtendedAgent" && kind != "ExtendedAgentTool") { SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"Error: Unsupported kind \"{kind}\". Expected ExtendedAgent or ExtendedAgentTool."); return context.Response; }
+            var kind = parsed.Kind;
+            var name = parsed.Name;
+            if (string.IsNullOrWhiteSpace(kind))
+            {
+                SreAgentPortedCommandHelpers.SetTextResult(context.Response, "Error: YAML must contain a \"kind\" field (ExtendedAgent or ExtendedAgentTool)");
+                return context.Response;
+            }
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                SreAgentPortedCommandHelpers.SetTextResult(context.Response, "Error: YAML must contain metadata.name");
+                return context.Response;
+            }
+            if (kind != "ExtendedAgent" && kind != "ExtendedAgentTool")
+            {
+                SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"Error: Unsupported kind \"{kind}\". Expected ExtendedAgent or ExtendedAgentTool.");
+                return context.Response;
+            }
 
             var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
             var props = new Dictionary<string, JsonElement>();
@@ -69,17 +86,37 @@ public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger,
             await _sreAgentService.ApplyExtendedAgentResourceAsync(endpoint, kind, name!, payload, o.Tenant, cancellationToken);
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ {(kind == "ExtendedAgentTool" ? "Tool" : "Agent")} '{name}' applied successfully");
         }
-        catch (Exception ex) { _logger.LogError(ex, "Error applying workflow YAML"); HandleException(context, ex); }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error applying workflow YAML");
+            HandleException(context, ex);
+        }
         return context.Response;
     }
 
     private static (string? Kind, string? Name, string? Owner, JsonArray Tags, JsonObject Spec) ParseMinimalYaml(string yaml)
     {
-        string? kind = null; string? name = null; string? owner = null; var tags = new JsonArray(); var spec = new JsonObject(); string? section = null; string? currentKey = null; var block = new List<string>(); var blockIsList = false;
+        string? kind = null;
+        string? name = null;
+        string? owner = null;
+        var tags = new JsonArray();
+        var spec = new JsonObject();
+        string? section = null;
+        string? currentKey = null;
+        var block = new List<string>();
+        var blockIsList = false;
         foreach (var rawLine in yaml.Replace("\r\n", "\n").Split('\n'))
         {
-            var line = rawLine.TrimEnd(); var trimmed = line.Trim(); if (trimmed.Length == 0 || trimmed.StartsWith('#')) continue;
-            if (!char.IsWhiteSpace(line[0])) { FlushBlock(spec, ref currentKey, block, ref blockIsList); section = trimmed.TrimEnd(':'); if (trimmed.StartsWith("kind:", StringComparison.OrdinalIgnoreCase)) kind = Clean(trimmed[5..]); continue; }
+            var line = rawLine.TrimEnd();
+            var trimmed = line.Trim();
+            if (trimmed.Length == 0 || trimmed.StartsWith('#')) continue;
+            if (!char.IsWhiteSpace(line[0]))
+            {
+                FlushBlock(spec, ref currentKey, block, ref blockIsList);
+                section = trimmed.TrimEnd(':');
+                if (trimmed.StartsWith("kind:", StringComparison.OrdinalIgnoreCase)) kind = Clean(trimmed[5..]);
+                continue;
+            }
             if (section == "metadata")
             {
                 if (trimmed.StartsWith("name:", StringComparison.OrdinalIgnoreCase)) name = Clean(trimmed[5..]);
@@ -88,13 +125,41 @@ public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger,
             }
             else if (section == "spec")
             {
-                if (trimmed.StartsWith('-')) { if (currentKey is not null) { blockIsList = true; block.Add(Clean(trimmed[1..])); } continue; }
+                if (trimmed.StartsWith('-'))
+                {
+                    if (currentKey is not null)
+                    {
+                        blockIsList = true;
+                        block.Add(Clean(trimmed[1..]));
+                    }
+                    continue;
+                }
                 var colon = trimmed.IndexOf(':');
-                if (colon > 0) { FlushBlock(spec, ref currentKey, block, ref blockIsList); var key = trimmed[..colon].Trim(); var value = trimmed[(colon + 1)..].Trim(); if (value is "|" or "|-" or ">" or ">-") { currentKey = key; blockIsList = false; } else if (value.Length == 0) { currentKey = key; blockIsList = false; } else spec[key] = Clean(value); }
+                if (colon > 0)
+                {
+                    FlushBlock(spec, ref currentKey, block, ref blockIsList);
+                    var key = trimmed[..colon].Trim();
+                    var value = trimmed[(colon + 1)..].Trim();
+                    if (value is "|" or "|-" or ">" or ">-")
+                    {
+                        currentKey = key;
+                        blockIsList = false;
+                    }
+                    else if (value.Length == 0)
+                    {
+                        currentKey = key;
+                        blockIsList = false;
+                    }
+                    else
+                    {
+                        spec[key] = Clean(value);
+                    }
+                }
                 else if (currentKey is not null) block.Add(trimmed);
             }
         }
-        FlushBlock(spec, ref currentKey, block, ref blockIsList); return (kind, name, owner, tags, spec);
+        FlushBlock(spec, ref currentKey, block, ref blockIsList);
+        return (kind, name, owner, tags, spec);
     }
 
     private static void FlushBlock(JsonObject spec, ref string? currentKey, List<string> block, ref bool blockIsList)
@@ -110,7 +175,9 @@ public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger,
         {
             spec[currentKey] = block.Count == 0 ? string.Empty : string.Join('\n', block);
         }
-        currentKey = null; block.Clear(); blockIsList = false;
+        currentKey = null;
+        block.Clear();
+        blockIsList = false;
     }
 
     private static string Clean(string value) => value.Trim().Trim('"', '\'');

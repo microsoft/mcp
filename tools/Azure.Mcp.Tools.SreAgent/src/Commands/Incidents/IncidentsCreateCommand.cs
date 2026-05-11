@@ -42,7 +42,17 @@ public sealed class IncidentsCreateCommand(ILogger<IncidentsCreateCommand> logge
         {
             var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
             var user = Environment.GetEnvironmentVariable("USER") ?? Environment.GetEnvironmentVariable("USERNAME") ?? "mcp-user";
-            var prompt = string.Join('\n', new[] { $"🚨 INCIDENT: {o.Title}", $"Severity: {o.Severity!.ToUpperInvariant()}", o.Services?.Length > 0 ? $"Affected services: {string.Join(", ", o.Services)}" : string.Empty, string.Empty, o.Description!, string.Empty, "Investigate this incident. Identify root cause, assess impact, and recommend remediation steps.", "Check relevant incident response plans if available." }.Where(x => x.Length > 0));
+            var prompt = string.Join('\n', new[]
+            {
+                $"🚨 INCIDENT: {o.Title}",
+                $"Severity: {o.Severity!.ToUpperInvariant()}",
+                o.Services?.Length > 0 ? $"Affected services: {string.Join(", ", o.Services)}" : string.Empty,
+                string.Empty,
+                o.Description!,
+                string.Empty,
+                "Investigate this incident. Identify root cause, assess impact, and recommend remediation steps.",
+                "Check relevant incident response plans if available."
+            }.Where(x => x.Length > 0));
             var request = new IncidentThreadCreateRequest
             {
                 StartMessage = new IncidentThreadStartMessage
@@ -54,10 +64,17 @@ public sealed class IncidentsCreateCommand(ILogger<IncidentsCreateCommand> logge
                 }
             };
             var thread = await _sreAgentService.CreateIncidentThreadAsync(endpoint, request, o.Tenant, cancellationToken);
-            if (string.IsNullOrWhiteSpace(thread?.Id)) throw new InvalidOperationException("Incident thread created but no ID returned");
+            if (string.IsNullOrWhiteSpace(thread?.Id))
+            {
+                throw new InvalidOperationException("Incident thread created but no ID returned");
+            }
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ Incident created: {o.Title}\n\n- **Thread ID:** {thread.Id}\n- **Severity:** {o.Severity}\n- **Agent:** {o.Agent}\n{(o.Services?.Length > 0 ? $"- **Services:** {string.Join(", ", o.Services)}\n" : string.Empty)}\nThe agent is investigating. Use get_thread to check progress, or send_message to provide additional context.");
         }
-        catch (Exception ex) { _logger.LogError(ex, "Error creating incident"); HandleException(context, ex); }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating incident");
+            HandleException(context, ex);
+        }
         return context.Response;
     }
 }

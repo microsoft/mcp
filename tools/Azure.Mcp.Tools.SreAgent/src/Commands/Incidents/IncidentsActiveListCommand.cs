@@ -26,8 +26,16 @@ public sealed class IncidentsActiveListCommand(ILogger<IncidentsActiveListComman
             var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
             var threads = await _sreAgentService.ListIncidentThreadsAsync(endpoint, o.Tenant, cancellationToken);
             var keywords = new[] { "incident", "🚨", "outage", "alert", "critical", "crash", "failure" };
-            var incidents = threads.Where(t => !string.IsNullOrWhiteSpace(t.Status?.IncidentStatus?.IncidentId) || !string.IsNullOrWhiteSpace(t.Status?.IncidentStatus?.Status) || t.Status?.ActionsStatus?.HasCriticalActions == true || keywords.Any(k => $"{t.Title ?? string.Empty} {t.StartMessage?.Text ?? string.Empty}".Contains(k, StringComparison.OrdinalIgnoreCase))).ToList();
-            if (incidents.Count == 0) { SreAgentPortedCommandHelpers.SetTextResult(context.Response, "No active incidents found. Use create_incident to start an incident investigation."); return context.Response; }
+            var incidents = threads.Where(t =>
+                !string.IsNullOrWhiteSpace(t.Status?.IncidentStatus?.IncidentId)
+                || !string.IsNullOrWhiteSpace(t.Status?.IncidentStatus?.Status)
+                || t.Status?.ActionsStatus?.HasCriticalActions == true
+                || keywords.Any(k => $"{t.Title ?? string.Empty} {t.StartMessage?.Text ?? string.Empty}".Contains(k, StringComparison.OrdinalIgnoreCase))).ToList();
+            if (incidents.Count == 0)
+            {
+                SreAgentPortedCommandHelpers.SetTextResult(context.Response, "No active incidents found. Use create_incident to start an incident investigation.");
+                return context.Response;
+            }
             var lines = new List<string> { "# Active Incidents", string.Empty };
             foreach (var t in incidents)
             {
@@ -41,10 +49,15 @@ public sealed class IncidentsActiveListCommand(ILogger<IncidentsActiveListComman
                 lines.Add($"- **{title}** ({t.Id})");
                 lines.Add($"  Status: {(parts.Count > 0 ? string.Join(", ", parts) : "Active")} | Agent: {agent}{modified}");
             }
-            lines.Add(string.Empty); lines.Add("Use get_thread to see full details, or send_message to provide updates.");
+            lines.Add(string.Empty);
+            lines.Add("Use get_thread to see full details, or send_message to provide updates.");
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, string.Join('\n', lines));
         }
-        catch (Exception ex) { _logger.LogError(ex, "Error listing active incidents"); HandleException(context, ex); }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error listing active incidents");
+            HandleException(context, ex);
+        }
         return context.Response;
     }
 }

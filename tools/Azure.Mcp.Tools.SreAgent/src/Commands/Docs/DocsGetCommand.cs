@@ -14,12 +14,31 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
 public sealed class DocsGetCommand(ILogger<DocsGetCommand> logger) : GlobalCommand<DocsGetOptions>
 {
     private readonly ILogger<DocsGetCommand> _logger = logger;
-    protected override void RegisterOptions(Command command) { base.RegisterOptions(command); command.Options.Add(SreAgentPortedOptionDefinitions.Topic); }
-    protected override DocsGetOptions BindOptions(ParseResult parseResult) { var o = base.BindOptions(parseResult); o.Topic = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.TopicName); return o; }
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(SreAgentPortedOptionDefinitions.Topic);
+    }
+
+    protected override DocsGetOptions BindOptions(ParseResult parseResult)
+    {
+        var o = base.BindOptions(parseResult);
+        o.Topic = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.TopicName);
+        return o;
+    }
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid) return Task.FromResult(context.Response); var o = BindOptions(parseResult);
-        try { SreAgentPortedCommandHelpers.SetTextResult(context.Response, Resolve(o.Topic!.ToLowerInvariant())); } catch (Exception ex) { _logger.LogError(ex, "Error getting documentation"); HandleException(context, ex); }
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid) return Task.FromResult(context.Response);
+        var o = BindOptions(parseResult);
+        try
+        {
+            SreAgentPortedCommandHelpers.SetTextResult(context.Response, Resolve(o.Topic!.ToLowerInvariant()));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting documentation");
+            HandleException(context, ex);
+        }
         return Task.FromResult(context.Response);
     }
     private static string Resolve(string topic) => topic switch

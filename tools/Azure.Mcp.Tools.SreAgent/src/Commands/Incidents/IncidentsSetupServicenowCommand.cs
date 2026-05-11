@@ -68,18 +68,30 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
             };
             if (string.Equals(o.AuthType, "BearerToken", StringComparison.OrdinalIgnoreCase))
             {
-                if (string.IsNullOrWhiteSpace(o.TokenEnv)) throw new ArgumentException("tokenEnv is required for BearerToken auth");
+                if (string.IsNullOrWhiteSpace(o.TokenEnv))
+                {
+                    throw new ArgumentException("tokenEnv is required for BearerToken auth");
+                }
                 var token = Environment.GetEnvironmentVariable(o.TokenEnv);
-                if (string.IsNullOrWhiteSpace(token)) throw new InvalidOperationException($"ServiceNow bearer token environment variable '{o.TokenEnv}' is not set.");
+                if (string.IsNullOrWhiteSpace(token))
+                {
+                    throw new InvalidOperationException($"ServiceNow bearer token environment variable '{o.TokenEnv}' is not set.");
+                }
                 ext["authType"] = "BearerToken";
                 ext["bearerToken"] = token;
             }
             else
             {
-                if (string.IsNullOrWhiteSpace(o.UsernameEnv) || string.IsNullOrWhiteSpace(o.PasswordEnv)) throw new ArgumentException("usernameEnv and passwordEnv are required for BasicAuth");
+                if (string.IsNullOrWhiteSpace(o.UsernameEnv) || string.IsNullOrWhiteSpace(o.PasswordEnv))
+                {
+                    throw new ArgumentException("usernameEnv and passwordEnv are required for BasicAuth");
+                }
                 var username = Environment.GetEnvironmentVariable(o.UsernameEnv);
                 var password = Environment.GetEnvironmentVariable(o.PasswordEnv);
-                if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password)) throw new InvalidOperationException("ServiceNow username/password environment variables are not set.");
+                if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+                {
+                    throw new InvalidOperationException("ServiceNow username/password environment variables are not set.");
+                }
                 ext["authType"] = "CustomHeaders";
                 ext["headers"] = new Dictionary<string, object>
                 {
@@ -102,7 +114,11 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
             await _sreAgentService.CreateOrUpdateConnectorAsync(endpoint, o.Name!, connector, o.Tenant, cancellationToken);
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ ServiceNow connector '{o.Name}' created ({normalized}).\n\n**Next steps:**\n1. Run `connectors -> test` to verify the connection\n2. Add ServiceNow tools to your agent via `yaml -> apply`\n3. Create an incident response plan with `incidents -> create_plan`");
         }
-        catch (Exception ex) { _logger.LogError(ex, "Error setting up ServiceNow connector"); HandleException(context, ex); }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting up ServiceNow connector");
+            HandleException(context, ex);
+        }
         return context.Response;
     }
 }

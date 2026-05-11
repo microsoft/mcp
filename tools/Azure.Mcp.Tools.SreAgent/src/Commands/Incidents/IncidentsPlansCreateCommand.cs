@@ -15,7 +15,13 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 [CommandMetadata(Id = "84d958db-8de0-456d-a1d5-99d372f33c80", Name = "plans-create", Title = "Create Incident Response Plan", Description = "Create and enable an incident response plan with a filter and handler.", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
 public sealed class IncidentsPlansCreateCommand(ILogger<IncidentsPlansCreateCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<IncidentPlanCreateOptions>
 {
-    private static readonly Dictionary<string, string[]> SeverityToPriorities = new(StringComparer.OrdinalIgnoreCase) { ["critical"] = ["P1"], ["high"] = ["P1", "P2"], ["medium"] = ["P2", "P3"], ["low"] = ["P3", "P4"] };
+    private static readonly Dictionary<string, string[]> SeverityToPriorities = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["critical"] = ["P1"],
+        ["high"] = ["P1", "P2"],
+        ["medium"] = ["P2", "P3"],
+        ["low"] = ["P3", "P4"]
+    };
     private readonly ILogger<IncidentsPlansCreateCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
@@ -105,7 +111,11 @@ public sealed class IncidentsPlansCreateCommand(ILogger<IncidentsPlansCreateComm
 
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ Incident response plan '{o.Name}' created and enabled.\n\n**Filter:** {filterId} (matches incidents with title containing \"{o.TriggerCondition}\", priorities: {string.Join(", ", priorities)}, service: {o.Services![0]})\n**Handler:** {handlerId} ({o.Steps!.Length} response steps)\n**Agent:** {o.Agent} (mode: {o.AgentMode ?? "autonomous"})\n\nIncoming incidents matching the filter will automatically trigger the '{o.Agent}' agent with the configured response steps. The plan is visible in the portal under Incident Management.");
         }
-        catch (Exception ex) { _logger.LogError(ex, "Error creating incident response plan"); HandleException(context, ex); }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating incident response plan");
+            HandleException(context, ex);
+        }
         return context.Response;
     }
 }

@@ -55,7 +55,9 @@ public sealed class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetupPagerdu
                 SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"Connector '{o.Name}' already exists. Use `connectors -> test` to verify, or `connectors -> delete` to recreate.");
                 return context.Response;
             }
-            catch (HttpRequestException) { }
+            catch (HttpRequestException)
+            {
+            }
 
             var dataSource = string.IsNullOrWhiteSpace(o.Subdomain) ? "https://api.pagerduty.com" : $"https://{o.Subdomain}.pagerduty.com";
             var connector = new AgentConnectorEnvelope
@@ -79,7 +81,11 @@ public sealed class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetupPagerdu
             await _sreAgentService.CreateOrUpdateConnectorAsync(endpoint, o.Name!, connector, o.Tenant, cancellationToken);
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ PagerDuty connector '{o.Name}' created (API key resolved from ${o.ApiKeyEnv}).\n\n**Next steps:**\n1. Run `connectors -> test` to verify the connection\n2. Add PagerDuty tools to your agent via `yaml -> apply`\n3. Create an incident response plan with `incidents -> create_plan`");
         }
-        catch (Exception ex) { _logger.LogError(ex, "Error setting up PagerDuty connector"); HandleException(context, ex); }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting up PagerDuty connector");
+            HandleException(context, ex);
+        }
         return context.Response;
     }
 }
