@@ -42,8 +42,8 @@ public sealed class DiagnosticsModifyCommand(
         command.Options.Add(FabricOptionDefinitions.DiagnosticsConfig.AsRequired());
         command.Validators.Add(result =>
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceIdName);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceName);
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
 
             if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
             {
@@ -55,9 +55,9 @@ public sealed class DiagnosticsModifyCommand(
     protected override DiagnosticsModifyOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceIdName);
-        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceName);
-        options.DiagnosticsConfig = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DiagnosticsConfigName);
+        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+        options.DiagnosticsConfig = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DiagnosticsConfig.Name);
         return options;
     }
 
@@ -75,8 +75,8 @@ public sealed class DiagnosticsModifyCommand(
                 ? options.WorkspaceId
                 : options.Workspace;
 
-            var result = await _oneLakeService.ModifyDiagnosticsAsync(workspaceIdentifier!, options.DiagnosticsConfig!, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeSettings);
+            await _oneLakeService.ModifyDiagnosticsAsync(workspaceIdentifier!, options.DiagnosticsConfig!, cancellationToken);
+            context.Response.Results = ResponseResult.Create(new DiagnosticsModifyCommandResult("Diagnostics settings modified successfully."), OneLakeJsonContext.Default.DiagnosticsModifyCommandResult);
         }
         catch (Exception ex)
         {
@@ -85,5 +85,12 @@ public sealed class DiagnosticsModifyCommand(
         }
 
         return context.Response;
+    }
+
+    public sealed class DiagnosticsModifyCommandResult
+    {
+        public string Message { get; init; } = string.Empty;
+        public DiagnosticsModifyCommandResult() { }
+        public DiagnosticsModifyCommandResult(string message) { Message = message; }
     }
 }

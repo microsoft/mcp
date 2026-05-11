@@ -1,9 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Fabric.Mcp.Tools.OneLake.Commands.Settings;
+using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Settings;
 
@@ -51,5 +55,55 @@ public class ImmutabilityPolicyModifyCommandTests : CommandUnitTestsBase<Immutab
         Assert.False(metadata.OpenWorld);
         Assert.False(metadata.ReadOnly);
         Assert.False(metadata.Secret);
+    }
+
+    [Theory]
+    [InlineData("--workspace-id ws1 --immutability-policy {\"scope\":\"DiagnosticLogs\",\"retentionDays\":7}", true)]
+    [InlineData("--workspace ws1 --immutability-policy {\"scope\":\"DiagnosticLogs\",\"retentionDays\":7}", true)]
+    [InlineData("--immutability-policy {\"scope\":\"DiagnosticLogs\",\"retentionDays\":7}", false)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        if (shouldSucceed)
+        {
+            Service.ModifyImmutabilityPolicyAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+                .Returns(Task.CompletedTask);
+        }
+
+        var response = await ExecuteCommandAsync(args);
+
+        Assert.NotNull(response);
+        if (shouldSucceed)
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        else
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_SuccessfulModification_ReturnsSuccessMessage()
+    {
+        Service.ModifyImmutabilityPolicyAsync("ws1", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", "ws1",
+            "--immutability-policy", "{\"scope\":\"DiagnosticLogs\",\"retentionDays\":7}");
+
+        var result = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.ImmutabilityPolicyModifyCommandResult);
+        Assert.Contains("successfully", result.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.Received(1).ModifyImmutabilityPolicyAsync("ws1", Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesServiceErrors()
+    {
+        Service.ModifyImmutabilityPolicyAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("Forbidden"));
+
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", "ws1",
+            "--immutability-policy", "{\"scope\":\"DiagnosticLogs\",\"retentionDays\":7}");
+
+        Assert.NotNull(response);
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
 }

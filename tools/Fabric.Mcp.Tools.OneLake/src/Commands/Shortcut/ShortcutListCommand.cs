@@ -42,10 +42,10 @@ public sealed class ShortcutListCommand(
         command.Options.Add(FabricOptionDefinitions.ParentPath.AsOptional());
         command.Validators.Add(result =>
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceIdName);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceName);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemIdName);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemName);
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
 
             if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
             {
@@ -62,11 +62,11 @@ public sealed class ShortcutListCommand(
     protected override ShortcutListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceIdName);
-        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceName);
-        options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemIdName);
-        options.Item = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemName);
-        options.ParentPath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ParentPathName);
+        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+        options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+        options.Item = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
+        options.ParentPath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ParentPath.Name);
         return options;
     }
 

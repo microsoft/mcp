@@ -1,9 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
+using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Shortcut;
 
@@ -51,5 +55,63 @@ public class ShortcutResetCacheCommandTests : CommandUnitTestsBase<ShortcutReset
         Assert.False(metadata.OpenWorld);
         Assert.False(metadata.ReadOnly);
         Assert.False(metadata.Secret);
+    }
+
+    [Theory]
+    [InlineData("--workspace-id ws1", true)]
+    [InlineData("--workspace ws1", true)]
+    [InlineData("", false)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        if (shouldSucceed)
+        {
+            Service.ResetShortcutCacheAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+                .Returns(Task.CompletedTask);
+        }
+
+        var response = await ExecuteCommandAsync(args);
+
+        Assert.NotNull(response);
+        if (shouldSucceed)
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        else
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NoItemRequired_SucceedsWithWorkspaceOnly()
+    {
+        Service.ResetShortcutCacheAsync("ws1", Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var response = await ExecuteCommandAsync("--workspace-id", "ws1");
+
+        var result = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.ShortcutResetCacheCommandResult);
+        Assert.Contains("successfully", result.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.Received(1).ResetShortcutCacheAsync("ws1", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesServiceErrors()
+    {
+        Service.ResetShortcutCacheAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("Service unavailable"));
+
+        var response = await ExecuteCommandAsync("--workspace-id", "ws1");
+
+        Assert.NotNull(response);
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public void BindOptions_UsesWorkspaceName_WhenWorkspaceIdNotProvided()
+    {
+        Service.ResetShortcutCacheAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        // Validator should pass with --workspace (friendly name)
+        var parseResult = CommandDefinition.Parse("--workspace myWorkspace");
+        var isValid = Command.Validate(parseResult.CommandResult);
+        Assert.True(isValid.IsValid);
     }
 }

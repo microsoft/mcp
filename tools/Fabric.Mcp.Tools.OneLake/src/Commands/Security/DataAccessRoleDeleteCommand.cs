@@ -45,10 +45,10 @@ public sealed class DataAccessRoleDeleteCommand(
         command.Options.Add(FabricOptionDefinitions.RoleName.AsRequired());
         command.Validators.Add(result =>
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceIdName);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceName);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemIdName);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemName);
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
 
             if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
             {
@@ -65,11 +65,11 @@ public sealed class DataAccessRoleDeleteCommand(
     protected override DataAccessRoleDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceIdName);
-        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceName);
-        options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemIdName);
-        options.Item = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemName);
-        options.RoleName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.RoleNameName);
+        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+        options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+        options.Item = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
+        options.RoleName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.RoleName.Name);
         return options;
     }
 
