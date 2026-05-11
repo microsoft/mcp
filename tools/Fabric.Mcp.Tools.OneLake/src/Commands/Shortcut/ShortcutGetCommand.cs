@@ -43,10 +43,10 @@ public sealed class ShortcutGetCommand(
         command.Options.Add(FabricOptionDefinitions.ShortcutName.AsRequired());
         command.Validators.Add(result =>
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceIdName);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceName);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemIdName);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemName);
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
 
             if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
             {
@@ -63,12 +63,12 @@ public sealed class ShortcutGetCommand(
     protected override ShortcutGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceIdName);
-        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceName);
-        options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemIdName);
-        options.Item = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemName);
-        options.ShortcutPath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ShortcutPathName);
-        options.ShortcutName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ShortcutNameName);
+        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+        options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+        options.Item = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
+        options.ShortcutPath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ShortcutPath.Name);
+        options.ShortcutName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ShortcutName.Name);
         return options;
     }
 

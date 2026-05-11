@@ -12,5 +12,5 @@ public sealed class ShortcutCreateOrUpdateOptions : GlobalOptions
     public string? ItemId { get; set; }
     public string? Item { get; set; }
     public string? ShortcutsDefinition { get; set; }
-    public bool CreateOrOverwrite { get; set; }
+    public string? ShortcutConflictPolicy { get; set; }
 }

@@ -56,12 +56,12 @@ public interface IOneLakeService
     // Shortcut Operations
     Task<ShortcutListResponse> ListShortcutsAsync(string workspaceId, string itemId, string? parentPath = null, CancellationToken cancellationToken = default);
     Task<OneLakeShortcut> GetShortcutAsync(string workspaceId, string itemId, string shortcutPath, string shortcutName, CancellationToken cancellationToken = default);
-    Task<ShortcutCreateOrUpdateResponse> CreateOrUpdateShortcutsAsync(string workspaceId, string itemId, string shortcutsJson, bool createOrOverwrite = false, CancellationToken cancellationToken = default);
+    Task<BulkCreateShortcutResponse> CreateOrUpdateShortcutsAsync(string workspaceId, string itemId, string shortcutsJson, string? shortcutConflictPolicy = null, CancellationToken cancellationToken = default);
     Task DeleteShortcutAsync(string workspaceId, string itemId, string shortcutPath, string shortcutName, CancellationToken cancellationToken = default);
-    Task ResetShortcutCacheAsync(string workspaceId, string itemId, CancellationToken cancellationToken = default);
+    Task ResetShortcutCacheAsync(string workspaceId, CancellationToken cancellationToken = default);
 
     // Settings Operations
     Task<OneLakeSettings> GetSettingsAsync(string workspaceId, CancellationToken cancellationToken = default);
-    Task<OneLakeSettings> ModifyDiagnosticsAsync(string workspaceId, string diagnosticsConfigJson, CancellationToken cancellationToken = default);
-    Task<OneLakeSettings> ModifyImmutabilityPolicyAsync(string workspaceId, string immutabilityPolicyJson, CancellationToken cancellationToken = default);
+    Task ModifyDiagnosticsAsync(string workspaceId, string diagnosticsConfigJson, CancellationToken cancellationToken = default);
+    Task ModifyImmutabilityPolicyAsync(string workspaceId, string immutabilityPolicyJson, CancellationToken cancellationToken = default);
 }

@@ -9,6 +9,4 @@ public sealed class ShortcutResetCacheOptions : GlobalOptions
 {
     public string? WorkspaceId { get; set; }
     public string? Workspace { get; set; }
-    public string? ItemId { get; set; }
-    public string? Item { get; set; }
 }

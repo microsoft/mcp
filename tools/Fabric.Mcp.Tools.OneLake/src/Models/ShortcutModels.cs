@@ -48,6 +48,12 @@ public class ShortcutTarget
 
     [JsonPropertyName("externalDataShare")]
     public ExternalDataShareShortcutTarget? ExternalDataShare { get; set; }
+
+    [JsonPropertyName("azureBlobStorage")]
+    public AzureBlobStorageShortcutTarget? AzureBlobStorage { get; set; }
+
+    [JsonPropertyName("oneDriveSharePoint")]
+    public OneDriveSharePointShortcutTarget? OneDriveSharePoint { get; set; }
 }
 
 /// <summary>
@@ -150,6 +156,39 @@ public class ExternalDataShareShortcutTarget
 }
 
 /// <summary>
+/// Azure Blob Storage shortcut target.
+/// </summary>
+public class AzureBlobStorageShortcutTarget
+{
+    [JsonPropertyName("location")]
+    public string? Location { get; set; }
+
+    [JsonPropertyName("subpath")]
+    public string? Subpath { get; set; }
+
+    [JsonPropertyName("connectionId")]
+    public string? ConnectionId { get; set; }
+}
+
+/// <summary>
+/// OneDrive / SharePoint Online shortcut target.
+/// </summary>
+public class OneDriveSharePointShortcutTarget
+{
+    [JsonPropertyName("location")]
+    public string? Location { get; set; }
+
+    [JsonPropertyName("subpath")]
+    public string? Subpath { get; set; }
+
+    [JsonPropertyName("connectionId")]
+    public string? ConnectionId { get; set; }
+
+    [JsonPropertyName("updateFabricItemSensitivity")]
+    public bool? UpdateFabricItemSensitivity { get; set; }
+}
+
+/// <summary>
 /// Response from the List Shortcuts API.
 /// </summary>
 public class ShortcutListResponse
@@ -165,22 +204,109 @@ public class ShortcutListResponse
 }
 
 /// <summary>
-/// Request body for the Create Or Update Shortcuts API.
+/// Request body for the bulk create shortcuts API (POST /shortcuts/bulkCreate).
 /// </summary>
-public class ShortcutCreateOrUpdateRequest
+public class BulkCreateShortcutsRequest
 {
-    [JsonPropertyName("shortcuts")]
-    public List<OneLakeShortcut>? Shortcuts { get; set; }
-
-    [JsonPropertyName("createOrOverwrite")]
-    public bool? CreateOrOverwrite { get; set; }
+    [JsonPropertyName("createShortcutRequests")]
+    public List<CreateShortcutWithTransformRequest>? CreateShortcutRequests { get; set; }
 }
 
 /// <summary>
-/// Response from the Create Or Update Shortcuts API.
+/// A single shortcut creation request (with optional transform).
 /// </summary>
-public class ShortcutCreateOrUpdateResponse
+public class CreateShortcutWithTransformRequest
+{
+    [JsonPropertyName("path")]
+    public string? Path { get; set; }
+
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("target")]
+    public ShortcutTarget? Target { get; set; }
+
+    [JsonPropertyName("transform")]
+    public CsvToDeltaTransform? Transform { get; set; }
+}
+
+/// <summary>
+/// CSV-to-Delta transform definition.
+/// </summary>
+public class CsvToDeltaTransform
+{
+    [JsonPropertyName("type")]
+    public string? Type { get; set; }
+
+    [JsonPropertyName("includeSubfolders")]
+    public bool? IncludeSubfolders { get; set; }
+
+    [JsonPropertyName("properties")]
+    public CsvToDeltaTransformProperties? Properties { get; set; }
+}
+
+/// <summary>
+/// Properties for the CSV-to-Delta transform.
+/// </summary>
+public class CsvToDeltaTransformProperties
+{
+    [JsonPropertyName("delimiter")]
+    public string? Delimiter { get; set; }
+
+    [JsonPropertyName("skipFilesWithErrors")]
+    public bool? SkipFilesWithErrors { get; set; }
+
+    [JsonPropertyName("useFirstRowAsHeader")]
+    public bool? UseFirstRowAsHeader { get; set; }
+}
+
+/// <summary>
+/// Response from POST /shortcuts/bulkCreate.
+/// </summary>
+public class BulkCreateShortcutResponse
 {
     [JsonPropertyName("value")]
-    public List<OneLakeShortcut>? Value { get; set; }
+    public List<CreateShortcutResponse>? Value { get; set; }
+}
+
+/// <summary>
+/// Per-shortcut result in a bulk create response.
+/// </summary>
+public class CreateShortcutResponse
+{
+    [JsonPropertyName("request")]
+    public ShortcutRequestInfo? Request { get; set; }
+
+    [JsonPropertyName("result")]
+    public OneLakeShortcut? Result { get; set; }
+
+    [JsonPropertyName("status")]
+    public string? Status { get; set; }
+
+    [JsonPropertyName("error")]
+    public ShortcutCreateError? Error { get; set; }
+}
+
+/// <summary>
+/// Original name/path echoed back in a bulk create response item.
+/// </summary>
+public class ShortcutRequestInfo
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("path")]
+    public string? Path { get; set; }
+}
+
+/// <summary>
+/// Error details for a failed shortcut in a bulk create response.
+/// </summary>
+public class ShortcutCreateError
+{
+    [JsonPropertyName("errorCode")]
+    public string? ErrorCode { get; set; }
+
+    [JsonPropertyName("message")]
+    public string? Message { get; set; }
 }

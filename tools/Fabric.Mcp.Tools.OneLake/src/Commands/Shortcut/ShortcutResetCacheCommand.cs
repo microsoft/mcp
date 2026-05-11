@@ -38,23 +38,14 @@ public sealed class ShortcutResetCacheCommand(
         base.RegisterOptions(command);
         command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
         command.Validators.Add(result =>
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceIdName);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceName);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemIdName);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemName);
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
 
             if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
             {
                 result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-
-            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
-            {
-                result.AddError("Item identifier is required. Provide --item or --item-id.");
             }
         });
     }
@@ -62,10 +53,8 @@ public sealed class ShortcutResetCacheCommand(
     protected override ShortcutResetCacheOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceIdName);
-        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceName);
-        options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemIdName);
-        options.Item = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemName);
+        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
         return options;
     }
 
@@ -83,18 +72,14 @@ public sealed class ShortcutResetCacheCommand(
                 ? options.WorkspaceId
                 : options.Workspace;
 
-            var itemIdentifier = !string.IsNullOrWhiteSpace(options.ItemId)
-                ? options.ItemId
-                : options.Item;
-
-            await _oneLakeService.ResetShortcutCacheAsync(workspaceIdentifier!, itemIdentifier!, cancellationToken);
+            await _oneLakeService.ResetShortcutCacheAsync(workspaceIdentifier!, cancellationToken);
             var result = new ShortcutResetCacheCommandResult("Shortcut cache reset successfully.");
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.ShortcutResetCacheCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error resetting shortcut cache. Workspace: {Workspace}, Item: {Item}.",
-                options.WorkspaceId ?? options.Workspace, options.ItemId ?? options.Item);
+            _logger.LogError(ex, "Error resetting shortcut cache. Workspace: {Workspace}.",
+                options.WorkspaceId ?? options.Workspace);
             HandleException(context, ex);
         }
 

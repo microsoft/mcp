@@ -216,10 +216,10 @@ public static class FabricOptionDefinitions
         Required = false
     };
 
-    public const string CreateOrOverwriteName = "create-or-overwrite";
-    public static readonly Option<bool> CreateOrOverwrite = new($"--{CreateOrOverwriteName}")
+    public const string ShortcutConflictPolicyName = "shortcut-conflict-policy";
+    public static readonly Option<string> ShortcutConflictPolicy = new($"--{ShortcutConflictPolicyName}")
     {
-        Description = "When true, overwrites existing shortcuts. When false (default), fails if a shortcut already exists.",
+        Description = "Action when a shortcut with the same name and path already exists. One of: Abort (default), CreateOrOverwrite, OverwriteOnly, GenerateUniqueName.",
         Required = false
     };
 

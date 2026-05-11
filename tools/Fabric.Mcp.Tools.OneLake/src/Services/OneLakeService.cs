@@ -1661,7 +1661,115 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         }
 
         var response = await _httpClient.SendAsync(request, cancellationToken);
-        response.EnsureSuccessStatusCode();
+
+        // Handle long running operations (202 Accepted)
+        if (response.StatusCode == System.Net.HttpStatusCode.Accepted)
+        {
+            var locationUrl = response.Headers.Location?.ToString();
+            if (!string.IsNullOrEmpty(locationUrl))
+            {
+                return await PollFabricLroAsync(locationUrl, cancellationToken) ?? Stream.Null;
+            }
+            return Stream.Null;
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException(
+                $"Response status code does not indicate success: {(int)response.StatusCode} ({response.ReasonPhrase}). Error details: {errorBody}",
+                null,
+                response.StatusCode);
+        }
+
+        return await response.Content.ReadAsStreamAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Polls a Fabric long running operation URL until it succeeds or fails,
+    /// then fetches and returns the result stream.
+    /// </summary>
+    private async Task<Stream?> PollFabricLroAsync(string operationUrl, CancellationToken cancellationToken)
+    {
+        const int MaxAttempts = 120; // ~10 minutes at 5s default
+        var retryDelay = TimeSpan.FromSeconds(5);
+
+        for (var attempt = 0; attempt < MaxAttempts; attempt++)
+        {
+            await Task.Delay(retryDelay, cancellationToken);
+
+            var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.GetFabricScope() });
+            var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
+
+            using var pollRequest = new HttpRequestMessage(HttpMethod.Get, operationUrl);
+            pollRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+            ApplyUserAgent(pollRequest);
+
+            var pollResponse = await _httpClient.SendAsync(pollRequest, cancellationToken);
+            if (!pollResponse.IsSuccessStatusCode)
+            {
+                var errorBody = await pollResponse.Content.ReadAsStringAsync(cancellationToken);
+                throw new HttpRequestException(
+                    $"LRO polling failed: {(int)pollResponse.StatusCode} ({pollResponse.ReasonPhrase}). {errorBody}",
+                    null,
+                    pollResponse.StatusCode);
+            }
+
+            // Update retry delay from Retry-After header
+            if (pollResponse.Headers.TryGetValues("Retry-After", out var retryAfterValues)
+                && int.TryParse(retryAfterValues.FirstOrDefault(), out var retryAfterSecs))
+            {
+                retryDelay = TimeSpan.FromSeconds(Math.Max(1, retryAfterSecs));
+            }
+
+            var stateStream = await pollResponse.Content.ReadAsStreamAsync(cancellationToken);
+            var state = await JsonSerializer.DeserializeAsync(stateStream, OneLakeJsonContext.Default.OperationState, cancellationToken);
+
+            switch (state?.Status)
+            {
+                case "Succeeded":
+                    // Location header on the completed poll response points to the result URL
+                    var resultUrl = pollResponse.Headers.Location?.ToString();
+                    if (!string.IsNullOrEmpty(resultUrl))
+                    {
+                        return await GetFabricLroResultAsync(resultUrl, cancellationToken);
+                    }
+                    return Stream.Null;
+
+                case "Failed":
+                    var errorMessage = state.Error?.Message ?? "Long running operation failed.";
+                    var errorCode = state.Error?.ErrorCode ?? "Unknown";
+                    throw new HttpRequestException(
+                        $"Long running operation failed ({errorCode}): {errorMessage}",
+                        null,
+                        System.Net.HttpStatusCode.InternalServerError);
+            }
+            // NotStarted / Running / Undefined: keep polling
+        }
+
+        throw new HttpRequestException(
+            "Long running operation timed out after maximum polling attempts.",
+            null,
+            System.Net.HttpStatusCode.RequestTimeout);
+    }
+
+    /// <summary>
+    /// GETs the result URL of a completed Fabric long running operation.
+    /// </summary>
+    private async Task<Stream?> GetFabricLroResultAsync(string resultUrl, CancellationToken cancellationToken)
+    {
+        var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.GetFabricScope() });
+        var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, resultUrl);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+        ApplyUserAgent(request);
+
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return Stream.Null;
+        }
 
         return await response.Content.ReadAsStreamAsync(cancellationToken);
     }
@@ -1817,7 +1925,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     public async Task<DataAccessRole> GetDataAccessRoleAsync(string workspaceId, string itemId, string roleName, CancellationToken cancellationToken = default)
     {
         var encodedRoleName = Uri.EscapeDataString(roleName);
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/dataAccessRoles/{encodedRoleName}";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/dataAccessRoles/{encodedRoleName}?preview=true";
         var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.DataAccessRole, cancellationToken) ?? new DataAccessRole();
     }
@@ -1840,16 +1948,19 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             throw new ArgumentException("Role definition must include a non-empty 'name' property.", nameof(roleDefinitionJson));
         }
 
-        var encodedRoleName = Uri.EscapeDataString(roleDefinition.Name);
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/dataAccessRoles/{encodedRoleName}";
-        var response = await SendFabricApiRequestAsync(HttpMethod.Put, url, roleDefinitionJson, cancellationToken: cancellationToken);
-        return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.DataAccessRole, cancellationToken) ?? new DataAccessRole();
+        // Use the single-role POST endpoint (preview API) with Overwrite conflict policy.
+        // This creates the role if it doesn't exist, or replaces it if it does — without
+        // touching other roles on the item (unlike the bulk PUT approach).
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/dataAccessRoles?preview=true&dataAccessRoleConflictPolicy=Overwrite";
+        var requestBody = JsonSerializer.Serialize(roleDefinition, OneLakeJsonContext.Default.DataAccessRole);
+        await SendFabricApiRequestAsync(HttpMethod.Post, url, requestBody, cancellationToken: cancellationToken);
+        return roleDefinition;
     }
 
     public async Task DeleteDataAccessRoleAsync(string workspaceId, string itemId, string roleName, CancellationToken cancellationToken = default)
     {
         var encodedRoleName = Uri.EscapeDataString(roleName);
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/dataAccessRoles/{encodedRoleName}";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/dataAccessRoles/{encodedRoleName}?preview=true";
         await SendFabricApiDeleteRequestAsync(url, cancellationToken);
     }
 
@@ -1874,11 +1985,31 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.OneLakeShortcut, cancellationToken) ?? new OneLakeShortcut();
     }
 
-    public async Task<ShortcutCreateOrUpdateResponse> CreateOrUpdateShortcutsAsync(string workspaceId, string itemId, string shortcutsJson, bool createOrOverwrite = false, CancellationToken cancellationToken = default)
+    public async Task<BulkCreateShortcutResponse> CreateOrUpdateShortcutsAsync(string workspaceId, string itemId, string shortcutsJson, string? shortcutConflictPolicy = null, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts?createOrOverwrite={createOrOverwrite.ToString().ToLowerInvariant()}";
-        var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, shortcutsJson, cancellationToken: cancellationToken);
-        return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.ShortcutCreateOrUpdateResponse, cancellationToken) ?? new ShortcutCreateOrUpdateResponse();
+        BulkCreateShortcutsRequest request;
+        try
+        {
+            request = JsonSerializer.Deserialize(shortcutsJson, OneLakeJsonContext.Default.BulkCreateShortcutsRequest)
+                ?? throw new ArgumentException("Invalid shortcuts JSON: deserialized to null.", nameof(shortcutsJson));
+        }
+        catch (JsonException ex)
+        {
+            throw new ArgumentException($"Invalid shortcuts JSON: {ex.Message}", nameof(shortcutsJson), ex);
+        }
+
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts/bulkCreate";
+        if (!string.IsNullOrWhiteSpace(shortcutConflictPolicy))
+            url += $"?shortcutConflictPolicy={Uri.EscapeDataString(shortcutConflictPolicy)}";
+
+        var body = JsonSerializer.Serialize(request, OneLakeJsonContext.Default.BulkCreateShortcutsRequest);
+        var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, body, cancellationToken: cancellationToken);
+        using var reader = new StreamReader(response);
+        var responseBody = await reader.ReadToEndAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(responseBody))
+            return new BulkCreateShortcutResponse();
+        return JsonSerializer.Deserialize(responseBody, OneLakeJsonContext.Default.BulkCreateShortcutResponse)
+            ?? new BulkCreateShortcutResponse();
     }
 
     public async Task DeleteShortcutAsync(string workspaceId, string itemId, string shortcutPath, string shortcutName, CancellationToken cancellationToken = default)
@@ -1889,9 +2020,9 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         await SendFabricApiDeleteRequestAsync(url, cancellationToken);
     }
 
-    public async Task ResetShortcutCacheAsync(string workspaceId, string itemId, CancellationToken cancellationToken = default)
+    public async Task ResetShortcutCacheAsync(string workspaceId, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts/resetCache";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/onelake/resetShortcutCache";
         await SendFabricApiRequestAsync(HttpMethod.Post, url, cancellationToken: cancellationToken);
     }
 
@@ -1903,18 +2034,16 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.OneLakeSettings, cancellationToken) ?? new OneLakeSettings();
     }
 
-    public async Task<OneLakeSettings> ModifyDiagnosticsAsync(string workspaceId, string diagnosticsConfigJson, CancellationToken cancellationToken = default)
+    public async Task ModifyDiagnosticsAsync(string workspaceId, string diagnosticsConfigJson, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/onelake/settings/diagnostics";
-        var response = await SendFabricApiRequestAsync(new HttpMethod("PATCH"), url, diagnosticsConfigJson, cancellationToken: cancellationToken);
-        return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.OneLakeSettings, cancellationToken) ?? new OneLakeSettings();
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/onelake/settings/modifyDiagnostics";
+        await SendFabricApiRequestAsync(HttpMethod.Post, url, diagnosticsConfigJson, cancellationToken: cancellationToken);
     }
 
-    public async Task<OneLakeSettings> ModifyImmutabilityPolicyAsync(string workspaceId, string immutabilityPolicyJson, CancellationToken cancellationToken = default)
+    public async Task ModifyImmutabilityPolicyAsync(string workspaceId, string immutabilityPolicyJson, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/onelake/settings/immutabilityPolicy";
-        var response = await SendFabricApiRequestAsync(new HttpMethod("PATCH"), url, immutabilityPolicyJson, cancellationToken: cancellationToken);
-        return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.OneLakeSettings, cancellationToken) ?? new OneLakeSettings();
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy";
+        await SendFabricApiRequestAsync(HttpMethod.Post, url, immutabilityPolicyJson, cancellationToken: cancellationToken);
     }
 
     private async Task SendFabricApiDeleteRequestAsync(string url, CancellationToken cancellationToken)
