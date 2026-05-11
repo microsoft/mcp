@@ -52,7 +52,7 @@ Key capabilities:
 - **Complete API Context**: Full OpenAPI specifications for all supported Fabric workloads
 - **Item Definition Knowledge**: JSON schemas for every Fabric item type (Lakehouses, pipelines, semantic models, notebooks, etc.)
 - **Built-in Best Practices**: Embedded guidance on pagination, error handling, and recommended patterns
-- **Local-First Security**: Runs entirely on your machine—documentation tools work offline, and live operations (OneLake, item creation) connect only when you authenticate
+- **Local-First Security**: Runs entirely on your machine—API documentation and best practices tools work offline, and live operations (OneLake, item creation) connect only when you authenticate
 
 # Installation
 <!-- insert-section: vsix {{- Install the [Fabric MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server)}} -->
@@ -268,7 +268,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 ## Documentation
 
 - See the [Microsoft Fabric documentation](https://learn.microsoft.com/fabric/) to learn about the Microsoft Fabric platform.
-- See the [Fabric MCP Servers documentation](https://learn.microsoft.com/rest/api/fabric/articles/mcp-servers/what-is-fabric-mcp-server) on Microsoft Learn for architecture overviews, setup guides, and tools references.
+- See the [Fabric MCP Servers documentation](https://learn.microsoft.com/rest/api/fabric/articles/mcp-servers/what-is-fabric-mcp-server) on Microsoft Learn for architecture overviews, setup guides, and tool reference.
 - For MCP server-specific troubleshooting, see the [Troubleshooting Guide](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md).
 
 ## Feedback and Support
