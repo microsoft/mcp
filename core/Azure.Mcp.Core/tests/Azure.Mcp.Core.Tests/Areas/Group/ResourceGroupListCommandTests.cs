@@ -12,7 +12,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Core.Tests.UnitTests.Areas.Group.UnitTests;
+namespace Azure.Mcp.Core.Tests.Areas.Group;
 
 public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListCommand, IResourceGroupService>
 {
