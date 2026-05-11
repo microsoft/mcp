@@ -1156,6 +1156,11 @@ Example prompts that generate Azure CLI commands:
 * "Turn off DDoS protection in my Platform Landing Zone"
 * "Turn off Bastion host in my Platform Landing Zone"
 
+### Azure Resource Manager
+
+* Use Azure resource graph to query Azure resources
+* Create, view and cancel ARM template deployments
+
 ### Azure Terraform
 
 * "Get the documentation for azurerm_virtual_network"
