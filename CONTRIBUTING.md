@@ -89,7 +89,7 @@ If you are contributing significant changes, or if the issue is already assigned
       - `Services/` - Service implementations and interfaces
       - `Options/` - Service specific command options
     - `tests/` - Service specific tests
-      - `{Server}.Mcp.Tools.{ToolArea}.Tests/` - Unit tests (no Azure resources) and Integraion tests (requires Azure)
+      - `{Server}.Mcp.Tools.{ToolArea}.Tests/` - Unit tests (no Azure resources) and Integration tests (requires Azure)
       - `test-resources.bicep` - Infrastructure templates for testing
 - `eng/` - Shared tools, templates, CLI helpers
 - `docs/` - Central documentation and onboarding materials

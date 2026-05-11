@@ -332,7 +332,7 @@ function Get-PathsToTest {
         $rootedTestResourcesPath = "$($using:RepoRoot)/$testResourcesPath"
         $hasTestResources = Test-Path "$rootedTestResourcesPath/test-resources.bicep"
         $hasUnifiedTests = Test-Path "$rootedTestResourcesPath/$projectName.Tests.csproj"
-        $testProjectDetails = $hasUnifiedTests ? (& "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path "$rootedTestResourcesPath/$projectName.Tests.csproj") : $null
+        $testProjectDetails = $hasUnifiedTests ? (& "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj") : $null
         $hasLiveTests = $false
         # At this time there are two ways to denote if a project has live and unit tests.
         # 1. Separate projects for live and unit tests, e.g. Azure.Mcp.Server.UnitTests.csproj and Azure.Mcp.Server.LiveTests.csproj
