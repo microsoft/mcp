@@ -50,7 +50,7 @@ public class LoadTestingCommandTests(ITestOutputHelper output, TestProxyFixture 
             });
 
         // Assert
-        var items = result.AssertProperty("LoadTest");
+        var items = result.AssertProperty("loadTest");
         Assert.Equal(JsonValueKind.Array, items.ValueKind);
         Assert.NotEmpty(items.EnumerateArray());
         foreach (var item in items.EnumerateArray())

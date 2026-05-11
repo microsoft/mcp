@@ -5,7 +5,6 @@ using System.Text.Json;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
-using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ServiceFabric.LiveTests;
@@ -29,21 +28,21 @@ public class ServiceFabricCommandTests(ITestOutputHelper output, TestProxyFixtur
             });
 
         // Assert
-        var nodes = result.AssertProperty("Nodes");
+        var nodes = result.AssertProperty("nodes");
         Assert.Equal(JsonValueKind.Array, nodes.ValueKind);
 
         foreach (var node in nodes.EnumerateArray())
         {
             node.AssertProperty("id");
             var properties = node.AssertProperty("properties");
-            properties.AssertProperty("Name");
+            properties.AssertProperty("name");
 
-            if (properties.TryGetProperty("Type", out var type))
+            if (properties.TryGetProperty("type", out var type))
             {
                 Assert.Equal(JsonValueKind.String, type.ValueKind);
             }
 
-            if (properties.TryGetProperty("NodeStatus", out var status))
+            if (properties.TryGetProperty("nodeStatus", out var status))
             {
                 Assert.Equal(JsonValueKind.Number, status.ValueKind);
             }
