@@ -30,12 +30,14 @@ namespace Azure.Mcp.Tools.SreAgent.Services;
 public sealed class SreAgentService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
+    IHttpClientFactory httpClientFactory,
     ILogger<SreAgentService> logger)
     : BaseAzureResourceService(subscriptionService, tenantService), ISreAgentService
 {
     private const string SreAgentResourceType = "Microsoft.App/SREAgentPreview";
     private static readonly string[] DataPlaneScopes = ["https://azuresre.dev/.default"];
 
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ILogger<SreAgentService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<SreAgentResource>> ListAgentsAsync(
@@ -99,7 +101,7 @@ public sealed class SreAgentService(
             request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
         }
 
-        using var http = TenantService.GetClient();
+        using var http = _httpClientFactory.CreateClient();
         using var response = await http.SendAsync(request, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
 
@@ -779,7 +781,7 @@ public sealed class SreAgentService(
         multipartContent.Add(fileContent, "files", fileName);
         request.Content = multipartContent;
 
-        using var http = TenantService.GetClient();
+        using var http = _httpClientFactory.CreateClient();
         using var response = await http.SendAsync(request, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)
