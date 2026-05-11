@@ -46,7 +46,7 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
 
 # Overview
 
-**Microsoft Fabric MCP Server** gives your AI agents the knowledge they need to generate robust, production-ready code for Microsoft Fabric—all without directly accessing your environment.
+**Microsoft Fabric MCP Server** gives your AI agents the knowledge they need to generate robust, production-ready code for Microsoft Fabric.
 
 Key capabilities:
 - **Complete API Context**: Full OpenAPI specifications for all supported Fabric workloads
@@ -177,8 +177,8 @@ Use one of the following options to configure your `mcp.json`:
 ## Getting Started
 
 1. Open GitHub Copilot in [VS Code](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode) and switch to Agent mode.
-1. Select **Refresh** on the tools list.
-    - You should see the Fabric MCP Server in the list of tools.
+1. Select **Refresh** on the tools list
+    - You should see the Fabric MCP Server in the list of tools
 1. Try a prompt that uses Fabric context, such as `What Fabric workload types are available?`
     - The agent should be able to use the Fabric MCP Server tools to complete your query
 1. Check out the [Microsoft Fabric documentation](https://learn.microsoft.com/fabric/) and review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md) for commonly asked questions
@@ -280,7 +280,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 ## Security
 
-The Fabric MCP Server is a **local-first** tool that runs entirely on your machine. It provides API specifications, schemas, and best practices without connecting to live Microsoft Fabric environments.
+The Fabric MCP Server is a **local-first** tool that runs entirely on your machine. API documentation and best practices tools work offline. OneLake data operations and core Fabric operations connect to your live Fabric environment only when you authenticate.
 
 MCP as a phenomenon is very novel and cutting-edge. As with all new technology standards, consider doing a security review to ensure any systems that integrate with MCP servers follow all regulations and standards your system is expected to adhere to.
 
