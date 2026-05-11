@@ -27,8 +27,8 @@ public sealed class MemoriesAddCommand(ILogger<MemoriesAddCommand> logger, ISreA
     protected override MemoriesAddOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.NameName);
-        o.Content = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.ContentName);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Name.Name);
+        o.Content = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Content.Name);
         return o;
     }
 

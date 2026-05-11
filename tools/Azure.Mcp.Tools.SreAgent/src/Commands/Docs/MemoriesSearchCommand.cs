@@ -27,7 +27,7 @@ public sealed class MemoriesSearchCommand(ILogger<MemoriesSearchCommand> logger,
     protected override MemoriesSearchOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Query = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.QueryName);
+        o.Query = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Query.Name);
         return o;
     }
 

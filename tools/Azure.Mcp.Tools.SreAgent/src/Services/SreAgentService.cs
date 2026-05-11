@@ -17,15 +17,15 @@ using System.Text.Json.Serialization.Metadata;
 namespace Azure.Mcp.Tools.SreAgent.Services;
 
 /// <summary>
-/// Provides access to the Azure SRE Agent ARM resources (Microsoft.App/SREAgentPreview)
+/// Provides access to the Azure SRE Agent ARM resources (Microsoft.App/agents)
 /// and to the per-resource SRE Agent data-plane REST API (https://*.azuresre.ai).
 /// </summary>
 /// <remarks>
 /// ARM enumeration is performed against Azure Resource Graph via
 /// <see cref="BaseAzureResourceService.ExecuteResourceQueryAsync{T}"/>.
 /// Data-plane calls acquire a bearer token for the SRE Agent data-plane audience
-/// <c>https://azuresre.dev/.default</c> (matches the audience the existing .NET CLI
-/// in the SRE Agent runtime repo uses, see Agent.Cli/Services/TokenService.cs).
+/// <c>59f0a04a-b322-4310-adc9-39ac41e9631e/.default</c> (matches <c>SRE_API_AUDIENCE</c>
+/// in the Node SRE Agent CLI at <c>src/Agent/Agent.Cli.Node/src/services/auth.ts</c>).
 /// </remarks>
 public sealed class SreAgentService(
     ISubscriptionService subscriptionService,
@@ -34,8 +34,10 @@ public sealed class SreAgentService(
     ILogger<SreAgentService> logger)
     : BaseAzureResourceService(subscriptionService, tenantService), ISreAgentService
 {
-    private const string SreAgentResourceType = "Microsoft.App/SREAgentPreview";
-    private static readonly string[] DataPlaneScopes = ["https://azuresre.dev/.default"];
+    private const string SreAgentResourceType = "Microsoft.App/agents";
+    // Audience for SRE Agent data-plane tokens. Matches SRE_API_AUDIENCE in the Node CLI
+    // (src/Agent/Agent.Cli.Node/src/services/auth.ts).
+    private static readonly string[] DataPlaneScopes = ["59f0a04a-b322-4310-adc9-39ac41e9631e/.default"];
 
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ILogger<SreAgentService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -63,7 +65,7 @@ public sealed class SreAgentService(
 
     /// <summary>
     /// Calls the per-resource SRE Agent data-plane REST API. Acquires a bearer token
-    /// for <c>https://azuresre.dev/.default</c> using the active credential and forwards the response body.
+    /// for the SRE Agent data-plane audience using the active credential and forwards the response body.
     /// </summary>
     /// <param name="endpoint">The agent's data-plane endpoint (e.g. <c>https://my-agent--abc.def.eastus2.azuresre.ai</c>).</param>
     /// <param name="path">Request path beginning with <c>/</c>.</param>
@@ -130,9 +132,11 @@ public sealed class SreAgentService(
         if (item.TryGetProperty("properties", out var props) && props.ValueKind == JsonValueKind.Object)
         {
             resource.ProvisioningState = TryGetString(props, "provisioningState");
-            // The SRE Agent ARM resource exposes its data-plane URL on properties.endpoint.
-            // Some preview API versions used properties.fqdn; check both for forward/back compat.
-            resource.Endpoint = TryGetString(props, "endpoint") ?? TryGetString(props, "fqdn");
+            // The SRE Agent ARM resource exposes its data-plane URL on properties.agentEndpoint.
+            // Older preview API versions used properties.endpoint / properties.fqdn; check all for compat.
+            resource.Endpoint = TryGetString(props, "agentEndpoint")
+                ?? TryGetString(props, "endpoint")
+                ?? TryGetString(props, "fqdn");
             if (resource.Endpoint is { Length: > 0 } ep && !ep.StartsWith("http", StringComparison.OrdinalIgnoreCase))
             {
                 resource.Endpoint = $"https://{ep}";

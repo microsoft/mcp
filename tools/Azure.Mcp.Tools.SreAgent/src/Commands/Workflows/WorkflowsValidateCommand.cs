@@ -24,7 +24,7 @@ public sealed class WorkflowsValidateCommand(ILogger<WorkflowsValidateCommand> l
     protected override WorkflowsValidateOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.YamlContent = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.YamlContentName);
+        o.YamlContent = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.YamlContent.Name);
         return o;
     }
 

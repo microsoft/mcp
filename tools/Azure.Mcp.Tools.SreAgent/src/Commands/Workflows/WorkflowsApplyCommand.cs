@@ -30,8 +30,8 @@ public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger,
     protected override WorkflowsApplyOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.YamlContent = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.YamlContentName);
-        o.SourceName = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.SourceNameName);
+        o.YamlContent = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.YamlContent.Name);
+        o.SourceName = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.SourceName.Name);
         return o;
     }
 

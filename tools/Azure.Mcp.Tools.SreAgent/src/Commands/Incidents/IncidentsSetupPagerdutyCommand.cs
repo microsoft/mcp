@@ -30,9 +30,9 @@ public sealed class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetupPagerdu
     protected override IncidentConnectorPagerDutyOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.NameName);
-        o.ApiKeyEnv = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.ApiKeyEnvName);
-        o.Subdomain = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.SubdomainName);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Name.Name);
+        o.ApiKeyEnv = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.ApiKeyEnv.Name);
+        o.Subdomain = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Subdomain.Name);
         return o;
     }
 

@@ -27,8 +27,8 @@ public sealed class MemoriesDeleteCommand(ILogger<MemoriesDeleteCommand> logger,
     protected override MemoriesDeleteOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.NameName);
-        o.Confirm = parseResult.GetValueOrDefault<bool>(SreAgentPortedOptionDefinitions.ConfirmName);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Name.Name);
+        o.Confirm = parseResult.GetValueOrDefault<bool>(SreAgentPortedOptionDefinitions.Confirm.Name);
         return o;
     }
 

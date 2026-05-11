@@ -41,14 +41,14 @@ public sealed class IncidentsPlansCreateCommand(ILogger<IncidentsPlansCreateComm
     protected override IncidentPlanCreateOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.NameName);
-        o.Severity = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.SeverityName);
-        o.TriggerCondition = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.TriggerConditionName);
-        o.Services = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.ServicesName);
-        o.Steps = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.StepsName);
-        o.Escalation = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.EscalationName);
-        o.RunbookUrl = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.RunbookUrlName);
-        o.AgentMode = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.AgentModeName);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Name.Name);
+        o.Severity = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Severity.Name);
+        o.TriggerCondition = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.TriggerCondition.Name);
+        o.Services = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.Services.Name);
+        o.Steps = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.Steps.Name);
+        o.Escalation = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Escalation.Name);
+        o.RunbookUrl = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.RunbookUrl.Name);
+        o.AgentMode = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.AgentMode.Name);
         return o;
     }
 

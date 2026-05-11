@@ -26,7 +26,7 @@ public sealed class CommonPromptsGetCommand(ILogger<CommonPromptsGetCommand> log
     protected override CommonPromptsGetOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.NameName);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Name.Name);
         return o;
     }
 

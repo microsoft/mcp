@@ -33,12 +33,12 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
     protected override IncidentConnectorServiceNowOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.NameName);
-        o.InstanceUrl = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.InstanceUrlName);
-        o.AuthType = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.AuthTypeName);
-        o.TokenEnv = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.TokenEnvName);
-        o.UsernameEnv = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.UsernameEnvName);
-        o.PasswordEnv = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.PasswordEnvName);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Name.Name);
+        o.InstanceUrl = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.InstanceUrl.Name);
+        o.AuthType = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.AuthType.Name);
+        o.TokenEnv = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.TokenEnv.Name);
+        o.UsernameEnv = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.UsernameEnv.Name);
+        o.PasswordEnv = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.PasswordEnv.Name);
         return o;
     }
 

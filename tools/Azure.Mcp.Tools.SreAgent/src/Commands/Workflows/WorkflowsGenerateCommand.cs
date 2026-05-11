@@ -34,17 +34,17 @@ public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> l
     protected override WorkflowsGenerateOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Kind = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.KindName);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.NameName);
-        o.Description = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.DescriptionName);
-        o.ModelOrType = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.ModelOrTypeName);
-        o.Tools = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.ToolsName);
-        o.Handoffs = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.HandoffsName);
-        o.Connector = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.ConnectorName);
-        o.Database = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.DatabaseName);
-        o.Query = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.QueryName);
-        o.UrlTemplate = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.UrlTemplateName);
-        o.Parameters = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.ParametersName);
+        o.Kind = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Kind.Name);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Name.Name);
+        o.Description = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Description.Name);
+        o.ModelOrType = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.ModelOrType.Name);
+        o.Tools = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.Tools.Name);
+        o.Handoffs = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.Handoffs.Name);
+        o.Connector = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Connector.Name);
+        o.Database = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Database.Name);
+        o.Query = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Query.Name);
+        o.UrlTemplate = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.UrlTemplate.Name);
+        o.Parameters = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.Parameters.Name);
         return o;
     }
 
