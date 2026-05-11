@@ -26,29 +26,9 @@ public abstract class SreAgentDataPlaneCommand<
         return options;
     }
 
-    protected static async Task<string> ResolveEndpointAsync(
+    protected static Task<string> ResolveEndpointAsync(
         ISreAgentService sreAgentService,
         TOptions options,
         CancellationToken cancellationToken)
-    {
-        var agents = await sreAgentService.ListAgentsAsync(
-            options.Subscription!,
-            options.ResourceGroup,
-            options.Tenant,
-            options.RetryPolicy,
-            cancellationToken);
-
-        var agent = agents.FirstOrDefault(a => string.Equals(a.Name, options.Agent, StringComparison.OrdinalIgnoreCase));
-        if (agent is null)
-        {
-            throw new InvalidOperationException($"SRE Agent resource '{options.Agent}' was not found in subscription '{options.Subscription}'.");
-        }
-
-        if (string.IsNullOrWhiteSpace(agent.Endpoint))
-        {
-            throw new InvalidOperationException($"SRE Agent resource '{options.Agent}' does not expose a data-plane endpoint.");
-        }
-
-        return agent.Endpoint;
-    }
+        => SreAgentCommandHelpers.ResolveAgentEndpointAsync(sreAgentService, options, cancellationToken);
 }
