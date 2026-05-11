@@ -31,6 +31,7 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
     - [API Documentation & Best Practices](#api-documentation--best-practices)
     - [OneLake Data Operations](#onelake-data-operations)
     - [Core Fabric Operations](#core-fabric-operations)
+    - [Data Factory Operations](#data-factory-operations)
 - [Support and Reference](#support-and-reference)
   - [Documentation](#documentation)
   - [Feedback and Support](#feedback-and-support)
@@ -49,6 +50,7 @@ Key capabilities:
 - **Item Definition Knowledge**: JSON schemas for every Fabric item type (Lakehouses, pipelines, semantic models, notebooks, etc.)
 - **Built-in Best Practices**: Embedded guidance on pagination, error handling, and recommended patterns
 - **Local-First Security**: Runs entirely on your machine—never connects to your Fabric environment
+- **Data Factory Integration**: Pipeline and Dataflow Gen2 management with M query execution
 
 # Installation
 <!-- insert-section: vsix {{- Install the [Fabric MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server)}} -->
@@ -255,6 +257,18 @@ The Fabric MCP Server exposes tools organized into three categories:
 | Tool Name | Description |
 |-----------|-------------|
 | `core_create-item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
+
+### Data Factory Operations
+
+| Tool Name | Description |
+|-----------|-------------|
+| `datafactory_list-pipelines` | Lists all pipelines in a Microsoft Fabric workspace. |
+| `datafactory_create-pipeline` | Creates a new pipeline in a workspace. |
+| `datafactory_get-pipeline` | Gets details of a specific pipeline. |
+| `datafactory_run-pipeline` | Runs a pipeline on demand. |
+| `datafactory_list-dataflows` | Lists all Dataflow Gen2 items in a workspace. |
+| `datafactory_create-dataflow` | Creates a new Dataflow Gen2 item. |
+| `datafactory_execute-query` | Executes an M (Power Query) query against a dataflow. |
 
 > Always verify available commands via `--help`. Command names and availability may change between releases.
 <!-- remove-section: end remove_available_tools_section -->
