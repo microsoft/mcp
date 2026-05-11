@@ -75,11 +75,11 @@ public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger,
 
     private static (string? Kind, string? Name, string? Owner, JsonArray Tags, JsonObject Spec) ParseMinimalYaml(string yaml)
     {
-        string? kind = null; string? name = null; string? owner = null; var tags = new JsonArray(); var spec = new JsonObject(); string? section = null; string? currentKey = null; var block = new List<string>();
+        string? kind = null; string? name = null; string? owner = null; var tags = new JsonArray(); var spec = new JsonObject(); string? section = null; string? currentKey = null; var block = new List<string>(); var blockIsList = false;
         foreach (var rawLine in yaml.Replace("\r\n", "\n").Split('\n'))
         {
             var line = rawLine.TrimEnd(); var trimmed = line.Trim(); if (trimmed.Length == 0 || trimmed.StartsWith('#')) continue;
-            if (!char.IsWhiteSpace(line[0])) { FlushBlock(spec, ref currentKey, block); section = trimmed.TrimEnd(':'); if (trimmed.StartsWith("kind:", StringComparison.OrdinalIgnoreCase)) kind = Clean(trimmed[5..]); continue; }
+            if (!char.IsWhiteSpace(line[0])) { FlushBlock(spec, ref currentKey, block, ref blockIsList); section = trimmed.TrimEnd(':'); if (trimmed.StartsWith("kind:", StringComparison.OrdinalIgnoreCase)) kind = Clean(trimmed[5..]); continue; }
             if (section == "metadata")
             {
                 if (trimmed.StartsWith("name:", StringComparison.OrdinalIgnoreCase)) name = Clean(trimmed[5..]);
@@ -88,20 +88,29 @@ public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger,
             }
             else if (section == "spec")
             {
-                if (trimmed.StartsWith('-')) { if (currentKey is not null) block.Add(Clean(trimmed[1..])); continue; }
+                if (trimmed.StartsWith('-')) { if (currentKey is not null) { blockIsList = true; block.Add(Clean(trimmed[1..])); } continue; }
                 var colon = trimmed.IndexOf(':');
-                if (colon > 0) { FlushBlock(spec, ref currentKey, block); var key = trimmed[..colon].Trim(); var value = trimmed[(colon + 1)..].Trim(); if (value is "|" or "|-" or ">" or ">-") currentKey = key; else spec[key] = Clean(value); }
+                if (colon > 0) { FlushBlock(spec, ref currentKey, block, ref blockIsList); var key = trimmed[..colon].Trim(); var value = trimmed[(colon + 1)..].Trim(); if (value is "|" or "|-" or ">" or ">-") { currentKey = key; blockIsList = false; } else if (value.Length == 0) { currentKey = key; blockIsList = false; } else spec[key] = Clean(value); }
                 else if (currentKey is not null) block.Add(trimmed);
             }
         }
-        FlushBlock(spec, ref currentKey, block); return (kind, name, owner, tags, spec);
+        FlushBlock(spec, ref currentKey, block, ref blockIsList); return (kind, name, owner, tags, spec);
     }
 
-    private static void FlushBlock(JsonObject spec, ref string? currentKey, List<string> block)
+    private static void FlushBlock(JsonObject spec, ref string? currentKey, List<string> block, ref bool blockIsList)
     {
         if (currentKey is null) return;
-        spec[currentKey] = block.Count == 0 ? string.Empty : string.Join('\n', block);
-        currentKey = null; block.Clear();
+        if (blockIsList)
+        {
+            var arr = new JsonArray();
+            foreach (var item in block) arr.Add((JsonNode?)JsonValue.Create(item));
+            spec[currentKey] = arr;
+        }
+        else
+        {
+            spec[currentKey] = block.Count == 0 ? string.Empty : string.Join('\n', block);
+        }
+        currentKey = null; block.Clear(); blockIsList = false;
     }
 
     private static string Clean(string value) => value.Trim().Trim('"', '\'');

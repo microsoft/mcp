@@ -36,7 +36,18 @@ public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> l
     {
         if (parameters is null || parameters.Length == 0) return string.Empty;
         var lines = new List<string> { "  parameters:" };
-        foreach (var param in parameters) { var parts = param.Split(':'); var name = parts[0].Trim(); var desc = parts.Length > 2 ? parts[2].Trim() : parts.Length > 1 ? parts[1].Trim() : $"Parameter {name}"; lines.Add($"    - name: {name}"); lines.Add("      type: string"); lines.Add($"      description: {desc}"); lines.Add("      required: true"); lines.Add("      target: dictionary:args:string"); }
+        foreach (var param in parameters)
+        {
+            // Format: name:description (everything after the first ':' is the description so values containing ':' survive).
+            var parts = param.Split(':', 2);
+            var name = parts[0].Trim();
+            var desc = parts.Length > 1 ? parts[1].Trim() : $"Parameter {name}";
+            lines.Add($"    - name: {name}");
+            lines.Add("      type: string");
+            lines.Add($"      description: {desc}");
+            lines.Add("      required: true");
+            lines.Add("      target: dictionary:args:string");
+        }
         return string.Join('\n', lines);
     }
     private static string GenerateAgent(string name, string description, string[]? tools, string[]? handoffs)
