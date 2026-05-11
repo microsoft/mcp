@@ -9,7 +9,7 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 
 <!-- insert-section: nuget;pypi {{MCPRepositoryMetadata}} -->
 
-A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. The Fabric MCP Server packages complete OpenAPI specifications into a single context layer for AI-assisted development—without connecting to live Fabric environments.
+A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. The Fabric MCP Server packages complete OpenAPI specifications into a single context layer for AI-assisted development. API documentation and best practices tools work offline; OneLake data operations and core Fabric operations connect to your live Fabric environment when authenticated.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->
 [![Install Fabric MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Fabric_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server) [![Install Fabric MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Fabric_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-fabric.vscode-fabric-mcp-server)
 
@@ -52,7 +52,7 @@ Key capabilities:
 - **Complete API Context**: Full OpenAPI specifications for all supported Fabric workloads
 - **Item Definition Knowledge**: JSON schemas for every Fabric item type (Lakehouses, pipelines, semantic models, notebooks, etc.)
 - **Built-in Best Practices**: Embedded guidance on pagination, error handling, and recommended patterns
-- **Local-First Security**: Runs entirely on your machine—never connects to your Fabric environment
+- **Local-First Security**: Runs entirely on your machine—documentation tools work offline, and live operations (OneLake, item creation) connect only when you authenticate
 
 # Installation
 <!-- insert-section: vsix {{- Install the [Fabric MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server)}} -->
@@ -177,8 +177,8 @@ Use one of the following options to configure your `mcp.json`:
 ## Getting Started
 
 1. Open GitHub Copilot in [VS Code](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode) and switch to Agent mode.
-1. Click `refresh` on the tools list
-    - You should see the Fabric MCP Server in the list of tools
+1. Select **Refresh** on the tools list.
+    - You should see the Fabric MCP Server in the list of tools.
 1. Try a prompt that uses Fabric context, such as `What Fabric workload types are available?`
     - The agent should be able to use the Fabric MCP Server tools to complete your query
 1. Check out the [Microsoft Fabric documentation](https://learn.microsoft.com/fabric/) and review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md) for commonly asked questions
@@ -268,6 +268,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 ## Documentation
 
 - See the [Microsoft Fabric documentation](https://learn.microsoft.com/fabric/) to learn about the Microsoft Fabric platform.
+- See the [Fabric MCP Servers documentation](https://learn.microsoft.com/rest/api/fabric/articles/mcp-servers/what-is-fabric-mcp-server) on Microsoft Learn for architecture overviews, setup guides, and tools references.
 - For MCP server-specific troubleshooting, see the [Troubleshooting Guide](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md).
 
 ## Feedback and Support
