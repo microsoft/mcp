@@ -132,6 +132,34 @@ public class ServiceHealthEventsListCommandTests : CommandUnitTestsBase<ServiceH
     }
 
     [Fact]
+    public async Task ExecuteAsync_ReturnsConflict_WhenResourceHealthRequestConflicts()
+    {
+        var subscription = "sub123";
+        var errorCode = "MissingSubscriptionRegistration";
+        var errorMessage = "The subscription is not registered to use namespace 'Microsoft.ResourceHealth'.";
+        var expectedError = $"Azure Resource Health returned Conflict. The subscription may need the Microsoft.ResourceHealth provider registered, or the provider may still be registering. Details: {errorMessage}. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
+
+        Service.ListServiceHealthEventsAsync(
+            subscription,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ResourceHealthRequestFailedException(HttpStatusCode.Conflict, errorCode, errorMessage));
+
+        var response = await ExecuteCommandAsync("--subscription", subscription);
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.Conflict, response.Status);
+        Assert.Equal(expectedError, response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_WhenSubscriptionLookupFails()
     {
         var subscription = "missing-subscription";

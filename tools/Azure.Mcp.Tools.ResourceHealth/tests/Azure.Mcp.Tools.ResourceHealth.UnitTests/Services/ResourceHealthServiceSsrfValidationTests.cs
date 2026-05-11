@@ -211,6 +211,26 @@ public class ResourceHealthServiceSsrfValidationTests
     }
 
     [Fact]
+    public async Task ListAvailabilityStatusesAsync_ThrowsRequestFailedException_WhenRequestConflicts()
+    {
+        const string subscriptionId = "12345678-1234-1234-1234-123456789012";
+        var responseContent = "{\"error\":{\"code\":\"MissingSubscriptionRegistration\",\"message\":\"The subscription is not registered to use namespace 'Microsoft.ResourceHealth'.\"}}";
+        var response = new HttpResponseMessage(HttpStatusCode.Conflict)
+        {
+            Content = new StringContent(responseContent)
+        };
+        SetupMocksForValidRequest(response, subscriptionId);
+
+        var exception = await Assert.ThrowsAsync<ResourceHealthRequestFailedException>(
+            () => _service.ListAvailabilityStatusesAsync(subscriptionId, cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal(HttpStatusCode.Conflict, exception.StatusCode);
+        Assert.Equal("MissingSubscriptionRegistration", exception.ErrorCode);
+        Assert.Equal("The subscription is not registered to use namespace 'Microsoft.ResourceHealth'.", exception.ErrorMessage);
+        Assert.Equal(responseContent, exception.ResponseContent);
+    }
+
+    [Fact]
     public async Task ListServiceHealthEventsAsync_DeserializesSuccessResponseFromStream()
     {
         const string subscriptionId = "12345678-1234-1234-1234-123456789012";
