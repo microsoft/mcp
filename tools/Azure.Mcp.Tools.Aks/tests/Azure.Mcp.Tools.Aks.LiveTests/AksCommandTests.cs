@@ -58,38 +58,35 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
             // New enriched fields (presence and shape only)
             if (cluster.TryGetProperty("id", out var idProperty))
             {
-                Assert.True(idProperty.ValueKind is JsonValueKind.String);
+                Assert.Equal(JsonValueKind.String, idProperty.ValueKind);
             }
             if (cluster.TryGetProperty("networkProfile", out var netProfile))
             {
-                Assert.True(netProfile.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
-                if (netProfile.ValueKind == JsonValueKind.Object)
+                Assert.Equal(JsonValueKind.Object, netProfile.ValueKind);
+                if (netProfile.TryGetProperty("loadBalancerProfile", out var lbProfile))
                 {
-                    if (netProfile.TryGetProperty("loadBalancerProfile", out var lbProfile))
-                    {
-                        Assert.True(lbProfile.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
-                    }
+                    Assert.Equal(JsonValueKind.Object, lbProfile.ValueKind);
                 }
             }
             if (cluster.TryGetProperty("windowsProfile", out var winProfile))
             {
-                Assert.True(winProfile.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+                Assert.Equal(JsonValueKind.Object, winProfile.ValueKind);
             }
             if (cluster.TryGetProperty("servicePrincipalProfile", out var spProfile))
             {
-                Assert.True(spProfile.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+                Assert.Equal(JsonValueKind.Object, spProfile.ValueKind);
             }
             if (cluster.TryGetProperty("addonProfiles", out var addons))
             {
-                Assert.True(addons.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+                Assert.Equal(JsonValueKind.Object, addons.ValueKind);
             }
             if (cluster.TryGetProperty("identityProfile", out var idProfile))
             {
-                Assert.True(idProfile.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+                Assert.Equal(JsonValueKind.Object, idProfile.ValueKind);
             }
             if (cluster.TryGetProperty("tags", out var tags))
             {
-                Assert.True(tags.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+                Assert.Equal(JsonValueKind.Object, tags.ValueKind);
             }
         }
     }
@@ -199,11 +196,30 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
         cluster.AssertProperty("supportPlan");
 
         // Profiles present or null
-        cluster.AssertProperty("networkProfile");
-        cluster.AssertProperty("windowsProfile");
-        cluster.AssertProperty("servicePrincipalProfile");
-        cluster.AssertProperty("addonProfiles");
-        cluster.AssertProperty("identityProfile");
+        if (cluster.TryGetProperty("networkProfile", out var netProfile))
+        {
+            Assert.Equal(JsonValueKind.Object, netProfile.ValueKind);
+            if (netProfile.TryGetProperty("loadBalancerProfile", out var lbProfile))
+            {
+                Assert.Equal(JsonValueKind.Object, lbProfile.ValueKind);
+            }
+        }
+        if (cluster.TryGetProperty("windowsProfile", out var winProfile))
+        {
+            Assert.Equal(JsonValueKind.Object, winProfile.ValueKind);
+        }
+        if (cluster.TryGetProperty("servicePrincipalProfile", out var spProfile))
+        {
+            Assert.Equal(JsonValueKind.Object, spProfile.ValueKind);
+        }
+        if (cluster.TryGetProperty("addonProfiles", out var addons))
+        {
+            Assert.Equal(JsonValueKind.Object, addons.ValueKind);
+        }
+        if (cluster.TryGetProperty("identityProfile", out var idProfile))
+        {
+            Assert.Equal(JsonValueKind.Object, idProfile.ValueKind);
+        }
 
         // Get-specific should return agentPoolProfiles (we populate on Get)
         var pools = cluster.AssertProperty("agentPoolProfiles");

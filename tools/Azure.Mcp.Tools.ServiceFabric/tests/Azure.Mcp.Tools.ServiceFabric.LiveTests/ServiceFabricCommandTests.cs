@@ -35,14 +35,14 @@ public class ServiceFabricCommandTests(ITestOutputHelper output, TestProxyFixtur
         {
             node.AssertProperty("id");
             var properties = node.AssertProperty("properties");
-            properties.AssertProperty("name");
+            properties.AssertProperty("Name");
 
-            if (properties.TryGetProperty("type", out var type))
+            if (properties.TryGetProperty("Type", out var type))
             {
                 Assert.Equal(JsonValueKind.String, type.ValueKind);
             }
 
-            if (properties.TryGetProperty("nodeStatus", out var status))
+            if (properties.TryGetProperty("NodeStatus", out var status))
             {
                 Assert.Equal(JsonValueKind.Number, status.ValueKind);
             }

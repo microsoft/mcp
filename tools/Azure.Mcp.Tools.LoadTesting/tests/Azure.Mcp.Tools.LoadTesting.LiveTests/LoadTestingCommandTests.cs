@@ -55,7 +55,7 @@ public class LoadTestingCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.NotEmpty(items.EnumerateArray());
         foreach (var item in items.EnumerateArray())
         {
-            Assert.NotNull(item.GetProperty("Id").GetString());
+            Assert.NotNull(item.GetProperty("id").GetString());
         }
     }
 }

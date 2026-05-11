@@ -112,9 +112,11 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
         var workbooks = result.AssertProperty("workbooks");
         Assert.Equal(JsonValueKind.Array, workbooks.ValueKind);
 
-        // Total count should be present
-        var totalCount = result.AssertProperty("totalCount");
-        Assert.True(totalCount.ValueKind == JsonValueKind.Number || totalCount.ValueKind == JsonValueKind.Null);
+        // Total count is either present as a number or is omitted due to being null.
+        if (result!.Value.TryGetProperty("totalCount", out var totalCount))
+        {
+            Assert.Equal(JsonValueKind.Number, totalCount.ValueKind);
+        }
 
         // Returned count should be present
         var returned = result.AssertProperty("returned");
@@ -394,7 +396,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
         var workbookIdProperty = createdWorkbook.AssertProperty("workbookId");
         string? workbookId = workbookIdProperty.GetString();
         Assert.NotNull(workbookId);
-        workbookId = RetrieveSanitizedVariable("workbookId", workbookId);
+        workbookId = RetrieveSanitizedVariable("WorkbookId", workbookId);
 
         // Delete the workbook
         var deleteResult = await CallToolAsync(
