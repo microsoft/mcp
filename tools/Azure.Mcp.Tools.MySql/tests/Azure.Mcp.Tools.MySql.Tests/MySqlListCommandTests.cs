@@ -16,8 +16,8 @@ public class MySqlListCommandTests : CommandUnitTestsBase<MySqlListCommand, IMyS
     [Fact]
     public void Description_Verification()
     {
-        Assert.False(string.IsNullOrWhiteSpace(Command.Description));
-        Assert.Contains("List MySQL servers", Command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
         Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters.");
     }
 

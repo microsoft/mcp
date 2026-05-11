@@ -23,7 +23,8 @@ public class WebTestsGetCommandTests : CommandUnitTestsBase<WebTestsGetCommand, 
     public void Constructor_InitializesCommandCorrectly()
     {
         Assert.Equal("get", CommandDefinition.Name);
-        Assert.False(string.IsNullOrEmpty(CommandDefinition.Description));
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
         Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
@@ -43,7 +44,8 @@ public class WebTestsGetCommandTests : CommandUnitTestsBase<WebTestsGetCommand, 
     public void Description_ContainsRequiredInformation()
     {
         var description = Command.Description;
-        Assert.False(string.IsNullOrEmpty(description));
+        Assert.NotNull(description);
+        Assert.NotEmpty(description);
         Assert.True(description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 

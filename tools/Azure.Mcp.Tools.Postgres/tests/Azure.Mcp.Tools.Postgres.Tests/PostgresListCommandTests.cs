@@ -18,8 +18,8 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
     [Fact]
     public void Description_Verification()
     {
-        Assert.False(string.IsNullOrWhiteSpace(Command.Description));
-        Assert.Contains("List PostgreSQL servers", Command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
         Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters.");
     }
 

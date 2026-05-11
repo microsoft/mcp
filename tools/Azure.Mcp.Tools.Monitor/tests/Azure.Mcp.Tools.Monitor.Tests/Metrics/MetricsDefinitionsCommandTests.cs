@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Reflection;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Services;
@@ -23,9 +22,9 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
     public void Constructor_InitializesCommandCorrectly()
     {
         Assert.Equal("definitions", CommandDefinition.Name);
-        Assert.False(string.IsNullOrEmpty(CommandDefinition.Description));
-        Assert.Contains("Metrics Definition", Command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
+        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

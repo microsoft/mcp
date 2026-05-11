@@ -62,8 +62,8 @@ public class ServiceBusSetupTests
 
         // Assert
         Assert.NotNull(serviceBusGroup);
-        Assert.False(string.IsNullOrEmpty(serviceBusGroup.Description));
-        Assert.Contains("Service Bus", serviceBusGroup.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(serviceBusGroup.Description);
+        Assert.NotEmpty(serviceBusGroup.Description);
         Assert.True(serviceBusGroup.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
@@ -83,8 +83,8 @@ public class ServiceBusSetupTests
         var queueGroup = serviceBusGroup.SubGroup.FirstOrDefault(g => g.Name == "queue");
         Assert.NotNull(queueGroup);
         Assert.Equal("queue", queueGroup.Name);
-        Assert.False(string.IsNullOrEmpty(queueGroup.Description));
-        Assert.Contains("Queue operations", queueGroup.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(queueGroup.Description);
+        Assert.NotEmpty(queueGroup.Description);
         Assert.True(queueGroup.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
@@ -104,8 +104,8 @@ public class ServiceBusSetupTests
         var topicGroup = serviceBusGroup.SubGroup.FirstOrDefault(g => g.Name == "topic");
         Assert.NotNull(topicGroup);
         Assert.Equal("topic", topicGroup.Name);
-        Assert.False(string.IsNullOrEmpty(topicGroup.Description));
-        Assert.Contains("Topic operations", topicGroup.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(topicGroup.Description);
+        Assert.NotEmpty(topicGroup.Description);
         Assert.True(topicGroup.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 

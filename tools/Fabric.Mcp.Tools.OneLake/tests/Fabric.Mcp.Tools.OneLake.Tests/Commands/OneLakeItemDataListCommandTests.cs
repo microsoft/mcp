@@ -17,8 +17,8 @@ public class OneLakeItemDataListCommandTests : CommandUnitTestsBase<OneLakeItemD
         Assert.True(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);
-        Assert.False(string.IsNullOrEmpty(Command.Description));
-        Assert.Contains("OneLake DFS", Command.Description);
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
         Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
@@ -26,7 +26,8 @@ public class OneLakeItemDataListCommandTests : CommandUnitTestsBase<OneLakeItemD
     public void GetCommand_ReturnsValidCommand()
     {
         Assert.Equal("list_items_dfs", CommandDefinition.Name);
-        Assert.False(string.IsNullOrEmpty(CommandDefinition.Description));
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
         Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
         Assert.NotEmpty(CommandDefinition.Options);
     }

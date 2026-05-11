@@ -17,7 +17,8 @@ public class FileWriteCommandTests : CommandUnitTestsBase<FileWriteCommand, IOne
     {
         Assert.False(Command.Metadata.ReadOnly);
         Assert.True(Command.Metadata.Destructive);
-        Assert.False(string.IsNullOrEmpty(Command.Description));
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
         Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 

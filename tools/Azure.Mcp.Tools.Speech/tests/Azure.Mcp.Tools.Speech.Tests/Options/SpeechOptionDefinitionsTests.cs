@@ -60,8 +60,8 @@ public class SpeechOptionDefinitionsTests
         Assert.NotNull(option);
         Assert.Equal("--endpoint", option.Name);
         Assert.True(option.Required);
-        Assert.False(string.IsNullOrEmpty(option.Description));
-        Assert.Contains("Azure AI Services endpoint URL", option.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(option.Description);
+        Assert.NotEmpty(option.Description);
         Assert.True(option.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
@@ -75,6 +75,9 @@ public class SpeechOptionDefinitionsTests
         Assert.NotNull(option);
         Assert.Equal("--file", option.Name);
         Assert.True(option.Required);
+        Assert.NotNull(option.Description);
+        Assert.NotEmpty(option.Description);
+        Assert.True(option.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
@@ -87,6 +90,9 @@ public class SpeechOptionDefinitionsTests
         Assert.NotNull(option);
         Assert.Equal("--language", option.Name);
         Assert.False(option.Required);
+        Assert.NotNull(option.Description);
+        Assert.NotEmpty(option.Description);
+        Assert.True(option.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

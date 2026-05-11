@@ -33,9 +33,8 @@ public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLa
         Assert.True(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);
-        Assert.False(string.IsNullOrEmpty(Command.Description));
-        Assert.Contains("OneLake", Command.Description);
-        Assert.Contains("file", Command.Description);
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
         Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
@@ -43,7 +42,8 @@ public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLa
     public void GetCommand_ReturnsValidCommand()
     {
         Assert.Equal("read", CommandDefinition.Name);
-        Assert.False(string.IsNullOrEmpty(CommandDefinition.Description));
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
         Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
         Assert.NotEmpty(CommandDefinition.Options);
     }

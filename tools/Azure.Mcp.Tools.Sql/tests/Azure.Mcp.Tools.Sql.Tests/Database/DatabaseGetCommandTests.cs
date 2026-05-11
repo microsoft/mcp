@@ -20,7 +20,8 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
     public void Constructor_InitializesCommandCorrectly()
     {
         Assert.Equal("get", CommandDefinition.Name);
-        Assert.False(string.IsNullOrEmpty(CommandDefinition.Description));
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
         Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 

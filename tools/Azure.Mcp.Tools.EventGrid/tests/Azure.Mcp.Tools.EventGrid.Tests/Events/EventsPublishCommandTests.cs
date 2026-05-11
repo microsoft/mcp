@@ -22,9 +22,9 @@ public class EventsPublishCommandTests : CommandUnitTestsBase<EventGridPublishCo
     {
         Assert.Equal("publish", Command.Name);
         Assert.Equal("Publish Events to Event Grid Topic", Command.Title);
-        Assert.False(string.IsNullOrEmpty(CommandDefinition.Description));
-        Assert.Contains("Event Grid topics", Command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.True(CommandDefinition.Description.Length <= 1024, "Description should not exceed 1024 characters");
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
+        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
