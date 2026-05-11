@@ -422,14 +422,21 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     /// Backup Status API. Returns null for DPP-only resource types (disks, blobs, etc.)
     /// that are not supported by the RSV BackupStatus API.
     /// </summary>
-    private static BackupDataSourceType? MapArmResourceTypeToBackupDataSourceType(string armResourceType) =>
-        armResourceType switch
+    private static BackupDataSourceType? MapArmResourceTypeToBackupDataSourceType(string? armResourceType)
+    {
+        if (string.IsNullOrEmpty(armResourceType))
+        {
+            return null;
+        }
+
+        return armResourceType switch
         {
             "microsoft.compute/virtualmachines" => BackupDataSourceType.Vm,
             "microsoft.storage/storageaccounts" => BackupDataSourceType.AzureFileShare,
             "microsoft.sql/servers/databases" => BackupDataSourceType.SqlDatabase,
             _ => null // DPP-only types handled via DPP vault lookup
         };
+    }
 
     public async Task<List<UnprotectedResourceInfo>> FindUnprotectedResourcesAsync(
         string subscription, string? resourceTypeFilter, string? resourceGroup,
@@ -777,6 +784,6 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         return types;
     }
 
-    [GeneratedRegex(@"^[A-Za-z0-9]+\.[A-Za-z0-9]+/[A-Za-z0-9]+$")]
+    [GeneratedRegex(@"^[A-Za-z0-9]+\.[A-Za-z0-9]+(/[A-Za-z0-9]+)+$")]
     private static partial Regex ArmResourceTypeRegex();
 }
