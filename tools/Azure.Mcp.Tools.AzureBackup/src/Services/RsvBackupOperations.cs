@@ -20,16 +20,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
     private const string VaultType = VaultTypeResolver.Rsv;
     private const string FabricName = "Azure";
 
-    private static void ValidateSubscriptionFormat(string subscription)
-    {
-        if (!Guid.TryParse(subscription, out _))
-        {
-            throw new ArgumentException(
-                $"Invalid subscription ID '{subscription}'. Expected a GUID (e.g., 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'). " +
-                "If you provided a subscription name, use the subscription ID instead.");
-        }
-    }
-
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string location,
         string? sku, string? storageType, string? tenant,
