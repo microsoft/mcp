@@ -5,6 +5,29 @@
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
 
+# Fetch PR labels once at the start via GitHub REST API
+$prNumber = $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
+$prLabels = @()
+if ($prNumber) {
+    $repo = $env:BUILD_REPOSITORY_NAME
+    if (-not $repo) {
+        $repo = "microsoft/mcp"
+    }
+    $apiUrl = "https://api.github.com/repos/$repo/pulls/$prNumber"
+    $headers = @{ "Accept" = "application/vnd.github+json"; "User-Agent" = "mcp-changelog-check" }
+    if ($env:GH_TOKEN) {
+        $headers["Authorization"] = "Bearer $($env:GH_TOKEN)"
+    }
+    try {
+        $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers -Method Get -ErrorAction Stop
+        $prLabels = @($response.labels | ForEach-Object { $_.name })
+        Write-Host "PR #$prNumber labels: $($prLabels -join ', ')"
+    }
+    catch {
+        Write-Warning "Failed to fetch PR labels from GitHub API: $_"
+    }
+}
+
 Push-Location $RepoRoot
 try {
     $changedFiles = git diff --name-only --diff-filter=A "origin/main...HEAD" 2>&1
@@ -15,21 +38,12 @@ try {
         exit 0
     }
 
-    # Check for skip-changelog label via gh CLI
-    $prNumber = $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
-    Write-Host "DEBUG: PR Number = '$prNumber'"
-    # Write-Host "DEBUG: GH_TOKEN set = $([bool]$env:GH_TOKEN)"
     if (-not $prNumber) {
         Write-Host "Not a PR build - skipping skip-changelog label check."
         exit 0
     }
-    # Write-Host "DEBUG: GH_TOKEN length = $($env:GH_TOKEN.Length)"
-    gh auth status 2>&1 | Write-Host
-    Write-Host "DEBUG: Running 'gh pr view $prNumber --json labels --jq .labels[].name'"
-    $labels = gh pr view $prNumber --json labels --jq '.labels[].name' 2>&1
-    Write-Host "DEBUG: gh exit code = $LASTEXITCODE"
-    Write-Host "DEBUG: Labels returned = '$($labels -join ', ')'"
-    if ($labels -contains 'skip-changelog') {
+
+    if ($prLabels -contains 'skip-changelog') {
         Write-Host "'skip-changelog' label found — skipping."
         exit 0
     }
