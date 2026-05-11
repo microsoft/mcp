@@ -329,7 +329,7 @@ function Get-PathsToTest {
 
         $projectName = (Get-Item $path).Name
         $testResourcesPath = "$path/tests"
-        $rootedTestResourcesPath = Resolve-Path "$($using:RepoRoot)/$testResourcesPath"
+        $rootedTestResourcesPath = "$($using:RepoRoot)/$testResourcesPath"
         $hasTestResources = Test-Path "$rootedTestResourcesPath/test-resources.bicep"
         $hasUnifiedTests = Test-Path "$rootedTestResourcesPath/$projectName.Tests.csproj"
         $testProjectDetails = $hasUnifiedTests ? (& "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path "$rootedTestResourcesPath/$projectName.Tests.csproj") : $null

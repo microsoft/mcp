@@ -3,7 +3,7 @@
 
 [CmdletBinding()]
 param(
-    [string[]] $Paths = @('core\Azure.Mcp.Core'),
+    [string[]] $Paths,
     [string[]] $Members,
     [ValidateSet('Live', 'Unit', 'All', 'Recorded')]
     [string] $TestType = 'Unit',
