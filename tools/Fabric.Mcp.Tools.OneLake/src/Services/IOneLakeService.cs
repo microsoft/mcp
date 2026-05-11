@@ -46,4 +46,22 @@ public interface IOneLakeService
     Task<TableNamespaceGetResult> GetTableNamespaceAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, CancellationToken cancellationToken = default);
     Task<TableListResult> ListTablesAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, CancellationToken cancellationToken = default);
     Task<TableGetResult> GetTableAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, string tableName, CancellationToken cancellationToken = default);
+
+    // Data Access Security Operations
+    Task<DataAccessRoleListResponse> ListDataAccessRolesAsync(string workspaceId, string itemId, CancellationToken cancellationToken = default);
+    Task<DataAccessRole> GetDataAccessRoleAsync(string workspaceId, string itemId, string roleName, CancellationToken cancellationToken = default);
+    Task<DataAccessRole> CreateOrUpdateDataAccessRoleAsync(string workspaceId, string itemId, string roleDefinitionJson, CancellationToken cancellationToken = default);
+    Task DeleteDataAccessRoleAsync(string workspaceId, string itemId, string roleName, CancellationToken cancellationToken = default);
+
+    // Shortcut Operations
+    Task<ShortcutListResponse> ListShortcutsAsync(string workspaceId, string itemId, string? parentPath = null, CancellationToken cancellationToken = default);
+    Task<OneLakeShortcut> GetShortcutAsync(string workspaceId, string itemId, string shortcutPath, string shortcutName, CancellationToken cancellationToken = default);
+    Task<ShortcutCreateOrUpdateResponse> CreateOrUpdateShortcutsAsync(string workspaceId, string itemId, string shortcutsJson, bool createOrOverwrite = false, CancellationToken cancellationToken = default);
+    Task DeleteShortcutAsync(string workspaceId, string itemId, string shortcutPath, string shortcutName, CancellationToken cancellationToken = default);
+    Task ResetShortcutCacheAsync(string workspaceId, string itemId, CancellationToken cancellationToken = default);
+
+    // Settings Operations
+    Task<OneLakeSettings> GetSettingsAsync(string workspaceId, CancellationToken cancellationToken = default);
+    Task<OneLakeSettings> ModifyDiagnosticsAsync(string workspaceId, string diagnosticsConfigJson, CancellationToken cancellationToken = default);
+    Task<OneLakeSettings> ModifyImmutabilityPolicyAsync(string workspaceId, string immutabilityPolicyJson, CancellationToken cancellationToken = default);
 }

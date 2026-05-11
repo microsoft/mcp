@@ -178,4 +178,70 @@ public static class FabricOptionDefinitions
         Description = "The table name exposed by the OneLake table API.",
         Required = true
     };
+
+    // Data access security options
+    public const string RoleNameName = "role-name";
+    public static readonly Option<string> RoleName = new($"--{RoleNameName}")
+    {
+        Description = "The name of the data access role.",
+        Required = true
+    };
+
+    public const string RoleDefinitionName = "role-definition";
+    public static readonly Option<string> RoleDefinition = new($"--{RoleDefinitionName}")
+    {
+        Description = "JSON definition of the data access role including members and decision rules.",
+        Required = true
+    };
+
+    // Shortcut options
+    public const string ShortcutNameName = "shortcut-name";
+    public static readonly Option<string> ShortcutName = new($"--{ShortcutNameName}")
+    {
+        Description = "The name of the shortcut.",
+        Required = true
+    };
+
+    public const string ShortcutPathName = "shortcut-path";
+    public static readonly Option<string> ShortcutPath = new($"--{ShortcutPathName}")
+    {
+        Description = "The path of the shortcut within the item.",
+        Required = true
+    };
+
+    public const string ParentPathName = "parent-path";
+    public static readonly Option<string> ParentPath = new($"--{ParentPathName}")
+    {
+        Description = "The parent path under which to list shortcuts.",
+        Required = false
+    };
+
+    public const string CreateOrOverwriteName = "create-or-overwrite";
+    public static readonly Option<bool> CreateOrOverwrite = new($"--{CreateOrOverwriteName}")
+    {
+        Description = "When true, overwrites existing shortcuts. When false (default), fails if a shortcut already exists.",
+        Required = false
+    };
+
+    public const string ShortcutsDefinitionName = "shortcuts";
+    public static readonly Option<string> ShortcutsDefinition = new($"--{ShortcutsDefinitionName}")
+    {
+        Description = "JSON array of shortcut definitions to create or update.",
+        Required = true
+    };
+
+    // Settings options
+    public const string DiagnosticsConfigName = "diagnostics-config";
+    public static readonly Option<string> DiagnosticsConfig = new($"--{DiagnosticsConfigName}")
+    {
+        Description = "JSON configuration for OneLake diagnostic logging.",
+        Required = true
+    };
+
+    public const string ImmutabilityPolicyConfigName = "immutability-policy";
+    public static readonly Option<string> ImmutabilityPolicyConfig = new($"--{ImmutabilityPolicyConfigName}")
+    {
+        Description = "JSON configuration for OneLake immutability policy.",
+        Required = true
+    };
 }
