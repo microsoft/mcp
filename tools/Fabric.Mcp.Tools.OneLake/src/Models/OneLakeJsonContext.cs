@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Commands.Item;
+using Fabric.Mcp.Tools.OneLake.Commands.Security;
+using Fabric.Mcp.Tools.OneLake.Commands.Settings;
+using Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 using Fabric.Mcp.Tools.OneLake.Commands.Table;
 using Fabric.Mcp.Tools.OneLake.Commands.Workspace;
 
@@ -62,5 +65,36 @@ namespace Fabric.Mcp.Tools.OneLake.Models;
 [JsonSerializable(typeof(List<Lakehouse>))]
 [JsonSerializable(typeof(List<OneLakeFileInfo>))]
 [JsonSerializable(typeof(List<FileSystemItem>))]
+// Data Access Security types
+[JsonSerializable(typeof(DataAccessRole))]
+[JsonSerializable(typeof(DataAccessRoleListResponse))]
+[JsonSerializable(typeof(DataAccessRoleMembers))]
+[JsonSerializable(typeof(DecisionRule))]
+[JsonSerializable(typeof(DecisionRuleScope))]
+[JsonSerializable(typeof(FabricItemMember))]
+[JsonSerializable(typeof(MicrosoftEntraMember))]
+[JsonSerializable(typeof(DataAccessRoleDeleteCommand.DataAccessRoleDeleteCommandResult))]
+// Shortcut types
+[JsonSerializable(typeof(OneLakeShortcut))]
+[JsonSerializable(typeof(ShortcutTarget))]
+[JsonSerializable(typeof(OneLakeShortcutTarget))]
+[JsonSerializable(typeof(AdlsGen2ShortcutTarget))]
+[JsonSerializable(typeof(AmazonS3ShortcutTarget))]
+[JsonSerializable(typeof(GoogleCloudStorageShortcutTarget))]
+[JsonSerializable(typeof(DataverseShortcutTarget))]
+[JsonSerializable(typeof(S3CompatibleShortcutTarget))]
+[JsonSerializable(typeof(ExternalDataShareShortcutTarget))]
+[JsonSerializable(typeof(ShortcutListResponse))]
+[JsonSerializable(typeof(ShortcutCreateOrUpdateRequest))]
+[JsonSerializable(typeof(ShortcutCreateOrUpdateResponse))]
+[JsonSerializable(typeof(ShortcutDeleteCommand.ShortcutDeleteCommandResult))]
+[JsonSerializable(typeof(ShortcutResetCacheCommand.ShortcutResetCacheCommandResult))]
+// Settings types
+[JsonSerializable(typeof(OneLakeSettings))]
+[JsonSerializable(typeof(DiagnosticsSettings))]
+[JsonSerializable(typeof(DiagnosticsCategory))]
+[JsonSerializable(typeof(ImmutabilityPolicySettings))]
+[JsonSerializable(typeof(DiagnosticsModifyRequest))]
+[JsonSerializable(typeof(ImmutabilityPolicyModifyRequest))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]
 internal partial class OneLakeJsonContext : JsonSerializerContext;
