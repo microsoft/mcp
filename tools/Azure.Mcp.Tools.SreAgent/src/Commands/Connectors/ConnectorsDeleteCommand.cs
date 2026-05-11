@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
     Id = "50f58038-1258-48cc-a7d2-bc6c29614405",
     Name = "delete",
     Title = "Delete SRE Agent Connector",
-    Description = "Delete a connector from an Azure SRE Agent resource.",
+    Description = "Delete a connector from an Azure SRE Agent resource. Required: --subscription, --agent, --name, --confirm true.",
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -34,6 +34,7 @@ public sealed class ConnectorsDeleteCommand(ILogger<ConnectorsDeleteCommand> log
         base.RegisterOptions(command);
         command.Options.Add(SreAgentOptionDefinitions.Agent.AsRequired());
         command.Options.Add(SreAgentOptionDefinitions.Name.AsRequired());
+        command.Options.Add(SreAgentOptionDefinitions.Confirm);
     }
 
     protected override ConnectorsDeleteOptions BindOptions(ParseResult parseResult)
@@ -41,6 +42,7 @@ public sealed class ConnectorsDeleteCommand(ILogger<ConnectorsDeleteCommand> log
         var options = base.BindOptions(parseResult);
         options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
         options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name);
+        options.Confirm = parseResult.GetValueOrDefault<bool>(SreAgentOptionDefinitions.Confirm.Name);
         return options;
     }
 
@@ -54,6 +56,11 @@ public sealed class ConnectorsDeleteCommand(ILogger<ConnectorsDeleteCommand> log
         var options = BindOptions(parseResult);
         try
         {
+            if (!options.Confirm)
+            {
+                throw new InvalidOperationException($"Refusing to delete connector '{options.Name}': destructive operation requires --confirm true.");
+            }
+
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(_sreAgentService, options, cancellationToken);
             await _sreAgentService.DeleteConnectorAsync(endpoint, options.Name!, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new ConnectorsDeleteCommandResult(true, options.Name!), SreAgentJsonContext.Default.ConnectorsDeleteCommandResult);

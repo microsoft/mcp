@@ -6,4 +6,6 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Hooks;
 public class HooksDeleteOptions : BaseSreAgentOptions
 {
     public string? Name { get; set; }
+
+    public bool Confirm { get; set; }
 }
