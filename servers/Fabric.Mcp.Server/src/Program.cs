@@ -38,7 +38,7 @@ internal class Program
 
             services.AddLogging(builder =>
             {
-                builder.AddConsole();
+                builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
                 builder.SetMinimumLevel(LogLevel.Information);
             });
 
@@ -114,6 +114,7 @@ internal class Program
             new Fabric.Mcp.Tools.Docs.FabricDocsSetup(),
             new Fabric.Mcp.Tools.OneLake.FabricOneLakeSetup(),
             new Fabric.Mcp.Tools.Core.FabricCoreSetup(),
+            new Fabric.Mcp.Tools.DataFactory.DataFactoryAreaSetup(),
         ];
     }
 
