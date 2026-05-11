@@ -109,4 +109,4 @@ tools/Fabric.Mcp.Tools.DataFactory/
 
 - [Microsoft Fabric Data Factory documentation](https://learn.microsoft.com/fabric/data-factory/)
 - [DataFactory.MCP.Core NuGet package](https://www.nuget.org/packages/Microsoft.DataFactory.MCP.Core)
-- [Fabric MCP Server](../../servers/Fabric.Mcp.Server/README.md)
+- [Fabric MCP Server](https://github.com/microsoft/mcp/tree/main/servers/Fabric.Mcp.Server)
