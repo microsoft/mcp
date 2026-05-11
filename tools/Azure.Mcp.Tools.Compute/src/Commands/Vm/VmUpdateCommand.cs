@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
         Update, modify, or reconfigure an existing Azure Virtual Machine (VM) configuration.
         Use this to add or change tags on a VM, resize a VM to a different size, enable or configure boot diagnostics, or update user data.
         Equivalent to 'az vm update'. The VM may need to be deallocated before resizing to certain sizes.
+        Do not use this to change VM power state (start, stop, deallocate, restart); use VM power-state instead.
         """,
     Destructive = true,
     Idempotent = true,

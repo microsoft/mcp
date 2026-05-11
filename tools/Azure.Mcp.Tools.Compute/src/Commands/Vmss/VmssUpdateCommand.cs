@@ -19,9 +19,10 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
     Title = "Update Virtual Machine Scale Set",
     Description = """
         Update, modify, or reconfigure an existing Azure Virtual Machine Scale Set (VMSS).
-        Use this to scale instance count, resize VMs, change upgrade policy, or update tags on a scale set.
-        Equivalent to 'az vmss update'. Changes may require 'update-instances' to roll out to existing VMs.
-        Do not use this to create a new VMSS (use VMSS create) or to update a single VM (use VM update).
+        Use this only on a VMSS that already exists to adjust its instance count, resize its VMs,
+        switch its upgrade policy, or update its tags. Equivalent to 'az vmss update'.
+        Changes may require 'update-instances' to roll out to existing VMs.
+        Do not use this to create, deploy, or provision a new VMSS (use VMSS create instead) or to update a single VM (use VM update).
         """,
     Destructive = true,
     Idempotent = true,
