@@ -80,8 +80,8 @@ public sealed class AgentsCreateCommand(ILogger<AgentsCreateCommand> logger, ISr
                 {
                     HandoffDescription = options.Description,
                     Instructions = options.Instructions,
-                    Tools = ToList(options.Tools),
-                    Handoffs = ToList(options.Handoffs)
+                    Tools = ToList(options.Tools) ?? new List<string>(),
+                    Handoffs = ToList(options.Handoffs) ?? new List<string>()
                 }
             };
 

@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Hooks;
 
 [CommandMetadata(
     Id = "b2413e2f-e121-4d63-860c-28eebf4fd00a",
-    Name = "list-thread-hooks",
+    Name = "list",
     Title = "List SRE Agent Thread Hooks",
     Description = "List hook activation state for a thread on an Azure SRE Agent resource.",
     Destructive = false,

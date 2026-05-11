@@ -51,9 +51,8 @@ public sealed class MemoriesSearchCommand(ILogger<MemoriesSearchCommand> logger,
         var lines = new List<string> { $"# Search Results for \"{query}\"", string.Empty, $"{results.Count} result(s)", string.Empty };
         foreach (var r in results)
         {
-            var score = r.Score.HasValue ? $" (relevance: {SreAgentPortedCommandHelpers.Percent(r.Score.Value)}%)" : string.Empty;
-            lines.Add($"### {r.FileName ?? "unknown"}{score}");
-            if (!string.IsNullOrWhiteSpace(r.Content)) lines.Add(r.Content.Length > 500 ? r.Content[..500] + "..." : r.Content);
+            lines.Add($"### {r.Title ?? r.Id ?? "unknown"}");
+            if (!string.IsNullOrWhiteSpace(r.Contents)) lines.Add(r.Contents.Length > 500 ? r.Contents[..500] + "..." : r.Contents);
             lines.Add(string.Empty);
         }
         return string.Join('\n', lines);

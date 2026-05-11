@@ -754,14 +754,58 @@ public sealed class SreAgentService(
     public async Task DeleteMemoryAsync(string endpoint, string name, string? tenant = null, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        await CallDataPlaneAsync(endpoint, $"/api/v1/AgentMemory/document/{Uri.EscapeDataString(name)}", HttpMethod.Delete, tenant: tenant, cancellationToken: cancellationToken);
+        // The SRE Agent stores uploaded memories as <name>.md files. Append the extension
+        // when the caller omits it so DELETE matches the stored filename.
+        var fileName = name.EndsWith(".md", StringComparison.OrdinalIgnoreCase) ? name : name + ".md";
+        await CallDataPlaneAsync(endpoint, $"/api/v1/AgentMemory/document/{Uri.EscapeDataString(fileName)}", HttpMethod.Delete, tenant: tenant, cancellationToken: cancellationToken);
     }
 
     public async Task<List<MemorySearchResult>> SearchMemoriesAsync(string endpoint, string query, int k = 10, string? tenant = null, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(query);
         var body = await CallDataPlaneAsync(endpoint, $"/api/v1/AgentMemory/documents?query={Uri.EscapeDataString(query)}&k={k}", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
-        return SreAgentPortedCommandHelpers.DeserializeArray(body, SreAgentJsonContext.Default.ListMemorySearchResult);
+
+        // The SRE Agent memory search endpoint returns { "results": [ "<json-string>", ... ] }
+        // where each element is itself a JSON-serialized MemorySearchResult. Parse the outer
+        // envelope and then deserialize each inner string into a model.
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return [];
+        }
+        using var document = JsonDocument.Parse(body);
+        if (document.RootElement.ValueKind != JsonValueKind.Object ||
+            !document.RootElement.TryGetProperty("results", out var resultsElement) ||
+            resultsElement.ValueKind != JsonValueKind.Array)
+        {
+            return SreAgentPortedCommandHelpers.DeserializeArray(body, SreAgentJsonContext.Default.ListMemorySearchResult);
+        }
+        var list = new List<MemorySearchResult>();
+        foreach (var item in resultsElement.EnumerateArray())
+        {
+            string? innerJson = item.ValueKind switch
+            {
+                JsonValueKind.String => item.GetString(),
+                JsonValueKind.Object => item.GetRawText(),
+                _ => null
+            };
+            if (string.IsNullOrWhiteSpace(innerJson))
+            {
+                continue;
+            }
+            try
+            {
+                var result = JsonSerializer.Deserialize(innerJson, SreAgentJsonContext.Default.MemorySearchResult);
+                if (result is not null)
+                {
+                    list.Add(result);
+                }
+            }
+            catch (JsonException)
+            {
+                // Skip results that fail to parse rather than failing the entire search.
+            }
+        }
+        return list;
     }
 
     public async Task ReindexMemoriesAsync(string endpoint, string? tenant = null, CancellationToken cancellationToken = default)

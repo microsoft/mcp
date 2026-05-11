@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.SreAgent.Models;
@@ -9,8 +10,8 @@ public sealed record SreAgentThread
 {
     public string? Id { get; init; }
     public string? Title { get; init; }
-    public string? Source { get; init; }
-    public string? Status { get; init; }
+    public JsonElement? Source { get; init; }
+    public SreAgentThreadStatus? Status { get; init; }
     public string? CreatedTimestamp { get; init; }
     public string? ModifiedTimestamp { get; init; }
     public SreAgentThreadStartMessage? StartMessage { get; init; }
@@ -77,6 +78,24 @@ public sealed record SreAgentQuestionOption
 public sealed record SreAgentPagedResponse<T>
 {
     public List<T>? Value { get; init; }
+}
+
+public sealed record SreAgentThreadStatus
+{
+    public SreAgentThreadActionsStatus? ActionsStatus { get; init; }
+    public SreAgentThreadIncidentStatus? IncidentStatus { get; init; }
+}
+
+public sealed record SreAgentThreadActionsStatus
+{
+    public bool? HasCriticalActions { get; init; }
+    public bool? HasWarningActions { get; init; }
+}
+
+public sealed record SreAgentThreadIncidentStatus
+{
+    public string? IncidentId { get; init; }
+    public string? Status { get; init; }
 }
 
 public sealed record SreAgentThreadCreateRequest(SreAgentThreadStartMessageRequest StartMessage);

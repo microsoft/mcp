@@ -28,7 +28,7 @@ internal static class SreAgentPortedCommandHelpers
 
         if (root.ValueKind == JsonValueKind.Object)
         {
-            foreach (var propertyName in new[] { "value", "items", "documents", "data", "results" })
+            foreach (var propertyName in new[] { "value", "items", "documents", "data", "results", "files" })
             {
                 if (root.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.Array)
                 {

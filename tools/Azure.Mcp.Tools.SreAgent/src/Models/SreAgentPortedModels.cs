@@ -147,14 +147,24 @@ public sealed record DocumentInfo
     public long? Size { get; init; }
     [JsonPropertyName("lastModified")]
     public string? LastModified { get; init; }
+    [JsonPropertyName("isIndexed")]
+    public bool? IsIndexed { get; init; }
+    [JsonPropertyName("errorReason")]
+    public string? ErrorReason { get; init; }
 }
 
 public sealed record MemorySearchResult
 {
-    [JsonPropertyName("fileName")]
-    public string? FileName { get; init; }
-    [JsonPropertyName("content")]
-    public string? Content { get; init; }
-    [JsonPropertyName("score")]
-    public double? Score { get; init; }
+    [JsonPropertyName("Id")]
+    public string? Id { get; init; }
+    [JsonPropertyName("Title")]
+    public string? Title { get; init; }
+    [JsonPropertyName("Type")]
+    public string? Type { get; init; }
+    [JsonPropertyName("Filter")]
+    public string? Filter { get; init; }
+    [JsonPropertyName("Contents")]
+    public string? Contents { get; init; }
+    [JsonPropertyName("DerivedTypeName")]
+    public string? DerivedTypeName { get; init; }
 }

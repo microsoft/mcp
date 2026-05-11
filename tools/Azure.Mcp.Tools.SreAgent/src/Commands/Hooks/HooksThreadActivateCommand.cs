@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Hooks;
 
 [CommandMetadata(
     Id = "fdc972bc-cf9a-484e-bdc5-7a91a5cd330b",
-    Name = "activate-thread-hook",
+    Name = "activate",
     Title = "Activate SRE Agent Thread Hook",
     Description = "Activate an on-demand hook for a thread on an Azure SRE Agent resource.",
     Destructive = true,

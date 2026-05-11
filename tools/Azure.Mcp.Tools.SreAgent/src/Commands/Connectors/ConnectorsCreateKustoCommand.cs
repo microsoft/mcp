@@ -59,9 +59,12 @@ public sealed class ConnectorsCreateKustoCommand(ILogger<ConnectorsCreateKustoCo
         var options = BindOptions(parseResult);
         try
         {
-            var extendedProperties = string.IsNullOrWhiteSpace(options.Database)
-                ? null
-                : new Dictionary<string, object> { ["database"] = options.Database };
+            // SRE Agent requires the Kusto data source to be of the form
+            // https://<cluster>.kusto.windows.net/<database>. Concatenate database into
+            // the URL path when --database is supplied so server-side validation passes.
+            var dataSource = string.IsNullOrWhiteSpace(options.Database)
+                ? options.ClusterUrl
+                : $"{options.ClusterUrl!.TrimEnd('/')}/{Uri.EscapeDataString(options.Database!)}";
             var connector = new AgentConnectorEnvelope
             {
                 Name = options.Name,
@@ -69,9 +72,9 @@ public sealed class ConnectorsCreateKustoCommand(ILogger<ConnectorsCreateKustoCo
                 {
                     Name = options.Name,
                     DataConnectorType = "Kusto",
-                    DataSource = options.ClusterUrl,
+                    DataSource = dataSource,
                     Identity = "system",
-                    ExtendedProperties = extendedProperties
+                    ExtendedProperties = null
                 }
             };
 
