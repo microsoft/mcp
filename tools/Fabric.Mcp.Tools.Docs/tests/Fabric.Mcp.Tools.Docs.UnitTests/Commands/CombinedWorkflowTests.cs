@@ -2,91 +2,67 @@
 // Licensed under the MIT License.
 
 using System.Buffers;
-using System.CommandLine;
 using System.Net;
 using System.Text.Json;
+using Fabric.Mcp.Tools.Docs.Commands;
 using Fabric.Mcp.Tools.Docs.Commands.BestPractices;
 using Fabric.Mcp.Tools.Docs.Commands.PublicApis;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.Docs.UnitTests.Commands;
-
-/// <summary>
-/// Shared fixture for combined workflow tests. Creates the service provider
-/// and command instances once, shared across all tests in the class.
-/// </summary>
-public sealed class CombinedWorkflowFixture : IDisposable
-{
-    public ServiceProvider ServiceProvider { get; }
-    public ListWorkloadsCommand ListWorkloadsCommand { get; }
-    public GetWorkloadApisCommand GetWorkloadApisCommand { get; }
-    public GetWorkloadDefinitionCommand GetWorkloadDefinitionCommand { get; }
-    public GetExamplesCommand GetExamplesCommand { get; }
-
-    private readonly LoggerFactory _loggerFactory;
-
-    public CombinedWorkflowFixture()
-    {
-        _loggerFactory = new LoggerFactory();
-        ListWorkloadsCommand = new ListWorkloadsCommand(_loggerFactory.CreateLogger<ListWorkloadsCommand>());
-        GetWorkloadApisCommand = new GetWorkloadApisCommand(_loggerFactory.CreateLogger<GetWorkloadApisCommand>());
-        GetWorkloadDefinitionCommand = new GetWorkloadDefinitionCommand(_loggerFactory.CreateLogger<GetWorkloadDefinitionCommand>());
-        GetExamplesCommand = new GetExamplesCommand(_loggerFactory.CreateLogger<GetExamplesCommand>());
-
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddSingleton<IResourceProviderService, EmbeddedResourceProviderService>();
-        services.AddSingleton<IFabricPublicApiService, FabricPublicApiService>();
-        ServiceProvider = services.BuildServiceProvider();
-    }
-
-    public void Dispose()
-    {
-        ServiceProvider.Dispose();
-        _loggerFactory.Dispose();
-    }
-}
 
 /// <summary>
 /// Combined workflow tests that exercise real service implementations (no mocks).
 /// Commands use the real EmbeddedResourceProviderService and FabricPublicApiService
 /// backed by assembly-embedded resources.
 /// </summary>
-public class CombinedWorkflowTests(CombinedWorkflowFixture fixture) : IClassFixture<CombinedWorkflowFixture>
+public class CombinedWorkflowTests : IDisposable
 {
-    private readonly ServiceProvider _serviceProvider = fixture.ServiceProvider;
-    private readonly ListWorkloadsCommand _listWorkloadsCommand = fixture.ListWorkloadsCommand;
-    private readonly GetWorkloadApisCommand _getWorkloadApisCommand = fixture.GetWorkloadApisCommand;
-    private readonly GetWorkloadDefinitionCommand _getWorkloadDefinitionCommand = fixture.GetWorkloadDefinitionCommand;
-    private readonly GetExamplesCommand _getExamplesCommand = fixture.GetExamplesCommand;
+    private readonly ServiceProvider _serviceProvider;
+    private readonly ListWorkloadsCommand _listWorkloadsCommand;
+    private readonly GetWorkloadApisCommand _getWorkloadApisCommand;
+    private readonly GetWorkloadDefinitionCommand _getWorkloadDefinitionCommand;
+    private readonly GetExamplesCommand _getExamplesCommand;
+
+    public CombinedWorkflowTests()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IResourceProviderService, EmbeddedResourceProviderService>();
+        services.AddSingleton<IFabricPublicApiService, FabricPublicApiService>();
+        services.AddSingleton<ListWorkloadsCommand>();
+        services.AddSingleton<GetWorkloadApisCommand>();
+        services.AddSingleton<GetWorkloadDefinitionCommand>();
+        services.AddSingleton<GetExamplesCommand>();
+        _serviceProvider = services.BuildServiceProvider();
+
+        _listWorkloadsCommand = _serviceProvider.GetRequiredService<ListWorkloadsCommand>();
+        _getWorkloadApisCommand = _serviceProvider.GetRequiredService<GetWorkloadApisCommand>();
+        _getWorkloadDefinitionCommand = _serviceProvider.GetRequiredService<GetWorkloadDefinitionCommand>();
+        _getExamplesCommand = _serviceProvider.GetRequiredService<GetExamplesCommand>();
+    }
+
+    public void Dispose()
+    {
+        _serviceProvider.Dispose();
+        GC.SuppressFinalize(this);
+    }
 
     [Fact]
     public async Task ListWorkloads_ThenGetApisForEach_ReturnsApiSpecsForAllWorkloads()
     {
-        var cancellationToken = TestContext.Current.CancellationToken;
-
         // Step 1: List all workloads using the real service
-        var listContext = new CommandContext(_serviceProvider);
-        var listResult = await _listWorkloadsCommand.ExecuteAsync(
-            listContext, _listWorkloadsCommand.GetCommand().Parse([]), cancellationToken);
+        var listResult = await ExecuteCommandAsync(_listWorkloadsCommand);
 
-        Assert.Equal(HttpStatusCode.OK, listResult.Status);
-        Assert.NotNull(listResult.Results);
-
-        var workloads = DeserializeWorkloads(listResult);
+        var workloads = ValidateAndDeserializeWorkloadsResponse(listResult);
         Assert.NotEmpty(workloads);
 
         // Step 2: For each workload, get its API spec
         foreach (var workload in workloads)
         {
-            var apiContext = new CommandContext(_serviceProvider);
-            var apiResult = await _getWorkloadApisCommand.ExecuteAsync(
-                apiContext,
-                _getWorkloadApisCommand.GetCommand().Parse(["--workload-type", workload]),
-                cancellationToken);
+            var apiResult = await ExecuteCommandAsync(_getWorkloadApisCommand, "--workload-type", workload);
 
             Assert.Equal(HttpStatusCode.OK, apiResult.Status);
             Assert.NotNull(apiResult.Results);
@@ -96,28 +72,17 @@ public class CombinedWorkflowTests(CombinedWorkflowFixture fixture) : IClassFixt
     [Fact]
     public async Task ListWorkloads_ThenGetDefinitionForEach_ReturnsOrReportsNotFound()
     {
-        var cancellationToken = TestContext.Current.CancellationToken;
-
         // Step 1: List all workloads
-        var listContext = new CommandContext(_serviceProvider);
-        var listResult = await _listWorkloadsCommand.ExecuteAsync(
-            listContext, _listWorkloadsCommand.GetCommand().Parse([]), cancellationToken);
+        var listResult = await ExecuteCommandAsync(_listWorkloadsCommand);
 
-        Assert.Equal(HttpStatusCode.OK, listResult.Status);
-
-        var workloads = DeserializeWorkloads(listResult);
-        Assert.NotEmpty(workloads);
+        var workloads = ValidateAndDeserializeWorkloadsResponse(listResult);
 
         // Step 2: For each workload, get its item definition.
         // Not all workloads have embedded item definitions, so we accept OK or NotFound.
         var successCount = 0;
         foreach (var workload in workloads)
         {
-            var defContext = new CommandContext(_serviceProvider);
-            var defResult = await _getWorkloadDefinitionCommand.ExecuteAsync(
-                defContext,
-                _getWorkloadDefinitionCommand.GetCommand().Parse(["--workload-type", workload]),
-                cancellationToken);
+            var defResult = await ExecuteCommandAsync(_getWorkloadDefinitionCommand, "--workload-type", workload);
 
             Assert.True(
                 defResult.Status == HttpStatusCode.OK || defResult.Status == HttpStatusCode.NotFound,
@@ -176,35 +141,20 @@ public class CombinedWorkflowTests(CombinedWorkflowFixture fixture) : IClassFixt
     [Fact]
     public async Task ListWorkloads_ThenGetApisAndDefinitionsForEach_ReturnsAllData()
     {
-        var cancellationToken = TestContext.Current.CancellationToken;
-
         // Step 1: List all workloads
-        var listContext = new CommandContext(_serviceProvider);
-        var listResult = await _listWorkloadsCommand.ExecuteAsync(
-            listContext, _listWorkloadsCommand.GetCommand().Parse([]), cancellationToken);
+        var listResult = await ExecuteCommandAsync(_listWorkloadsCommand);
 
-        Assert.Equal(HttpStatusCode.OK, listResult.Status);
-
-        var workloads = DeserializeWorkloads(listResult);
-        Assert.NotEmpty(workloads);
+        var workloads = ValidateAndDeserializeWorkloadsResponse(listResult);
 
         // Step 2: For each workload, get both API spec and item definition
         foreach (var workload in workloads)
         {
-            var apiContext = new CommandContext(_serviceProvider);
-            var apiResult = await _getWorkloadApisCommand.ExecuteAsync(
-                apiContext,
-                _getWorkloadApisCommand.GetCommand().Parse(["--workload-type", workload]),
-                cancellationToken);
+            var apiResult = await ExecuteCommandAsync(_getWorkloadApisCommand, "--workload-type", workload);
 
             Assert.Equal(HttpStatusCode.OK, apiResult.Status);
             Assert.NotNull(apiResult.Results);
 
-            var defContext = new CommandContext(_serviceProvider);
-            var defResult = await _getWorkloadDefinitionCommand.ExecuteAsync(
-                defContext,
-                _getWorkloadDefinitionCommand.GetCommand().Parse(["--workload-type", workload]),
-                cancellationToken);
+            var defResult = await ExecuteCommandAsync(_getWorkloadDefinitionCommand, "--workload-type", workload);
 
             // Item definitions may not exist for every workload
             Assert.True(
@@ -216,46 +166,30 @@ public class CombinedWorkflowTests(CombinedWorkflowFixture fixture) : IClassFixt
     [Fact]
     public async Task ListWorkloads_ThenGetApisDefinitionsAndExamples_FullWorkflow()
     {
-        var cancellationToken = TestContext.Current.CancellationToken;
-
         // Step 1: List workloads
-        var listContext = new CommandContext(_serviceProvider);
-        var listResult = await _listWorkloadsCommand.ExecuteAsync(
-            listContext, _listWorkloadsCommand.GetCommand().Parse([]), cancellationToken);
+        var listResult = await ExecuteCommandAsync(_listWorkloadsCommand);
 
-        Assert.Equal(HttpStatusCode.OK, listResult.Status);
-
-        var workloads = DeserializeWorkloads(listResult);
-        Assert.NotEmpty(workloads);
+        var workloads = ValidateAndDeserializeWorkloadsResponse(listResult);
 
         // Step 2: For each workload, get APIs, definitions, and examples
         foreach (var workload in workloads)
         {
             // API spec - should always succeed for listed workloads
-            var apiContext = new CommandContext(_serviceProvider);
-            var apiResult = await _getWorkloadApisCommand.ExecuteAsync(
-                apiContext,
-                _getWorkloadApisCommand.GetCommand().Parse(["--workload-type", workload]),
-                cancellationToken);
+            var apiResult = await ExecuteCommandAsync(_getWorkloadApisCommand, "--workload-type", workload);
+
             Assert.Equal(HttpStatusCode.OK, apiResult.Status);
             Assert.NotNull(apiResult.Results);
 
             // Item definition - may or may not exist
-            var defContext = new CommandContext(_serviceProvider);
-            var defResult = await _getWorkloadDefinitionCommand.ExecuteAsync(
-                defContext,
-                _getWorkloadDefinitionCommand.GetCommand().Parse(["--workload-type", workload]),
-                cancellationToken);
+            var defResult = await ExecuteCommandAsync(_getWorkloadDefinitionCommand, "--workload-type", workload);
+
             Assert.True(
                 defResult.Status == HttpStatusCode.OK || defResult.Status == HttpStatusCode.NotFound,
                 $"Unexpected definition status {defResult.Status} for workload '{workload}'");
 
             // Examples - should always succeed (returns empty dict if none exist)
-            var exContext = new CommandContext(_serviceProvider);
-            var exResult = await _getExamplesCommand.ExecuteAsync(
-                exContext,
-                _getExamplesCommand.GetCommand().Parse(["--workload-type", workload]),
-                cancellationToken);
+            var exResult = await ExecuteCommandAsync(_getExamplesCommand, "--workload-type", workload);
+
             Assert.Equal(HttpStatusCode.OK, exResult.Status);
             Assert.NotNull(exResult.Results);
         }
@@ -265,15 +199,9 @@ public class CombinedWorkflowTests(CombinedWorkflowFixture fixture) : IClassFixt
     public async Task ListWorkloads_DoesNotReturnCommon()
     {
         // The service filters out the "common" pseudo-workload
-        var cancellationToken = TestContext.Current.CancellationToken;
+        var listResult = await ExecuteCommandAsync(_listWorkloadsCommand);
 
-        var listContext = new CommandContext(_serviceProvider);
-        var listResult = await _listWorkloadsCommand.ExecuteAsync(
-            listContext, _listWorkloadsCommand.GetCommand().Parse([]), cancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, listResult.Status);
-
-        var workloads = DeserializeWorkloads(listResult);
+        var workloads = ValidateAndDeserializeWorkloadsResponse(listResult);
         Assert.DoesNotContain("common", workloads, StringComparer.OrdinalIgnoreCase);
     }
 
@@ -281,13 +209,7 @@ public class CombinedWorkflowTests(CombinedWorkflowFixture fixture) : IClassFixt
     public async Task GetApis_WithCommonWorkloadType_ReturnsNotFound()
     {
         // "common" is explicitly rejected with a helpful message
-        var cancellationToken = TestContext.Current.CancellationToken;
-
-        var apiContext = new CommandContext(_serviceProvider);
-        var apiResult = await _getWorkloadApisCommand.ExecuteAsync(
-            apiContext,
-            _getWorkloadApisCommand.GetCommand().Parse(["--workload-type", "common"]),
-            cancellationToken);
+        var apiResult = await ExecuteCommandAsync(_getWorkloadApisCommand, "--workload-type", "common");
 
         Assert.Equal(HttpStatusCode.NotFound, apiResult.Status);
         Assert.Contains("common", apiResult.Message);
@@ -297,13 +219,7 @@ public class CombinedWorkflowTests(CombinedWorkflowFixture fixture) : IClassFixt
     [Fact]
     public async Task GetApis_WithNonexistentWorkload_ReturnsError()
     {
-        var cancellationToken = TestContext.Current.CancellationToken;
-
-        var apiContext = new CommandContext(_serviceProvider);
-        var apiResult = await _getWorkloadApisCommand.ExecuteAsync(
-            apiContext,
-            _getWorkloadApisCommand.GetCommand().Parse(["--workload-type", "this-workload-does-not-exist"]),
-            cancellationToken);
+        var apiResult = await ExecuteCommandAsync(_getWorkloadApisCommand, "--workload-type", "this-workload-does-not-exist");
 
         Assert.NotEqual(HttpStatusCode.OK, apiResult.Status);
     }
@@ -311,32 +227,21 @@ public class CombinedWorkflowTests(CombinedWorkflowFixture fixture) : IClassFixt
     [Fact]
     public async Task ListWorkloads_ThenGetApisForEach_ApiSpecContainsValidJson()
     {
-        var cancellationToken = TestContext.Current.CancellationToken;
-
         // Step 1: List workloads
-        var listContext = new CommandContext(_serviceProvider);
-        var listResult = await _listWorkloadsCommand.ExecuteAsync(
-            listContext, _listWorkloadsCommand.GetCommand().Parse([]), cancellationToken);
+        var listResult = await ExecuteCommandAsync(_listWorkloadsCommand);
 
-        Assert.Equal(HttpStatusCode.OK, listResult.Status);
-
-        var workloads = DeserializeWorkloads(listResult);
-        Assert.NotEmpty(workloads);
+        var workloads = ValidateAndDeserializeWorkloadsResponse(listResult);
 
         // Step 2: For each workload, verify the API spec result contains parseable JSON content
         foreach (var workload in workloads)
         {
-            var apiContext = new CommandContext(_serviceProvider);
-            var apiResult = await _getWorkloadApisCommand.ExecuteAsync(
-                apiContext,
-                _getWorkloadApisCommand.GetCommand().Parse(["--workload-type", workload]),
-                cancellationToken);
+            var apiResult = await ExecuteCommandAsync(_getWorkloadApisCommand, "--workload-type", workload);
 
             Assert.Equal(HttpStatusCode.OK, apiResult.Status);
             Assert.NotNull(apiResult.Results);
 
             // Serialize the result to JSON and verify it contains an apiSpecification field
-            var json = SerializeResults(apiResult);
+            var json = JsonSerializer.Serialize(apiResult.Results);
             using var doc = JsonDocument.Parse(json);
             Assert.True(doc.RootElement.TryGetProperty("apiSpecification", out var apiSpecElement),
                 $"API result for workload '{workload}' should contain 'apiSpecification'");
@@ -354,40 +259,28 @@ public class CombinedWorkflowTests(CombinedWorkflowFixture fixture) : IClassFixt
     public async Task ListWorkloads_ResultsAreConsistentAcrossMultipleInvocations()
     {
         // Verifies that calling the same tool twice returns consistent results
-        var cancellationToken = TestContext.Current.CancellationToken;
+        var result1 = await ExecuteCommandAsync(_listWorkloadsCommand);
+        var result2 = await ExecuteCommandAsync(_listWorkloadsCommand);
 
-        var context1 = new CommandContext(_serviceProvider);
-        var result1 = await _listWorkloadsCommand.ExecuteAsync(
-            context1, _listWorkloadsCommand.GetCommand().Parse([]), cancellationToken);
-
-        var context2 = new CommandContext(_serviceProvider);
-        var result2 = await _listWorkloadsCommand.ExecuteAsync(
-            context2, _listWorkloadsCommand.GetCommand().Parse([]), cancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, result1.Status);
-        Assert.Equal(HttpStatusCode.OK, result2.Status);
-
-        var workloads1 = DeserializeWorkloads(result1);
-        var workloads2 = DeserializeWorkloads(result2);
+        var workloads1 = ValidateAndDeserializeWorkloadsResponse(result1);
+        var workloads2 = ValidateAndDeserializeWorkloadsResponse(result2);
 
         Assert.Equal(workloads1.OrderBy(w => w), workloads2.OrderBy(w => w));
     }
 
-    private static string SerializeResults(CommandResponse response)
-    {
-        Assert.NotNull(response.Results);
-        var buffer = new ArrayBufferWriter<byte>();
-        using var writer = new Utf8JsonWriter(buffer);
-        response.Results.Write(writer);
-        writer.Flush();
-        return System.Text.Encoding.UTF8.GetString(buffer.WrittenSpan);
-    }
+    private Task<CommandResponse> ExecuteCommandAsync(IBaseCommand command, params string[] args)
+        => command.ExecuteAsync(new(_serviceProvider), command.GetCommand().Parse(args), TestContext.Current.CancellationToken);
 
-    private static IEnumerable<string> DeserializeWorkloads(CommandResponse response)
+    private static IEnumerable<string> ValidateAndDeserializeWorkloadsResponse(CommandResponse response)
     {
-        var json = SerializeResults(response);
-        using var doc = JsonDocument.Parse(json);
-        var workloadsArray = doc.RootElement.GetProperty("Workloads");
-        return workloadsArray.EnumerateArray().Select(e => e.GetString()!).ToArray();
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, FabricJsonContext.Default.ItemListCommandResult);
+        Assert.NotNull(result);
+        var workloads = result.Workloads;
+        Assert.NotEmpty(workloads);
+        return workloads;
     }
 }

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Group;
 using Azure.Mcp.Core.Areas.Subscription;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
@@ -53,7 +52,6 @@ using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using Microsoft.Mcp.Core.Services.Time;
-using ModelContextProtocol.Protocol;
 using NSubstitute;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
@@ -115,7 +113,7 @@ internal class CommandFactoryHelpers
             DisplayName = "Test Display",
             RootCommandGroupName = "azmcp"
         });
-        var telemetryService = services.GetService<ITelemetryService>() ?? new NoOpTelemetryService();
+        var telemetryService = services.GetService<ITelemetryService>() ?? new NoopTelemetryService();
         var commandFactory = new CommandFactory(services, areaSetups, telemetryService, configurationOptions, logger);
 
         return commandFactory;
@@ -174,7 +172,7 @@ internal class CommandFactoryHelpers
 
         var builder = new ServiceCollection()
             .AddLogging()
-            .AddSingleton<ITelemetryService, NoOpTelemetryService>()
+            .AddSingleton<ITelemetryService, NoopTelemetryService>()
             .AddSingleton(Substitute.For<ISubscriptionService>())
             .AddSingleton(Substitute.For<IResourceGroupService>())
             .AddSingleton(Substitute.For<ITenantService>())
@@ -191,18 +189,5 @@ internal class CommandFactoryHelpers
         }
 
         return builder;
-    }
-
-    public class NoOpTelemetryService : ITelemetryService
-    {
-        public Activity? StartActivity(string activityName) => null;
-
-        public Activity? StartActivity(string activityName, Implementation? clientInfo) => null;
-
-        public void Dispose()
-        {
-        }
-
-        public Task InitializeAsync() => Task.CompletedTask;
     }
 }

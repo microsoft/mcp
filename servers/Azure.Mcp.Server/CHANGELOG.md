@@ -2,15 +2,12 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.10 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
-
-### Bugs Fixed
+## 3.0.0-beta.10 (2026-05-07)
 
 ### Other Changes
+
+- Fixed `PluginTelemetryCommand` tool name validation to use the host-created CommandFactory, ensuring the full registered tool set is validated correctly. [[#2583](https://github.com/microsoft/mcp/pull/2583)]
+- Improved MSAL exception handling by capturing richer PII-safe telemetry details and mapping `MsalServiceException` and `MsalClientException` more accurately. [[#2587](https://github.com/microsoft/mcp/pull/2587)]
 
 ## 3.0.0-beta.9 (2026-05-05)
 

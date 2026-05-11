@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Help;
+using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Net;
 using System.Reflection;
@@ -315,8 +316,10 @@ public class CommandFactory : ICommandFactory
         {
             _logger.LogTrace("Executing '{Command}'.", command.Name);
 
-            using var activity = _telemetryService.StartActivity(ActivityName.CommandExecuted);
-            activity?.SetTag(TagName.ToolId, implementation.Id);
+            using var activity = _telemetryService.StartActivity(ActivityName.ToolExecuted);
+            activity?.SetTag(TagName.ToolId, implementation.Id)
+                .SetTag(TagName.ServerMode, "cli");
+            InjectToolAreaAndName(activity, parseResult);
             var cmdContext = new CommandContext(_serviceProvider, activity);
             var startTime = DateTime.UtcNow;
             try
@@ -426,7 +429,7 @@ public class CommandFactory : ICommandFactory
         var commandParts = new List<string>();
         foreach (var token in args)
         {
-            if (token.StartsWith("-", StringComparison.Ordinal))
+            if (token.StartsWith('-'))
                 break;
             commandParts.Add(token);
         }
@@ -507,14 +510,33 @@ public class CommandFactory : ICommandFactory
             return null;
         }
 
-        if (_commandNamesToArea.TryGetValue(fullCommandName, out var area))
+        return _commandNamesToArea.TryGetValue(fullCommandName, out var area) ? area.Name : null;
+    }
+
+    /// <summary>
+    /// Injects tool area and name tags into the activity based on the command being executed. The full command name
+    /// is parsed to determine the tool area and name, which are then added as tags to the activity.
+    /// </summary>
+    /// <param name="activity">The activity to inject tool area and name tags into.</param>
+    /// <param name="parseResult">The parsing result for the command.</param>
+    private void InjectToolAreaAndName(Activity? activity, ParseResult parseResult)
+    {
+        if (activity == null)
         {
-            return area.Name;
+            return;
         }
-        else
+
+        var commandResult = parseResult.CommandResult;
+        var fullCommandName = new List<string>() { commandResult.Command.Name };
+        while (commandResult.Parent is CommandResult parent
+            && parent.Command.Name != RootCommand.Name)
         {
-            return null;
+            fullCommandName.Insert(0, parent.Command.Name);
+            commandResult = parent;
         }
+
+        activity.SetTag(TagName.ToolArea, fullCommandName[0])
+            .SetTag(TagName.ToolName, string.Join(Separator, fullCommandName));
     }
 
     /// <summary>
