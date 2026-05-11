@@ -657,17 +657,16 @@ dotnet run -- onelake security get --workspace "Analytics Workspace" --item "Sal
 
 #### Create or Update Data Access Role
 
-Upserts a single data access role on a single item. Scoped to one role per call — does not affect other roles.
+Upserts a single data access role on a single item. Scoped to one role per call — does not affect other roles. The role name is derived from the `name` field in the JSON definition.
 
 ```bash
-dotnet run -- onelake security create-or-update --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --role-name "DataAnalysts" --role-definition '{"members":{"fabricItemMembers":[{"itemAccessType":"ReadAll"}]},"decisionRules":[{"effect":"Permit","permission":[{"attributeName":"Path","attributeValueIncludedIn":["Tables/*"]}]}]}'
+dotnet run -- onelake security create-or-update --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --role-definition '{"name":"DataAnalysts","members":{"fabricItemMembers":[{"itemAccessType":"ReadAll"}]},"decisionRules":[{"effect":"Permit","permission":[{"attributeName":"Path","attributeValueIncludedIn":["Tables/*"]}]}]}'
 ```
 
 **Parameters:**
 - `--workspace`/`--workspace-id`: Workspace identifier
 - `--item`/`--item-id`: Item identifier
-- `--role-name`: Name of the data access role
-- `--role-definition`: JSON definition of the role (members + decision rules)
+- `--role-definition`: JSON definition of the role (must include `name`, `members`, and `decisionRules`)
 
 #### Delete Data Access Role
 

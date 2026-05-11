@@ -1824,8 +1824,21 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<DataAccessRole> CreateOrUpdateDataAccessRoleAsync(string workspaceId, string itemId, string roleDefinitionJson, CancellationToken cancellationToken = default)
     {
-        var roleDefinition = JsonSerializer.Deserialize(roleDefinitionJson, OneLakeJsonContext.Default.DataAccessRole)
-            ?? throw new ArgumentException("Invalid role definition JSON.", nameof(roleDefinitionJson));
+        DataAccessRole roleDefinition;
+        try
+        {
+            roleDefinition = JsonSerializer.Deserialize(roleDefinitionJson, OneLakeJsonContext.Default.DataAccessRole)
+                ?? throw new ArgumentException("Invalid role definition JSON: deserialized to null.", nameof(roleDefinitionJson));
+        }
+        catch (JsonException ex)
+        {
+            throw new ArgumentException($"Invalid role definition JSON: {ex.Message}", nameof(roleDefinitionJson), ex);
+        }
+
+        if (string.IsNullOrWhiteSpace(roleDefinition.Name))
+        {
+            throw new ArgumentException("Role definition must include a non-empty 'name' property.", nameof(roleDefinitionJson));
+        }
 
         var encodedRoleName = Uri.EscapeDataString(roleDefinition.Name);
         var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/dataAccessRoles/{encodedRoleName}";
@@ -1913,7 +1926,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
         ApplyUserAgent(request);
 
-        var response = await _httpClient.SendAsync(request, cancellationToken);
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
     }
 
