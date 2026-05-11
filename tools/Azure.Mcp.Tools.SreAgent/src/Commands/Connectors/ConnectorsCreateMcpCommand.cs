@@ -52,7 +52,7 @@ public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpComman
         options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name);
         options.Type = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Type);
         options.Command = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Command);
-        options.Args = parseResult.GetValueOrDefault<string[]?>(SreAgentOptionDefinitions.Args.Name);
+        options.Args = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Args);
         options.EnvsJson = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.EnvsJson);
         options.Endpoint = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Endpoint);
         options.AuthType = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.AuthType);
