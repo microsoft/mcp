@@ -479,6 +479,52 @@ public class RegistryDiscoveryStrategyTests
     }
 
     [Fact]
+    public async Task DiscoverServersAsync_ArmServerIsDiscovered()
+    {
+        // Arrange
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
+
+        // Act
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
+        var armProvider = result.FirstOrDefault(p => p.CreateMetadata().Name == "arm");
+
+        // Assert
+        Assert.NotNull(armProvider);
+
+        var metadata = armProvider.CreateMetadata();
+        Assert.Equal("arm", metadata.Id);
+        Assert.Equal("arm", metadata.Name);
+        Assert.NotEmpty(metadata.Description);
+
+        // Verify description contains key terms
+        var description = metadata.Description.ToLowerInvariant();
+        Assert.Contains("azure", description);
+    }
+
+    [Fact]
+    public async Task DiscoverServersAsync_ArmServerHasExpectedProperties()
+    {
+        // Arrange
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
+
+        // Act
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
+        var armProvider = result.FirstOrDefault(p => p.CreateMetadata().Name == "arm");
+
+        // Assert
+        Assert.NotNull(armProvider);
+
+        var metadata = armProvider.CreateMetadata();
+        Assert.Equal("arm", metadata.Id);
+        Assert.Equal("arm", metadata.Name);
+
+        // Description should mention resource graph queries and Azure resources
+        var description = metadata.Description.ToLowerInvariant();
+        Assert.Contains("resource graph", description);
+        Assert.Contains("resources", description);
+    }
+
+    [Fact]
     public async Task DiscoverServersAsync_AllExpectedServersArePresent()
     {
         // Arrange
@@ -493,5 +539,6 @@ public class RegistryDiscoveryStrategyTests
         Assert.Contains("documentation", serverIds);
         Assert.Contains("azd", serverIds);
         Assert.Contains("foundry", serverIds);
+        Assert.Contains("arm", serverIds);
     }
 }

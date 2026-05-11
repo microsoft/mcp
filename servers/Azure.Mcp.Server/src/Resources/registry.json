@@ -21,6 +21,13 @@
             "description": "MCP server with tools to read, create, modify resources such as Models, Agents and Evaluation workflows in Microsoft Foundry platform.",
             "toolPrefix": "foundry_",
             "oauthScopes": ["https://mcp.ai.azure.com/Foundry.Mcp.Tools"]
+        },
+        "arm": {
+            "url": "https://mcp.management.azure.com",
+            "title": "Azure Resource Manager MCP",
+            "description": "MCP server with tools to use Azure Resource Graph to retrieve and filter information about Azure resources in a customer's subscription, and tools to manage ARM template deployments.",
+            "toolPrefix": "arm_",
+            "oauthScopes": ["22bfbae3-f4e7-485f-be43-8cee15065084/.default"]
         }
     }
 }
