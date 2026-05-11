@@ -23,7 +23,7 @@ OneLake is Microsoft Fabric's built-in data lake that provides unified storage f
 - Production-ready with 100% test coverage (309 tests)
 - Clean, focused API design optimized for AI agent interactions
 
-> **Note:** Item creation has moved to the [Fabric.Mcp.Tools.Core](../Fabric.Mcp.Tools.Core) toolset as `core_create_item`. See [Core tools](../Fabric.Mcp.Tools.Core) for item creation operations.
+> **Note:** Item creation has moved to the [Fabric.Mcp.Tools.Core](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Core) toolset as `core_create_item`. See [Core tools](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Core) for item creation operations.
 
 ## Prerequisites
 
@@ -180,7 +180,7 @@ dotnet run -- onelake item list-data --workspace-id "47242da5-ff3b-46fb-a94f-977
 
 #### Create Item
 
-> **Moved:** The `item create` command has been moved to [Fabric.Mcp.Tools.Core](../Fabric.Mcp.Tools.Core) as `core_create_item`. Use the Core toolset for creating new items (Lakehouse, Notebook, etc.) in a Microsoft Fabric workspace.
+> **Moved:** The `item create` command has been moved to [Fabric.Mcp.Tools.Core](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Core) as `core_create_item`. Use the Core toolset for creating new items (Lakehouse, Notebook, etc.) in a Microsoft Fabric workspace.
 
 ### File Operations
 
