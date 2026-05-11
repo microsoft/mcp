@@ -122,7 +122,6 @@ public class SreAgentSetup : IAreaSetup
         tools.AddCommand<AgentToolsListCommand>(serviceProvider);
         tools.AddCommand<AgentsToolsGetCommand>(serviceProvider);
         tools.AddCommand<AgentsToolsCreateCommand>(serviceProvider);
-        tools.AddCommand<SkillsDeleteCommand>(serviceProvider);
 
         var skills = new CommandGroup(
             "skills",
@@ -130,6 +129,7 @@ public class SreAgentSetup : IAreaSetup
         sreAgent.AddSubGroup(skills);
         skills.AddCommand<SkillsListCommand>(serviceProvider);
         skills.AddCommand<SkillsCreateCommand>(serviceProvider);
+        skills.AddCommand<SkillsDeleteCommand>(serviceProvider);
 
                 // Connectors + Hooks (sub-agent B)
         var connectors = new CommandGroup(
@@ -142,7 +142,23 @@ public class SreAgentSetup : IAreaSetup
         connectors.AddCommand<ConnectorsCreateMcpCommand>(serviceProvider);
         connectors.AddCommand<ConnectorsDeleteCommand>(serviceProvider);
         connectors.AddCommand<ConnectorsTestCommand>(serviceProvider);
-        
+
+        var hooks = new CommandGroup(
+            "hooks",
+            "SRE Agent hook operations - Commands for listing, retrieving, deleting, and managing thread-level activation of safety hooks.");
+        sreAgent.AddSubGroup(hooks);
+        hooks.AddCommand<HooksListCommand>(serviceProvider);
+        hooks.AddCommand<HooksGetCommand>(serviceProvider);
+        hooks.AddCommand<HooksDeleteCommand>(serviceProvider);
+
+        var hooksThread = new CommandGroup(
+            "thread",
+            "SRE Agent hook thread activation - Commands for listing and toggling on-demand hooks for a specific thread.");
+        hooks.AddSubGroup(hooksThread);
+        hooksThread.AddCommand<HooksThreadListCommand>(serviceProvider);
+        hooksThread.AddCommand<HooksThreadActivateCommand>(serviceProvider);
+        hooksThread.AddCommand<HooksThreadDeactivateCommand>(serviceProvider);
+
         // Threads + ScheduledTasks (sub-agent C)
         var threads = new CommandGroup(
             "threads",
@@ -155,6 +171,17 @@ public class SreAgentSetup : IAreaSetup
         threads.AddCommand<ThreadsDeleteCommand>(serviceProvider);
         threads.AddCommand<ThreadsInvestigateCommand>(serviceProvider);
         threads.AddCommand<ThreadsInvestigateYoloCommand>(serviceProvider);
+
+        var scheduledTasks = new CommandGroup(
+            "scheduledtasks",
+            "SRE Agent scheduled task operations - Commands for listing, creating, deleting, pausing, and resuming agent runs on a cron schedule.");
+        sreAgent.AddSubGroup(scheduledTasks);
+        scheduledTasks.AddCommand<ScheduledTasksListCommand>(serviceProvider);
+        scheduledTasks.AddCommand<ScheduledTasksGetCommand>(serviceProvider);
+        scheduledTasks.AddCommand<ScheduledTasksCreateCommand>(serviceProvider);
+        scheduledTasks.AddCommand<ScheduledTasksDeleteCommand>(serviceProvider);
+        scheduledTasks.AddCommand<ScheduledTasksPauseCommand>(serviceProvider);
+        scheduledTasks.AddCommand<ScheduledTasksResumeCommand>(serviceProvider);
         
         // Incidents + Workflows + Docs + Architecture (sub-agent D)
         var incidents = new CommandGroup("incidents", "Incident response planning, connector setup, and active incident operations.");
