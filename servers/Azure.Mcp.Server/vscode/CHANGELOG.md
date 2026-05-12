@@ -1,5 +1,12 @@
 # Release History
 
+## 3.0.10 (2026-05-07) (pre-release)
+
+### Changed
+
+- Fixed `PluginTelemetryCommand` tool name validation to use the host-created CommandFactory, ensuring the full registered tool set is validated correctly. [[#2583](https://github.com/microsoft/mcp/pull/2583)]
+- Improved MSAL exception handling by capturing richer PII-safe telemetry details and mapping `MsalServiceException` and `MsalClientException` more accurately. [[#2587](https://github.com/microsoft/mcp/pull/2587)]
+
 ## 3.0.9 (2026-05-05) (pre-release)
 
 ### Added

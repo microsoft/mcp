@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Overhauled azurebackup policy create with comprehensive schedule, retention, archive tiering, and advanced backup capabilities across RSV and DPP vaults, including 38+ new flags, a pre-flight PolicyCreateValidator, and expanded workload-type alias support."

@@ -505,6 +505,13 @@
   <Folder Name="/tools/Fabric.Mcp.Tools.Core/tests/">
     <Project Path="tools/Fabric.Mcp.Tools.Core/tests/Fabric.Mcp.Tools.Core.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/Fabric.Mcp.Tools.DataFactory/" />
+  <Folder Name="/tools/Fabric.Mcp.Tools.DataFactory/src/">
+    <Project Path="tools/Fabric.Mcp.Tools.DataFactory/src/Fabric.Mcp.Tools.DataFactory.csproj" />
+  </Folder>
+  <Folder Name="/tools/Fabric.Mcp.Tools.DataFactory/tests/">
+    <Project Path="tools/Fabric.Mcp.Tools.DataFactory/tests/Fabric.Mcp.Tools.DataFactory.UnitTests/Fabric.Mcp.Tools.DataFactory.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Fabric.Mcp.Tools.Docs/" />
   <Folder Name="/tools/Fabric.Mcp.Tools.Docs/src/">
     <Project Path="tools/Fabric.Mcp.Tools.Docs/src/Fabric.Mcp.Tools.Docs.csproj" />
