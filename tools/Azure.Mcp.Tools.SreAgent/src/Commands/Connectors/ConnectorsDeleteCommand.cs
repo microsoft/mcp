@@ -61,8 +61,8 @@ public sealed class ConnectorsDeleteCommand(ILogger<ConnectorsDeleteCommand> log
                 throw new InvalidOperationException($"Refusing to delete connector '{options.Name}': destructive operation requires --confirm true.");
             }
 
-            var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(_sreAgentService, options, cancellationToken);
-            await _sreAgentService.DeleteConnectorAsync(endpoint, options.Name!, options.Tenant, cancellationToken);
+            var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(_sreAgentService, options, cancellationToken);
+            await _sreAgentService.DeleteConnectorAsync(options.Subscription!, resourceGroup, options.Agent!, options.Name!, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new ConnectorsDeleteCommandResult(true, options.Name!), SreAgentJsonContext.Default.ConnectorsDeleteCommandResult);
         }
         catch (Exception ex)

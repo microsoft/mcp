@@ -78,8 +78,8 @@ public sealed class ConnectorsCreateKustoCommand(ILogger<ConnectorsCreateKustoCo
                 }
             };
 
-            var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(_sreAgentService, options, cancellationToken);
-            var created = await _sreAgentService.CreateOrUpdateConnectorAsync(endpoint, options.Name!, connector, options.Tenant, cancellationToken);
+            var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(_sreAgentService, options, cancellationToken);
+            var created = await _sreAgentService.CreateOrUpdateConnectorAsync(options.Subscription!, resourceGroup, options.Agent!, options.Name!, connector, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new ConnectorsCreateKustoCommandResult(created), SreAgentJsonContext.Default.ConnectorsCreateKustoCommandResult);
         }
         catch (Exception ex)

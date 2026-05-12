@@ -51,10 +51,10 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
             if (!Uri.TryCreate(o.InstanceUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps || !uri.Host.EndsWith(".service-now.com", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("ServiceNow instance URL must be an https URL on *.service-now.com.");
 
-            var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
+            var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(_sreAgentService, o, cancellationToken);
             try
             {
-                await _sreAgentService.GetConnectorAsync(endpoint, o.Name!, o.Tenant, cancellationToken);
+                await _sreAgentService.GetConnectorAsync(o.Subscription!, resourceGroup, o.Agent!, o.Name!, o.Tenant, cancellationToken);
                 SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"Connector '{o.Name}' already exists. Use `connectors -> test` to verify, or `connectors -> delete` to recreate.");
                 return context.Response;
             }
@@ -111,7 +111,7 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
                     ExtendedProperties = ext
                 }
             };
-            await _sreAgentService.CreateOrUpdateConnectorAsync(endpoint, o.Name!, connector, o.Tenant, cancellationToken);
+            await _sreAgentService.CreateOrUpdateConnectorAsync(o.Subscription!, resourceGroup, o.Agent!, o.Name!, connector, o.Tenant, cancellationToken);
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ ServiceNow connector '{o.Name}' created ({normalized}).\n\n**Next steps:**\n1. Run `connectors -> test` to verify the connection\n2. Add ServiceNow tools to your agent via `yaml -> apply`\n3. Create an incident response plan with `incidents -> create_plan`");
         }
         catch (Exception ex)

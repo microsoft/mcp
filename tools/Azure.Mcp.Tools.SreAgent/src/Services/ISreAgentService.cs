@@ -44,27 +44,42 @@ public interface ISreAgentService
     #region Connectors + Hooks (sub-agent B)
 
     Task<List<AgentConnector>> ListConnectorsAsync(
-        string endpoint,
+        string subscription,
+        string resourceGroup,
+        string agentName,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
     Task<AgentConnector> GetConnectorAsync(
-        string endpoint,
+        string subscription,
+        string resourceGroup,
+        string agentName,
         string name,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
     Task<AgentConnector> CreateOrUpdateConnectorAsync(
-        string endpoint,
+        string subscription,
+        string resourceGroup,
+        string agentName,
         string name,
         AgentConnectorEnvelope connector,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
     Task DeleteConnectorAsync(
-        string endpoint,
+        string subscription,
+        string resourceGroup,
+        string agentName,
         string name,
         string? tenant = null,
+        CancellationToken cancellationToken = default);
+
+    Task<string> ResolveAgentResourceGroupAsync(
+        string subscription,
+        string agentName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<ConnectorTestResult> TestConnectorAsync(

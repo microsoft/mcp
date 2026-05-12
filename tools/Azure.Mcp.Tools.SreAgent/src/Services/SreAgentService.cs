@@ -38,6 +38,9 @@ public sealed class SreAgentService(
     // Audience for SRE Agent data-plane tokens. Matches SRE_API_AUDIENCE in the Node CLI
     // (src/Agent/Agent.Cli.Node/src/services/auth.ts).
     private static readonly string[] DataPlaneScopes = ["59f0a04a-b322-4310-adc9-39ac41e9631e/.default"];
+    private static readonly string[] ArmScopes = ["https://management.azure.com/.default"];
+    private const string ArmHost = "https://management.azure.com";
+    private const string ArmApiVersion = "2025-05-01-preview";
 
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ILogger<SreAgentService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -117,6 +120,90 @@ public sealed class SreAgentService(
         }
 
         return body;
+    }
+
+    /// <summary>
+    /// Calls the Azure Resource Manager (ARM) control plane. Acquires a bearer token for the
+    /// ARM audience and appends the SRE Agent preview API version to the query string.
+    /// </summary>
+    /// <param name="path">Resource-relative ARM path beginning with <c>/subscriptions/...</c>.</param>
+    /// <param name="method">HTTP method.</param>
+    /// <param name="jsonBody">Optional JSON request body.</param>
+    /// <param name="tenant">Optional tenant to use when acquiring the credential.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Response body as a string. Empty string for 204 No Content responses.</returns>
+    internal async Task<string> CallArmAsync(
+        string path,
+        HttpMethod method,
+        string? jsonBody = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(path);
+
+        var credential = await GetCredential(tenant, cancellationToken);
+        var token = await credential.GetTokenAsync(new TokenRequestContext(ArmScopes), cancellationToken);
+
+        var separator = path.Contains('?') ? "&" : "?";
+        var requestUri = new Uri($"{ArmHost}{path}{separator}api-version={ArmApiVersion}");
+        using var request = new HttpRequestMessage(method, requestUri);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        if (jsonBody is not null)
+        {
+            request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+        }
+
+        using var http = _httpClientFactory.CreateClient();
+        using var response = await http.SendAsync(request, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning(
+                "SRE Agent ARM call failed. Status={Status} Path={Path}",
+                (int)response.StatusCode, path);
+            throw new HttpRequestException(
+                $"SRE Agent ARM call to {path} failed with status {(int)response.StatusCode}: {Truncate(body, 300)}");
+        }
+
+        return body;
+    }
+
+    private static string BuildConnectorArmPath(string subscription, string resourceGroup, string agentName, string? connectorName = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
+        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup);
+        ArgumentException.ThrowIfNullOrWhiteSpace(agentName);
+
+        var basePath = $"/subscriptions/{Uri.EscapeDataString(subscription)}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.App/agents/{Uri.EscapeDataString(agentName)}/connectors";
+        return string.IsNullOrWhiteSpace(connectorName)
+            ? basePath
+            : $"{basePath}/{Uri.EscapeDataString(connectorName)}";
+    }
+
+    /// <summary>
+    /// Resolves the resource group of a SRE Agent by name, scoped to the subscription.
+    /// Used by ARM connector operations when the caller does not supply --resource-group.
+    /// </summary>
+    public async Task<string> ResolveAgentResourceGroupAsync(
+        string subscription,
+        string agentName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
+        ArgumentException.ThrowIfNullOrWhiteSpace(agentName);
+
+        var agents = await ListAgentsAsync(subscription, resourceGroup: null, tenant, retryPolicy, cancellationToken);
+        var agent = agents.FirstOrDefault(a => string.Equals(a.Name, agentName, StringComparison.OrdinalIgnoreCase));
+        if (agent is null || string.IsNullOrWhiteSpace(agent.ResourceGroup))
+        {
+            throw new InvalidOperationException($"SRE Agent resource '{agentName}' was not found in subscription '{subscription}'.");
+        }
+
+        return agent.ResourceGroup!;
     }
 
     private static SreAgentResource ConvertToSreAgentResource(JsonElement item)
@@ -425,50 +512,96 @@ public sealed class SreAgentService(
 
     #region Connectors + Hooks (sub-agent B)
 
+    // Connector CRUD operations route through Azure Resource Manager (ARM) so the records end up
+    // in the same store the portal reads from. The data-plane endpoint is intentionally NOT used
+    // here — writes against /api/v2/extendedAgent/connectors create per-resource records that the
+    // portal Connectors page cannot see. TestConnectorAsync still uses the data plane because the
+    // testconnection action has no ARM equivalent.
     public async Task<List<AgentConnector>> ListConnectorsAsync(
-        string endpoint,
+        string subscription,
+        string resourceGroup,
+        string agentName,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        var body = await CallDataPlaneAsync(endpoint, "/api/v2/extendedAgent/connectors", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
-        return [.. DeserializeArray(body, SreAgentJsonContext.Default.ListAgentConnectorEnvelope).Select(ToConnector)];
+        var path = BuildConnectorArmPath(subscription, resourceGroup, agentName);
+        var body = await CallArmAsync(path, HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        return [.. DeserializeArmValueArray(body, SreAgentJsonContext.Default.AgentConnectorEnvelope).Select(ToConnector)];
     }
 
     public async Task<AgentConnector> GetConnectorAsync(
-        string endpoint,
+        string subscription,
+        string resourceGroup,
+        string agentName,
         string name,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        var body = await CallDataPlaneAsync(endpoint, $"/api/v2/extendedAgent/connectors/{Uri.EscapeDataString(name)}", HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
+        var path = BuildConnectorArmPath(subscription, resourceGroup, agentName, name);
+        var body = await CallArmAsync(path, HttpMethod.Get, tenant: tenant, cancellationToken: cancellationToken);
         var envelope = JsonSerializer.Deserialize(body, SreAgentJsonContext.Default.AgentConnectorEnvelope)
             ?? throw new InvalidOperationException($"Connector '{name}' returned an empty response.");
         return ToConnector(envelope);
     }
 
     public async Task<AgentConnector> CreateOrUpdateConnectorAsync(
-        string endpoint,
+        string subscription,
+        string resourceGroup,
+        string agentName,
         string name,
         AgentConnectorEnvelope connector,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        var jsonBody = JsonSerializer.Serialize(connector, SreAgentJsonContext.Default.AgentConnectorEnvelope);
-        var body = await CallDataPlaneAsync(endpoint, $"/api/v2/extendedAgent/connectors/{Uri.EscapeDataString(name)}", HttpMethod.Put, jsonBody, tenant, cancellationToken);
+        ArgumentNullException.ThrowIfNull(connector);
+        // ARM expects only the properties wrapper; top-level name/type belong in the URL/route.
+        var armEnvelope = new AgentConnectorEnvelope { Properties = connector.Properties };
+        var jsonBody = JsonSerializer.Serialize(armEnvelope, SreAgentJsonContext.Default.AgentConnectorEnvelope);
+        var path = BuildConnectorArmPath(subscription, resourceGroup, agentName, name);
+        var body = await CallArmAsync(path, HttpMethod.Put, jsonBody, tenant, cancellationToken);
         var envelope = JsonSerializer.Deserialize(body, SreAgentJsonContext.Default.AgentConnectorEnvelope);
         return envelope is null ? connector.Properties ?? new AgentConnector { Name = name } : ToConnector(envelope);
     }
 
     public async Task DeleteConnectorAsync(
-        string endpoint,
+        string subscription,
+        string resourceGroup,
+        string agentName,
         string name,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        await CallDataPlaneAsync(endpoint, $"/api/v2/extendedAgent/connectors/{Uri.EscapeDataString(name)}", HttpMethod.Delete, tenant: tenant, cancellationToken: cancellationToken);
+        var path = BuildConnectorArmPath(subscription, resourceGroup, agentName, name);
+        await CallArmAsync(path, HttpMethod.Delete, tenant: tenant, cancellationToken: cancellationToken);
+    }
+
+    private static List<T> DeserializeArmValueArray<T>(string body, JsonTypeInfo<T> typeInfo)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return [];
+        }
+
+        using var document = JsonDocument.Parse(body);
+        if (!document.RootElement.TryGetProperty("value", out var valueArray) || valueArray.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        var results = new List<T>(valueArray.GetArrayLength());
+        foreach (var item in valueArray.EnumerateArray())
+        {
+            var deserialized = item.Deserialize(typeInfo);
+            if (deserialized is not null)
+            {
+                results.Add(deserialized);
+            }
+        }
+
+        return results;
     }
 
     public async Task<ConnectorTestResult> TestConnectorAsync(

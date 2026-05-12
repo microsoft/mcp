@@ -55,8 +55,8 @@ public sealed class ConnectorsGetCommand(ILogger<ConnectorsGetCommand> logger, I
         var options = BindOptions(parseResult);
         try
         {
-            var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(_sreAgentService, options, cancellationToken);
-            var connector = await _sreAgentService.GetConnectorAsync(endpoint, options.Name!, options.Tenant, cancellationToken);
+            var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(_sreAgentService, options, cancellationToken);
+            var connector = await _sreAgentService.GetConnectorAsync(options.Subscription!, resourceGroup, options.Agent!, options.Name!, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new ConnectorsGetCommandResult(connector), SreAgentJsonContext.Default.ConnectorsGetCommandResult);
         }
         catch (Exception ex)

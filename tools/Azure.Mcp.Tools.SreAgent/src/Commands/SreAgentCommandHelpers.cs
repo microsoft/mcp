@@ -59,6 +59,33 @@ internal static class SreAgentCommandHelpers
             cancellationToken);
     }
 
+    /// <summary>
+    /// Returns the resource group containing the agent, falling back to a Resource Graph lookup
+    /// when the caller did not supply <c>--resource-group</c>. Used by ARM-based connector
+    /// commands which need the RG as part of the resource path.
+    /// </summary>
+    public static async Task<string> ResolveAgentResourceGroupAsync(
+        ISreAgentService sreAgentService,
+        BaseSreAgentOptions options,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentException.ThrowIfNullOrWhiteSpace(options.Subscription);
+        ArgumentException.ThrowIfNullOrWhiteSpace(options.Agent);
+
+        if (!string.IsNullOrWhiteSpace(options.ResourceGroup))
+        {
+            return options.ResourceGroup!;
+        }
+
+        return await sreAgentService.ResolveAgentResourceGroupAsync(
+            options.Subscription!,
+            options.Agent!,
+            options.Tenant,
+            options.RetryPolicy,
+            cancellationToken);
+    }
+
     public static Dictionary<string, object>? ParseJsonObject(string? json, string optionName)
     {
         if (string.IsNullOrWhiteSpace(json))
