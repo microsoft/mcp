@@ -324,7 +324,7 @@ try {
     $command = "dotnet test $coverageArg $resultsArg $loggerArg"
 
     if ($filterArg) {
-        $command = "--filter `"$filterArg`""
+        $command += "--filter `"$filterArg`""
     }
 
     Invoke-LoggedMsBuildCommand -Command $command -AllowedExitCodes @(0, 1)
