@@ -27,7 +27,8 @@ jobs:
 
   - pwsh: >
       ./eng/scripts/Build-Local.ps1
-      -ServerName ${{ variables.ServerName }}
+      ${{ if ne(variables.ServerName, '') }}:
+        -ServerName ${{ variables.ServerName }}
       -VerifyNpx
     displayName: "Build local package"
     workingDirectory: $(Build.SourcesDirectory)
