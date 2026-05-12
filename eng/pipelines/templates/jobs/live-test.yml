@@ -28,10 +28,10 @@ jobs:
     inputs:
       versionSpec: '22.x'
 
-  - ${{ if ne(parameters.ServerName, '') }}:
+  - ${{ if ne(variables['ServerName'], '') }}:
     - pwsh: >
         ./eng/scripts/Build-Local.ps1
-        -ServerName ${{ parameters.ServerName }}
+        -ServerName ${{ variables['ServerName'] }}
         -VerifyNpx
       displayName: "Build local package"
       workingDirectory: $(Build.SourcesDirectory)
