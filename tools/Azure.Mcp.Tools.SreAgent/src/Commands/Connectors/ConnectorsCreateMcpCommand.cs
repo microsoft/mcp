@@ -124,6 +124,9 @@ public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpComman
                 }
             }
 
+            var dataSource = string.Equals(options.Type, "stdio", StringComparison.OrdinalIgnoreCase)
+                ? options.Command
+                : options.Endpoint;
             var connector = new AgentConnectorEnvelope
             {
                 Name = options.Name,
@@ -131,8 +134,8 @@ public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpComman
                 {
                     Name = options.Name,
                     DataConnectorType = "Mcp",
-                    DataSource = "placeholder",
-                    Identity = string.Empty,
+                    DataSource = dataSource,
+                    Identity = "system",
                     ExtendedProperties = extendedProperties
                 }
             };
