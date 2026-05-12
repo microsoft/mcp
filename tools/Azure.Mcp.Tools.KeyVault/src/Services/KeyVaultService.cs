@@ -36,7 +36,7 @@ public sealed class KeyVaultService(
         var client = CreateKeyClient(vaultName, credential, retryPolicy);
         var keys = new List<string>();
 
-        await foreach (var key in client.GetPropertiesOfKeysAsync(cancellationToken).Where(x => x.Managed == includeManagedKeys))
+        await foreach (var key in client.GetPropertiesOfKeysAsync(cancellationToken).Where(x => includeManagedKeys || x.Managed != true))
         {
             keys.Add(key.Name);
         }
@@ -225,7 +225,7 @@ public sealed class KeyVaultService(
                 }
                 catch (FormatException ex)
                 {
-                    throw new Exception("The provided certificate-data is neither a file path, raw PEM, nor base64 encoded content.", ex);
+                    throw new ArgumentException("The provided certificate-data is neither raw PEM text nor valid base64-encoded content.", ex);
                 }
             }
         }
@@ -346,8 +346,18 @@ public sealed class KeyVaultService(
         var credential = await GetCredential(tenantId, cancellationToken);
         var hsmUri = new Uri(GetHsmUri(vaultName));
 
-        var hsmClient = new KeyVaultSettingsClient(hsmUri, credential);
+        var hsmClient = CreateSettingsClient(hsmUri, credential, retryPolicy);
         var hsmResponse = await hsmClient.GetSettingsAsync(cancellationToken);
         return hsmResponse.Value;
+    }
+
+    private KeyVaultSettingsClient CreateSettingsClient(Uri hsmUri, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
+    {
+        var httpClient = _httpClientFactory.CreateClient();
+        httpClient.BaseAddress = hsmUri;
+        var options = new KeyVaultAdministrationClientOptions();
+        options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
+        options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
+        return new(hsmUri, credential, options);
     }
 }

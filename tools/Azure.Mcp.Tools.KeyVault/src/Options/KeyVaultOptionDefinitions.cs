@@ -35,7 +35,7 @@ public static class KeyVaultOptionDefinitions
         $"--{KeyTypeParam}"
     )
     {
-        Description = "The type of key to create (RSA, EC).",
+        Description = "The type of key to create. Valid values: RSA, RSA-HSM, EC, EC-HSM, oct, oct-HSM.",
         Required = true
     };
 
