@@ -49,8 +49,10 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
         var o = BindOptions(parseResult);
         try
         {
-            if (!Uri.TryCreate(o.InstanceUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps || !uri.Host.EndsWith(".service-now.com", StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException("ServiceNow instance URL must be an https URL on *.service-now.com.");
+            if (!Uri.TryCreate(o.InstanceUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps ||
+                !(uri.Host.EndsWith(".service-now.com", StringComparison.OrdinalIgnoreCase) ||
+                  uri.Host.EndsWith(".servicenowservices.com", StringComparison.OrdinalIgnoreCase)))
+                throw new ArgumentException("ServiceNow instance URL must be an https URL on *.service-now.com or *.servicenowservices.com.");
 
             var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(_sreAgentService, o, cancellationToken);
             try

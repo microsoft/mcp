@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using System.Text.RegularExpressions;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -115,7 +116,7 @@ public sealed class SreAgentService(
                 "SRE Agent data-plane call failed. Status={Status} Endpoint={Endpoint} Path={Path}",
                 (int)response.StatusCode, endpointUri.Host, path);
             throw new HttpRequestException(
-                $"SRE Agent data-plane call to {endpointUri.Host}{path} failed with status {(int)response.StatusCode}: {Truncate(body, 300)}");
+                $"SRE Agent data-plane call to {endpointUri.Host}{path} failed with status {(int)response.StatusCode}: {SanitizeForErrorMessage(body, 300)}");
         }
 
         return body;
@@ -163,7 +164,7 @@ public sealed class SreAgentService(
                 "SRE Agent ARM call failed. Status={Status} Path={Path}",
                 (int)response.StatusCode, path);
             throw new HttpRequestException(
-                $"SRE Agent ARM call to {path} failed with status {(int)response.StatusCode}: {Truncate(body, 300)}");
+                $"SRE Agent ARM call to {path} failed with status {(int)response.StatusCode}: {SanitizeForErrorMessage(body, 300)}");
         }
 
         return body;
@@ -563,7 +564,16 @@ public sealed class SreAgentService(
         var path = BuildConnectorArmPath(subscription, resourceGroup, agentName, name);
         var body = await CallArmAsync(path, HttpMethod.Put, jsonBody, tenant, cancellationToken);
         var envelope = JsonSerializer.Deserialize(body, SreAgentJsonContext.Default.AgentConnectorEnvelope);
-        return envelope is null ? connector.Properties ?? new AgentConnector { Name = name } : ToConnector(envelope);
+        if (envelope is not null)
+        {
+            return ToConnector(envelope);
+        }
+        // ARM returned an empty body. Fall back to the request envelope but redact secrets
+        // before returning, since the caller-supplied ExtendedProperties still contain
+        // resolved bearer tokens / passwords from environment variables.
+        var fallback = connector.Properties ?? new AgentConnector { Name = name };
+        RedactSecretsInPlace(fallback.ExtendedProperties);
+        return fallback;
     }
 
     public async Task DeleteConnectorAsync(
@@ -689,7 +699,109 @@ public sealed class SreAgentService(
     {
         var connector = envelope.Properties ?? new AgentConnector();
         connector.Name ??= envelope.Name;
+        RedactSecretsInPlace(connector.ExtendedProperties);
         return connector;
+    }
+
+    // Keys whose values should never be returned to MCP clients. Matched case-insensitively.
+    private static readonly HashSet<string> SensitiveExtendedPropertyKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "bearerToken",
+        "apiKey",
+        "password",
+        "secret",
+        "clientSecret",
+        "accessToken",
+        "refreshToken",
+        "authorization",
+        "token",
+    };
+
+    private const string RedactedValue = "***";
+
+    /// <summary>
+    /// Walks an extended-properties dictionary and replaces values for known secret-bearing
+    /// keys with a redaction marker. Recurses into nested objects (e.g. <c>headers</c> maps
+    /// that may contain an <c>Authorization</c> entry) and into <see cref="JsonElement"/>
+    /// values produced by the source-generated deserializer.
+    /// </summary>
+    internal static void RedactSecretsInPlace(Dictionary<string, object>? properties)
+    {
+        if (properties is null || properties.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var key in properties.Keys.ToList())
+        {
+            if (SensitiveExtendedPropertyKeys.Contains(key))
+            {
+                properties[key] = RedactedValue;
+                continue;
+            }
+
+            properties[key] = RedactNestedValue(properties[key]);
+        }
+    }
+
+    private static object RedactNestedValue(object? value)
+    {
+        switch (value)
+        {
+            case null:
+                return null!;
+            case Dictionary<string, object> nested:
+                RedactSecretsInPlace(nested);
+                return nested;
+            case JsonElement element when element.ValueKind == JsonValueKind.Object:
+                var dict = new Dictionary<string, object>();
+                foreach (var prop in element.EnumerateObject())
+                {
+                    if (SensitiveExtendedPropertyKeys.Contains(prop.Name))
+                    {
+                        dict[prop.Name] = RedactedValue;
+                    }
+                    else
+                    {
+                        dict[prop.Name] = RedactNestedValue(prop.Value);
+                    }
+                }
+                return dict;
+            default:
+                return value;
+        }
+    }
+
+    // Regexes used to strip secrets out of upstream error response bodies before they are
+    // surfaced in exception messages or written to structured logs.
+    private static readonly Regex SecretJsonValueRegex = new(
+        "(\"(?:bearerToken|apiKey|api_key|password|secret|clientSecret|client_secret|accessToken|access_token|refreshToken|refresh_token|token|authorization)\"\\s*:\\s*)\"[^\"]*\"",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex BasicAuthHeaderRegex = new(
+        "(\"Authorization\"\\s*:\\s*\")(?:Bearer|Basic)\\s+[^\"]*\"",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex BearerAuthHeaderRegex = new(
+        "(?i)(Authorization\\s*:\\s*)(?:Bearer|Basic)\\s+\\S+",
+        RegexOptions.Compiled);
+
+    /// <summary>
+    /// Sanitizes an upstream response body for inclusion in an exception message.
+    /// Redacts JSON values for well-known secret keys and any Bearer/Basic Authorization
+    /// header values, then truncates to <paramref name="max"/> characters. ARM and
+    /// data-plane error bodies frequently echo parts of the request, including the
+    /// secrets we sent, so this scrub is required before the body is logged or thrown.
+    /// </summary>
+    internal static string SanitizeForErrorMessage(string? value, int max)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+
+        var scrubbed = SecretJsonValueRegex.Replace(value, "$1\"" + RedactedValue + "\"");
+        scrubbed = BasicAuthHeaderRegex.Replace(scrubbed, "$1" + RedactedValue + "\"");
+        scrubbed = BearerAuthHeaderRegex.Replace(scrubbed, "$1" + RedactedValue);
+        return Truncate(scrubbed, max);
     }
     private static List<T> DeserializeArray<T>(string body, JsonTypeInfo<List<T>> jsonTypeInfo)
     {
@@ -951,7 +1063,11 @@ public sealed class SreAgentService(
     {
         ArgumentException.ThrowIfNullOrEmpty(endpoint);
         ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
-        var endpointUri = new Uri(endpoint);
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var endpointUri) ||
+            endpointUri.Scheme != Uri.UriSchemeHttps)
+        {
+            throw new ArgumentException($"SRE Agent endpoint must be an absolute https URL. Got: '{endpoint}'.", nameof(endpoint));
+        }
         var requestUri = new Uri(endpointUri, "/api/v1/AgentMemory/upload");
         var credential = await GetCredential(tenant, cancellationToken);
         var token = await credential.GetTokenAsync(new TokenRequestContext(DataPlaneScopes), cancellationToken);
@@ -968,7 +1084,7 @@ public sealed class SreAgentService(
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            throw new HttpRequestException($"SRE Agent memory upload to {endpointUri.Host} failed with status {(int)response.StatusCode}: {Truncate(body, 300)}");
+            throw new HttpRequestException($"SRE Agent memory upload to {endpointUri.Host} failed with status {(int)response.StatusCode}: {SanitizeForErrorMessage(body, 300)}");
         }
     }
 
