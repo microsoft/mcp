@@ -122,6 +122,7 @@ internal sealed class TemporaryAssetsPathResolver : IRecordingPathResolver, IDis
     }
 }
 
+[Trait("TestType", "Live")]
 public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
 {
     private string RecordingFileLocation = string.Empty;

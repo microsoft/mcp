@@ -20,6 +20,7 @@ using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Services.Azure.Authentication;
 
+[Trait("TestType", "Live")]
 public class AuthenticationIntegrationTests : IAsyncLifetime
 {
     private readonly ServiceProvider _serviceProvider;

@@ -14,6 +14,7 @@ namespace Azure.Mcp.Core.Tests.Areas.Server;
 /// Live integration tests for Azure MCP Server that validate tool loading behavior across different modes.
 /// These tests start actual MCP server instances and verify the correct tools are loaded.
 /// </summary>
+[Trait("TestType", "Live")]
 public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 {
     private Process? _httpServerProcess;

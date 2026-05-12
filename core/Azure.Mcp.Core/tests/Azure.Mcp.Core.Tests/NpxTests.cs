@@ -8,6 +8,7 @@ using Xunit;
 
 namespace Azure.Mcp.Core.Tests;
 
+[Trait("TestType", "Live")]
 public class NpxTests
 {
     private readonly LiveTestSettings _settings;

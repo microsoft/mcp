@@ -19,6 +19,7 @@ namespace Azure.Mcp.Core.Tests.Services.Azure.Authentication;
 /// Tests verify that authentication challenges return correct WWW-Authenticate headers
 /// with OAuth 2.0 protected resource metadata.
 /// </summary>
+[Trait("TestType", "Live")]
 public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsyncLifetime
 {
     protected ITestOutputHelper _output = output;

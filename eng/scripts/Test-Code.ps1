@@ -305,12 +305,26 @@ try {
     $coverageArg = $CollectCoverage ? "--collect:'XPlat Code Coverage'" : ""
     $resultsArg = "--results-directory '$TestResultsPath'"
     $loggerArg = "--logger 'trx' --logger 'console;verbosity=detailed'"
-
-    $command = "dotnet test $coverageArg $resultsArg $loggerArg"
+    $filterArg = switch ($TestType) {
+        'Live' { "TestType=Live" }
+        'Unit' { "TestType!=Live" }
+        'Recorded' { "TestType=Live" }
+        default { "" }
+    }
 
     if($Members.Count -gt 0) {
         $memberFilterString = $Members | ForEach-Object { "FullyQualifiedName~$_" } | Join-String -Separator '|'
-        $command += " --filter '$memberFilterString'"
+        if ($filterArg) {
+            $filterArg += "&($memberFilterString)"
+        } else {
+            $filterArg = "$memberFilterString"
+        }
+    }
+
+    $command = "dotnet test $coverageArg $resultsArg $loggerArg"
+
+    if ($filterArg) {
+        $command = "--filter `"$filterArg`""
     }
 
     Invoke-LoggedMsBuildCommand -Command $command -AllowedExitCodes @(0, 1)
