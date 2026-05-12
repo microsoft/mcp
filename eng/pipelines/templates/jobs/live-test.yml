@@ -25,13 +25,19 @@ jobs:
     inputs:
       versionSpec: '22.x'
 
-  - pwsh: >
-      ./eng/scripts/Build-Local.ps1
-      ${{ if ne(variables.ServerName, '') }}:
+  - ${{ if ne(variables.ServerName, '') }}:
+    - pwsh: >
+        ./eng/scripts/Build-Local.ps1
         -ServerName ${{ variables.ServerName }}
-      -VerifyNpx
-    displayName: "Build local package"
-    workingDirectory: $(Build.SourcesDirectory)
+        -VerifyNpx
+      displayName: "Build local package"
+      workingDirectory: $(Build.SourcesDirectory)
+  - ${{ else }}:
+    - pwsh: >
+        ./eng/scripts/Build-Local.ps1
+        -VerifyNpx
+      displayName: "Build local package"
+      workingDirectory: $(Build.SourcesDirectory)
 
   - pwsh: >
       ./eng/scripts/Test-Code.ps1
