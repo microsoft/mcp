@@ -5,6 +5,9 @@ parameters:
   type: number
 - name: TimeoutInMinutes
   type: number
+- name: ServerName
+  type: string
+  default: ''
 
 jobs:
 - job: LiveTest
@@ -25,10 +28,10 @@ jobs:
     inputs:
       versionSpec: '22.x'
 
-  - ${{ if ne(variables.ServerName, '') }}:
+  - ${{ if ne(parameters.ServerName, '') }}:
     - pwsh: >
         ./eng/scripts/Build-Local.ps1
-        -ServerName ${{ variables.ServerName }}
+        -ServerName ${{ parameters.ServerName }}
         -VerifyNpx
       displayName: "Build local package"
       workingDirectory: $(Build.SourcesDirectory)
