@@ -7,7 +7,7 @@ jobs:
   - checkout: self
     fetchDepth: 0
 
-  - template: /eng/pipelines/templates/steps/install-dotnet.
+  - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
   - task: NodeTool@0
     displayName: "Install Node.js 22"
