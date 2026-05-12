@@ -28,7 +28,8 @@ public sealed class DocsGetCommand(ILogger<DocsGetCommand> logger) : GlobalComma
     }
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid) return Task.FromResult(context.Response);
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return Task.FromResult(context.Response);
         var o = BindOptions(parseResult);
         try
         {

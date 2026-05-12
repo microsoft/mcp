@@ -37,7 +37,8 @@ public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger,
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid) return context.Response;
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return context.Response;
         var o = BindOptions(parseResult);
         try
         {
@@ -109,19 +110,24 @@ public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger,
         {
             var line = rawLine.TrimEnd();
             var trimmed = line.Trim();
-            if (trimmed.Length == 0 || trimmed.StartsWith('#')) continue;
+            if (trimmed.Length == 0 || trimmed.StartsWith('#'))
+                continue;
             if (!char.IsWhiteSpace(line[0]))
             {
                 FlushBlock(spec, ref currentKey, block, ref blockIsList);
                 section = trimmed.TrimEnd(':');
-                if (trimmed.StartsWith("kind:", StringComparison.OrdinalIgnoreCase)) kind = Clean(trimmed[5..]);
+                if (trimmed.StartsWith("kind:", StringComparison.OrdinalIgnoreCase))
+                    kind = Clean(trimmed[5..]);
                 continue;
             }
             if (section == "metadata")
             {
-                if (trimmed.StartsWith("name:", StringComparison.OrdinalIgnoreCase)) name = Clean(trimmed[5..]);
-                else if (trimmed.StartsWith("owner:", StringComparison.OrdinalIgnoreCase)) owner = Clean(trimmed[6..]);
-                else if (trimmed.StartsWith('-')) tags.Add((JsonNode?)JsonValue.Create(Clean(trimmed[1..])));
+                if (trimmed.StartsWith("name:", StringComparison.OrdinalIgnoreCase))
+                    name = Clean(trimmed[5..]);
+                else if (trimmed.StartsWith("owner:", StringComparison.OrdinalIgnoreCase))
+                    owner = Clean(trimmed[6..]);
+                else if (trimmed.StartsWith('-'))
+                    tags.Add((JsonNode?)JsonValue.Create(Clean(trimmed[1..])));
             }
             else if (section == "spec")
             {
@@ -155,7 +161,8 @@ public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger,
                         spec[key] = Clean(value);
                     }
                 }
-                else if (currentKey is not null) block.Add(trimmed);
+                else if (currentKey is not null)
+                    block.Add(trimmed);
             }
         }
         FlushBlock(spec, ref currentKey, block, ref blockIsList);
@@ -164,11 +171,13 @@ public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger,
 
     private static void FlushBlock(JsonObject spec, ref string? currentKey, List<string> block, ref bool blockIsList)
     {
-        if (currentKey is null) return;
+        if (currentKey is null)
+            return;
         if (blockIsList)
         {
             var arr = new JsonArray();
-            foreach (var item in block) arr.Add((JsonNode?)JsonValue.Create(item));
+            foreach (var item in block)
+                arr.Add((JsonNode?)JsonValue.Create(item));
             spec[currentKey] = arr;
         }
         else

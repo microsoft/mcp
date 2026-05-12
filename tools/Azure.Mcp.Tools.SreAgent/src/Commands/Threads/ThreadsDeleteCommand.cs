@@ -42,7 +42,8 @@ public sealed class ThreadsDeleteCommand(ILogger<ThreadsDeleteCommand> logger, I
         var options = BindOptions(parseResult);
         try
         {
-            if (!options.Confirm) throw new InvalidOperationException("Deleting a thread requires --confirm true.");
+            if (!options.Confirm)
+                throw new InvalidOperationException("Deleting a thread requires --confirm true.");
             var endpoint = await ResolveEndpointAsync(_sreAgentService, options, cancellationToken);
             await _sreAgentService.DeleteThreadAsync(endpoint, options.ThreadId!, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new SreAgentThreadOperationResult(options.ThreadId, "deleted", []), SreAgentJsonContext.Default.SreAgentThreadOperationResult);

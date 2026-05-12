@@ -17,7 +17,8 @@ public sealed class MemoriesReindexCommand(ILogger<MemoriesReindexCommand> logge
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid) return context.Response;
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return context.Response;
         var o = BindOptions(parseResult);
         try
         {

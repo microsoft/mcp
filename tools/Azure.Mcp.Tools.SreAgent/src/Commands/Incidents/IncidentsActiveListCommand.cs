@@ -19,7 +19,8 @@ public sealed class IncidentsActiveListCommand(ILogger<IncidentsActiveListComman
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid) return context.Response;
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return context.Response;
         var o = BindOptions(parseResult);
         try
         {
@@ -42,9 +43,12 @@ public sealed class IncidentsActiveListCommand(ILogger<IncidentsActiveListComman
                 var title = t.Title ?? (t.StartMessage?.Text?.Length > 80 ? t.StartMessage.Text[..80] : t.StartMessage?.Text) ?? "Untitled";
                 var agent = t.StartMessage?.Author?.DisplayName ?? "unknown";
                 var parts = new List<string>();
-                if (t.Status?.ActionsStatus?.HasCriticalActions == true) parts.Add("⚠️ Critical");
-                if (t.Status?.ActionsStatus?.HasWarningActions == true) parts.Add("⚡ Warning");
-                if (!string.IsNullOrWhiteSpace(t.Status?.IncidentStatus?.Status)) parts.Add(t.Status.IncidentStatus.Status);
+                if (t.Status?.ActionsStatus?.HasCriticalActions == true)
+                    parts.Add("⚠️ Critical");
+                if (t.Status?.ActionsStatus?.HasWarningActions == true)
+                    parts.Add("⚡ Warning");
+                if (!string.IsNullOrWhiteSpace(t.Status?.IncidentStatus?.Status))
+                    parts.Add(t.Status.IncidentStatus.Status);
                 var modified = DateTimeOffset.TryParse(t.ModifiedTimestamp, out var dto) ? $" | Updated: {dto.LocalDateTime}" : string.Empty;
                 lines.Add($"- **{title}** ({t.Id})");
                 lines.Add($"  Status: {(parts.Count > 0 ? string.Join(", ", parts) : "Active")} | Agent: {agent}{modified}");

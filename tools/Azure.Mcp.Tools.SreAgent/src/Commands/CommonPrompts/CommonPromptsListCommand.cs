@@ -33,7 +33,8 @@ public sealed class CommonPromptsListCommand(ILogger<CommonPromptsListCommand> l
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid) return context.Response;
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return context.Response;
         var o = BindOptions(parseResult);
         try
         {
@@ -47,7 +48,8 @@ public sealed class CommonPromptsListCommand(ILogger<CommonPromptsListCommand> l
 
     private static string Format(List<CommonPromptEnvelope> prompts, string? search)
     {
-        if (prompts.Count == 0) return string.IsNullOrWhiteSpace(search) ? "No common prompts found." : $"No common prompts matched search \"{search}\".";
+        if (prompts.Count == 0)
+            return string.IsNullOrWhiteSpace(search) ? "No common prompts found." : $"No common prompts matched search \"{search}\".";
         var lines = new List<string> { "# Common Prompts", string.Empty, $"{prompts.Count} prompt(s)", string.Empty };
         foreach (var p in prompts)
         {

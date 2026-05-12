@@ -42,7 +42,8 @@ public sealed class ScheduledTasksDeleteCommand(ILogger<ScheduledTasksDeleteComm
         var options = BindOptions(parseResult);
         try
         {
-            if (!options.Confirm) throw new InvalidOperationException("Deleting a scheduled task requires --confirm true.");
+            if (!options.Confirm)
+                throw new InvalidOperationException("Deleting a scheduled task requires --confirm true.");
             var endpoint = await ResolveEndpointAsync(_sreAgentService, options, cancellationToken);
             await _sreAgentService.DeleteScheduledTaskAsync(endpoint, options.TaskId!, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new ScheduledTaskOperationResult(options.TaskId, "deleted"), SreAgentJsonContext.Default.ScheduledTaskOperationResult);

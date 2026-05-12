@@ -33,7 +33,8 @@ public sealed class MemoriesSearchCommand(ILogger<MemoriesSearchCommand> logger,
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid) return context.Response;
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return context.Response;
         var o = BindOptions(parseResult);
         try
         {
@@ -47,12 +48,14 @@ public sealed class MemoriesSearchCommand(ILogger<MemoriesSearchCommand> logger,
 
     private static string Format(string query, List<MemorySearchResult> results)
     {
-        if (results.Count == 0) return $"No documents matched query: \"{query}\"";
+        if (results.Count == 0)
+            return $"No documents matched query: \"{query}\"";
         var lines = new List<string> { $"# Search Results for \"{query}\"", string.Empty, $"{results.Count} result(s)", string.Empty };
         foreach (var r in results)
         {
             lines.Add($"### {r.Title ?? r.Id ?? "unknown"}");
-            if (!string.IsNullOrWhiteSpace(r.Contents)) lines.Add(r.Contents.Length > 500 ? r.Contents[..500] + "..." : r.Contents);
+            if (!string.IsNullOrWhiteSpace(r.Contents))
+                lines.Add(r.Contents.Length > 500 ? r.Contents[..500] + "..." : r.Contents);
             lines.Add(string.Empty);
         }
         return string.Join('\n', lines);

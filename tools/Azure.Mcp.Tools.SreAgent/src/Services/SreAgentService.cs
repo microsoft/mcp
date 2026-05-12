@@ -4,6 +4,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -12,8 +13,6 @@ using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
-
-using System.Text.Json.Serialization.Metadata;
 namespace Azure.Mcp.Tools.SreAgent.Services;
 
 /// <summary>
@@ -235,8 +234,10 @@ public sealed class SreAgentService(
 
     private static string? TryGetString(JsonElement element, string propertyName)
     {
-        if (element.ValueKind != JsonValueKind.Object) return null;
-        if (!element.TryGetProperty(propertyName, out var prop)) return null;
+        if (element.ValueKind != JsonValueKind.Object)
+            return null;
+        if (!element.TryGetProperty(propertyName, out var prop))
+            return null;
         return prop.ValueKind == JsonValueKind.String ? prop.GetString() : null;
     }
 

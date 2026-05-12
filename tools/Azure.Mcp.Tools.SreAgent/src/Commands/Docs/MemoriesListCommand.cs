@@ -18,7 +18,8 @@ public sealed class MemoriesListCommand(ILogger<MemoriesListCommand> logger, ISr
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid) return context.Response;
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return context.Response;
         var o = BindOptions(parseResult);
         try
         {
@@ -32,7 +33,8 @@ public sealed class MemoriesListCommand(ILogger<MemoriesListCommand> logger, ISr
 
     private static string Format(List<DocumentInfo> docs)
     {
-        if (docs.Count == 0) return "No documents found in knowledge base.";
+        if (docs.Count == 0)
+            return "No documents found in knowledge base.";
         var lines = new List<string> { "# Knowledge Base Documents", string.Empty, $"{docs.Count} document(s)", string.Empty };
         foreach (var d in docs)
         {

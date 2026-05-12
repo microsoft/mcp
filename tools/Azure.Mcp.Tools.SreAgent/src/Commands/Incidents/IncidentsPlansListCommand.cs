@@ -18,7 +18,8 @@ public sealed class IncidentsPlansListCommand(ILogger<IncidentsPlansListCommand>
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid) return context.Response;
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return context.Response;
         var options = BindOptions(parseResult);
         try
         {
@@ -39,7 +40,8 @@ public sealed class IncidentsPlansListCommand(ILogger<IncidentsPlansListCommand>
 
     private static string FormatPlans(List<IncidentFilter> filters, List<IncidentHandler> handlers)
     {
-        if (filters.Count == 0 && handlers.Count == 0) return "No incident response plans found. Use `incidents -> create_plan` to create one.";
+        if (filters.Count == 0 && handlers.Count == 0)
+            return "No incident response plans found. Use `incidents -> create_plan` to create one.";
         var handlersByFilterId = handlers.Where(h => !string.IsNullOrWhiteSpace(h.IncidentFilterId)).GroupBy(h => h.IncidentFilterId!).ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
         var lines = new List<string> { "# Incident Response Plans", string.Empty };
         foreach (var filter in filters)
@@ -48,11 +50,16 @@ public sealed class IncidentsPlansListCommand(ILogger<IncidentsPlansListCommand>
             var status = filter.IsEnabled == true ? "🟢 Enabled" : "🔴 Disabled";
             lines.Add($"## {handler?.Name ?? filter.Id} ({status})");
             lines.Add($"- **Filter ID:** {filter.Id}");
-            if (!string.IsNullOrWhiteSpace(filter.ImpactedService)) lines.Add($"- **Service:** {filter.ImpactedService}");
-            if (filter.Priorities?.Count > 0) lines.Add($"- **Priorities:** {string.Join(", ", filter.Priorities)}");
-            if (!string.IsNullOrWhiteSpace(filter.TitleContains)) lines.Add($"- **Title match:** \"{filter.TitleContains}\"");
-            if (!string.IsNullOrWhiteSpace(filter.HandlingAgent)) lines.Add($"- **Agent:** {filter.HandlingAgent}");
-            if (!string.IsNullOrWhiteSpace(filter.AgentMode)) lines.Add($"- **Mode:** {filter.AgentMode}");
+            if (!string.IsNullOrWhiteSpace(filter.ImpactedService))
+                lines.Add($"- **Service:** {filter.ImpactedService}");
+            if (filter.Priorities?.Count > 0)
+                lines.Add($"- **Priorities:** {string.Join(", ", filter.Priorities)}");
+            if (!string.IsNullOrWhiteSpace(filter.TitleContains))
+                lines.Add($"- **Title match:** \"{filter.TitleContains}\"");
+            if (!string.IsNullOrWhiteSpace(filter.HandlingAgent))
+                lines.Add($"- **Agent:** {filter.HandlingAgent}");
+            if (!string.IsNullOrWhiteSpace(filter.AgentMode))
+                lines.Add($"- **Mode:** {filter.AgentMode}");
             lines.Add(handler is null ? "- **Handler:** ⚠️ None configured" : $"- **Handler:** {handler.Id} ({handler.IncidentProcessingGuide?.Count ?? 0} steps)");
             lines.Add(string.Empty);
         }
@@ -61,7 +68,8 @@ public sealed class IncidentsPlansListCommand(ILogger<IncidentsPlansListCommand>
         {
             lines.Add("## ⚠️ Orphaned Handlers (no matching filter)");
             lines.Add(string.Empty);
-            foreach (var h in orphaned) lines.Add($"- **{h.Name ?? h.Id}** (filter: {h.IncidentFilterId})");
+            foreach (var h in orphaned)
+                lines.Add($"- **{h.Name ?? h.Id}** (filter: {h.IncidentFilterId})");
             lines.Add(string.Empty);
         }
         return string.Join('\n', lines);

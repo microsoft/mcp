@@ -32,13 +32,15 @@ public sealed class CommonPromptsGetCommand(ILogger<CommonPromptsGetCommand> log
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid) return context.Response;
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return context.Response;
         var o = BindOptions(parseResult);
         try
         {
             var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
             var prompt = await _sreAgentService.GetCommonPromptAsync(endpoint, o.Name!, o.Tenant, cancellationToken);
-            if (prompt is null) { SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"Common prompt '{o.Name}' not found."); return context.Response; }
+            if (prompt is null)
+            { SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"Common prompt '{o.Name}' not found."); return context.Response; }
             var body = prompt.Properties?.Prompt ?? string.Empty;
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"# {prompt.Name ?? o.Name}\n\n{body}");
         }

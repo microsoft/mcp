@@ -333,10 +333,6 @@
   <Folder Name="/tools/Azure.Mcp.Tools.ResourceHealth/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.ResourceHealth/tests/Azure.Mcp.Tools.ResourceHealth.Tests/Azure.Mcp.Tools.ResourceHealth.Tests.csproj" />
   </Folder>
-  <Folder Name="/tools/Azure.Mcp.Tools.SreAgent/" />
-  <Folder Name="/tools/Azure.Mcp.Tools.SreAgent/src/">
-    <Project Path="../../tools/Azure.Mcp.Tools.SreAgent/src/Azure.Mcp.Tools.SreAgent.csproj" />
-  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Search/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Search/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Search/src/Azure.Mcp.Tools.Search.csproj" />
@@ -378,6 +374,13 @@
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Sql/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.Sql/tests/Azure.Mcp.Tools.Sql.Tests/Azure.Mcp.Tools.Sql.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.SreAgent/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.SreAgent/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.SreAgent/src/Azure.Mcp.Tools.SreAgent.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.SreAgent/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.SreAgent/tests/Azure.Mcp.Tools.SreAgent.UnitTests/Azure.Mcp.Tools.SreAgent.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Storage/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Storage/src/">

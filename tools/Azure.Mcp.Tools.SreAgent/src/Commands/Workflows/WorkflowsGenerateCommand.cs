@@ -99,7 +99,8 @@ public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> l
 
     private static string BuildParameters(string[]? parameters)
     {
-        if (parameters is null || parameters.Length == 0) return string.Empty;
+        if (parameters is null || parameters.Length == 0)
+            return string.Empty;
         var lines = new List<string> { "  parameters:" };
         foreach (var param in parameters)
         {
@@ -167,7 +168,8 @@ public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> l
 
     private static string GenerateLink(string name, string description, string? urlTemplate, string paramsYaml)
     {
-        if (string.IsNullOrWhiteSpace(urlTemplate)) return "Error: LinkTool requires 'urlTemplate'.";
+        if (string.IsNullOrWhiteSpace(urlTemplate))
+            return "Error: LinkTool requires 'urlTemplate'.";
         var yaml = $"api_version: azuresre.ai/v2\nkind: ExtendedAgentTool\nmetadata:\n  name: {name}\nspec:\n  type: LinkTool\n  toolMode: Auto\n  description: |\n    {description}\n  template: \"{urlTemplate}\"\n{paramsYaml}".Trim();
         return $"# Generated LinkTool YAML\n\n```yaml\n{yaml}\n```";
     }

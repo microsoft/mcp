@@ -2,21 +2,20 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.SreAgent.Commands.Agents;
+using Azure.Mcp.Tools.SreAgent.Commands.Architecture;
+using Azure.Mcp.Tools.SreAgent.Commands.CommonPrompts;
+using Azure.Mcp.Tools.SreAgent.Commands.Connectors;
+using Azure.Mcp.Tools.SreAgent.Commands.Docs;
+using Azure.Mcp.Tools.SreAgent.Commands.Hooks;
+using Azure.Mcp.Tools.SreAgent.Commands.Incidents;
+using Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
 using Azure.Mcp.Tools.SreAgent.Commands.Skills;
+using Azure.Mcp.Tools.SreAgent.Commands.Threads;
+using Azure.Mcp.Tools.SreAgent.Commands.Workflows;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
-
-using Azure.Mcp.Tools.SreAgent.Commands.CommonPrompts;
-using Azure.Mcp.Tools.SreAgent.Commands.Connectors;
-using Azure.Mcp.Tools.SreAgent.Commands.Hooks;
-using Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
-using Azure.Mcp.Tools.SreAgent.Commands.Threads;
-using Azure.Mcp.Tools.SreAgent.Commands.Architecture;
-using Azure.Mcp.Tools.SreAgent.Commands.Docs;
-using Azure.Mcp.Tools.SreAgent.Commands.Incidents;
-using Azure.Mcp.Tools.SreAgent.Commands.Workflows;
 namespace Azure.Mcp.Tools.SreAgent;
 
 public class SreAgentSetup : IAreaSetup
@@ -131,7 +130,7 @@ public class SreAgentSetup : IAreaSetup
         skills.AddCommand<SkillsCreateCommand>(serviceProvider);
         skills.AddCommand<SkillsDeleteCommand>(serviceProvider);
 
-                // Connectors + Hooks (sub-agent B)
+        // Connectors + Hooks (sub-agent B)
         var connectors = new CommandGroup(
             "connectors",
             "SRE Agent connector operations - Commands for listing, creating, deleting, and testing SRE Agent connectors.");
@@ -182,7 +181,7 @@ public class SreAgentSetup : IAreaSetup
         scheduledTasks.AddCommand<ScheduledTasksDeleteCommand>(serviceProvider);
         scheduledTasks.AddCommand<ScheduledTasksPauseCommand>(serviceProvider);
         scheduledTasks.AddCommand<ScheduledTasksResumeCommand>(serviceProvider);
-        
+
         // Incidents + Workflows + Docs + Architecture (sub-agent D)
         var incidents = new CommandGroup("incidents", "Incident response planning, connector setup, and active incident operations.");
         var workflows = new CommandGroup("workflows", "Generate, validate, and apply SRE Agent workflow YAML.");
@@ -220,6 +219,6 @@ public class SreAgentSetup : IAreaSetup
         commonPrompts.AddCommand<CommonPromptsCreateCommand>(serviceProvider);
         commonPrompts.AddCommand<CommonPromptsDeleteCommand>(serviceProvider);
 
-return sreAgent;
+        return sreAgent;
     }
 }
