@@ -376,6 +376,8 @@ function Get-PathsToTest {
             return @{ _error = $true }
         }
 
+        Write-Progress -Activity "Checking for test resources" -Status $path -Completed
+        
         return @{
             _error               = $false
             path                 = $path
@@ -392,7 +394,13 @@ function Get-PathsToTest {
         $script:exitCode = 1
     }
 
-    $pathsToTest = $pathsToTest | Where-Object { -not $_._error } | ForEach-Object { $_.Remove('_error'); $_ } | Sort-Object { $_.path }
+    $pathsToTest = $pathsToTest | Where-Object {
+        if ($_._error) {
+            return $false
+        } else {
+            return (!$govTest -or $_.azureSupportedClouds -icontains 'AzureUSGovernment')
+        }
+    } | ForEach-Object { $_.Remove('_error'); $_ } | Sort-Object { $_.path }
 
     return $pathsToTest
 }
