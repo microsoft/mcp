@@ -78,12 +78,8 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
-            Assert.NotNull(response.Results);
-            Assert.Equal("Success", response.Message);
-
-            var result = DeserializeResponse(response, StorageJsonContext.Default.AccountCreateCommandResult);
-            Assert.NotNull(result);
-            Assert.NotNull(result!.Account);
+            var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.AccountCreateCommandResult);
+            Assert.NotNull(result.Account);
             Assert.Equal("testaccount", result.Account.Name);
         }
         else

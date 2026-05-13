@@ -3,37 +3,16 @@
 
 using Azure.Mcp.Tools.EventHubs.Commands.EventHub;
 using Azure.Mcp.Tools.EventHubs.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.UnitTests.EventHub;
 
-public class EventHubUpdateCommandTests
+public class EventHubUpdateCommandTests : CommandUnitTestsBase<EventHubUpdateCommand, IEventHubsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IEventHubsService _eventHubsService;
-    private readonly ILogger<EventHubUpdateCommand> _logger;
-    private readonly EventHubUpdateCommand _command;
-    private readonly CommandContext _context;
-
-    public EventHubUpdateCommandTests()
-    {
-        _eventHubsService = Substitute.For<IEventHubsService>();
-        _logger = Substitute.For<ILogger<EventHubUpdateCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_eventHubsService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger, _eventHubsService);
-        _context = new(_serviceProvider);
-    }
-
     [Theory]
     [InlineData("", false)]
     [InlineData("--subscription test-subscription --eventhub test-hub --namespace test-namespace --resource-group test-rg", true)]
@@ -44,7 +23,6 @@ public class EventHubUpdateCommandTests
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse(args);
         if (shouldSucceed)
         {
             var eventHub = new Models.EventHub(
@@ -57,9 +35,9 @@ public class EventHubUpdateCommandTests
                 "Active",
                 DateTimeOffset.UtcNow.AddDays(-1),
                 DateTimeOffset.UtcNow,
-                new List<string> { "0", "1", "2", "3" });
+                ["0", "1", "2", "3"]);
 
-            _eventHubsService.CreateOrUpdateEventHubAsync(
+            Service.CreateOrUpdateEventHubAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -73,7 +51,7 @@ public class EventHubUpdateCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -92,10 +70,7 @@ public class EventHubUpdateCommandTests
     public async Task ExecuteAsync_HandlesServiceError()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse(
-            "--subscription test-subscription --eventhub test-hub --namespace test-namespace --resource-group test-rg");
-
-        _eventHubsService.CreateOrUpdateEventHubAsync(
+        Service.CreateOrUpdateEventHubAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -108,7 +83,11 @@ public class EventHubUpdateCommandTests
             .ThrowsAsync(new InvalidOperationException("Namespace 'test-namespace' not found in resource group 'test-rg'"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
+            "--eventhub", "test-hub",
+            "--namespace", "test-namespace",
+            "--resource-group", "test-rg");
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -119,10 +98,7 @@ public class EventHubUpdateCommandTests
     public async Task ExecuteAsync_HandlesAuthenticationError()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse(
-            "--subscription unauthorized-sub --eventhub test-hub --namespace test-namespace --resource-group test-rg");
-
-        _eventHubsService.CreateOrUpdateEventHubAsync(
+        Service.CreateOrUpdateEventHubAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -135,7 +111,11 @@ public class EventHubUpdateCommandTests
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "unauthorized-sub",
+            "--eventhub", "test-hub",
+            "--namespace", "test-namespace",
+            "--resource-group", "test-rg");
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -146,9 +126,6 @@ public class EventHubUpdateCommandTests
     public async Task ExecuteAsync_SuccessfullyCreatesEventHub()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse(
-            "--subscription test-subscription --eventhub new-hub --namespace test-namespace --resource-group test-rg --partition-count 8 --message-retention-in-hours 336");
-
         var eventHub = new Models.EventHub(
             "new-hub",
             "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.EventHub/namespaces/test-namespace/eventhubs/new-hub",
@@ -159,9 +136,9 @@ public class EventHubUpdateCommandTests
             "Active",
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow,
-            new List<string> { "0", "1", "2", "3", "4", "5", "6", "7" });
+            ["0", "1", "2", "3", "4", "5", "6", "7"]);
 
-        _eventHubsService.CreateOrUpdateEventHubAsync(
+        Service.CreateOrUpdateEventHubAsync(
             Arg.Is("new-hub"),
             Arg.Is("test-namespace"),
             Arg.Is("test-rg"),
@@ -174,7 +151,13 @@ public class EventHubUpdateCommandTests
             .Returns(eventHub);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
+            "--eventhub", "new-hub",
+            "--namespace", "test-namespace",
+            "--resource-group", "test-rg",
+            "--partition-count", "8",
+            "--message-retention-in-hours", "336");
 
         // Assert
         Assert.Equal(200, (int)response.Status);

@@ -31,6 +31,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         Service.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -40,12 +41,8 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         var response = await ExecuteCommandAsync("--subscription", subscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
 
-        var result = DeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Accounts);
         Assert.Equal(expectedAccounts.Results.Count, result.Accounts.Count);
         Assert.Equal(expectedAccounts.Results.Select(a => a.Name), result.Accounts.Select(a => a.Name));
@@ -60,6 +57,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         Service.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -69,12 +67,8 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         var response = await ExecuteCommandAsync("--subscription", subscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
 
-        var result = DeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Accounts);
     }
 
@@ -88,6 +82,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         Service.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
+            Arg.Any<string?>(),
             null,
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -127,6 +122,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
             Service.GetAccountDetails(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
+                Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
@@ -162,6 +158,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         Service.GetAccountDetails(
             Arg.Is(account),
             Arg.Is(subscription),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -171,15 +168,9 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         var response = await ExecuteCommandAsync("--account", account, "--subscription", subscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
 
-        var result = DeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.Accounts);
-
         Assert.Equal(expectedAccount.Results[0].Name, result.Accounts[0].Name);
         Assert.Equal(expectedAccount.Results[0].Location, result.Accounts[0].Location);
         Assert.Equal(expectedAccount.Results[0].Kind, result.Accounts[0].Kind);
@@ -193,7 +184,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         var subscription = "sub123";
 
         Service.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -213,7 +204,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         var subscription = "sub123";
 
         Service.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Storage account not found"));
 
         // Act
@@ -232,7 +223,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         var subscription = "sub123";
 
         Service.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         // Act
@@ -241,5 +232,22 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithResourceGroup_ForwardsResourceGroupToService()
+    {
+        // Arrange
+        const string resourceGroup = "test-rg";
+        const string subscription = "sub123";
+        Service.GetAccountDetails(Arg.Any<string?>(), Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<StorageAccountInfo>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", subscription, "--resource-group", resourceGroup);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).GetAccountDetails(Arg.Any<string?>(), Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 }

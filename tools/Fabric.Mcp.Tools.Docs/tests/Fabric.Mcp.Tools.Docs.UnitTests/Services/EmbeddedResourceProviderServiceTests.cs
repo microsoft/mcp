@@ -5,7 +5,7 @@ using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
-namespace Fabric.Mcp.Tools.Docs.Tests.Services;
+namespace Fabric.Mcp.Tools.Docs.UnitTests.Services;
 
 public class EmbeddedResourceProviderServiceTests
 {

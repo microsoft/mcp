@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added ARM MCP registry integration and exposed ARM MCP tools in Azure MCP so users can discover and invoke ARM-focused capabilities."

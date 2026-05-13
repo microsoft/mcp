@@ -1,53 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
 namespace Azure.Mcp.Tools.ManagedLustre.UnitTests.FileSystem.ImportJob;
 
-public class ImportJobDeleteCommandTests
+public class ImportJobDeleteCommandTests : CommandUnitTestsBase<ImportJobDeleteCommand, IManagedLustreService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IManagedLustreService _managedLustreService;
-    private readonly ILogger<ImportJobDeleteCommand> _logger;
-    private readonly ImportJobDeleteCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
     private const string Sub = "sub123";
     private const string Rg = "rg1";
     private const string Name = "amlfs-01";
     private const string JobName = "import-job-01";
 
-    public ImportJobDeleteCommandTests()
-    {
-        _managedLustreService = Substitute.For<IManagedLustreService>();
-        _logger = Substitute.For<ILogger<ImportJobDeleteCommand>>();
-        var services = new ServiceCollection().AddSingleton(_managedLustreService);
-        _serviceProvider = services.BuildServiceProvider();
-        _command = new(_managedLustreService, _logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("delete", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("delete", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Theory]
@@ -61,26 +38,21 @@ public class ImportJobDeleteCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _managedLustreService.DeleteImportJobAsync(
+            Service.DeleteImportJobAsync(
                 Arg.Is(Sub), Arg.Is(Rg), Arg.Is(Name), Arg.Is(JobName), Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
                 .Returns(Task.CompletedTask);
         }
 
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
-            Assert.NotNull(response.Results);
-            var json = JsonSerializer.Serialize(response.Results);
-            var result = JsonSerializer.Deserialize(json, ManagedLustreJsonContext.Default.ImportJobDeleteResult);
-            Assert.NotNull(result);
-            Assert.Equal(JobName, result!.JobName);
+            var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobDeleteResult);
+            Assert.Equal(JobName, result.JobName);
         }
         else
         {
@@ -92,16 +64,15 @@ public class ImportJobDeleteCommandTests
     public async Task ExecuteAsync_ValidInput_CallsServiceAndReturnsSuccess()
     {
         // Arrange
-        _managedLustreService.DeleteImportJobAsync(
+        Service.DeleteImportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         var args = $"--subscription {Sub} --resource-group {Rg} --filesystem-name {Name} --job-name {JobName}";
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -111,16 +82,15 @@ public class ImportJobDeleteCommandTests
     public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse()
     {
         // Arrange
-        _managedLustreService.DeleteImportJobAsync(
+        Service.DeleteImportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
         var args = $"--subscription {Sub} --resource-group {Rg} --filesystem-name {Name} --job-name {JobName}";
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -131,24 +101,20 @@ public class ImportJobDeleteCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        _managedLustreService.DeleteImportJobAsync(
+        Service.DeleteImportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
-        var parseResult = _commandDefinition.Parse([
-            "--subscription", Sub, "--resource-group", Rg, "--filesystem-name", Name, "--job-name", JobName]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", Sub,
+            "--resource-group", Rg,
+            "--filesystem-name", Name,
+            "--job-name", JobName);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ManagedLustreJsonContext.Default.ImportJobDeleteResult);
-        Assert.NotNull(result);
-        Assert.Equal(JobName, result!.JobName);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobDeleteResult);
+        Assert.Equal(JobName, result.JobName);
     }
 }

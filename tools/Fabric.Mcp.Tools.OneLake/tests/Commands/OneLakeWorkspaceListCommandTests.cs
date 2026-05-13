@@ -3,61 +3,28 @@
 
 using Fabric.Mcp.Tools.OneLake.Commands.Workspace;
 using Fabric.Mcp.Tools.OneLake.Services;
-using Microsoft.Extensions.Logging;
-using NSubstitute;
+using Microsoft.Mcp.Tests.Client;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
-public class OneLakeWorkspaceListCommandTests
+public class OneLakeWorkspaceListCommandTests : CommandUnitTestsBase<OneLakeWorkspaceListCommand, IOneLakeService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeWorkspaceListCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-
-        // Act
-        var command = new OneLakeWorkspaceListCommand(logger, oneLakeService);
-
-        // Assert
-        Assert.Equal("list_workspaces", command.Name);
-        Assert.Equal("List OneLake Workspaces", command.Title);
-        Assert.Contains("Lists all Fabric workspaces accessible via OneLake", command.Description);
-        Assert.True(command.Metadata.ReadOnly);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.Idempotent);
+        Assert.Equal("list_workspaces", Command.Name);
+        Assert.Equal("List OneLake Workspaces", Command.Title);
+        Assert.Contains("Lists all Fabric workspaces accessible via OneLake", Command.Description);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.Idempotent);
     }
 
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeWorkspaceListCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new OneLakeWorkspaceListCommand(logger, oneLakeService);
-
-        // Act
-        var systemCommand = command.GetCommand();
-
-        // Assert
-        Assert.NotNull(systemCommand);
-        Assert.Equal("list_workspaces", systemCommand.Name);
-        Assert.NotNull(systemCommand.Description);
-    }
-
-    [Fact]
-    public void CommandOptions_ContainsFormatOption()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeWorkspaceListCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new OneLakeWorkspaceListCommand(logger, oneLakeService);
-
-        // Act
-        var systemCommand = command.GetCommand();
-
-        // Assert - Just verify we have some options
-        Assert.NotEmpty(systemCommand.Options);
+        Assert.Equal("list_workspaces", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Options);
     }
 }

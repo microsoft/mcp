@@ -2,61 +2,33 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Server;
 using Azure.Mcp.Tools.MySql.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.MySql.UnitTests.Server;
 
-public class ServerParamSetCommandTests
+public class ServerParamSetCommandTests : CommandUnitTestsBase<ServerParamSetCommand, IMySqlService>
 {
-
-    private readonly IMySqlService _mysqlService;
-    private readonly ILogger<ServerParamSetCommand> _logger;
-
-    public ServerParamSetCommandTests()
-    {
-        _mysqlService = Substitute.For<IMySqlService>();
-        _logger = Substitute.For<ILogger<ServerParamSetCommand>>();
-
-
-
-    }
-
     [Fact]
     public async Task ExecuteAsync_SetsParameter_WhenSuccessful()
     {
         var newValue = "100";
-        _mysqlService.SetServerParameterAsync("sub123", "rg1", "user1", "test-server", "max_connections", newValue, Arg.Any<CancellationToken>()).Returns(newValue);
+        Service.SetServerParameterAsync("sub123", "rg1", "user1", "test-server", "max_connections", newValue, Arg.Any<CancellationToken>()).Returns(newValue);
 
-        var command = new ServerParamSetCommand(_logger, _mysqlService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
             "--server", "test-server",
             "--param", "max_connections",
-            "--value", newValue
-        ]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
+            "--value", newValue);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.ServerParamSetCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, MySqlJsonContext.Default.ServerParamSetCommandResult);
         Assert.Equal("max_connections", result.Parameter);
         Assert.Equal(newValue, result.Value);
     }
@@ -64,21 +36,16 @@ public class ServerParamSetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenServiceThrows()
     {
-        _mysqlService.SetServerParameterAsync("sub123", "rg1", "user1", "test-server", "invalid_param", "100", Arg.Any<CancellationToken>())
+        Service.SetServerParameterAsync("sub123", "rg1", "user1", "test-server", "invalid_param", "100", Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Parameter 'invalid_param' not found."));
 
-        var command = new ServerParamSetCommand(_logger, _mysqlService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
             "--server", "test-server",
             "--param", "invalid_param",
-            "--value", "100"
-        ]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--value", "100");
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -88,9 +55,7 @@ public class ServerParamSetCommandTests
     [Fact]
     public void Metadata_IsConfiguredCorrectly()
     {
-        var command = new ServerParamSetCommand(_logger, _mysqlService);
-
-        Assert.True(command.Metadata.Destructive);
-        Assert.False(command.Metadata.ReadOnly);
+        Assert.True(Command.Metadata.Destructive);
+        Assert.False(Command.Metadata.ReadOnly);
     }
 }

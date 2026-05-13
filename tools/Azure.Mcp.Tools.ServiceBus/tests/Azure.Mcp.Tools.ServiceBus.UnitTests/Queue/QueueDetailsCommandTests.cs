@@ -1,48 +1,26 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.ServiceBus.Commands;
 using Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Services;
 using Azure.Messaging.ServiceBus;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ServiceBus.UnitTests.Queue;
 
-public class QueueDetailsCommandTests
+public class QueueDetailsCommandTests : CommandUnitTestsBase<QueueDetailsCommand, IServiceBusService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IServiceBusService _serviceBusService;
-    private readonly ILogger<QueueDetailsCommand> _logger;
-    private readonly QueueDetailsCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
     // Test constants
     private const string SubscriptionId = "sub123";
     private const string QueueName = "testQueue";
     private const string NamespaceName = "test.servicebus.windows.net";
-
-    public QueueDetailsCommandTests()
-    {
-        _serviceBusService = Substitute.For<IServiceBusService>();
-        _logger = Substitute.For<ILogger<QueueDetailsCommand>>();
-
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-        _command = new(_logger, _serviceBusService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsQueueDetails()
@@ -61,27 +39,23 @@ public class QueueDetailsCommandTests
             ScheduledMessageCount = 0
         };
 
-        _serviceBusService.GetQueueDetails(
+        Service.GetQueueDetails(
             Arg.Is(NamespaceName),
             Arg.Is(QueueName),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>()
-        ).Returns(expectedDetails);
-
-        var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--queue", QueueName]);
+            Arg.Any<CancellationToken>())
+            .Returns(expectedDetails);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", SubscriptionId,
+            "--namespace", NamespaceName,
+            "--queue", QueueName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ServiceBusJsonContext.Default.QueueDetailsCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ServiceBusJsonContext.Default.QueueDetailsCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(QueueName, result.QueueDetails.Name);
         Assert.Equal(expectedDetails.Status, result.QueueDetails.Status);
         Assert.Equal(expectedDetails.ActiveMessageCount, result.QueueDetails.ActiveMessageCount);
@@ -93,18 +67,19 @@ public class QueueDetailsCommandTests
         // Arrange
         var serviceBusException = new ServiceBusException("Queue not found", ServiceBusFailureReason.MessagingEntityNotFound);
 
-        _serviceBusService.GetQueueDetails(
+        Service.GetQueueDetails(
             Arg.Is(NamespaceName),
             Arg.Is(QueueName),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>()
-        ).ThrowsAsync(serviceBusException);
-
-        var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--queue", QueueName]);
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(serviceBusException);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", SubscriptionId,
+            "--namespace", NamespaceName,
+            "--queue", QueueName);
 
         // Assert
         Assert.NotNull(response);
@@ -118,18 +93,19 @@ public class QueueDetailsCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _serviceBusService.GetQueueDetails(
+        Service.GetQueueDetails(
             Arg.Is(NamespaceName),
             Arg.Is(QueueName),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>()
-        ).ThrowsAsync(new Exception(expectedError));
-
-        var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--queue", QueueName]);
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception(expectedError));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", SubscriptionId,
+            "--namespace", NamespaceName,
+            "--queue", QueueName);
 
         // Assert
         Assert.NotNull(response);
@@ -155,19 +131,17 @@ public class QueueDetailsCommandTests
                 ActiveMessageCount = 5
             };
 
-            _serviceBusService.GetQueueDetails(
+            Service.GetQueueDetails(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+                Arg.Any<CancellationToken>())
                 .Returns(expectedDetails);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)

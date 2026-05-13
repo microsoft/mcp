@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -189,13 +190,13 @@ public class ServerToolLoaderTests
         var storageTool = new Tool()
         {
             Name = "storage",
-            Meta = new([new("LocalRequiredHint", true)])
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, true)]
         };
         var storageClientTool = new McpClientTool(Substitute.For<McpClient>(), storageTool);
         var keyvaultTool = new Tool()
         {
             Name = "keyvault",
-            Meta = new([new("LocalRequiredHint", false)])
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, false)]
         };
         var keyvaultClientTool = new McpClientTool(Substitute.For<McpClient>(), keyvaultTool);
         var mcpClient = Substitute.For<McpClient>();
@@ -207,13 +208,13 @@ public class ServerToolLoaderTests
                         new JsonObject([
                             new("name", "storage"),
                             new("meta", new JsonObject([
-                                new("LocalRequiredHint", true)
+                                new(McpHelper.LocalRequiredHintMetaKey, true)
                             ]))
                         ]),
                         new JsonObject([
                             new("name", "keyvault"),
                             new("meta", new JsonObject([
-                                new("LocalRequiredHint", false)
+                                new(McpHelper.LocalRequiredHintMetaKey, false)
                             ]))
                         ])
                     ]))
@@ -235,12 +236,8 @@ public class ServerToolLoaderTests
         Assert.NotEmpty(tools);
         Assert.All(tools, tool =>
         {
-            var meta = tool.Meta;
-            if (meta != null && meta.TryGetPropertyValue("LocalRequiredHint", out var localRequiredHint))
-            {
-                Assert.False(localRequiredHint?.GetValue<bool>(),
-                    $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
-            }
+            Assert.False(McpHelper.HasHint(tool, McpHelper.LocalRequiredHintMetaKey),
+                $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
         });
     }
 
@@ -384,7 +381,7 @@ public class ServerToolLoaderTests
             Description = "Local-only command",
             InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
             Annotations = new ToolAnnotations(),
-            Meta = new JsonObject { ["LocalRequiredHint"] = true }
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, true)]
         };
 
         var remoteTool = new Tool
@@ -393,7 +390,7 @@ public class ServerToolLoaderTests
             Description = "Remote-safe command",
             InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
             Annotations = new ToolAnnotations(),
-            Meta = new JsonObject { ["LocalRequiredHint"] = false }
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, false)]
         };
 
         var localToolExecuted = false;
@@ -432,7 +429,7 @@ public class ServerToolLoaderTests
             Description = "Local-only command",
             InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
             Annotations = new ToolAnnotations(),
-            Meta = new JsonObject { ["LocalRequiredHint"] = true }
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, true)]
         };
 
         var remoteTool = new Tool
@@ -441,7 +438,7 @@ public class ServerToolLoaderTests
             Description = "Remote-safe command",
             InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
             Annotations = new ToolAnnotations(),
-            Meta = new JsonObject { ["LocalRequiredHint"] = false }
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, false)]
         };
 
         var clientBuilder = new MockMcpClientBuilder()

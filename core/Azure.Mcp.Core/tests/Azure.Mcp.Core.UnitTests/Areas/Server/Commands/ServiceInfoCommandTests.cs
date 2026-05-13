@@ -1,34 +1,20 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Configuration;
-using Microsoft.Mcp.Core.Models.Command;
-using NSubstitute;
+using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands;
 
-public class ServiceInfoCommandTests
+public class ServiceInfoCommandTests : CommandUnitTestsBase<ServiceInfoCommand, object>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<ServiceInfoCommand> _logger;
     private readonly McpServerConfiguration _mcpServerConfiguration;
-    private readonly CommandContext _context;
-    private readonly ServiceInfoCommand _command;
-    private readonly Command _commandDefinition;
 
     public ServiceInfoCommandTests()
     {
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _context = new(_serviceProvider);
-        _logger = Substitute.For<ILogger<ServiceInfoCommand>>();
         _mcpServerConfiguration = new McpServerConfiguration
         {
             Name = "Test-Name?",
@@ -36,24 +22,17 @@ public class ServiceInfoCommandTests
             DisplayName = "Test Display",
             RootCommandGroupName = "azmcp"
         };
-        _command = new(Microsoft.Extensions.Options.Options.Create(_mcpServerConfiguration), _logger);
-        _commandDefinition = _command.GetCommand();
+        Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(_mcpServerConfiguration));
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsCorrectProperties()
     {
-        var args = _commandDefinition.Parse([]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync([]);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ServiceInfoJsonContext.Default.ServiceInfoCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ServiceInfoJsonContext.Default.ServiceInfoCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(_mcpServerConfiguration.Name, result.Name);
         Assert.Equal(_mcpServerConfiguration.Version, result.Version);
     }

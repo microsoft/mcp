@@ -12,29 +12,21 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Deploy.Commands.App;
 
+[CommandMetadata(
+    Id = "ce9d648d-7c76-48a0-8cba-b9b57c6fd00b",
+    Name = "get",
+    Title = "Get AZD deployed App Logs",
+    Description = "Shows application logs for Azure Developer CLI (azd) deployed applications from their associated Log Analytics workspace. Supports Container Apps, App Services, and Function Apps deployed via 'azd up'. Requires local workspace access to read the azure.yaml project file. Automatically discovers the correct Log Analytics workspace and resources based on azd environment configuration. Returns console log entries for checking deployment status or troubleshooting post-deployment issues.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = true)]
 public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger, IDeployService deployService) : SubscriptionCommand<LogsGetOptions>()
 {
-    private const string CommandTitle = "Get AZD deployed App Logs";
     private readonly ILogger<LogsGetCommand> _logger = logger;
     private readonly IDeployService _deployService = deployService;
-    public override string Id => "ce9d648d-7c76-48a0-8cba-b9b57c6fd00b";
-
-    public override string Name => "get";
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    public override string Description =>
-        """
-        Shows application logs specifically for Azure Developer CLI (azd) deployed applications from their associated Log Analytics workspace for Container Apps, App Services, and Function Apps. Designed exclusively for applications deployed via 'azd up' command and automatically discovers the correct workspace and resources based on the azd environment configuration. Use this tool to check deployment status or troubleshoot post-deployment issues.
-        """;
 
     protected override void RegisterOptions(Command command)
     {

@@ -14,36 +14,31 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
-public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
-    : BaseComputeCommand<VmssCreateOptions>(true)
-{
-    private const string CommandTitle = "Create Virtual Machine Scale Set";
-    private readonly ILogger<VmssCreateCommand> _logger = logger;
-
-    public override string Id => "c46a4bc5-cba6-4d99-991b-a9109fc689ad";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "c46a4bc5-cba6-4d99-991b-a9109fc689ad",
+    Name = "create",
+    Title = "Create Virtual Machine Scale Set",
+    Description = """
         Create, deploy, or provision an Azure Virtual Machine Scale Set (VMSS) for running multiple identical VM instances.
         Use this to deploy workloads that need horizontal scaling, load balancing, or high availability across instances.
-        Equivalent to 'az vmss create'. Defaults to 2 instances, Standard_DS1_v2 size, and Ubuntu 24.04 LTS.
+        Equivalent to 'az vmss create'. Defaults to 2 instances and Standard_D2s_v5 size when not specified.
+        The --image option is required and has no default; if the user does not specify an image, ask them which image to use
+        (an alias such as 'Ubuntu2404' or 'Win2022Datacenter', a marketplace URN like 'publisher:offer:sku:version',
+        or a shared gallery image ID starting with '/sharedGalleries/').
         For Linux VMSS with SSH, read the user's public key file (e.g., ~/.ssh/id_rsa.pub) and pass its content.
         Do not use this for creating a single standalone VM (use VM create instead).
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = true
-    };
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = true,
+    LocalRequired = false)]
+public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComputeService computeService)
+    : BaseComputeCommand<VmssCreateOptions>(true)
+{
+    private readonly ILogger<VmssCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override void RegisterOptions(Command command)
     {
@@ -58,9 +53,11 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
         command.Options.Add(ComputeOptionDefinitions.AdminPassword);
         command.Options.Add(ComputeOptionDefinitions.SshPublicKey);
 
+        // Image is required and has no default
+        command.Options.Add(ComputeOptionDefinitions.Image.AsRequired());
+
         // Optional configuration
         command.Options.Add(ComputeOptionDefinitions.VmSize);
-        command.Options.Add(ComputeOptionDefinitions.Image);
         command.Options.Add(ComputeOptionDefinitions.OsType);
 
         // VMSS-specific options
@@ -143,13 +140,11 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var result = await computeService.CreateVmssAsync(
+            var result = await _computeService.CreateVmssAsync(
                 options.VmssName!,
                 options.ResourceGroup!,
                 options.Subscription!,

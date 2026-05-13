@@ -52,10 +52,10 @@ public class SttRecognizeCommandTests : IDisposable
         // Create real SpeechService with mocked dependencies
         _speechService = new SpeechService(_tenantService, _speechServiceLogger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
 
-        var collection = new ServiceCollection().AddSingleton(_speechService);
+        var collection = new ServiceCollection();
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _speechService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
@@ -178,7 +178,7 @@ public class SttRecognizeCommandTests : IDisposable
     [Fact]
     public void Constructor_WithValidLogger_ShouldCreateInstance()
     {
-        var command = new SttRecognizeCommand(_logger);
+        var command = new SttRecognizeCommand(_logger, _speechService);
         Assert.NotNull(command);
         Assert.Equal("recognize", command.Name);
     }

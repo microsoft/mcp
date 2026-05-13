@@ -3,47 +3,22 @@
 
 using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Extension.Commands;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Extension.UnitTests;
 
-public sealed class CliGenerateCommandTests
+public sealed class CliGenerateCommandTests : CommandUnitTestsBase<CliGenerateCommand, ICliGenerateService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ICliGenerateService _cliGenerateService;
-    private readonly ILogger<CliGenerateCommand> _logger;
-    private readonly CliGenerateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public CliGenerateCommandTests()
-    {
-        _httpClientFactory = Substitute.For<IHttpClientFactory>();
-        _cliGenerateService = Substitute.For<ICliGenerateService>();
-        _logger = Substitute.For<ILogger<CliGenerateCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_httpClientFactory);
-        collection.AddSingleton(_cliGenerateService);
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _cliGenerateService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("generate", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -60,18 +35,15 @@ public sealed class CliGenerateCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _cliGenerateService.GenerateAzureCLICommandAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            Service.GenerateAzureCLICommandAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+                .Returns(new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent("Command")
-                }));
+                });
         }
 
-        // Build args from a single string in tests using the test-only splitter
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal([shouldSucceed ? 200 : 400], [(int)response.Status]);
@@ -90,25 +62,18 @@ public sealed class CliGenerateCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        _cliGenerateService.GenerateAzureCLICommandAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        Service.GenerateAzureCLICommandAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent("Command")
-            }));
-
-        var parseResult = _commandDefinition.Parse("--intent mock_intent --cli-type az");
+            });
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--intent", "mock_intent", "--cli-type", "az");
 
         // Assert
-        Assert.Equal([200], [(int)response.Status]);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ExtensionJsonContext.Default.CliGenerateResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ExtensionJsonContext.Default.CliGenerateResult);
-
-        Assert.NotNull(result);
         Assert.Equal("az", result.CliType);
         Assert.Equal("Command", result.Command);
     }
@@ -117,12 +82,10 @@ public sealed class CliGenerateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _cliGenerateService.GenerateAzureCLICommandAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).ThrowsAsync(new Exception("Test error"));
-
-        var parseResult = _commandDefinition.Parse("--intent mock_intent --cli-type az");
+        Service.GenerateAzureCLICommandAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--intent", "mock_intent", "--cli-type", "az");
 
         // Assert
         Assert.Equal([500], [(int)response.Status]);

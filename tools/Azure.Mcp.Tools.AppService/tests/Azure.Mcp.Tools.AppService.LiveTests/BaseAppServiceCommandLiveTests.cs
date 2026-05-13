@@ -27,4 +27,15 @@ public abstract class BaseAppServiceCommandLiveTests(ITestOutputHelper output, T
         new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.possibleOutboundIpv6Addresses")),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.homeStamp")),
     ];
+
+    // Sanitize resource group name in response bodies (complements the URI sanitizer in base class)
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
+    [
+        ..base.BodyRegexSanitizers,
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody()
+        {
+            Regex = Settings.ResourceGroupName,
+            Value = "Sanitized"
+        }),
+    ];
 }

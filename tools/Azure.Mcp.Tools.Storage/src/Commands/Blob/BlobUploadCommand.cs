@@ -11,33 +11,24 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob;
 
-public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorageService storageService) : BaseBlobCommand<BlobUploadOptions>
-{
-    private const string CommandTitle = "Upload Local File to Blob";
-    private readonly ILogger<BlobUploadCommand> _logger = logger;
-    private readonly IStorageService _storageService = storageService;
-
-    public override string Id => "aafb82ac-e35a-4800-b362-c642a3ac1e17";
-
-    public override string Name => "upload";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "aafb82ac-e35a-4800-b362-c642a3ac1e17",
+    Name = "upload",
+    Title = "Upload Local File to Blob",
+    Description = """
         Uploads a local file to an Azure Storage blob, only if the blob does not exist, returning the last modified time,
         ETag, and content hash of the uploaded blob.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = true,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = true)]
+public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorageService storageService) : BaseBlobCommand<BlobUploadOptions>
+{
+    private readonly ILogger<BlobUploadCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     protected override void RegisterOptions(Command command)
     {

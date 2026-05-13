@@ -11,27 +11,23 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
 
+[CommandMetadata(
+    Id = "173cfc00-7c12-486d-a0e7-c0d4c1de23fd",
+    Name = "list_table_namespaces",
+    Title = "List OneLake Table Namespaces",
+    Description = "Lists table namespaces in OneLake. Use this when the user needs to discover available table namespaces.",
+    Destructive = false,
+    Idempotent = true,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false)]
 public sealed class TableNamespaceListCommand(
     ILogger<TableNamespaceListCommand> logger,
     IOneLakeService oneLakeService) : GlobalCommand<TableNamespaceListOptions>()
 {
     private readonly ILogger<TableNamespaceListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "173cfc00-7c12-486d-a0e7-c0d4c1de23fd";
-    public override string Name => "list_table_namespaces";
-    public override string Title => "List OneLake Table Namespaces";
-    public override string Description => "Lists table namespaces in OneLake. Use this when the user needs to discover available table namespaces.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

@@ -12,32 +12,22 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 
+[CommandMetadata(
+    Id = "716a33e5-755c-4168-87ed-8a4651476c6e",
+    Name = "list",
+    Title = "List Event Grid Subscriptions",
+    Description = "Show all available Event Grid subscriptions with optional topic filtering. This tool displays active event subscriptions including webhook endpoints, event filters, and delivery retry policies. Use this when you need to show, list, or get Event Grid subscriptions for topics. Requires either topic name OR subscription. If only topic is provided, searches all accessible subscriptions for a topic with that name. Resource group and location filters can be applied, but only when used with a subscription or topic.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger, IEventGridService eventGridService, ISubscriptionService subscriptionService) : GlobalCommand<SubscriptionListOptions>
 {
-    private const string CommandTitle = "List Event Grid Subscriptions";
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
     private readonly IEventGridService _eventGridService = eventGridService;
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
-    public override string Id => "716a33e5-755c-4168-87ed-8a4651476c6e";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        Show all available Event Grid subscriptions with optional topic filtering. This tool displays active event subscriptions including webhook endpoints, event filters, and delivery retry policies. Use this when you need to show, list, or get Event Grid subscriptions for topics. Requires either topic name OR subscription. If only topic is provided, searches all accessible subscriptions for a topic with that name. Resource group and location filters can be applied, but only when used with a subscription or topic.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -97,6 +87,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             if (crossSubscriptionSearch)
             {
                 // Iterate all subscriptions and aggregate
+                // TODO (alzimmer): Listing all subscriptions should be done in the IEventGridService implementation.
                 var allSubs = await _subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
                 var aggregate = new List<EventGridSubscriptionInfo>();
                 foreach (var sub in allSubs)

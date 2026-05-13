@@ -35,12 +35,7 @@ public class SubscriptionListCommandTests : CommandUnitTestsBase<SubscriptionLis
         var result = await ExecuteCommandAsync();
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results);
-
-        var subscriptions = DeserializeResponse(result, SubscriptionJsonContext.Default.SubscriptionListCommandResult);
-        Assert.NotNull(subscriptions);
+        var subscriptions = ValidateAndDeserializeResponse(result, SubscriptionJsonContext.Default.SubscriptionListCommandResult);
         Assert.Equal(2, subscriptions.Subscriptions.Count);
 
         var first = subscriptions.Subscriptions[0];
@@ -190,12 +185,7 @@ public class SubscriptionListCommandTests : CommandUnitTestsBase<SubscriptionLis
         var result = await ExecuteCommandAsync();
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results);
-
-        var subscriptions = DeserializeResponse(result, SubscriptionJsonContext.Default.SubscriptionListCommandResult);
-        Assert.NotNull(subscriptions);
+        var subscriptions = ValidateAndDeserializeResponse(result, SubscriptionJsonContext.Default.SubscriptionListCommandResult);
         Assert.Equal(2, subscriptions.Subscriptions.Count);
 
         // No subscription should be marked as default

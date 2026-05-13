@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Core;
@@ -19,8 +19,8 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
 
     /// <summary>
     /// Resolves the DPP datasource profile from a user-supplied or auto-detected type string.
-    /// Handles auto-detection (e.g. "Microsoft.Storage/storageAccounts" → Blob profile)
-    /// and friendly name mapping (e.g. "aks" → AKS profile).
+    /// Handles auto-detection (e.g. "Microsoft.Storage/storageAccounts" -> Blob profile)
+    /// and friendly name mapping (e.g. "aks" -> AKS profile).
     /// </summary>
     internal static DppDatasourceProfile ResolveProfile(string datasourceTypeOrArm)
     {
@@ -64,7 +64,16 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             }
         };
 
-        var vaultData = new DataProtectionBackupVaultData(new AzureLocation(location), new DataProtectionBackupVaultProperties(storageSettings));
+        var vaultData = new DataProtectionBackupVaultData(new AzureLocation(location), new DataProtectionBackupVaultProperties(storageSettings))
+        {
+            // DPP (Backup Vault) requires a Managed Identity to authenticate to protected
+            // datasources (storage accounts, disks, PG Flex, etc.). Without it every
+            // 'protecteditem protect' call would fail server-side with VaultMSIUnauthorized.
+            // Default to SystemAssigned so the vault is usable out of the box; callers can
+            // change this later via 'vault update --identity-type ...'.
+            Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(
+                Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned)
+        };
 
         var result = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, vaultData, cancellationToken);
 
@@ -116,6 +125,9 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
     public async Task<ProtectResult> ProtectItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string policyName, string? datasourceType,
+        string? aksIncludedNamespaces, string? aksExcludedNamespaces,
+        string? aksLabelSelectors, string? aksIncludeClusterScopeResources,
+        string? aksSnapshotResourceGroup,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -132,9 +144,36 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var collection = vaultResource.GetDataProtectionBackupInstances();
 
         var policyId = DataProtectionBackupPolicyResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, policyName);
-        var datasourceResourceId = new ResourceIdentifier(datasourceId);
+        ResourceIdentifier datasourceResourceId;
+        try
+        {
+            datasourceResourceId = new ResourceIdentifier(datasourceId);
+        }
+        catch (Exception ex) when (ex is FormatException or ArgumentException or UriFormatException)
+        {
+            throw new ArgumentException(
+                $"Invalid datasource ID '{datasourceId}'. Expected a fully-qualified ARM resource ID " +
+                "(e.g., /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/disks/{name}).", ex);
+        }
 
-        var resolvedDatasourceType = datasourceType ?? datasourceResourceId.ResourceType.ToString();
+        string resolvedDatasourceType;
+        if (!string.IsNullOrEmpty(datasourceType))
+        {
+            resolvedDatasourceType = datasourceType;
+        }
+        else
+        {
+            try
+            {
+                resolvedDatasourceType = datasourceResourceId.ResourceType.ToString();
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(
+                    $"Could not determine datasource type from '{datasourceId}'. " +
+                    "The ARM resource ID may be malformed. Provide --datasource-type explicitly or fix the resource ID.", ex);
+            }
+        }
         var profile = ResolveProfile(resolvedDatasourceType);
 
         var instanceName = DppDatasourceRegistry.GenerateInstanceName(profile, datasourceResourceId);
@@ -143,7 +182,10 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
 
         if (profile.RequiresSnapshotResourceGroup)
         {
-            var snapshotRgId = ResourceGroupResource.CreateResourceIdentifier(subscription, datasourceResourceId.ResourceGroupName ?? resourceGroup);
+            var snapshotRg = !string.IsNullOrWhiteSpace(aksSnapshotResourceGroup)
+                ? aksSnapshotResourceGroup
+                : datasourceResourceId.ResourceGroupName ?? resourceGroup;
+            var snapshotRgId = ResourceGroupResource.CreateResourceIdentifier(subscription, snapshotRg);
             var opStoreSettings = new OperationalDataStoreSettings(DataStoreType.OperationalStore)
             {
                 ResourceGroupId = snapshotRgId,
@@ -155,9 +197,48 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         if (profile.BackupParametersMode == DppBackupParametersMode.KubernetesCluster)
         {
             policyInfo.PolicyParameters ??= new BackupInstancePolicySettings();
+
+            var includeClusterScope = string.IsNullOrWhiteSpace(aksIncludeClusterScopeResources)
+                || aksIncludeClusterScopeResources.Equals("true", StringComparison.OrdinalIgnoreCase);
+
             var aksSettings = new KubernetesClusterBackupDataSourceSettings(
                 isSnapshotVolumesEnabled: true,
-                isClusterScopeResourcesIncluded: true);
+                isClusterScopeResourcesIncluded: includeClusterScope);
+
+            // AKS namespace scoping (--aks-included-namespaces / --aks-excluded-namespaces):
+            // NOT YET FUNCTIONAL due to Azure SDK serialization bug.
+            //
+            // Problem: KubernetesClusterBackupDataSourceSettings (Azure.ResourceManager.DataProtectionBackup
+            // v1.7.1) initializes both IncludedNamespaces and ExcludedNamespaces as empty IList<string>.
+            // The serializer always emits both as [] even when only one is populated. The DPP API rejects
+            // with UserErrorInvalidIncludedExcludedNamespacesList: "Include and Exclude list for Namespaces
+            // cannot be used together."
+            //
+            // How the CLI works around this: az dataprotection backup-instance initialize-backupconfig
+            // outputs JSON with null for unused fields (e.g. "excluded_namespaces": null). The CLI never
+            // uses the .NET SDK type for serialization — it constructs the JSON directly.
+            //
+            // Workarounds attempted and why they failed:
+            //   1. Clear() on unused list → still serializes as []
+            //   2. Reflection to null backing field → NullReferenceException in JsonModelWriteCore
+            //   3. ModelReaderWriter.Read from JSON with null → re-initializes empty list on deserialize
+            //
+            // Fix required: Azure REST API specs (Azure/azure-rest-api-specs) should add x-nullable: true
+            // to includedNamespaces and excludedNamespaces in KubernetesClusterBackupDatasourceParameters.
+            // This would generate nullable IList<string>? properties that the serializer can omit when null.
+            // Path: specification/dataprotection/resource-manager/Microsoft.DataProtection/stable/2023-11-01/dataprotection.json
+            //
+            // What works: --aks-label-selectors, --aks-include-cluster-scope-resources, --aks-snapshot-resource-group
+            // What doesn't: --aks-included-namespaces, --aks-excluded-namespaces (params accepted but ignored)
+
+            if (!string.IsNullOrWhiteSpace(aksLabelSelectors))
+            {
+                foreach (var label in aksLabelSelectors.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    aksSettings.LabelSelectors.Add(label);
+                }
+            }
+
             policyInfo.PolicyParameters.BackupDataSourceParametersList.Add(aksSettings);
         }
 
@@ -197,15 +278,55 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             Properties = instanceProperties
         };
 
-        var result = await collection.CreateOrUpdateAsync(WaitUntil.Started, instanceName, instanceData, cancellationToken);
+        // DPP protection is asynchronous on the server side and is NOT surfaced as a
+        // backup job (only on-demand backup, restore, etc. are jobs). MCP must therefore
+        // wait for the underlying operationStatus to reach a terminal state and then read
+        // back the BackupInstance to confirm the protection actually configured. Using
+        // WaitUntil.Completed lets the SDK poll the Azure-AsyncOperation header for us
+        // and surface the real server-side error (e.g. VaultMSIUnauthorized) as a
+        // RequestFailedException, instead of silently returning "Accepted".
+        ArmOperation<DataProtectionBackupInstanceResource> operation;
+        try
+        {
+            operation = await collection.CreateOrUpdateAsync(
+                WaitUntil.Completed, instanceName, instanceData, cancellationToken);
+        }
+        catch (RequestFailedException ex)
+        {
+            return new ProtectResult(
+                "Failed",
+                instanceName,
+                JobId: null,
+                $"Protection failed for backup instance '{instanceName}': {ex.Message}",
+                ProtectionStatus: null,
+                ErrorMessage: ex.Message);
+        }
 
-        var jobId = ExtractJobIdFromOperation(result.GetRawResponse());
+        // Re-read the backup instance to capture the authoritative protection status.
+        // The LRO can complete while the BI is still in ConfiguringProtection; both
+        // outcomes are surfaced to the caller via ProtectionStatus. If the re-read
+        // fails with a transient error, report success (protection did complete) and
+        // let the caller verify with 'protecteditem get'.
+        string? protectionStatus = null;
+        try
+        {
+            var instanceResource = armClient.GetDataProtectionBackupInstanceResource(operation.Value.Id);
+            var bi = await instanceResource.GetAsync(cancellationToken);
+            protectionStatus = bi.Value.Data.Properties?.ProtectionStatus?.Status?.ToString();
+        }
+        catch (RequestFailedException)
+        {
+            // Transient re-read failure; protection itself succeeded.
+        }
 
         return new ProtectResult(
-            "Accepted",
+            "Succeeded",
             instanceName,
-            jobId,
-            jobId != null ? $"Protection initiated. Use 'azurebackup job get --job {jobId}' to monitor progress." : "Protection initiated.");
+            JobId: null,
+            $"Protection configured for backup instance '{instanceName}' (status: {protectionStatus ?? "Unknown"}). " +
+            $"Use 'azurebackup protecteditem get --protected-item {instanceName}' to view details.",
+            ProtectionStatus: protectionStatus,
+            ErrorMessage: null);
     }
 
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(
@@ -231,13 +352,13 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
         {
-            // Direct lookup failed — search by friendly/datasource name
+            // Direct lookup failed  -  search by friendly/datasource name
         }
 
         // Fall back to listing all items and searching by friendly name
         var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
         var found = items.FirstOrDefault(i =>
-            i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase) ||
+            (!string.IsNullOrEmpty(i.Name) && i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase)) ||
             MatchesDppFriendlyName(i, protectedItemName));
         return found ?? throw new KeyNotFoundException(
             $"Protected item '{protectedItemName}' not found in vault '{vaultName}'. " +
@@ -420,9 +541,32 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var collection = vaultResource.GetDataProtectionBackupJobs();
 
         var jobs = new List<BackupJobInfo>();
-        await foreach (var job in collection.GetAllAsync(cancellationToken))
+        var enumerator = collection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        try
         {
-            jobs.Add(MapToJobInfo(job.Data));
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    jobs.Add(MapToJobInfo(enumerator.Current.Data));
+                }
+                catch (FormatException)
+                {
+                    // The Azure SDK may throw FormatException when deserializing jobs with
+                    // non-standard ISO 8601 duration fields (XmlConvert.ToTimeSpan limitation).
+                    // Return the jobs collected so far rather than failing the entire list.
+                    break;
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
         }
 
         return jobs;
@@ -556,11 +700,15 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
     }
 
     public async Task<OperationResult> CreatePolicyAsync(
+        Policy.PolicyCreateRequest request,
         string vaultName, string resourceGroup, string subscription,
-        string policyName, string workloadType,
-        string? scheduleTime, string? dailyRetentionDays,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var policyName = request.Policy;
+        var workloadType = request.WorkloadType;
+
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
@@ -573,61 +721,20 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
         var collection = vaultResource.GetDataProtectionBackupPolicies();
 
-        var retentionDays = int.TryParse(dailyRetentionDays, out var dd) ? dd : 0;
-        var scheduleTimeValue = scheduleTime ?? "02:00";
-        var now = DateTimeOffset.UtcNow;
-        var scheduleParts = scheduleTimeValue.Split(':');
-        var scheduleHour = int.TryParse(scheduleParts[0], out var sh) ? sh : 2;
-        var scheduleMinute = scheduleParts.Length > 1 && int.TryParse(scheduleParts[1], out var sm) ? sm : 0;
-        var scheduleStartTime = new DateTimeOffset(now.Year, now.Month, now.Day, scheduleHour, scheduleMinute, 0, TimeSpan.Zero);
-
         var profile = DppDatasourceRegistry.Resolve(workloadType);
-        var dataStoreType = profile.UsesOperationalStore ? DataStoreType.OperationalStore : DataStoreType.VaultStore;
-
-        var defaultRetention = retentionDays > 0 ? retentionDays : profile.DefaultRetentionDays;
-
-        var retentionDeleteSetting = new DataProtectionBackupAbsoluteDeleteSetting(TimeSpan.FromDays(defaultRetention));
-        var retentionDataStore = new DataStoreInfoBase(dataStoreType, "DataStoreInfoBase");
-        var retentionLifeCycle = new SourceLifeCycle(retentionDeleteSetting, retentionDataStore);
-        var retentionRule = new DataProtectionRetentionRule("Default", [retentionLifeCycle])
-        {
-            IsDefault = true,
-        };
-
-        List<DataProtectionBasePolicyRule> rules = [retentionRule];
-
-        // Stage 2 TODO: Multi-tier retention
-        // When adding weekly/monthly/yearly retention support, add the parameters
-        // back to this method and create per-tier retention rules and tagging criteria.
-        // The weeklyRetentionWeeks/monthlyRetentionMonths/yearlyRetentionYears will be
-        // implemented with profile-driven templates.
-
-        if (!profile.IsContinuousBackup)
-        {
-            var repeatingInterval = $"R/{scheduleStartTime:yyyy-MM-ddTHH:mm:ss+00:00}/{profile.ScheduleInterval}";
-
-            var schedule = new DataProtectionBackupSchedule([repeatingInterval])
-            {
-                TimeZone = "UTC",
-            };
-            var defaultTag = new DataProtectionBackupRetentionTag("Default");
-            var taggingCriteria = new DataProtectionBackupTaggingCriteria(true, 99, defaultTag);
-            var triggerContext = new ScheduleBasedBackupTriggerContext(schedule, [taggingCriteria]);
-            var backupDataStore = new DataStoreInfoBase(dataStoreType, "DataStoreInfoBase");
-            var backupRule = new DataProtectionBackupRule(profile.BackupRuleName, backupDataStore, triggerContext)
-            {
-                BackupParameters = new DataProtectionBackupSettings(profile.BackupType),
-            };
-
-            rules.Add(backupRule);
-        }
-
-        var policyProperties = new RuleBasedBackupPolicy(
-            [profile.ArmResourceType],
-            rules);
+        var policyProperties = Policy.DppPolicyBuilder.Build(request, profile);
         var policyData = new DataProtectionBackupPolicyData { Properties = policyProperties };
 
-        await collection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
+        try
+        {
+            await collection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 400 && ex.ErrorCode == "UserErrorBMSUpdatePolicyNotSupported")
+        {
+            // DPP does not support updating an existing policy via CreateOrUpdate.
+            // If the policy already exists, treat it as success (idempotent create).
+            return new OperationResult("Succeeded", null, $"Policy '{policyName}' already exists in vault '{vaultName}'.");
+        }
 
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' created in vault '{vaultName}'.");
     }
@@ -644,6 +751,15 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+
+        // Pre-check current state. Re-enabling an already-enabled CRR returns a generic
+        // CloudInternalError on the DPP backend, which is indistinguishable from a real
+        // platform failure - so we avoid the call entirely when CRR is already enabled.
+        var vault = await vaultResource.GetAsync(cancellationToken);
+        if (vault.Value.Data.Properties?.FeatureSettings?.CrossRegionRestoreState == CrossRegionRestoreState.Enabled)
+        {
+            return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
+        }
 
         var patchData = new DataProtectionBackupVaultPatch
         {
@@ -740,6 +856,60 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
 
         return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'.");
     }
+
+    public async Task<OperationResult> ConfigureMultiUserAuthorizationAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string resourceGuardId, string? tenant, RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(resourceGuardId), resourceGuardId));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+        var proxyCollection = vaultResource.GetResourceGuardProxyBaseResources();
+
+        var proxyData = new ResourceGuardProxyBaseResourceData
+        {
+            Properties = new ResourceGuardProxyBase
+            {
+                ResourceGuardResourceId = resourceGuardId
+            }
+        };
+
+        await proxyCollection.CreateOrUpdateAsync(
+            WaitUntil.Completed,
+            "DppResourceGuardProxy",
+            proxyData,
+            cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Multi-User Authorization enabled on vault '{vaultName}' with Resource Guard '{resourceGuardId}'.");
+    }
+
+    public async Task<OperationResult> DisableMultiUserAuthorizationAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? tenant, RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+
+        var proxyResponse = await vaultResource.GetResourceGuardProxyBaseResourceAsync("DppResourceGuardProxy", cancellationToken);
+        await proxyResponse.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Multi-User Authorization disabled on vault '{vaultName}'.");
+    }
+
 
     private static BackupVaultInfo MapToVaultInfo(DataProtectionBackupVaultData data, string? resourceGroup)
     {

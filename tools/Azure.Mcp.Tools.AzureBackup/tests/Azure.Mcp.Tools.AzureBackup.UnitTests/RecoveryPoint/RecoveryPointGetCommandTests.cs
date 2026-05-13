@@ -2,50 +2,26 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.UnitTests.RecoveryPoint;
 
-public class RecoveryPointGetCommandTests
+public class RecoveryPointGetCommandTests : CommandUnitTestsBase<RecoveryPointGetCommand, IAzureBackupService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IAzureBackupService _backupService;
-    private readonly ILogger<RecoveryPointGetCommand> _logger;
-    private readonly RecoveryPointGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly System.CommandLine.Command _commandDefinition;
-
-    public RecoveryPointGetCommandTests()
-    {
-        _backupService = Substitute.For<IAzureBackupService>();
-        _logger = Substitute.For<ILogger<RecoveryPointGetCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_backupService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _backupService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("get", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("get", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Fact]
@@ -62,7 +38,7 @@ public class RecoveryPointGetCommandTests
             new("rp2", "rp2", "rsv", DateTimeOffset.UtcNow.AddDays(-2), "Incremental")
         };
 
-        _backupService.ListRecoveryPointsAsync(
+        Service.ListRecoveryPointsAsync(
             Arg.Is(vault),
             Arg.Is(resourceGroup),
             Arg.Is(subscription),
@@ -72,21 +48,18 @@ public class RecoveryPointGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedPoints));
-
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--vault", vault, "--resource-group", resourceGroup, "--protected-item", protectedItem]);
+            .Returns(expectedPoints);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--vault", vault,
+            "--resource-group", resourceGroup,
+            "--protected-item", protectedItem);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.RecoveryPointGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.RecoveryPointGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(2, result.RecoveryPoints.Count);
         Assert.Equal("rp1", result.RecoveryPoints[0].Name);
     }
@@ -100,9 +73,8 @@ public class RecoveryPointGetCommandTests
         var resourceGroup = "myRg";
         var protectedItem = "vm1";
         var rpId = "rp1";
-        var expectedRp = new RecoveryPointInfo("rp1", rpId, "rsv", DateTimeOffset.UtcNow.AddDays(-1), "Full");
 
-        _backupService.GetRecoveryPointAsync(
+        Service.GetRecoveryPointAsync(
             Arg.Is(vault),
             Arg.Is(resourceGroup),
             Arg.Is(subscription),
@@ -113,21 +85,19 @@ public class RecoveryPointGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedRp));
-
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--vault", vault, "--resource-group", resourceGroup, "--protected-item", protectedItem, "--recovery-point", rpId]);
+            .Returns(new RecoveryPointInfo("rp1", rpId, "rsv", DateTimeOffset.UtcNow.AddDays(-1), "Full"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--vault", vault,
+            "--resource-group", resourceGroup,
+            "--protected-item", protectedItem,
+            "--recovery-point", rpId);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.RecoveryPointGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.RecoveryPointGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.RecoveryPoints);
         Assert.Equal(rpId, result.RecoveryPoints[0].Name);
     }
@@ -136,22 +106,20 @@ public class RecoveryPointGetCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoRecoveryPointsExist()
     {
         // Arrange
-        _backupService.ListRecoveryPointsAsync(
+        Service.ListRecoveryPointsAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(new List<RecoveryPointInfo>()));
-
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg", "--protected-item", "item"]);
+            .Returns([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--protected-item", "item");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.RecoveryPointGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.RecoveryPointGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.RecoveryPoints);
     }
 
@@ -159,14 +127,16 @@ public class RecoveryPointGetCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
-        _backupService.ListRecoveryPointsAsync(
+        Service.ListRecoveryPointsAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg", "--protected-item", "item"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--protected-item", "item");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -177,14 +147,17 @@ public class RecoveryPointGetCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
-        _backupService.GetRecoveryPointAsync(
+        Service.GetRecoveryPointAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Is("nonexistent"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Recovery point not found"));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg", "--protected-item", "item", "--recovery-point", "nonexistent"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--protected-item", "item",
+            "--recovery-point", "nonexistent");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -199,19 +172,17 @@ public class RecoveryPointGetCommandTests
     {
         if (shouldSucceed)
         {
-            _backupService.ListRecoveryPointsAsync(
+            Service.ListRecoveryPointsAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(new List<RecoveryPointInfo>()));
+                .Returns([]);
 
-            _backupService.GetRecoveryPointAsync(
+            Service.GetRecoveryPointAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Is("rp1"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(new RecoveryPointInfo("rp1", "rp1", "rsv", DateTimeOffset.UtcNow, "Full")));
+                .Returns(new RecoveryPointInfo("rp1", "rp1", "rsv", DateTimeOffset.UtcNow, "Full"));
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -228,8 +199,7 @@ public class RecoveryPointGetCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange & Act
-        var command = _command.GetCommand();
-        var options = command.Options;
+        var options = CommandDefinition.Options;
 
         // Assert
         Assert.Contains(options, o => o.Name == "--subscription");

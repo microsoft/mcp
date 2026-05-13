@@ -1,47 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Tools.Deploy.Commands.Pipeline;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
-using NSubstitute;
+using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Deploy.UnitTests.Commands.Pipeline;
 
 
-public class GuidanceGetCommandTests
+public class GuidanceGetCommandTests : CommandUnitTestsBase<GuidanceGetCommand, object>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<GuidanceGetCommand> _logger;
-    private readonly Command _commandDefinition;
-    private readonly CommandContext _context;
-    private readonly GuidanceGetCommand _command;
-
-    public GuidanceGetCommandTests()
-    {
-        _logger = Substitute.For<ILogger<GuidanceGetCommand>>();
-
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-        _context = new(_serviceProvider);
-        _command = new(_logger);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public async Task Should_generate_pipeline()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
-            "--subscription", "test-subscription-id"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        // arrange & act
+        var result = await ExecuteCommandAsync("--subscription", "test-subscription-id");
 
         // assert
         Assert.NotNull(result);
@@ -56,16 +30,12 @@ public class GuidanceGetCommandTests
     [Fact]
     public async Task Should_generate_pipeline_with_github_actions()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
+        // arrange & act
+        var result = await ExecuteCommandAsync(
             "--subscription", "test-subscription-id",
             "--is-azd-project", "false",
             "--pipeline-platform", "github-actions",
-            "--deploy-option", "deploy-only",
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--deploy-option", "deploy-only");
 
         // assert
         Assert.NotNull(result);
@@ -80,16 +50,12 @@ public class GuidanceGetCommandTests
     [Fact]
     public async Task Should_generate_pipeline_with_azure_devops()
     {
-        // arrange - not providing is-azd-project should default to false
-        var args = _commandDefinition.Parse([
+        // arrange & act - not providing is-azd-project should default to false
+        var result = await ExecuteCommandAsync(
             "--subscription", "test-subscription-id",
             "--is-azd-project", "false",
             "--pipeline-platform", "azure-devops",
-            "--deploy-option", "deploy-only",
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--deploy-option", "deploy-only");
 
         // assert
         Assert.NotNull(result);
@@ -104,15 +70,11 @@ public class GuidanceGetCommandTests
     [Fact]
     public async Task Should_generate_pipeline_with_provision_and_deploy()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
+        // arrange & act
+        var result = await ExecuteCommandAsync(
             "--subscription", "test-subscription-id",
             "--is-azd-project", "false",
-            "--deploy-option", "provision-and-deploy",
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--deploy-option", "provision-and-deploy");
 
         // assert
         Assert.NotNull(result);

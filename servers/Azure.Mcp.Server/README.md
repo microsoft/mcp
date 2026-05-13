@@ -20,7 +20,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- remove-section: end remove_install_links -->
 ## Table of Contents
 - [Overview](#overview)
-- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm;pypi remove_installation_sub_sections -->
+- [Local Setup](#local-setup)<!-- remove-section: start nuget;vsix;npm;pypi remove_installation_sub_sections -->
     - [IDE](#ide)
         - [VS Code (Recommended)](#vs-code-recommended)
         - [Visual Studio 2026](#visual-studio-2026)
@@ -33,8 +33,8 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [NPM](#npm)
         - [PyPI](#pypi)
         - [Docker](#docker)
-        - [MCPB](#mcpb)
-    - [Remote MCP Server (preview)](#remote-mcp-server-preview)<!-- remove-section: end remove_installation_sub_sections -->
+        - [MCPB](#mcpb)<!-- remove-section: end remove_installation_sub_sections -->
+- [Remote Setup](#remote-setup)
 - [Usage](#usage)
     - [Getting Started](#getting-started)
     - [Sovereign Cloud Support](#sovereign-cloud-support)
@@ -57,7 +57,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 
 **Azure MCP Server** supercharges your agents with Azure context across **40+ different Azure services**.
 
-# Installation
+# Local Setup
 <!-- insert-section: vsix {{- Install the [Azure MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server)}} -->
 <!-- insert-section: vsix {{- Start (or Auto-Start) the MCP Server}} -->
 <!-- insert-section: vsix {{   > **VS Code (version 1.103 or above):** You can now configure MCP servers to start automatically using the `chat.mcp.autostart` setting, instead of manually restarting them after configuration changes.}} -->
@@ -838,14 +838,13 @@ class Program
 </details>
 
 <!-- remove-section: end remove_package_manager_section -->
-
-## Remote MCP Server (preview)
-
-Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To self-host the Azure MCP Server for use with these platforms, deploy it as a remote MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
-
-Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/README.md) for deployment options.
-
 <!-- remove-section: end remove_entire_installation_sub_section -->
+
+# Remote Setup
+
+Host the Azure MCP Server as a remote endpoint when your client requires HTTP-based MCP servers (for example, Microsoft Foundry and Microsoft Copilot Studio) or when you want to share a single deployment across users and environments. The server can be self-hosted on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
+
+See the remote hosting [azd templates](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/README.md) for deployment options.
 
 # Usage
 
@@ -952,12 +951,19 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Delete application setting 'LogLevel' from my 'my-webapp' in 'my-resource-group'"
 * "List the deployments for web app 'my-webapp' in 'my-resource-group'"
 * "Get the deployment 'deployment-id' for web app 'my-webapp' in 'my-resource-group'"
+* "List the diagnostic detectors for web app 'my-webapp' in 'my-resource-group'"
+* "Diagnose the web app 'my-webapp' with detector 'detector-name' in 'my-resource-group'"
+* "Start the web app 'my-webapp' in 'my-resource-group'"
+* "Stop the web app 'my-webapp' in 'my-resource-group'"
+* "Restart the web app 'my-webapp' in 'my-resource-group'"
+* "Soft restart the web app 'my-webapp' in 'my-resource-group' waiting for restart to complete"
 
 ### 🛡️ Azure Backup
 
 * "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus with vault-type 'rsv'"
 * "Get details of backup vault 'myvault' in resource group 'myRG'"
 * "Create a backup policy for Azure VMs in vault 'myvault'"
+* "Update backup policy schedule time to 04:00 in vault 'myvault'"
 * "List protectable items in my backup vault"
 * "Check backup status for my Azure resource in eastus"
 * "Get recovery points for a protected item"
@@ -1150,6 +1156,25 @@ Example prompts that generate Azure CLI commands:
 * "Turn off DDoS protection in my Platform Landing Zone"
 * "Turn off Bastion host in my Platform Landing Zone"
 
+### Azure Resource Manager
+
+* Use Azure resource graph to query Azure resources
+* Create, view and cancel ARM template deployments
+
+### Azure Terraform
+
+* "Get the documentation for azurerm_virtual_network"
+* "Show me the arguments for azurerm_storage_account"
+* "Get AzAPI documentation for Microsoft.Storage/storageAccounts"
+* "Get AzAPI docs for Microsoft.Compute/virtualMachines with API version 2024-07-01"
+* "List all available Azure Verified Modules"
+* "Show all versions of avm-res-network-virtualnetwork"
+* "Get the documentation for avm-res-storage-storageaccount version 0.1.0"
+* "Export all resources in resource group my-rg to Terraform"
+* "Export all storage accounts in my subscription using a resource graph query"
+* "Validate Terraform files in ./my-terraform-folder against Azure security policies"
+* "Validate my Terraform plan file against Azure-Proactive-Resiliency-Library-v2 policies"
+
 ### 🏛️ Azure Well-Architected Framework
 
 * "List all services with Well-Architected Framework guidance"
@@ -1207,6 +1232,7 @@ The Azure MCP Server provides tools for interacting with **43+ Azure service are
 - 💾 **Azure Storage** - Blob storage
 -  **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management
+- 🏗️ **Azure Terraform** - Terraform provider documentation, Azure Verified Modules, resource export, and policy validation
 - 🏗️ **Azure Terraform Best Practices** - Infrastructure as code guidance
 - 🖥️ **Azure Virtual Desktop** - Virtual desktop infrastructure
 - 🏛️ **Azure Well-Architected Framework** - Architectural best practices and design patterns

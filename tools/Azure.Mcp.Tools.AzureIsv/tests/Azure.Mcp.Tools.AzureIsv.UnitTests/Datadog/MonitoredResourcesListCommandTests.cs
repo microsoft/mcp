@@ -4,31 +4,15 @@
 using System.Net;
 using Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
 using Azure.Mcp.Tools.AzureIsv.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureIsv.UnitTests.Datadog;
 
-public class MonitoredResourcesListCommandTests
+public class MonitoredResourcesListCommandTests : CommandUnitTestsBase<MonitoredResourcesListCommand, IDatadogService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IDatadogService _datadogService;
-    private readonly ILogger<MonitoredResourcesListCommand> _logger;
-
-    public MonitoredResourcesListCommandTests()
-    {
-        _datadogService = Substitute.For<IDatadogService>();
-        _logger = Substitute.For<ILogger<MonitoredResourcesListCommand>>();
-
-        var collection = new ServiceCollection();
-
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     [Fact]
     public async Task ExecuteAsync_ReturnsResources_WhenResourcesExist()
     {
@@ -37,15 +21,14 @@ public class MonitoredResourcesListCommandTests
             "/subscriptions/1234/resourceGroups/rg-demo/providers/Microsoft.Datadog/monitors/app-demo-1",
             "/subscriptions/1234/resourceGroups/rg-demo/providers/Microsoft.Datadog/monitors/vm-demo-2"
         };
-        _datadogService.ListMonitoredResources(Arg.Is("rg1"), Arg.Is("sub123"), Arg.Is("datadog1"), Arg.Any<CancellationToken>())
+        Service.ListMonitoredResources(Arg.Is("rg1"), Arg.Is("sub123"), Arg.Is("datadog1"), Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
-        var command = new MonitoredResourcesListCommand(_logger, _datadogService);
-        var args = command.GetCommand().Parse($"--subscription sub123 --resource-group rg1 --datadog-resource datadog1");
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--datadog-resource", "datadog1");
 
         // Assert
         Assert.NotNull(response);
@@ -56,15 +39,14 @@ public class MonitoredResourcesListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoResources()
     {
         // Arrange
-        _datadogService.ListMonitoredResources("rg1", "sub123", "datadog1", Arg.Any<CancellationToken>())
+        Service.ListMonitoredResources("rg1", "sub123", "datadog1", Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var command = new MonitoredResourcesListCommand(_logger, _datadogService);
-        var args = command.GetCommand().Parse($"--subscription sub123 --resource-group rg1 --datadog-resource datadog1");
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--datadog-resource", "datadog1");
 
         // Assert
         Assert.NotNull(response);
@@ -75,15 +57,14 @@ public class MonitoredResourcesListCommandTests
     {
         // Arrange
         var expectedError = "Missing required arguments: datadog-resource";
-        _datadogService.ListMonitoredResources("rg1", "sub123", "datadog1", Arg.Any<CancellationToken>())
+        Service.ListMonitoredResources("rg1", "sub123", "datadog1", Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new MonitoredResourcesListCommand(_logger, _datadogService);
-        var args = command.GetCommand().Parse($"--subscription sub123 --resource-group rg1 --datadog-resource datadog1");
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--datadog-resource", "datadog1");
 
         // Assert
         Assert.NotNull(response);

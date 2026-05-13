@@ -10,18 +10,20 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands;
 
+[CommandMetadata(
+    Id = "77e60b50-5c16-4879-96b1-6a40d9c08a37",
+    Name = "list",
+    Title = "List MySQL Resources",
+    Description = "List MySQL servers, databases, or tables in your subscription. Returns all servers by default. Specify --server to list databases on that server, or --server and --database to list tables in a specific database.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlService mysqlService) : BaseMySqlCommand<MySqlDatabaseOptions>(logger)
 {
     private readonly IMySqlService _mysqlService = mysqlService;
-    public override string Id => "77e60b50-5c16-4879-96b1-6a40d9c08a37";
-
-    public override string Name => "list";
-
-    public override string Description => "List MySQL servers, databases, or tables in your subscription. Returns all servers by default. Specify --server to list databases on that server, or --server and --database to list tables in a specific database.";
-
-    public override string Title => "List MySQL Resources";
-
-    public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false };
 
     protected override void RegisterOptions(Command command)
     {

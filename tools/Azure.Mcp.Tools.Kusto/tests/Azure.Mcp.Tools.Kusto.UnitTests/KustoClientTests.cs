@@ -18,7 +18,7 @@ public sealed class KustoClientTests
     {
         _tokenCredential = Substitute.For<TokenCredential>();
         _tokenCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<AccessToken>(new AccessToken("noop-token", DateTimeOffset.UtcNow.AddHours(1))));
+            .Returns(new AccessToken("noop-token", DateTimeOffset.UtcNow.AddHours(1)));
 
         _httpClientFactory = Substitute.For<IHttpClientFactory>();
     }
@@ -29,7 +29,7 @@ public sealed class KustoClientTests
         // Arrange
         var tokenCredential = Substitute.For<TokenCredential>();
         tokenCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<AccessToken>(new AccessToken("noop-token", DateTimeOffset.UtcNow.AddHours(1))));
+            .Returns(new AccessToken("noop-token", DateTimeOffset.UtcNow.AddHours(1)));
 
         using var httpClient = new HttpClient(new MockHttpMessageHandler());
 

@@ -2,37 +2,20 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Commands.Knowledge;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.Mcp.Tools.Search.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Search.UnitTests.Knowledge;
 
-public class KnowledgeSourceGetCommandTests
+public class KnowledgeSourceGetCommandTests : CommandUnitTestsBase<KnowledgeSourceGetCommand, ISearchService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ISearchService _searchService;
-    private readonly ILogger<KnowledgeSourceGetCommand> _logger;
-
-    public KnowledgeSourceGetCommandTests()
-    {
-        _searchService = Substitute.For<ISearchService>();
-        _logger = Substitute.For<ILogger<KnowledgeSourceGetCommand>>();
-
-        var collection = new ServiceCollection();
-
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     [Fact]
     public async Task ExecuteAsync_ReturnsKnowledgeSources_WhenSourcesExist()
     {
@@ -42,26 +25,17 @@ public class KnowledgeSourceGetCommandTests
             new("source2", "IndexSource", "Second source")
         };
 
-        _searchService.ListKnowledgeSources(
+        Service.ListKnowledgeSources(
             Arg.Is("service123"),
             Arg.Is((string?)null),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedSources);
 
-        var command = new KnowledgeSourceGetCommand(_logger, _searchService);
+        var response = await ExecuteCommandAsync("--service", "service123");
 
-        var args = command.GetCommand().Parse("--service service123");
-        var context = new CommandContext(_serviceProvider);
+        var result = ValidateAndDeserializeResponse(response, SearchJsonContext.Default.KnowledgeSourceGetCommandResult);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, SearchJsonContext.Default.KnowledgeSourceGetCommandResult);
-        Assert.NotNull(result);
         Assert.Equal(expectedSources, result.KnowledgeSources);
     }
 
@@ -70,26 +44,17 @@ public class KnowledgeSourceGetCommandTests
     {
         var expectedSource = new KnowledgeSourceInfo("source1", "BlobSource", "First source");
 
-        _searchService.ListKnowledgeSources(
+        Service.ListKnowledgeSources(
             Arg.Is("service123"),
             Arg.Is("source1"),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([expectedSource]);
 
-        var command = new KnowledgeSourceGetCommand(_logger, _searchService);
+        var response = await ExecuteCommandAsync("--service", "service123", "--knowledge-source", "source1");
 
-        var args = command.GetCommand().Parse("--service service123 --knowledge-source source1");
-        var context = new CommandContext(_serviceProvider);
+        var result = ValidateAndDeserializeResponse(response, SearchJsonContext.Default.KnowledgeSourceGetCommandResult);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, SearchJsonContext.Default.KnowledgeSourceGetCommandResult);
-        Assert.NotNull(result);
         Assert.Single(result.KnowledgeSources);
         Assert.Equal(expectedSource, result.KnowledgeSources[0]);
     }
@@ -97,23 +62,16 @@ public class KnowledgeSourceGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoSources()
     {
-        _searchService.ListKnowledgeSources(
+        Service.ListKnowledgeSources(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>()).Returns([]);
 
-        var command = new KnowledgeSourceGetCommand(_logger, _searchService);
+        var response = await ExecuteCommandAsync("--service", "service123");
 
-        var args = command.GetCommand().Parse("--service service123");
-        var context = new CommandContext(_serviceProvider);
+        var result = ValidateAndDeserializeResponse(response, SearchJsonContext.Default.KnowledgeSourceGetCommandResult);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response?.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, SearchJsonContext.Default.KnowledgeSourceGetCommandResult);
-        Assert.NotNull(result);
         Assert.Empty(result.KnowledgeSources);
     }
 
@@ -123,19 +81,14 @@ public class KnowledgeSourceGetCommandTests
         var expectedError = "Test error";
         var serviceName = "service123";
 
-        _searchService.ListKnowledgeSources(
+        Service.ListKnowledgeSources(
             Arg.Is(serviceName),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new KnowledgeSourceGetCommand(_logger, _searchService);
-
-        var args = command.GetCommand().Parse($"--service {serviceName}");
-        var context = new CommandContext(_serviceProvider);
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--service", serviceName);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

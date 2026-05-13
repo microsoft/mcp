@@ -2,53 +2,29 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.MySql.UnitTests;
 
-public class MySqlListCommandTests
+public class MySqlListCommandTests : CommandUnitTestsBase<MySqlListCommand, IMySqlService>
 {
-    private readonly IMySqlService _mysqlService;
-    private readonly ILogger<MySqlListCommand> _logger;
-
-    public MySqlListCommandTests()
-    {
-        _mysqlService = Substitute.For<IMySqlService>();
-        _logger = Substitute.For<ILogger<MySqlListCommand>>();
-    }
-
     [Fact]
     public async Task ExecuteAsync_ListsServers_WhenNoServerOrDatabaseProvided()
     {
         var expectedServers = new List<string> { "mysql-server-1", "mysql-server-2", "mysql-server-3" };
-        _mysqlService.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>()).Returns(expectedServers);
+        Service.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>()).Returns(expectedServers);
 
-        var command = new MySqlListCommand(_logger, _mysqlService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1"
-        ]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
+            "--user", "user1");
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.MySqlListCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, MySqlJsonContext.Default.MySqlListCommandResult);
         Assert.Equal(expectedServers, result.Servers);
         Assert.Null(result.Databases);
         Assert.Null(result.Tables);
@@ -58,27 +34,15 @@ public class MySqlListCommandTests
     public async Task ExecuteAsync_ListsDatabases_WhenServerProvided()
     {
         var expectedDatabases = new List<string> { "db1", "db2", "db3" };
-        _mysqlService.ListDatabasesAsync("sub123", "rg1", "user1", "server1", Arg.Any<CancellationToken>()).Returns(expectedDatabases);
+        Service.ListDatabasesAsync("sub123", "rg1", "user1", "server1", Arg.Any<CancellationToken>()).Returns(expectedDatabases);
 
-        var command = new MySqlListCommand(_logger, _mysqlService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
-            "--server", "server1"
-        ]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
+            "--server", "server1");
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.MySqlListCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, MySqlJsonContext.Default.MySqlListCommandResult);
         Assert.Null(result.Servers);
         Assert.Equal(expectedDatabases, result.Databases);
         Assert.Null(result.Tables);
@@ -88,28 +52,16 @@ public class MySqlListCommandTests
     public async Task ExecuteAsync_ListsTables_WhenServerAndDatabaseProvided()
     {
         var expectedTables = new List<string> { "users", "products", "orders" };
-        _mysqlService.GetTablesAsync("sub123", "rg1", "user1", "server1", "db1", Arg.Any<CancellationToken>()).Returns(expectedTables);
+        Service.GetTablesAsync("sub123", "rg1", "user1", "server1", "db1", Arg.Any<CancellationToken>()).Returns(expectedTables);
 
-        var command = new MySqlListCommand(_logger, _mysqlService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
             "--server", "server1",
-            "--database", "db1"
-        ]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
+            "--database", "db1");
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.MySqlListCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, MySqlJsonContext.Default.MySqlListCommandResult);
         Assert.Null(result.Servers);
         Assert.Null(result.Databases);
         Assert.Equal(expectedTables, result.Tables);
@@ -118,25 +70,14 @@ public class MySqlListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenNoServersExist()
     {
-        _mysqlService.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>()).Returns([]);
+        Service.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>()).Returns([]);
 
-        var command = new MySqlListCommand(_logger, _mysqlService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1"
-        ]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
+            "--user", "user1");
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.MySqlListCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, MySqlJsonContext.Default.MySqlListCommandResult);
         Assert.NotNull(result.Servers);
         Assert.Empty(result.Servers);
         Assert.Null(result.Databases);
@@ -146,26 +87,15 @@ public class MySqlListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenNoDatabasesExist()
     {
-        _mysqlService.ListDatabasesAsync("sub123", "rg1", "user1", "server1", Arg.Any<CancellationToken>()).Returns([]);
+        Service.ListDatabasesAsync("sub123", "rg1", "user1", "server1", Arg.Any<CancellationToken>()).Returns([]);
 
-        var command = new MySqlListCommand(_logger, _mysqlService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
-            "--server", "server1"
-        ]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
+            "--server", "server1");
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.MySqlListCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, MySqlJsonContext.Default.MySqlListCommandResult);
         Assert.Null(result.Servers);
         Assert.NotNull(result.Databases);
         Assert.Empty(result.Databases);
@@ -175,27 +105,16 @@ public class MySqlListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenNoTablesExist()
     {
-        _mysqlService.GetTablesAsync("sub123", "rg1", "user1", "server1", "db1", Arg.Any<CancellationToken>()).Returns([]);
+        Service.GetTablesAsync("sub123", "rg1", "user1", "server1", "db1", Arg.Any<CancellationToken>()).Returns([]);
 
-        var command = new MySqlListCommand(_logger, _mysqlService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
             "--server", "server1",
-            "--database", "db1"
-        ]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
+            "--database", "db1");
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.MySqlListCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, MySqlJsonContext.Default.MySqlListCommandResult);
         Assert.Null(result.Servers);
         Assert.Null(result.Databases);
         Assert.NotNull(result.Tables);
@@ -205,18 +124,13 @@ public class MySqlListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenListServersThrows()
     {
-        _mysqlService.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>())
+        Service.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
-        var command = new MySqlListCommand(_logger, _mysqlService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1"
-        ]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--user", "user1");
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -226,19 +140,14 @@ public class MySqlListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenListDatabasesThrows()
     {
-        _mysqlService.ListDatabasesAsync("sub123", "rg1", "user1", "server1", Arg.Any<CancellationToken>())
+        Service.ListDatabasesAsync("sub123", "rg1", "user1", "server1", Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
-        var command = new MySqlListCommand(_logger, _mysqlService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
-            "--server", "server1"
-        ]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--server", "server1");
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -248,20 +157,15 @@ public class MySqlListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenGetTablesThrows()
     {
-        _mysqlService.GetTablesAsync("sub123", "rg1", "user1", "server1", "db1", Arg.Any<CancellationToken>())
+        Service.GetTablesAsync("sub123", "rg1", "user1", "server1", "db1", Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
-        var command = new MySqlListCommand(_logger, _mysqlService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
             "--server", "server1",
-            "--database", "db1"
-        ]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--database", "db1");
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -271,24 +175,20 @@ public class MySqlListCommandTests
     [Fact]
     public void Metadata_IsConfiguredCorrectly()
     {
-        var command = new MySqlListCommand(_logger, _mysqlService);
-
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.ReadOnly);
     }
 
     [Fact]
     public void Name_IsCorrect()
     {
-        var command = new MySqlListCommand(_logger, _mysqlService);
-        Assert.Equal("list", command.Name);
+        Assert.Equal("list", Command.Name);
     }
 
     [Fact]
     public void Description_IsCorrect()
     {
-        var command = new MySqlListCommand(_logger, _mysqlService);
-        Assert.Contains("List MySQL servers", command.Description);
-        Assert.Contains("databases, or tables", command.Description);
+        Assert.Contains("List MySQL servers", Command.Description);
+        Assert.Contains("databases, or tables", Command.Description);
     }
 }

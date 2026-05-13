@@ -2,50 +2,27 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Grafana.Commands;
 using Azure.Mcp.Tools.Grafana.Commands.Workspace;
 using Azure.Mcp.Tools.Grafana.Models;
 using Azure.Mcp.Tools.Grafana.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Grafana.UnitTests;
 
-public sealed class WorkspaceListCommandTests
+public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceListCommand, IGrafanaService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IGrafanaService _grafana;
-    private readonly ILogger<WorkspaceListCommand> _logger;
-
-    public WorkspaceListCommandTests()
-    {
-        _grafana = Substitute.For<IGrafanaService>();
-        _logger = Substitute.For<ILogger<WorkspaceListCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_grafana);
-
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     [Fact]
     public void Constructor_Should_Initialize_Command_Properly()
     {
-        // Arrange & Act
-        var command = new WorkspaceListCommand(_grafana, _logger);
-
-        // Assert
-        Assert.NotNull(command);
-        Assert.Equal("list", command.Name);
-        Assert.Equal("List Grafana Workspaces", command.Title);
-        Assert.Contains("List all Grafana workspace resources", command.Description);
+        Assert.Equal("list", Command.Name);
+        Assert.Equal("List Grafana Workspaces", Command.Title);
+        Assert.Contains("List all Grafana workspace resources", Command.Description);
     }
 
     [Fact]
@@ -84,48 +61,32 @@ public sealed class WorkspaceListCommandTests
             )
         ], false);
 
-        _grafana.ListWorkspacesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspacesAsync("sub123", Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedWorkspaces);
 
-        var command = new WorkspaceListCommand(_grafana, _logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123"]);
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, GrafanaJsonContext.Default.WorkspaceListCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-
-        Assert.Contains("grafana-workspace-1", json);
-        Assert.Contains("grafana-workspace-2", json);
+        Assert.NotNull(result.Workspaces);
+        Assert.Contains(result.Workspaces, w => w.Name == "grafana-workspace-1");
+        Assert.Contains(result.Workspaces, w => w.Name == "grafana-workspace-2");
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoWorkspacesExist()
     {
         // Arrange
-        _grafana.ListWorkspacesAsync("sub123", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspacesAsync("sub123", Arg.Any<string?>(), null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<GrafanaWorkspace>([], false));
 
-        var command = new WorkspaceListCommand(_grafana, _logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123"]);
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, GrafanaJsonContext.Default.WorkspaceListCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, GrafanaJsonContext.Default.WorkspaceListCommandResult);
         Assert.Empty(result.Workspaces);
     }
 
@@ -151,15 +112,11 @@ public sealed class WorkspaceListCommandTests
             )
         ], false);
 
-        _grafana.ListWorkspacesAsync("sub123", "tenant456", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspacesAsync("sub123", Arg.Any<string?>(), "tenant456", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedWorkspaces);
 
-        var command = new WorkspaceListCommand(_grafana, _logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123", "--tenant", "tenant456"]);
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--tenant", "tenant456");
 
         // Assert
         Assert.NotNull(response);
@@ -173,19 +130,31 @@ public sealed class WorkspaceListCommandTests
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         var subscriptionId = "sub123";
 
-        _grafana.ListWorkspacesAsync(subscriptionId, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspacesAsync(subscriptionId, Arg.Any<string?>(), null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var command = new WorkspaceListCommand(_grafana, _logger);
-        var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithResourceGroup_ForwardsResourceGroupToService()
+    {
+        // Arrange
+        const string resourceGroup = "test-rg";
+        Service.ListWorkspacesAsync(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<GrafanaWorkspace>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", resourceGroup);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListWorkspacesAsync(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 }

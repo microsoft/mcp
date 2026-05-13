@@ -14,33 +14,22 @@ namespace Azure.Mcp.Tools.Redis.Commands;
 /// <summary>
 /// Lists Redis resources in a subscription. Returns details for all Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources.
 /// </summary>
+[CommandMetadata(
+    Id = "eded7479-4187-4742-957f-d7778e03a69d",
+    Name = "list",
+    Title = "List Redis Resources",
+    Description = "List/show all Redis resources in a subscription. Returns details of all Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources. Use this command to explore and view which Redis resources are available in your subscription.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ResourceListCommand(IRedisService redisService, ILogger<ResourceListCommand> logger)
     : SubscriptionCommand<ResourceListOptions>()
 {
-    private const string CommandTitle = "List Redis Resources";
     private readonly IRedisService _redisService = redisService;
     private readonly ILogger<ResourceListCommand> _logger = logger;
-
-    public override string Id => "eded7479-4187-4742-957f-d7778e03a69d";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        $"""
-        List/show all Redis resources in a subscription. Returns details of all Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources. Use this command to explore and view which Redis resources are available in your subscription.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

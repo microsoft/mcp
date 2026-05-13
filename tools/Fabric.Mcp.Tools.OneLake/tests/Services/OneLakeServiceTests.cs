@@ -4,7 +4,6 @@
 #pragma warning disable xUnit1051 // Cancellation token warnings - this is example code
 
 using Fabric.Mcp.Tools.OneLake.Models;
-using Fabric.Mcp.Tools.OneLake.Services;
 using NSubstitute;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Services;
@@ -30,14 +29,9 @@ public class OneLakeServiceTests
     }
 
     // Example testable service following the PublicApi pattern
-    public class TestableOneLakeService
+    public class TestableOneLakeService(IOneLakeApiClient apiClient)
     {
-        private readonly IOneLakeApiClient _apiClient;
-
-        public TestableOneLakeService(IOneLakeApiClient apiClient)
-        {
-            _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
-        }
+        private readonly IOneLakeApiClient _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
 
         public async Task<IEnumerable<Workspace>> ListOneLakeWorkspacesAsync(string? continuationToken = null, CancellationToken cancellationToken = default)
         {

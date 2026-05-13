@@ -18,29 +18,27 @@ using Microsoft.Mcp.Core.Options;
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 [HiddenCommand]
+[CommandMetadata(
+    Id = "b70e5f70-d616-4a54-9879-6aa0a80345d9",
+    Name = "read",
+    Title = "Read OneLake File",
+    Description = "Read the contents of a file from OneLake storage.",
+    Destructive = false,
+    Idempotent = true,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false)]
 public sealed class FileReadCommand(
     ILogger<FileReadCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<FileReadOptions>()
+    IOneLakeService oneLakeService,
+    IOptions<ServiceStartOptions> options) : GlobalCommand<FileReadOptions>()
 {
     private readonly ILogger<FileReadCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
+    private readonly IOptions<ServiceStartOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
 
     private const long InlineContentLimitBytes = 1 * 1024 * 1024; // 1 MiB inline payload limit
-
-    public override string Id => "b70e5f70-d616-4a54-9879-6aa0a80345d9";
-    public override string Name => "read";
-    public override string Title => "Read OneLake File";
-    public override string Description => "Read the contents of a file from OneLake storage.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -100,8 +98,7 @@ public sealed class FileReadCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var serviceStartOptions = context.GetService<IOptions<ServiceStartOptions>>();
-            var transport = serviceStartOptions.Value.Transport ?? "stdio";
+            var transport = _options.Value.Transport ?? "stdio";
             var isLocalTransport = string.Equals(transport, "stdio", StringComparison.OrdinalIgnoreCase);
 
             string? downloadPath = null;

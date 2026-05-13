@@ -79,8 +79,12 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
+
+        Assert.Equal(expectedRecommendations.Count, result.Recommendations.Count);
+        Assert.Equal(expectedRecommendations[0].ResourceId, result.Recommendations[0].ResourceId);
+        Assert.Equal(expectedRecommendations[0].RecommendationText, result.Recommendations[0].RecommendationText);
+        Assert.Equal(expectedRecommendations[0].Category, result.Recommendations[0].Category);
 
         // Verify the mock was called
         await Service.Received(1).ListRecommendationsAsync(
@@ -88,14 +92,6 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
-
-        var result = DeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
-
-        Assert.NotNull(result);
-        Assert.Equal(expectedRecommendations.Count, result.Recommendations.Count);
-        Assert.Equal(expectedRecommendations[0].ResourceId, result.Recommendations[0].ResourceId);
-        Assert.Equal(expectedRecommendations[0].RecommendationText, result.Recommendations[0].RecommendationText);
-        Assert.Equal(expectedRecommendations[0].Category, result.Recommendations[0].Category);
     }
 
     [Fact]
@@ -113,12 +109,8 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
 
-        var result = DeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Recommendations);
     }
 

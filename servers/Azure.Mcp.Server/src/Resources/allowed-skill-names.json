@@ -1,15 +1,17 @@
 [
+  "airunway-aks-setup",
   "appinsights-instrumentation",
   "azure-ai",
   "azure-aigateway",
   "azure-cloud-migrate",
   "azure-compliance",
   "azure-compute",
-  "azure-cost-optimization",
+  "azure-cost",
   "azure-deploy",
   "azure-diagnostics",
   "azure-enterprise-infra-planner",
   "azure-hosted-copilot-sdk",
+  "azure-kubernetes",
   "azure-kusto",
   "azure-messaging",
   "azure-prepare",
@@ -20,6 +22,7 @@
   "azure-storage",
   "azure-upgrade",
   "azure-validate",
+  "entra-agent-id",
   "entra-app-registration",
   "microsoft-foundry"
 ]

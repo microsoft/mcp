@@ -2,47 +2,28 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.UnitTests;
 
-public class ResourceGetCommandTests
+public class ResourceGetCommandTests : CommandUnitTestsBase<ResourceGetCommand, IFoundryExtensionsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IFoundryExtensionsService _foundryService;
-    private readonly ILogger<ResourceGetCommand> _logger;
-
-    public ResourceGetCommandTests()
-    {
-        _foundryService = Substitute.For<IFoundryExtensionsService>();
-        _logger = Substitute.For<ILogger<ResourceGetCommand>>();
-
-        var collection = new ServiceCollection();
-
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = new ResourceGetCommand(_logger, _foundryService);
-
-        Assert.Equal("get", command.Name);
-        Assert.NotEmpty(command.Description);
-        Assert.NotNull(command.Metadata);
-        Assert.True(command.Metadata.ReadOnly);
-        Assert.True(command.Metadata.Idempotent);
-        Assert.False(command.Metadata.Destructive);
+        Assert.Equal("get", Command.Name);
+        Assert.NotEmpty(Command.Description);
+        Assert.NotNull(Command.Metadata);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.True(Command.Metadata.Idempotent);
+        Assert.False(Command.Metadata.Destructive);
     }
 
     [Fact]
@@ -59,7 +40,7 @@ public class ResourceGetCommandTests
                 Endpoint = "https://resource1.openai.azure.com/",
                 Kind = "OpenAI",
                 SkuName = "S0",
-                Deployments = new List<DeploymentInformation>()
+                Deployments = []
             },
             new()
             {
@@ -70,11 +51,11 @@ public class ResourceGetCommandTests
                 Endpoint = "https://resource2.openai.azure.com/",
                 Kind = "AIServices",
                 SkuName = "S0",
-                Deployments = new List<DeploymentInformation>()
+                Deployments = []
             }
         };
 
-        _foundryService.ListAiResourcesAsync(
+        Service.ListAiResourcesAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -82,18 +63,10 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
-        var command = new ResourceGetCommand(_logger, _foundryService);
-        var args = command.GetCommand().Parse(["--subscription", "test-sub"]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "test-sub");
 
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, FoundryExtensionsJsonContext.Default.ResourceGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, FoundryExtensionsJsonContext.Default.ResourceGetCommandResult);
-        Assert.NotNull(result);
         Assert.NotNull(result.Resources);
         Assert.Equal(expectedResources.Count, result.Resources.Count);
     }
@@ -112,11 +85,11 @@ public class ResourceGetCommandTests
                 Endpoint = "https://resource1.openai.azure.com/",
                 Kind = "OpenAI",
                 SkuName = "S0",
-                Deployments = new List<DeploymentInformation>()
+                Deployments = []
             }
         };
 
-        _foundryService.ListAiResourcesAsync(
+        Service.ListAiResourcesAsync(
             Arg.Any<string>(),
             Arg.Is("test-rg"),
             Arg.Any<string?>(),
@@ -124,18 +97,10 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
-        var command = new ResourceGetCommand(_logger, _foundryService);
-        var args = command.GetCommand().Parse(["--subscription", "test-sub", "--resource-group", "test-rg"]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "test-sub", "--resource-group", "test-rg");
 
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, FoundryExtensionsJsonContext.Default.ResourceGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, FoundryExtensionsJsonContext.Default.ResourceGetCommandResult);
-        Assert.NotNull(result);
         Assert.NotNull(result.Resources);
         Assert.Single(result.Resources);
         Assert.Equal("test-rg", result.Resources[0].ResourceGroup);
@@ -153,8 +118,8 @@ public class ResourceGetCommandTests
             Endpoint = "https://test-resource.openai.azure.com/",
             Kind = "OpenAI",
             SkuName = "S0",
-            Deployments = new List<DeploymentInformation>
-            {
+            Deployments =
+            [
                 new()
                 {
                     DeploymentName = "gpt-4o",
@@ -165,10 +130,10 @@ public class ResourceGetCommandTests
                     SkuCapacity = 100,
                     ProvisioningState = "Succeeded"
                 }
-            }
+            ]
         };
 
-        _foundryService.GetAiResourceAsync(
+        Service.GetAiResourceAsync(
             Arg.Any<string>(),
             Arg.Is("test-rg"),
             Arg.Is("test-resource"),
@@ -177,22 +142,13 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResource);
 
-        var command = new ResourceGetCommand(_logger, _foundryService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "test-sub",
             "--resource-group", "test-rg",
-            "--resource-name", "test-resource"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-name", "test-resource");
 
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, FoundryExtensionsJsonContext.Default.ResourceGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, FoundryExtensionsJsonContext.Default.ResourceGetCommandResult);
-        Assert.NotNull(result);
         Assert.NotNull(result.Resources);
         Assert.Single(result.Resources);
         Assert.Equal("test-resource", result.Resources[0].ResourceName);
@@ -203,7 +159,7 @@ public class ResourceGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoResourcesExist()
     {
-        _foundryService.ListAiResourcesAsync(
+        Service.ListAiResourcesAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -211,18 +167,9 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var command = new ResourceGetCommand(_logger, _foundryService);
-        var args = command.GetCommand().Parse(["--subscription", "test-sub"]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "test-sub");
 
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, FoundryExtensionsJsonContext.Default.ResourceGetCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, FoundryExtensionsJsonContext.Default.ResourceGetCommandResult);
         Assert.Empty(result.Resources);
     }
 
@@ -231,7 +178,7 @@ public class ResourceGetCommandTests
     {
         var expectedError = "Failed to list resources";
 
-        _foundryService.ListAiResourcesAsync(
+        Service.ListAiResourcesAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -239,10 +186,7 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new ResourceGetCommand(_logger, _foundryService);
-        var args = command.GetCommand().Parse(["--subscription", "test-sub"]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "test-sub");
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -254,7 +198,7 @@ public class ResourceGetCommandTests
     {
         var expectedError = "Resource not found";
 
-        _foundryService.GetAiResourceAsync(
+        Service.GetAiResourceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -263,14 +207,10 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new ResourceGetCommand(_logger, _foundryService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "test-sub",
             "--resource-group", "test-rg",
-            "--resource-name", "test-resource"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-name", "test-resource");
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -283,7 +223,7 @@ public class ResourceGetCommandTests
     [InlineData("--subscription", "test-sub", "--resource-group", "test-rg", "--resource-name", "test-resource")]
     public async Task ExecuteAsync_ValidatesInputCorrectly(params string[] args)
     {
-        _foundryService.ListAiResourcesAsync(
+        Service.ListAiResourcesAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -291,7 +231,7 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        _foundryService.GetAiResourceAsync(
+        Service.GetAiResourceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -300,10 +240,7 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new AiResourceInformation());
 
-        var command = new ResourceGetCommand(_logger, _foundryService);
-        var parsedArgs = command.GetCommand().Parse(args);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, parsedArgs, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -321,8 +258,8 @@ public class ResourceGetCommandTests
             Endpoint = "https://test-resource.openai.azure.com/",
             Kind = "OpenAI",
             SkuName = "S0",
-            Deployments = new List<DeploymentInformation>
-            {
+            Deployments =
+            [
                 new()
                 {
                     DeploymentName = "gpt-4o",
@@ -344,10 +281,10 @@ public class ResourceGetCommandTests
                     SkuCapacity = 120,
                     ProvisioningState = "Succeeded"
                 }
-            }
+            ]
         };
 
-        _foundryService.GetAiResourceAsync(
+        Service.GetAiResourceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -356,22 +293,13 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(resourceWithDeployments);
 
-        var command = new ResourceGetCommand(_logger, _foundryService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "test-sub",
             "--resource-group", "test-rg",
-            "--resource-name", "test-resource"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-name", "test-resource");
 
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, FoundryExtensionsJsonContext.Default.ResourceGetCommandResult);
 
-        // Serialize and deserialize to validate JSON context
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, FoundryExtensionsJsonContext.Default.ResourceGetCommandResult);
-        Assert.NotNull(result);
         Assert.NotNull(result.Resources);
         Assert.Single(result.Resources);
 
@@ -405,15 +333,13 @@ public class ResourceGetCommandTests
     [Fact]
     public void BindOptions_BindsOptionsCorrectly()
     {
-        var command = new ResourceGetCommand(_logger, _foundryService);
-        var args = command.GetCommand().Parse([
+        var args = CommandDefinition.Parse([
             "--subscription", "test-sub",
             "--resource-group", "test-rg",
             "--resource-name", "test-resource",
             "--tenant", "test-tenant"
         ]);
 
-        var context = new CommandContext(_serviceProvider);
         // We can't directly access BindOptions, but we can verify the command parses correctly
         Assert.Empty(args.Errors);
     }

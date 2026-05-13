@@ -1,43 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.UnitTests.Blob.Container;
 
-public class ContainerGetCommandTests
+public class ContainerGetCommandTests : CommandUnitTestsBase<ContainerGetCommand, IStorageService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IStorageService _storageService;
-    private readonly ILogger<ContainerGetCommand> _logger;
-    private readonly ContainerGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public ContainerGetCommandTests()
-    {
-        _storageService = Substitute.For<IStorageService>();
-        _logger = Substitute.For<ILogger<ContainerGetCommand>>();
-
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-        _command = new(_logger, _storageService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public async Task ExecuteAsync_NoParameters_ReturnsContainers()
     {
@@ -50,7 +28,7 @@ public class ContainerGetCommandTests
             new("container2", DateTimeOffset.UtcNow, null, new Dictionary<string, string>(), null, null, null, null, false, false, null, null, false)
         ]);
 
-        _storageService.GetContainerDetails(
+        Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
@@ -60,19 +38,12 @@ public class ContainerGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedContainers);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--account", account]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscription, "--account", account);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.ContainerGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.ContainerGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Containers);
         Assert.Equal(expectedContainers.Count, result.Containers.Count);
         Assert.Equal(expectedContainers.Select(a => a.Name), result.Containers.Select(a => a.Name));
@@ -85,7 +56,7 @@ public class ContainerGetCommandTests
         var subscription = "sub123";
         var account = "testaccount";
 
-        _storageService.GetContainerDetails(
+        Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
@@ -95,19 +66,12 @@ public class ContainerGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--account", account]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscription, "--account", account);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.ContainerGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.ContainerGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Containers);
     }
 
@@ -119,7 +83,7 @@ public class ContainerGetCommandTests
         var subscription = "sub123";
         var account = "testaccount";
 
-        _storageService.GetContainerDetails(
+        Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
@@ -129,10 +93,8 @@ public class ContainerGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--account", account]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscription, "--account", account);
 
         // Assert
         Assert.NotNull(response);
@@ -143,10 +105,9 @@ public class ContainerGetCommandTests
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("get", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("get", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Theory]
@@ -165,7 +126,7 @@ public class ContainerGetCommandTests
                 new("container", DateTimeOffset.UtcNow, null, new Dictionary<string, string>(), null, null, null, null, false, false, null, null, false)
             ]);
 
-            _storageService.GetContainerDetails(
+            Service.GetContainerDetails(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
@@ -176,10 +137,8 @@ public class ContainerGetCommandTests
                 .Returns(expectedContainers);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -204,7 +163,7 @@ public class ContainerGetCommandTests
         var expected = new ContainerInfo(container, DateTimeOffset.UtcNow, "etag123", new Dictionary<string, string>(),
             "unlocked", "available", null, "private", false, false, null, null, false);
 
-        _storageService.GetContainerDetails(
+        Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is(subscription),
@@ -214,20 +173,15 @@ public class ContainerGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([expected]);
 
-        var args = _commandDefinition.Parse(["--account", account, "--subscription", subscription, "--container", container]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", account,
+            "--subscription", subscription,
+            "--container", container);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.ContainerGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.ContainerGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.Containers);
 
         Assert.Equal(expected.Name, result.Containers[0].Name);
@@ -243,7 +197,7 @@ public class ContainerGetCommandTests
         var subscription = "sub123";
         var container = "container123";
 
-        _storageService.GetContainerDetails(
+        Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is(subscription),
@@ -253,10 +207,11 @@ public class ContainerGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription, "--container", container]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", account,
+            "--subscription", subscription,
+            "--container", container);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -272,7 +227,7 @@ public class ContainerGetCommandTests
         var subscription = "sub123";
         var container = "notfound";
 
-        _storageService.GetContainerDetails(
+        Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is(subscription),
@@ -282,10 +237,11 @@ public class ContainerGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Container not found"));
 
-        var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription, "--container", container]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", account,
+            "--subscription", subscription,
+            "--container", container);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -300,7 +256,7 @@ public class ContainerGetCommandTests
         var subscription = "sub123";
         var container = "container123";
 
-        _storageService.GetContainerDetails(
+        Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is(subscription),
@@ -310,10 +266,11 @@ public class ContainerGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
-        var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription, "--container", container]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", account,
+            "--subscription", subscription,
+            "--container", container);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);

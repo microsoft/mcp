@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppService.Commands;
+using Azure.Mcp.Tools.AppService.Commands.Webapp;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.ResourceManager.AppService;
@@ -414,6 +415,7 @@ public class AppServiceService(
 
     private static DetectorDetails MapToDetectorDetails(JsonElement metadata)
     {
+        var id = metadata.GetProperty("id").GetString()!;
         var name = metadata.GetProperty("name").GetString()!;
         var type = metadata.GetProperty("type").GetString()!;
         var description = metadata.GetProperty("description").GetString();
@@ -422,7 +424,7 @@ public class AppServiceService(
             ? analysisTypesElement.EnumerateArray().Select(at => at.GetString() ?? string.Empty).Where(at => !string.IsNullOrEmpty(at)).ToList()
             : null;
 
-        return new(name, type, description, category, categories);
+        return new(id, name, type, description, category, categories);
     }
 
     public async Task<DiagnosisResults> DiagnoseDetectorAsync(
@@ -516,5 +518,51 @@ public class AppServiceService(
         using var jsonDoc = await JsonDocument.ParseAsync(contentStream, cancellationToken: cancellationToken);
 
         return mapFunc(jsonDoc);
+    }
+
+    public async Task<string> ChangeWebAppStateAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string stateChange,
+        bool softRestart,
+        bool waitForCompletion,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(appName), appName),
+            (nameof(stateChange), stateChange));
+
+        if (!WebappChangeStateCommand.ValidateStateChange(stateChange, out var errorMessage))
+        {
+            throw new ArgumentException(errorMessage);
+        }
+
+        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+
+        if (stateChange.Equals("start", StringComparison.OrdinalIgnoreCase))
+        {
+            await webAppResource.StartAsync(cancellationToken: cancellationToken);
+            return $"Web app '{appName}' start initiated successfully.";
+        }
+        else if (stateChange.Equals("stop", StringComparison.OrdinalIgnoreCase))
+        {
+            await webAppResource.StopAsync(cancellationToken: cancellationToken);
+            return $"Web app '{appName}' stop initiated successfully.";
+        }
+        else if (stateChange.Equals("restart", StringComparison.OrdinalIgnoreCase))
+        {
+            await webAppResource.RestartAsync(softRestart: softRestart, synchronous: waitForCompletion, cancellationToken: cancellationToken);
+            return waitForCompletion
+                ? $"Web app '{appName}' restart completed successfully (Soft restart: {softRestart})."
+                : $"Web app '{appName}' restart initiated successfully (Soft restart: {softRestart}).";
+        }
+
+        // Should never reach this.
+        throw new ArgumentException($"Invalid state change action: {stateChange}. Valid values are: start, stop, restart.");
     }
 }

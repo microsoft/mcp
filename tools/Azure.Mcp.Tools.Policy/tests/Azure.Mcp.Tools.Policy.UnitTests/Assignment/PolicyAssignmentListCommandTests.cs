@@ -6,44 +6,26 @@ using Azure.Mcp.Tools.Policy.Commands;
 using Azure.Mcp.Tools.Policy.Commands.Assignment;
 using Azure.Mcp.Tools.Policy.Models;
 using Azure.Mcp.Tools.Policy.Services;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute.ExceptionExtensions;
 
 namespace Azure.Mcp.Tools.Policy.UnitTests.Assignment;
 
-public class PolicyAssignmentListCommandTests
+public class PolicyAssignmentListCommandTests : CommandUnitTestsBase<PolicyAssignmentListCommand, IPolicyService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IPolicyService _service;
-    private readonly ILogger<PolicyAssignmentListCommand> _logger;
-
-    public PolicyAssignmentListCommandTests()
-    {
-        _service = Substitute.For<IPolicyService>();
-        _logger = Substitute.For<ILogger<PolicyAssignmentListCommand>>();
-
-        var services = new ServiceCollection();
-        _serviceProvider = services.BuildServiceProvider();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        // Arrange & Act
-        var command = new PolicyAssignmentListCommand(_logger, _service);
-
-        // Assert
-        Assert.NotNull(command);
-        Assert.Equal("list", command.Name);
-        Assert.Equal("List Policy Assignments", command.Title);
-        Assert.Contains("policy assignment", command.Description.ToLower());
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.Idempotent);
-        Assert.False(command.Metadata.OpenWorld);
-        Assert.True(command.Metadata.ReadOnly);
-        Assert.False(command.Metadata.LocalRequired);
-        Assert.False(command.Metadata.Secret);
+        Assert.Equal("list", Command.Name);
+        Assert.Equal("List Policy Assignments", Command.Title);
+        Assert.Contains("policy assignment", Command.Description.ToLower());
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.Idempotent);
+        Assert.False(Command.Metadata.OpenWorld);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.LocalRequired);
+        Assert.False(Command.Metadata.Secret);
     }
 
     [Theory]
@@ -57,7 +39,6 @@ public class PolicyAssignmentListCommandTests
         string? expectedErrorContext)
     {
         // Arrange
-        var command = new PolicyAssignmentListCommand(_logger, _service);
         var args = new List<string>();
 
         if (!string.IsNullOrEmpty(subscription))
@@ -65,22 +46,19 @@ public class PolicyAssignmentListCommandTests
         if (!string.IsNullOrEmpty(scope))
             args.AddRange(["--scope", scope]);
 
-        var parseResult = command.GetCommand().Parse([.. args]);
-        var context = new CommandContext(_serviceProvider);
-
         if (shouldSucceed)
         {
-            _service.ListPolicyAssignmentsAsync(
+            Service.ListPolicyAssignmentsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(new List<PolicyAssignment>()));
+                .Returns([]);
         }
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync(args.ToArray());
 
         // Assert
         if (shouldSucceed)
@@ -101,8 +79,6 @@ public class PolicyAssignmentListCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        var command = new PolicyAssignmentListCommand(_logger, _service);
-
         var assignments = new List<PolicyAssignment>
         {
             new()
@@ -115,28 +91,20 @@ public class PolicyAssignmentListCommandTests
             }
         };
 
-        _service.ListPolicyAssignmentsAsync(
+        Service.ListPolicyAssignmentsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(assignments));
-
-        var parseResult = command.GetCommand().Parse(["--subscription", "test-sub"]);
-        var context = new CommandContext(_serviceProvider);
+            .Returns(assignments);
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync("--subscription", "test-sub");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var deserialized = ValidateAndDeserializeResponse(response, PolicyJsonContext.Default.PolicyAssignmentListCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var deserialized = JsonSerializer.Deserialize(json, PolicyJsonContext.Default.PolicyAssignmentListCommandResult);
-
-        Assert.NotNull(deserialized);
         Assert.Single(deserialized.Assignments);
         Assert.Equal("test-assignment", deserialized.Assignments[0].Name);
     }
@@ -145,9 +113,7 @@ public class PolicyAssignmentListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        var command = new PolicyAssignmentListCommand(_logger, _service);
-
-        _service.ListPolicyAssignmentsAsync(
+        Service.ListPolicyAssignmentsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -155,11 +121,8 @@ public class PolicyAssignmentListCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
-        var parseResult = command.GetCommand().Parse(["--subscription", "test-sub"]);
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync("--subscription", "test-sub");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -170,26 +133,21 @@ public class PolicyAssignmentListCommandTests
     public async Task ExecuteAsync_WithScope_PassesScopeToService()
     {
         // Arrange
-        var command = new PolicyAssignmentListCommand(_logger, _service);
-
-        var assignments = new List<PolicyAssignment>();
-        _service.ListPolicyAssignmentsAsync(
+        Service.ListPolicyAssignmentsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(assignments));
+            .Returns([]);
 
         var scope = "/subscriptions/test-sub/resourceGroups/test-rg";
-        var parseResult = command.GetCommand().Parse(["--subscription", "test-sub", "--scope", scope]);
-        var context = new CommandContext(_serviceProvider);
 
         // Act
-        await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        await ExecuteCommandAsync("--subscription", "test-sub", "--scope", scope);
 
         // Assert
-        await _service.Received(1).ListPolicyAssignmentsAsync(
+        await Service.Received(1).ListPolicyAssignmentsAsync(
             "test-sub",
             scope,
             Arg.Any<string?>(),
@@ -201,25 +159,19 @@ public class PolicyAssignmentListCommandTests
     public async Task ExecuteAsync_WithoutScope_PassesNullScope()
     {
         // Arrange
-        var command = new PolicyAssignmentListCommand(_logger, _service);
-
-        var assignments = new List<PolicyAssignment>();
-        _service.ListPolicyAssignmentsAsync(
+        Service.ListPolicyAssignmentsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(assignments));
-
-        var parseResult = command.GetCommand().Parse(["--subscription", "test-sub"]);
-        var context = new CommandContext(_serviceProvider);
+            .Returns([]);
 
         // Act
-        await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        await ExecuteCommandAsync("--subscription", "test-sub");
 
         // Assert
-        await _service.Received(1).ListPolicyAssignmentsAsync(
+        await Service.Received(1).ListPolicyAssignmentsAsync(
             "test-sub",
             null,
             Arg.Any<string?>(),
@@ -231,46 +183,26 @@ public class PolicyAssignmentListCommandTests
     public async Task ExecuteAsync_ReturnsEmptyList_WhenNoAssignments()
     {
         // Arrange
-        var command = new PolicyAssignmentListCommand(_logger, _service);
-
-        var assignments = new List<PolicyAssignment>();
-        _service.ListPolicyAssignmentsAsync(
+        Service.ListPolicyAssignmentsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(assignments));
-
-        var parseResult = command.GetCommand().Parse(["--subscription", "test-sub"]);
-        var context = new CommandContext(_serviceProvider);
+            .Returns([]);
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync("--subscription test-sub");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var deserialized = JsonSerializer.Deserialize(json, PolicyJsonContext.Default.PolicyAssignmentListCommandResult);
-
-        Assert.NotNull(deserialized);
+        var deserialized = ValidateAndDeserializeResponse(response, PolicyJsonContext.Default.PolicyAssignmentListCommandResult);
         Assert.Empty(deserialized.Assignments);
     }
 
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        // Arrange
-        var command = new PolicyAssignmentListCommand(_logger, _service);
-
-        // Act
-        var systemCommand = command.GetCommand();
-
-        // Assert
-        Assert.NotNull(systemCommand);
-        Assert.Equal("list", systemCommand.Name);
-        Assert.NotNull(systemCommand.Description);
+        Assert.Equal("list", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
     }
 }
