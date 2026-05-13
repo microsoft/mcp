@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.AI.OpenAI;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.Cosmos.Models;
+using Azure.Mcp.Tools.Cosmos.Validation;
 using Azure.ResourceManager.CosmosDB;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
@@ -293,6 +296,432 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         }
 
         return items;
+    }
+
+    public async Task<CosmosContainerSchema> GetApproximateSchema(
+        string accountName,
+        string databaseName,
+        string containerName,
+        int sampleSize,
+        string subscription,
+        AuthMethod authMethod = AuthMethod.Credential,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(accountName), accountName),
+            (nameof(databaseName), databaseName),
+            (nameof(containerName), containerName),
+            (nameof(subscription), subscription));
+
+        if (sampleSize < 1 || sampleSize > 100)
+        {
+            throw new ArgumentOutOfRangeException(nameof(sampleSize), sampleSize, "Sample size must be between 1 and 100.");
+        }
+
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
+        var container = client.GetContainer(databaseName, containerName);
+
+        var queryDef = new QueryDefinition($"SELECT TOP {sampleSize} * FROM c");
+        var iterator = container.GetItemQueryStreamIterator(
+            queryDef,
+            requestOptions: new QueryRequestOptions { MaxItemCount = sampleSize });
+
+        var typeMap = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+        var countMap = new Dictionary<string, int>(StringComparer.Ordinal);
+        var sampled = 0;
+
+        while (iterator.HasMoreResults && sampled < sampleSize)
+        {
+            using var response = await iterator.ReadNextAsync(cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception(response.ErrorMessage);
+            }
+
+            using var doc = await JsonDocument.ParseAsync(response.Content, cancellationToken: cancellationToken);
+            if (!doc.RootElement.TryGetProperty("Documents", out var docs))
+            {
+                continue;
+            }
+
+            foreach (var item in docs.EnumerateArray())
+            {
+                if (item.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                sampled++;
+
+                foreach (var prop in item.EnumerateObject())
+                {
+                    var typeName = prop.Value.ValueKind switch
+                    {
+                        JsonValueKind.String => "string",
+                        JsonValueKind.Number => "number",
+                        JsonValueKind.True or JsonValueKind.False => "boolean",
+                        JsonValueKind.Object => "object",
+                        JsonValueKind.Array => "array",
+                        JsonValueKind.Null => "null",
+                        _ => "unknown",
+                    };
+
+                    if (!typeMap.TryGetValue(prop.Name, out var set))
+                    {
+                        set = new HashSet<string>(StringComparer.Ordinal);
+                        typeMap[prop.Name] = set;
+                    }
+                    set.Add(typeName);
+
+                    countMap.TryGetValue(prop.Name, out var current);
+                    countMap[prop.Name] = current + 1;
+                }
+
+                if (sampled >= sampleSize)
+                {
+                    break;
+                }
+            }
+        }
+
+        var properties = typeMap
+            .OrderBy(kvp => kvp.Key, StringComparer.Ordinal)
+            .Select(kvp => new CosmosSchemaProperty(
+                kvp.Key,
+                string.Join(" | ", kvp.Value.OrderBy(t => t, StringComparer.Ordinal)),
+                countMap.TryGetValue(kvp.Key, out var c) ? c : 0,
+                sampled))
+            .ToList();
+
+        return new CosmosContainerSchema(sampled, properties);
+    }
+
+    public async Task<List<JsonElement>> GetRecentItems(
+        string accountName,
+        string databaseName,
+        string containerName,
+        int count,
+        string subscription,
+        AuthMethod authMethod = AuthMethod.Credential,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(accountName), accountName),
+            (nameof(databaseName), databaseName),
+            (nameof(containerName), containerName),
+            (nameof(subscription), subscription));
+
+        if (count < 1 || count > 100)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be between 1 and 100.");
+        }
+
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
+        var container = client.GetContainer(databaseName, containerName);
+
+        var queryDef = new QueryDefinition($"SELECT TOP {count} * FROM c ORDER BY c._ts DESC");
+        var iterator = container.GetItemQueryStreamIterator(
+            queryDef,
+            requestOptions: new QueryRequestOptions { MaxItemCount = count });
+
+        var results = new List<JsonElement>(count);
+        while (iterator.HasMoreResults && results.Count < count)
+        {
+            using var response = await iterator.ReadNextAsync(cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception(response.ErrorMessage);
+            }
+
+            using var doc = await JsonDocument.ParseAsync(response.Content, cancellationToken: cancellationToken);
+            if (!doc.RootElement.TryGetProperty("Documents", out var docs))
+            {
+                continue;
+            }
+
+            foreach (var item in docs.EnumerateArray())
+            {
+                results.Add(item.Clone());
+                if (results.Count >= count)
+                {
+                    break;
+                }
+            }
+        }
+
+        return results;
+    }
+
+    public async Task<JsonElement?> GetItem(
+        string accountName,
+        string databaseName,
+        string containerName,
+        string id,
+        string? partitionKey,
+        string subscription,
+        AuthMethod authMethod = AuthMethod.Credential,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(accountName), accountName),
+            (nameof(databaseName), databaseName),
+            (nameof(containerName), containerName),
+            (nameof(id), id),
+            (nameof(subscription), subscription));
+
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
+        var container = client.GetContainer(databaseName, containerName);
+
+        if (!string.IsNullOrEmpty(partitionKey))
+        {
+            try
+            {
+                using var response = await container.ReadItemStreamAsync(id, new PartitionKey(partitionKey), cancellationToken: cancellationToken);
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception(response.ErrorMessage);
+                }
+
+                using var doc = await JsonDocument.ParseAsync(response.Content, cancellationToken: cancellationToken);
+                return doc.RootElement.Clone();
+            }
+            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+        }
+
+        var queryDef = new QueryDefinition("SELECT * FROM c WHERE c.id = @id").WithParameter("@id", id);
+        var iterator = container.GetItemQueryStreamIterator(
+            queryDef,
+            requestOptions: new QueryRequestOptions { MaxItemCount = 1 });
+
+        while (iterator.HasMoreResults)
+        {
+            using var response = await iterator.ReadNextAsync(cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception(response.ErrorMessage);
+            }
+
+            using var doc = await JsonDocument.ParseAsync(response.Content, cancellationToken: cancellationToken);
+            if (doc.RootElement.TryGetProperty("Documents", out var docs) && docs.GetArrayLength() > 0)
+            {
+                return docs[0].Clone();
+            }
+        }
+
+        return null;
+    }
+
+    public async Task<List<JsonElement>> TextSearch(
+        string accountName,
+        string databaseName,
+        string containerName,
+        string property,
+        string searchPhrase,
+        int count,
+        string subscription,
+        AuthMethod authMethod = AuthMethod.Credential,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(accountName), accountName),
+            (nameof(databaseName), databaseName),
+            (nameof(containerName), containerName),
+            (nameof(property), property),
+            (nameof(searchPhrase), searchPhrase),
+            (nameof(subscription), subscription));
+
+        if (!CosmosPropertyValidator.IsValid(property))
+        {
+            throw new ArgumentException(
+                "Invalid property name. Use dot notation with letters, digits, and underscores only (e.g., 'name' or 'profile.name').",
+                nameof(property));
+        }
+
+        if (count < 1 || count > 100)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be between 1 and 100.");
+        }
+
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
+        var container = client.GetContainer(databaseName, containerName);
+
+        var queryDef = new QueryDefinition(
+                $"SELECT TOP {count} * FROM c WHERE FullTextContains(c.{property}, @searchPhrase)")
+            .WithParameter("@searchPhrase", searchPhrase);
+
+        var iterator = container.GetItemQueryStreamIterator(
+            queryDef,
+            requestOptions: new QueryRequestOptions { MaxItemCount = count });
+
+        var results = new List<JsonElement>(count);
+        while (iterator.HasMoreResults && results.Count < count)
+        {
+            using var response = await iterator.ReadNextAsync(cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception(response.ErrorMessage);
+            }
+
+            using var doc = await JsonDocument.ParseAsync(response.Content, cancellationToken: cancellationToken);
+            if (!doc.RootElement.TryGetProperty("Documents", out var docs))
+            {
+                continue;
+            }
+
+            foreach (var item in docs.EnumerateArray())
+            {
+                results.Add(item.Clone());
+                if (results.Count >= count)
+                {
+                    break;
+                }
+            }
+        }
+
+        return results;
+    }
+
+    public async Task<List<JsonElement>> VectorSearch(
+        string accountName,
+        string databaseName,
+        string containerName,
+        string vectorProperty,
+        IReadOnlyList<string> selectProperties,
+        IReadOnlyList<float> embedding,
+        int count,
+        string subscription,
+        AuthMethod authMethod = AuthMethod.Credential,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(accountName), accountName),
+            (nameof(databaseName), databaseName),
+            (nameof(containerName), containerName),
+            (nameof(vectorProperty), vectorProperty),
+            (nameof(subscription), subscription));
+
+        if (!CosmosPropertyValidator.IsValid(vectorProperty))
+        {
+            throw new ArgumentException(
+                "Invalid vector property name. Use dot notation with letters, digits, and underscores only (e.g., 'embedding' or 'metadata.vector').",
+                nameof(vectorProperty));
+        }
+
+        if (selectProperties == null || selectProperties.Count == 0)
+        {
+            throw new ArgumentException("At least one property must be supplied in selectProperties.", nameof(selectProperties));
+        }
+
+        foreach (var prop in selectProperties)
+        {
+            if (!CosmosPropertyValidator.IsValid(prop))
+            {
+                throw new ArgumentException(
+                    $"Invalid property name '{prop}' in selectProperties. Use dot notation with letters, digits, and underscores only.",
+                    nameof(selectProperties));
+            }
+        }
+
+        if (embedding == null || embedding.Count == 0)
+        {
+            throw new ArgumentException("Embedding vector must contain at least one value.", nameof(embedding));
+        }
+
+        if (count < 1 || count > 50)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be between 1 and 50.");
+        }
+
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
+        var container = client.GetContainer(databaseName, containerName);
+
+        var selectClause = string.Join(", ", selectProperties.Select(p => $"c.{p}"));
+        var embeddingArray = embedding is float[] arr ? arr : embedding.ToArray();
+
+        var queryDef = new QueryDefinition(
+                $"SELECT TOP @topN {selectClause}, VectorDistance(c.{vectorProperty}, @embedding) AS _score "
+                + $"FROM c ORDER BY VectorDistance(c.{vectorProperty}, @embedding)")
+            .WithParameter("@topN", count)
+            .WithParameter("@embedding", embeddingArray);
+
+        var iterator = container.GetItemQueryStreamIterator(
+            queryDef,
+            requestOptions: new QueryRequestOptions { MaxItemCount = count });
+
+        var results = new List<JsonElement>(count);
+        while (iterator.HasMoreResults && results.Count < count)
+        {
+            using var response = await iterator.ReadNextAsync(cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception(response.ErrorMessage);
+            }
+
+            using var doc = await JsonDocument.ParseAsync(response.Content, cancellationToken: cancellationToken);
+            if (!doc.RootElement.TryGetProperty("Documents", out var docs))
+            {
+                continue;
+            }
+
+            foreach (var item in docs.EnumerateArray())
+            {
+                results.Add(item.Clone());
+                if (results.Count >= count)
+                {
+                    break;
+                }
+            }
+        }
+
+        return results;
+    }
+
+    public async Task<float[]> GenerateEmbedding(
+        string text,
+        EmbeddingRequest request,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(text), text),
+            (nameof(request.Endpoint), request?.Endpoint),
+            (nameof(request.DeploymentName), request?.DeploymentName));
+
+        var credential = await GetCredential(tenant, cancellationToken);
+        var clientOptions = new AzureOpenAIClientOptions
+        {
+            Transport = new System.ClientModel.Primitives.HttpClientPipelineTransport(_httpClientFactory.CreateClient()),
+        };
+
+        var openAi = new AzureOpenAIClient(new Uri(request!.Endpoint!), credential, clientOptions);
+        var embeddingClient = openAi.GetEmbeddingClient(request.DeploymentName);
+
+        var response = request.Dimensions.HasValue
+            ? await embeddingClient.GenerateEmbeddingAsync(
+                text,
+                new OpenAI.Embeddings.EmbeddingGenerationOptions { Dimensions = request.Dimensions.Value },
+                cancellationToken)
+            : await embeddingClient.GenerateEmbeddingAsync(text, cancellationToken: cancellationToken);
+
+        return response.Value.ToFloats().ToArray();
     }
 
     internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>
