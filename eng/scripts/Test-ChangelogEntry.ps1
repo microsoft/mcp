@@ -1,4 +1,4 @@
-#!/bin/env pwsh
+#!/usr/bin/env pwsh
 #Requires -Version 7
 
 # Validates that a PR includes a changelog entry or has the 'skip-changelog' label.
@@ -24,13 +24,20 @@ if ($prNumber) {
         Write-Host "PR #$prNumber labels: $($prLabels -join ', ')"
     }
     catch {
-        Write-Warning "Failed to fetch PR labels from GitHub API: $_"
+        Write-Error "Failed to fetch PR labels from GitHub API for PR #$prNumber. Unable to validate whether the 'skip-changelog' label is present. Ensure the GitHub authentication step ran and GH_TOKEN is available, then retry. Underlying error: $_"
+        exit 1
     }
 }
 
 Push-Location $RepoRoot
 try {
-    $changedFiles = git diff --name-only --diff-filter=A "origin/main...HEAD" 2>&1
+    $diffRange = "origin/main...HEAD"
+    $changedFiles = git diff --name-only --diff-filter=AM $diffRange 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        $gitError = ($changedFiles | Out-String).Trim()
+        Write-Error "Failed to determine changed files with 'git diff --name-only --diff-filter=AM $diffRange'. $gitError"
+        exit 1
+    }
     $hasChangelog = $changedFiles | Where-Object { $_ -match 'changelog-entries/.*\.yml$' -or $_ -match 'CHANGELOG\.md'}
 
     if ($hasChangelog) {
@@ -48,7 +55,7 @@ try {
         exit 0
     }
 
-    Write-Host "No changelog entry and no 'skip-changelog' label. If changelog entry is not required, add the 'skip-changelog' label to the PR to bypass this check. Or add a changelog entry TO the PR."
+    Write-Error "Add a changelog entry to the PR or apply the 'skip-changelog' label."
     exit 1
 }
 finally {
