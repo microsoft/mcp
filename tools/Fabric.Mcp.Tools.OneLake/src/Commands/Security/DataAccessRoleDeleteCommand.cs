@@ -38,37 +38,16 @@ public sealed class DataAccessRoleDeleteCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsRequired());
+        command.Options.Add(FabricOptionDefinitions.ItemId.AsRequired());
         command.Options.Add(FabricOptionDefinitions.RoleName.AsRequired());
-        command.Validators.Add(result =>
-        {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-
-            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
-            {
-                result.AddError("Item identifier is required. Provide --item or --item-id.");
-            }
-        });
     }
 
     protected override DataAccessRoleDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
         options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        options.Item = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
         options.RoleName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.RoleName.Name);
         return options;
     }
@@ -83,41 +62,20 @@ public sealed class DataAccessRoleDeleteCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
-                ? options.WorkspaceId
-                : options.Workspace;
-
-            var itemIdentifier = !string.IsNullOrWhiteSpace(options.ItemId)
-                ? options.ItemId
-                : options.Item;
-
-            await _oneLakeService.DeleteDataAccessRoleAsync(workspaceIdentifier!, itemIdentifier!, options.RoleName!, cancellationToken);
+            await _oneLakeService.DeleteDataAccessRoleAsync(options.WorkspaceId!, options.ItemId!, options.RoleName!, cancellationToken);
             var result = new DataAccessRoleDeleteCommandResult(options.RoleName!, "Data access role deleted successfully.");
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DataAccessRoleDeleteCommandResult);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting data access role. Workspace: {Workspace}, Item: {Item}, Role: {Role}.",
-                options.WorkspaceId ?? options.Workspace, options.ItemId ?? options.Item, options.RoleName);
+                options.WorkspaceId, options.ItemId, options.RoleName);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    public sealed class DataAccessRoleDeleteCommandResult
-    {
-        public string RoleName { get; init; } = string.Empty;
-        public string Message { get; init; } = string.Empty;
-
-        public DataAccessRoleDeleteCommandResult()
-        {
-        }
-
-        public DataAccessRoleDeleteCommandResult(string roleName, string message)
-        {
-            RoleName = roleName;
-            Message = message;
-        }
-    }
+    public sealed record DataAccessRoleDeleteCommandResult(string RoleName, string Message);
 }
+

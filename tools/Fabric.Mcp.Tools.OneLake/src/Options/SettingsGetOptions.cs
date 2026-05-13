@@ -8,5 +8,5 @@ namespace Fabric.Mcp.Tools.OneLake.Options;
 public sealed class SettingsGetOptions : GlobalOptions
 {
     public string? WorkspaceId { get; set; }
-    public string? Workspace { get; set; }
 }
+

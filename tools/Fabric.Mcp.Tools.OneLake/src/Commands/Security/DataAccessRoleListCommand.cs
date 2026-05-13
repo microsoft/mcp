@@ -39,36 +39,17 @@ public sealed class DataAccessRoleListCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
-        command.Validators.Add(result =>
-        {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-
-            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
-            {
-                result.AddError("Item identifier is required. Provide --item or --item-id.");
-            }
-        });
+        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsRequired());
+        command.Options.Add(FabricOptionDefinitions.ItemId.AsRequired());
+        command.Options.Add(FabricOptionDefinitions.ContinuationToken.AsOptional());
     }
 
     protected override DataAccessRoleListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
         options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        options.Item = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
+        options.ContinuationToken = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ContinuationTokenName);
         return options;
     }
 
@@ -82,23 +63,17 @@ public sealed class DataAccessRoleListCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
-                ? options.WorkspaceId
-                : options.Workspace;
 
-            var itemIdentifier = !string.IsNullOrWhiteSpace(options.ItemId)
-                ? options.ItemId
-                : options.Item;
-
-            var result = await _oneLakeService.ListDataAccessRolesAsync(workspaceIdentifier!, itemIdentifier!, cancellationToken);
+            var result = await _oneLakeService.ListDataAccessRolesAsync(options.WorkspaceId!, options.ItemId!, options.ContinuationToken, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DataAccessRoleListResponse);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing data access roles. Workspace: {Workspace}, Item: {Item}.", options.WorkspaceId ?? options.Workspace, options.ItemId ?? options.Item);
+            _logger.LogError(ex, "Error listing data access roles. Workspace: {Workspace}, Item: {Item}.", options.WorkspaceId, options.ItemId);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 }
+

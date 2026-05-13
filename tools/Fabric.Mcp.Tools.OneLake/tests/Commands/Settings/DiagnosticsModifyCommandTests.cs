@@ -59,7 +59,6 @@ public class DiagnosticsModifyCommandTests : CommandUnitTestsBase<DiagnosticsMod
 
     [Theory]
     [InlineData("--workspace-id ws1 --diagnostics-config {\"status\":\"Disabled\"}", true)]
-    [InlineData("--workspace ws1 --diagnostics-config {\"status\":\"Disabled\"}", true)]
     [InlineData("--diagnostics-config {\"status\":\"Disabled\"}", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -107,3 +106,4 @@ public class DiagnosticsModifyCommandTests : CommandUnitTestsBase<DiagnosticsMod
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
 }
+

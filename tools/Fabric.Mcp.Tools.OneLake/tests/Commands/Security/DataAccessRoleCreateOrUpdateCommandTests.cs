@@ -61,7 +61,6 @@ public class DataAccessRoleCreateOrUpdateCommandTests : CommandUnitTestsBase<Dat
 
     [Theory]
     [InlineData("--workspace-id ws1 --item-id item1", true)]
-    [InlineData("--workspace ws1 --item item1", true)]
     [InlineData("--item-id item1", false)]  // missing workspace
     [InlineData("--workspace-id ws1", false)]  // missing item
     [InlineData("", false)]
@@ -124,3 +123,4 @@ public class DataAccessRoleCreateOrUpdateCommandTests : CommandUnitTestsBase<Dat
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
 }
+

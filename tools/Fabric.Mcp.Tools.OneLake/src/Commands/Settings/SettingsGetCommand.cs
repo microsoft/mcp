@@ -17,8 +17,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Settings;
     Title = "Get OneLake Settings",
     Description = """
         Get the OneLake settings for a workspace — diagnostics configuration and
-        immutability policy. Read-only; for changes use onelake_modify_diagnostics
-        or onelake_modify_immutability_policy. Requires OneLake.Read.All.
+        immutability policy. Requires OneLake.Read.All.
         """,
     Destructive = false,
     Idempotent = true,
@@ -36,25 +35,13 @@ public sealed class SettingsGetCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Validators.Add(result =>
-        {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-        });
+        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsRequired());
     }
 
     protected override SettingsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
         return options;
     }
 
@@ -68,19 +55,17 @@ public sealed class SettingsGetCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
-                ? options.WorkspaceId
-                : options.Workspace;
 
-            var result = await _oneLakeService.GetSettingsAsync(workspaceIdentifier!, cancellationToken);
+            var result = await _oneLakeService.GetSettingsAsync(options.WorkspaceId!, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeSettings);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting OneLake settings. Workspace: {Workspace}.", options.WorkspaceId ?? options.Workspace);
+            _logger.LogError(ex, "Error getting OneLake settings. Workspace: {Workspace}.", options.WorkspaceId);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 }
+

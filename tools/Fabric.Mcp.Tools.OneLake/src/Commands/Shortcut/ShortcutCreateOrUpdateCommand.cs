@@ -19,7 +19,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
         Create one or more shortcuts in a single call using the bulk create API
         (POST /shortcuts/bulkCreate). Pass a JSON object with a
         "createShortcutRequests" array — one entry for a single shortcut, many
-        entries for bulk. Use --shortcut-conflict-policy to control behaviour
+        entries for bulk. Use shortcut conflict policy to control behaviour
         when a shortcut with the same name and path already exists: Abort
         (default), CreateOrOverwrite, OverwriteOnly, or GenerateUniqueName.
         Requires OneLake.ReadWrite.All.
@@ -40,38 +40,17 @@ public sealed class ShortcutCreateOrUpdateCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsRequired());
+        command.Options.Add(FabricOptionDefinitions.ItemId.AsRequired());
         command.Options.Add(FabricOptionDefinitions.ShortcutsDefinition.AsRequired());
         command.Options.Add(FabricOptionDefinitions.ShortcutConflictPolicy.AsOptional());
-        command.Validators.Add(result =>
-        {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-
-            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
-            {
-                result.AddError("Item identifier is required. Provide --item or --item-id.");
-            }
-        });
     }
 
     protected override ShortcutCreateOrUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
         options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        options.Item = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
         options.ShortcutsDefinition = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ShortcutsDefinition.Name);
         options.ShortcutConflictPolicy = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ShortcutConflictPolicy.Name);
         return options;
@@ -87,24 +66,19 @@ public sealed class ShortcutCreateOrUpdateCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
-                ? options.WorkspaceId
-                : options.Workspace;
 
-            var itemIdentifier = !string.IsNullOrWhiteSpace(options.ItemId)
-                ? options.ItemId
-                : options.Item;
 
-            var result = await _oneLakeService.CreateOrUpdateShortcutsAsync(workspaceIdentifier!, itemIdentifier!, options.ShortcutsDefinition!, options.ShortcutConflictPolicy, cancellationToken);
+            var result = await _oneLakeService.CreateOrUpdateShortcutsAsync(options.WorkspaceId!, options.ItemId!, options.ShortcutsDefinition!, options.ShortcutConflictPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.BulkCreateShortcutResponse);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating/updating shortcuts. Workspace: {Workspace}, Item: {Item}.",
-                options.WorkspaceId ?? options.Workspace, options.ItemId ?? options.Item);
+                options.WorkspaceId, options.ItemId);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 }
+

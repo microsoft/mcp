@@ -8,5 +8,5 @@ namespace Fabric.Mcp.Tools.OneLake.Options;
 public sealed class ShortcutResetCacheOptions : GlobalOptions
 {
     public string? WorkspaceId { get; set; }
-    public string? Workspace { get; set; }
 }
+

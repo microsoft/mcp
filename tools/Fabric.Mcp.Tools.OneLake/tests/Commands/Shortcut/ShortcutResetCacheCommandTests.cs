@@ -59,7 +59,6 @@ public class ShortcutResetCacheCommandTests : CommandUnitTestsBase<ShortcutReset
 
     [Theory]
     [InlineData("--workspace-id ws1", true)]
-    [InlineData("--workspace ws1", true)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -104,14 +103,11 @@ public class ShortcutResetCacheCommandTests : CommandUnitTestsBase<ShortcutReset
     }
 
     [Fact]
-    public void BindOptions_UsesWorkspaceName_WhenWorkspaceIdNotProvided()
+    public void BindOptions_RequiresWorkspaceId()
     {
-        Service.ResetShortcutCacheAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Task.CompletedTask);
-
-        // Validator should pass with --workspace (friendly name)
-        var parseResult = CommandDefinition.Parse("--workspace myWorkspace");
+        var parseResult = CommandDefinition.Parse(string.Empty);
         var isValid = Command.Validate(parseResult.CommandResult);
-        Assert.True(isValid.IsValid);
+        Assert.False(isValid.IsValid);
     }
 }
+

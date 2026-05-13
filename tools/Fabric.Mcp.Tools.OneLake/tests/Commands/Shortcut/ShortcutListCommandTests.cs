@@ -29,6 +29,13 @@ public class ShortcutListCommandTests : CommandUnitTestsBase<ShortcutListCommand
     }
 
     [Fact]
+    public void GetCommand_RegistersContinuationTokenOption()
+    {
+        var option = CommandDefinition.Options.FirstOrDefault(o => o.Name == "--continuation-token");
+        Assert.NotNull(option);
+    }
+
+    [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenLoggerIsNull()
     {
         Assert.Throws<ArgumentNullException>(() => new ShortcutListCommand(null!, Service));

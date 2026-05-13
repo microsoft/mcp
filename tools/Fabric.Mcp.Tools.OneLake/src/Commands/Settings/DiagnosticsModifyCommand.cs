@@ -37,26 +37,14 @@ public sealed class DiagnosticsModifyCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsRequired());
         command.Options.Add(FabricOptionDefinitions.DiagnosticsConfig.AsRequired());
-        command.Validators.Add(result =>
-        {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-        });
     }
 
     protected override DiagnosticsModifyOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
         options.DiagnosticsConfig = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DiagnosticsConfig.Name);
         return options;
     }
@@ -71,26 +59,19 @@ public sealed class DiagnosticsModifyCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
-                ? options.WorkspaceId
-                : options.Workspace;
 
-            await _oneLakeService.ModifyDiagnosticsAsync(workspaceIdentifier!, options.DiagnosticsConfig!, cancellationToken);
-            context.Response.Results = ResponseResult.Create(new DiagnosticsModifyCommandResult("Diagnostics settings modified successfully."), OneLakeJsonContext.Default.DiagnosticsModifyCommandResult);
+            await _oneLakeService.ModifyDiagnosticsAsync(options.WorkspaceId!, options.DiagnosticsConfig!, cancellationToken);
+            context.Response.Results = ResponseResult.Create(new("Diagnostics settings modified successfully."), OneLakeJsonContext.Default.DiagnosticsModifyCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error modifying OneLake diagnostics. Workspace: {Workspace}.", options.WorkspaceId ?? options.Workspace);
+            _logger.LogError(ex, "Error modifying OneLake diagnostics. Workspace: {Workspace}.", options.WorkspaceId);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    public sealed class DiagnosticsModifyCommandResult
-    {
-        public string Message { get; init; } = string.Empty;
-        public DiagnosticsModifyCommandResult() { }
-        public DiagnosticsModifyCommandResult(string message) { Message = message; }
-    }
+    public sealed record DiagnosticsModifyCommandResult(string Message);
 }
+

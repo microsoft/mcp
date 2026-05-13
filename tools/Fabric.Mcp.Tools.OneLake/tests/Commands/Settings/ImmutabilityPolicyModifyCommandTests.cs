@@ -59,7 +59,6 @@ public class ImmutabilityPolicyModifyCommandTests : CommandUnitTestsBase<Immutab
 
     [Theory]
     [InlineData("--workspace-id ws1 --immutability-policy {\"scope\":\"DiagnosticLogs\",\"retentionDays\":7}", true)]
-    [InlineData("--workspace ws1 --immutability-policy {\"scope\":\"DiagnosticLogs\",\"retentionDays\":7}", true)]
     [InlineData("--immutability-policy {\"scope\":\"DiagnosticLogs\",\"retentionDays\":7}", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -107,3 +106,4 @@ public class ImmutabilityPolicyModifyCommandTests : CommandUnitTestsBase<Immutab
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
 }
+
