@@ -251,9 +251,13 @@ public static class ServiceCollectionExtensions
     /// Using <see cref="IConfiguration"/> configures <see cref="McpServerConfiguration"/>.
     /// </summary>
     /// <param name="services">Service Collection to add configuration logic to.</param>
-    public static void InitializeConfigurationAndOptions(this IServiceCollection services)
+    public static void InitializeConfigurationOptionsAndOpenTelemetry(this IServiceCollection services)
     {
+#if DEBUG
+        var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
+#else
         var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
+#endif
         var configuration = new ConfigurationBuilder()
             .AddJsonFile("appsettings.json", optional: false)
             .AddJsonFile($"appsettings.{environment}.json", optional: true)
@@ -293,5 +297,7 @@ public static class ServiceCollectionExtensions
                 // over any other settings.
                 options.IsTelemetryEnabled = rootConfiguration.GetValue("AZURE_MCP_COLLECT_TELEMETRY", true);
             });
+
+        services.ConfigureOpenTelemetry(configuration);
     }
 }

@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.Extensions.Azure;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -25,7 +26,7 @@ public static class OpenTelemetryExtensions
     /// </summary>
     private const string MicrosoftOwnedAppInsightsConnectionString = "InstrumentationKey=21e003c0-efee-4d3f-8a98-1868515aa2c9;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=f14f6a2d-6405-4f88-bd58-056f25fe274f";
 
-    public static void ConfigureOpenTelemetry(this IServiceCollection services)
+    public static void ConfigureOpenTelemetry(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<ITelemetryService, TelemetryService>();
 
@@ -46,10 +47,10 @@ public static class OpenTelemetryExtensions
             services.AddSingleton<IMachineInformationProvider, DefaultMachineInformationProvider>();
         }
 
-        EnableAzureMonitor(services);
+        EnableAzureMonitor(services, configuration);
     }
 
-    private static void EnableAzureMonitor(this IServiceCollection services)
+    private static void EnableAzureMonitor(this IServiceCollection services, IConfiguration configuration)
     {
 #if DEBUG
         services.AddSingleton(sp =>
@@ -80,7 +81,7 @@ public static class OpenTelemetryExtensions
                     .AddTelemetrySdk();
             });
 
-        var userProvidedAppInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
+        var userProvidedAppInsightsConnectionString = configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
 
         if (!string.IsNullOrWhiteSpace(userProvidedAppInsightsConnectionString))
         {
@@ -92,7 +93,7 @@ public static class OpenTelemetryExtensions
 #if RELEASE
         // This environment variable can be used to disable Microsoft telemetry collection.
         // By default, Microsoft telemetry is enabled.
-        var microsoftTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT");
+        var microsoftTelemetry = configuration["AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT"];
 
         bool shouldCollectMicrosoftTelemetry = string.IsNullOrWhiteSpace(microsoftTelemetry) || (bool.TryParse(microsoftTelemetry, out var shouldCollect) && shouldCollect);
 
@@ -102,7 +103,7 @@ public static class OpenTelemetryExtensions
         }
 #endif
 
-        var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
+        var enableOtlp = configuration["AZURE_MCP_ENABLE_OTLP_EXPORTER"];
         if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
         {
             otelBuilder.WithTracing(tracing => tracing.AddOtlpExporter())
