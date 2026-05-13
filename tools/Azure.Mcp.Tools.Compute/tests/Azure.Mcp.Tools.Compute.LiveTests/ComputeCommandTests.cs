@@ -851,7 +851,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Single(diskList);
 
         JsonElement retrievedDisk = diskList[0];
-        Assert.NotNull(retrievedDisk.AssertProperty("Nme").GetString());
+        Assert.NotNull(retrievedDisk.AssertProperty("Name").GetString());
         Assert.NotNull(retrievedDisk.AssertProperty("SkuName").GetString()); // SkuName is sanitized during playback
         Assert.Equal(32, retrievedDisk.AssertProperty("DiskSizeGB").GetInt32());
     }
