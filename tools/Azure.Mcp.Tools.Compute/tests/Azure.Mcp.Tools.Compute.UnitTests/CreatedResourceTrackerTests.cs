@@ -69,7 +69,7 @@ public class CreatedResourceTrackerTests
         var armClient = Substitute.For<ArmClient>();
 
         // Should complete without error even with no resources
-        await tracker.RollbackAsync(armClient, CancellationToken.None);
+        await tracker.RollbackAsync(armClient);
 
         Assert.False(tracker.HasResources);
     }
@@ -100,7 +100,7 @@ public class CreatedResourceTrackerTests
             });
         armClient.GetGenericResource(Arg.Any<ResourceIdentifier>()).Returns(mockResource);
 
-        await tracker.RollbackAsync(armClient, CancellationToken.None);
+        await tracker.RollbackAsync(armClient);
 
         // Verify all 4 resources had delete called
         armClient.Received(4).GetGenericResource(Arg.Any<ResourceIdentifier>());
@@ -137,7 +137,7 @@ public class CreatedResourceTrackerTests
         armClient.GetGenericResource(id1).Returns(succeedingResource);
 
         // Should not throw despite delete failure
-        await tracker.RollbackAsync(armClient, CancellationToken.None);
+        await tracker.RollbackAsync(armClient);
 
         // Both resources were attempted
         armClient.Received(1).GetGenericResource(id2);
@@ -158,7 +158,7 @@ public class CreatedResourceTrackerTests
         armClient.GetGenericResource(id).Returns(mockResource);
 
         // Should complete without error - 404 is treated as already deleted
-        await tracker.RollbackAsync(armClient, CancellationToken.None);
+        await tracker.RollbackAsync(armClient);
 
         armClient.Received(1).GetGenericResource(id);
     }

@@ -202,6 +202,7 @@ public class ComputeService(
         }
 
         // Create the VM
+        VirtualMachineResource createdVm;
         try
         {
             var vmCollection = resourceGroupResource.GetVirtualMachines();
@@ -212,32 +213,33 @@ public class ComputeService(
                 cancellationToken);
             await WaitForLroCompletionAsync(vmOperation, cancellationToken);
 
-            var createdVm = vmOperation.Value;
-
-            // Get IP addresses
-            var (publicIp, privateIp) = await GetVmIpAddressesAsync(
-                resourceGroupResource,
-                nicId,
-                cancellationToken);
-
-            return new(
-                Name: createdVm.Data.Name,
-                Id: createdVm.Data.Id?.ToString(),
-                Location: createdVm.Data.Location.Name,
-                VmSize: createdVm.Data.HardwareProfile?.VmSize?.ToString(),
-                ProvisioningState: createdVm.Data.ProvisioningState,
-                OsType: effectiveOsType,
-                PublicIpAddress: publicIp,
-                PrivateIpAddress: privateIp,
-                Zones: createdVm.Data.Zones?.ToList(),
-                Tags: createdVm.Data.Tags as IReadOnlyDictionary<string, string>);
+            createdVm = vmOperation.Value;
         }
         catch
         {
             _logger.LogWarning("VM creation failed. Rolling back newly created network resources.");
-            await networkTracker.RollbackAsync(armClient, cancellationToken);
+            await networkTracker.RollbackAsync(armClient);
             throw;
         }
+
+        // Get IP addresses (post-creation read; failures here should NOT trigger rollback —
+        // the VM exists and depends on the NIC/PIP we'd otherwise delete).
+        var (publicIp, privateIp) = await GetVmIpAddressesAsync(
+            resourceGroupResource,
+            nicId,
+            cancellationToken);
+
+        return new(
+            Name: createdVm.Data.Name,
+            Id: createdVm.Data.Id?.ToString(),
+            Location: createdVm.Data.Location.Name,
+            VmSize: createdVm.Data.HardwareProfile?.VmSize?.ToString(),
+            ProvisioningState: createdVm.Data.ProvisioningState,
+            OsType: effectiveOsType,
+            PublicIpAddress: publicIp,
+            PrivateIpAddress: privateIp,
+            Zones: createdVm.Data.Zones?.ToList(),
+            Tags: createdVm.Data.Tags as IReadOnlyDictionary<string, string>);
     }
 
     private static (string Publisher, string Offer, string Sku, string Version) ParseImage(string? image)
@@ -466,7 +468,7 @@ public class ComputeService(
         }
         catch
         {
-            await tracker.RollbackAsync(armClient, cancellationToken);
+            await tracker.RollbackAsync(armClient);
             throw;
         }
     }
@@ -898,7 +900,7 @@ public class ComputeService(
         catch
         {
             _logger.LogWarning("VMSS creation failed. Rolling back newly created network resources.");
-            await networkTracker.RollbackAsync(armClient, cancellationToken);
+            await networkTracker.RollbackAsync(armClient);
             throw;
         }
     }
@@ -1294,7 +1296,7 @@ public class ComputeService(
         }
         catch
         {
-            await tracker.RollbackAsync(armClient, cancellationToken);
+            await tracker.RollbackAsync(armClient);
             throw;
         }
     }

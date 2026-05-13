@@ -21,9 +21,17 @@ internal sealed class CreatedResourceTracker(ILogger logger)
     /// <summary>
     /// Delete all tracked resources in reverse creation order.
     /// Best-effort: logs errors but does not throw.
+    /// Uses a fresh cancellation token with a timeout so rollback can complete
+    /// even when the original operation's token was cancelled.
     /// </summary>
-    public async Task RollbackAsync(ArmClient armClient, CancellationToken cancellationToken)
+    public async Task RollbackAsync(ArmClient armClient)
     {
+        // Use a fresh token so rollback isn't short-circuited if the caller cancelled.
+        // 5 minutes is enough to delete a handful of network resources but bounded
+        // so a hung delete doesn't block the caller indefinitely.
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+        var rollbackToken = cts.Token;
+
         for (var i = _createdResources.Count - 1; i >= 0; i--)
         {
             var id = _createdResources[i];
@@ -31,7 +39,7 @@ internal sealed class CreatedResourceTracker(ILogger logger)
             {
                 logger.LogInformation("Rolling back: deleting {ResourceId}", id);
                 var genericResource = armClient.GetGenericResource(id);
-                await genericResource.DeleteAsync(WaitUntil.Completed, cancellationToken);
+                await genericResource.DeleteAsync(WaitUntil.Completed, rollbackToken);
                 logger.LogInformation("Rolled back: {ResourceId}", id);
             }
             catch (RequestFailedException ex) when (ex.Status == 404)
