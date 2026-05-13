@@ -20,14 +20,10 @@ public class DataFactoryAreaSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        // Bridge host auth to DataFactory.MCP.Core: resolve TokenCredential from the host's
-        // IAzureTokenCredentialProvider so DataFactory services auto-use host authentication
-        services.TryAddSingleton<TokenCredential>(sp =>
-        {
-            var provider = sp.GetRequiredService<IAzureTokenCredentialProvider>();
-            return provider.GetTokenCredentialAsync(tenantId: null, CancellationToken.None)
-                .GetAwaiter().GetResult();
-        });
+        // Bridge host auth to DataFactory.MCP.Core via a delegating TokenCredential that
+        // calls through to IAzureTokenCredentialProvider on each token request. This avoids
+        // caching a single credential (which breaks OBO/multi-user) and sync-over-async.
+        services.TryAddSingleton<TokenCredential, ProviderDelegatingCredential>();
 
         // Register DataFactory.MCP.Core services (auth, HttpClients, all service implementations)
         services.AddDataFactoryMcpServices();
