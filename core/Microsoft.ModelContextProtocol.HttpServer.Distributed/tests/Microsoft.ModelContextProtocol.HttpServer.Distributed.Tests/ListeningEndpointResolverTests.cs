@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.ModelContextProtocol.HttpServer.Distributed;
 using Microsoft.ModelContextProtocol.HttpServer.Distributed.Abstractions;
 using NSubstitute;
 using Xunit;
@@ -15,12 +12,7 @@ namespace Microsoft.ModelContextProtocol.HttpServer.Distributed.Tests;
 
 public sealed class ListeningEndpointResolverTests
 {
-    private readonly ListeningEndpointResolver _resolver;
-
-    public ListeningEndpointResolverTests()
-    {
-        _resolver = new ListeningEndpointResolver();
-    }
+    private readonly ListeningEndpointResolver _resolver = new();
 
     #region Explicit Configuration Tests
 
@@ -358,9 +350,7 @@ public sealed class ListeningEndpointResolverTests
             var result = _resolver.ResolveListeningEndpoint(server, options);
 
             // Assert - Should prefer external address over localhost variants
-            Assert.Equal(
-                "http://10.0.1.5:5000",
-                result);
+            Assert.Equal("http://10.0.1.5:5000", result);
         }
     }
 
@@ -513,7 +503,7 @@ public sealed class ListeningEndpointResolverTests
     {
         // Arrange
         var mockFeature = Substitute.For<IServerAddressesFeature>();
-        mockFeature.Addresses.Returns(new List<string> { "not-a-valid-uri", "also-invalid", "still-not-valid" });
+        mockFeature.Addresses.Returns(["not-a-valid-uri", "also-invalid", "still-not-valid"]);
 
         var server = Substitute.For<IServer>();
         var features = new FeatureCollection();
@@ -681,7 +671,7 @@ public sealed class ListeningEndpointResolverTests
     private static IServer CreateServer(params string[] addresses)
     {
         var mockFeature = Substitute.For<IServerAddressesFeature>();
-        mockFeature.Addresses.Returns(new List<string>(addresses));
+        mockFeature.Addresses.Returns(addresses);
 
         var server = Substitute.For<IServer>();
         var features = new FeatureCollection();

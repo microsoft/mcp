@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.ComponentModel;
 using System.Globalization;
 using System.Net;
 using Microsoft.AspNetCore.Builder;
@@ -13,7 +12,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Microsoft.ModelContextProtocol.HttpServer.Distributed;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -57,23 +55,19 @@ public sealed class RealServerIntegrationTests
 
         await using var mcpClient1 = await McpClient.CreateAsync(
             transport1,
-            cancellationToken: CancellationToken.None
-        );
+            cancellationToken: TestContext.Current.CancellationToken);
         await using var mcpClient2 = await McpClient.CreateAsync(
             transport2,
-            cancellationToken: CancellationToken.None
-        );
+            cancellationToken: TestContext.Current.CancellationToken);
 
         // Act - Each client calls tools on its connected server
         // First, verify which server each client is connected to
         var client1Server = await mcpClient1.CallToolAsync(
             "get_server_id",
-            cancellationToken: CancellationToken.None
-        );
+            cancellationToken: TestContext.Current.CancellationToken);
         var client2Server = await mcpClient2.CallToolAsync(
             "get_server_id",
-            cancellationToken: CancellationToken.None
-        );
+            cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert - Each server identifies correctly
         Assert.Equal("server-1", ((TextContentBlock)client1Server.Content[0]).Text);
@@ -85,8 +79,7 @@ public sealed class RealServerIntegrationTests
     {
         // Arrange
         var sharedCache = new MemoryDistributedCache(
-            Options.Create(new MemoryDistributedCacheOptions())
-        );
+            Options.Create(new MemoryDistributedCacheOptions()));
 
         await using var host = await CreateKestrelServerAsync(sharedCache, "server-test");
 
@@ -99,22 +92,18 @@ public sealed class RealServerIntegrationTests
 
         await using var mcpClient = await McpClient.CreateAsync(
             transport,
-            cancellationToken: CancellationToken.None
-        );
+            cancellationToken: TestContext.Current.CancellationToken);
 
         // Act - Make multiple requests with the same client
         var serverId = await mcpClient.CallToolAsync(
             "get_server_id",
-            cancellationToken: CancellationToken.None
-        );
+            cancellationToken: TestContext.Current.CancellationToken);
         var counter1 = await mcpClient.CallToolAsync(
             "increment_counter",
-            cancellationToken: CancellationToken.None
-        );
+            cancellationToken: TestContext.Current.CancellationToken);
         var counter2 = await mcpClient.CallToolAsync(
             "increment_counter",
-            cancellationToken: CancellationToken.None
-        );
+            cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert - Tools execute successfully
         Assert.Equal("server-test", ((TextContentBlock)serverId.Content[0]).Text);
@@ -145,31 +134,26 @@ public sealed class RealServerIntegrationTests
         using var httpClient1 = new HttpClient();
         await using var transport1 = new HttpClientTransport(
             new HttpClientTransportOptions { Endpoint = host1.McpEndpoint },
-            httpClient1
-        );
+            httpClient1);
         await using var mcpClient1 = await McpClient.CreateAsync(
             transport1,
-            cancellationToken: CancellationToken.None
-        );
+            cancellationToken: TestContext.Current.CancellationToken);
 
         // Act - First client establishes session on server-1
         var firstResponse = await mcpClient1.CallToolAsync(
             "get_server_id",
-            cancellationToken: CancellationToken.None
-        );
+            cancellationToken: TestContext.Current.CancellationToken);
         var firstServerId = ((TextContentBlock)firstResponse.Content[0]).Text;
 
         // Make more requests with same client - should stay on same server
         var secondResponse = await mcpClient1.CallToolAsync(
             "get_server_id",
-            cancellationToken: CancellationToken.None
-        );
+            cancellationToken: TestContext.Current.CancellationToken);
         var secondServerId = ((TextContentBlock)secondResponse.Content[0]).Text;
 
         var thirdResponse = await mcpClient1.CallToolAsync(
             "get_server_id",
-            cancellationToken: CancellationToken.None
-        );
+            cancellationToken: TestContext.Current.CancellationToken);
         var thirdServerId = ((TextContentBlock)thirdResponse.Content[0]).Text;
 
         // Assert - All requests from same client stay on same server
@@ -214,8 +198,7 @@ public sealed class RealServerIntegrationTests
                 );
                 var mcpClient = await McpClient.CreateAsync(
                     transport,
-                    cancellationToken: CancellationToken.None
-                );
+                    cancellationToken: TestContext.Current.CancellationToken);
 
                 clients.Add((httpClient, transport, mcpClient));
             }
@@ -226,7 +209,7 @@ public sealed class RealServerIntegrationTests
             {
                 var response = await mcpClient.CallToolAsync(
                     "get_server_id",
-                    cancellationToken: CancellationToken.None
+                    cancellationToken: TestContext.Current.CancellationToken
                 );
                 serverIds.Add(((TextContentBlock)response.Content[0]).Text);
             }
@@ -276,25 +259,25 @@ public sealed class RealServerIntegrationTests
         );
         await using var mcpClient1 = await McpClient.CreateAsync(
             transport1,
-            cancellationToken: CancellationToken.None
+            cancellationToken: TestContext.Current.CancellationToken
         );
 
         // Act - Client makes multiple requests, all should stay on server-1
         var firstResponse = await mcpClient1.CallToolAsync(
             "get_server_id",
-            cancellationToken: CancellationToken.None
+            cancellationToken: TestContext.Current.CancellationToken
         );
         var firstServerId = ((TextContentBlock)firstResponse.Content[0]).Text;
 
         var secondResponse = await mcpClient1.CallToolAsync(
             "get_server_id",
-            cancellationToken: CancellationToken.None
+            cancellationToken: TestContext.Current.CancellationToken
         );
         var secondServerId = ((TextContentBlock)secondResponse.Content[0]).Text;
 
         var thirdResponse = await mcpClient1.CallToolAsync(
             "get_server_id",
-            cancellationToken: CancellationToken.None
+            cancellationToken: TestContext.Current.CancellationToken
         );
         var thirdServerId = ((TextContentBlock)thirdResponse.Content[0]).Text;
 
@@ -409,20 +392,13 @@ public sealed class RealServerIntegrationTests
         public required string ServerId { get; init; }
     }
 
-    private sealed class KestrelServerHandle : IAsyncDisposable
+    private sealed class KestrelServerHandle(IHost host, Uri baseAddress) : IAsyncDisposable
     {
-        private readonly IHost _host;
+        private readonly IHost _host = host;
 
-        public KestrelServerHandle(IHost host, Uri baseAddress)
-        {
-            _host = host;
-            BaseAddress = baseAddress;
-            McpEndpoint = new Uri(baseAddress, "mcp");
-        }
+        public Uri BaseAddress { get; } = baseAddress;
 
-        public Uri BaseAddress { get; }
-
-        public Uri McpEndpoint { get; }
+        public Uri McpEndpoint { get; } = new(baseAddress, "mcp");
 
         public async ValueTask DisposeAsync()
         {
