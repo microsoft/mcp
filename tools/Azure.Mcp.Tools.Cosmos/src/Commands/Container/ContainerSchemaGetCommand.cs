@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Container;
     Id = "f1c6a0e2-3d40-4b3f-9a37-2dc1f6cf4a12",
     Name = "get",
     Title = "Infer Cosmos DB Container Schema",
-    Description = "Infer an approximate schema for a Cosmos DB container by sampling documents and reporting the top-level properties along with their observed JSON types and how often each appeared.",
+    Description = "Infer an approximate schema for a Cosmos DB container by sampling documents and reporting the top-level properties along with their inferred types and the number of sampled documents in which each appeared.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

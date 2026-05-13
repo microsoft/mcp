@@ -6,7 +6,7 @@ namespace Azure.Mcp.Tools.Cosmos.Models;
 /// <summary>
 /// Configuration required to generate an embedding from free-form text via Azure OpenAI.
 /// </summary>
-/// <param name="Endpoint">Azure OpenAI endpoint, e.g., "https://my-aoai.openai.azure.com/".</param>
+/// <param name="Endpoint">Azure OpenAI endpoint, e.g., "https://my-endpoint.openai.azure.com/".</param>
 /// <param name="DeploymentName">Name of the embedding deployment.</param>
 /// <param name="Dimensions">
 /// Optional embedding dimensions to request. Only honored by models that support custom dimensions

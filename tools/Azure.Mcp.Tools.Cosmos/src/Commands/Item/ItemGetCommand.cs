@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     Id = "d4c1b2a3-9e8f-4d7c-86b5-1a2b3c4d5e6f",
     Name = "get",
     Title = "Get Cosmos DB Document by Id",
-    Description = "Look up a single Cosmos DB document by its id. When --partition-key is supplied, an efficient point read is used; otherwise a cross-partition query is executed. Returns null when no matching document is found.",
+    Description = "Find a single Cosmos DB document by its id in the specified database and container. When --partition-key is supplied, an efficient point read is used; otherwise a cross-partition query is executed.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

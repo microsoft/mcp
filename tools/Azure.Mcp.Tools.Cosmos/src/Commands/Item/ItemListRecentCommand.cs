@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     Id = "9a1b1c2d-3e4f-4a5b-9c6d-7e8f9a0b1c2d",
     Name = "list-recent",
     Title = "List Recent Cosmos DB Documents",
-    Description = "Retrieve the most recently modified documents from a Cosmos DB container, ordered by the system timestamp (_ts) in descending order. Use --count to control how many documents are returned.",
+    Description = "Retrieve the most recently modified documents from a Cosmos DB container, ordered by the system timestamp (_ts) in descending order. Use the --count option to control how many documents are returned (1-20, default is 10).",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -38,9 +38,9 @@ public sealed class ItemListRecentCommand(ILogger<ItemListRecentCommand> logger,
         command.Validators.Add(result =>
         {
             var count = result.GetValueOrDefault<int>(CosmosOptionDefinitions.Count.Name);
-            if (count < 1 || count > 100)
+            if (count < 1 || count > 20)
             {
-                result.AddError("--count must be between 1 and 100.");
+                result.AddError("--count must be between 1 and 20.");
             }
         });
     }

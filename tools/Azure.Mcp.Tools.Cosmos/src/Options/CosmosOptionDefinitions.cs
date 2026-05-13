@@ -74,7 +74,7 @@ public static class CosmosOptionDefinitions
         $"--{CountName}"
     )
     {
-        Description = "Maximum number of documents to return (1-100). Defaults to 10.",
+        Description = "Maximum number of documents to return (1-20). Defaults to 10.",
         Required = false,
         DefaultValueFactory = _ => 10
     };
@@ -83,7 +83,7 @@ public static class CosmosOptionDefinitions
         $"--{SampleSizeName}"
     )
     {
-        Description = "Number of documents to sample for schema inference (1-100). Defaults to 10.",
+        Description = "Number of documents to sample for schema inference (1-20). Defaults to 10.",
         Required = false,
         DefaultValueFactory = _ => 10
     };
@@ -100,7 +100,7 @@ public static class CosmosOptionDefinitions
         $"--{PartitionKeyName}"
     )
     {
-        Description = "Optional partition key value for the document. When provided, a point read is used (much cheaper than a cross-partition query)."
+        Description = "Optional partition key value for the document. When provided, a point read is used (cheaper than a cross-partition query)."
     };
 
     public static readonly Option<string> Property = new(
@@ -115,7 +115,7 @@ public static class CosmosOptionDefinitions
         $"--{SearchPhraseName}"
     )
     {
-        Description = "The phrase to search for. Passed as a parameterized value to a Cosmos DB FullTextContains query (the container must have a full-text index on the property).",
+        Description = "The phrase to search for. Passed as a parameterized value to a Cosmos DB FullTextContains query. The container must have a full-text index on the property.",
         Required = true
     };
 
@@ -153,7 +153,7 @@ public static class CosmosOptionDefinitions
         $"--{OpenAIEndpointName}"
     )
     {
-        Description = "Azure OpenAI endpoint (e.g., 'https://my-aoai.openai.azure.com/') used to generate the embedding when --search-text is supplied."
+        Description = "Azure OpenAI endpoint (e.g., 'https://my-endpoint.openai.azure.com/') used to generate the embedding when --search-text is supplied."
     };
 
     public static readonly Option<string?> EmbeddingDeployment = new(

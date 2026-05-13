@@ -315,9 +315,9 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             (nameof(containerName), containerName),
             (nameof(subscription), subscription));
 
-        if (sampleSize < 1 || sampleSize > 100)
+        if (sampleSize < 1 || sampleSize > 20)
         {
-            throw new ArgumentOutOfRangeException(nameof(sampleSize), sampleSize, "Sample size must be between 1 and 100.");
+            throw new ArgumentOutOfRangeException(nameof(sampleSize), sampleSize, "Sample size must be between 1 and 20.");
         }
 
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
@@ -415,9 +415,9 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             (nameof(containerName), containerName),
             (nameof(subscription), subscription));
 
-        if (count < 1 || count > 100)
+        if (count < 1 || count > 20)
         {
-            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be between 1 and 100.");
+            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be between 1 and 20.");
         }
 
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
@@ -553,9 +553,9 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
                 nameof(property));
         }
 
-        if (count < 1 || count > 100)
+        if (count < 1 || count > 20)
         {
-            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be between 1 and 100.");
+            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be between 1 and 20.");
         }
 
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
@@ -627,7 +627,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
 
         if (selectProperties == null || selectProperties.Count == 0)
         {
-            throw new ArgumentException("At least one property must be supplied in selectProperties.", nameof(selectProperties));
+            throw new ArgumentException("At least one property must be supplied in properties to select.", nameof(selectProperties));
         }
 
         foreach (var prop in selectProperties)
@@ -635,7 +635,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             if (!PropertyValidator.IsValid(prop))
             {
                 throw new ArgumentException(
-                    $"Invalid property name '{prop}' in selectProperties. Use dot notation with letters, digits, and underscores only.",
+                    $"Invalid property name '{prop}' in properties to select. Use dot notation with letters, digits, and underscores only (e.g., 'name' or 'profile.name').",
                     nameof(selectProperties));
             }
         }

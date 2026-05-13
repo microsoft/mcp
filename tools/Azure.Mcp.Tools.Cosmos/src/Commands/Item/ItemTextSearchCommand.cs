@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     Id = "8b4c5d6e-7f80-4a91-bc23-d4e5f6a7b8c9",
     Name = "text-search",
     Title = "Text Search Cosmos DB Documents",
-    Description = "Search documents in a Cosmos DB container where the specified property contains the given phrase. Uses Cosmos DB's FullTextContains function and requires a full-text index on the property.",
+    Description = "Retrieve the TOP N documents in a Cosmos DB container where the specified property contains the provided search string. Use the --count option to control how many documents are returned (1-20, default is 10). Requires a Cosmos DB full-text index on the property.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -43,13 +43,13 @@ public sealed class ItemTextSearchCommand(ILogger<ItemTextSearchCommand> logger,
             var property = result.GetValueOrDefault<string>(CosmosOptionDefinitions.Property.Name);
             if (!PropertyValidator.IsValid(property))
             {
-                result.AddError("--property must be a dot-delimited identifier (letters, digits, and underscores only).");
+                result.AddError("--property must use dot notation with letters, digits, and underscores only (e.g., name or profile.name).");
             }
 
             var count = result.GetValueOrDefault<int>(CosmosOptionDefinitions.Count.Name);
-            if (count < 1 || count > 100)
+            if (count < 1 || count > 20)
             {
-                result.AddError("--count must be between 1 and 100.");
+                result.AddError("--count must be between 1 and 20.");
             }
         });
     }

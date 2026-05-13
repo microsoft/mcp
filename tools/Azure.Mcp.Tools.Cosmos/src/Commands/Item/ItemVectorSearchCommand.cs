@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     Id = "5e6f7a8b-9c0d-4e1f-a2b3-c4d5e6f7a8b9",
     Name = "vector-search",
     Title = "Vector Search Cosmos DB Documents",
-    Description = "Run a vector similarity search against a Cosmos DB container. Provide a precomputed embedding via --embedding (comma-separated floats) or supply --search-text along with --openai-endpoint and --embedding-deployment to generate one via Azure OpenAI. The container must have a vector index on --vector-property.",
+    Description = "Perform a vector similarity search on Cosmos DB. Use Azure OpenAI to generate an embedding by supplying --search-text along with --openai-endpoint and --embedding-deployment or provide a precomputed embedding via --embedding as comma-separated float values. The container must have a vector index on --vector-property.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
