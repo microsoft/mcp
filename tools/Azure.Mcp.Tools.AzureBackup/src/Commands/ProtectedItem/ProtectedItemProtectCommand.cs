@@ -46,6 +46,11 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
         command.Options.Add(AzureBackupOptionDefinitions.Policy.AsRequired());
         command.Options.Add(AzureBackupOptionDefinitions.Container);
         command.Options.Add(AzureBackupOptionDefinitions.DatasourceType);
+        command.Options.Add(AzureBackupOptionDefinitions.AksSnapshotResourceGroup);
+        command.Options.Add(AzureBackupOptionDefinitions.AksIncludedNamespaces);
+        command.Options.Add(AzureBackupOptionDefinitions.AksExcludedNamespaces);
+        command.Options.Add(AzureBackupOptionDefinitions.AksLabelSelectors);
+        command.Options.Add(AzureBackupOptionDefinitions.AksIncludeClusterScopeResources);
     }
 
     protected override ProtectedItemProtectOptions BindOptions(ParseResult parseResult)
@@ -55,6 +60,11 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
         options.Policy = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Policy.Name);
         options.Container = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Container.Name);
         options.DatasourceType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DatasourceType.Name);
+        options.AksSnapshotResourceGroup = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksSnapshotResourceGroup.Name);
+        options.AksIncludedNamespaces = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksIncludedNamespaces.Name);
+        options.AksExcludedNamespaces = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksExcludedNamespaces.Name);
+        options.AksLabelSelectors = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksLabelSelectors.Name);
+        options.AksIncludeClusterScopeResources = parseResult.GetValueOrDefault<bool>(AzureBackupOptionDefinitions.AksIncludeClusterScopeResources.Name);
         return options;
     }
 
@@ -81,6 +91,11 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
                 options.VaultType,
                 options.Container,
                 options.DatasourceType,
+                options.AksIncludedNamespaces,
+                options.AksExcludedNamespaces,
+                options.AksLabelSelectors,
+                options.AksIncludeClusterScopeResources ? "true" : null,
+                options.AksSnapshotResourceGroup,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

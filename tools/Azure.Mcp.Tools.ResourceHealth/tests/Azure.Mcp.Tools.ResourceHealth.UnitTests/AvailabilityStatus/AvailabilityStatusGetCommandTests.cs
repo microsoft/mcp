@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -182,6 +183,24 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
     }
 
     [Fact]
+    public async Task ExecuteAsync_ReturnsConflict_WhenResourceHealthListRequestConflicts()
+    {
+        var subscriptionId = "12345678-1234-1234-1234-123456789012";
+        var errorCode = "MissingSubscriptionRegistration";
+        var errorMessage = "The subscription is not registered to use namespace 'Microsoft.ResourceHealth'.";
+        var expectedError = $"Azure Resource Health returned Conflict. The subscription may need the Microsoft.ResourceHealth provider registered, or the provider may still be registering. Details: {errorMessage}. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
+
+        Service.ListAvailabilityStatusesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ResourceHealthRequestFailedException(HttpStatusCode.Conflict, errorCode, errorMessage));
+
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId);
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.Conflict, response.Status);
+        Assert.Equal(expectedError, response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_WhenSubscriptionLookupFails()
     {
         var subscription = "missing-subscription";
@@ -205,6 +224,11 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
     [InlineData("--subscription")]
     public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing(string missingParameter)
     {
+        // The subscription option falls back to the Azure CLI profile or AZURE_SUBSCRIPTION_ID env var.
+        // Skip if a CLI profile default is present so the test only runs when
+        // the missing-subscription path is actually exercised.
+        TestEnvironment.SkipIfDefaultSubscriptionConfigured();
+
         var argsList = new List<string>();
         if (missingParameter != "--subscription")
         {

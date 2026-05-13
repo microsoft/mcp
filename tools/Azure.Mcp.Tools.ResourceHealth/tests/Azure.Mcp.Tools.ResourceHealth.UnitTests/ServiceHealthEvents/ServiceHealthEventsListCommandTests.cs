@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -25,6 +26,14 @@ public class ServiceHealthEventsListCommandTests : CommandUnitTestsBase<ServiceH
     [InlineData("--subscription sub123 --filter startTime ge 2023-01-01", true)]
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
     {
+        // The subscription option falls back to the Azure CLI profile or AZURE_SUBSCRIPTION_ID env var.
+        // For the empty-args (missing subscription) cases, skip when a CLI
+        // profile default is present so we only assert when validation actually fails.
+        if (!shouldSucceed && string.IsNullOrWhiteSpace(args))
+        {
+            TestEnvironment.SkipIfDefaultSubscriptionConfigured();
+        }
+
         // Arrange
         if (shouldSucceed)
         {
@@ -120,6 +129,34 @@ public class ServiceHealthEventsListCommandTests : CommandUnitTestsBase<ServiceH
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
         Assert.Contains(expectedError, response.Message ?? "");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsConflict_WhenResourceHealthRequestConflicts()
+    {
+        var subscription = "sub123";
+        var errorCode = "MissingSubscriptionRegistration";
+        var errorMessage = "The subscription is not registered to use namespace 'Microsoft.ResourceHealth'.";
+        var expectedError = $"Azure Resource Health returned Conflict. The subscription may need the Microsoft.ResourceHealth provider registered, or the provider may still be registering. Details: {errorMessage}. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
+
+        Service.ListServiceHealthEventsAsync(
+            subscription,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ResourceHealthRequestFailedException(HttpStatusCode.Conflict, errorCode, errorMessage));
+
+        var response = await ExecuteCommandAsync("--subscription", subscription);
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.Conflict, response.Status);
+        Assert.Equal(expectedError, response.Message);
     }
 
     [Fact]

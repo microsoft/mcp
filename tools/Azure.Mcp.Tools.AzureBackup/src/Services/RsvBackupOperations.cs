@@ -20,16 +20,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
     private const string VaultType = VaultTypeResolver.Rsv;
     private const string FabricName = "Azure";
 
-    private static void ValidateSubscriptionFormat(string subscription)
-    {
-        if (!Guid.TryParse(subscription, out _))
-        {
-            throw new ArgumentException(
-                $"Invalid subscription ID '{subscription}'. Expected a GUID (e.g., 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'). " +
-                "If you provided a subscription name, use the subscription ID instead.");
-        }
-    }
-
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string location,
         string? sku, string? storageType, string? tenant,
@@ -40,7 +30,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(location), location));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
@@ -75,7 +64,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -90,7 +78,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var subId = SubscriptionResource.CreateResourceIdentifier(subscription);
@@ -118,7 +105,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(subscription), subscription),
             (nameof(datasourceId), datasourceId),
             (nameof(policyName), policyName));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
@@ -256,7 +242,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(protectedItemName), protectedItemName));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
@@ -321,7 +306,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
@@ -346,7 +330,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(policyName), policyName));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var policyId = BackupProtectionPolicyResource.CreateResourceIdentifier(
@@ -365,7 +348,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
@@ -390,7 +372,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(jobId), jobId));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var jobResourceId = BackupJobResource.CreateResourceIdentifier(
@@ -409,7 +390,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
@@ -435,7 +415,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(subscription), subscription),
             (nameof(protectedItemName), protectedItemName),
             (nameof(recoveryPointId), recoveryPointId));
-        ValidateSubscriptionFormat(subscription);
 
         if (string.IsNullOrEmpty(containerName))
         {
@@ -465,7 +444,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(protectedItemName), protectedItemName));
-        ValidateSubscriptionFormat(subscription);
 
         if (string.IsNullOrEmpty(containerName))
         {
@@ -528,7 +506,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -601,18 +578,21 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
     }
 
     public async Task<OperationResult> CreatePolicyAsync(
+        Policy.PolicyCreateRequest request,
         string vaultName, string resourceGroup, string subscription,
-        string policyName, string workloadType,
-        string? scheduleTime, string? dailyRetentionDays,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var policyName = request.Policy;
+        var workloadType = request.WorkloadType;
+
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(policyName), policyName),
             (nameof(workloadType), workloadType));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultResourceId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -624,101 +604,43 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var policyCollection = rgResource.GetBackupProtectionPolicies(vaultName);
 
-        var retentionDays = int.TryParse(dailyRetentionDays, out var dd) ? dd : 30;
-
-        // Stage 2 TODO: Multi-tier retention
-        // When adding weekly/monthly/yearly retention support, add the parameters
-        // back to this method and replace the current DailyRetentionSchedule-only approach
-        // with a full LongTermRetentionPolicy:
-        //   - DailySchedule: always present, using retentionDays.
-        //   - WeeklySchedule: WeeklyRetentionSchedule with DaysOfTheWeek=[Sunday].
-        //   - MonthlySchedule: MonthlyRetentionSchedule with WeeksOfTheMonth=[First].
-        //   - YearlySchedule: YearlyRetentionSchedule with MonthsOfYear=[January].
-        // For VmWorkload: multi-tier retention goes on the Full sub-policy only.
-
-        var scheduleDateTime = DateTimeOffset.TryParse(scheduleTime, out var st) ? st : new DateTimeOffset(DateTime.UtcNow.Date.AddHours(2), TimeSpan.Zero);
-        var scheduleRunTime = new DateTimeOffset(scheduleDateTime.Year, scheduleDateTime.Month, scheduleDateTime.Day,
-            scheduleDateTime.Hour, scheduleDateTime.Minute, 0, TimeSpan.Zero);
-
-        BackupGenericProtectionPolicy policyProperties;
-
-        var profile = RsvDatasourceRegistry.ResolveOrDefault(workloadType);
-
-        if (profile.PolicyType == RsvPolicyType.VmWorkload)
-        {
-            var fullSchedule = new SimpleSchedulePolicy { ScheduleRunFrequency = ScheduleRunType.Daily };
-            fullSchedule.ScheduleRunTimes.Add(scheduleRunTime);
-
-            var fullRetention = new DailyRetentionSchedule { RetentionDuration = new RetentionDuration { Count = retentionDays, DurationType = RetentionDurationType.Days } };
-            fullRetention.RetentionTimes.Add(scheduleRunTime);
-
-            var fullSubPolicy = new SubProtectionPolicy
-            {
-                PolicyType = new SubProtectionPolicyType("Full"),
-                SchedulePolicy = fullSchedule,
-                RetentionPolicy = new LongTermRetentionPolicy { DailySchedule = fullRetention }
-            };
-
-            var logSubPolicy = new SubProtectionPolicy
-            {
-                PolicyType = new SubProtectionPolicyType("Log"),
-                SchedulePolicy = new LogSchedulePolicy { ScheduleFrequencyInMins = 60 },
-                RetentionPolicy = new SimpleRetentionPolicy { RetentionDuration = new RetentionDuration { Count = 15, DurationType = RetentionDurationType.Days } }
-            };
-
-            var wlPolicy = new VmWorkloadProtectionPolicy
-            {
-                WorkLoadType = new BackupWorkloadType(profile.ApiWorkloadType ?? "SQLDataBase"),
-                Settings = new BackupCommonSettings
-                {
-                    TimeZone = "UTC",
-                    IsCompression = false,
-                    IsSqlCompression = false
-                }
-            };
-            wlPolicy.SubProtectionPolicy.Add(fullSubPolicy);
-            wlPolicy.SubProtectionPolicy.Add(logSubPolicy);
-
-            policyProperties = wlPolicy;
-        }
-        else if (profile.PolicyType == RsvPolicyType.AzureFileShare)
-        {
-            var schedulePolicy = new SimpleSchedulePolicy { ScheduleRunFrequency = ScheduleRunType.Daily };
-            schedulePolicy.ScheduleRunTimes.Add(scheduleRunTime);
-
-            var dailyRetention = new DailyRetentionSchedule { RetentionDuration = new RetentionDuration { Count = retentionDays, DurationType = RetentionDurationType.Days } };
-            dailyRetention.RetentionTimes.Add(scheduleRunTime);
-
-            policyProperties = new FileShareProtectionPolicy
-            {
-                WorkLoadType = new BackupWorkloadType("AzureFileShare"),
-                SchedulePolicy = schedulePolicy,
-                RetentionPolicy = new LongTermRetentionPolicy { DailySchedule = dailyRetention }
-            };
-        }
-        else
-        {
-            var schedulePolicy = new SimpleSchedulePolicy { ScheduleRunFrequency = ScheduleRunType.Daily };
-            schedulePolicy.ScheduleRunTimes.Add(scheduleRunTime);
-
-            var dailyRetention = new DailyRetentionSchedule { RetentionDuration = new RetentionDuration { Count = retentionDays, DurationType = RetentionDurationType.Days } };
-            dailyRetention.RetentionTimes.Add(scheduleRunTime);
-
-            policyProperties = new IaasVmProtectionPolicy
-            {
-                SchedulePolicy = schedulePolicy,
-                RetentionPolicy = new LongTermRetentionPolicy { DailySchedule = dailyRetention }
-            };
-        }
+        var policyProperties = Policy.RsvPolicyBuilder.Build(request);
 
         var policyData = new BackupProtectionPolicyData(vaultLocation)
         {
             Properties = policyProperties
         };
 
+        // --policy-tags maps to ARM resource tags on the policy (RSV only).
+        ApplyPolicyTags(policyData.Tags, request.PolicyTags);
+
         await policyCollection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' created in vault '{vaultName}'.");
+    }
+
+    private static void ApplyPolicyTags(IDictionary<string, string> destination, string? tagsCsv)
+    {
+        if (string.IsNullOrWhiteSpace(tagsCsv))
+        {
+            return;
+        }
+
+        foreach (var pair in tagsCsv!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var idx = pair.IndexOf('=');
+            if (idx <= 0 || idx == pair.Length - 1)
+            {
+                continue;
+            }
+
+            var key = pair[..idx].Trim();
+            var value = pair[(idx + 1)..].Trim();
+            if (key.Length > 0)
+            {
+                destination[key] = value;
+            }
+        }
     }
 
     public async Task<OperationResult> UpdatePolicyAsync(
@@ -899,7 +821,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(immutabilityState), immutabilityState));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -931,7 +852,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(softDeleteState), softDeleteState));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -980,7 +900,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -1002,6 +921,13 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             var currentConfig = await configResource.GetAsync(cancellationToken);
 
             var data = currentConfig.Value.Data;
+
+            // The BackupResourceConfig GET reliably returns the CRR state even when the
+            // Vault GET RedundancySettings.CrossRegionRestore property is not populated.
+            if (data.Properties.EnableCrossRegionRestore == true)
+            {
+                return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
+            }
             data.Properties.EnableCrossRegionRestore = true;
 
             var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
@@ -1339,7 +1265,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(datasourceId), datasourceId));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
@@ -1618,7 +1543,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 

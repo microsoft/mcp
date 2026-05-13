@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
+using Azure.Mcp.Tools.AzureBackup.Services.Policy;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -33,7 +34,7 @@ public class AzureBackupServiceTests
     [Fact]
     public async Task GetVaultAsync_RsvNotFound_FallsThroughToDpp()
     {
-        // RSV returns 404 → should try DPP
+        // RSV returns 404 -> should try DPP
         var expectedVault = new BackupVaultInfo(null, "myVault", "DPP", "eastus", "rg", null, null, null, null, null, null, null, null, null);
         _rsvOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
@@ -50,7 +51,7 @@ public class AzureBackupServiceTests
     [Fact]
     public async Task GetVaultAsync_RsvForbidden_FallsThroughToDpp()
     {
-        // RSV returns 403 → should try DPP (not propagate immediately)
+        // RSV returns 403 -> should try DPP (not propagate immediately)
         var expectedVault = new BackupVaultInfo(null, "myVault", "DPP", "eastus", "rg", null, null, null, null, null, null, null, null, null);
         _rsvOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
@@ -65,7 +66,7 @@ public class AzureBackupServiceTests
     [Fact]
     public async Task GetVaultAsync_RsvUnauthorized_FallsThroughToDpp()
     {
-        // RSV returns 401 → should try DPP
+        // RSV returns 401 -> should try DPP
         var expectedVault = new BackupVaultInfo(null, "myVault", "DPP", "eastus", "rg", null, null, null, null, null, null, null, null, null);
         _rsvOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(401, "Unauthorized"));
@@ -96,7 +97,7 @@ public class AzureBackupServiceTests
     [Fact]
     public async Task GetVaultAsync_BothStacksForbidden_ThrowsUnauthorizedAccessException()
     {
-        // Both RSV and DPP return 403 → should throw UnauthorizedAccessException (not KeyNotFoundException)
+        // Both RSV and DPP return 403 -> should throw UnauthorizedAccessException (not KeyNotFoundException)
         _rsvOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
         _dppOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
@@ -112,7 +113,7 @@ public class AzureBackupServiceTests
     [Fact]
     public async Task GetVaultAsync_BothStacksUnauthorized_ThrowsUnauthorizedAccessException()
     {
-        // Both RSV and DPP return 401 → should throw UnauthorizedAccessException
+        // Both RSV and DPP return 401 -> should throw UnauthorizedAccessException
         _rsvOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(401, "Unauthorized"));
         _dppOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
@@ -317,14 +318,21 @@ public class AzureBackupServiceTests
         _rsvOps.GetVaultAsync("v", "rg", "sub", null, null, Arg.Any<CancellationToken>())
             .Returns(new BackupVaultInfo(null, "v", "RSV", "eastus", "rg", null, null, null, null, null, null, null, null, null));
         _rsvOps.CreatePolicyAsync(
-            "v", "rg", "sub", "p", "VM",
-            Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == "VM" && r.DailyRetentionDays == "30"),
+            "v", "rg", "sub",
             Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(baseResult);
 
+        var request = new PolicyCreateRequest
+        {
+            Policy = "p",
+            WorkloadType = "VM",
+            DailyRetentionDays = "30",
+        };
+
         var result = await _service.CreatePolicyAsync(
-            "v", "rg", "sub", "p", "VM", null,
-            null, "30",
+            request,
+            "v", "rg", "sub", null,
             null, null, CancellationToken.None);
 
         Assert.Equal("Succeeded", result.Status);

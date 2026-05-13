@@ -8,6 +8,11 @@ jobs:
     fetchDepth: 0
 
   - template: /eng/pipelines/templates/steps/install-dotnet.yml
+
+  - task: NodeTool@0
+    displayName: "Install Node.js 22"
+    inputs:
+      versionSpec: '22.x'
   
   - task: Powershell@2
     displayName: "Run source analysis"

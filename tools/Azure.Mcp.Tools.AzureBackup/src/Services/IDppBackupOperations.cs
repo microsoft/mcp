@@ -65,13 +65,10 @@ public interface IDppBackupOperations
         CancellationToken cancellationToken);
 
     Task<OperationResult> CreatePolicyAsync(
+        Policy.PolicyCreateRequest request,
         string vaultName,
         string resourceGroup,
         string subscription,
-        string policyName,
-        string workloadType,
-        string? scheduleTime,
-        string? dailyRetentionDays,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
@@ -83,6 +80,11 @@ public interface IDppBackupOperations
         string datasourceId,
         string policyName,
         string? datasourceType,
+        string? aksIncludedNamespaces,
+        string? aksExcludedNamespaces,
+        string? aksLabelSelectors,
+        string? aksIncludeClusterScopeResources,
+        string? aksSnapshotResourceGroup,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
