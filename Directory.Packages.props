@@ -84,7 +84,7 @@
     <PackageVersion Include="Microsoft.HybridRow" Version="1.1.0-preview4" />
     <PackageVersion Include="Microsoft.Azure.Cosmos.Aot" Version="0.1.4-preview.2" />
     <PackageVersion Include="Microsoft.Azure.Mcp.AzTypes.Internal.Compact" Version="0.2.804" />
-    <PackageVersion Include="Microsoft.DataFactory.MCP.Core" Version="0.20.0-beta" />
+    <PackageVersion Include="Microsoft.DataFactory.MCP.Core" Version="0.21.0-beta" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
     <PackageVersion Include="ModelContextProtocol" Version="1.1.0" />

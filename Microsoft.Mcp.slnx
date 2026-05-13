@@ -5,8 +5,7 @@
     <Project Path="core/Azure.Mcp.Core/src/Azure.Mcp.Core.csproj" />
   </Folder>
   <Folder Name="/core/Azure.Mcp.Core/tests/">
-    <Project Path="core/Azure.Mcp.Core/tests/Azure.Mcp.Core.LiveTests/Azure.Mcp.Core.LiveTests.csproj" />
-    <Project Path="core/Azure.Mcp.Core/tests/Azure.Mcp.Core.UnitTests/Azure.Mcp.Core.UnitTests.csproj" />
+    <Project Path="core/Azure.Mcp.Core/tests/Azure.Mcp.Core.Tests/Azure.Mcp.Core.Tests.csproj" />
     <Project Path="core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Azure.Mcp.Tests.csproj" />
   </Folder>
   <Folder Name="/core/Fabric.Mcp.Core/" />
@@ -18,7 +17,7 @@
     <Project Path="core/Microsoft.Mcp.Core/src/Microsoft.Mcp.Core.csproj" />
   </Folder>
   <Folder Name="/core/Microsoft.Mcp.Core/tests/">
-    <Project Path="core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Core.UnitTests/Microsoft.Mcp.Core.UnitTests.csproj" />
+    <Project Path="core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Core.Tests/Microsoft.Mcp.Core.Tests.csproj" />
     <Project Path="core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Microsoft.Mcp.Tests.csproj" />
   </Folder>
   <Folder Name="/core/Microsoft.ModelContextProtocol.HttpServer.Distributed/" />
