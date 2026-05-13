@@ -3840,6 +3840,7 @@
         "azurebackup_governance_soft-delete",
         "azurebackup_disasterrecovery_enable-crr",
         "azurebackup_protecteditem_undelete",
+        "azurebackup_security_configure-encryption",
         "azurebackup_security_configure-mua"
       ]
     },
