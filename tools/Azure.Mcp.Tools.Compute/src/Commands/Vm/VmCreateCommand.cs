@@ -27,7 +27,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
         (an alias such as 'Ubuntu2404' or 'Win2022Datacenter', a marketplace URN like 'publisher:offer:sku:version',
         or a shared gallery image ID starting with '/sharedGalleries/').
         For Linux VMs with SSH, read the user's public key file (e.g., ~/.ssh/id_rsa.pub) and pass its content.
-        Do not use this for creating standalone managed disks (use disk create) or Virtual Machine Scale Sets (use VMSS create).
+        Do not use this for Virtual Machine Scale Sets with multiple identical instances (use VMSS create instead).
         """,
     Destructive = true,
     Idempotent = false,
