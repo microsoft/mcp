@@ -225,7 +225,7 @@ public sealed class KeyVaultService(
                 }
                 catch (FormatException ex)
                 {
-                    throw new ArgumentException("The provided certificate-data is neither raw PEM text nor valid base64-encoded content.", ex);
+                    throw new ArgumentException("The provided certificate-data is neither a valid file path, raw PEM text, nor valid base64-encoded content.", ex);
                 }
             }
         }

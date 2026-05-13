@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -60,12 +59,11 @@ public class CertificateImportCommandTests : CommandUnitTestsBase<CertificateImp
 
     public static IEnumerable<object[]> InvalidArgumentCases()
     {
-        // Build scenarios with missing required parameters
+        // Build scenarios with missing required parameters (subscription-independent)
         yield return new object[] { "" };
         yield return new object[] { "--vault knownVault" };
         yield return new object[] { "--vault knownVault --certificate knownCertificate" };
         yield return new object[] { "--vault knownVault --certificate knownCertificate --subscription knownSubscription" };
-        yield return new object[] { $"--vault knownVault --certificate knownCertificate --certificate-data {_fakePfxBase64}" };
     }
 
     [Theory]
@@ -76,6 +74,21 @@ public class CertificateImportCommandTests : CommandUnitTestsBase<CertificateImp
         var response = await ExecuteCommandAsync(argLine.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsArguments_WhenSubscriptionMissing()
+    {
+        // This case relies on no default subscription being configured (env var or Azure CLI profile).
+        // Skip when a subscription is already available to avoid false failures in dev environments.
+        TestEnvironment.SkipIfDefaultSubscriptionConfigured();
+
+        var response = await ExecuteCommandAsync(
+            "--vault", _knownVault,
+            "--certificate", _knownCertName,
+            "--certificate-data", _fakePfxBase64);
+
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 
@@ -224,11 +237,12 @@ public class CertificateImportCommandTests : CommandUnitTestsBase<CertificateImp
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_OnInvalidCertificateData()
+    public async Task ExecuteAsync_Returns400_OnInvalidCertificateData()
     {
-        // Simulate service throwing the wrapped invalid data message
+        // KV-11: service throws ArgumentException for data that is neither a file path, PEM, nor base64;
+        // the base handler maps ArgumentException -> HTTP 400.
         var invalidData = "not-valid-base64-or-path";
-        var errorMessage = $"Error importing certificate '{_knownCertName}' into vault {_knownVault}: The provided certificate-data is neither a file path, raw PEM, nor base64 encoded content.";
+        var errorMessage = "The provided certificate-data is neither a valid file path, raw PEM text, nor valid base64-encoded content.";
 
         Service.ImportCertificate(
             _knownVault,
@@ -239,7 +253,7 @@ public class CertificateImportCommandTests : CommandUnitTestsBase<CertificateImp
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new Exception(errorMessage));
+            .ThrowsAsync(new ArgumentException(errorMessage));
 
         var response = await ExecuteCommandAsync(
             "--vault", _knownVault,
@@ -247,8 +261,8 @@ public class CertificateImportCommandTests : CommandUnitTestsBase<CertificateImp
             "--certificate-data", invalidData,
             "--subscription", _knownSubscription);
 
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-        Assert.StartsWith(errorMessage, response.Message);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("certificate-data", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
