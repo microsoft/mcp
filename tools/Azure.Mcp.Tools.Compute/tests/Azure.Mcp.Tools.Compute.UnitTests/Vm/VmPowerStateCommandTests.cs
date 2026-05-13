@@ -30,17 +30,17 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
     }
 
     [Theory]
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --state start", true)]
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --state stop", true)]
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --state deallocate", true)]
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --state restart", true)]
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --state stop --skip-shutdown", true)]
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --state stop --no-wait", true)]
-    [InlineData("--resource-group test-rg --subscription sub123 --state start", false)] // Missing vm-name
-    [InlineData("--vm-name test-vm --subscription sub123 --state start", false)] // Missing resource-group
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123", false)] // Missing state
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --state invalid", false)] // Invalid state
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --state start --skip-shutdown", false)] // skip-shutdown with non-stop state
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --power-action start", true)]
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --power-action stop", true)]
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --power-action deallocate", true)]
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --power-action restart", true)]
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --power-action stop --skip-shutdown", true)]
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --power-action stop --no-wait", true)]
+    [InlineData("--resource-group test-rg --subscription sub123 --power-action start", false)] // Missing vm-name
+    [InlineData("--vm-name test-vm --subscription sub123 --power-action start", false)] // Missing resource-group
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123", false)] // Missing power-action
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --power-action invalid", false)] // Invalid action
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --power-action start --skip-shutdown", false)] // skip-shutdown with non-stop action
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Arrange
@@ -56,7 +56,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new VmPowerStateResult("test-vm", null, "test-rg", "start", "Operation completed.", true));
+                .Returns(new VmPowerStateResult("test-vm", null, "test-rg", "Operation completed.", true));
         }
 
         // Act & Assert
@@ -78,18 +78,18 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
     [InlineData("stop")]
     [InlineData("deallocate")]
     [InlineData("restart")]
-    public async Task ExecuteAsync_ChangesVmPowerState(string state)
+    public async Task ExecuteAsync_ChangesVmPowerState(string powerAction)
     {
         // Arrange
         var expectedResult = new VmPowerStateResult(
-            _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup, state,
-            $"Virtual machine '{_knownVmName}' {state} operation completed successfully.", true);
+            _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup,
+            $"Virtual machine '{_knownVmName}' {powerAction} operation completed successfully.", true);
 
         Service.ChangeVmPowerStateAsync(
             Arg.Is(_knownVmName),
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
-            Arg.Is(state),
+            Arg.Is(powerAction),
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
@@ -102,11 +102,10 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--state", state);
+            "--power-action", powerAction);
 
         var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmPowerStateCommandResult);
         Assert.Equal(_knownVmName, result.PowerState.Name);
-        Assert.Equal(state, result.PowerState.State);
         Assert.True(result.PowerState.Completed);
     }
 
@@ -115,7 +114,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
     {
         // Arrange
         var expectedResult = new VmPowerStateResult(
-            _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup, "start",
+            _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup,
             $"Virtual machine '{_knownVmName}' start operation initiated. Use instance view to check status.", false);
 
         Service.ChangeVmPowerStateAsync(
@@ -135,7 +134,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--state", "start",
+            "--power-action", "start",
             "--no-wait");
 
         // Assert
@@ -159,7 +158,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
     {
         // Arrange
         var expectedResult = new VmPowerStateResult(
-            _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup, "stop",
+            _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup,
             $"Virtual machine '{_knownVmName}' stop operation completed successfully.", true);
 
         Service.ChangeVmPowerStateAsync(
@@ -179,7 +178,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--state", "stop",
+            "--power-action", "stop",
             "--skip-shutdown");
 
         // Assert
@@ -220,7 +219,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--state", "start");
+            "--power-action", "start");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -250,7 +249,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--state", "start");
+            "--power-action", "start");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -279,7 +278,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--state", "restart");
+            "--power-action", "restart");
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -291,7 +290,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
     {
         // Arrange
         var expectedResult = new VmPowerStateResult(
-            _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup, "start",
+            _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup,
             $"Virtual machine '{_knownVmName}' start operation completed successfully.", true);
 
         Service.ChangeVmPowerStateAsync(
@@ -311,13 +310,12 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--state", "start");
+            "--power-action", "start");
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmPowerStateCommandResult);
         Assert.Equal(_knownVmName, result.PowerState.Name);
         Assert.Equal(_knownResourceGroup, result.PowerState.ResourceGroup);
-        Assert.Equal("start", result.PowerState.State);
         Assert.True(result.PowerState.Completed);
     }
 
@@ -326,7 +324,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
     {
         // Arrange
         var parseResult = CommandDefinition.Parse(
-            $"--vm-name {_knownVmName} --resource-group {_knownResourceGroup} --subscription {_knownSubscription} --state stop --no-wait --skip-shutdown");
+            $"--vm-name {_knownVmName} --resource-group {_knownResourceGroup} --subscription {_knownSubscription} --power-action stop --no-wait --skip-shutdown");
 
         // Assert parse was successful
         Assert.Empty(parseResult.Errors);

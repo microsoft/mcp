@@ -17,7 +17,7 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, ICo
     : BaseComputeCommand<VmPowerStateOptions>(true)
 {
     private const string CommandTitle = "Change Virtual Machine Power State";
-    private static readonly HashSet<string> s_validStates = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> s_validActions = new(StringComparer.OrdinalIgnoreCase)
     {
         "start", "stop", "deallocate", "restart"
     };
@@ -34,7 +34,7 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, ICo
         Use this to deallocate a VM to release compute resources while keeping the VM and preserving its configuration,
         power on a stopped VM, power off or shut down a running VM, or reboot a VM.
         Deallocating a VM stops billing for compute resources while the VM remains available to be started again later.
-        Supported --state values: deallocate (release compute resources while keeping the VM), start (power on), stop (power off, shut down), restart (reboot).
+        Supported --power-action values: deallocate (release compute resources while keeping the VM), start (power on), stop (power off, shut down), restart (reboot).
         Equivalent to 'az vm deallocate', 'az vm start', 'az vm stop', 'az vm restart'.
         Use --skip-shutdown with stop to force the action without graceful OS shutdown.
         Use --no-wait to return immediately; the response will include a 'statusUri' (the ARM Azure-AsyncOperation URL)
@@ -59,22 +59,22 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, ICo
         base.RegisterOptions(command);
 
         command.Options.Add(ComputeOptionDefinitions.VmName.AsRequired());
-        command.Options.Add(ComputeOptionDefinitions.State);
+        command.Options.Add(ComputeOptionDefinitions.PowerAction);
         command.Options.Add(ComputeOptionDefinitions.NoWait);
         command.Options.Add(ComputeOptionDefinitions.SkipShutdown);
 
         command.Validators.Add(commandResult =>
         {
-            var state = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.State.Name);
-            if (!string.IsNullOrEmpty(state) && !s_validStates.Contains(state))
+            var powerAction = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.PowerAction.Name);
+            if (!string.IsNullOrEmpty(powerAction) && !s_validActions.Contains(powerAction))
             {
-                commandResult.AddError($"Invalid --state value '{state}'. Accepted values: start, stop, deallocate, restart.");
+                commandResult.AddError($"Invalid --power-action value '{powerAction}'. Accepted values: start, stop, deallocate, restart.");
             }
 
             var skipShutdown = commandResult.GetValueOrDefault<bool>(ComputeOptionDefinitions.SkipShutdown.Name);
-            if (skipShutdown && !string.Equals(state, "stop", StringComparison.OrdinalIgnoreCase))
+            if (skipShutdown && !string.Equals(powerAction, "stop", StringComparison.OrdinalIgnoreCase))
             {
-                commandResult.AddError("--skip-shutdown is only compatible with --state stop.");
+                commandResult.AddError("--skip-shutdown is only compatible with --power-action stop.");
             }
         });
     }
@@ -83,7 +83,7 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, ICo
     {
         var options = base.BindOptions(parseResult);
         options.VmName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
-        options.State = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.State.Name);
+        options.PowerAction = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.PowerAction.Name);
         options.NoWait = parseResult.GetValueOrDefault<bool>(ComputeOptionDefinitions.NoWait.Name);
         options.SkipShutdown = parseResult.GetValueOrDefault<bool>(ComputeOptionDefinitions.SkipShutdown.Name);
         return options;
@@ -106,7 +106,7 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, ICo
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.State!,
+                options.PowerAction!,
                 options.NoWait,
                 options.SkipShutdown,
                 options.Tenant,
@@ -120,8 +120,8 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, ICo
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error changing VM power state. VmName: {VmName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, State: {State}",
-                options.VmName, options.ResourceGroup, options.Subscription, options.State);
+                "Error changing VM power state. VmName: {VmName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, PowerAction: {PowerAction}",
+                options.VmName, options.ResourceGroup, options.Subscription, options.PowerAction);
             HandleException(context, ex);
         }
 

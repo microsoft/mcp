@@ -1429,7 +1429,7 @@ azmcp compute vm delete --subscription "my-subscription" \
 azmcp compute vm power-state --subscription <subscription> \
                              --resource-group <resource-group> \
                              --vm-name <vm-name> \
-                             --state <start|stop|deallocate|restart> \
+                             --power-action <start|stop|deallocate|restart> \
                              [--no-wait] \
                              [--skip-shutdown]
 
@@ -1440,21 +1440,21 @@ azmcp compute vm power-state --subscription <subscription> \
 azmcp compute vm power-state --subscription "my-subscription" \
                              --resource-group "my-rg" \
                              --vm-name "my-vm" \
-                             --state start
+                             --power-action start
 
 # Stop a VM (graceful shutdown)
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute vm power-state --subscription "my-subscription" \
                              --resource-group "my-rg" \
                              --vm-name "my-vm" \
-                             --state stop
+                             --power-action stop
 
 # Stop a VM immediately (skip OS shutdown)
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute vm power-state --subscription "my-subscription" \
                              --resource-group "my-rg" \
                              --vm-name "my-vm" \
-                             --state stop \
+                             --power-action stop \
                              --skip-shutdown
 
 # Deallocate a VM (release compute resources, stop billing)
@@ -1462,21 +1462,21 @@ azmcp compute vm power-state --subscription "my-subscription" \
 azmcp compute vm power-state --subscription "my-subscription" \
                              --resource-group "my-rg" \
                              --vm-name "my-vm" \
-                             --state deallocate
+                             --power-action deallocate
 
 # Restart a VM
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute vm power-state --subscription "my-subscription" \
                              --resource-group "my-rg" \
                              --vm-name "my-vm" \
-                             --state restart
+                             --power-action restart
 
 # Start a VM without waiting for completion
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute vm power-state --subscription "my-subscription" \
                              --resource-group "my-rg" \
                              --vm-name "my-vm" \
-                             --state start \
+                             --power-action start \
                              --no-wait
 ```
 
@@ -1489,7 +1489,7 @@ azmcp compute vm power-state --subscription "my-subscription" \
 - **With `--no-wait`**: Returns immediately after initiating the operation without waiting for completion.
 
 **Returns:**
-- VM name, ID, resource group, requested state, completion status, and a status message.
+- VM name, ID, resource group, requested power action, completion status, and a status message.
 
 **Parameters:**
 | Parameter | Required | Description |
@@ -1497,9 +1497,9 @@ azmcp compute vm power-state --subscription "my-subscription" \
 | `--subscription` | Yes | Azure subscription ID |
 | `--resource-group`, `-g` | Yes | Resource group name |
 | `--vm-name` | Yes | Name of the virtual machine |
-| `--state` | Yes | Power state action: `start`, `stop`, `deallocate`, or `restart` |
+| `--power-action` | Yes | Power action to apply (not the current power state): `start`, `stop`, `deallocate`, or `restart` |
 | `--no-wait` | No | Return immediately without waiting for the operation to complete |
-| `--skip-shutdown` | No | Skip OS shutdown when stopping (force power off). Only valid with `--state stop` |
+| `--skip-shutdown` | No | Skip OS shutdown when stopping (force power off). Only valid with `--power-action stop` |
 
 #### Virtual Machine Scale Sets
 

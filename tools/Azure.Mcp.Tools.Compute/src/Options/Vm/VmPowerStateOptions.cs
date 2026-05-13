@@ -7,7 +7,7 @@ public class VmPowerStateOptions : BaseComputeOptions
 {
     public string? VmName { get; set; }
 
-    public string? State { get; set; }
+    public string? PowerAction { get; set; }
 
     public bool NoWait { get; set; }
 

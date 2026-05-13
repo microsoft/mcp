@@ -162,7 +162,7 @@ public interface IComputeService
         string vmName,
         string resourceGroup,
         string subscription,
-        string state,
+        string powerAction,
         bool noWait = false,
         bool skipShutdown = false,
         string? tenant = null,

@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
         Use this to add or change tags on a VM, resize a VM to a different size, enable or configure boot diagnostics, or update user data.
         Equivalent to 'az vm update'. The VM may need to be deallocated before resizing to certain sizes.
         Do not use this to change VM power state (start, stop, deallocate, restart); use VM power-state instead.
+        Do not use this to create a new VM (use VM create) or to update Virtual Machine Scale Sets (use VMSS update).
         """,
     Destructive = true,
     Idempotent = true,

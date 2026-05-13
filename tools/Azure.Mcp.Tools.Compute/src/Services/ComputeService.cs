@@ -1150,7 +1150,7 @@ public class ComputeService(
         string vmName,
         string resourceGroup,
         string subscription,
-        string state,
+        string powerAction,
         bool noWait = false,
         bool skipShutdown = false,
         string? tenant = null,
@@ -1168,13 +1168,13 @@ public class ComputeService(
         var vmResponse = await vmCollection.GetAsync(vmName, cancellationToken: cancellationToken);
         var vmResource = vmResponse.Value;
 
-        ArmOperation operation = state.ToLowerInvariant() switch
+        ArmOperation operation = powerAction.ToLowerInvariant() switch
         {
             "start" => await vmResource.PowerOnAsync(WaitUntil.Started, cancellationToken),
             "stop" => await vmResource.PowerOffAsync(WaitUntil.Started, skipShutdown, cancellationToken),
             "deallocate" => await vmResource.DeallocateAsync(WaitUntil.Started, cancellationToken: cancellationToken),
             "restart" => await vmResource.RestartAsync(WaitUntil.Started, cancellationToken),
-            _ => throw new ArgumentException($"Invalid state '{state}'. Accepted values: start, stop, deallocate, restart.", nameof(state))
+            _ => throw new ArgumentException($"Invalid power action '{powerAction}'. Accepted values: start, stop, deallocate, restart.", nameof(powerAction))
         };
 
         if (!noWait)
@@ -1199,12 +1199,12 @@ public class ComputeService(
         }
 
         var message = completed
-            ? $"Virtual machine '{vmName}' {state} operation completed successfully."
+            ? $"Virtual machine '{vmName}' {powerAction} operation completed successfully."
             : statusUri is not null
-                ? $"Virtual machine '{vmName}' {state} operation initiated. Poll 'statusUri' to track completion."
-                : $"Virtual machine '{vmName}' {state} operation initiated. Use instance view to check status.";
+                ? $"Virtual machine '{vmName}' {powerAction} operation initiated. Poll 'statusUri' to track completion."
+                : $"Virtual machine '{vmName}' {powerAction} operation initiated. Use instance view to check status.";
 
-        return new VmPowerStateResult(vmName, vmResource.Id.ToString(), resourceGroup, state, message, completed, statusUri);
+        return new VmPowerStateResult(vmName, vmResource.Id.ToString(), resourceGroup, message, completed, statusUri);
     }
 
     public async Task<bool> DeleteVmssAsync(

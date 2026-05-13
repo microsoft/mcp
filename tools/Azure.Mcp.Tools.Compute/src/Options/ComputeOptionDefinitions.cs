@@ -336,13 +336,13 @@ public static class ComputeOptionDefinitions
     };
 
     // Power state options
-    public const string StateName = "state";
+    public const string PowerActionName = "power-action";
     public const string NoWaitName = "no-wait";
     public const string SkipShutdownName = "skip-shutdown";
 
-    public static readonly Option<string> State = new($"--{StateName}")
+    public static readonly Option<string> PowerAction = new($"--{PowerActionName}")
     {
-        Description = "The power state change to apply to the VM. Accepted values: start, stop, deallocate, restart.",
+        Description = "The power action to apply to the VM (not the current power state). Accepted values: start, stop, deallocate, restart.",
         Required = true
     };
 

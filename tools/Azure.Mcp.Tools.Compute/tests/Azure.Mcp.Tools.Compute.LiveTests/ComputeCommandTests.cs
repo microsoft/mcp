@@ -565,6 +565,23 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
     #region VM Power State Tests
 
+    private async Task<string?> GetActualVmPowerStateAsync(string vmName)
+    {
+        var getResult = await CallToolAsync(
+            "compute_vm_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", vmName },
+                { "instance-view", true }
+            });
+
+        var instanceView = getResult.AssertProperty("InstanceView");
+        Assert.Equal(JsonValueKind.Object, instanceView.ValueKind);
+        return instanceView.GetProperty("powerState").GetString();
+    }
+
     [Fact]
     public async Task Should_perform_power_state_lifecycle()
     {
@@ -576,14 +593,15 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", VmName },
-                { "state", "stop" }
+                { "power-action", "stop" }
             });
 
         var stopPowerState = stopResult.AssertProperty("PowerState");
         Assert.Equal(JsonValueKind.Object, stopPowerState.ValueKind);
         Assert.NotNull(stopPowerState.GetProperty("name").GetString());
-        Assert.Equal("stop", stopPowerState.GetProperty("state").GetString());
         Assert.True(stopPowerState.GetProperty("completed").GetBoolean());
+        // Verify the VM's actual power state via instance view.
+        Assert.Equal("stopped", await GetActualVmPowerStateAsync(VmName));
 
         // Step 2: Start the VM from stopped state
         var startResult = await CallToolAsync(
@@ -593,13 +611,13 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", VmName },
-                { "state", "start" }
+                { "power-action", "start" }
             });
 
         var startPowerState = startResult.AssertProperty("PowerState");
         Assert.Equal(JsonValueKind.Object, startPowerState.ValueKind);
-        Assert.Equal("start", startPowerState.GetProperty("state").GetString());
         Assert.Equal(JsonValueKind.True, startPowerState.GetProperty("completed").ValueKind);
+        Assert.Equal("running", await GetActualVmPowerStateAsync(VmName));
 
         // Step 3: Restart the VM (requires running state)
         var restartResult = await CallToolAsync(
@@ -609,13 +627,13 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", VmName },
-                { "state", "restart" }
+                { "power-action", "restart" }
             });
 
         var restartPowerState = restartResult.AssertProperty("PowerState");
         Assert.Equal(JsonValueKind.Object, restartPowerState.ValueKind);
-        Assert.Equal("restart", restartPowerState.GetProperty("state").GetString());
         Assert.Equal(JsonValueKind.True, restartPowerState.GetProperty("completed").ValueKind);
+        Assert.Equal("running", await GetActualVmPowerStateAsync(VmName));
 
         // Step 4: Stop with skip-shutdown (VM is running after restart)
         var skipShutdownResult = await CallToolAsync(
@@ -625,14 +643,14 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", VmName },
-                { "state", "stop" },
+                { "power-action", "stop" },
                 { "skip-shutdown", true }
             });
 
         var skipShutdownPowerState = skipShutdownResult.AssertProperty("PowerState");
         Assert.Equal(JsonValueKind.Object, skipShutdownPowerState.ValueKind);
-        Assert.Equal("stop", skipShutdownPowerState.GetProperty("state").GetString());
         Assert.Equal(JsonValueKind.True, skipShutdownPowerState.GetProperty("completed").ValueKind);
+        Assert.Equal("stopped", await GetActualVmPowerStateAsync(VmName));
 
         // Step 5: Deallocate the VM (VM is stopped)
         var deallocateResult = await CallToolAsync(
@@ -642,13 +660,13 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", VmName },
-                { "state", "deallocate" }
+                { "power-action", "deallocate" }
             });
 
         var deallocatePowerState = deallocateResult.AssertProperty("PowerState");
         Assert.Equal(JsonValueKind.Object, deallocatePowerState.ValueKind);
-        Assert.Equal("deallocate", deallocatePowerState.GetProperty("state").GetString());
         Assert.Equal(JsonValueKind.True, deallocatePowerState.GetProperty("completed").ValueKind);
+        Assert.Equal("deallocated", await GetActualVmPowerStateAsync(VmName));
 
         // Step 6: Start with no-wait (VM is deallocated, restore to running state)
         var noWaitResult = await CallToolAsync(
@@ -658,15 +676,16 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", VmName },
-                { "state", "start" },
+                { "power-action", "start" },
                 { "no-wait", true }
             });
 
         var noWaitPowerState = noWaitResult.AssertProperty("PowerState");
         Assert.Equal(JsonValueKind.Object, noWaitPowerState.ValueKind);
-        Assert.Equal("start", noWaitPowerState.GetProperty("state").GetString());
         Assert.Equal(JsonValueKind.False, noWaitPowerState.GetProperty("completed").ValueKind);
         Assert.Contains("initiated", noWaitPowerState.GetProperty("message").GetString());
+        // With --no-wait the operation is only initiated; the VM may still be in a transitional
+        // state (e.g. "starting") so we don't assert a specific final state here.
     }
 
     [Fact]
@@ -681,7 +700,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", invalidVmName },
-                { "state", "start" }
+                { "power-action", "start" }
             },
             resultProcessor: elem => elem);
 

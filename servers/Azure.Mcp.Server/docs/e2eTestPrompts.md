@@ -270,7 +270,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vm_power-state | Deallocate and power off VM <vm-name> to stop billing for compute resources while preserving the VM |
 | compute_vmss_create | Create a virtual machine scale set named <vmss-name> in resource group <resource-group-name> |
 | compute_vmss_create | Create a VMSS with 3 instances in <resource-group-name> |
-| compute_vmss_create | Create and deploy a new virtual machine scale set with Rolling upgrade policy and 5 instances |
+| compute_vmss_create | Deploy a virtual machine scale set with Rolling upgrade policy and 5 instances |
 | compute_vmss_create | Create Linux VMSS with SSH authentication in <resource-group-name> |
 | compute_vmss_get | List all virtual machine scale sets in my subscription |
 | compute_vmss_get | List virtual machine scale sets in resource group <resource-group-name> |
@@ -285,7 +285,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vmss_update | Add tags to scale set <vmss-name> in resource group <resource-group-name> |
 | compute_vmss_delete | Delete scale set <vmss-name> in resource group <resource-group-name> |
 | compute_vmss_delete | Remove VMSS <vmss-name> from resource group <resource-group-name> |
-| compute_vmss_delete | Delete and destroy virtual machine scale set <vmss-name> in resource group <resource-group-name> |
+| compute_vmss_delete | Destroy virtual machine scale set <vmss-name> in resource group <resource-group-name> |
 | compute_vmss_delete | Force delete VMSS <vmss-name> in resource group <resource-group-name> using force-deletion |
 | compute_disk_get | List all managed disks in my subscription |
 | compute_disk_get | Show me all disks in resource group <resource-group> |
