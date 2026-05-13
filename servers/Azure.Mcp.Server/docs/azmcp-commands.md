@@ -2001,6 +2001,57 @@ azmcp cosmos database container item query --subscription <subscription> \
                                            --database <database> \
                                            --container <container> \
                                            [--query "SELECT * FROM c"]
+
+# Infer an approximate schema for a Cosmos DB container by sampling documents.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp cosmos database container schema get --subscription <subscription> \
+                                           --account <account> \
+                                           --database <database> \
+                                           --container <container> \
+                                           [--sample-size 10]
+
+# Get the most recently modified documents from a Cosmos DB container.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp cosmos database container item list-recent --subscription <subscription> \
+                                                 --account <account> \
+                                                 --database <database> \
+                                                 --container <container> \
+                                                 [--count 10]
+
+# Get a single Cosmos DB document by id (point read when --partition-key is supplied).
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp cosmos database container item get --subscription <subscription> \
+                                         --account <account> \
+                                         --database <database> \
+                                         --container <container> \
+                                         --id <id> \
+                                         [--partition-key <partition-key>]
+
+# Search Cosmos DB documents where a property contains a phrase (FullTextContains).
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp cosmos database container item text-search --subscription <subscription> \
+                                                 --account <account> \
+                                                 --database <database> \
+                                                 --container <container> \
+                                                 --property <property> \
+                                                 --search-phrase <phrase> \
+                                                 [--count 10]
+
+# Vector similarity search against a Cosmos DB container. Provide --embedding (CSV floats)
+# or --search-text plus --openai-endpoint and --embedding-deployment to generate one.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp cosmos database container item vector-search --subscription <subscription> \
+                                                   --account <account> \
+                                                   --database <database> \
+                                                   --container <container> \
+                                                   --vector-property <vector-property> \
+                                                   --select-properties <p1,p2,...> \
+                                                   [--count 10] \
+                                                   [--embedding "0.1,0.2,..."] \
+                                                   [--search-text "free-form text"] \
+                                                   [--openai-endpoint <endpoint>] \
+                                                   [--embedding-deployment <deployment>] \
+                                                   [--embedding-dimensions <n>]
 ```
 
 ### Azure Data Explorer Operations

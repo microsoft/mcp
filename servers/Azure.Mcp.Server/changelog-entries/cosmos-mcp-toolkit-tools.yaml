@@ -1,0 +1,9 @@
+changes:
+  - section: "Features Added"
+    description: |
+      Added five Cosmos DB MCP tools that bring this server in line with the Azure Cosmos DB MCP Toolkit:
+      `cosmos database container schema get` (infer container schema by sampling documents),
+      `cosmos database container item list-recent` (return the most recently modified documents),
+      `cosmos database container item get` (look up a document by id, with optional partition key for point reads),
+      `cosmos database container item text-search` (FullTextContains-based property search), and
+      `cosmos database container item vector-search` (VectorDistance similarity search with optional Azure OpenAI embedding generation via `--search-text`).

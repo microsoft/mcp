@@ -350,6 +350,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | cosmos_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> |
 | cosmos_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> |
 | cosmos_database_container_item_query | Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name> |
+| cosmos_database_container_item_get | Get the document with id <document_id> from container <container_name> in database <database_name> of cosmosdb account <account_name> |
+| cosmos_database_container_item_get | Find the document <document_id> in container <container_name> (database <database_name>, account <account_name>) using partition key <partition_key> |
+| cosmos_database_container_item_list-recent | Show me the 10 most recent documents in container <container_name> of database <database_name> in cosmosdb account <account_name> |
+| cosmos_database_container_item_list-recent | Get the latest <count> documents from <container_name> in <database_name> for cosmosdb account <account_name> |
+| cosmos_database_container_item_text-search | Search documents in container <container_name> (database <database_name>, account <account_name>) where <property> contains "<phrase>" |
+| cosmos_database_container_item_vector-search | Run a vector search in container <container_name> of database <database_name> for cosmosdb account <account_name> using <vector_property> and the embedding <embedding> |
+| cosmos_database_container_item_vector-search | Find documents similar to "<text>" in container <container_name> using vector property <vector_property> with Azure OpenAI endpoint <endpoint> and deployment <deployment> |
+| cosmos_database_container_schema_get | Infer the schema of container <container_name> in database <database_name> for cosmosdb account <account_name> |
+| cosmos_database_container_schema_get | Sample <sample_size> documents from container <container_name> (database <database_name>, account <account_name>) and tell me the property names and types |
 
 ## Azure Data Explorer
 
