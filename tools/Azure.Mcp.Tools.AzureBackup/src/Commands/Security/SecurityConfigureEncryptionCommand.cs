@@ -35,6 +35,7 @@ public sealed class SecurityConfigureEncryptionCommand(ILogger<SecurityConfigure
 {
     private readonly ILogger<SecurityConfigureEncryptionCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
+    private string? _lastVaultType;
 
     protected override void RegisterOptions(Command command)
     {
@@ -75,13 +76,17 @@ public sealed class SecurityConfigureEncryptionCommand(ILogger<SecurityConfigure
                 {
                     commandResult.AddError("--key-vault-uri must be a valid URI (e.g., 'https://kv-name.vault.azure.net/').");
                 }
-                else if (!string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
+                else
                 {
-                    commandResult.AddError("--key-vault-uri must use HTTPS (e.g., 'https://kv-name.vault.azure.net/').");
-                }
-                else if (uri.AbsolutePath != "/" && !string.IsNullOrEmpty(uri.AbsolutePath.TrimEnd('/')))
-                {
-                    commandResult.AddError("--key-vault-uri must be the Key Vault base URI without path segments (e.g., 'https://kv-name.vault.azure.net/'). Do not include '/keys/...' in the URI.");
+                    if (!string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
+                    {
+                        commandResult.AddError("--key-vault-uri must use HTTPS (e.g., 'https://kv-name.vault.azure.net/').");
+                    }
+
+                    if (uri.AbsolutePath != "/" && !string.IsNullOrEmpty(uri.AbsolutePath.TrimEnd('/')))
+                    {
+                        commandResult.AddError("--key-vault-uri must be the Key Vault base URI without path segments (e.g., 'https://kv-name.vault.azure.net/'). Do not include '/keys/...' in the URI.");
+                    }
                 }
             }
         });
@@ -108,6 +113,7 @@ public sealed class SecurityConfigureEncryptionCommand(ILogger<SecurityConfigure
         var options = BindOptions(parseResult);
 
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        _lastVaultType = options.VaultType;
 
         try
         {
@@ -145,7 +151,9 @@ public sealed class SecurityConfigureEncryptionCommand(ILogger<SecurityConfigure
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Vault or Key Vault key not found. Verify the vault name, resource group, Key Vault URI, and key name.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
-            $"Bad request configuring CMK encryption. For RSV, CMK can only be enabled on new vaults with no registered items. Ensure the vault has a managed identity enabled and the Key Vault Crypto Service Encryption User role is assigned. Details: {reqEx.Message}",
+            string.Equals(_lastVaultType, "rsv", StringComparison.OrdinalIgnoreCase)
+                ? $"Bad request configuring CMK encryption. For RSV, CMK can only be enabled on new vaults with no registered items. Ensure the vault has a managed identity enabled and the Key Vault Crypto Service Encryption User role is assigned. Details: {reqEx.Message}"
+                : $"Bad request configuring CMK encryption. Ensure the vault has a managed identity enabled and the Key Vault Crypto Service Encryption User role is assigned. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed. The vault's managed identity needs Key Vault Crypto Service Encryption User role on the Key Vault. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>

@@ -1025,16 +1025,15 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(keyVaultUri), keyVaultUri),
             (nameof(keyName), keyName),
             (nameof(identityType), identityType));
-        ValidateSubscriptionFormat(subscription);
-
-        var normalizedIdentity = identityType.ToUpperInvariant();
-        if (normalizedIdentity != "SYSTEMASSIGNED" && normalizedIdentity != "USERASSIGNED")
+        var isSystemAssigned = "SystemAssigned".Equals(identityType, StringComparison.OrdinalIgnoreCase);
+        var isUserAssigned = "UserAssigned".Equals(identityType, StringComparison.OrdinalIgnoreCase);
+        if (!isSystemAssigned && !isUserAssigned)
         {
             throw new ArgumentException(
                 $"Invalid identity type '{identityType}' for CMK encryption. Supported values: 'SystemAssigned', 'UserAssigned'.");
         }
 
-        if (normalizedIdentity == "USERASSIGNED" && string.IsNullOrWhiteSpace(userAssignedIdentityId))
+        if (isUserAssigned && string.IsNullOrWhiteSpace(userAssignedIdentityId))
         {
             throw new ArgumentException(
                 "The --user-assigned-identity-id parameter is required when --identity-type is 'UserAssigned'.");
@@ -1052,11 +1051,11 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         var vault = await vaultResource.GetAsync(cancellationToken);
 
         var kekIdentity = new CmkKekIdentity();
-        if (normalizedIdentity == "SYSTEMASSIGNED")
+        if (isSystemAssigned)
         {
             kekIdentity.UseSystemAssignedIdentity = true;
         }
-        else // USERASSIGNED - validated above
+        else
         {
             kekIdentity.UseSystemAssignedIdentity = false;
             kekIdentity.UserAssignedIdentity = new ResourceIdentifier(userAssignedIdentityId!);
