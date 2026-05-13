@@ -11,7 +11,7 @@ namespace Azure.Mcp.Tools.Cosmos.Validation;
 /// such as the property names interpolated into <c>FullTextContains(c.{property}, ...)</c>
 /// and <c>VectorDistance(c.{vector}, ...)</c>.
 /// </summary>
-internal static class CosmosPropertyValidator
+internal static class PropertyValidator
 {
     private static readonly Regex PropertyPattern = RegexHelper.CreateRegex(
         @"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$",

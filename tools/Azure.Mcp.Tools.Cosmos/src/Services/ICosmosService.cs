@@ -43,7 +43,7 @@ public interface ICosmosService : IAsyncDisposable
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<CosmosContainerSchema> GetApproximateSchema(
+    Task<ContainerSchema> GetApproximateSchema(
         string accountName,
         string databaseName,
         string containerName,

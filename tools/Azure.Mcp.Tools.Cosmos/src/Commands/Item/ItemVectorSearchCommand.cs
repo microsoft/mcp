@@ -49,7 +49,7 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
         command.Validators.Add(result =>
         {
             var vectorProperty = result.GetValueOrDefault<string>(CosmosOptionDefinitions.VectorProperty.Name);
-            if (!CosmosPropertyValidator.IsValid(vectorProperty))
+            if (!PropertyValidator.IsValid(vectorProperty))
             {
                 result.AddError("--vector-property must be a dot-delimited identifier (letters, digits, and underscores only).");
             }
@@ -63,7 +63,7 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
             {
                 foreach (var prop in selectProperties.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 {
-                    if (!CosmosPropertyValidator.IsValid(prop))
+                    if (!PropertyValidator.IsValid(prop))
                     {
                         result.AddError($"--select-properties contains an invalid property '{prop}'. Use letters, digits, and underscores only.");
                         break;

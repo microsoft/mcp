@@ -100,5 +100,5 @@ public sealed class ContainerSchemaGetCommand(ILogger<ContainerSchemaGetCommand>
         _ => base.GetStatusCode(ex)
     };
 
-    internal record ContainerSchemaGetCommandResult(int SampleSize, IReadOnlyList<Models.CosmosSchemaProperty> Properties);
+    internal record ContainerSchemaGetCommandResult(int SampleSize, IReadOnlyList<Models.SchemaProperty> Properties);
 }

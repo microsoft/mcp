@@ -298,7 +298,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         return items;
     }
 
-    public async Task<CosmosContainerSchema> GetApproximateSchema(
+    public async Task<ContainerSchema> GetApproximateSchema(
         string accountName,
         string databaseName,
         string containerName,
@@ -388,14 +388,14 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
 
         var properties = typeMap
             .OrderBy(kvp => kvp.Key, StringComparer.Ordinal)
-            .Select(kvp => new CosmosSchemaProperty(
+            .Select(kvp => new SchemaProperty(
                 kvp.Key,
                 string.Join(" | ", kvp.Value.OrderBy(t => t, StringComparer.Ordinal)),
                 countMap.TryGetValue(kvp.Key, out var c) ? c : 0,
                 sampled))
             .ToList();
 
-        return new CosmosContainerSchema(sampled, properties);
+        return new ContainerSchema(sampled, properties);
     }
 
     public async Task<List<JsonElement>> GetRecentItems(
@@ -546,7 +546,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             (nameof(searchPhrase), searchPhrase),
             (nameof(subscription), subscription));
 
-        if (!CosmosPropertyValidator.IsValid(property))
+        if (!PropertyValidator.IsValid(property))
         {
             throw new ArgumentException(
                 "Invalid property name. Use dot notation with letters, digits, and underscores only (e.g., 'name' or 'profile.name').",
@@ -618,7 +618,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             (nameof(vectorProperty), vectorProperty),
             (nameof(subscription), subscription));
 
-        if (!CosmosPropertyValidator.IsValid(vectorProperty))
+        if (!PropertyValidator.IsValid(vectorProperty))
         {
             throw new ArgumentException(
                 "Invalid vector property name. Use dot notation with letters, digits, and underscores only (e.g., 'embedding' or 'metadata.vector').",
@@ -632,7 +632,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
 
         foreach (var prop in selectProperties)
         {
-            if (!CosmosPropertyValidator.IsValid(prop))
+            if (!PropertyValidator.IsValid(prop))
             {
                 throw new ArgumentException(
                     $"Invalid property name '{prop}' in selectProperties. Use dot notation with letters, digits, and underscores only.",

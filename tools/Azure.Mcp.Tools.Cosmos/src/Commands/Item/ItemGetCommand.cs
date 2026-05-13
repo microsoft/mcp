@@ -75,8 +75,8 @@ public sealed class ItemGetCommand(ILogger<ItemGetCommand> logger, ICosmosServic
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Account: {Account}, Database: {Database}, Container: {Container}, Id: {Id}",
-                Name, options.Account, options.Database, options.Container, options.Id);
+            _logger.LogError(ex, "Error in {Operation}. Account: {Account}, Database: {Database}, Container: {Container}",
+                Name, options.Account, options.Database, options.Container);
             HandleException(context, ex);
         }
 

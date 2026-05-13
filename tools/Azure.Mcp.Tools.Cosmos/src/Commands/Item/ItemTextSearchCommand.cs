@@ -41,7 +41,7 @@ public sealed class ItemTextSearchCommand(ILogger<ItemTextSearchCommand> logger,
         command.Validators.Add(result =>
         {
             var property = result.GetValueOrDefault<string>(CosmosOptionDefinitions.Property.Name);
-            if (!CosmosPropertyValidator.IsValid(property))
+            if (!PropertyValidator.IsValid(property))
             {
                 result.AddError("--property must be a dot-delimited identifier (letters, digits, and underscores only).");
             }

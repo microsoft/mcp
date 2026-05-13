@@ -31,12 +31,12 @@ public class ContainerSchemaGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsSchema_OnSuccess()
     {
-        var properties = new List<CosmosSchemaProperty>
+        var properties = new List<SchemaProperty>
         {
             new("id", "string", 5, 5),
             new("name", "string", 4, 5),
         };
-        Cosmos.Models.CosmosContainerSchema schema = new(5, properties);
+        Cosmos.Models.ContainerSchema schema = new(5, properties);
 
         Service.GetApproximateSchema(
             Arg.Is("acct"),
