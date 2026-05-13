@@ -3,6 +3,9 @@
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="Fabric.Mcp.Tools.DataFactory.UnitTests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\core\Fabric.Mcp.Core\src\Fabric.Mcp.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
