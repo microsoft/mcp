@@ -541,9 +541,32 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var collection = vaultResource.GetDataProtectionBackupJobs();
 
         var jobs = new List<BackupJobInfo>();
-        await foreach (var job in collection.GetAllAsync(cancellationToken))
+        var enumerator = collection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        try
         {
-            jobs.Add(MapToJobInfo(job.Data));
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    jobs.Add(MapToJobInfo(enumerator.Current.Data));
+                }
+                catch (FormatException)
+                {
+                    // The Azure SDK may throw FormatException when deserializing jobs with
+                    // non-standard ISO 8601 duration fields (XmlConvert.ToTimeSpan limitation).
+                    // Return the jobs collected so far rather than failing the entire list.
+                    break;
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
         }
 
         return jobs;

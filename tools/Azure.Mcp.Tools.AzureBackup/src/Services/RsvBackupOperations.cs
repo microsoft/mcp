@@ -20,16 +20,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
     private const string VaultType = VaultTypeResolver.Rsv;
     private const string FabricName = "Azure";
 
-    private static void ValidateSubscriptionFormat(string subscription)
-    {
-        if (!Guid.TryParse(subscription, out _))
-        {
-            throw new ArgumentException(
-                $"Invalid subscription ID '{subscription}'. Expected a GUID (e.g., 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'). " +
-                "If you provided a subscription name, use the subscription ID instead.");
-        }
-    }
-
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string location,
         string? sku, string? storageType, string? tenant,
@@ -40,7 +30,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(location), location));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
@@ -75,7 +64,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -90,7 +78,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var subId = SubscriptionResource.CreateResourceIdentifier(subscription);
@@ -118,7 +105,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(subscription), subscription),
             (nameof(datasourceId), datasourceId),
             (nameof(policyName), policyName));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
@@ -256,7 +242,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(protectedItemName), protectedItemName));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
@@ -321,7 +306,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
@@ -346,7 +330,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(policyName), policyName));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var policyId = BackupProtectionPolicyResource.CreateResourceIdentifier(
@@ -365,7 +348,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
@@ -390,7 +372,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(jobId), jobId));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var jobResourceId = BackupJobResource.CreateResourceIdentifier(
@@ -409,7 +390,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
@@ -435,7 +415,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(subscription), subscription),
             (nameof(protectedItemName), protectedItemName),
             (nameof(recoveryPointId), recoveryPointId));
-        ValidateSubscriptionFormat(subscription);
 
         if (string.IsNullOrEmpty(containerName))
         {
@@ -465,7 +444,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(protectedItemName), protectedItemName));
-        ValidateSubscriptionFormat(subscription);
 
         if (string.IsNullOrEmpty(containerName))
         {
@@ -528,7 +506,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -616,7 +593,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(subscription), subscription),
             (nameof(policyName), policyName),
             (nameof(workloadType), workloadType));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultResourceId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -845,7 +821,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(immutabilityState), immutabilityState));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -877,7 +852,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(softDeleteState), softDeleteState));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -926,7 +900,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -948,6 +921,13 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             var currentConfig = await configResource.GetAsync(cancellationToken);
 
             var data = currentConfig.Value.Data;
+
+            // The BackupResourceConfig GET reliably returns the CRR state even when the
+            // Vault GET RedundancySettings.CrossRegionRestore property is not populated.
+            if (data.Properties.EnableCrossRegionRestore == true)
+            {
+                return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
+            }
             data.Properties.EnableCrossRegionRestore = true;
 
             var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
@@ -1357,7 +1337,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(datasourceId), datasourceId));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
@@ -1636,7 +1615,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
