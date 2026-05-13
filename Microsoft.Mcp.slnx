@@ -427,6 +427,7 @@
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.SreAgent/tests/">
     <Project Path="tools/Azure.Mcp.Tools.SreAgent/tests/Azure.Mcp.Tools.SreAgent.UnitTests/Azure.Mcp.Tools.SreAgent.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.SreAgent/tests/Azure.Mcp.Tools.SreAgent.LiveTests/Azure.Mcp.Tools.SreAgent.LiveTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Storage/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Storage/src/">

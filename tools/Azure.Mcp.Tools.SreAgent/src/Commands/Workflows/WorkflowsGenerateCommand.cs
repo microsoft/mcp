@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Workflows;
 
@@ -18,33 +19,33 @@ public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> l
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Kind);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Name);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Description);
-        command.Options.Add(SreAgentPortedOptionDefinitions.ModelOrType);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Tools);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Handoffs);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Connector);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Database);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Query);
-        command.Options.Add(SreAgentPortedOptionDefinitions.UrlTemplate);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Parameters);
+        command.Options.Add(SreAgentOptionDefinitions.Kind);
+        command.Options.Add(SreAgentOptionDefinitions.Name);
+        command.Options.Add(SreAgentOptionDefinitions.Description.AsRequired());
+        command.Options.Add(SreAgentOptionDefinitions.ModelOrType);
+        command.Options.Add(SreAgentOptionDefinitions.Tools);
+        command.Options.Add(SreAgentOptionDefinitions.Handoffs);
+        command.Options.Add(SreAgentOptionDefinitions.Connector);
+        command.Options.Add(SreAgentOptionDefinitions.Database);
+        command.Options.Add(SreAgentOptionDefinitions.Query);
+        command.Options.Add(SreAgentOptionDefinitions.UrlTemplate);
+        command.Options.Add(SreAgentOptionDefinitions.ParametersList);
     }
 
     protected override WorkflowsGenerateOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Kind = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Kind.Name);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Name.Name);
-        o.Description = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Description.Name);
-        o.ModelOrType = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.ModelOrType.Name);
-        o.Tools = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.Tools.Name);
-        o.Handoffs = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.Handoffs.Name);
-        o.Connector = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Connector.Name);
-        o.Database = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Database.Name);
-        o.Query = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Query.Name);
-        o.UrlTemplate = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.UrlTemplate.Name);
-        o.Parameters = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.Parameters.Name);
+        o.Kind = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Kind.Name);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        o.Description = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Description.Name);
+        o.ModelOrType = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.ModelOrType.Name);
+        o.Tools = parseResult.GetValueOrDefault<string[]>(SreAgentOptionDefinitions.Tools.Name);
+        o.Handoffs = parseResult.GetValueOrDefault<string[]>(SreAgentOptionDefinitions.Handoffs.Name);
+        o.Connector = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Connector.Name);
+        o.Database = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Database.Name);
+        o.Query = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Query.Name);
+        o.UrlTemplate = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.UrlTemplate.Name);
+        o.Parameters = parseResult.GetValueOrDefault<string[]>(SreAgentOptionDefinitions.ParametersList.Name);
         return o;
     }
 

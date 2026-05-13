@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
@@ -20,18 +21,18 @@ public sealed class IncidentsCreateCommand(ILogger<IncidentsCreateCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Severity);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Title);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Description);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Services);
+        command.Options.Add(SreAgentOptionDefinitions.Severity);
+        command.Options.Add(SreAgentOptionDefinitions.Title);
+        command.Options.Add(SreAgentOptionDefinitions.Description.AsRequired());
+        command.Options.Add(SreAgentOptionDefinitions.Services);
     }
     protected override IncidentCreateOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Severity = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Severity.Name);
-        o.Title = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Title.Name);
-        o.Description = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Description.Name);
-        o.Services = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.Services.Name);
+        o.Severity = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Severity.Name);
+        o.Title = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Title.Name);
+        o.Description = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Description.Name);
+        o.Services = parseResult.GetValueOrDefault<string[]>(SreAgentOptionDefinitions.Services.Name);
         return o;
     }
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)

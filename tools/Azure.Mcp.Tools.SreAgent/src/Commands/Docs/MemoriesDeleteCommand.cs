@@ -20,15 +20,15 @@ public sealed class MemoriesDeleteCommand(ILogger<MemoriesDeleteCommand> logger,
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Name);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Confirm);
+        command.Options.Add(SreAgentOptionDefinitions.Name);
+        command.Options.Add(SreAgentOptionDefinitions.Confirm);
     }
 
     protected override MemoriesDeleteOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Name.Name);
-        o.Confirm = parseResult.GetValueOrDefault<bool>(SreAgentPortedOptionDefinitions.Confirm.Name);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        o.Confirm = parseResult.GetValueOrDefault<bool>(SreAgentOptionDefinitions.Confirm.Name);
         return o;
     }
 
@@ -41,8 +41,7 @@ public sealed class MemoriesDeleteCommand(ILogger<MemoriesDeleteCommand> logger,
         {
             if (!o.Confirm)
             {
-                SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"Error: Refusing to delete memory '{o.Name}': destructive operation requires 'confirm: true'. Ask the user to confirm, then retry with confirm=true.");
-                return context.Response;
+                throw new InvalidOperationException($"Refusing to delete memory '{o.Name}': destructive operation requires --confirm true.");
             }
             var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
             await _sreAgentService.DeleteMemoryAsync(endpoint, o.Name!, o.Tenant, cancellationToken);

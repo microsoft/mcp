@@ -38,6 +38,8 @@ public interface ISreAgentService
 
     Task<SreSkill> CreateSkillAsync(string endpoint, SreSkillCreateRequest request, string? tenant = null, CancellationToken cancellationToken = default);
 
+    Task<SreAgentDeleteResult> DeleteSkillAsync(string endpoint, string name, string? tenant = null, CancellationToken cancellationToken = default);
+
     #endregion
 
 

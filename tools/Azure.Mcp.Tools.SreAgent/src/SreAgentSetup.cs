@@ -18,7 +18,7 @@ using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.SreAgent;
 
-public class SreAgentSetup : IAreaSetup
+public sealed class SreAgentSetup : IAreaSetup
 {
     public string Name => "sreagent";
 
@@ -36,7 +36,7 @@ public class SreAgentSetup : IAreaSetup
         services.AddSingleton<AgentsDeleteCommand>();
         services.AddSingleton<AgentsToolsGetCommand>();
         services.AddSingleton<AgentsToolsCreateCommand>();
-        services.AddSingleton<AgentToolsListCommand>();
+        services.AddSingleton<AgentsToolsListCommand>();
         services.AddSingleton<SkillsDeleteCommand>();
         services.AddSingleton<SkillsListCommand>();
         services.AddSingleton<SkillsCreateCommand>();
@@ -118,7 +118,7 @@ public class SreAgentSetup : IAreaSetup
             "tools",
             "SRE Agent custom tool operations - Commands for listing and managing custom tools on an SRE Agent resource.");
         agents.AddSubGroup(tools);
-        tools.AddCommand<AgentToolsListCommand>(serviceProvider);
+        tools.AddCommand<AgentsToolsListCommand>(serviceProvider);
         tools.AddCommand<AgentsToolsGetCommand>(serviceProvider);
         tools.AddCommand<AgentsToolsCreateCommand>(serviceProvider);
 

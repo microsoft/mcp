@@ -23,15 +23,15 @@ public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger,
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(SreAgentPortedOptionDefinitions.YamlContent);
-        command.Options.Add(SreAgentPortedOptionDefinitions.SourceName);
+        command.Options.Add(SreAgentOptionDefinitions.YamlContent);
+        command.Options.Add(SreAgentOptionDefinitions.SourceName);
     }
 
     protected override WorkflowsApplyOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.YamlContent = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.YamlContent.Name);
-        o.SourceName = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.SourceName.Name);
+        o.YamlContent = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.YamlContent.Name);
+        o.SourceName = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.SourceName.Name);
         return o;
     }
 

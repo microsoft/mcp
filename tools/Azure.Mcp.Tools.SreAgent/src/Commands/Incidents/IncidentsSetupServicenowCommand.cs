@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
@@ -22,23 +23,23 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Name);
-        command.Options.Add(SreAgentPortedOptionDefinitions.InstanceUrl);
-        command.Options.Add(SreAgentPortedOptionDefinitions.AuthType);
-        command.Options.Add(SreAgentPortedOptionDefinitions.TokenEnv);
-        command.Options.Add(SreAgentPortedOptionDefinitions.UsernameEnv);
-        command.Options.Add(SreAgentPortedOptionDefinitions.PasswordEnv);
+        command.Options.Add(SreAgentOptionDefinitions.Name);
+        command.Options.Add(SreAgentOptionDefinitions.InstanceUrl);
+        command.Options.Add(SreAgentOptionDefinitions.AuthType.AsRequired());
+        command.Options.Add(SreAgentOptionDefinitions.TokenEnv);
+        command.Options.Add(SreAgentOptionDefinitions.UsernameEnv);
+        command.Options.Add(SreAgentOptionDefinitions.PasswordEnv);
     }
 
     protected override IncidentConnectorServiceNowOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Name.Name);
-        o.InstanceUrl = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.InstanceUrl.Name);
-        o.AuthType = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.AuthType.Name);
-        o.TokenEnv = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.TokenEnv.Name);
-        o.UsernameEnv = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.UsernameEnv.Name);
-        o.PasswordEnv = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.PasswordEnv.Name);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        o.InstanceUrl = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.InstanceUrl.Name);
+        o.AuthType = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.AuthType.Name);
+        o.TokenEnv = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.TokenEnv.Name);
+        o.UsernameEnv = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.UsernameEnv.Name);
+        o.PasswordEnv = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.PasswordEnv.Name);
         return o;
     }
 

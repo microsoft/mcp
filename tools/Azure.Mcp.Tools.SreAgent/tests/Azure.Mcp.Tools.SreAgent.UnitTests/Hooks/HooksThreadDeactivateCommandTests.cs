@@ -1,9 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
+using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Hooks;
+using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Helpers;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SreAgent.UnitTests.Hooks;
@@ -14,8 +20,7 @@ public class HooksThreadDeactivateCommandTests : CommandUnitTestsBase<HooksThrea
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = Command.GetCommand();
-        Assert.NotNull(command.Name);
-        Assert.NotEmpty(command.Name);
+        Assert.Equal("deactivate", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
@@ -25,5 +30,126 @@ public class HooksThreadDeactivateCommandTests : CommandUnitTestsBase<HooksThrea
     {
         var command = Command.GetCommand();
         Assert.NotNull(command.Options);
+        var optionNames = command.Options.Select(o => o.Name).ToList();
+        Assert.Contains("--agent", optionNames);
+        Assert.Contains("--thread-id", optionNames);
+        Assert.Contains("--hook-name", optionNames);
+    }
+
+    [Theory]
+    [InlineData("--subscription sub --agent agent1 --thread-id thread1 --hook-name hook1", true)]
+    [InlineData("--subscription sub --agent agent1 --thread-id thread1 --hook-name hook1 --tenant tenant1", true)]
+    [InlineData("--subscription sub --agent agent1 --thread-id thread1", false)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        TestEnvironment.ClearAzureSubscriptionId();
+        if (shouldSucceed)
+        {
+            Service.ListAgentsAsync(
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
+                .Returns(new List<SreAgentResource>
+                {
+                    new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
+                });
+            Service.DeactivateThreadHookAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
+                .Returns(Task.CompletedTask);
+        }
+
+        var response = await ExecuteCommandAsync(args);
+
+        if (shouldSucceed)
+        {
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        }
+        else
+        {
+            Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DeserializationValidation()
+    {
+        Service.ListAgentsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new List<SreAgentResource>
+            {
+                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
+            });
+        Service.DeactivateThreadHookAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--thread-id", "thread1", "--hook-name", "hook1");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, SreAgentJsonContext.Default.HooksThreadDeactivateCommandResult);
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesServiceErrors()
+    {
+        Service.ListAgentsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new List<SreAgentResource>
+            {
+                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
+            });
+        Service.DeactivateThreadHookAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("Test error"));
+
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--thread-id", "thread1", "--hook-name", "hook1");
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Contains("Test error", response.Message);
+    }
+
+    [Fact]
+    public async Task BindOptions_BindsOptionsCorrectly()
+    {
+        Service.ListAgentsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new List<SreAgentResource>
+            {
+                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
+            });
+        Service.DeactivateThreadHookAsync("https://agent1.azuresre.ai", "thread1", "hook1", null, Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--thread-id", "thread1", "--hook-name", "hook1");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).DeactivateThreadHookAsync("https://agent1.azuresre.ai", "thread1", "hook1", null, Arg.Any<CancellationToken>());
     }
 }

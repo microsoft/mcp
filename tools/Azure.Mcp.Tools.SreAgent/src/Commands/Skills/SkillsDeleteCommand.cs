@@ -60,7 +60,7 @@ public sealed class SkillsDeleteCommand(ILogger<SkillsDeleteCommand> logger, ISr
         {
             if (!options.Confirm)
             {
-                throw new InvalidOperationException($"Refusing to delete tool '{options.Name}': destructive operation requires --confirm true.");
+                throw new InvalidOperationException($"Refusing to delete skill '{options.Name}': destructive operation requires --confirm true.");
             }
 
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
@@ -72,12 +72,12 @@ public sealed class SkillsDeleteCommand(ILogger<SkillsDeleteCommand> logger, ISr
                 options.RetryPolicy,
                 cancellationToken);
 
-            var result = await _sreAgentService.DeleteAgentToolAsync(endpoint, options.Name!, options.Tenant, cancellationToken);
+            var result = await _sreAgentService.DeleteSkillAsync(endpoint, options.Name!, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result), SreAgentJsonContext.Default.SkillsDeleteCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting SRE Agent tool {Name} from agent resource {Agent}.", options.Name, options.Agent);
+            _logger.LogError(ex, "Error deleting SRE Agent skill {Name} from agent resource {Agent}.", options.Name, options.Agent);
             HandleException(context, ex);
         }
 

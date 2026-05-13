@@ -19,17 +19,17 @@ public sealed class PlanCommand(ILogger<PlanCommand> logger) : GlobalCommand<Pla
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Requirements);
-        command.Options.Add(SreAgentPortedOptionDefinitions.TriggerType);
-        command.Options.Add(SreAgentPortedOptionDefinitions.KustoConnector);
+        command.Options.Add(SreAgentOptionDefinitions.Requirements);
+        command.Options.Add(SreAgentOptionDefinitions.TriggerType);
+        command.Options.Add(SreAgentOptionDefinitions.KustoConnector);
     }
 
     protected override PlanOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Requirements = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Requirements.Name);
-        o.TriggerType = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.TriggerType.Name);
-        o.KustoConnector = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.KustoConnector.Name);
+        o.Requirements = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Requirements.Name);
+        o.TriggerType = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.TriggerType.Name);
+        o.KustoConnector = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.KustoConnector.Name);
         return o;
     }
 

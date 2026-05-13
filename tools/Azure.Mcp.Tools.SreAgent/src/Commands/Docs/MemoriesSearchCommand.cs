@@ -21,13 +21,13 @@ public sealed class MemoriesSearchCommand(ILogger<MemoriesSearchCommand> logger,
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Query);
+        command.Options.Add(SreAgentOptionDefinitions.Query);
     }
 
     protected override MemoriesSearchOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Query = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Query.Name);
+        o.Query = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Query.Name);
         return o;
     }
 

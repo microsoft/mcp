@@ -21,13 +21,13 @@ public sealed class CommonPromptsListCommand(ILogger<CommonPromptsListCommand> l
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Search);
+        command.Options.Add(SreAgentOptionDefinitions.Search);
     }
 
     protected override CommonPromptsListOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Search = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Search.Name);
+        o.Search = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Search.Name);
         return o;
     }
 

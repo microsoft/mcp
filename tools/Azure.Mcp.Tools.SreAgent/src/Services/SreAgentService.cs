@@ -94,6 +94,8 @@ public sealed class SreAgentService(
             throw new ArgumentException($"SRE Agent endpoint must be an absolute https URL. Got: '{endpoint}'.", nameof(endpoint));
         }
 
+        ValidateDataPlaneEndpoint(endpointUri);
+
         var credential = await GetCredential(tenant, cancellationToken);
         var token = await credential.GetTokenAsync(new TokenRequestContext(DataPlaneScopes), cancellationToken);
 
@@ -120,6 +122,22 @@ public sealed class SreAgentService(
         }
 
         return body;
+    }
+
+    /// <summary>
+    /// Validates that the SRE Agent data-plane endpoint host belongs to the trusted
+    /// <c>*.azuresre.ai</c> domain to prevent SSRF.
+    /// </summary>
+    private static void ValidateDataPlaneEndpoint(Uri endpointUri)
+    {
+        var host = endpointUri.Host;
+        if (string.IsNullOrEmpty(host) ||
+            !host.EndsWith(".azuresre.ai", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                $"SRE Agent endpoint host must end with '.azuresre.ai'. Got: '{host}'.",
+                nameof(endpointUri));
+        }
     }
 
     /// <summary>
@@ -421,6 +439,24 @@ public sealed class SreAgentService(
             body,
             SreAgentJsonContext.Default.SreSkill,
             new SreSkill { Name = request.Name, Type = request.Type, Properties = request.Properties });
+    }
+
+    public async Task<SreAgentDeleteResult> DeleteSkillAsync(
+        string endpoint,
+        string name,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(name), name));
+
+        await CallDataPlaneAsync(
+            endpoint,
+            $"/api/v2/extendedAgent/skills/{Uri.EscapeDataString(name)}",
+            HttpMethod.Delete,
+            tenant: tenant,
+            cancellationToken: cancellationToken);
+
+        return new SreAgentDeleteResult(name, "ExtendedAgentSkill", true);
     }
 
     private static T DeserializeRequired<T>(string body, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo, string resourceName)
@@ -897,12 +933,12 @@ public sealed class SreAgentService(
 
     public async Task PauseScheduledTaskAsync(string endpoint, string taskId, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        await CallDataPlaneAsync(endpoint, $"/api/v1/scheduledtasks/{Uri.EscapeDataString(taskId)}/pause", HttpMethod.Post, tenant: tenant, cancellationToken: cancellationToken);
+        await CallDataPlaneAsync(endpoint, $"/api/v1/scheduledtasks/{Uri.EscapeDataString(taskId)}/pause", HttpMethod.Post, "{}", tenant, cancellationToken);
     }
 
     public async Task ResumeScheduledTaskAsync(string endpoint, string taskId, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        await CallDataPlaneAsync(endpoint, $"/api/v1/scheduledtasks/{Uri.EscapeDataString(taskId)}/resume", HttpMethod.Post, tenant: tenant, cancellationToken: cancellationToken);
+        await CallDataPlaneAsync(endpoint, $"/api/v1/scheduledtasks/{Uri.EscapeDataString(taskId)}/resume", HttpMethod.Post, "{}", tenant, cancellationToken);
     }
 
     private static List<T> DeserializeList<T>(string body, JsonTypeInfo<SreAgentPagedResponse<T>> pagedTypeInfo, JsonTypeInfo<List<T>> listTypeInfo)

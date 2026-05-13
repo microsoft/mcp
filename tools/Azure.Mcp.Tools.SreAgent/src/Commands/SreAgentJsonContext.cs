@@ -20,7 +20,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands;
 [JsonSerializable(typeof(AgentsDeleteCommand.AgentsDeleteCommandResult))]
 [JsonSerializable(typeof(AgentsToolsGetCommand.AgentsToolsGetCommandResult))]
 [JsonSerializable(typeof(AgentsToolsCreateCommand.AgentsToolsCreateCommandResult))]
-[JsonSerializable(typeof(AgentToolsListCommand.AgentToolsListCommandResult))]
+[JsonSerializable(typeof(AgentsToolsListCommand.AgentToolsListCommandResult))]
 [JsonSerializable(typeof(SkillsDeleteCommand.SkillsDeleteCommandResult))]
 [JsonSerializable(typeof(SkillsListCommand.SkillsListCommandResult))]
 [JsonSerializable(typeof(SkillsCreateCommand.SkillsCreateCommandResult))]

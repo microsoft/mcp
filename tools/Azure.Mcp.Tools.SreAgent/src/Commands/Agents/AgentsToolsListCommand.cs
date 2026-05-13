@@ -11,7 +11,7 @@ using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
-namespace Azure.Mcp.Tools.SreAgent.Commands.Skills;
+namespace Azure.Mcp.Tools.SreAgent.Commands.Agents;
 
 [CommandMetadata(
     Id = "f3ed0747-6f67-451a-a699-cfaf7ad33f4d",
@@ -24,10 +24,10 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Skills;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AgentToolsListCommand(ILogger<AgentToolsListCommand> logger, ISreAgentService sreAgentService)
+public sealed class AgentsToolsListCommand(ILogger<AgentsToolsListCommand> logger, ISreAgentService sreAgentService)
     : BaseSreAgentCommand<AgentToolsListOptions>
 {
-    private readonly ILogger<AgentToolsListCommand> _logger = logger;
+    private readonly ILogger<AgentsToolsListCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
     protected override void RegisterOptions(Command command)

@@ -1,10 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Tools.SreAgent.Commands.Docs;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Helpers;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
+using Azure.Mcp.Tools.SreAgent.Commands;
+using Azure.Mcp.Tools.SreAgent.Models;
 
 namespace Azure.Mcp.Tools.SreAgent.UnitTests.Docs;
 
@@ -14,8 +20,7 @@ public class DocsGetCommandTests : CommandUnitTestsBase<DocsGetCommand, ISreAgen
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = Command.GetCommand();
-        Assert.NotNull(command.Name);
-        Assert.NotEmpty(command.Name);
+        Assert.Equal("get", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
@@ -25,5 +30,49 @@ public class DocsGetCommandTests : CommandUnitTestsBase<DocsGetCommand, ISreAgen
     {
         var command = Command.GetCommand();
         Assert.NotNull(command.Options);
+        var optionNames = command.Options.Select(o => o.Name).ToList();
+        Assert.Contains("--topic", optionNames);
+    }
+
+    [Theory]
+    [InlineData("--topic agents", true)]
+    [InlineData("--topic tools", true)]
+    [InlineData("--topic all", true)]
+    [InlineData("", false)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        TestEnvironment.ClearAzureSubscriptionId();
+
+        var response = await ExecuteCommandAsync(args);
+
+        if (shouldSucceed)
+        {
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        }
+        else
+        {
+            Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandleServiceErrors()
+    {
+        var response = await ExecuteCommandAsync("--topic", "unknown-topic");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, SreAgentJsonContext.Default.SreAgentTextResult);
+        Assert.Contains("Unknown topic", result.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsDocumentationContent()
+    {
+        var response = await ExecuteCommandAsync("--topic", "agents");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, SreAgentJsonContext.Default.SreAgentTextResult);
+        Assert.Contains("Agent", result.Message);
     }
 }

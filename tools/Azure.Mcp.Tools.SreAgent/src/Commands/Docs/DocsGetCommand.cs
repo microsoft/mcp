@@ -17,13 +17,13 @@ public sealed class DocsGetCommand(ILogger<DocsGetCommand> logger) : GlobalComma
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Topic);
+        command.Options.Add(SreAgentOptionDefinitions.Topic);
     }
 
     protected override DocsGetOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Topic = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Topic.Name);
+        o.Topic = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Topic.Name);
         return o;
     }
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)

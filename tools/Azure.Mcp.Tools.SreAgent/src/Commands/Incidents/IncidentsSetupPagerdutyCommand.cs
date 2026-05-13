@@ -22,17 +22,17 @@ public sealed class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetupPagerdu
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Name);
-        command.Options.Add(SreAgentPortedOptionDefinitions.ApiKeyEnv);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Subdomain);
+        command.Options.Add(SreAgentOptionDefinitions.Name);
+        command.Options.Add(SreAgentOptionDefinitions.ApiKeyEnv);
+        command.Options.Add(SreAgentOptionDefinitions.Subdomain);
     }
 
     protected override IncidentConnectorPagerDutyOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Name.Name);
-        o.ApiKeyEnv = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.ApiKeyEnv.Name);
-        o.Subdomain = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Subdomain.Name);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        o.ApiKeyEnv = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.ApiKeyEnv.Name);
+        o.Subdomain = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Subdomain.Name);
         return o;
     }
 

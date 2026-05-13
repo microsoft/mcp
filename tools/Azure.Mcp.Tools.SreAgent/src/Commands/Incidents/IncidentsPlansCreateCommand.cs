@@ -28,27 +28,27 @@ public sealed class IncidentsPlansCreateCommand(ILogger<IncidentsPlansCreateComm
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Name);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Severity);
-        command.Options.Add(SreAgentPortedOptionDefinitions.TriggerCondition);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Services);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Steps);
-        command.Options.Add(SreAgentPortedOptionDefinitions.Escalation);
-        command.Options.Add(SreAgentPortedOptionDefinitions.RunbookUrl);
-        command.Options.Add(SreAgentPortedOptionDefinitions.AgentMode);
+        command.Options.Add(SreAgentOptionDefinitions.Name);
+        command.Options.Add(SreAgentOptionDefinitions.Severity);
+        command.Options.Add(SreAgentOptionDefinitions.TriggerCondition);
+        command.Options.Add(SreAgentOptionDefinitions.Services);
+        command.Options.Add(SreAgentOptionDefinitions.Steps);
+        command.Options.Add(SreAgentOptionDefinitions.Escalation);
+        command.Options.Add(SreAgentOptionDefinitions.RunbookUrl);
+        command.Options.Add(SreAgentOptionDefinitions.AgentMode);
     }
 
     protected override IncidentPlanCreateOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Name.Name);
-        o.Severity = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Severity.Name);
-        o.TriggerCondition = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.TriggerCondition.Name);
-        o.Services = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.Services.Name);
-        o.Steps = parseResult.GetValueOrDefault<string[]>(SreAgentPortedOptionDefinitions.Steps.Name);
-        o.Escalation = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.Escalation.Name);
-        o.RunbookUrl = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.RunbookUrl.Name);
-        o.AgentMode = parseResult.GetValueOrDefault<string>(SreAgentPortedOptionDefinitions.AgentMode.Name);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        o.Severity = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Severity.Name);
+        o.TriggerCondition = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.TriggerCondition.Name);
+        o.Services = parseResult.GetValueOrDefault<string[]>(SreAgentOptionDefinitions.Services.Name);
+        o.Steps = parseResult.GetValueOrDefault<string[]>(SreAgentOptionDefinitions.Steps.Name);
+        o.Escalation = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Escalation.Name);
+        o.RunbookUrl = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.RunbookUrl.Name);
+        o.AgentMode = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.AgentMode.Name);
         return o;
     }
 

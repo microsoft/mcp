@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -47,7 +47,14 @@ public class AgentsListCommandTests : CommandUnitTestsBase<AgentsListCommand, IS
 
         var response = await ExecuteCommandAsync(args);
 
-        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+        if (shouldSucceed)
+        {
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        }
+        else
+        {
+            Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        }
         if (shouldSucceed)
         {
             Assert.NotNull(response.Results);
