@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
@@ -75,5 +76,5 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
         return context.Response;
     }
 
-    internal record UpdateWorkbooksCommandResult(WorkbookInfo Workbook);
+    internal record UpdateWorkbooksCommandResult([property: JsonPropertyName("Workbook")] WorkbookInfo Workbook);
 }

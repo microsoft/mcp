@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
@@ -196,5 +197,5 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger, IComputeSer
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmCreateCommandResult(VmCreateResult Vm);
+    internal record VmCreateCommandResult([property: JsonPropertyName("Vm")] VmCreateResult Vm);
 }

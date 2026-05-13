@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
@@ -87,5 +88,7 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger, I
         return context.Response;
     }
 
-    internal record ShowWorkbooksCommandResult(List<WorkbookInfo> Workbooks, List<WorkbookError> Errors);
+    internal record ShowWorkbooksCommandResult(
+        [property: JsonPropertyName("Workbooks")] List<WorkbookInfo> Workbooks,
+        [property: JsonPropertyName("Errors")] List<WorkbookError> Errors);
 }

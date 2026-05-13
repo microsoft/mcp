@@ -389,7 +389,7 @@ All response types are registered in `AzureBackupJsonContext`:
 // ... all 15 command result types + 11 model types
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
   )]
 internal sealed partial class AzureBackupJsonContext : JsonSerializerContext;
 ```

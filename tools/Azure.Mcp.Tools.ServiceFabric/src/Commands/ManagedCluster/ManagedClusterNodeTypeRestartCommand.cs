@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.ServiceFabric.Options;
 using Azure.Mcp.Tools.ServiceFabric.Options.ManagedCluster;
 using Azure.Mcp.Tools.ServiceFabric.Services;
@@ -104,5 +105,5 @@ public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterN
         _ => base.GetStatusCode(ex)
     };
 
-    internal record ManagedClusterNodeTypeRestartCommandResult(Models.RestartNodeResponse Response);
+    internal record ManagedClusterNodeTypeRestartCommandResult([property: JsonPropertyName("Response")] Models.RestartNodeResponse Response);
 }

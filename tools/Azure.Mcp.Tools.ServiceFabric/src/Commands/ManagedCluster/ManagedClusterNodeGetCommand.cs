@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.ServiceFabric.Options;
 using Azure.Mcp.Tools.ServiceFabric.Options.ManagedCluster;
 using Azure.Mcp.Tools.ServiceFabric.Services;
@@ -111,5 +112,5 @@ public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCo
         _ => base.GetStatusCode(ex)
     };
 
-    internal record ManagedClusterNodeGetCommandResult(List<Models.ManagedClusterNode> Nodes);
+    internal record ManagedClusterNodeGetCommandResult([property: JsonPropertyName("Nodes")] List<Models.ManagedClusterNode> Nodes);
 }

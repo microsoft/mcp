@@ -28,7 +28,7 @@ public class ServiceFabricCommandTests(ITestOutputHelper output, TestProxyFixtur
             });
 
         // Assert
-        var nodes = result.AssertProperty("nodes");
+        var nodes = result.AssertProperty("Nodes");
         Assert.Equal(JsonValueKind.Array, nodes.ValueKind);
 
         foreach (var node in nodes.EnumerateArray())

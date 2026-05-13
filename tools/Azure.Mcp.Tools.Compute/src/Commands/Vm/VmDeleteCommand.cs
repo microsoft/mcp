@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
 using Azure.Mcp.Tools.Compute.Services;
@@ -103,5 +104,7 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger, IComputeSer
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmDeleteCommandResult(string Message, bool Success);
+    internal record VmDeleteCommandResult(
+        [property: JsonPropertyName("Message")] string Message,
+        [property: JsonPropertyName("Success")] bool Success);
 }

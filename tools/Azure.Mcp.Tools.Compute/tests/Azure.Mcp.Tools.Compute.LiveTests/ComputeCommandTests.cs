@@ -24,7 +24,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     // Sanitize resource group in URIs
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
     [
-        new UriRegexSanitizer(new UriRegexSanitizerBody
+        new(new()
         {
             Regex = "resource[gG]roups\\/([^?\\/]+)",
             Value = "Sanitized",
@@ -35,23 +35,23 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     // Sanitize resource group name, base name, and subscription ID everywhere
     public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
     [
-        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        new(new()
         {
             Regex = Settings.ResourceGroupName,
             Value = "Sanitized",
         }),
-        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        new(new()
         {
             Regex = Settings.ResourceBaseName,
             Value = "Sanitized",
         }),
-        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        new(new()
         {
             Regex = Settings.SubscriptionId,
             Value = "00000000-0000-0000-0000-000000000000",
         }),
         // Sanitize all subscription GUIDs in image references and other nested properties
-        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        new(new()
         {
             Regex = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
             Value = "00000000-0000-0000-0000-000000000000",
@@ -61,7 +61,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     // Sanitize admin password in request bodies
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$..adminPassword")
+        new(new("$..adminPassword")
         {
             Value = "REDACTED",
         })
@@ -77,7 +77,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId }
             });
 
-        var vms = result.AssertProperty("vms");
+        var vms = result.AssertProperty("Vms");
         Assert.Equal(JsonValueKind.Array, vms.ValueKind);
         Assert.NotEmpty(vms.EnumerateArray());
     }
@@ -93,7 +93,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "resource-group", Settings.ResourceGroupName }
             });
 
-        var vms = result.AssertProperty("vms");
+        var vms = result.AssertProperty("Vms");
         Assert.Equal(JsonValueKind.Array, vms.ValueKind);
 
         var vmArray = vms.EnumerateArray().ToList();
@@ -112,7 +112,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "vm-name", VmName }
             });
 
-        var vm = result.AssertProperty("vm");
+        var vm = result.AssertProperty("Vm");
         Assert.Equal(JsonValueKind.Object, vm.ValueKind);
 
         var name = vm.GetProperty("name");
@@ -144,14 +144,14 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "instance-view", true }
             });
 
-        var vm = result.AssertProperty("vm");
+        var vm = result.AssertProperty("Vm");
         Assert.Equal(JsonValueKind.Object, vm.ValueKind);
 
         var name = vm.GetProperty("name");
         Assert.NotNull(name.GetString()); // Name is sanitized during playback
 
         // Verify instance view is present
-        var instanceView = result.AssertProperty("instanceView");
+        var instanceView = result.AssertProperty("InstanceView");
         Assert.Equal(JsonValueKind.Object, instanceView.ValueKind);
 
         // Check for power state
@@ -174,7 +174,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId }
             });
 
-        var vmssList = result.AssertProperty("vmssList");
+        var vmssList = result.AssertProperty("VmssList");
         Assert.Equal(JsonValueKind.Array, vmssList.ValueKind);
         Assert.NotEmpty(vmssList.EnumerateArray());
     }
@@ -191,7 +191,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "vmss-name", VmssName }
             });
 
-        var vmss = result.AssertProperty("vmss");
+        var vmss = result.AssertProperty("Vmss");
         Assert.Equal(JsonValueKind.Object, vmss.ValueKind);
 
         var name = vmss.GetProperty("name");
@@ -219,7 +219,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "instance-id", "0" }
             });
 
-        var vm = result.AssertProperty("vmInstance");
+        var vm = result.AssertProperty("VmInstance");
         Assert.Equal(JsonValueKind.Object, vm.ValueKind);
 
         var returnedInstanceId = vm.GetProperty("instanceId");
@@ -248,7 +248,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "no-public-ip", true }
             });
 
-        var vm = result.AssertProperty("vm");
+        var vm = result.AssertProperty("Vm");
         Assert.Equal(JsonValueKind.Object, vm.ValueKind);
 
         var provisioningState = vm.GetProperty("provisioningState");
@@ -286,7 +286,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "no-public-ip", true }
             });
 
-        var vm = result.AssertProperty("vm");
+        var vm = result.AssertProperty("Vm");
         Assert.Equal(JsonValueKind.Object, vm.ValueKind);
 
         var provisioningState = vm.GetProperty("provisioningState");
@@ -312,7 +312,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "tags", "testkey=testvalue,environment=livetests" }
             });
 
-        var vm = result.AssertProperty("vm");
+        var vm = result.AssertProperty("Vm");
         Assert.Equal(JsonValueKind.Object, vm.ValueKind);
 
         var provisioningState = vm.GetProperty("provisioningState");
@@ -336,7 +336,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "boot-diagnostics", "true" }
             });
 
-        var vm = result.AssertProperty("vm");
+        var vm = result.AssertProperty("Vm");
         Assert.Equal(JsonValueKind.Object, vm.ValueKind);
 
         var provisioningState = vm.GetProperty("provisioningState");
@@ -373,7 +373,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "os-disk-size-gb", 40 }
             });
 
-        var vmss = result.AssertProperty("vmss");
+        var vmss = result.AssertProperty("Vmss");
         Assert.Equal(JsonValueKind.Object, vmss.ValueKind);
 
         var provisioningState = vmss.GetProperty("provisioningState");
@@ -410,7 +410,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "os-disk-type", "StandardSSD_LRS" }
             });
 
-        var vmss = result.AssertProperty("vmss");
+        var vmss = result.AssertProperty("Vmss");
         Assert.Equal(JsonValueKind.Object, vmss.ValueKind);
 
         var provisioningState = vmss.GetProperty("provisioningState");
@@ -433,7 +433,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "tags", "testkey=testvalue,environment=livetests" }
             });
 
-        var vmss = result.AssertProperty("vmss");
+        var vmss = result.AssertProperty("Vmss");
         Assert.Equal(JsonValueKind.Object, vmss.ValueKind);
 
         var provisioningState = vmss.GetProperty("provisioningState");
@@ -457,7 +457,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "upgrade-policy", "Automatic" }
             });
 
-        var vmss = result.AssertProperty("vmss");
+        var vmss = result.AssertProperty("Vmss");
         Assert.Equal(JsonValueKind.Object, vmss.ValueKind);
 
         var provisioningState = vmss.GetProperty("provisioningState");
@@ -503,10 +503,10 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "force-deletion", true }
             });
 
-        var message = result.AssertProperty("message");
+        var message = result.AssertProperty("Message");
         Assert.Contains("successfully deleted", message.GetString());
 
-        var success = result.AssertProperty("success");
+        var success = result.AssertProperty("Success");
         Assert.Equal(JsonValueKind.True, success.ValueKind);
     }
 
@@ -546,10 +546,10 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "force-deletion", true }
             });
 
-        var message = result.AssertProperty("message");
+        var message = result.AssertProperty("Message");
         Assert.Contains("successfully deleted", message.GetString());
 
-        var success = result.AssertProperty("success");
+        var success = result.AssertProperty("Success");
         Assert.Equal(JsonValueKind.True, success.ValueKind);
     }
 
@@ -577,18 +577,18 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disks = result.Value.AssertProperty("disks");
+        JsonElement disks = result.Value.AssertProperty("Disks");
         Assert.Equal(JsonValueKind.Array, disks.ValueKind);
 
         List<JsonElement> diskList = disks.EnumerateArray().ToList();
         Assert.Single(diskList);
 
         JsonElement disk = diskList[0];
-        Assert.NotNull(disk.AssertProperty("name").GetString()); // Name is sanitized during playback
-        Assert.NotNull(disk.AssertProperty("resourceGroup").GetString()); // Resource group is sanitized during playback
-        Assert.NotNull(disk.AssertProperty("location").GetString());
-        Assert.NotNull(disk.AssertProperty("skuName").GetString());
-        Assert.True(disk.AssertProperty("diskSizeGB").GetInt32() > 0);
+        Assert.NotNull(disk.AssertProperty("Name").GetString()); // Name is sanitized during playback
+        Assert.NotNull(disk.AssertProperty("ResourceGroup").GetString()); // Resource group is sanitized during playback
+        Assert.NotNull(disk.AssertProperty("Location").GetString());
+        Assert.NotNull(disk.AssertProperty("SkuName").GetString());
+        Assert.True(disk.AssertProperty("DiskSizeGB").GetInt32() > 0);
     }
 
     [Fact]
@@ -607,7 +607,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disks = result.Value.AssertProperty("disks");
+        JsonElement disks = result.Value.AssertProperty("Disks");
         Assert.Equal(JsonValueKind.Array, disks.ValueKind);
 
         List<JsonElement> diskList = disks.EnumerateArray().ToList();
@@ -632,12 +632,12 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disks = result.Value.AssertProperty("disks");
+        JsonElement disks = result.Value.AssertProperty("Disks");
         Assert.Equal(JsonValueKind.Array, disks.ValueKind);
 
         List<JsonElement> diskList = disks.EnumerateArray().ToList();
         Assert.NotEmpty(diskList);
-        Assert.All(diskList, d => Assert.Equal(resourceGroup, d.AssertProperty("resourceGroup").GetString()));
+        Assert.All(diskList, d => Assert.Equal(resourceGroup, d.AssertProperty("ResourceGroup").GetString()));
     }
 
     [Fact]
@@ -712,13 +712,13 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         // Assert
         // When disk name is provided without resource group, it searches across the entire subscription
         Assert.NotNull(result);
-        var disks = result.Value.AssertProperty("disks");
+        var disks = result.Value.AssertProperty("Disks");
         var diskList = disks.EnumerateArray().ToList();
         // In playback, the sanitizer may filter out results, so just verify the structure is correct
         if (diskList.Any())
         {
             var disk = diskList.First();
-            Assert.NotNull(disk.GetProperty("name").GetString()); // Name is sanitized during playback
+            Assert.NotNull(disk.GetProperty("Name").GetString()); // Name is sanitized during playback
         }
     }
 
@@ -745,14 +745,14 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disk = result.Value.AssertProperty("disk");
+        JsonElement disk = result.Value.AssertProperty("Disk");
         Assert.Equal(JsonValueKind.Object, disk.ValueKind);
 
-        Assert.NotNull(disk.AssertProperty("name").GetString());
-        Assert.NotNull(disk.AssertProperty("location").GetString());
-        Assert.NotNull(disk.AssertProperty("skuName").GetString()); // SkuName is sanitized during playback
-        Assert.Equal(32, disk.AssertProperty("diskSizeGB").GetInt32());
-        Assert.Equal("Succeeded", disk.AssertProperty("provisioningState").GetString());
+        Assert.NotNull(disk.AssertProperty("Name").GetString());
+        Assert.NotNull(disk.AssertProperty("Location").GetString());
+        Assert.NotNull(disk.AssertProperty("SkuName").GetString()); // SkuName is sanitized during playback
+        Assert.Equal(32, disk.AssertProperty("DiskSizeGB").GetInt32());
+        Assert.Equal("Succeeded", disk.AssertProperty("ProvisioningState").GetString());
     }
 
     [Fact]
@@ -776,17 +776,17 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disk = result.Value.AssertProperty("disk");
+        JsonElement disk = result.Value.AssertProperty("Disk");
         Assert.Equal(JsonValueKind.Object, disk.ValueKind);
 
-        Assert.NotNull(disk.AssertProperty("name").GetString());
-        Assert.NotNull(disk.AssertProperty("location").GetString());
-        Assert.NotNull(disk.AssertProperty("skuName").GetString()); // SkuName is sanitized during playback
-        Assert.Equal(64, disk.AssertProperty("diskSizeGB").GetInt32());
-        Assert.Equal("Succeeded", disk.AssertProperty("provisioningState").GetString());
+        Assert.NotNull(disk.AssertProperty("Name").GetString());
+        Assert.NotNull(disk.AssertProperty("Location").GetString());
+        Assert.NotNull(disk.AssertProperty("SkuName").GetString()); // SkuName is sanitized during playback
+        Assert.Equal(64, disk.AssertProperty("DiskSizeGB").GetInt32());
+        Assert.Equal("Succeeded", disk.AssertProperty("ProvisioningState").GetString());
 
         // Verify tags were applied
-        JsonElement tags = disk.AssertProperty("tags");
+        JsonElement tags = disk.AssertProperty("Tags");
         Assert.Equal(JsonValueKind.Object, tags.ValueKind);
     }
 
@@ -830,8 +830,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             });
 
         Assert.NotNull(createResult);
-        JsonElement createdDisk = createResult.Value.AssertProperty("disk");
-        Assert.Equal("Succeeded", createdDisk.AssertProperty("provisioningState").GetString());
+        JsonElement createdDisk = createResult.Value.AssertProperty("Disk");
+        Assert.Equal("Succeeded", createdDisk.AssertProperty("ProvisioningState").GetString());
 
         // Get - verify the created disk can be retrieved
         JsonElement? getResult = await CallToolAsync(
@@ -844,16 +844,16 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             });
 
         Assert.NotNull(getResult);
-        JsonElement disks = getResult.Value.AssertProperty("disks");
+        JsonElement disks = getResult.Value.AssertProperty("Disks");
         Assert.Equal(JsonValueKind.Array, disks.ValueKind);
 
         List<JsonElement> diskList = disks.EnumerateArray().ToList();
         Assert.Single(diskList);
 
         JsonElement retrievedDisk = diskList[0];
-        Assert.NotNull(retrievedDisk.AssertProperty("name").GetString());
-        Assert.NotNull(retrievedDisk.AssertProperty("skuName").GetString()); // SkuName is sanitized during playback
-        Assert.Equal(32, retrievedDisk.AssertProperty("diskSizeGB").GetInt32());
+        Assert.NotNull(retrievedDisk.AssertProperty("Nme").GetString());
+        Assert.NotNull(retrievedDisk.AssertProperty("SkuName").GetString()); // SkuName is sanitized during playback
+        Assert.Equal(32, retrievedDisk.AssertProperty("DiskSizeGB").GetInt32());
     }
 
     [Fact]
@@ -879,13 +879,13 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disk = result.Value.AssertProperty("disk");
+        JsonElement disk = result.Value.AssertProperty("Disk");
         Assert.Equal(JsonValueKind.Object, disk.ValueKind);
 
-        Assert.NotNull(disk.AssertProperty("name").GetString());
-        Assert.NotNull(disk.AssertProperty("location").GetString());
-        Assert.NotNull(disk.AssertProperty("skuName").GetString()); // SkuName is sanitized during playback
-        Assert.Equal("Succeeded", disk.AssertProperty("provisioningState").GetString());
+        Assert.NotNull(disk.AssertProperty("Name").GetString());
+        Assert.NotNull(disk.AssertProperty("Location").GetString());
+        Assert.NotNull(disk.AssertProperty("SkuName").GetString()); // SkuName is sanitized during playback
+        Assert.Equal("Succeeded", disk.AssertProperty("ProvisioningState").GetString());
     }
 
     [Fact]
@@ -912,13 +912,13 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disk = result.Value.AssertProperty("disk");
+        JsonElement disk = result.Value.AssertProperty("Disk");
         Assert.Equal(JsonValueKind.Object, disk.ValueKind);
 
-        Assert.NotNull(disk.AssertProperty("name").GetString());
-        Assert.NotNull(disk.AssertProperty("location").GetString());
-        Assert.NotNull(disk.AssertProperty("skuName").GetString()); // SkuName is sanitized during playback
-        Assert.Equal("Succeeded", disk.AssertProperty("provisioningState").GetString());
+        Assert.NotNull(disk.AssertProperty("Name").GetString());
+        Assert.NotNull(disk.AssertProperty("Location").GetString());
+        Assert.NotNull(disk.AssertProperty("SkuName").GetString()); // SkuName is sanitized during playback
+        Assert.Equal("Succeeded", disk.AssertProperty("ProvisioningState").GetString());
     }
 
     [Fact]
@@ -942,14 +942,14 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disk = result.Value.AssertProperty("disk");
+        JsonElement disk = result.Value.AssertProperty("Disk");
         Assert.Equal(JsonValueKind.Object, disk.ValueKind);
 
-        Assert.NotNull(disk.AssertProperty("name").GetString());
-        Assert.NotNull(disk.AssertProperty("location").GetString());
-        Assert.NotNull(disk.AssertProperty("skuName").GetString()); // SkuName is sanitized during playback
-        Assert.Equal("Succeeded", disk.AssertProperty("provisioningState").GetString());
-        Assert.Equal("ReadyToUpload", disk.AssertProperty("diskState").GetString());
+        Assert.NotNull(disk.AssertProperty("Name").GetString());
+        Assert.NotNull(disk.AssertProperty("Location").GetString());
+        Assert.NotNull(disk.AssertProperty("SkuName").GetString()); // SkuName is sanitized during playback
+        Assert.Equal("Succeeded", disk.AssertProperty("ProvisioningState").GetString());
+        Assert.Equal("ReadyToUpload", disk.AssertProperty("DiskState").GetString());
     }
 
     [Fact]
@@ -975,14 +975,14 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disk = result.Value.AssertProperty("disk");
+        JsonElement disk = result.Value.AssertProperty("Disk");
         Assert.Equal(JsonValueKind.Object, disk.ValueKind);
 
-        Assert.NotNull(disk.AssertProperty("name").GetString());
-        Assert.NotNull(disk.AssertProperty("location").GetString());
-        Assert.NotNull(disk.AssertProperty("skuName").GetString()); // SkuName is sanitized during playback
-        Assert.Equal("Succeeded", disk.AssertProperty("provisioningState").GetString());
-        Assert.Equal("ReadyToUpload", disk.AssertProperty("diskState").GetString());
+        Assert.NotNull(disk.AssertProperty("Name").GetString());
+        Assert.NotNull(disk.AssertProperty("Location").GetString());
+        Assert.NotNull(disk.AssertProperty("SkuName").GetString()); // SkuName is sanitized during playback
+        Assert.Equal("Succeeded", disk.AssertProperty("ProvisioningState").GetString());
+        Assert.Equal("ReadyToUpload", disk.AssertProperty("DiskState").GetString());
     }
 
     [Fact]
@@ -1042,12 +1042,12 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disk = result.Value.AssertProperty("disk");
+        JsonElement disk = result.Value.AssertProperty("Disk");
         Assert.Equal(JsonValueKind.Object, disk.ValueKind);
 
-        Assert.NotNull(disk.AssertProperty("name").GetString()); // Name is sanitized during playback
-        Assert.Equal(64, disk.AssertProperty("diskSizeGB").GetInt32());
-        Assert.Equal("Succeeded", disk.AssertProperty("provisioningState").GetString());
+        Assert.NotNull(disk.AssertProperty("Name").GetString()); // Name is sanitized during playback
+        Assert.Equal(64, disk.AssertProperty("DiskSizeGB").GetInt32());
+        Assert.Equal("Succeeded", disk.AssertProperty("ProvisioningState").GetString());
     }
 
     [Fact]
@@ -1080,11 +1080,11 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disk = result.Value.AssertProperty("disk");
+        JsonElement disk = result.Value.AssertProperty("Disk");
         Assert.Equal(JsonValueKind.Object, disk.ValueKind);
 
-        Assert.NotNull(disk.AssertProperty("skuName").GetString()); // SkuName is sanitized during playback
-        Assert.Equal("Succeeded", disk.AssertProperty("provisioningState").GetString());
+        Assert.NotNull(disk.AssertProperty("SkuName").GetString()); // SkuName is sanitized during playback
+        Assert.Equal("Succeeded", disk.AssertProperty("ProvisioningState").GetString());
     }
 
     [Fact]
@@ -1117,12 +1117,12 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Assert
         Assert.NotNull(result);
-        JsonElement disk = result.Value.AssertProperty("disk");
+        JsonElement disk = result.Value.AssertProperty("Disk");
         Assert.Equal(JsonValueKind.Object, disk.ValueKind);
 
-        JsonElement tags = disk.AssertProperty("tags");
+        JsonElement tags = disk.AssertProperty("Tags");
         Assert.Equal(JsonValueKind.Object, tags.ValueKind);
-        Assert.Equal("Succeeded", disk.AssertProperty("provisioningState").GetString());
+        Assert.Equal("Succeeded", disk.AssertProperty("ProvisioningState").GetString());
     }
 
     [Fact]
@@ -1166,8 +1166,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             });
 
         Assert.NotNull(createResult);
-        JsonElement createdDisk = createResult.Value.AssertProperty("disk");
-        Assert.Equal("Succeeded", createdDisk.AssertProperty("provisioningState").GetString());
+        JsonElement createdDisk = createResult.Value.AssertProperty("Disk");
+        Assert.Equal("Succeeded", createdDisk.AssertProperty("ProvisioningState").GetString());
 
         // Update multiple properties at once (resize up to 128GB)
         JsonElement? updateResult = await CallToolAsync(
@@ -1183,11 +1183,11 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             });
 
         Assert.NotNull(updateResult);
-        JsonElement updatedDisk = updateResult.Value.AssertProperty("disk");
+        JsonElement updatedDisk = updateResult.Value.AssertProperty("Disk");
         Assert.Equal(JsonValueKind.Object, updatedDisk.ValueKind);
-        Assert.Equal(128, updatedDisk.AssertProperty("diskSizeGB").GetInt32());
-        Assert.NotNull(updatedDisk.AssertProperty("skuName").GetString()); // SkuName is sanitized during playback
-        Assert.Equal("Succeeded", updatedDisk.AssertProperty("provisioningState").GetString());
+        Assert.Equal(128, updatedDisk.AssertProperty("DiskSizeGB").GetInt32());
+        Assert.NotNull(updatedDisk.AssertProperty("SkuName").GetString()); // SkuName is sanitized during playback
+        Assert.Equal("Succeeded", updatedDisk.AssertProperty("ProvisioningState").GetString());
 
         // Verify with a get call
         JsonElement? getResult = await CallToolAsync(
@@ -1200,13 +1200,13 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             });
 
         Assert.NotNull(getResult);
-        JsonElement disks = getResult.Value.AssertProperty("disks");
+        JsonElement disks = getResult.Value.AssertProperty("Disks");
         List<JsonElement> diskList = disks.EnumerateArray().ToList();
         Assert.Single(diskList);
 
         JsonElement verifiedDisk = diskList[0];
-        Assert.Equal(128, verifiedDisk.AssertProperty("diskSizeGB").GetInt32());
-        Assert.NotNull(verifiedDisk.AssertProperty("skuName").GetString()); // SkuName is sanitized during playback
+        Assert.Equal(128, verifiedDisk.AssertProperty("DiskSizeGB").GetInt32());
+        Assert.NotNull(verifiedDisk.AssertProperty("SkuName").GetString()); // SkuName is sanitized during playback
     }
 
     #endregion
@@ -1239,8 +1239,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             });
 
         Assert.NotNull(result);
-        Assert.True(result.Value.AssertProperty("deleted").GetBoolean());
-        Assert.NotNull(result.Value.AssertProperty("diskName").GetString());
+        Assert.True(result.Value.AssertProperty("Deleted").GetBoolean());
+        Assert.NotNull(result.Value.AssertProperty("DiskName").GetString());
     }
 
     [Fact]
@@ -1260,7 +1260,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Idempotent operation should return Deleted = false for non-existent disk
         Assert.NotNull(result);
-        Assert.False(result.Value.AssertProperty("deleted").GetBoolean());
+        Assert.False(result.Value.AssertProperty("Deleted").GetBoolean());
     }
 
     [Fact]
@@ -1289,7 +1289,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             });
 
         Assert.NotNull(deleteResult);
-        Assert.True(deleteResult.Value.AssertProperty("deleted").GetBoolean());
+        Assert.True(deleteResult.Value.AssertProperty("Deleted").GetBoolean());
 
         // Verify - attempt to get the deleted disk should return error
         JsonElement? getResult = await CallToolAsync(
@@ -1342,10 +1342,10 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // First delete should succeed, second should return false (already deleted)
         Assert.NotNull(firstResult);
-        Assert.True(firstResult.Value.AssertProperty("deleted").GetBoolean());
+        Assert.True(firstResult.Value.AssertProperty("Deleted").GetBoolean());
 
         Assert.NotNull(secondResult);
-        Assert.False(secondResult.Value.AssertProperty("deleted").GetBoolean());
+        Assert.False(secondResult.Value.AssertProperty("Deleted").GetBoolean());
     }
 
     #endregion

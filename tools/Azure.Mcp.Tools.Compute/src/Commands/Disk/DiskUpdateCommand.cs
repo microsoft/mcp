@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Disk;
@@ -218,5 +219,5 @@ public sealed class DiskUpdateCommand(
     /// <summary>
     /// Result record for the disk update command.
     /// </summary>
-    public record DiskUpdateCommandResult(DiskInfo Disk);
+    public record DiskUpdateCommandResult([property: JsonPropertyName("Disk")] DiskInfo Disk);
 }

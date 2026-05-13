@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
@@ -90,5 +91,5 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
         return context.Response;
     }
 
-    public sealed record CreateWorkbooksCommandResult(WorkbookInfo Workbook);
+    public sealed record CreateWorkbooksCommandResult([property: JsonPropertyName("Workbook")] WorkbookInfo Workbook);
 }

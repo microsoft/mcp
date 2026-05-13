@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
@@ -88,5 +89,7 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
         return context.Response;
     }
 
-    public sealed record DeleteWorkbooksCommandResult(List<string> Succeeded, List<WorkbookError> Errors);
+    public sealed record DeleteWorkbooksCommandResult(
+        [property: JsonPropertyName("Succeeded")] List<string> Succeeded,
+        [property: JsonPropertyName("Errors")] List<WorkbookError> Errors);
 }

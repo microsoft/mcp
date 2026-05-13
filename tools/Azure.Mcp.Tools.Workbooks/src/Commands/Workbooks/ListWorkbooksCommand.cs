@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
@@ -134,5 +135,8 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, I
         };
     }
 
-    internal record ListWorkbooksCommandResult(List<WorkbookInfo> Workbooks, int? TotalCount, int Returned);
+    internal record ListWorkbooksCommandResult(
+        [property: JsonPropertyName("Workbooks")] List<WorkbookInfo> Workbooks,
+        [property: JsonPropertyName("TotalCount")] int? TotalCount,
+        [property: JsonPropertyName("Returned")] int Returned);
 }

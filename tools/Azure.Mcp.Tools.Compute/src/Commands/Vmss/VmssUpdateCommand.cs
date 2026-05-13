@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
@@ -137,5 +138,5 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger, IComput
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmssUpdateCommandResult(VmssUpdateResult Vmss);
+    internal record VmssUpdateCommandResult([property: JsonPropertyName("Vmss")] VmssUpdateResult Vmss);
 }
