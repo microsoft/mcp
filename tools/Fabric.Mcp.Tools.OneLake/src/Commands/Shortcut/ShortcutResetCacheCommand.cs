@@ -16,7 +16,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
     Name = "reset_shortcut_cache",
     Title = "Reset OneLake Shortcut Cache",
     Description = """
-        Drop cached shortcut reads for an item, forcing the next read to
+        Drop cached shortcut reads for a workspace, forcing the next read to
         re-resolve from the destination. Use sparingly — primarily for debugging
         stale-cache issues. Requires OneLake.ReadWrite.All.
         """,
@@ -36,25 +36,13 @@ public sealed class ShortcutResetCacheCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Validators.Add(result =>
-        {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-        });
+        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsRequired());
     }
 
     protected override ShortcutResetCacheOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
         return options;
     }
 
@@ -68,35 +56,21 @@ public sealed class ShortcutResetCacheCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
-                ? options.WorkspaceId
-                : options.Workspace;
 
-            await _oneLakeService.ResetShortcutCacheAsync(workspaceIdentifier!, cancellationToken);
+            await _oneLakeService.ResetShortcutCacheAsync(options.WorkspaceId!, cancellationToken);
             var result = new ShortcutResetCacheCommandResult("Shortcut cache reset successfully.");
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.ShortcutResetCacheCommandResult);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error resetting shortcut cache. Workspace: {Workspace}.",
-                options.WorkspaceId ?? options.Workspace);
+                options.WorkspaceId);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    public sealed class ShortcutResetCacheCommandResult
-    {
-        public string Message { get; init; } = string.Empty;
-
-        public ShortcutResetCacheCommandResult()
-        {
-        }
-
-        public ShortcutResetCacheCommandResult(string message)
-        {
-            Message = message;
-        }
-    }
+    public sealed record ShortcutResetCacheCommandResult(string Message);
 }
+

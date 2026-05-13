@@ -98,10 +98,10 @@ You can verify which environment you're targeting by checking the endpoints in t
 
 ### Workspace and Item Identifiers
 
-All commands accept either GUID identifiers or friendly names via the `--workspace` and `--item` options. The existing `--workspace-id` and `--item-id` switches remain available for scripts that already depend on them. Friendly-name inputs are sent directly to the OneLake APIs without local GUID resolution; when using names, specify the item as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). Table-based commands additionally accept schema identifiers through `--namespace` or its alias `--schema`.
+The Fabric Core REST APIs used by the Security, Shortcuts, and Settings commands require GUID identifiers. Use `--workspace-id` for workspace scope and `--item-id` for item scope. Table-based commands additionally accept schema identifiers through `--namespace` or its alias `--schema`.
 
 ```bash
-dotnet run -- onelake file list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --path "Files"
+dotnet run -- onelake shortcut list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
 ```
 
 ## Available Commands
@@ -632,27 +632,28 @@ These tools manage role-based data access policies on OneLake items (Lakehouse /
 
 #### List Data Access Roles
 
-Lists all data access roles defined on a single item.
+Lists all data access roles defined on a single item. Supports pagination via `--continuation-token`.
 
 ```bash
-dotnet run -- onelake security list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse"
+dotnet run -- onelake security list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
 ```
 
 **Parameters:**
-- `--workspace`/`--workspace-id`: Workspace identifier
-- `--item`/`--item-id`: Item identifier
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
+- `--continuation-token`: (Optional) Token for retrieving the next page of results
 
 #### Get Data Access Role
 
 Gets the full definition of a single data access role — members, permissions, decision rules.
 
 ```bash
-dotnet run -- onelake security get --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --role-name "DataAnalysts"
+dotnet run -- onelake security get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --role-name "DataAnalysts"
 ```
 
 **Parameters:**
-- `--workspace`/`--workspace-id`: Workspace identifier
-- `--item`/`--item-id`: Item identifier
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
 - `--role-name`: Name of the data access role to retrieve
 
 #### Create or Update Data Access Role
@@ -660,12 +661,12 @@ dotnet run -- onelake security get --workspace "Analytics Workspace" --item "Sal
 Upserts a single data access role on a single item. Scoped to one role per call — does not affect other roles. The role name is derived from the `name` field in the JSON definition.
 
 ```bash
-dotnet run -- onelake security create-or-update --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --role-definition '{"name":"DataAnalysts","members":{"fabricItemMembers":[{"itemAccessType":"ReadAll"}]},"decisionRules":[{"effect":"Permit","permission":[{"attributeName":"Path","attributeValueIncludedIn":["Tables/*"]}]}]}'
+dotnet run -- onelake security create-or-update --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --role-definition '{"name":"DataAnalysts","members":{"fabricItemMembers":[{"itemAccessType":"ReadAll"}]},"decisionRules":[{"effect":"Permit","permission":[{"attributeName":"Path","attributeValueIncludedIn":["Tables/*"]}]}]}'
 ```
 
 **Parameters:**
-- `--workspace`/`--workspace-id`: Workspace identifier
-- `--item`/`--item-id`: Item identifier
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
 - `--role-definition`: JSON definition of the role (must include `name`, `members`, and `decisionRules`)
 
 #### Delete Data Access Role
@@ -673,12 +674,12 @@ dotnet run -- onelake security create-or-update --workspace "Analytics Workspace
 Deletes a single data access role from a single item. Destructive — principals that gained access only via this role lose it.
 
 ```bash
-dotnet run -- onelake security delete --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --role-name "TempRole"
+dotnet run -- onelake security delete --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --role-name "TempRole"
 ```
 
 **Parameters:**
-- `--workspace`/`--workspace-id`: Workspace identifier
-- `--item`/`--item-id`: Item identifier
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
 - `--role-name`: Name of the data access role to delete
 
 ### Shortcut Operations
@@ -687,28 +688,29 @@ Shortcuts are references to data stored in external or internal locations (ADLS 
 
 #### List Shortcuts
 
-Lists shortcuts defined within an item, recursing through subfolders.
+Lists shortcuts defined within an item, recursing through subfolders. Supports pagination via `--continuation-token`.
 
 ```bash
-dotnet run -- onelake shortcut list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse"
+dotnet run -- onelake shortcut list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
 ```
 
 **Parameters:**
-- `--workspace`/`--workspace-id`: Workspace identifier
-- `--item`/`--item-id`: Item identifier
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
 - `--parent-path`: (Optional) Parent path to scope the listing
+- `--continuation-token`: (Optional) Token for retrieving the next page of results
 
 #### Get Shortcut
 
 Gets the properties of a single shortcut (name, path, target, configuration).
 
 ```bash
-dotnet run -- onelake shortcut get --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --shortcut-name "ExternalData" --shortcut-path "Tables/ExternalData"
+dotnet run -- onelake shortcut get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --shortcut-name "ExternalData" --shortcut-path "Tables/ExternalData"
 ```
 
 **Parameters:**
-- `--workspace`/`--workspace-id`: Workspace identifier
-- `--item`/`--item-id`: Item identifier
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
 - `--shortcut-name`: Name of the shortcut
 - `--shortcut-path`: Path of the shortcut within the item
 
@@ -717,12 +719,12 @@ dotnet run -- onelake shortcut get --workspace "Analytics Workspace" --item "Sal
 Creates one or more shortcuts in a single call. Pass `--create-or-overwrite` to upsert (default fails on conflict).
 
 ```bash
-dotnet run -- onelake shortcut create-or-update --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --shortcuts '[{"name":"ExternalData","path":"Tables/ExternalData","target":{"adlsGen2":{"location":"https://storageaccount.dfs.core.windows.net","subpath":"/container/path"}}}]'
+dotnet run -- onelake shortcut create-or-update --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --shortcuts '[{"name":"ExternalData","path":"Tables/ExternalData","target":{"adlsGen2":{"location":"https://storageaccount.dfs.core.windows.net","subpath":"/container/path"}}}]'
 ```
 
 **Parameters:**
-- `--workspace`/`--workspace-id`: Workspace identifier
-- `--item`/`--item-id`: Item identifier
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
 - `--shortcuts`: JSON array of shortcut definitions
 - `--create-or-overwrite`: (Optional) If set, overwrites existing shortcuts
 
@@ -731,26 +733,25 @@ dotnet run -- onelake shortcut create-or-update --workspace "Analytics Workspace
 Deletes a single shortcut from an item. The destination data is preserved — only the shortcut reference is removed.
 
 ```bash
-dotnet run -- onelake shortcut delete --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --shortcut-name "ExternalData" --shortcut-path "Tables/ExternalData"
+dotnet run -- onelake shortcut delete --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --shortcut-name "ExternalData" --shortcut-path "Tables/ExternalData"
 ```
 
 **Parameters:**
-- `--workspace`/`--workspace-id`: Workspace identifier
-- `--item`/`--item-id`: Item identifier
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
 - `--shortcut-name`: Name of the shortcut to delete
 - `--shortcut-path`: Path of the shortcut
 
 #### Reset Shortcut Cache
 
-Drops cached shortcut reads for an item, forcing the next read to re-resolve from the destination. Use sparingly — primarily for debugging stale-cache issues.
+Drops cached shortcut reads for a workspace, forcing the next read to re-resolve from the destination. Use sparingly — primarily for debugging stale-cache issues.
 
 ```bash
-dotnet run -- onelake shortcut reset-cache --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse"
+dotnet run -- onelake shortcut reset-cache --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5"
 ```
 
 **Parameters:**
-- `--workspace`/`--workspace-id`: Workspace identifier
-- `--item`/`--item-id`: Item identifier
+- `--workspace-id`: Workspace ID (GUID)
 
 ### Settings Operations
 
@@ -761,22 +762,22 @@ Workspace-level OneLake settings for diagnostics and immutability policies. Thes
 Gets the OneLake settings for a workspace — diagnostics configuration and immutability policy.
 
 ```bash
-dotnet run -- onelake settings get --workspace "Analytics Workspace"
+dotnet run -- onelake settings get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5"
 ```
 
 **Parameters:**
-- `--workspace`/`--workspace-id`: Workspace identifier
+- `--workspace-id`: Workspace ID (GUID)
 
 #### Modify Diagnostics
 
 Modifies the diagnostic logging configuration for OneLake at the workspace scope. Replaces the existing diagnostics block; fetch with `get settings` first if you want to merge.
 
 ```bash
-dotnet run -- onelake settings modify-diagnostics --workspace "Analytics Workspace" --diagnostics-config '{"logAnalyticsWorkspaceId":"<workspace-id>","level":"Verbose"}'
+dotnet run -- onelake settings modify-diagnostics --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --diagnostics-config '{"logAnalyticsWorkspaceId":"<workspace-id>","level":"Verbose"}'
 ```
 
 **Parameters:**
-- `--workspace`/`--workspace-id`: Workspace identifier
+- `--workspace-id`: Workspace ID (GUID)
 - `--diagnostics-config`: JSON configuration for diagnostic settings
 
 #### Modify Immutability Policy
@@ -784,11 +785,11 @@ dotnet run -- onelake settings modify-diagnostics --workspace "Analytics Workspa
 Modifies the workspace-level OneLake immutability policy. **Warning:** Once enabled, immutability cannot be disabled — confirm with the user before applying.
 
 ```bash
-dotnet run -- onelake settings modify-immutability --workspace "Analytics Workspace" --immutability-policy '{"state":"Enabled"}'
+dotnet run -- onelake settings modify-immutability --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --immutability-policy '{"state":"Enabled"}'
 ```
 
 **Parameters:**
-- `--workspace`/`--workspace-id`: Workspace identifier
+- `--workspace-id`: Workspace ID (GUID)
 - `--immutability-policy`: JSON immutability policy configuration
 
 ## Quick Reference - fabmcp.exe Commands
@@ -864,43 +865,43 @@ fabmcp.exe onelake table get --workspace "Analytics Workspace" --item "SalesLake
 ### Security Operations
 ```cmd
 # List data access roles on an item
-fabmcp.exe onelake security list --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+fabmcp.exe onelake security list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
 
 # Get a specific role definition
-fabmcp.exe onelake security get --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --role-name "DataAnalysts"
+fabmcp.exe onelake security get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --role-name "DataAnalysts"
 
 # Delete a data access role
-fabmcp.exe onelake security delete --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --role-name "TempRole"
+fabmcp.exe onelake security delete --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --role-name "TempRole"
 ```
 
 ### Shortcut Operations
 ```cmd
 # List shortcuts on an item
-fabmcp.exe onelake shortcut list --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+fabmcp.exe onelake shortcut list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
 
 # Get a specific shortcut
-fabmcp.exe onelake shortcut get --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --shortcut-name "ExternalData" --shortcut-path "Tables/ExternalData"
+fabmcp.exe onelake shortcut get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --shortcut-name "ExternalData" --shortcut-path "Tables/ExternalData"
 
 # Delete a shortcut
-fabmcp.exe onelake shortcut delete --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --shortcut-name "ExternalData" --shortcut-path "Tables/ExternalData"
+fabmcp.exe onelake shortcut delete --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --shortcut-name "ExternalData" --shortcut-path "Tables/ExternalData"
 
 # Reset shortcut cache
-fabmcp.exe onelake shortcut reset-cache --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+fabmcp.exe onelake shortcut reset-cache --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5"
 ```
 
 ### Settings Operations
 ```cmd
 # Get workspace OneLake settings
-fabmcp.exe onelake settings get --workspace "47242da5-ff3b-46fb-a94f-977909b773d5"
+fabmcp.exe onelake settings get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5"
 
 # Modify diagnostics configuration
-fabmcp.exe onelake settings modify-diagnostics --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --diagnostics-config '{"logAnalyticsWorkspaceId":"<id>","level":"Verbose"}'
+fabmcp.exe onelake settings modify-diagnostics --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --diagnostics-config '{"logAnalyticsWorkspaceId":"<id>","level":"Verbose"}'
 
 # Modify immutability policy
-fabmcp.exe onelake settings modify-immutability --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --immutability-policy '{"state":"Enabled"}'
+fabmcp.exe onelake settings modify-immutability --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --immutability-policy '{"state":"Enabled"}'
 ```
 
-**Note:** Replace the workspace identifier (`47242da5-ff3b-46fb-a94f-977909b773d5`) and item identifier (`0e67ed13-2bb6-49be-9c87-a1105a4ea342`) with your actual Fabric workspace and item values (names or IDs).
+**Note:** Replace the workspace ID (`47242da5-ff3b-46fb-a94f-977909b773d5`) and item ID (`0e67ed13-2bb6-49be-9c87-a1105a4ea342`) with your actual Fabric GUIDs.
 
 ## Common Usage Patterns
 

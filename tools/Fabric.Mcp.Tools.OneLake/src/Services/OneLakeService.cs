@@ -1915,9 +1915,14 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     }
 
     // Data Access Security Operations
-    public async Task<DataAccessRoleListResponse> ListDataAccessRolesAsync(string workspaceId, string itemId, CancellationToken cancellationToken = default)
+    public async Task<DataAccessRoleListResponse> ListDataAccessRolesAsync(string workspaceId, string itemId, string? continuationToken = null, CancellationToken cancellationToken = default)
     {
         var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/dataAccessRoles";
+        if (!string.IsNullOrWhiteSpace(continuationToken))
+        {
+            url += $"?continuationToken={Uri.EscapeDataString(continuationToken)}";
+        }
+
         var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.DataAccessRoleListResponse, cancellationToken) ?? new DataAccessRoleListResponse();
     }
@@ -1965,13 +1970,25 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     }
 
     // Shortcut Operations
-    public async Task<ShortcutListResponse> ListShortcutsAsync(string workspaceId, string itemId, string? parentPath = null, CancellationToken cancellationToken = default)
+    public async Task<ShortcutListResponse> ListShortcutsAsync(string workspaceId, string itemId, string? parentPath = null, string? continuationToken = null, CancellationToken cancellationToken = default)
     {
         var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts";
+        var queryParams = new List<string>();
         if (!string.IsNullOrWhiteSpace(parentPath))
         {
-            url += $"?parentPath={Uri.EscapeDataString(parentPath)}";
+            queryParams.Add($"parentPath={Uri.EscapeDataString(parentPath)}");
         }
+
+        if (!string.IsNullOrWhiteSpace(continuationToken))
+        {
+            queryParams.Add($"continuationToken={Uri.EscapeDataString(continuationToken)}");
+        }
+
+        if (queryParams.Count > 0)
+        {
+            url += $"?{string.Join("&", queryParams)}";
+        }
+
         var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.ShortcutListResponse, cancellationToken) ?? new ShortcutListResponse();
     }

@@ -36,26 +36,14 @@ public sealed class ImmutabilityPolicyModifyCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsRequired());
         command.Options.Add(FabricOptionDefinitions.ImmutabilityPolicyConfig.AsRequired());
-        command.Validators.Add(result =>
-        {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-        });
     }
 
     protected override ImmutabilityPolicyModifyOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
         options.ImmutabilityPolicyConfig = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ImmutabilityPolicyConfig.Name);
         return options;
     }
@@ -70,26 +58,19 @@ public sealed class ImmutabilityPolicyModifyCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
-                ? options.WorkspaceId
-                : options.Workspace;
 
-            await _oneLakeService.ModifyImmutabilityPolicyAsync(workspaceIdentifier!, options.ImmutabilityPolicyConfig!, cancellationToken);
-            context.Response.Results = ResponseResult.Create(new ImmutabilityPolicyModifyCommandResult("Immutability policy modified successfully."), OneLakeJsonContext.Default.ImmutabilityPolicyModifyCommandResult);
+            await _oneLakeService.ModifyImmutabilityPolicyAsync(options.WorkspaceId!, options.ImmutabilityPolicyConfig!, cancellationToken);
+            context.Response.Results = ResponseResult.Create(new("Immutability policy modified successfully."), OneLakeJsonContext.Default.ImmutabilityPolicyModifyCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error modifying OneLake immutability policy. Workspace: {Workspace}.", options.WorkspaceId ?? options.Workspace);
+            _logger.LogError(ex, "Error modifying OneLake immutability policy. Workspace: {Workspace}.", options.WorkspaceId);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    public sealed class ImmutabilityPolicyModifyCommandResult
-    {
-        public string Message { get; init; } = string.Empty;
-        public ImmutabilityPolicyModifyCommandResult() { }
-        public ImmutabilityPolicyModifyCommandResult(string message) { Message = message; }
-    }
+    public sealed record ImmutabilityPolicyModifyCommandResult(string Message);
 }
+

@@ -48,13 +48,13 @@ public interface IOneLakeService
     Task<TableGetResult> GetTableAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, string tableName, CancellationToken cancellationToken = default);
 
     // Data Access Security Operations
-    Task<DataAccessRoleListResponse> ListDataAccessRolesAsync(string workspaceId, string itemId, CancellationToken cancellationToken = default);
+    Task<DataAccessRoleListResponse> ListDataAccessRolesAsync(string workspaceId, string itemId, string? continuationToken = null, CancellationToken cancellationToken = default);
     Task<DataAccessRole> GetDataAccessRoleAsync(string workspaceId, string itemId, string roleName, CancellationToken cancellationToken = default);
     Task<DataAccessRole> CreateOrUpdateDataAccessRoleAsync(string workspaceId, string itemId, string roleDefinitionJson, CancellationToken cancellationToken = default);
     Task DeleteDataAccessRoleAsync(string workspaceId, string itemId, string roleName, CancellationToken cancellationToken = default);
 
     // Shortcut Operations
-    Task<ShortcutListResponse> ListShortcutsAsync(string workspaceId, string itemId, string? parentPath = null, CancellationToken cancellationToken = default);
+    Task<ShortcutListResponse> ListShortcutsAsync(string workspaceId, string itemId, string? parentPath = null, string? continuationToken = null, CancellationToken cancellationToken = default);
     Task<OneLakeShortcut> GetShortcutAsync(string workspaceId, string itemId, string shortcutPath, string shortcutName, CancellationToken cancellationToken = default);
     Task<BulkCreateShortcutResponse> CreateOrUpdateShortcutsAsync(string workspaceId, string itemId, string shortcutsJson, string? shortcutConflictPolicy = null, CancellationToken cancellationToken = default);
     Task DeleteShortcutAsync(string workspaceId, string itemId, string shortcutPath, string shortcutName, CancellationToken cancellationToken = default);

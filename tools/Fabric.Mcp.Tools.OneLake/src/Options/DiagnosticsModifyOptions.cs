@@ -8,6 +8,6 @@ namespace Fabric.Mcp.Tools.OneLake.Options;
 public sealed class DiagnosticsModifyOptions : GlobalOptions
 {
     public string? WorkspaceId { get; set; }
-    public string? Workspace { get; set; }
     public string? DiagnosticsConfig { get; set; }
 }
+

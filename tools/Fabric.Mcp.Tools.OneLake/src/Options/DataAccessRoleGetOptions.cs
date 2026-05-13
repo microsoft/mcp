@@ -8,8 +8,7 @@ namespace Fabric.Mcp.Tools.OneLake.Options;
 public sealed class DataAccessRoleGetOptions : GlobalOptions
 {
     public string? WorkspaceId { get; set; }
-    public string? Workspace { get; set; }
     public string? ItemId { get; set; }
-    public string? Item { get; set; }
     public string? RoleName { get; set; }
 }
+
