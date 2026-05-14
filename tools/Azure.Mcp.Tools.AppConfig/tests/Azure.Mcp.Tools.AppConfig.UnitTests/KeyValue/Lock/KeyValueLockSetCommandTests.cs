@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
 using Azure.Mcp.Tools.AppConfig.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
@@ -15,6 +17,11 @@ namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue.Lock;
 
 public class KeyValueLockSetCommandTests : CommandUnitTestsBase<KeyValueLockSetCommand, IAppConfigService>
 {
+    public KeyValueLockSetCommandTests()
+    {
+        Services.AddSingleton<ISubscriptionResolver>(SubscriptionResolver.Instance);
+    }
+
     [Fact]
     public async Task ExecuteAsync_LocksKeyValue_WhenValidParametersProvided()
     {
