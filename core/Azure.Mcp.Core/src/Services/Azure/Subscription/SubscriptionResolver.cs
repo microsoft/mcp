@@ -12,17 +12,10 @@ namespace Azure.Mcp.Core.Services.Azure.Subscription;
 /// </summary>
 public sealed class SubscriptionResolver : ISubscriptionResolver
 {
-    public static SubscriptionResolver Instance { get; } = new();
-
-    public string? GetSubscription(ParseResult parseResult)
+    public string? ResolveSubscription(string? subscription)
     {
-        string? subscription = CommandHelper.GetSubscription(parseResult);
-
-        if (!string.IsNullOrEmpty(subscription))
-        {
-            subscription = subscription.Trim('"', '\'');
-        }
-
+        subscription = subscription?.Trim('"', '\'');
+        subscription = CommandHelper.GetSubscription(subscription);
         return subscription;
     }
 

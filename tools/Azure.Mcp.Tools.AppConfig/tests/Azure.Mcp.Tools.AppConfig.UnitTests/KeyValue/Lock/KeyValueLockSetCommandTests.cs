@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppConfig.Commands;
@@ -17,9 +18,13 @@ namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue.Lock;
 
 public class KeyValueLockSetCommandTests : CommandUnitTestsBase<KeyValueLockSetCommand, IAppConfigService>
 {
+    ISubscriptionResolver _subscriptionResolver;
+    
     public KeyValueLockSetCommandTests()
     {
-        Services.AddSingleton<ISubscriptionResolver>(SubscriptionResolver.Instance);
+        _subscriptionResolver = Substitute.For<ISubscriptionResolver>();
+        _subscriptionResolver.ResolveSubscription(Arg.Any<string?>()).Returns(args => args[0]); // Return the input subscription for testing
+        Services.AddSingleton(_subscriptionResolver);
     }
 
     [Fact]

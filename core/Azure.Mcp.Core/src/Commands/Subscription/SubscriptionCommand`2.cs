@@ -33,7 +33,7 @@ public abstract class SubscriptionCommand<
     {
         var options = base.BindOptions(parseResult);
         // Always post-process subscription via resolver (env var / CLI profile fallback)
-        options.Subscription = _subscriptionResolver.GetSubscription(parseResult);
+        options.Subscription = _subscriptionResolver.ResolveSubscription(options.Subscription);
         return options;
     }
 }

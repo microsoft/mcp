@@ -12,10 +12,10 @@ namespace Azure.Mcp.Core.Services.Azure.Subscription;
 public interface ISubscriptionResolver
 {
     /// <summary>
-    /// Resolves the subscription from the parse result, falling back to Azure CLI profile
+    /// Resolves the subscription from the provided value, falling back to Azure CLI profile
     /// or AZURE_SUBSCRIPTION_ID environment variable.
     /// </summary>
-    string? GetSubscription(ParseResult parseResult);
+    string? ResolveSubscription(string? subscription);
 
     /// <summary>
     /// Checks if a subscription is available from the command option, Azure CLI profile,
