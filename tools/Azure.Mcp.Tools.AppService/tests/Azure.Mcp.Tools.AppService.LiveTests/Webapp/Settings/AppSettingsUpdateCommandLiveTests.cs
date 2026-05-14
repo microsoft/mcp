@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
 using Azure.Mcp.Tools.AppService.Commands;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -34,8 +33,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-update-type", "add" }
             });
 
-        var updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
-        Assert.NotNull(updateResult);
+        var updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Application setting '{settingName}' added", updateResult.UpdateStatus);
     }
@@ -60,8 +58,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-update-type", "add" }
             });
 
-        var updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
-        Assert.NotNull(updateResult);
+        var updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Application setting '{settingName}' added", updateResult.UpdateStatus);
 
@@ -77,8 +74,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-update-type", "add" }
             });
 
-        updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
-        Assert.NotNull(updateResult);
+        updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Failed to add application setting '{settingName}'", updateResult.UpdateStatus);
     }
@@ -103,8 +99,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-update-type", "set" }
             });
 
-        var updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
-        Assert.NotNull(updateResult);
+        var updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Application setting '{settingName}' set", updateResult.UpdateStatus);
 
@@ -120,8 +115,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-update-type", "set" }
             });
 
-        updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
-        Assert.NotNull(updateResult);
+        updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Application setting '{settingName}' set", updateResult.UpdateStatus);
     }
@@ -146,8 +140,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-update-type", "set" }
             });
 
-        var updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
-        Assert.NotNull(updateResult);
+        var updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Application setting '{settingName}' set", updateResult.UpdateStatus);
 
@@ -162,8 +155,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-update-type", "delete" }
             });
 
-        updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
-        Assert.NotNull(updateResult);
+        updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Application setting '{settingName}' deleted", updateResult.UpdateStatus);
     }
@@ -187,8 +179,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-update-type", "delete" }
             });
 
-        var updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
-        Assert.NotNull(updateResult);
+        var updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Application setting '{settingName}' doesn't exist", updateResult.UpdateStatus);
     }

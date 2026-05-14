@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
 using Azure.Mcp.Tools.AppService.Commands;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -30,8 +29,7 @@ public class AppSettingsGetCommandLiveTests(ITestOutputHelper output, TestProxyF
                 { "app", webappName }
             });
 
-        var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsGetResult);
-        Assert.NotNull(getResult);
+        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsGetResult);
         Assert.NotEmpty(getResult.AppSettings);
     }
 }
