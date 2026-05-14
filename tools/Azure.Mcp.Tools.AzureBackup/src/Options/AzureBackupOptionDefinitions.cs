@@ -30,6 +30,12 @@ public static class AzureBackupOptionDefinitions
     public const string TagFilterName = "tag-filter";
     public const string ResourceGuardIdName = "resource-guard-id";
 
+    // Security - CMK encryption
+    public const string KeyVaultUriName = "key-vault-uri";
+    public const string KeyNameOptionName = "key-name";
+    public const string KeyVersionName = "key-version";
+    public const string UserAssignedIdentityIdName = "user-assigned-identity-id";
+
     // Policy create  -  common schedule flags (new in policy create overhaul)
     public const string ScheduleTimeName = "schedule-time";
     public const string TimeZoneName = "time-zone";
@@ -95,6 +101,7 @@ public static class AzureBackupOptionDefinitions
     public const string AksExcludedNamespacesName = "aks-excluded-namespaces";
     public const string AksLabelSelectorsName = "aks-label-selectors";
     public const string AksIncludeClusterScopeResourcesName = "aks-include-cluster-scope-resources";
+
 
     public static readonly Option<string> Vault = new($"--{VaultName}")
     {
@@ -534,6 +541,30 @@ public static class AzureBackupOptionDefinitions
     public static readonly Option<string> ResourceGuardId = new($"--{ResourceGuardIdName}")
     {
         Description = "ARM resource ID of the Resource Guard to link for Multi-User Authorization (e.g., '/subscriptions/.../resourceGroups/.../providers/Microsoft.DataProtection/resourceGuards/myGuard').",
+        Required = false
+    };
+
+    public static readonly Option<string> KeyVaultUri = new($"--{KeyVaultUriName}")
+    {
+        Description = "Key Vault URI (e.g., 'https://kv-security-prod.vault.azure.net/').",
+        Required = true
+    };
+
+    public static readonly Option<string> KeyNameOption = new($"--{KeyNameOptionName}")
+    {
+        Description = "Name of the encryption key in the Key Vault.",
+        Required = true
+    };
+
+    public static readonly Option<string> KeyVersion = new($"--{KeyVersionName}")
+    {
+        Description = "Specific key version. Omit to always use the latest version.",
+        Required = false
+    };
+
+    public static readonly Option<string> UserAssignedIdentityId = new($"--{UserAssignedIdentityIdName}")
+    {
+        Description = "ARM resource ID of the user-assigned managed identity for Key Vault access. Required when --identity-type is 'UserAssigned'.",
         Required = false
     };
 }

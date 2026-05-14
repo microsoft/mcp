@@ -1,11 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
@@ -13,7 +8,6 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Microsoft.ModelContextProtocol.HttpServer.Distributed;
 using Microsoft.ModelContextProtocol.HttpServer.Distributed.Abstractions;
 using NSubstitute;
 using Xunit;
@@ -202,7 +196,7 @@ public sealed class SessionAffinityEndpointFilterTests
         );
 
         Assert.NotNull(result);
-        Assert.IsAssignableFrom<IResult>(result);
+        Assert.IsType<IResult>(result, exactMatch: false);
 
         await ((IResult)result!).ExecuteAsync(httpContext);
         Assert.Equal(StatusCodes.Status502BadGateway, httpContext.Response.StatusCode);
@@ -779,20 +773,13 @@ public sealed class SessionAffinityEndpointFilterTests
         return context;
     }
 
-    private sealed class TestEndpointFilterInvocationContext : EndpointFilterInvocationContext
+    private sealed class TestEndpointFilterInvocationContext(
+        HttpContext httpContext,
+        IEnumerable<object?>? arguments = null) : EndpointFilterInvocationContext
     {
-        private readonly List<object?> _arguments;
+        private readonly List<object?> _arguments = arguments?.ToList() ?? [];
 
-        public TestEndpointFilterInvocationContext(
-            HttpContext httpContext,
-            IEnumerable<object?>? arguments = null
-        )
-        {
-            HttpContext = httpContext;
-            _arguments = arguments?.ToList() ?? [];
-        }
-
-        public override HttpContext HttpContext { get; }
+        public override HttpContext HttpContext { get; } = httpContext;
 
         public override T GetArgument<T>(int index)
         {
@@ -873,9 +860,7 @@ public sealed class SessionAffinityEndpointFilterTests
 
     private sealed class TestHttpForwarder : IHttpForwarder, IDisposable
     {
-        private readonly List<ForwarderCall> _calls = [];
-
-        public List<ForwarderCall> Calls => _calls;
+        public List<ForwarderCall> Calls { get; } = [];
 
         public ForwarderError NextResult { get; set; } = ForwarderError.None;
 
@@ -883,7 +868,7 @@ public sealed class SessionAffinityEndpointFilterTests
 
         public void Dispose()
         {
-            _calls.Clear();
+            Calls.Clear();
         }
 
         // Explicit interface implementation for IHttpForwarder.SendAsync
@@ -896,7 +881,7 @@ public sealed class SessionAffinityEndpointFilterTests
             HttpTransformer transformer
         )
         {
-            _calls.Add(new ForwarderCall(context, destinationPrefix));
+            Calls.Add(new ForwarderCall(context, destinationPrefix));
 
             // Set the response status code if forwarder succeeds
             if (NextResult == ForwarderError.None)

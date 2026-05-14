@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Fabric.Mcp.Tools.OneLake.csproj" />
+    <ProjectReference Include="..\..\src\Fabric.Mcp.Tools.Core.csproj" />
     <ProjectReference Include="$(RepoRoot)core\Microsoft.Mcp.Core\tests\Microsoft.Mcp.Tests\Microsoft.Mcp.Tests.csproj" />
   </ItemGroup>
 

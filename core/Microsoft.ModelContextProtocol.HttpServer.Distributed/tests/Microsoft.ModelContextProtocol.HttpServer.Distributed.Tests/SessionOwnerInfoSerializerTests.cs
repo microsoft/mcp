@@ -10,12 +10,7 @@ namespace Microsoft.ModelContextProtocol.HttpServer.Distributed.Tests;
 
 public class SessionOwnerInfoSerializerTests
 {
-    private readonly SessionOwnerInfoSerializer _serializer;
-
-    public SessionOwnerInfoSerializerTests()
-    {
-        _serializer = new SessionOwnerInfoSerializer();
-    }
+    private readonly SessionOwnerInfoSerializer _serializer = new();
 
     [Fact]
     public void Serialize_ValidSessionOwnerInfo_WritesToBuffer()

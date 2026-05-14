@@ -215,4 +215,17 @@ public interface IRsvBackupOperations
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
+
+    Task<OperationResult> ConfigureEncryptionAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string keyVaultUri,
+        string keyName,
+        string identityType,
+        string? keyVersion,
+        string? userAssignedIdentityId,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
 }

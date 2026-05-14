@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Linq;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Commands;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests;
 

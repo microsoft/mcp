@@ -25,7 +25,7 @@
     <Project Path="core/Microsoft.ModelContextProtocol.HttpServer.Distributed/src/Microsoft.ModelContextProtocol.HttpServer.Distributed.csproj" />
   </Folder>
   <Folder Name="/core/Microsoft.ModelContextProtocol.HttpServer.Distributed/tests/">
-    <Project Path="core/Microsoft.ModelContextProtocol.HttpServer.Distributed/tests/Microsoft.ModelContextProtocol.HttpServer.Distributed.Tests.csproj" />
+    <Project Path="core/Microsoft.ModelContextProtocol.HttpServer.Distributed/tests/Microsoft.ModelContextProtocol.HttpServer.Distributed.Tests/Microsoft.ModelContextProtocol.HttpServer.Distributed.Tests.csproj" />
   </Folder>
   <Folder Name="/core/Template.Mcp.Core/" />
   <Folder Name="/core/Template.Mcp.Core/src/">
@@ -502,7 +502,7 @@
     <Project Path="tools/Fabric.Mcp.Tools.Core/src/Fabric.Mcp.Tools.Core.csproj" />
   </Folder>
   <Folder Name="/tools/Fabric.Mcp.Tools.Core/tests/">
-    <Project Path="tools/Fabric.Mcp.Tools.Core/tests/Fabric.Mcp.Tools.Core.UnitTests.csproj" />
+    <Project Path="tools/Fabric.Mcp.Tools.Core/tests/Fabric.Mcp.Tools.Core.Tests/Fabric.Mcp.Tools.Core.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Fabric.Mcp.Tools.DataFactory/" />
   <Folder Name="/tools/Fabric.Mcp.Tools.DataFactory/src/">
@@ -523,6 +523,6 @@
     <Project Path="tools/Fabric.Mcp.Tools.OneLake/src/Fabric.Mcp.Tools.OneLake.csproj" />
   </Folder>
   <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/tests/">
-    <Project Path="tools/Fabric.Mcp.Tools.OneLake/tests/Fabric.Mcp.Tools.OneLake.Tests.csproj" />
+    <Project Path="tools/Fabric.Mcp.Tools.OneLake/tests/Fabric.Mcp.Tools.OneLake.Tests/Fabric.Mcp.Tools.OneLake.Tests.csproj" />
   </Folder>
 </Solution>

@@ -5,7 +5,7 @@ using Fabric.Mcp.Tools.Core.Commands;
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Mcp.Tests.Client;
 
-namespace Fabric.Mcp.Tools.Core.UnitTests.Commands;
+namespace Fabric.Mcp.Tools.Core.Tests.Commands;
 
 public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IFabricCoreService>
 {

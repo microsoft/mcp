@@ -26,7 +26,7 @@
     <Project Path="../../tools/Fabric.Mcp.Tools.Core/src/Fabric.Mcp.Tools.Core.csproj" />
   </Folder>
   <Folder Name="/tools/Fabric.Mcp.Tools.Core/tests/">
-    <Project Path="../../tools/Fabric.Mcp.Tools.Core/tests/Fabric.Mcp.Tools.Core.UnitTests.csproj" />
+    <Project Path="../../tools/Fabric.Mcp.Tools.Core/tests/Fabric.Mcp.Tools.Core.Tests/Fabric.Mcp.Tools.Core.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Fabric.Mcp.Tools.DataFactory/" />
   <Folder Name="/tools/Fabric.Mcp.Tools.DataFactory/src/">
@@ -47,6 +47,6 @@
     <Project Path="../../tools/Fabric.Mcp.Tools.OneLake/src/Fabric.Mcp.Tools.OneLake.csproj" />
   </Folder>
   <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/tests/">
-    <Project Path="../../tools/Fabric.Mcp.Tools.OneLake/tests/Fabric.Mcp.Tools.OneLake.Tests.csproj" />
+    <Project Path="../../tools/Fabric.Mcp.Tools.OneLake/tests/Fabric.Mcp.Tools.OneLake.Tests/Fabric.Mcp.Tools.OneLake.Tests.csproj" />
   </Folder>
 </Solution>

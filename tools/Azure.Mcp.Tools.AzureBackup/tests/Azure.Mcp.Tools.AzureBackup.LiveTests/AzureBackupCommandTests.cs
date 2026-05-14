@@ -1781,9 +1781,9 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
         // If no soft-deleted item exists (consumed by a prior run or never set up),
         // the command returns an error response instead of a result. Skip gracefully.
-        if (!result.Value.TryGetProperty("result", out var opResult))
+        if (!result.HasValue || !result.Value.TryGetProperty("result", out var opResult))
         {
-            var msg = result.Value.TryGetProperty("message", out var m) ? m.GetString() : "unknown";
+            var msg = result.HasValue && result.Value.TryGetProperty("message", out var m) ? m.GetString() : "unknown";
             Assert.Skip($"No soft-deleted DPP backup instance available: {msg}");
             return;
         }
@@ -2020,4 +2020,45 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     // Command-level validation errors return MCP error responses without tool content.
 
     #endregion
+
+    #region Security - Configure Encryption (CMK)
+
+    [Fact]
+    [LiveTestOnly]
+    public async Task SecurityConfigureEncryption_RsvVault_SystemAssigned()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureEncryption_RSV_SystemAssigned");
+
+        var result = await CallToolAsync(
+            "azurebackup_security_configure-encryption",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "rsv" },
+                { "key-vault-uri", Settings.DeploymentOutputs?.GetValueOrDefault("KEY_VAULT_URI") ?? "https://kv-backup-test.vault.azure.net/" },
+                { "key-name", Settings.DeploymentOutputs?.GetValueOrDefault("KEY_NAME") ?? "backup-cmk" },
+                { "identity-type", "SystemAssigned" }
+            });
+
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityConfigureEncryption_RSV_SystemAssigned");
+
+        if (result.HasValue)
+        {
+            var text = result.Value.GetProperty("text").GetString() ?? "";
+            Output.WriteLine($"Result: {text}");
+            Assert.Contains("Succeeded", text);
+        }
+        else
+        {
+            Assert.Fail("Unexpected response from SecurityConfigureEncryption (RSV SystemAssigned)");
+        }
+    }
+
+    #endregion
+
 }
+

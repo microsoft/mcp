@@ -1070,6 +1070,21 @@ azmcp azurebackup security configure-mua --subscription <subscription> \
                                          [--resource-guard-id <resource-guard-id>]
 ```
 
+```bash
+# Configures Customer-Managed Key (CMK) encryption on a vault using a key from Azure Key Vault.
+# Supports both RSV and DPP vaults. Requires managed identity with Key Vault Crypto Service Encryption User role.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup security configure-encryption --subscription <subscription> \
+                                                --resource-group <resource-group> \
+                                                --vault <vault> \
+                                                --key-vault-uri <key-vault-uri> \
+                                                --key-name <key-name> \
+                                                --identity-type <identity-type> \
+                                                [--vault-type <vault-type>] \
+                                                [--key-version <key-version>] \
+                                                [--user-assigned-identity-id <user-assigned-identity-id>]
+```
+
 ### Azure CLI Operations
 
 #### Generate

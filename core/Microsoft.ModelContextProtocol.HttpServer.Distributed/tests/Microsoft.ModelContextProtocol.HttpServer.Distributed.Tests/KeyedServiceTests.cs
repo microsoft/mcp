@@ -78,8 +78,7 @@ public class KeyedServiceTests
                 await Task.Yield(); // Simulate async work
                 return ownerInfo;
             },
-            TestContext.Current.CancellationToken
-        );
+            TestContext.Current.CancellationToken);
 
         var getResult = await sessionStore.GetOrClaimOwnershipAsync(
             sessionId,
@@ -91,8 +90,7 @@ public class KeyedServiceTests
                     "Factory should not be called for existing session"
                 );
             },
-            TestContext.Current.CancellationToken
-        );
+            TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(setResult);

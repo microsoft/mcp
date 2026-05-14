@@ -1,4 +1,4 @@
-# Fabric.Mcp.Tools.Core.UnitTests
+# Fabric.Mcp.Tools.Core.Tests
 
 Unit tests for the Fabric Core toolset.
 

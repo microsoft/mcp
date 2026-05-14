@@ -168,6 +168,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azurebackup_protecteditem_undelete | Undelete the accidentally deleted backup for VM <datasource_id> in vault <vault_name> under resource group <resource_group> |
 | azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> |
 | azurebackup_recoverypoint_get | List available recovery points for <item_name> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_security_configure-encryption | Configure customer-managed key encryption on vault <vault_name> in resource group <resource_group> using key <key_name> from key vault <key_vault_uri> with system-assigned identity |
+| azurebackup_security_configure-encryption | Enable CMK encryption on vault <vault_name> using user-assigned identity <identity_id> and key <key_name> from <key_vault_uri> |
+| azurebackup_security_configure-encryption | Set up customer-managed encryption for backup vault <vault_name> in <resource_group> |
 | azurebackup_security_configure-mua | Enable multi-user authorization on vault <vault_name> in resource group <resource_group> with resource guard <resource_guard_id> |
 | azurebackup_security_configure-mua | Disable MUA on vault <vault_name> in resource group <resource_group> |
 | azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' |

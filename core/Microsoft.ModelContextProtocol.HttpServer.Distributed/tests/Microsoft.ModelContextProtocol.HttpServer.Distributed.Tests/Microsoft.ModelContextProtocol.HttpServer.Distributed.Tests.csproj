@@ -15,6 +15,6 @@
     <PackageReference Include="Microsoft.AspNetCore.TestHost" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\Microsoft.ModelContextProtocol.HttpServer.Distributed.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.ModelContextProtocol.HttpServer.Distributed.csproj" />
   </ItemGroup>
 </Project>

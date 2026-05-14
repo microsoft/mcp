@@ -35,6 +35,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands;
 [JsonSerializable(typeof(GovernanceSoftDeleteCommand.GovernanceSoftDeleteCommandResult))]
 [JsonSerializable(typeof(DisasterRecoveryEnableCrrCommand.DisasterRecoveryEnableCrrCommandResult))]
 [JsonSerializable(typeof(SecurityConfigureMuaCommand.SecurityConfigureMuaCommandResult))]
+[JsonSerializable(typeof(SecurityConfigureEncryptionCommand.SecurityConfigureEncryptionCommandResult))]
 [JsonSerializable(typeof(BackupVaultInfo))]
 [JsonSerializable(typeof(ProtectedItemInfo))]
 [JsonSerializable(typeof(BackupPolicyInfo))]
