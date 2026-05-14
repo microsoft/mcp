@@ -1781,9 +1781,9 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
         // If no soft-deleted item exists (consumed by a prior run or never set up),
         // the command returns an error response instead of a result. Skip gracefully.
-        if (!result.Value.TryGetProperty("result", out var opResult))
+        if (!result.HasValue || !result.Value.TryGetProperty("result", out var opResult))
         {
-            var msg = result.Value.TryGetProperty("message", out var m) ? m.GetString() : "unknown";
+            var msg = result.HasValue && result.Value.TryGetProperty("message", out var m) ? m.GetString() : "unknown";
             Assert.Skip($"No soft-deleted DPP backup instance available: {msg}");
             return;
         }
