@@ -10,9 +10,10 @@ using Microsoft.Mcp.Tests.Generated.Models;
 using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Acr.LiveTests;
+namespace Azure.Mcp.Tools.Acr.Tests;
 
-public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     public override List<string> DisabledDefaultSanitizers =>
     [
@@ -23,7 +24,7 @@ public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
         ..base.BodyKeySanitizers,
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$..data.properties.loginServer") {
+        new(new("$..data.properties.loginServer") {
              Value = "sanitized.azurecr.io"
         })
     ];

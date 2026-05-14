@@ -3,7 +3,7 @@
 
 using Xunit;
 
-namespace Azure.Mcp.Server.UnitTests.Infrastructure;
+namespace Azure.Mcp.Server.Tests.Infrastructure;
 
 public class GetTargetAreaNameTests
 {
