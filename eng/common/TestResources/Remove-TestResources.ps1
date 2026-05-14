@@ -86,6 +86,7 @@ param (
 
 . (Join-Path $PSScriptRoot .. scripts Helpers Resource-Helpers.ps1)
 . (Join-Path $PSScriptRoot TestResources-Helpers.ps1)
+. $PSScriptRoot/SubConfig-Helpers.ps1
 
 # By default stop for any error.
 if (!$PSBoundParameters.ContainsKey('ErrorAction')) {
@@ -103,10 +104,6 @@ trap {
     # Like using try..finally in PowerShell, but without keeping track of more braces or tabbing content.
     $exitActions.Invoke()
 }
-
-. $PSScriptRoot/SubConfig-Helpers.ps1
-# Source helpers to purge resources.
-. "$PSScriptRoot\..\scripts\Helpers\Resource-Helpers.ps1"
 
 function Log($Message) {
     Write-Host ('{0} - {1}' -f [DateTime]::Now.ToLongTimeString(), $Message)
@@ -180,6 +177,9 @@ if (!$ResourceGroupName) {
 # Ignore errors to leave the automatically selected subscription.
 if ($SubscriptionId) {
     $currentSubcriptionId = $context.Subscription.Id
+
+    Write-Host "Current subscription is '$currentSubcriptionId'. Desired subscription is '$SubscriptionId'."
+
     if ($currentSubcriptionId -ne $SubscriptionId) {
         Log "Selecting subscription '$SubscriptionId'"
         $null = Select-AzSubscription -Subscription $SubscriptionId -WarningAction Ignore

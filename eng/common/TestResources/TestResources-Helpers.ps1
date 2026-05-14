@@ -349,6 +349,26 @@ function SetDeploymentOutputs(
     return $deploymentEnvironmentVariables, $deploymentOutputs
 }
 
+function Write-TemplateValidationError($templateValidationResult, [int]$level, [int]$maxLevel) {
+    if (!$templateValidationResult -or !$templateValidationResult.Message) {
+        return;
+    }
+
+    # Retrieve one or more messages then decode the strings for readability (remove quote escapes, fix link readability, etc.)
+    $parsedMessage = ($templateValidationResult.Message -join "$([System.Environment]::NewLine)$([System.Environment]::NewLine)")
+    $parsedMessage = [System.Net.WebUtility]::UrlDecode($parsedMessage)
+
+    Write-Host (" " * ($level * 2) + $parsedMessage)
+
+    if ($level -ge $maxLevel) {
+        return;
+    }
+
+    foreach ($detail in $templateValidationResult.Details) {
+        Write-TemplateValidationError $detail ($level + 1) $maxLevel
+    }
+}
+
 function HandleTemplateDeploymentError($templateValidationResult) {
     Write-Warning "Deployment template validation failed"
 
@@ -357,14 +377,10 @@ function HandleTemplateDeploymentError($templateValidationResult) {
         return
     }
 
-    # Retrieve one or more messages then decode the strings for readability (remove quote escapes, fix link readability, etc.)
-    $parsedMessage = ($templateValidationResult.Details.Message -join "$([System.Environment]::NewLine)$([System.Environment]::NewLine)")
-    $parsedMessage = [System.Net.WebUtility]::UrlDecode($parsedMessage)
-
     Write-Warning "#####################################################"
     Write-Warning "######### TEMPLATE VALIDATION ERROR DETAILS #########"
     Write-Warning "#####################################################"
-    Write-Host $parsedMessage
+    Write-TemplateValidationError $templateValidationResult 0 5
     Write-Warning "#####################################################"
 }
 

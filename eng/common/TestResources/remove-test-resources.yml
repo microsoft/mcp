@@ -44,6 +44,9 @@ steps:
             ${{ parameters.SubscriptionConfiguration }}
           "@ | ConvertFrom-Json -AsHashtable;
 
+          Write-Host "Passing configuration values"
+          Write-Host ($subscriptionConfiguration | ConvertTo-Json)
+
           eng/common/TestResources/Remove-TestResources.ps1 `
             @subscriptionConfiguration `
             -ResourceType '${{ parameters.ResourceType }}' `
