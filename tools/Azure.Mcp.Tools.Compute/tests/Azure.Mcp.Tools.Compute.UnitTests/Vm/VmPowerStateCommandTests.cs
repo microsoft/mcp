@@ -56,7 +56,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new VmPowerStateResult("test-vm", null, "test-rg", "Operation completed.", true));
+                .Returns(new VmPowerStateResult("test-vm", null, "test-rg", "start", "Operation completed.", true));
         }
 
         // Act & Assert
@@ -83,7 +83,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
         // Arrange
         var expectedResult = new VmPowerStateResult(
             _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup,
-            $"Virtual machine '{_knownVmName}' {powerAction} operation completed successfully.", true);
+            powerAction, $"Virtual machine '{_knownVmName}' {powerAction} operation completed successfully.", true);
 
         Service.ChangeVmPowerStateAsync(
             Arg.Is(_knownVmName),
@@ -115,7 +115,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
         // Arrange
         var expectedResult = new VmPowerStateResult(
             _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup,
-            $"Virtual machine '{_knownVmName}' start operation initiated. Use instance view to check status.", false);
+            "start", $"Virtual machine '{_knownVmName}' start operation initiated. Use instance view to check status.", false);
 
         Service.ChangeVmPowerStateAsync(
             Arg.Is(_knownVmName),
@@ -159,7 +159,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
         // Arrange
         var expectedResult = new VmPowerStateResult(
             _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup,
-            $"Virtual machine '{_knownVmName}' stop operation completed successfully.", true);
+            "stop", $"Virtual machine '{_knownVmName}' stop operation completed successfully.", true);
 
         Service.ChangeVmPowerStateAsync(
             Arg.Is(_knownVmName),
@@ -291,7 +291,7 @@ public class VmPowerStateCommandTests : CommandUnitTestsBase<VmPowerStateCommand
         // Arrange
         var expectedResult = new VmPowerStateResult(
             _knownVmName, $"/subscriptions/{_knownSubscription}/resourceGroups/{_knownResourceGroup}/providers/Microsoft.Compute/virtualMachines/{_knownVmName}", _knownResourceGroup,
-            $"Virtual machine '{_knownVmName}' start operation completed successfully.", true);
+            "start", $"Virtual machine '{_knownVmName}' start operation completed successfully.", true);
 
         Service.ChangeVmPowerStateAsync(
             Arg.Any<string>(),

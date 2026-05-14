@@ -1204,7 +1204,7 @@ public class ComputeService(
                 ? $"Virtual machine '{vmName}' {powerAction} operation initiated. Poll 'statusUri' to track completion."
                 : $"Virtual machine '{vmName}' {powerAction} operation initiated. Use instance view to check status.";
 
-        return new VmPowerStateResult(vmName, vmResource.Id.ToString(), resourceGroup, message, completed, statusUri);
+        return new VmPowerStateResult(vmName, vmResource.Id.ToString(), resourceGroup, powerAction, message, completed, statusUri);
     }
 
     public async Task<bool> DeleteVmssAsync(

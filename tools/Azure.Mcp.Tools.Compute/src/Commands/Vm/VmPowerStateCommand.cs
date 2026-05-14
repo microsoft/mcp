@@ -59,7 +59,7 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, ICo
         base.RegisterOptions(command);
 
         command.Options.Add(ComputeOptionDefinitions.VmName.AsRequired());
-        command.Options.Add(ComputeOptionDefinitions.PowerAction);
+        command.Options.Add(ComputeOptionDefinitions.PowerAction.AsRequired());
         command.Options.Add(ComputeOptionDefinitions.NoWait);
         command.Options.Add(ComputeOptionDefinitions.SkipShutdown);
 

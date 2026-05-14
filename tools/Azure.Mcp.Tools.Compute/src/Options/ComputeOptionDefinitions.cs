@@ -343,7 +343,7 @@ public static class ComputeOptionDefinitions
     public static readonly Option<string> PowerAction = new($"--{PowerActionName}")
     {
         Description = "The power action to apply to the VM (not the current power state). Accepted values: start, stop, deallocate, restart.",
-        Required = true
+        Required = false
     };
 
     public static readonly Option<bool> NoWait = new($"--{NoWaitName}")
