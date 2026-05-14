@@ -5,7 +5,7 @@ using System.Reflection;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Xunit;
 
-namespace Azure.Mcp.Tools.AppConfig.UnitTests.Services;
+namespace Azure.Mcp.Tools.AppConfig.Tests.Services;
 
 public class AppConfigServiceTests
 {

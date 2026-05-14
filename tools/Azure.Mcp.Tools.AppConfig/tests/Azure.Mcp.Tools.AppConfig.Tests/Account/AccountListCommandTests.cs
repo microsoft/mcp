@@ -13,7 +13,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.AppConfig.UnitTests.Account;
+namespace Azure.Mcp.Tools.AppConfig.Tests.Account;
 
 public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, IAppConfigService>
 {

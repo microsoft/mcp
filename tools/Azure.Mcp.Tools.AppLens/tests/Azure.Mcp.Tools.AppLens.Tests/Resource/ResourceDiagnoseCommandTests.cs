@@ -11,7 +11,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.AppLens.UnitTests.Resource;
+namespace Azure.Mcp.Tools.AppLens.Tests.Resource;
 
 public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnoseCommand, IAppLensService>
 {

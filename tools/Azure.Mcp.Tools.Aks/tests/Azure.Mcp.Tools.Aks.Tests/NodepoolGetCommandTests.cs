@@ -9,9 +9,10 @@ using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Aks.LiveTests;
+namespace Azure.Mcp.Tools.Aks.Tests;
 
-public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     [Fact]
     public async Task Should_get_nodepool_for_cluster()

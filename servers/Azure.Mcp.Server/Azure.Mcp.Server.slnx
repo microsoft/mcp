@@ -45,30 +45,28 @@
     <Project Path="../../tools/Azure.Mcp.Tools.Aks/src/Azure.Mcp.Tools.Aks.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Aks/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Aks/tests/Azure.Mcp.Tools.Aks.LiveTests/Azure.Mcp.Tools.Aks.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.Aks/tests/Azure.Mcp.Tools.Aks.UnitTests/Azure.Mcp.Tools.Aks.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Aks/tests/Azure.Mcp.Tools.Aks.Tests/Azure.Mcp.Tools.Aks.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AppConfig/" />
   <Folder Name="/tools/Azure.Mcp.Tools.AppConfig/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.AppConfig/src/Azure.Mcp.Tools.AppConfig.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AppConfig/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.AppConfig/tests/Azure.Mcp.Tools.AppConfig.LiveTests/Azure.Mcp.Tools.AppConfig.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.AppConfig/tests/Azure.Mcp.Tools.AppConfig.UnitTests/Azure.Mcp.Tools.AppConfig.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.AppConfig/tests/Azure.Mcp.Tools.AppConfig.Tests/Azure.Mcp.Tools.AppConfig.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AppLens/" />
   <Folder Name="/tools/Azure.Mcp.Tools.AppLens/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.AppLens/src/Azure.Mcp.Tools.AppLens.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AppLens/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.AppLens/tests/Azure.Mcp.Tools.AppLens.UnitTests/Azure.Mcp.Tools.AppLens.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.AppLens/tests/Azure.Mcp.Tools.AppLens.Tests/Azure.Mcp.Tools.AppLens.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ApplicationInsights/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ApplicationInsights/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.ApplicationInsights/src/Azure.Mcp.Tools.ApplicationInsights.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ApplicationInsights/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.ApplicationInsights/tests/Azure.Mcp.Tools.ApplicationInsights.UnitTests/Azure.Mcp.Tools.ApplicationInsights.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.ApplicationInsights/tests/Azure.Mcp.Tools.ApplicationInsights.Tests/Azure.Mcp.Tools.ApplicationInsights.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AppService/" />
   <Folder Name="/tools/Azure.Mcp.Tools.AppService/src/">

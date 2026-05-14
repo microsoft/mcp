@@ -11,7 +11,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Aks.UnitTests.Cluster;
+namespace Azure.Mcp.Tools.Aks.Tests.Cluster;
 
 public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IAksService>
 {

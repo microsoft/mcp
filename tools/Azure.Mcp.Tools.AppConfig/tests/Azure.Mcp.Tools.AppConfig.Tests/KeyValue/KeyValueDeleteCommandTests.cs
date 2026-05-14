@@ -11,7 +11,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue;
+namespace Azure.Mcp.Tools.AppConfig.Tests.KeyValue;
 
 public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCommand, IAppConfigService>
 {

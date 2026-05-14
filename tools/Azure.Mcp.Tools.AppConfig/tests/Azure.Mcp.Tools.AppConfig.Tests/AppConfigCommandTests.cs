@@ -19,7 +19,7 @@ using Microsoft.Mcp.Tests.Generated.Models;
 using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
-namespace Azure.Mcp.Tools.AppConfig.LiveTests;
+namespace Azure.Mcp.Tools.AppConfig.Tests;
 
 public class AppConfigCommandTests : RecordedCommandTestsBase
 {
@@ -51,7 +51,7 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
 
     public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
     [
-        new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
+        new(new() {
           Regex = "\"domains\"\\s*:\\s*\\[(?s)(?<domains>.*?)\\]",
           GroupForReplace = "domains",
           Value = "\"contoso.com\""

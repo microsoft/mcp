@@ -11,7 +11,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue.Lock;
+namespace Azure.Mcp.Tools.AppConfig.Tests.KeyValue.Lock;
 
 public class KeyValueLockSetCommandTests : CommandUnitTestsBase<KeyValueLockSetCommand, IAppConfigService>
 {

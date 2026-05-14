@@ -10,7 +10,7 @@ using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Tools.ApplicationInsights.UnitTests;
+namespace Azure.Mcp.Tools.ApplicationInsights.Tests;
 
 public class RecommendationListCommandTests : CommandUnitTestsBase<RecommendationListCommand, IApplicationInsightsService>
 {

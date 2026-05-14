@@ -11,7 +11,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Aks.UnitTests.Nodepool;
+namespace Azure.Mcp.Tools.Aks.Tests.Nodepool;
 
 public sealed class NodepoolGetCommandTests : CommandUnitTestsBase<NodepoolGetCommand, IAksService>
 {

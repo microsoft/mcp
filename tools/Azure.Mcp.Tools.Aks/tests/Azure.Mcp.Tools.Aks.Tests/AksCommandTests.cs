@@ -9,9 +9,10 @@ using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Aks.LiveTests;
+namespace Azure.Mcp.Tools.Aks.Tests;
 
-public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
 
     [Fact]
