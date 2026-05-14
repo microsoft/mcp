@@ -79,8 +79,7 @@ Azure.Mcp.Tools.AzureBackup/
 └── tests/
     ├── test-resources.bicep                      # Bicep: deploys RSV + DPP vaults
     ├── test-resources-post.ps1                   # Post-deployment settings script
-    ├── Azure.Mcp.Tools.AzureBackup.LiveTests/    # Recorded integration tests
-    └── Azure.Mcp.Tools.AzureBackup.UnitTests/    # Unit tests (mocked services)
+    └── Azure.Mcp.Tools.AzureBackup.Tests/    # Recorded integration and unit tests (mocked services)
 ```
 
 ---

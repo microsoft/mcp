@@ -75,39 +75,35 @@
     <Project Path="../../tools/Azure.Mcp.Tools.AppService/src/Azure.Mcp.Tools.AppService.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AppService/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.AppService/tests/Azure.Mcp.Tools.AppService.LiveTests/Azure.Mcp.Tools.AppService.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.AppService/tests/Azure.Mcp.Tools.AppService.UnitTests/Azure.Mcp.Tools.AppService.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.AppService/tests/Azure.Mcp.Tools.AppService.Tests/Azure.Mcp.Tools.AppService.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Authorization/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Authorization/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Authorization/src/Azure.Mcp.Tools.Authorization.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Authorization/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Authorization/tests/Azure.Mcp.Tools.Authorization.LiveTests/Azure.Mcp.Tools.Authorization.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.Authorization/tests/Azure.Mcp.Tools.Authorization.UnitTests/Azure.Mcp.Tools.Authorization.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Authorization/tests/Azure.Mcp.Tools.Authorization.Tests/Azure.Mcp.Tools.Authorization.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureBackup/" />
   <Folder Name="/tools/Azure.Mcp.Tools.AzureBackup/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.AzureBackup/src/Azure.Mcp.Tools.AzureBackup.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureBackup/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.LiveTests/Azure.Mcp.Tools.AzureBackup.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.UnitTests/Azure.Mcp.Tools.AzureBackup.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.Tests/Azure.Mcp.Tools.AzureBackup.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureBestPractices/" />
   <Folder Name="/tools/Azure.Mcp.Tools.AzureBestPractices/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.AzureBestPractices/src/Azure.Mcp.Tools.AzureBestPractices.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureBestPractices/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.AzureBestPractices/tests/Azure.Mcp.Tools.AzureBestPractices.UnitTests/Azure.Mcp.Tools.AzureBestPractices.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.AzureBestPractices/tests/Azure.Mcp.Tools.AzureBestPractices.Tests/Azure.Mcp.Tools.AzureBestPractices.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureIsv/" />
   <Folder Name="/tools/Azure.Mcp.Tools.AzureIsv/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.AzureIsv/src/Azure.Mcp.Tools.AzureIsv.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureIsv/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.AzureIsv/tests/Azure.Mcp.Tools.AzureIsv.LiveTests/Azure.Mcp.Tools.AzureIsv.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.AzureIsv/tests/Azure.Mcp.Tools.AzureIsv.UnitTests/Azure.Mcp.Tools.AzureIsv.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.AzureIsv/tests/Azure.Mcp.Tools.AzureIsv.Tests/Azure.Mcp.Tools.AzureIsv.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureMigrate/" />
   <Folder Name="/tools/Azure.Mcp.Tools.AzureMigrate/src/">
