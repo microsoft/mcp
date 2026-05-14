@@ -19,11 +19,12 @@ namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue.Lock;
 public class KeyValueLockSetCommandTests : CommandUnitTestsBase<KeyValueLockSetCommand, IAppConfigService>
 {
     ISubscriptionResolver _subscriptionResolver;
-    
+
     public KeyValueLockSetCommandTests()
     {
         _subscriptionResolver = Substitute.For<ISubscriptionResolver>();
-        _subscriptionResolver.ResolveSubscription(Arg.Any<string?>()).Returns(args => args[0]); // Return the input subscription for testing
+        // Return the input subscription for testing
+        _subscriptionResolver.ResolveSubscription(Arg.Any<string?>()).Returns(args => args[0]);
         Services.AddSingleton(_subscriptionResolver);
     }
 
