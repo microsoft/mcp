@@ -39,7 +39,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
 
         ValidateMetadataConfiguration();
 
-        _command = new Command(Name, Description);
+        _command = new ExtendedCommand(this, Name, Description);
         RegisterOptions(_command);
     }
 

@@ -124,7 +124,8 @@ Microsoft MCP (Model Context Protocol) servers provide AI agents with structured
 ### Good examples to follow
 - Command implementation: `tools/Azure.Mcp.Tools.Storage/src/Commands/Account/StorageAccountGetCommand.cs`
 - Service pattern: `tools/Azure.Mcp.Tools.Storage/src/Services/StorageService.cs`
-- Unit tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.UnitTests/Account/StorageAccountGetCommandTests.cs`
+- Unit tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/Account/StorageAccountGetCommandTests.cs`
+- Integration tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/StorageCommandTests.cs`
 - Live test infrastructure: `tools/Azure.Mcp.Tools.Storage/tests/test-resources.bicep`
 - Option definitions: `tools/Azure.Mcp.Tools.Storage/src/Options/StorageOptionDefinitions.cs`
 
@@ -226,10 +227,9 @@ Azure.Mcp.Tools.{Service}/
 │   ├── Models/                   # Data models and DTOs
 │   └── {Service}Setup.cs         # Service registration and configuration
 └── tests/
-    ├── Azure.Mcp.Tools.{Service}.UnitTests/     # Unit tests (no Azure resources)
-    ├── Azure.Mcp.Tools.{Service}.LiveTests/     # Integration tests (requires Azure)
-    ├── test-resources.bicep                     # Test infrastructure template
-    └── test-resources-post.ps1                  # Post-deployment setup script
+    ├── Azure.Mcp.Tools.{Service}.Tests/    # Unit tests (no Azure resources) and Integration tests (requires Azure)
+    ├── test-resources.bicep                # Test infrastructure template
+    └── test-resources-post.ps1             # Post-deployment setup script
 ```
 
 ### Command Naming Convention
@@ -270,14 +270,14 @@ dotnet build
 # Specific toolset unit tests
 ./eng/scripts/Test-Code.ps1 -Paths Storage, KeyVault
 
-# Live tests (requires Azure authentication and resources)
-./eng/scripts/Test-Code.ps1 -TestType Live -Paths Storage
-
 # Deploy test infrastructure for live tests
 ./eng/scripts/Deploy-TestResources.ps1 -Paths Storage
 
+# Live tests (requires Azure authentication and resources)
+./eng/scripts/Test-Code.ps1 -TestType Live -Paths Storage
+
 # Run tests from specific directory
-pushd 'tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.UnitTests'
+pushd 'tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests'
 dotnet test --filter "FullyQualifiedName~StorageAccountGetCommandTests"
 popd
 ```
@@ -514,8 +514,8 @@ tools/Azure.Mcp.Tools.{Service}/
 │   ├── Services/{Service}Service.cs                 # Service implementation
 │   └── Commands/{Service}JsonContext.cs             # JSON serialization context
 └── tests/
-    ├── Azure.Mcp.Tools.{Service}.UnitTests/{Resource}/{Resource}{Operation}CommandTests.cs
-    ├── Azure.Mcp.Tools.{Service}.LiveTests/{Service}CommandTests.cs
+    ├── Azure.Mcp.Tools.{Service}.Tests/{Resource}/{Resource}{Operation}CommandTests.cs     # Unit tests (no Azure resources)
+    ├── Azure.Mcp.Tools.{Service}.Tests/{Service}CommandTests.cs                            # Integration tests (requires Azure)
     ├── test-resources.bicep                          # Test infrastructure (Azure services only)
     └── test-resources-post.ps1                       # Post-deployment script (Azure services only)
 ```

@@ -27,10 +27,12 @@ using Microsoft.Mcp.Core.Options;
     Secret = false)]
 public sealed class BlobGetCommand(
     ILogger<BlobGetCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<BlobGetOptions>()
+    IOneLakeService oneLakeService,
+    IOptions<ServiceStartOptions> options) : GlobalCommand<BlobGetOptions>()
 {
     private readonly ILogger<BlobGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
+    private readonly IOptions<ServiceStartOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
 
     private const long InlineContentLimitBytes = 1 * 1024 * 1024; // 1 MiB inline payload limit
 
@@ -93,8 +95,7 @@ public sealed class BlobGetCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var serviceStartOptions = context.GetService<IOptions<ServiceStartOptions>>();
-            var transport = serviceStartOptions.Value.Transport ?? "stdio";
+            var transport = _options.Value.Transport ?? "stdio";
             var isLocalTransport = string.Equals(transport, "stdio", StringComparison.OrdinalIgnoreCase);
 
             string? downloadPath = null;

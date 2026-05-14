@@ -65,13 +65,10 @@ public interface IRsvBackupOperations
         CancellationToken cancellationToken);
 
     Task<OperationResult> CreatePolicyAsync(
+        Policy.PolicyCreateRequest request,
         string vaultName,
         string resourceGroup,
         string subscription,
-        string policyName,
-        string workloadType,
-        string? scheduleTime,
-        string? dailyRetentionDays,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
@@ -215,6 +212,19 @@ public interface IRsvBackupOperations
         string vaultName,
         string resourceGroup,
         string subscription,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<OperationResult> ConfigureEncryptionAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string keyVaultUri,
+        string keyName,
+        string identityType,
+        string? keyVersion,
+        string? userAssignedIdentityId,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);

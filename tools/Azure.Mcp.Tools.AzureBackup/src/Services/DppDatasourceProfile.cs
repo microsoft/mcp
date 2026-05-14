@@ -14,7 +14,7 @@ public enum DppDataSourceSetMode
     /// <summary>DataSourceSetInfo points to the datasource itself (AKS).</summary>
     Self,
 
-    /// <summary>DataSourceSetInfo points to the parent resource (ESAN volume group → parent ESAN).</summary>
+    /// <summary>DataSourceSetInfo points to the parent resource (ESAN volume group -> parent ESAN).</summary>
     Parent,
 }
 
@@ -63,7 +63,7 @@ public enum DppBackupParametersMode
 /// Each property drives a specific dimension of protect, policy-create, and restore operations.
 /// </summary>
 /// <remarks>
-/// AOT-safe: no reflection, no Func delegates — pure data record with enum-driven dispatch.
+/// AOT-safe: no reflection, no Func delegates  -  pure data record with enum-driven dispatch.
 ///
 /// === Policy Create - Staged Implementation Plan ===
 ///
@@ -104,7 +104,7 @@ public sealed record DppDatasourceProfile
     public bool UsesOperationalStore { get; init; }
 
 
-    /// <summary>True for continuous backup (Blob, ADLS) — no scheduled backup rule created.</summary>
+    /// <summary>True for continuous backup (Blob, ADLS)  -  no scheduled backup rule created.</summary>
     public bool IsContinuousBackup { get; init; }
 
     /// <summary>ISO 8601 schedule interval (e.g. "PT4H", "P1D"). Ignored when <see cref="IsContinuousBackup"/> is true.</summary>
@@ -140,7 +140,7 @@ public sealed record DppDatasourceProfile
     /// <summary>
     /// If non-null, when the user's resource ID matches this base ARM type (e.g. "Microsoft.Storage/storageAccounts"),
     /// automatically re-map to this profile's <see cref="ArmResourceType"/>.
-    /// Used for Blob (storage account → blobServices) auto-detection.
+    /// Used for Blob (storage account -> blobServices) auto-detection.
     /// </summary>
     public string? AutoDetectFromBaseResourceType { get; init; }
 

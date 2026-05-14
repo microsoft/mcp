@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Improved Azure Resource Health error handling to preserve non-success ARM response details and return clearer guidance for conflict responses such as missing or in-progress Microsoft.ResourceHealth provider registration."
