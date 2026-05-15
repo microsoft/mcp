@@ -8,6 +8,7 @@ using Azure.Core;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Options;
+
 public static class RetryOptionsExtensions
 {
     public static void ConfigureRetryOptions(this ClientOptions clientOptions, RetryPolicyOptions? retryPolicy)
