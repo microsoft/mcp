@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue.Lock;
 
 public class KeyValueLockSetCommandTests : CommandUnitTestsBase<KeyValueLockSetCommand, IAppConfigService>
 {
-    ISubscriptionResolver _subscriptionResolver;
+    private readonly ISubscriptionResolver _subscriptionResolver;
 
     public KeyValueLockSetCommandTests()
     {
