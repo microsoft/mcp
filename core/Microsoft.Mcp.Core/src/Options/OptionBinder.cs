@@ -144,7 +144,7 @@ public static class OptionBinder
 
         // For array/collection types, allow multiple values after a single option token
         // e.g., --modules RedisBloom RedisJSON instead of --modules RedisBloom --modules RedisJSON
-        if (descriptor.Type.IsArray || descriptor.Type.IsAssignableTo(typeof(System.Collections.IEnumerable)) && descriptor.Type != typeof(string))
+        if (descriptor.Type.IsArray || (descriptor.Type != typeof(string) && descriptor.Type.IsAssignableTo(typeof(System.Collections.IEnumerable))))
         {
             option.Arity = ArgumentArity.OneOrMore;
             option.AllowMultipleArgumentsPerToken = true;
