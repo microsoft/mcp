@@ -30,6 +30,10 @@ public class ComputeSetup : IAreaSetup
         services.AddSingleton<VmUpdateCommand>();
         services.AddSingleton<VmDeleteCommand>();
         services.AddSingleton<VmPowerStateCommand>();
+        services.AddSingleton<VmSkuListCommand>();
+        services.AddSingleton<VmImageListCommand>();
+        services.AddSingleton<VmQuotaCheckCommand>();
+        services.AddSingleton<VmRegionRecommendCommand>();
 
         // VMSS commands
         services.AddSingleton<VmssGetCommand>();
@@ -69,6 +73,10 @@ public class ComputeSetup : IAreaSetup
         vm.AddCommand<VmUpdateCommand>(serviceProvider);
         vm.AddCommand<VmDeleteCommand>(serviceProvider);
         vm.AddCommand<VmPowerStateCommand>(serviceProvider);
+        vm.AddCommand<VmSkuListCommand>(serviceProvider);
+        vm.AddCommand<VmImageListCommand>(serviceProvider);
+        vm.AddCommand<VmQuotaCheckCommand>(serviceProvider);
+        vm.AddCommand<VmRegionRecommendCommand>(serviceProvider);
 
         // Create VMSS subgroup
         var vmss = new CommandGroup("vmss", "Virtual Machine Scale Set operations - Commands for managing and monitoring Azure Virtual Machine Scale Sets including scale set details, instances, and rolling upgrades.");

@@ -1888,4 +1888,480 @@ public class ComputeService(
             return false;
         }
     }
+
+    // ============================================================
+    // Guided-create discovery (read-only): SKUs, Images, Quota, Regions
+    // ============================================================
+
+    private static readonly System.Net.Http.HttpClient s_retailPricesClient = new()
+    {
+        Timeout = TimeSpan.FromSeconds(15)
+    };
+
+    public async Task<List<VmSkuInfo>> ListVmSkusAsync(
+        string subscription,
+        string location,
+        int? minVCpus = null,
+        double? minMemoryGb = null,
+        string? familyPrefix = null,
+        int? top = null,
+        bool includePricing = false,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var filter = $"location eq '{location}'";
+        var results = new List<VmSkuInfo>();
+        var limit = top ?? 50;
+
+        await foreach (var sku in subscriptionResource.GetComputeResourceSkusAsync(filter, includeExtendedLocations: null, cancellationToken))
+        {
+            if (!string.Equals(sku.ResourceType, "virtualMachines", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (!string.IsNullOrEmpty(familyPrefix) &&
+                !(sku.Name?.StartsWith(familyPrefix, StringComparison.OrdinalIgnoreCase) == true ||
+                  sku.Family?.StartsWith(familyPrefix, StringComparison.OrdinalIgnoreCase) == true))
+                continue;
+
+            int? vCpus = null;
+            double? memoryGb = null;
+            int? maxDataDisks = null;
+            bool? acceleratedNetworking = null;
+            bool? premiumIo = null;
+            int? gpus = null;
+
+            if (sku.Capabilities is not null)
+            {
+                foreach (var cap in sku.Capabilities)
+                {
+                    switch (cap.Name)
+                    {
+                        case "vCPUs":
+                            if (int.TryParse(cap.Value, out var v)) vCpus = v;
+                            break;
+                        case "MemoryGB":
+                            if (double.TryParse(cap.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var m)) memoryGb = m;
+                            break;
+                        case "MaxDataDiskCount":
+                            if (int.TryParse(cap.Value, out var d)) maxDataDisks = d;
+                            break;
+                        case "AcceleratedNetworkingEnabled":
+                            acceleratedNetworking = string.Equals(cap.Value, "True", StringComparison.OrdinalIgnoreCase);
+                            break;
+                        case "PremiumIO":
+                            premiumIo = string.Equals(cap.Value, "True", StringComparison.OrdinalIgnoreCase);
+                            break;
+                        case "GPUs":
+                            if (int.TryParse(cap.Value, out var g)) gpus = g;
+                            break;
+                    }
+                }
+            }
+
+            if (minVCpus.HasValue && (!vCpus.HasValue || vCpus.Value < minVCpus.Value)) continue;
+            if (minMemoryGb.HasValue && (!memoryGb.HasValue || memoryGb.Value < minMemoryGb.Value)) continue;
+
+            var zones = sku.LocationInfo?
+                .SelectMany(li => li.Zones ?? Enumerable.Empty<string>())
+                .Distinct()
+                .OrderBy(z => z)
+                .ToList();
+
+            var restrictions = sku.Restrictions?
+                .Select(r => $"{r.RestrictionsType}:{r.ReasonCode}")
+                .ToList();
+
+            decimal? payAsYouGo = null;
+            decimal? spot = null;
+            if (includePricing && !string.IsNullOrEmpty(sku.Name))
+            {
+                (payAsYouGo, spot) = await TryFetchRetailPricesAsync(sku.Name!, location, cancellationToken);
+            }
+
+            results.Add(new VmSkuInfo(
+                Name: sku.Name ?? string.Empty,
+                Family: sku.Family,
+                Size: sku.Size,
+                Tier: sku.Tier,
+                VCpus: vCpus,
+                MemoryGb: memoryGb,
+                MaxDataDisks: maxDataDisks,
+                AcceleratedNetworking: acceleratedNetworking,
+                PremiumIo: premiumIo,
+                Gpus: gpus,
+                Zones: zones,
+                Restrictions: restrictions,
+                PayAsYouGoHourlyUsd: payAsYouGo,
+                SpotHourlyUsd: spot));
+
+            if (results.Count >= limit) break;
+        }
+
+        return results;
+    }
+
+    private async Task<(decimal? PayAsYouGo, decimal? Spot)> TryFetchRetailPricesAsync(
+        string armSkuName,
+        string location,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var filter = $"serviceName eq 'Virtual Machines' and armSkuName eq '{armSkuName}' and armRegionName eq '{location}' and priceType eq 'Consumption'";
+            var url = $"https://prices.azure.com/api/retail/prices?$filter={Uri.EscapeDataString(filter)}&$top=50";
+
+            using var resp = await s_retailPricesClient.GetAsync(url, cancellationToken);
+            if (!resp.IsSuccessStatusCode) return (null, null);
+
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken);
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            if (!doc.RootElement.TryGetProperty("Items", out var items)) return (null, null);
+
+            decimal? pay = null;
+            decimal? spot = null;
+            foreach (var item in items.EnumerateArray())
+            {
+                if (!item.TryGetProperty("retailPrice", out var priceEl)) continue;
+                if (!item.TryGetProperty("productName", out var prodEl)) continue;
+                if (!item.TryGetProperty("skuName", out var skuEl)) continue;
+
+                var productName = prodEl.GetString() ?? string.Empty;
+                var skuName = skuEl.GetString() ?? string.Empty;
+                if (productName.Contains("Windows", StringComparison.OrdinalIgnoreCase)) continue;
+
+                var price = priceEl.GetDecimal();
+                if (skuName.Contains("Spot", StringComparison.OrdinalIgnoreCase))
+                {
+                    spot ??= price;
+                }
+                else if (skuName.Contains("Low Priority", StringComparison.OrdinalIgnoreCase))
+                {
+                    // skip
+                }
+                else
+                {
+                    pay ??= price;
+                }
+            }
+            return (pay, spot);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Retail Prices API lookup failed for {Sku} in {Location}", armSkuName, location);
+            return (null, null);
+        }
+    }
+
+    public async Task<List<VmImageInfo>> ListVmImagesAsync(
+        string subscription,
+        string location,
+        string? alias = null,
+        string? publisher = null,
+        string? offer = null,
+        string? sku = null,
+        int? top = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var results = new List<VmImageInfo>();
+        var limit = top ?? 50;
+
+        // Case 1: alias resolution (single or all)
+        if (!string.IsNullOrEmpty(alias))
+        {
+            if (s_imageAliases.TryGetValue(alias, out var src))
+            {
+                results.Add(ToImageInfo(alias, src));
+            }
+            return results;
+        }
+
+        if (string.IsNullOrEmpty(publisher) && string.IsNullOrEmpty(offer) && string.IsNullOrEmpty(sku))
+        {
+            // Default: return the built-in alias catalog
+            foreach (var kvp in s_imageAliases)
+            {
+                results.Add(ToImageInfo(kvp.Key, kvp.Value));
+                if (results.Count >= limit) break;
+            }
+            return results;
+        }
+
+        // Case 2: marketplace listing (requires publisher + offer + sku for version listing)
+        if (string.IsNullOrEmpty(publisher) || string.IsNullOrEmpty(offer) || string.IsNullOrEmpty(sku))
+        {
+            return results;
+        }
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var azureLocation = new Azure.Core.AzureLocation(location);
+        try
+        {
+            var versions = subscriptionResource.GetVirtualMachineImagesAsync(
+                azureLocation, publisher!, offer!, sku!, cancellationToken: cancellationToken);
+
+            await foreach (var version in versions)
+            {
+                results.Add(new VmImageInfo(
+                    Alias: null,
+                    Publisher: publisher,
+                    Offer: offer,
+                    Sku: sku,
+                    Version: version.Name,
+                    Urn: $"{publisher}:{offer}:{sku}:{version.Name}",
+                    OsType: null,
+                    HyperVGeneration: null,
+                    Source: "marketplace"));
+
+                if (results.Count >= limit) break;
+            }
+        }
+        catch (RequestFailedException ex)
+        {
+            _logger.LogDebug(ex, "GetVirtualMachineImagesAsync failed for {Publisher}/{Offer}/{Sku} in {Location}", publisher, offer, sku, location);
+        }
+
+        return results;
+    }
+
+    private static VmImageInfo ToImageInfo(string alias, ImageSource src)
+    {
+        if (src.IsSharedGallery)
+        {
+            return new VmImageInfo(
+                Alias: alias,
+                Publisher: null,
+                Offer: null,
+                Sku: null,
+                Version: null,
+                Urn: src.SharedGalleryImageUniqueId,
+                OsType: ComputeUtilities.DetermineOsType(null, alias),
+                HyperVGeneration: "V2",
+                Source: "sharedGallery");
+        }
+
+        return new VmImageInfo(
+            Alias: alias,
+            Publisher: src.Publisher,
+            Offer: src.Offer,
+            Sku: src.Sku,
+            Version: src.Version,
+            Urn: $"{src.Publisher}:{src.Offer}:{src.Sku}:{src.Version}",
+            OsType: ComputeUtilities.DetermineOsType(null, alias),
+            HyperVGeneration: null,
+            Source: "alias");
+    }
+
+    public async Task<List<VmQuotaInfo>> CheckVmQuotaAsync(
+        string subscription,
+        string location,
+        string? familyPrefix = null,
+        int? requestedVCpus = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var results = new List<VmQuotaInfo>();
+        var azureLocation = new Azure.Core.AzureLocation(location);
+
+        await foreach (var usage in Azure.ResourceManager.Compute.ComputeExtensions.GetUsagesAsync(subscriptionResource, azureLocation, cancellationToken))
+        {
+            var nameValue = usage.Name?.Value ?? string.Empty;
+
+            if (!string.IsNullOrEmpty(familyPrefix) &&
+                !nameValue.StartsWith(familyPrefix, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var available = Math.Max(0, usage.Limit - usage.CurrentValue);
+            var percent = usage.Limit > 0 ? (double)usage.CurrentValue / usage.Limit * 100.0 : 0.0;
+            var nearLimit = percent > 80.0;
+
+            string status;
+            if (requestedVCpus.HasValue && available < requestedVCpus.Value)
+                status = "Insufficient";
+            else if (nearLimit)
+                status = "NearLimit";
+            else
+                status = "Sufficient";
+
+            results.Add(new VmQuotaInfo(
+                Name: nameValue,
+                LocalizedName: usage.Name?.LocalizedValue,
+                Unit: usage.Unit.ToString(),
+                CurrentValue: usage.CurrentValue,
+                Limit: usage.Limit,
+                Available: available,
+                PercentUsed: Math.Round(percent, 2),
+                NearLimit: nearLimit,
+                Status: status));
+        }
+
+        return results;
+    }
+
+    private static readonly Dictionary<string, string> s_workloadFamilyHints = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["gpu"] = "Standard_N",
+        ["ai"] = "Standard_N",
+        ["training"] = "Standard_N",
+        ["inference"] = "Standard_N",
+        ["render"] = "Standard_N",
+        ["batch"] = "Standard_F",
+        ["compute"] = "Standard_F",
+        ["hpc"] = "Standard_H",
+        ["memory"] = "Standard_E",
+        ["database"] = "Standard_E",
+        ["analytics"] = "Standard_E",
+        ["web"] = "Standard_D",
+        ["api"] = "Standard_D",
+        ["general"] = "Standard_D",
+        ["dev"] = "Standard_B",
+        ["test"] = "Standard_B",
+        ["sandbox"] = "Standard_B",
+        ["burstable"] = "Standard_B"
+    };
+
+    // Lightweight tier-1 region preference list. The full list comes from the API; this just biases scoring.
+    private static readonly Dictionary<string, int> s_regionPopularity = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["eastus"] = 10,
+        ["eastus2"] = 9,
+        ["westus2"] = 9,
+        ["westus3"] = 8,
+        ["centralus"] = 8,
+        ["northeurope"] = 9,
+        ["westeurope"] = 9,
+        ["uksouth"] = 8,
+        ["southeastasia"] = 8,
+        ["japaneast"] = 7,
+        ["australiaeast"] = 7,
+        ["canadacentral"] = 7,
+        ["brazilsouth"] = 6,
+        ["southafricanorth"] = 6,
+        ["centralindia"] = 7,
+        ["francecentral"] = 7,
+        ["germanywestcentral"] = 7,
+        ["norwayeast"] = 6,
+        ["swedencentral"] = 6,
+        ["switzerlandnorth"] = 6,
+        ["uaenorth"] = 6,
+        ["koreacentral"] = 7
+    };
+
+    // Regions with documented AZ support — sufficient for ranking, not authoritative.
+    private static readonly HashSet<string> s_azRegions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "eastus", "eastus2", "westus2", "westus3", "centralus", "southcentralus",
+        "canadacentral", "brazilsouth",
+        "northeurope", "westeurope", "uksouth", "francecentral", "germanywestcentral",
+        "norwayeast", "swedencentral", "switzerlandnorth",
+        "uaenorth", "southafricanorth",
+        "australiaeast", "centralindia", "japaneast", "koreacentral", "southeastasia",
+        "eastasia", "qatarcentral"
+    };
+
+    public async Task<List<VmRegionRecommendation>> RecommendVmRegionsAsync(
+        string subscription,
+        string? workloadHint = null,
+        string? geographyPreference = null,
+        bool requireAvailabilityZones = false,
+        int? top = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var limit = top ?? 5;
+        var hintLower = workloadHint?.ToLowerInvariant() ?? string.Empty;
+        var geoLower = geographyPreference?.ToLowerInvariant();
+
+        // Detect a family hint for rationale text only (no filtering — quota lives elsewhere)
+        string? preferredFamily = null;
+        foreach (var kvp in s_workloadFamilyHints)
+        {
+            if (hintLower.Contains(kvp.Key, StringComparison.OrdinalIgnoreCase))
+            {
+                preferredFamily = kvp.Value;
+                break;
+            }
+        }
+
+        var candidates = new List<VmRegionRecommendation>();
+
+        await foreach (var loc in subscriptionResource.GetLocationsAsync(includeExtendedLocations: false, cancellationToken))
+        {
+            var name = loc.Name ?? string.Empty;
+            if (string.IsNullOrEmpty(name)) continue;
+
+            var hasZones = s_azRegions.Contains(name);
+            if (requireAvailabilityZones && !hasZones) continue;
+
+            int score = 0;
+            var rationaleParts = new List<string>();
+
+            if (s_regionPopularity.TryGetValue(name, out var popularity))
+            {
+                score += popularity;
+                if (popularity >= 8) rationaleParts.Add("tier-1 region with broad SKU coverage");
+            }
+
+            if (hasZones)
+            {
+                score += 3;
+                rationaleParts.Add("supports Availability Zones");
+            }
+
+            if (!string.IsNullOrEmpty(geoLower))
+            {
+                var geography = loc.Metadata?.Geography?.ToLowerInvariant() ?? string.Empty;
+                var groupGroup = loc.Metadata?.GeographyGroup?.ToLowerInvariant() ?? string.Empty;
+                if (geography.Contains(geoLower) || groupGroup.Contains(geoLower) || name.Contains(geoLower))
+                {
+                    score += 5;
+                    rationaleParts.Add($"matches geography preference '{geographyPreference}'");
+                }
+            }
+
+            if (preferredFamily is not null)
+            {
+                rationaleParts.Add($"hint suggests {preferredFamily}* family — verify SKU availability with compute_vm_sku_list");
+            }
+
+            if (rationaleParts.Count == 0)
+            {
+                rationaleParts.Add("available in subscription");
+            }
+
+            candidates.Add(new VmRegionRecommendation(
+                Name: name,
+                DisplayName: loc.DisplayName,
+                Geography: loc.Metadata?.Geography,
+                PhysicalLocation: loc.Metadata?.PhysicalLocation,
+                AvailabilityZones: hasZones,
+                Score: score,
+                Rationale: string.Join("; ", rationaleParts)));
+        }
+
+        return candidates
+            .OrderByDescending(c => c.Score)
+            .ThenBy(c => c.Name)
+            .Take(limit)
+            .ToList();
+    }
 }

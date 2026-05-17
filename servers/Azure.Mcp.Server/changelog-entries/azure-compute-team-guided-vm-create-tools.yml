@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added compute_vm_list_skus, compute_vm_list_images, compute_vm_check_quota, and compute_vm_recommend_region tools to support guided VM/VMSS create flows. These read-only discovery primitives let agents present real SKU choices, valid images, current quota usage, and ranked region suggestions before calling compute_vm_create or compute_vmss_create."

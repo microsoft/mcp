@@ -251,4 +251,48 @@ public interface IComputeService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    // Guided-create discovery operations (read-only)
+    Task<List<VmSkuInfo>> ListVmSkusAsync(
+        string subscription,
+        string location,
+        int? minVCpus = null,
+        double? minMemoryGb = null,
+        string? familyPrefix = null,
+        int? top = null,
+        bool includePricing = false,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<List<VmImageInfo>> ListVmImagesAsync(
+        string subscription,
+        string location,
+        string? alias = null,
+        string? publisher = null,
+        string? offer = null,
+        string? sku = null,
+        int? top = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<List<VmQuotaInfo>> CheckVmQuotaAsync(
+        string subscription,
+        string location,
+        string? familyPrefix = null,
+        int? requestedVCpus = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<List<VmRegionRecommendation>> RecommendVmRegionsAsync(
+        string subscription,
+        string? workloadHint = null,
+        string? geographyPreference = null,
+        bool requireAvailabilityZones = false,
+        int? top = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }
