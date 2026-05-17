@@ -135,6 +135,7 @@ public sealed class FileSharesService(
         int? provisionedThroughputMiBPerSec = null,
         string? publicNetworkAccess = null,
         string? nfsRootSquash = null,
+        string? nfsEncryptionInTransit = null,
         string[]? allowedSubnets = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
@@ -184,8 +185,14 @@ public sealed class FileSharesService(
             if (!string.IsNullOrEmpty(publicNetworkAccess))
                 fileShareData.Properties.PublicNetworkAccess = new Azure.ResourceManager.FileShares.Models.FileSharePublicNetworkAccess(publicNetworkAccess);
 
-            if (!string.IsNullOrEmpty(nfsRootSquash))
-                fileShareData.Properties.NfsProtocolRootSquash = new Azure.ResourceManager.FileShares.Models.ShareRootSquash(nfsRootSquash);
+            if (!string.IsNullOrEmpty(nfsRootSquash) || !string.IsNullOrEmpty(nfsEncryptionInTransit))
+            {
+                fileShareData.Properties.NfsProtocolProperties ??= new Azure.ResourceManager.FileShares.Models.NfsProtocolProperties();
+                if (!string.IsNullOrEmpty(nfsRootSquash))
+                    fileShareData.Properties.NfsProtocolProperties.RootSquash = new Azure.ResourceManager.FileShares.Models.ShareRootSquash(nfsRootSquash);
+                if (!string.IsNullOrEmpty(nfsEncryptionInTransit))
+                    fileShareData.Properties.NfsProtocolProperties.EncryptionInTransitRequired = new Azure.ResourceManager.FileShares.Models.EncryptionInTransitRequired(nfsEncryptionInTransit);
+            }
 
             if (allowedSubnets != null && allowedSubnets.Length > 0)
             {
@@ -234,6 +241,7 @@ public sealed class FileSharesService(
         int? provisionedThroughputMiBPerSec = null,
         string? publicNetworkAccess = null,
         string? nfsRootSquash = null,
+        string? nfsEncryptionInTransit = null,
         string[]? allowedSubnets = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
@@ -257,7 +265,7 @@ public sealed class FileSharesService(
 
             // Set properties that are explicitly provided
             if (provisionedStorageInGiB.HasValue || provisionedIOPerSec.HasValue || provisionedThroughputMiBPerSec.HasValue ||
-                !string.IsNullOrEmpty(publicNetworkAccess) || !string.IsNullOrEmpty(nfsRootSquash) || allowedSubnets?.Length > 0)
+                !string.IsNullOrEmpty(publicNetworkAccess) || !string.IsNullOrEmpty(nfsRootSquash) || !string.IsNullOrEmpty(nfsEncryptionInTransit) || allowedSubnets?.Length > 0)
             {
                 patch.Properties = new Azure.ResourceManager.FileShares.Models.FileSharePatchProperties();
 
@@ -282,9 +290,13 @@ public sealed class FileSharesService(
                 patch.Properties.PublicNetworkAccess = new Azure.ResourceManager.FileShares.Models.FileSharePublicNetworkAccess(publicNetworkAccess);
             }
 
-            if (!string.IsNullOrEmpty(nfsRootSquash) && patch.Properties != null)
+            if ((!string.IsNullOrEmpty(nfsRootSquash) || !string.IsNullOrEmpty(nfsEncryptionInTransit)) && patch.Properties != null)
             {
-                patch.Properties.NfsProtocolRootSquash = new Azure.ResourceManager.FileShares.Models.ShareRootSquash(nfsRootSquash);
+                patch.Properties.NfsProtocolProperties ??= new Azure.ResourceManager.FileShares.Models.NfsProtocolProperties();
+                if (!string.IsNullOrEmpty(nfsRootSquash))
+                    patch.Properties.NfsProtocolProperties.RootSquash = new Azure.ResourceManager.FileShares.Models.ShareRootSquash(nfsRootSquash);
+                if (!string.IsNullOrEmpty(nfsEncryptionInTransit))
+                    patch.Properties.NfsProtocolProperties.EncryptionInTransitRequired = new Azure.ResourceManager.FileShares.Models.EncryptionInTransitRequired(nfsEncryptionInTransit);
             }
 
             if (tags is { Count: > 0 })
@@ -589,7 +601,7 @@ public sealed class FileSharesService(
             var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
 
             // Get the existing snapshot
-            var existingSnapshot = await snapshotCollection.GetFileShareSnapshotAsync(snapshotId, cancellationToken);
+            var existingSnapshot = await snapshotCollection.GetAsync(snapshotId, cancellationToken);
 
             // Create a patch object with only the properties to update
             var patch = new Azure.ResourceManager.FileShares.Models.FileShareSnapshotPatch();
@@ -656,8 +668,8 @@ public sealed class FileSharesService(
             var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
 
             // Get the snapshot and delete it
-            var snapshotResource = await snapshotCollection.GetFileShareSnapshotAsync(snapshotId, cancellationToken);
-            await snapshotResource.Value.DeleteFileShareSnapshotAsync(WaitUntil.Completed, cancellationToken);
+            var snapshotResource = await snapshotCollection.GetAsync(snapshotId, cancellationToken);
+            await snapshotResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
@@ -754,7 +766,7 @@ public sealed class FileSharesService(
 
             var response = await subscriptionResource.GetUsageDataAsync(azureLocation, cancellationToken);
 
-            var output = response.Value.Properties;
+            var output = response.Value;
 
             _logger.LogInformation(
                 "Retrieved usage data. FileShareCount: {Count}, Subscription: {Subscription}, Location: {Location}",
@@ -764,7 +776,7 @@ public sealed class FileSharesService(
             {
                 LiveShares = new LiveSharesUsageData
                 {
-                    FileShareCount = output.LiveSharesFileShareCount ?? 0
+                    FileShareCount = output.LiveSharesFileShareCount
                 }
             };
         }

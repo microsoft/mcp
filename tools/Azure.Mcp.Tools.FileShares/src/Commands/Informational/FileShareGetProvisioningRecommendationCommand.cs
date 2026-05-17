@@ -46,7 +46,7 @@ public sealed class FileShareGetProvisioningRecommendationCommand(ILogger<FileSh
     {
         var options = base.BindOptions(parseResult);
         options.Location = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Location.Name);
-        options.ProvisionedStorageGiB = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
+        options.ProvisionedStorageGiB = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
         return options;
     }
 

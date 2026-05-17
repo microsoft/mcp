@@ -333,6 +333,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
                 { "provisioned-throughput-mib-per-sec", provisionedThroughputMiBPerSec ?? 125 },
                 { "public-network-access", publicNetworkAccess ?? "Enabled" },
                 { "nfs-root-squash", nfsRootSquash ?? "NoRootSquash" },
+                { "nfs-encryption-in-transit", "Enabled" },
                 { "tags", "{\"environment\":\"test\",\"owner\":\"ankushb\"}" }
             };
 
