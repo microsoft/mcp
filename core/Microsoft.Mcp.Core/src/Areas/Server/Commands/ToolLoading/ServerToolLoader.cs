@@ -1,21 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Concurrent;
 using System.Diagnostics;
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrategy, IOptions<ToolLoaderOptions> options, ILogger<ServerToolLoader> logger) : BaseToolLoader(logger)
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = serverDiscoveryStrategy ?? throw new ArgumentNullException(nameof(serverDiscoveryStrategy));
-    private readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, List<Tool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
 
     private const string ToolCallProxySchema = """
         {
@@ -27,7 +29,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             },
             "parameters": {
               "type": "object",
-              "description": "A key/value pair of parameters names nad values to pass to the tool call command."
+              "description": "A key/value pair of parameters names and values to pass to the tool call command."
             }
           },
           "additionalProperties": false
@@ -182,15 +184,15 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         return new CallToolResult
         {
             Content =
-                [
-                    new TextContentBlock {
+            [
+                new TextContentBlock {
                     Text = """
                         The "command" parameters are required when not learning
                         Run again with the "learn" argument to get a list of available tools and their parameters.
                         To learn about a specific tool, use the "tool" argument with the name of the tool.
                     """
                 }
-                ]
+            ]
         };
     }
 
@@ -253,6 +255,47 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 parameters = samplingResult.parameters;
             }
 
+            // Verify the resolved command (which may have been updated by sampling)
+            // exists and is permitted under current mode restrictions.
+            var allTools = await GetAllChildToolsAsync(request, tool, cancellationToken);
+            var resolvedTool = allTools.FirstOrDefault(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase));
+
+            if (resolvedTool == null)
+            {
+                // Sampling resolved to a command that doesn't exist at all.
+                return await InvokeToolLearn(request, intent, tool, cancellationToken);
+            }
+
+            if ((options?.Value?.ReadOnly ?? false) && resolvedTool.Annotations?.ReadOnlyHint != true)
+            {
+                return McpHelper.InjectToolIdMetadata(new CallToolResult
+                {
+                    Content =
+                    [
+                        new TextContentBlock
+                        {
+                            Text = $"Tool '{tool} {command}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
+                        }
+                    ],
+                    IsError = true,
+                }, resolvedTool.Meta);
+            }
+
+            if ((options?.Value?.IsHttpMode ?? false) && McpHelper.HasHint(resolvedTool, McpHelper.LocalRequiredHintMetaKey))
+            {
+                return McpHelper.InjectToolIdMetadata(new CallToolResult
+                {
+                    Content =
+                    [
+                        new TextContentBlock
+                        {
+                            Text = $"Tool '{tool} {command}' is not available. This server is running in HTTP mode and this tool requires local execution.",
+                        }
+                    ],
+                    IsError = true,
+                }, resolvedTool.Meta);
+            }
+
             // At this point we should always have a valid command (child tool) call to invoke.
             Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true)
                 .SetTag(TagName.ToolName, command);
@@ -283,7 +326,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                         [
                             new TextContentBlock {
                                     Text = $"""
-                                        The '{command}' command is missing required parameters.
+                                        {textContent.Text}
 
                                         - Review the following command spec and identify the required arguments from the input schema.
                                         - Omit any arguments that are not required or do not apply to your use case.
@@ -303,10 +346,12 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                         finalResponse.Content.Add(contentBlock);
                     }
 
-                    return finalResponse;
+                    return McpHelper.InjectToolIdMetadata(finalResponse, resolvedTool.Meta);
                 }
             }
 
+            // Return without injecting tool metadata since this is a proxy and the actual tool execution happens in another server.
+            // Leave the other server responsible for injecting the correct tool metadata for observability and telemetry purposes.
             return toolCallResponse;
         }
         catch (Exception ex)
@@ -369,20 +414,15 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     /// <param name="request"></param>
     /// <param name="tool"></param>
     /// <returns></returns>
-    private async Task<List<Tool>> GetChildToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
+    internal async Task<List<Tool>> GetAllChildToolsAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
-        if (_cachedToolLists.TryGetValue(tool, out var cachedList))
+        if (_cachedAllToolLists.TryGetValue(tool, out var cachedList))
         {
             return cachedList;
         }
 
-        if (string.IsNullOrWhiteSpace(request.Params?.Name))
-        {
-            throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
-        }
-
         var clientOptions = CreateClientOptions(request.Server);
-        var client = await _serverDiscoveryStrategy.GetOrCreateClientAsync(request.Params.Name, clientOptions, cancellationToken);
+        var client = await _serverDiscoveryStrategy.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
         if (client == null)
         {
             return [];
@@ -397,17 +437,25 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
         var list = listTools
             .Select(t => t.ProtocolTool)
-            .Where(t => !(options?.Value?.ReadOnly ?? false) || (t.Annotations?.ReadOnlyHint == true))
             .ToList();
 
-        _cachedToolLists[tool] = list;
+        _cachedAllToolLists[tool] = list;
         return list;
+    }
+
+    internal async Task<List<Tool>> GetChildToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
+    {
+        var allTools = await GetAllChildToolsAsync(request, tool, cancellationToken);
+        return allTools
+            .Where(t => !(options?.Value?.ReadOnly ?? false) || (t.Annotations?.ReadOnlyHint == true))
+            .Where(t => !(options?.Value?.IsHttpMode ?? false) || !McpHelper.HasHint(t, McpHelper.LocalRequiredHintMetaKey))
+            .ToList();
     }
 
     private async Task<string> GetChildToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
         var listTools = await GetChildToolListAsync(request, tool, cancellationToken);
-        return JsonSerializer.Serialize(listTools, ServerJsonContext.Default.ListTool);
+        return JsonSerializer.Serialize(listTools, ServerJsonContext.Default.IEnumerableTool);
     }
 
     private async Task<Tool> GetChildToolAsync(RequestContext<CallToolRequestParams> request, string toolName, string commandName, CancellationToken cancellationToken)
@@ -453,7 +501,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
         JsonElement toolParams = GetParametersJsonElement(request);
         var toolParamsJson = toolParams.GetRawText();
-        var availableToolsJson = JsonSerializer.Serialize(availableTools, ServerJsonContext.Default.ListTool);
+        var availableToolsJson = JsonSerializer.Serialize(availableTools, ServerJsonContext.Default.IEnumerableTool);
 
         var samplingRequest = new CreateMessageRequestParams
         {
@@ -529,7 +577,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     /// </summary>
     protected override async ValueTask DisposeAsyncCore()
     {
-        _cachedToolLists.Clear();
+        _cachedAllToolLists.Clear();
         await ValueTask.CompletedTask;
     }
 }

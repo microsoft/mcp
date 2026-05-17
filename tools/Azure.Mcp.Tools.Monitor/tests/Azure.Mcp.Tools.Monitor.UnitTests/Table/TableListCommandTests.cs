@@ -1,48 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Table;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.Table;
 
-public sealed class TableListCommandTests
+public sealed class TableListCommandTests : CommandUnitTestsBase<TableListCommand, IMonitorService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IMonitorService _monitorService;
-    private readonly ILogger<TableListCommand> _logger;
-    private readonly TableListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
     private const string _knownSubscription = "knownSubscription";
     private const string _knownWorkspace = "knownWorkspace";
     private const string _knownResourceGroupName = "knownResourceGroup";
     private const string _knownTableType = "CustomLog";
-
-    public TableListCommandTests()
-    {
-        _monitorService = Substitute.For<IMonitorService>();
-        _logger = Substitute.For<ILogger<TableListCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_monitorService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
 
     [Theory]
     [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --table-type {_knownTableType} --resource-group {_knownResourceGroupName}", true)]
@@ -60,7 +36,7 @@ public sealed class TableListCommandTests
                 "AppRequests",
                 "AppDependencies"
             };
-            _monitorService.ListTables(
+            Service.ListTables(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -72,7 +48,7 @@ public sealed class TableListCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -98,7 +74,7 @@ public sealed class TableListCommandTests
             "AppDependencies",
             "AppMetrics"
         };
-        _monitorService.ListTables(
+        Service.ListTables(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -108,21 +84,15 @@ public sealed class TableListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedTables);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", _knownSubscription,
             "--workspace", _knownWorkspace,
-            "--resource-group", _knownResourceGroupName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--resource-group", _knownResourceGroupName);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
         // Verify the mock was called
-        await _monitorService.Received(1).ListTables(
+        await Service.Received(1).ListTables(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -131,10 +101,8 @@ public sealed class TableListCommandTests
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.TableListCommandResult);
+        var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.TableListCommandResult);
 
-        Assert.NotNull(result);
         Assert.Equal(expectedTables.Count, result.Tables.Count);
         Assert.Equal(expectedTables[0], result.Tables[0]);
         Assert.Equal(expectedTables[1], result.Tables[1]);
@@ -147,7 +115,7 @@ public sealed class TableListCommandTests
     {
         // Arrange
         var expectedTables = new List<string> { "CustomTable1", "CustomTable2" };
-        _monitorService.ListTables(
+        Service.ListTables(
             _knownSubscription,
             _knownResourceGroupName,
             _knownWorkspace,
@@ -157,19 +125,16 @@ public sealed class TableListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedTables);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", _knownSubscription,
             "--workspace", _knownWorkspace,
             "--resource-group", _knownResourceGroupName,
-            "--table-type", _knownTableType
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--table-type", _knownTableType);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _monitorService.Received(1).ListTables(
+        await Service.Received(1).ListTables(
             _knownSubscription,
             _knownResourceGroupName,
             _knownWorkspace,
@@ -183,7 +148,7 @@ public sealed class TableListCommandTests
     public async Task ExecuteAsync_ReturnsEmptyWhenNoTables()
     {
         // Arrange
-        _monitorService.ListTables(
+        Service.ListTables(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -193,23 +158,15 @@ public sealed class TableListCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", _knownSubscription,
             "--workspace", _knownWorkspace,
-            "--resource-group", _knownResourceGroupName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--resource-group", _knownResourceGroupName);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.TableListCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.TableListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Tables);
     }
 
@@ -217,7 +174,7 @@ public sealed class TableListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _monitorService.ListTables(
+        Service.ListTables(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -225,16 +182,13 @@ public sealed class TableListCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<string>>(new Exception("Test error")));
-
-        var args = _commandDefinition.Parse([
-            "--subscription", _knownSubscription,
-            "--workspace", _knownWorkspace,
-            "--resource-group", _knownResourceGroupName
-        ]);
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", _knownSubscription,
+            "--workspace", _knownWorkspace,
+            "--resource-group", _knownResourceGroupName);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

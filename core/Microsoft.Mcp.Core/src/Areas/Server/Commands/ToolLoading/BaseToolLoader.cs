@@ -2,10 +2,13 @@
 // Licensed under the MIT License.
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
 /// Base class for tool loaders that provides common functionality including disposal patterns.
@@ -151,11 +154,13 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     }
 
     /// <summary>
-    /// Handles elicitation for commands that access sensitive data.
+    /// Handles elicitation for commands that are sensitive, destructive, or both.
+    /// Builds a single consolidated prompt based on which metadata flags are set.
     /// If elicitation is disabled or not supported, returns appropriate error result.
     /// </summary>
     /// <param name="request">The request context containing the MCP server.</param>
     /// <param name="toolName">The name of the tool being invoked.</param>
+    /// <param name="command">The tool command being invoked.</param>
     /// <param name="dangerouslyDisableElicitation">Whether elicitation has been disabled via dangerous option.</param>
     /// <param name="logger">Logger instance for recording elicitation events.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
@@ -163,59 +168,101 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// Null if elicitation was accepted or bypassed (operation should proceed).
     /// A CallToolResult with IsError=true if elicitation was rejected or failed (operation should not proceed).
     /// </returns>
-    protected static async Task<CallToolResult?> HandleSecretElicitationAsync(
+    protected static async Task<CallToolResult?> HandleElicitationAsync(
         RequestContext<CallToolRequestParams> request,
         string toolName,
+        IBaseCommand command,
         bool dangerouslyDisableElicitation,
         ILogger logger,
         CancellationToken cancellationToken)
     {
-        // Check if elicitation is disabled by dangerous option
-        if (dangerouslyDisableElicitation)
+        bool isSecret = command.Metadata.Secret;
+        bool isDestructive = command.Metadata.Destructive;
+
+        if (!isSecret && !isDestructive)
         {
-            logger.LogWarning("Tool '{Tool}' handles sensitive data but elicitation is disabled via --dangerously-disable-elicitation. Proceeding without user consent.", toolName);
             return null;
         }
 
-        // If client doesn't support elicitation, treat as rejected and don't execute
+        string reason = (isSecret, isDestructive) switch
+        {
+            (true, true) => "handles sensitive data and may perform destructive operations",
+            (true, false) => "handles sensitive data",
+            (false, true) => "may perform destructive operations",
+            _ => string.Empty
+        };
+
+        if (dangerouslyDisableElicitation)
+        {
+            logger.LogWarning("Tool '{Tool}' {Reason} but elicitation is disabled via --dangerously-disable-elicitation. Proceeding without user consent.", toolName, reason);
+            return null;
+        }
+
         if (!request.Server.SupportsElicitation())
         {
-            logger.LogWarning("Tool '{Tool}' handles sensitive data but client does not support elicitation. Operation rejected.", toolName);
-            return new CallToolResult
+            logger.LogWarning("Tool '{Tool}' {Reason} but client does not support elicitation. Operation rejected.", toolName, reason);
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
             {
-                Content = [new TextContentBlock { Text = "This tool handles sensitive data and requires user consent, but the client does not support elicitation. Operation rejected for security." }],
+                Content = [new TextContentBlock { Text = $"This tool {reason} and requires user consent, but the client does not support elicitation. Operation rejected for security." }],
                 IsError = true
-            };
+            }, command.Id);
         }
 
         try
         {
-            logger.LogInformation("Tool '{Tool}' handles sensitive data. Requesting user confirmation via elicitation.", toolName);
+            logger.LogInformation("Tool '{Tool}' {Reason}. Requesting user confirmation via elicitation.", toolName, reason);
 
-            // Create the elicitation request with empty schema (required by MCP SDK 0.8.0-preview.1+)
-            // No form fields - pure accept/decline prompt
+            string message = (isSecret, isDestructive) switch
+            {
+                (true, true) =>
+                    $"⚠️ WARNING: The tool '{toolName}' may expose secrets or sensitive information AND may delete or modify existing resources.\n\n" +
+                    "This operation could reveal confidential data such as passwords, API keys, or certificates, " +
+                    "and could permanently alter or remove Azure resources, configurations, or data.\n\n" +
+                    "Do you want to continue?",
+                (true, false) =>
+                    $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\n" +
+                    "This operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\n" +
+                    "Do you want to continue with this potentially sensitive operation?",
+                _ =>
+                    $"⚠️ DESTRUCTIVE OPERATION WARNING: The tool '{toolName}' may delete or modify existing resources.\n\n" +
+                    "This operation could permanently alter or remove Azure resources, configurations, or data.\n\n" +
+                    "Do you want to continue with this potentially destructive operation?"
+            };
+
+            // Create the elicitation request with a single-select enum for approve/reject
             var protocolRequest = new ElicitRequestParams
             {
-                Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
+                Message = message,
                 RequestedSchema = new()
                 {
-                    Properties = new Dictionary<string, ElicitRequestParams.PrimitiveSchemaDefinition>(),
-                    Required = []
+                    Properties = new Dictionary<string, ElicitRequestParams.PrimitiveSchemaDefinition>
+                    {
+                        ["decision"] = new ElicitRequestParams.TitledSingleSelectEnumSchema
+                        {
+                            Title = "Decision",
+                            Description = "Approve or reject this sensitive operation.",
+                            OneOf = new List<ElicitRequestParams.EnumSchemaOption>
+                            {
+                                new() { Title = "Approve", Const = "accept" },
+                                new() { Title = "Reject", Const = "reject" }
+                            }
+                        }
+                    },
+                    Required = ["decision"]
                 }
             };
 
-            // Send the elicitation request directly through the MCP server
             var protocolResponse = await request.Server.ElicitAsync(protocolRequest, cancellationToken);
 
             if (protocolResponse.Action != "accept")
             {
                 logger.LogInformation("User {Action} the elicitation for tool '{Tool}'. Operation not executed.",
                     protocolResponse.Action, toolName);
-                return new CallToolResult
+                return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
                     Content = [new TextContentBlock { Text = $"Operation cancelled by user ({protocolResponse.Action})." }],
                     IsError = true
-                };
+                }, command.Id);
             }
 
             logger.LogInformation("User accepted elicitation for tool '{Tool}'. Proceeding with execution.", toolName);
@@ -224,11 +271,11 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         catch (Exception ex)
         {
             logger.LogError(ex, "Error during elicitation for tool '{Tool}': {Error}", toolName, ex.Message);
-            return new CallToolResult
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
             {
-                Content = [new TextContentBlock { Text = $"Elicitation failed for sensitive tool '{toolName}': {ex.Message}. Operation not executed for security." }],
+                Content = [new TextContentBlock { Text = $"Elicitation failed for tool '{toolName}': {ex.Message}. Operation not executed for security." }],
                 IsError = true
-            };
+            }, command.Id);
         }
     }
 }

@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.CommandLine.Help;
 using System.CommandLine.Invocation;
-using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Configuration;
 
 namespace Microsoft.Mcp.Core.Commands;
 
@@ -15,12 +14,12 @@ namespace Microsoft.Mcp.Core.Commands;
 /// </summary>
 internal class CustomHelpAction : SynchronousCommandLineAction
 {
-    private readonly IOptions<AzureMcpServerConfiguration> _options;
+    private readonly IOptions<McpServerConfiguration> _options;
     private readonly HelpAction _defaultHelp;
 
     private readonly IAreaSetup[]? _serviceAreas;
 
-    public CustomHelpAction(IOptions<AzureMcpServerConfiguration> options, HelpAction action, IAreaSetup[]? serviceAreas = null)
+    public CustomHelpAction(IOptions<McpServerConfiguration> options, HelpAction action, IAreaSetup[]? serviceAreas = null)
     {
         _options = options;
         _defaultHelp = action;

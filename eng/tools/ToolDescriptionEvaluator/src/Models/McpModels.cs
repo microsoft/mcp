@@ -8,7 +8,7 @@ namespace ToolSelection.Models;
 // Constants
 public static class McpConstants
 {
-    public const string LatestProtocolVersion = "2025-06-18";
+    public const string LatestProtocolVersion = "2025-11-25";
     public const string JsonRpcVersion = "2.0";
 }
 

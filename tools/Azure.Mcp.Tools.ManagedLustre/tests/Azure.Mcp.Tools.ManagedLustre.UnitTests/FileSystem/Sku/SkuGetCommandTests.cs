@@ -1,51 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 
 namespace Azure.Mcp.Tools.ManagedLustre.UnitTests.FileSystem.Sku;
 
-public class SkuGetCommandTests
+public class SkuGetCommandTests : CommandUnitTestsBase<SkuGetCommand, IManagedLustreService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IManagedLustreService _amlfsService;
-    private readonly ILogger<SkuGetCommand> _logger;
-    private readonly SkuGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
     private readonly string _knownSubscriptionId = "sub123";
-
-    public SkuGetCommandTests()
-    {
-        _amlfsService = Substitute.For<IManagedLustreService>();
-        _logger = Substitute.For<ILogger<SkuGetCommand>>();
-
-        var services = new ServiceCollection().AddSingleton(_amlfsService);
-        _serviceProvider = services.BuildServiceProvider();
-
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("get", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("get", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Fact]
@@ -68,7 +44,7 @@ public class SkuGetCommandTests
             )
         };
 
-        _amlfsService.SkuGetInfoAsync(
+        Service.SkuGetInfoAsync(
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -76,22 +52,13 @@ public class SkuGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var args = _commandDefinition.Parse([
-            "--subscription", _knownSubscriptionId
-        ]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", _knownSubscriptionId);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.SkuGetResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ManagedLustreJsonContext.Default.SkuGetResult);
-
-        Assert.NotNull(result);
-        Assert.NotNull(result!.Skus);
+        Assert.NotNull(result.Skus);
         Assert.Equal(2, result.Skus.Count);
         Assert.Equal("AMLFS-Durable-Premium-40", result.Skus[0].Name);
     }
@@ -105,7 +72,7 @@ public class SkuGetCommandTests
     {
         if (shouldSucceed)
         {
-            _amlfsService.SkuGetInfoAsync(
+            Service.SkuGetInfoAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
@@ -114,8 +81,7 @@ public class SkuGetCommandTests
                 .Returns([new("n", "eastus", false, [])]);
         }
 
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     }

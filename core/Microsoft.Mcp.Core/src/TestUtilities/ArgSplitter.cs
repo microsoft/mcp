@@ -3,7 +3,7 @@
 
 using System.Text;
 
-namespace Azure.Mcp.TestUtilities;
+namespace Microsoft.Mcp.Core.TestUtilities;
 
 public static class ArgSplitter
 {

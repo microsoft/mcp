@@ -2,54 +2,28 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.UnitTests.Namespace;
 
-public class NamespaceUpdateCommandTests
+public class NamespaceUpdateCommandTests : CommandUnitTestsBase<NamespaceUpdateCommand, IEventHubsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IEventHubsService _eventHubsService;
-    private readonly ILogger<NamespaceUpdateCommand> _logger;
-    private readonly NamespaceUpdateCommand _command;
-    private readonly CommandContext _context;
-
-    public NamespaceUpdateCommandTests()
-    {
-        _eventHubsService = Substitute.For<IEventHubsService>();
-        _logger = Substitute.For<ILogger<NamespaceUpdateCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_eventHubsService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        // Arrange & Act
-        var command = new NamespaceUpdateCommand(_logger);
-
-        // Assert
-        Assert.NotNull(command);
-        Assert.Equal("update", command.Name);
-        Assert.Equal("Create or Update Event Hubs Namespace", command.Title);
-        Assert.Contains("Create or Update a Namespace", command.Description);
-        Assert.True(command.Metadata.Destructive);
-        Assert.True(command.Metadata.Idempotent);
-        Assert.False(command.Metadata.ReadOnly);
+        Assert.Equal("update", Command.Name);
+        Assert.Equal("Create or Update Event Hubs Namespace", Command.Title);
+        Assert.Contains("Create or Update a Namespace", Command.Description);
+        Assert.True(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.Idempotent);
+        Assert.False(Command.Metadata.ReadOnly);
     }
 
     [Theory]
@@ -65,12 +39,10 @@ public class NamespaceUpdateCommandTests
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, string expectedErrorMessage)
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-
         if (shouldSucceed)
         {
             var updatedNamespace = CreateSampleNamespace();
-            _eventHubsService.CreateOrUpdateNamespaceAsync(
+            Service.CreateOrUpdateNamespaceAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -90,7 +62,7 @@ public class NamespaceUpdateCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Assert
         if (shouldSucceed)
@@ -113,17 +85,8 @@ public class NamespaceUpdateCommandTests
     public async Task ExecuteAsync_UpdatesNamespaceWithSkuChanges()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "test-namespace",
-            "--sku-name", "Premium",
-            "--sku-tier", "Premium",
-            "--sku-capacity", "4"
-        ]);
-
         var updatedNamespace = CreateSampleNamespace();
-        _eventHubsService.CreateOrUpdateNamespaceAsync(
+        Service.CreateOrUpdateNamespaceAsync(
             "test-namespace",
             "test-rg",
             "test-sub",
@@ -142,12 +105,18 @@ public class NamespaceUpdateCommandTests
             .Returns(updatedNamespace);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace",
+            "--sku-name", "Premium",
+            "--sku-tier", "Premium",
+            "--sku-capacity", "4");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        await _eventHubsService.Received(1).CreateOrUpdateNamespaceAsync(
+        await Service.Received(1).CreateOrUpdateNamespaceAsync(
             "test-namespace",
             "test-rg",
             "test-sub",
@@ -169,16 +138,8 @@ public class NamespaceUpdateCommandTests
     public async Task ExecuteAsync_UpdatesNamespaceWithAutoInflateSettings()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "test-namespace",
-            "--is-auto-inflate-enabled", "true",
-            "--maximum-throughput-units", "20"
-        ]);
-
         var updatedNamespace = CreateSampleNamespace();
-        _eventHubsService.CreateOrUpdateNamespaceAsync(
+        Service.CreateOrUpdateNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -197,7 +158,12 @@ public class NamespaceUpdateCommandTests
             .Returns(updatedNamespace);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace",
+            "--is-auto-inflate-enabled", "true",
+            "--maximum-throughput-units", "20");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -208,13 +174,6 @@ public class NamespaceUpdateCommandTests
     public async Task ExecuteAsync_UpdatesNamespaceWithTags()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "test-namespace",
-            "--tags", "{\"environment\":\"production\",\"team\":\"platform\"}"
-        ]);
-
         var expectedTags = new Dictionary<string, string>
         {
             { "environment", "production" },
@@ -222,7 +181,7 @@ public class NamespaceUpdateCommandTests
         };
 
         var updatedNamespace = CreateSampleNamespace();
-        _eventHubsService.CreateOrUpdateNamespaceAsync(
+        Service.CreateOrUpdateNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -246,7 +205,11 @@ public class NamespaceUpdateCommandTests
             .Returns(updatedNamespace);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace",
+            "--tags", "{\"environment\":\"production\",\"team\":\"platform\"}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -256,16 +219,12 @@ public class NamespaceUpdateCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesInvalidTagsJson()
     {
-        // Arrange
-        var parseResult = _command.GetCommand().Parse([
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "test-sub",
             "--resource-group", "test-rg",
             "--namespace", "test-namespace",
-            "--tags", "invalid-json"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--tags", "invalid-json");
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -277,21 +236,8 @@ public class NamespaceUpdateCommandTests
     public async Task ExecuteAsync_UpdatesNamespaceWithAllFeatures()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "test-namespace",
-            "--location", "westus2",
-            "--sku-name", "Premium",
-            "--sku-tier", "Premium",
-            "--sku-capacity", "2",
-            "--kafka-enabled", "true",
-            "--zone-redundant", "true",
-            "--tags", "{\"env\":\"prod\"}"
-        ]);
-
         var updatedNamespace = CreateSampleNamespace();
-        _eventHubsService.CreateOrUpdateNamespaceAsync(
+        Service.CreateOrUpdateNamespaceAsync(
             "test-namespace",
             "test-rg",
             "test-sub",
@@ -310,12 +256,22 @@ public class NamespaceUpdateCommandTests
             .Returns(updatedNamespace);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace",
+            "--location", "westus2",
+            "--sku-name", "Premium",
+            "--sku-tier", "Premium",
+            "--sku-capacity", "2",
+            "--kafka-enabled", "true",
+            "--zone-redundant", "true",
+            "--tags", "{\"env\":\"prod\"}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        await _eventHubsService.Received(1).CreateOrUpdateNamespaceAsync(
+        await Service.Received(1).CreateOrUpdateNamespaceAsync(
             "test-namespace",
             "test-rg",
             "test-sub",
@@ -337,14 +293,7 @@ public class NamespaceUpdateCommandTests
     public async Task ExecuteAsync_HandlesServiceException()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "test-namespace",
-            "--sku-name", "Premium"
-        ]);
-
-        _eventHubsService.CreateOrUpdateNamespaceAsync(
+        Service.CreateOrUpdateNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -363,7 +312,11 @@ public class NamespaceUpdateCommandTests
             .ThrowsAsync(new InvalidOperationException("Update failed"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace",
+            "--sku-name", "Premium");
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -374,14 +327,7 @@ public class NamespaceUpdateCommandTests
     public async Task ExecuteAsync_HandlesKeyNotFoundException()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "nonexistent-namespace",
-            "--sku-name", "Premium"
-        ]);
-
-        _eventHubsService.CreateOrUpdateNamespaceAsync(
+        Service.CreateOrUpdateNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -400,7 +346,11 @@ public class NamespaceUpdateCommandTests
             .ThrowsAsync(new KeyNotFoundException("Namespace not found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "nonexistent-namespace",
+            "--sku-name", "Premium");
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -411,16 +361,8 @@ public class NamespaceUpdateCommandTests
     public async Task ExecuteAsync_WithTenant_PassesCorrectParameters()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "test-namespace",
-            "--sku-name", "Premium",
-            "--tenant", "test-tenant-123"
-        ]);
-
         var updatedNamespace = CreateSampleNamespace();
-        _eventHubsService.CreateOrUpdateNamespaceAsync(
+        Service.CreateOrUpdateNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -439,11 +381,16 @@ public class NamespaceUpdateCommandTests
             .Returns(updatedNamespace);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace",
+            "--sku-name", "Premium",
+            "--tenant", "test-tenant-123");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _eventHubsService.Received(1).CreateOrUpdateNamespaceAsync(
+        await Service.Received(1).CreateOrUpdateNamespaceAsync(
             "test-namespace",
             "test-rg",
             "test-sub",
@@ -465,7 +412,7 @@ public class NamespaceUpdateCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
+        var parseResult = CommandDefinition.Parse([
             "--subscription", "test-sub",
             "--resource-group", "test-rg",
             "--namespace", "test-namespace",
@@ -482,9 +429,9 @@ public class NamespaceUpdateCommandTests
         ]);
 
         // Act
-        var options = _command.GetType()
+        var options = Command.GetType()
             .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.Invoke(_command, [parseResult]) as NamespaceUpdateOptions;
+            ?.Invoke(Command, [parseResult]) as NamespaceUpdateOptions;
 
         // Assert
         Assert.NotNull(options);
@@ -504,13 +451,12 @@ public class NamespaceUpdateCommandTests
     }
 
     private static Models.Namespace CreateSampleNamespace()
-    {
-        return new Models.Namespace(
+        => new(
             "test-namespace",
             "/subscriptions/test-sub/resourceGroups/test-rg/providers/Microsoft.EventHub/namespaces/test-namespace",
             "test-rg",
             "East US",
-            new Models.EventHubsSku("Standard", "Standard", null),
+            new("Standard", "Standard", null),
             "Active",
             "Succeeded",
             DateTimeOffset.UtcNow.AddDays(-1),
@@ -522,5 +468,4 @@ public class NamespaceUpdateCommandTests
             true,
             false,
             new Dictionary<string, string> { { "env", "test" } });
-    }
 }

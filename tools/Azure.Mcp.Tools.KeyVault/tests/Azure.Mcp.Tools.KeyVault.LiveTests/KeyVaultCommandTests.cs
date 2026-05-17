@@ -4,12 +4,11 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Attributes;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
 using Azure.Security.KeyVault.Keys;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.LiveTests;
@@ -17,6 +16,12 @@ namespace Azure.Mcp.Tools.KeyVault.LiveTests;
 public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private readonly KeyVaultTestCertificateAssets _importCertificateAssets = KeyVaultTestCertificates.Load();
+
+    public override CustomDefaultMatcher? TestMatcher => new()
+    {
+        ExcludedHeaders = "Authorization,Content-Type",
+        CompareBodies = false
+    };
 
     public override List<BodyRegexSanitizer> BodyRegexSanitizers => [
         // Sanitizes all hostnames in URLs to remove actual vault names (not limited to `kid` fields)
@@ -215,7 +220,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
 
 
     [Fact]
-    [CustomMatcher(compareBody: false)]
     public async Task Should_import_certificate()
     {
         var fakePassword = _importCertificateAssets.Password;

@@ -90,10 +90,14 @@ try {
         }
     }
 
-    # Copy Publish-DockerImages.ps1 to staging - 1ES release templates don't allow checkout,
-    # so scripts needed at release time must be staged with artifacts
-    $publishScript = "$PSScriptRoot/Publish-DockerImages.ps1"
-    Write-Host "`nCopying Publish-DockerImages.ps1 to $OutputPath"
+    # Copy Load-DockerImages.ps1 and Publish-DockerManifests.ps1 to staging - 1ES release
+    # templates don't allow checkout, so scripts needed at release time must be staged with artifacts
+    $loadScript = "$PSScriptRoot/Load-DockerImages.ps1"
+    Write-Host "`nCopying Load-DockerImages.ps1 to $OutputPath"
+    Copy-Item -Path $loadScript -Destination $OutputPath -Force
+
+    $publishScript = "$PSScriptRoot/Publish-DockerManifests.ps1"
+    Write-Host "Copying Publish-DockerManifests.ps1 to $OutputPath"
     Copy-Item -Path $publishScript -Destination $OutputPath -Force
 }
 finally {

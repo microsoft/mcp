@@ -4,16 +4,16 @@
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Areas.Server.Models;
-using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
 /// A tool loader that creates MCP tools from the registered command factory.
@@ -74,8 +74,9 @@ public sealed class CommandFactoryToolLoader(
         }
 
         var tools = visibleCommands
+            .Where(kvp => !_options.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
+            .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
             .Select(kvp => GetTool(kvp.Key, kvp.Value))
-            .Where(tool => !_options.Value.ReadOnly || (tool.Annotations?.ReadOnlyHint == true))
             .ToList();
 
         var listToolsResult = new ListToolsResult { Tools = tools };
@@ -145,29 +146,61 @@ public sealed class CommandFactoryToolLoader(
             };
         }
         activity?.SetTag(TagName.ToolId, command.Id);
+
+        // Enforce read-only mode at execution time
+        if (_options.Value.ReadOnly && !command.Metadata.ReadOnly)
+        {
+            var content = new TextContentBlock
+            {
+                Text = $"Tool '{toolName}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
+            };
+
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
+            {
+                Content = [content],
+                IsError = true,
+            }, command.Id);
+        }
+
+        // Enforce HTTP mode restrictions at execution time
+        if (_options.Value.IsHttpMode && command.Metadata.LocalRequired)
+        {
+            var content = new TextContentBlock
+            {
+                Text = $"Tool '{toolName}' is not available. This server is running in HTTP mode and this tool requires local execution.",
+            };
+
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
+            {
+                Content = [content],
+                IsError = true,
+            }, command.Id);
+        }
+
         var commandContext = new CommandContext(_serviceProvider, activity);
 
-        // Check if this tool requires elicitation for sensitive data
-        var metadata = command.Metadata;
-        if (metadata.Secret)
-        {
-            var elicitationResult = await HandleSecretElicitationAsync(
-                request,
-                toolName,
-                _options.Value.DangerouslyDisableElicitation,
-                _logger,
-                cancellationToken);
+        // Check if this tool requires elicitation for sensitive or destructive operations
+        var elicitationResult = await HandleElicitationAsync(
+            request,
+            toolName,
+            command,
+            _options.Value.DangerouslyDisableElicitation,
+            _logger,
+            cancellationToken);
 
-            if (elicitationResult != null)
-            {
-                return elicitationResult;
-            }
+        if (elicitationResult != null)
+        {
+            return elicitationResult;
         }
 
         var realCommand = command.GetCommand();
         ParseResult? commandOptions = null;
 
-        if (realCommand.Options.Count == 1 && IsRawMcpToolInputOption(realCommand.Options[0]))
+        var effectiveOptions = realCommand.Options
+            .Where(o => !CommandFactory.IsLearnOption(o))
+            .ToList();
+
+        if (effectiveOptions.Count == 1 && IsRawMcpToolInputOption(effectiveOptions[0]))
         {
             commandOptions = realCommand.ParseFromRawMcpToolInput(request.Params.Arguments);
         }
@@ -191,7 +224,7 @@ public sealed class CommandFactoryToolLoader(
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
-            return new CallToolResult
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
             {
                 Content = [
                     new TextContentBlock {
@@ -199,7 +232,7 @@ public sealed class CommandFactoryToolLoader(
                     }
                 ],
                 IsError = isError
-            };
+            }, command.Id);
         }
         catch (Exception ex)
         {
@@ -238,24 +271,30 @@ public sealed class CommandFactoryToolLoader(
             Title = command.Title,
         };
 
+        JsonObject meta = [new(McpHelper.ToolIdMetaKey, command.Id)];
         // Add Secret metadata to tool.Meta if the property exists
         if (metadata.Secret)
         {
-            tool.Meta = new JsonObject
-            {
-                ["SecretHint"] = metadata.Secret
-            };
+            meta[McpHelper.SecretHintMetaKey] = metadata.Secret;
         }
+        // Add LocalRequired metadata to tool.Meta if the property exists
+        if (metadata.LocalRequired)
+        {
+            meta[McpHelper.LocalRequiredHintMetaKey] = metadata.LocalRequired;
+        }
+        tool.Meta = meta;
 
-        var options = command.GetCommand().Options;
+        var options = command.GetCommand().Options
+            .Where(o => !CommandFactory.IsLearnOption(o))
+            .ToList();
 
         var schema = new ToolInputSchema();
 
-        if (options != null && options.Count > 0)
+        if (options.Count > 0)
         {
             if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
             {
-                var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? new JsonObject();
+                var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? [];
                 tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
                 return tool;
             }

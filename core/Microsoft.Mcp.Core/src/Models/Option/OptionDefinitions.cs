@@ -3,7 +3,7 @@
 
 using Azure.Core;
 
-namespace Azure.Mcp.Core.Models.Option;
+namespace Microsoft.Mcp.Core.Models.Option;
 
 public static partial class OptionDefinitions
 {

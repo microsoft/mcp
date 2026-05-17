@@ -1,31 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
 namespace Azure.Mcp.Tools.ManagedLustre.UnitTests.FileSystem;
 
-public class FileSystemUpdateCommandTests
+public class FileSystemUpdateCommandTests : CommandUnitTestsBase<FileSystemUpdateCommand, IManagedLustreService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IManagedLustreService _svc;
-    private readonly ILogger<FileSystemUpdateCommand> _logger;
-    private readonly FileSystemUpdateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
     private const string Sub = "sub123";
     private const string Rg = "rg1";
     private const string Name = "amlfs-01";
@@ -34,24 +23,12 @@ public class FileSystemUpdateCommandTests
     private const int Size = 4;
     private const string SubnetId = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/vnet1/subnets/sub1";
 
-    public FileSystemUpdateCommandTests()
-    {
-        _svc = Substitute.For<IManagedLustreService>();
-        _logger = Substitute.For<ILogger<FileSystemUpdateCommand>>();
-        var services = new ServiceCollection().AddSingleton(_svc);
-        _serviceProvider = services.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("update", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("update", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Theory]
@@ -67,7 +44,7 @@ public class FileSystemUpdateCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _svc.UpdateFileSystemAsync(
+            Service.UpdateFileSystemAsync(
                 Arg.Is(Sub),
                 Arg.Is(Rg),
                 Arg.Is(Name),
@@ -83,10 +60,8 @@ public class FileSystemUpdateCommandTests
                 .Returns(CreateLustre());
         }
 
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -109,7 +84,7 @@ public class FileSystemUpdateCommandTests
     public async Task ExecuteAsync_MaintenanceUpdate_CallsServiceAndReturnsResult()
     {
         var expected = CreateLustre();
-        _svc.UpdateFileSystemAsync(
+        Service.UpdateFileSystemAsync(
             Sub,
             Rg,
             Name,
@@ -124,17 +99,15 @@ public class FileSystemUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var args = _commandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
             "--maintenance-day", "Monday",
-            "--maintenance-time", "01:00"
-        ]);
+            "--maintenance-time", "01:00");
 
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _svc.Received(1).UpdateFileSystemAsync(
+        await Service.Received(1).UpdateFileSystemAsync(
             Sub,
             Rg,
             Name,
@@ -148,17 +121,15 @@ public class FileSystemUpdateCommandTests
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ManagedLustreJsonContext.Default.FileSystemUpdateResult);
-        Assert.NotNull(result);
-        Assert.Equal(Name, result!.FileSystem.Name);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemUpdateResult);
+        Assert.Equal(Name, result.FileSystem.Name);
     }
 
     [Fact]
     public async Task ExecuteAsync_RootSquashUpdate_CallsService()
     {
         var expected = CreateLustre();
-        _svc.UpdateFileSystemAsync(
+        Service.UpdateFileSystemAsync(
             Sub,
             Rg,
             Name,
@@ -173,19 +144,17 @@ public class FileSystemUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var args = _commandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
             "--root-squash-mode", "All",
             "--no-squash-nid-list", "nid1,nid2",
             "--squash-uid", "1000",
-            "--squash-gid", "1000"
-        ]);
+            "--squash-gid", "1000");
 
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _svc.Received(1).UpdateFileSystemAsync(
+        await Service.Received(1).UpdateFileSystemAsync(
             Sub,
             Rg,
             Name,
@@ -203,7 +172,7 @@ public class FileSystemUpdateCommandTests
     [Fact]
     public async Task ExecuteAsync_ServiceThrowsRequestFailed_ReturnsStatus()
     {
-        _svc.UpdateFileSystemAsync(
+        Service.UpdateFileSystemAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -218,15 +187,13 @@ public class FileSystemUpdateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "not found"));
 
-        var args = _commandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
             "--maintenance-day", "Monday",
-            "--maintenance-time", "00:00"
-        ]);
+            "--maintenance-time", "00:00");
 
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -243,7 +210,7 @@ public class FileSystemUpdateCommandTests
     {
         if (shouldSucceed)
         {
-            _svc.UpdateFileSystemAsync(
+            Service.UpdateFileSystemAsync(
                 Arg.Is(Sub),
                 Arg.Is(Rg),
                 Arg.Is(Name),
@@ -259,8 +226,7 @@ public class FileSystemUpdateCommandTests
                 .Returns(CreateLustre());
         }
 
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (!shouldSucceed)
@@ -277,7 +243,7 @@ public class FileSystemUpdateCommandTests
     public async Task ExecuteAsync_RootSquashMode_WithUidGid_SucceedsAndCallsService()
     {
         var expected = CreateLustre();
-        _svc.UpdateFileSystemAsync(
+        Service.UpdateFileSystemAsync(
             Sub,
             Rg,
             Name,
@@ -292,19 +258,17 @@ public class FileSystemUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var args = _commandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
             "--root-squash-mode", "All",
             "--no-squash-nid-list", "nid1,nid2",
             "--squash-uid", "2000",
-            "--squash-gid", "3000"
-        ]);
+            "--squash-gid", "3000");
 
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _svc.Received(1).UpdateFileSystemAsync(
+        await Service.Received(1).UpdateFileSystemAsync(
             Sub,
             Rg,
             Name,
@@ -322,16 +286,13 @@ public class FileSystemUpdateCommandTests
     [Fact]
     public async Task ExecuteAsync_RootSquashNotNone_MissingNoSquashNidList_Returns400()
     {
-        var args = _commandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
             "--root-squash-mode", "All",
             "--squash-uid", "1000",
-            "--squash-gid", "1000"
-        ]);
-
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--squash-gid", "1000");
 
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("no-squash", response.Message, StringComparison.OrdinalIgnoreCase);

@@ -63,7 +63,7 @@ sql:
         };
     }
 
-    [McpServerPrompt(Name = "onelake_best_practices")]
+    [McpServerPrompt(Name = "onelake_best-practices")]
     [Description("Context & usage tips for OneLake tools: auth, partitions, paging, limits.")]
     public static ChatMessage[] BestPractices()
     {

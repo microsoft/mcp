@@ -18,6 +18,7 @@ Write-Host "  VM Name: $($DeploymentOutputs['VMNAME'].Value)" -ForegroundColor C
 Write-Host "  VMSS Name: $($DeploymentOutputs['VMSSNAME'].Value)" -ForegroundColor Cyan
 Write-Host "  Resource Group: $($DeploymentOutputs['RESOURCEGROUPNAME'].Value)" -ForegroundColor Cyan
 Write-Host "  Disk Name: $($DeploymentOutputs['diskName'].Value)" -ForegroundColor Cyan
+Write-Host "  Gallery Image Version ID: $($DeploymentOutputs['GALLERYIMAGEVERSIONID'].Value)" -ForegroundColor Cyan
 
 # Wait for VM to be fully provisioned and running
 Write-Host "Waiting for VM to be fully provisioned..." -ForegroundColor Yellow

@@ -1,32 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 
-public sealed class ImportJobCreateCommand(ILogger<ImportJobCreateCommand> logger)
-    : BaseManagedLustreCommand<ImportJobCreateOptions>(logger)
-{
-    private const string CommandTitle = "Create Azure Managed Lustre Import Job";
-
-    private new readonly ILogger<ImportJobCreateCommand> _logger = logger;
-
-    public override string Id => "b1f3c5e7-9d2a-4b8f-6c3e-1a7b9d2f5e8c";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "b1f3c5e7-9d2a-4b8f-6c3e-1a7b9d2f5e8c",
+    Name = "create",
+    Title = "Create Azure Managed Lustre Import Job",
+    Description = """
         Creates a one-time import job for an Azure Managed Lustre filesystem to import files from the linked blob storage container. The import job performs a one-time sync of data from the configured HSM blob container to the Lustre filesystem. Use this to import specific prefixes or all data from blob storage into the filesystem at a point in time.
         Required options:
         - filesystem-name: The name of the AMLFS filesystem
@@ -35,19 +25,19 @@ public sealed class ImportJobCreateCommand(ILogger<ImportJobCreateCommand> logge
         - conflict-resolution-mode: How to handle conflicting files (Fail, Skip, OverwriteIfDirty, OverwriteAlways, default: Fail)
         - import-prefixes: Blob prefixes to import (default: imports all data from root '/')
         - maximum-errors: Maximum errors allowed before job failure (-1: infinite, 0: fail on first error, default: use service default)
-        """;
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogger<ImportJobCreateCommand> logger)
+    : BaseManagedLustreCommand<ImportJobCreateOptions>(logger)
+{
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IManagedLustreService _service = service;
+    private new readonly ILogger<ImportJobCreateCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {
@@ -83,7 +73,6 @@ public sealed class ImportJobCreateCommand(ILogger<ImportJobCreateCommand> logge
 
         try
         {
-            var svc = context.GetService<IManagedLustreService>();
 
             // Log the prefixes for debugging
             if (options.ImportPrefixes != null && options.ImportPrefixes.Length > 0)
@@ -95,7 +84,7 @@ public sealed class ImportJobCreateCommand(ILogger<ImportJobCreateCommand> logge
                 _logger.LogInformation("No import prefixes received, will import all data");
             }
 
-            var job = await svc.CreateImportJobAsync(
+            var job = await _service.CreateImportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,
@@ -111,8 +100,8 @@ public sealed class ImportJobCreateCommand(ILogger<ImportJobCreateCommand> logge
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating import job for AMLFS filesystem {FileSystem}. Options: {@Options}",
-                options.FileSystemName, options);
+            _logger.LogError(ex, "Error creating import job for AMLFS filesystem {FileSystem}.",
+                options.FileSystemName);
             HandleException(context, ex);
         }
 

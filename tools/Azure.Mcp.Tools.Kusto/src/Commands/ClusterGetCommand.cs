@@ -3,40 +3,32 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : SubscriptionCommand<ClusterGetOptions>
+[CommandMetadata(
+    Id = "5fc5a42b-a7f6-4d4a-9517-a8e119752b7a",
+    Name = "get",
+    Title = "Get Kusto Cluster Details",
+    Description = "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IKustoService kustoService) : SubscriptionCommand<ClusterGetOptions>
 {
-    private const string CommandTitle = "Get Kusto Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
-
-    public override string Id => "5fc5a42b-a7f6-4d4a-9517-a8e119752b7a";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IKustoService _kustoService = kustoService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -63,8 +55,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : Subsc
 
         try
         {
-            var kusto = context.GetService<IKustoService>();
-            var cluster = await kusto.GetClusterAsync(
+            var cluster = await _kustoService.GetClusterAsync(
                 options.Subscription!,
                 options.ClusterName!,
                 options.Tenant,

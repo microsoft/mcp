@@ -1,41 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.UnitTests.Namespace;
 
-public class NamespaceGetCommandTests
+public class NamespaceGetCommandTests : CommandUnitTestsBase<NamespaceGetCommand, IEventHubsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IEventHubsService _eventHubsService;
-    private readonly ILogger<NamespaceGetCommand> _logger;
-    private readonly NamespaceGetCommand _command;
-    private readonly CommandContext _context;
-
-    public NamespaceGetCommandTests()
-    {
-        _eventHubsService = Substitute.For<IEventHubsService>();
-        _logger = Substitute.For<ILogger<NamespaceGetCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_eventHubsService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-    }
-
     [Theory]
     [InlineData("", false)]
     [InlineData("--subscription test-subscription", true)]
@@ -45,7 +24,6 @@ public class NamespaceGetCommandTests
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse(args);
         if (shouldSucceed)
         {
             // Set up appropriate service method based on arguments
@@ -70,7 +48,7 @@ public class NamespaceGetCommandTests
                     true,
                     new Dictionary<string, string> { { "env", "prod" } });
 
-                _eventHubsService.GetNamespaceAsync(
+                Service.GetNamespaceAsync(
                     Arg.Any<string>(),
                     Arg.Any<string>(),
                     Arg.Any<string>(),
@@ -101,7 +79,7 @@ public class NamespaceGetCommandTests
                         new Models.EventHubsSku("Standard", "Standard", null)),
                 };
 
-                _eventHubsService.GetNamespacesAsync(
+                Service.GetNamespacesAsync(
                     Arg.Any<string>(),
                     Arg.Any<string>(),
                     Arg.Any<string?>(),
@@ -112,7 +90,7 @@ public class NamespaceGetCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -131,9 +109,7 @@ public class NamespaceGetCommandTests
     public async Task ExecuteAsync_HandlesServiceError()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse("--subscription 12345678-1234-1234-1234-123456789012 --resource-group rg-eventhubs-test");
-
-        _eventHubsService.GetNamespacesAsync(
+        Service.GetNamespacesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -142,7 +118,9 @@ public class NamespaceGetCommandTests
             .ThrowsAsync(new InvalidOperationException("Resource Group 'rg-eventhubs-test' could not be found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "12345678-1234-1234-1234-123456789012",
+            "--resource-group", "rg-eventhubs-test");
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -153,8 +131,7 @@ public class NamespaceGetCommandTests
     public async Task ExecuteAsync_HandlesAuthenticationError()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse("--subscription unauthorized-sub --resource-group rg-eventhubs-prod");
-        _eventHubsService.GetNamespacesAsync(
+        Service.GetNamespacesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -163,7 +140,9 @@ public class NamespaceGetCommandTests
             .ThrowsAsync(new UnauthorizedAccessException("The current user does not have access to subscription 'unauthorized-sub'"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "unauthorized-sub",
+            "--resource-group", "rg-eventhubs-prod");
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);

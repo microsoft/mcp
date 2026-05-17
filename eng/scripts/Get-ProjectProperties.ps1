@@ -60,7 +60,14 @@ $propertyList = @(
 
     'IsAotCompatible',
 
-    'McpRepositoryName'
+    'McpRepositoryName',
+
+    'McpbPlatforms',
+
+    'AzureSupportedClouds',
+
+    'HasLiveTests',
+    'HasUnitTests'
 )
 
 $projectFile = $projectFiles | Select-Object -First 1

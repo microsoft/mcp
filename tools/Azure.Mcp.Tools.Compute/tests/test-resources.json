@@ -1,11 +1,12 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "languageVersion": "2.0",
   "contentVersion": "1.0.0.0",
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.40.2.10011",
-      "templateHash": "14469809156686005433"
+      "version": "0.39.26.7824",
+      "templateHash": "15290613665516866995"
     }
   },
   "parameters": {
@@ -20,14 +21,13 @@
     },
     "location": {
       "type": "string",
-      "defaultValue": "westus2",
+      "defaultValue": "[resourceGroup().location]",
       "metadata": {
         "description": "The location of the resource. By default, this is the same as the resource group."
       }
     },
     "testApplicationOid": {
       "type": "string",
-      "defaultValue": "",
       "metadata": {
         "description": "The client OID to grant access to test resources."
       }
@@ -48,18 +48,21 @@
     },
     "vmSize": {
       "type": "string",
-      "defaultValue": "Standard_D2s_v6",
+      "defaultValue": "Standard_B2s",
       "metadata": {
         "description": "The VM size to use for testing."
       }
     }
   },
-  "resources": [
-    {
+  "variables": {
+    "location": "eastus2"
+  },
+  "resources": {
+    "vnet": {
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "2023-05-01",
       "name": "[format('{0}-vnet', parameters('baseName'))]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
@@ -76,18 +79,18 @@
         ]
       }
     },
-    {
+    "nic": {
       "type": "Microsoft.Network/networkInterfaces",
       "apiVersion": "2023-05-01",
       "name": "[format('{0}-nic', parameters('baseName'))]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "properties": {
         "ipConfigurations": [
           {
             "name": "ipconfig1",
             "properties": {
               "subnet": {
-                "id": "[reference(resourceId('Microsoft.Network/virtualNetworks', format('{0}-vnet', parameters('baseName'))), '2023-05-01').subnets[0].id]"
+                "id": "[reference('vnet').subnets[0].id]"
               },
               "privateIPAllocationMethod": "Dynamic"
             }
@@ -95,14 +98,14 @@
         ]
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', format('{0}-vnet', parameters('baseName')))]"
+        "vnet"
       ]
     },
-    {
+    "vm": {
       "type": "Microsoft.Compute/virtualMachines",
-      "apiVersion": "2024-03-01",
+      "apiVersion": "2023-09-01",
       "name": "[format('{0}-vm', parameters('baseName'))]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
@@ -120,7 +123,7 @@
               "storageAccountType": "Standard_LRS"
             }
           },
-          "diskControllerType": "NVMe"
+          "diskControllerType": "SCSI"
         },
         "osProfile": {
           "computerName": "[format('{0}-vm', parameters('baseName'))]",
@@ -146,14 +149,14 @@
         "purpose": "mcp-testing"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', parameters('baseName')))]"
+        "nic"
       ]
     },
-    {
+    "vmss": {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "apiVersion": "2024-03-01",
+      "apiVersion": "2023-09-01",
       "name": "[format('{0}-vmss', parameters('baseName'))]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "sku": {
         "name": "[parameters('vmSize')]",
         "tier": "Standard",
@@ -178,7 +181,7 @@
                 "storageAccountType": "Standard_LRS"
               }
             },
-            "diskControllerType": "NVMe"
+            "diskControllerType": "SCSI"
           },
           "osProfile": {
             "computerNamePrefix": "[format('{0}-', parameters('baseName'))]",
@@ -199,7 +202,7 @@
                       "name": "vmssipconfig",
                       "properties": {
                         "subnet": {
-                          "id": "[reference(resourceId('Microsoft.Network/virtualNetworks', format('{0}-vnet', parameters('baseName'))), '2023-05-01').subnets[0].id]"
+                          "id": "[reference('vnet').subnets[0].id]"
                         }
                       }
                     }
@@ -211,10 +214,17 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', format('{0}-vnet', parameters('baseName')))]"
+        "vnet"
       ]
     },
-    {
+    "vmContributorRoleDefinition": {
+      "existing": true,
+      "type": "Microsoft.Authorization/roleDefinitions",
+      "apiVersion": "2018-01-01-preview",
+      "subscriptionId": "[subscription().subscriptionId]",
+      "name": "9980e02c-c2be-4d73-94e8-173b1dc7cf3c"
+    },
+    "appVmContributorRoleAssignment": {
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2022-04-01",
       "name": "[guid(subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '9980e02c-c2be-4d73-94e8-173b1dc7cf3c'), parameters('testApplicationOid'), resourceGroup().id)]",
@@ -224,7 +234,14 @@
         "description": "Virtual Machine Contributor for testApplicationOid"
       }
     },
-    {
+    "readerRoleDefinition": {
+      "existing": true,
+      "type": "Microsoft.Authorization/roleDefinitions",
+      "apiVersion": "2018-01-01-preview",
+      "subscriptionId": "[subscription().subscriptionId]",
+      "name": "acdd72a7-3385-48ef-bd42-f606fba81ae7"
+    },
+    "appReaderRoleAssignment": {
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2022-04-01",
       "name": "[guid(subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7'), parameters('testApplicationOid'), resourceGroup().id)]",
@@ -234,11 +251,11 @@
         "description": "Reader for testApplicationOid"
       }
     },
-    {
+    "testDisk": {
       "type": "Microsoft.Compute/disks",
       "apiVersion": "2023-10-02",
       "name": "[format('{0}-disk', parameters('baseName'))]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "sku": {
         "name": "Standard_LRS"
       },
@@ -253,20 +270,103 @@
         "Purpose": "MCP-Testing"
       }
     },
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2022-04-01",
-      "scope": "[resourceId('Microsoft.Compute/disks', format('{0}-disk', parameters('baseName')))]",
-      "name": "[guid(subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c'), parameters('testApplicationOid'), resourceId('Microsoft.Compute/disks', format('{0}-disk', parameters('baseName'))))]",
+    "testDataDisk": {
+      "type": "Microsoft.Compute/disks",
+      "apiVersion": "2023-10-02",
+      "name": "[format('{0}-datadisk', parameters('baseName'))]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
       "properties": {
-        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
-        "principalId": "[parameters('testApplicationOid')]"
+        "creationData": {
+          "createOption": "Empty"
+        },
+        "diskSizeGB": 16
+      }
+    },
+    "gallery": {
+      "type": "Microsoft.Compute/galleries",
+      "apiVersion": "2023-07-03",
+      "name": "[format('{0}gallery', replace(parameters('baseName'), '-', ''))]",
+      "location": "[variables('location')]"
+    },
+    "galleryImage": {
+      "type": "Microsoft.Compute/galleries/images",
+      "apiVersion": "2023-07-03",
+      "name": "[format('{0}/{1}', format('{0}gallery', replace(parameters('baseName'), '-', '')), 'test-linux-image')]",
+      "location": "[variables('location')]",
+      "properties": {
+        "identifier": {
+          "publisher": "TestPublisher",
+          "offer": "TestOffer",
+          "sku": "TestSku"
+        },
+        "osType": "Linux",
+        "osState": "Specialized",
+        "hyperVGeneration": "V2",
+        "architecture": "x64"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/disks', format('{0}-disk', parameters('baseName')))]"
+        "gallery"
       ]
+    },
+    "galleryImageVersion": {
+      "type": "Microsoft.Compute/galleries/images/versions",
+      "apiVersion": "2023-07-03",
+      "name": "[format('{0}/{1}/{2}', format('{0}gallery', replace(parameters('baseName'), '-', '')), 'test-linux-image', '1.0.0')]",
+      "location": "[variables('location')]",
+      "properties": {
+        "storageProfile": {
+          "osDiskImage": {
+            "source": {
+              "id": "[resourceId('Microsoft.Compute/disks', format('{0}-disk', parameters('baseName')))]"
+            }
+          },
+          "dataDiskImages": [
+            {
+              "lun": 0,
+              "source": {
+                "id": "[resourceId('Microsoft.Compute/disks', format('{0}-datadisk', parameters('baseName')))]"
+              }
+            }
+          ]
+        },
+        "publishingProfile": {
+          "replicaCount": 1,
+          "targetRegions": [
+            {
+              "name": "[variables('location')]",
+              "regionalReplicaCount": 1,
+              "storageAccountType": "Standard_LRS"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "galleryImage",
+        "testDataDisk",
+        "testDisk"
+      ]
+    },
+    "contributorRoleDefinition": {
+      "existing": true,
+      "type": "Microsoft.Authorization/roleDefinitions",
+      "apiVersion": "2018-01-01-preview",
+      "subscriptionId": "[subscription().subscriptionId]",
+      "name": "b24988ac-6180-42a0-ab88-20f7382dd24c"
+    },
+    "diskContributorRoleAssignment": {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c'), parameters('testApplicationOid'), resourceGroup().id)]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+        "principalId": "[parameters('testApplicationOid')]",
+        "description": "Contributor for testApplicationOid - allows creating and updating disks in the resource group"
+      }
     }
-  ],
+  },
   "outputs": {
     "vmName": {
       "type": "string",
@@ -290,7 +390,11 @@
     },
     "location": {
       "type": "string",
-      "value": "[parameters('location')]"
+      "value": "[variables('location')]"
+    },
+    "galleryImageVersionId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Compute/galleries/images/versions', format('{0}gallery', replace(parameters('baseName'), '-', '')), 'test-linux-image', '1.0.0')]"
     }
   }
 }

@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Core.Areas.Server.Models;
+namespace Microsoft.Mcp.Core.Areas.Server.Models;
 
 /// <summary>
 /// Represents the JSON schema for a tool's input parameters.
@@ -27,4 +27,12 @@ public sealed class ToolInputSchema
     /// </summary>
     [JsonPropertyName("required")]
     public string[]? Required { get; set; } = [];
+
+    /// <summary>
+    /// Indicates whether additional properties beyond those defined are allowed.
+    /// Defaults to false for OpenAI/Codex structured output strict mode compatibility.
+    /// </summary>
+    [JsonPropertyName("additionalProperties")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? AdditionalProperties { get; init; } = false;
 }

@@ -21,7 +21,10 @@ public sealed class TemplateServiceTests
         Assert.NotNull(result);
         Assert.NotEmpty(result);
         Assert.Contains("{{Title}}", result);
-        Assert.Contains("{{ProjectName}}", result);
+        Assert.Contains("{{Goal}}", result);
+        Assert.Contains("{{SampleMermaid}}", result);
+        Assert.Contains("{{ResourceInfo}}", result);
+        Assert.Contains("{{ExecutionSteps}}", result);
     }
 
     [Fact]
@@ -42,8 +45,10 @@ public sealed class TemplateServiceTests
         var replacements = new Dictionary<string, string>
         {
             { "Title", "Test Deployment Plan" },
-            { "ProjectName", "TestProject" },
-            { "ProvisioningTool", "AZD" }
+            { "Goal", "Deploy TestProject to Azure" },
+            { "SampleMermaid", "<resource-diagram>" },
+            { "ResourceInfo", "Azure existing resources" },
+            { "ExecutionSteps", "<execution-steps>" }
         };
 
         // Act
@@ -52,10 +57,14 @@ public sealed class TemplateServiceTests
         // Assert
         Assert.Contains("Test Deployment Plan", result);
         Assert.Contains("TestProject", result);
-        Assert.Contains("AZD", result);
+        Assert.Contains("<resource-diagram>", result);
+        Assert.Contains("Azure existing resources", result);
+        Assert.Contains("<execution-steps>", result);
         Assert.DoesNotContain("{{Title}}", result);
-        Assert.DoesNotContain("{{ProjectName}}", result);
-        Assert.DoesNotContain("{{ProvisioningTool}}", result);
+        Assert.DoesNotContain("{{Goal}}", result);
+        Assert.DoesNotContain("{{SampleMermaid}}", result);
+        Assert.DoesNotContain("{{ResourceInfo}}", result);
+        Assert.DoesNotContain("{{ExecutionSteps}}", result);
     }
 
     [Fact]

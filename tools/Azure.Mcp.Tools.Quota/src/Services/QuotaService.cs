@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -27,15 +26,15 @@ public class QuotaService(
         CancellationToken cancellationToken)
     {
         TokenCredential credential = await GetCredential(cancellationToken);
-        Dictionary<string, List<UsageInfo>> quotaByResourceTypes = await AzureQuotaService.GetAzureQuotaAsync(
+        return await AzureQuotaService.GetAzureQuotaAsync(
             credential,
             resourceTypes,
             subscriptionId,
             location,
+            TenantService,
             loggerFactory,
             _httpClientFactory,
             cancellationToken);
-        return quotaByResourceTypes;
     }
 
     public async Task<List<string>> GetAvailableRegionsForResourceTypesAsync(

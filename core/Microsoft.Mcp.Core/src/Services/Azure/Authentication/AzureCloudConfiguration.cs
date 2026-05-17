@@ -1,20 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Options;
+using Azure.Identity;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 
-namespace Azure.Mcp.Core.Services.Azure.Authentication;
+namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
 /// Implementation of <see cref="IAzureCloudConfiguration"/> that reads from configuration.
 /// </summary>
 public class AzureCloudConfiguration : IAzureCloudConfiguration
 {
-    private const string DefaultAuthorityHost = "https://login.microsoftonline.com";
+
+    public enum AzureCloud
+    {
+        AzurePublicCloud,
+        AzureChinaCloud,
+        AzureUSGovernmentCloud,
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AzureCloudConfiguration"/> class.
@@ -37,7 +44,7 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
             ?? configuration["Cloud"]
             ?? Environment.GetEnvironmentVariable("AZURE_CLOUD");
 
-        (AuthorityHost, ArmEnvironment) = ParseCloudValue(cloudValue);
+        (AuthorityHost, ArmEnvironment, CloudType) = ParseCloudValue(cloudValue);
 
         logger?.LogDebug(
             "Azure cloud configuration initialized. Cloud value: '{CloudValue}', AuthorityHost: '{AuthorityHost}', ArmEnvironment: '{ArmEnvironment}'",
@@ -52,31 +59,27 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
     /// <inheritdoc/>
     public ArmEnvironment ArmEnvironment { get; }
 
-    private static (Uri authorityHost, ArmEnvironment armEnvironment) ParseCloudValue(string? cloudValue)
+    public AzureCloud CloudType { get; }
+
+    private static (Uri authorityHost, ArmEnvironment armEnvironment, AzureCloud cloudType) ParseCloudValue(string? cloudValue)
     {
         if (string.IsNullOrWhiteSpace(cloudValue))
         {
-            return (new Uri(DefaultAuthorityHost), ArmEnvironment.AzurePublicCloud);
-        }
-
-        // Check if it's already a URL - in this case we only have authority host
-        // and must default to public cloud for ARM (custom cloud scenario requires
-        // additional configuration not currently supported)
-        if (cloudValue.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-        {
-            return (new Uri(cloudValue), ArmEnvironment.AzurePublicCloud);
+            return (AzureAuthorityHosts.AzurePublicCloud, ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud);
         }
 
         // Map common sovereign cloud names to authority hosts and ARM environments
         return cloudValue.ToLowerInvariant() switch
         {
-            "azurecloud" or "azurepubliccloud" or "public" =>
-                (new Uri("https://login.microsoftonline.com"), ArmEnvironment.AzurePublicCloud),
-            "azurechinacloud" or "china" =>
-                (new Uri("https://login.chinacloudapi.cn"), ArmEnvironment.AzureChina),
+            "azurecloud" or "azurepubliccloud" or "public" or "azurepublic" =>
+                (AzureAuthorityHosts.AzurePublicCloud, ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud),
+            "azurechinacloud" or "china" or "azurechina" =>
+                (AzureAuthorityHosts.AzureChina, ArmEnvironment.AzureChina, AzureCloud.AzureChinaCloud),
             "azureusgovernment" or "azureusgovernmentcloud" or "usgov" or "usgovernment" =>
-                (new Uri("https://login.microsoftonline.us"), ArmEnvironment.AzureGovernment),
-            _ => (new Uri(DefaultAuthorityHost), ArmEnvironment.AzurePublicCloud) // Default to public cloud if unknown
+                (AzureAuthorityHosts.AzureGovernment, ArmEnvironment.AzureGovernment, AzureCloud.AzureUSGovernmentCloud),
+            _ => throw new ArgumentException(
+                $"Unrecognized cloud value '{cloudValue}'. Supported values are: AzureCloud, AzurePublicCloud, Public, AzurePublic, AzureChinaCloud, China, AzureChina, AzureUSGovernment, AzureUSGovernmentCloud, USGov, USGovernment.",
+                nameof(cloudValue))
         };
     }
 }

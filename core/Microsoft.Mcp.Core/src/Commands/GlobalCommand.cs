@@ -3,13 +3,16 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using Azure;
 using Azure.Core;
 using Azure.Identity;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Core.Options;
-using Microsoft.Mcp.Core.Commands;
+using Microsoft.Identity.Client;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Options;
 
-namespace Azure.Mcp.Core.Commands;
+namespace Microsoft.Mcp.Core.Commands;
 
 public abstract class GlobalCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : BaseCommand<TOptions>
@@ -76,7 +79,7 @@ public abstract class GlobalCommand<
         };
 
         // Create a RetryPolicyOptions capturing only explicitly provided values so unspecified settings remain SDK defaults
-        var hasAnyRetry = Options.ParseResultExtensions.HasAnyRetryOptions(parseResult);
+        var hasAnyRetry = ParseResultExtensions.HasAnyRetryOptions(parseResult);
         if (hasAnyRetry)
         {
             var policy = new RetryPolicyOptions();
@@ -110,18 +113,47 @@ public abstract class GlobalCommand<
     {
         AuthenticationFailedException authEx =>
             $"Authentication failed. Please run 'az login' to sign in to Azure. Details: {authEx.Message}",
-        RequestFailedException rfEx => rfEx.Message,
+        RequestFailedException rfEx => HandleRequestFailedException(rfEx),
         HttpRequestException httpEx =>
             $"Service unavailable or network connectivity issues. Details: {httpEx.Message}",
+        TimeoutException timeoutEx =>
+            $"The operation timed out. Details: {timeoutEx.Message.TrimEnd('.')}",
+        TaskCanceledException canceledEx =>
+            $"The operation timed out or was canceled. Details: {canceledEx.Message.TrimEnd('.')}",
         _ => ex.Message  // Just return the actual exception message
     };
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
+        ArgumentException => HttpStatusCode.BadRequest,
         KeyNotFoundException => HttpStatusCode.NotFound,
         AuthenticationFailedException => HttpStatusCode.Unauthorized,
         RequestFailedException rfEx => (HttpStatusCode)rfEx.Status,
-        HttpRequestException => HttpStatusCode.ServiceUnavailable,
+        MsalServiceException msalServiceEx => (HttpStatusCode)msalServiceEx.StatusCode,
+        HttpRequestException httpEx => httpEx.StatusCode ?? HttpStatusCode.ServiceUnavailable,
+        InvalidOperationException => HttpStatusCode.UnprocessableEntity,
+        TimeoutException => HttpStatusCode.GatewayTimeout,
+        TaskCanceledException => HttpStatusCode.GatewayTimeout,
         _ => HttpStatusCode.InternalServerError
     };
+
+    private static string HandleRequestFailedException(RequestFailedException ex)
+    {
+        string message = ex.Message ?? string.Empty;
+
+        if (ex.Status == 401 && message.Contains("InvalidAuthenticationTokenTenant", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Authentication failed due to a tenant mismatch. " +
+            "Your credential is authenticated to a different Azure tenant than the one required by this subscription. " +
+            "To resolve: " +
+            "1. Authenticate to the target tenant using one of the supported credential types: " +
+            "   - Azure CLI: Run 'az login --tenant <tenant_id>' and set AZURE_TOKEN_CREDENTIALS=AzureCliCredential, " +
+            "   - Azure PowerShell: Run 'Connect-AzAccount -Tenant <tenant_id>' and set AZURE_TOKEN_CREDENTIALS=AzurePowerShellCredential, " +
+            "   - Azure Developer CLI: Run 'azd auth login --tenant-id <tenant_id>' and set AZURE_TOKEN_CREDENTIALS=AzureDeveloperCliCredential, " +
+            "2. Restart the Azure MCP Server. " +
+            "For the complete list of supported credentials, see: https://aka.ms/azmcp/auth";
+        }
+
+        return message;
+    }
 }

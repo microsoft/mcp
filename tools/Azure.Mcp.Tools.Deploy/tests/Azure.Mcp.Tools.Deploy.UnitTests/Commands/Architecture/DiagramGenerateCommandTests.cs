@@ -5,36 +5,20 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.Deploy.Commands.Architecture;
 using Azure.Mcp.Tools.Deploy.Options;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
-using NSubstitute;
+using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Deploy.UnitTests.Commands.Architecture;
 
 
-public class DiagramGenerateCommandTests
+public class DiagramGenerateCommandTests : CommandUnitTestsBase<DiagramGenerateCommand, object>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<DiagramGenerateCommand> _logger;
-
-    public DiagramGenerateCommandTests()
-    {
-        _logger = Substitute.For<ILogger<DiagramGenerateCommand>>();
-
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
-
     [Fact]
     public async Task GenerateArchitectureDiagram_ShouldReturnNoServiceDetected()
     {
-        var command = new DiagramGenerateCommand(_logger);
-        var args = command.GetCommand().Parse(["--raw-mcp-tool-input", "{\"projectName\": \"test\",\"services\": []}"]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--raw-mcp-tool-input", "{\"projectName\": \"test\",\"services\": []}");
+
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Contains("No service detected", response.Message);
@@ -43,26 +27,23 @@ public class DiagramGenerateCommandTests
     [Fact]
     public async Task GenerateArchitectureDiagram_InvalidJsonInput()
     {
-        var command = new DiagramGenerateCommand(_logger);
-        var args = command.GetCommand().Parse(["--raw-mcp-tool-input", "test"]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--raw-mcp-tool-input", "test");
+
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Invalid JSON format", response.Message);
+        Assert.Contains("invalid JSON literal", response.Message);
     }
 
     [Fact]
     public async Task GenerateArchitectureDiagram_ShouldReturnEncryptedDiagramUrl()
     {
-        var command = new DiagramGenerateCommand(_logger);
         var appTopology = new AppTopology()
         {
             WorkspaceFolder = "testWorkspace",
             ProjectName = "testProject",
             Services =
             [
-                new ServiceConfig
+                new()
                 {
                     Name = "website",
                     AzureComputeHost = "appservice",
@@ -70,10 +51,10 @@ public class DiagramGenerateCommandTests
                     Port = "80",
                     Dependencies =
                     [
-                        new DependencyConfig { Name = "store", ConnectionType = "system-identity", ServiceType = "azurestorageaccount" }
+                        new() { Name = "store", ConnectionType = "system-identity", ServiceType = "azurestorageaccount" }
                     ],
                 },
-                new ServiceConfig
+                new()
                 {
                     Name = "frontend",
                     Path = "testWorkspace/web",
@@ -82,10 +63,10 @@ public class DiagramGenerateCommandTests
                     Port = "8080",
                     Dependencies =
                     [
-                        new DependencyConfig { Name = "backend", ConnectionType = "http", ServiceType = "containerapp" }
+                        new() { Name = "backend", ConnectionType = "http", ServiceType = "containerapp" }
                     ]
                 },
-                new ServiceConfig
+                new()
                 {
                     Name = "backend",
                     Path = "testWorkspace/api",
@@ -94,11 +75,11 @@ public class DiagramGenerateCommandTests
                     Port = "3000",
                     Dependencies =
                     [
-                        new DependencyConfig { Name = "db", ConnectionType = "secret", ServiceType = "azurecosmosdb" },
-                        new DependencyConfig { Name = "secretStore", ConnectionType = "system-identity", ServiceType = "azurekeyvault" }
+                        new() { Name = "db", ConnectionType = "secret", ServiceType = "azurecosmosdb" },
+                        new() { Name = "secretStore", ConnectionType = "system-identity", ServiceType = "azurekeyvault" }
                     ]
                 },
-                new ServiceConfig
+                new()
                 {
                     Name = "frontendservice",
                     Path = "testWorkspace/web",
@@ -107,10 +88,10 @@ public class DiagramGenerateCommandTests
                     Port = "3001",
                     Dependencies =
                     [
-                        new DependencyConfig { Name = "backendservice", ConnectionType = "user-identity", ServiceType = "aks"}
+                        new() { Name = "backendservice", ConnectionType = "user-identity", ServiceType = "aks"}
                     ]
                 },
-                new ServiceConfig
+                new()
                 {
                     Name = "backendservice",
                     Path = "testWorkspace/api",
@@ -119,15 +100,14 @@ public class DiagramGenerateCommandTests
                     Port = "3000",
                     Dependencies =
                     [
-                        new DependencyConfig { Name = "database", ConnectionType = "user-identity", ServiceType = "azurecacheforredis" }
+                        new() { Name = "database", ConnectionType = "user-identity", ServiceType = "azurecacheforredis" }
                     ]
                 }
             ]
         };
 
-        var args = command.GetCommand().Parse(["--raw-mcp-tool-input", JsonSerializer.Serialize(appTopology)]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--raw-mcp-tool-input", JsonSerializer.Serialize(appTopology));
+
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         // Extract the URL from the response message

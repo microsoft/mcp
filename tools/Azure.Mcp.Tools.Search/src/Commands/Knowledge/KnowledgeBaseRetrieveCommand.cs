@@ -3,7 +3,6 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Knowledge;
 using Azure.Mcp.Tools.Search.Services;
@@ -15,19 +14,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
-public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCommand> logger) : GlobalCommand<KnowledgeBaseRetrieveOptions>()
-{
-    private const string CommandTitle = "Execute retrieval using a knowledge base in Azure AI Search";
-    private readonly ILogger<KnowledgeBaseRetrieveCommand> _logger = logger;
-
-    public override string Id => "dcd2952d-02af-4ffc-a7a2-3c6d04251f66";
-
-    public override string Name => "retrieve";
-
-    public override string Title => CommandTitle;
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "dcd2952d-02af-4ffc-a7a2-3c6d04251f66",
+    Name = "retrieve",
+    Title = "Execute retrieval using a knowledge base in Azure AI Search",
+    Description = """
         Execute a retrieval operation using a specific Azure AI Search knowledge base, effectively searching and querying the underlying
         data sources as needed to find relevant information. Provide either a --query for single-turn retrieval or one or more
         conversational --messages in role:content form (e.g. user:What policies apply?). Specifying both --query and --messages is not
@@ -36,17 +27,17 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
         Required arguments:
         - service
         - knowledge-base
-        """;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        ReadOnly = true,
-        OpenWorld = true, // possibly interacts with Web content and federated data sources
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = true,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeBaseRetrieveOptions>()
+{
+    private readonly ILogger<KnowledgeBaseRetrieveCommand> _logger = logger;
+    private readonly ISearchService _searchService = searchService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -66,6 +57,22 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
             else if (!string.IsNullOrEmpty(query) && messages.Length > 0)
             {
                 commandResult.AddError("Specifying both --query and --messages is not allowed.");
+            }
+
+            if (messages.Length > 0)
+            {
+                foreach ((var index, var message) in messages.Index())
+                {
+                    try
+                    {
+                        ParseMessage(message);
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        commandResult.AddError($"Message {index}: {ex.Message}");
+                        continue;
+                    }
+                }
             }
         });
     }
@@ -94,7 +101,7 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
         {
             try
             {
-                parsedMessages = [.. options.Messages.Select(m => ParseMessage(m))];
+                parsedMessages = [.. options.Messages.Select(ParseMessage)];
             }
             catch (ArgumentException ex)
             {
@@ -106,8 +113,7 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
 
         try
         {
-            var searchService = context.GetService<ISearchService>();
-            var result = await searchService.RetrieveFromKnowledgeBase(options.Service!, options.KnowledgeBase!, options.Query, parsedMessages, options.RetryPolicy, cancellationToken);
+            var result = await _searchService.RetrieveFromKnowledgeBase(options.Service!, options.KnowledgeBase!, options.Query, parsedMessages, options.RetryPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result), SearchJsonContext.Default.KnowledgeBaseRetrieveCommandResult);
         }
         catch (Exception ex)
@@ -119,18 +125,18 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
         return context.Response;
     }
 
-    internal (string role, string content) ParseMessage(string message)
+    internal static (string role, string content) ParseMessage(string message)
     {
         var idx = message.IndexOf(':');
         if (idx <= 0 || idx == message.Length - 1)
         {
-            throw new ArgumentException($"Invalid message format '{message}'. Expected role:content.");
+            throw new ArgumentException($"Invalid message format, expected 'role:content'.");
         }
         var role = message[..idx].Trim();
         var content = message[(idx + 1)..].Trim();
         if (string.IsNullOrEmpty(role) || string.IsNullOrEmpty(content))
         {
-            throw new ArgumentException($"Invalid message format '{message}'. Role and content required.");
+            throw new ArgumentException($"Invalid message format, both 'role' and 'content' must have a non-empty value.");
         }
         if (role != "user" && role != "assistant")
         {

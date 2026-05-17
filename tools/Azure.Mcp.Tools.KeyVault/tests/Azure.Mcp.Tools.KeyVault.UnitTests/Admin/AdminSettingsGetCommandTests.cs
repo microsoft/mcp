@@ -1,55 +1,31 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Admin;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Administration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.UnitTests.Admin;
 
-public class AdminSettingsGetCommandTests
+public class AdminSettingsGetCommandTests : CommandUnitTestsBase<AdminSettingsGetCommand, IKeyVaultService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IKeyVaultService _keyVaultService;
-    private readonly ILogger<AdminSettingsGetCommand> _logger;
-    private readonly AdminSettingsGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
     private const string KnownSubscriptionId = "knownSubscription";
     private const string KnownVaultName = "knownVaultName";
-
-    public AdminSettingsGetCommandTests()
-    {
-        _keyVaultService = Substitute.For<IKeyVaultService>();
-        _logger = Substitute.For<ILogger<AdminSettingsGetCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_keyVaultService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsSettingsDictionary()
     {
         // We return null from service (simplest stub); command should still succeed with empty dictionary.
-        _keyVaultService.GetVaultSettings(
+        Service.GetVaultSettings(
             Arg.Is(KnownVaultName),
             Arg.Is(KnownSubscriptionId),
             Arg.Any<string?>(),
@@ -57,20 +33,9 @@ public class AdminSettingsGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns((GetSettingsResult)null!);
 
-        var args = _commandDefinition.Parse([
-            "--vault", KnownVaultName,
-            "--subscription", KnownSubscriptionId
-        ]);
+        var response = await ExecuteCommandAsync("--vault", KnownVaultName, "--subscription", KnownSubscriptionId);
 
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        // Deserialize the wrapped result to verify structure and empty settings dictionary
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.AdminSettingsGetCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, KeyVaultJsonContext.Default.AdminSettingsGetCommandResult);
         Assert.Equal(KnownVaultName, result.Name);
         Assert.NotNull(result.Settings);
     }
@@ -79,21 +44,15 @@ public class AdminSettingsGetCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         var expectedError = "Test error";
-        _keyVaultService
-            .GetVaultSettings(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+        Service.GetVaultSettings(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse([
-            "--vault", KnownVaultName,
-            "--subscription", KnownSubscriptionId
-        ]);
-
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--vault", KnownVaultName, "--subscription", KnownSubscriptionId);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains(expectedError, response.Message);
@@ -110,7 +69,7 @@ public class AdminSettingsGetCommandTests
         if (args.Contains("--vault") && !args.Contains("--subscription") && shouldSucceed)
         {
             // Provide subscription via environment variable
-            EnvironmentHelpers.SetAzureSubscriptionId(KnownSubscriptionId);
+            TestEnvironment.SetAzureSubscriptionId(KnownSubscriptionId);
         }
         else if (!args.Contains("--subscription"))
         {
@@ -121,18 +80,16 @@ public class AdminSettingsGetCommandTests
         if (shouldSucceed)
         {
             // Service returns null result -> treated as empty settings
-            _keyVaultService
-                .GetVaultSettings(
-                    Arg.Any<string>(),
-                    Arg.Any<string>(),
-                    Arg.Any<string?>(),
-                    Arg.Any<RetryPolicyOptions?>(),
-                    Arg.Any<CancellationToken>())
+            Service.GetVaultSettings(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns((GetSettingsResult)null!);
         }
 
-        var parseResult = _commandDefinition.Parse(string.IsNullOrWhiteSpace(args) ? Array.Empty<string>() : args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (!shouldSucceed)

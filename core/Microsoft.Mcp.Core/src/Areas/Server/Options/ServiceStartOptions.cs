@@ -3,10 +3,10 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Core.Areas.Server.Options;
+namespace Microsoft.Mcp.Core.Areas.Server.Options;
 
 /// <summary>
-/// Configuration options for starting the Azure MCP server service.
+/// Configuration options for starting the MCP server service.
 /// </summary>
 public class ServiceStartOptions
 {
@@ -67,7 +67,7 @@ public class ServiceStartOptions
     public bool DangerouslyDisableElicitation { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets the outgoing authentication strategy for Azure service requests.
+    /// Gets or sets the outgoing authentication strategy for service requests.
     /// Determines whether to use hosting environment identity or on-behalf-of flow.
     /// </summary>
     [JsonPropertyName("outgoingAuthStrategy")]
@@ -83,10 +83,29 @@ public class ServiceStartOptions
     public string? SupportLoggingFolder { get; set; } = null;
 
     /// <summary>
+    /// Gets or sets whether retry policy bounds checking is disabled.
+    /// When true, no upper bounds are enforced on retry delays, max delays, network timeouts, or max retries.
+    /// </summary>
+    [JsonPropertyName("dangerouslyDisableRetryLimits")]
+    public bool DangerouslyDisableRetryLimits { get; set; } = false;
+
+    /// <summary>
     /// Gets or sets the Azure cloud environment for authentication.
     /// Supports well-known cloud names (AzureCloud, AzureChinaCloud, AzureUSGovernment)
     /// or custom authority host URLs starting with https://.
     /// </summary>
     [JsonPropertyName("cloud")]
     public string? Cloud { get; set; } = null;
+
+    /// <summary>
+    /// Gets a value indicating whether the server is running in HTTP (remote) mode.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsHttpMode => Transport == TransportTypes.Http;
+
+    /// <summary>
+    /// Gets or sets whether caching is disabled.
+    /// </summary>
+    [JsonPropertyName("disableCaching")]
+    public bool DisableCaching { get; set; } = false;
 }

@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Client;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 
 /// <summary>
 /// Server provider that starts the azmcp server in "all" mode while explicitly
@@ -16,7 +16,6 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 public sealed class ConsolidatedToolServerProvider(CommandGroup commandGroup) : IMcpServerProvider
 {
     private readonly CommandGroup _commandGroup = commandGroup;
-    private string? _entryPoint = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
 
     /// <summary>
     /// Gets or sets the entry point executable path for the MCP server.
@@ -24,16 +23,21 @@ public sealed class ConsolidatedToolServerProvider(CommandGroup commandGroup) : 
     /// </summary>
     public string? EntryPoint
     {
-        get => _entryPoint;
-        set => _entryPoint = string.IsNullOrWhiteSpace(value)
+        get;
+        set => field = string.IsNullOrWhiteSpace(value)
             ? System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName
             : value;
-    }
+    } = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
 
     /// <summary>
     /// Gets or sets whether the MCP server should run in read-only mode.
     /// </summary>
     public bool ReadOnly { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the transport mechanism for the MCP server.
+    /// </summary>
+    public string Transport { get; set; } = TransportTypes.StdIo;
 
     /// <inheritdoc/>
     public async Task<McpClient> CreateClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken)
@@ -62,7 +66,7 @@ public sealed class ConsolidatedToolServerProvider(CommandGroup commandGroup) : 
     /// </summary>
     internal string[] BuildArguments()
     {
-        var arguments = new List<string> { "server", "start", "--mode", "all" };
+        var arguments = new List<string> { "server", "start", "--mode", "all", "--transport", Transport };
 
         foreach (var kvp in _commandGroup.Commands)
         {
@@ -81,14 +85,11 @@ public sealed class ConsolidatedToolServerProvider(CommandGroup commandGroup) : 
     /// <summary>
     /// Creates metadata for the MCP server provider based on the command group.
     /// </summary>
-    public McpServerMetadata CreateMetadata()
+    public McpServerMetadata CreateMetadata() => new()
     {
-        return new McpServerMetadata
-        {
-            Id = _commandGroup.Name,
-            Name = _commandGroup.Name,
-            Description = _commandGroup.Description,
-            ToolMetadata = _commandGroup.ToolMetadata,
-        };
-    }
+        Id = _commandGroup.Name,
+        Name = _commandGroup.Name,
+        Description = _commandGroup.Description,
+        ToolMetadata = _commandGroup.ToolMetadata
+    };
 }

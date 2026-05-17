@@ -2,10 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FunctionApp.LiveTests;
@@ -69,6 +71,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_handle_empty_subscription_gracefully()
     {
         var result = await CallToolAsync(
@@ -78,7 +81,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
                 { "subscription", "" }
             });
 
-        Assert.False(result.HasValue);
+        Assert.True(result.HasValue);
     }
 
     [Fact]
@@ -88,35 +91,35 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
             "functionapp_get",
             new()
             {
-                { "subscription", "invalid-subscription" }
+                { "subscription", "not-a-real-sub" }
             });
 
         Assert.True(result.HasValue);
         var errorDetails = result.Value;
         errorDetails.AssertProperty("message");
         var typeProperty = errorDetails.AssertProperty("type");
-        Assert.Equal("Exception", typeProperty.GetString());
+        Assert.Equal("ArgumentException", typeProperty.GetString());
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_validate_required_subscription_parameter()
     {
         var result = await CallToolAsync("functionapp_get", []);
 
-        Assert.False(result.HasValue);
+        Assert.True(result.HasValue);
     }
 
     [Fact]
     public async Task Should_get_specific_function_app()
     {
-        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
         // List to obtain a real function app and its resource group
         var listResult = await CallToolAsync(
             "functionapp_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", resourceGroupName }
+                { "resource-group", Settings.ResourceGroupName }
             });
 
         var functionApps = listResult.AssertProperty("functionApps");
@@ -124,7 +127,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
 
         var first = functionApps.EnumerateArray().First();
         var name = RegisterOrRetrieveVariable("functionAppName", first.AssertProperty("name").GetString()!);
-        if (TestMode == Tests.Helpers.TestMode.Playback)
+        if (TestMode == TestMode.Playback)
         {
             name = string.Concat("Sanitized", name.AsSpan(name.IndexOf('-')));
         }
@@ -146,7 +149,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
         var functionApp = functionApps.EnumerateArray().First();
         Assert.Equal(JsonValueKind.Object, functionApp.ValueKind);
 
-        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : name, functionApp.AssertProperty("name").GetString());
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : name, functionApp.AssertProperty("name").GetString());
         Assert.Equal(resourceGroup, functionApp.AssertProperty("resourceGroupName").GetString());
         // Common useful properties
         if (functionApp.TryGetProperty("location", out var loc))
@@ -171,13 +174,14 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
         var errorDetails = result.Value;
         errorDetails.AssertProperty("message");
         var typeProperty = errorDetails.AssertProperty("type");
-        Assert.Equal("Exception", typeProperty.GetString());
+        Assert.Equal("RequestFailedException", typeProperty.GetString());
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_validate_required_parameters_for_get_command()
     {
-        // Missing resource-group
+        // Missing resource-group when function-app is specified - validation catches it
         var missingRg = await CallToolAsync(
             "functionapp_get",
             new()
@@ -187,7 +191,8 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
             });
         Assert.False(missingRg.HasValue);
 
-        // Missing subscription
+        // Missing subscription with resource-group and function-app falls back to default subscription
+        // but resource group 'rg-test' doesn't exist, resulting in an error
         var missingSub = await CallToolAsync(
             "functionapp_get",
             new()
@@ -195,6 +200,9 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
                 { "resource-group", "rg-test" },
                 { "function-app", "name-test" }
             });
-        Assert.False(missingSub.HasValue);
+        Assert.True(missingSub.HasValue);
+        missingSub.Value.AssertProperty("message");
+        var missingSubType = missingSub.Value.AssertProperty("type");
+        Assert.Equal("RequestFailedException", missingSubType.GetString());
     }
 }

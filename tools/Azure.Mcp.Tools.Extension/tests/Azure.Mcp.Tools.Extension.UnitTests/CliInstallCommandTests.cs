@@ -3,47 +3,22 @@
 
 using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Extension.Commands;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Extension.UnitTests;
 
-public sealed class CliInstallCommandTests
+public sealed class CliInstallCommandTests : CommandUnitTestsBase<CliInstallCommand, ICliInstallService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ICliInstallService _cliInstallService;
-    private readonly ILogger<CliInstallCommand> _logger;
-    private readonly CliInstallCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public CliInstallCommandTests()
-    {
-        _httpClientFactory = Substitute.For<IHttpClientFactory>();
-        _cliInstallService = Substitute.For<ICliInstallService>();
-        _logger = Substitute.For<ILogger<CliInstallCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_httpClientFactory);
-        collection.AddSingleton(_cliInstallService);
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("install", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -60,18 +35,15 @@ public sealed class CliInstallCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _cliInstallService.GetCliInstallInstructions(Arg.Any<string>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            Service.GetCliInstallInstructions(Arg.Any<string>(), Arg.Any<CancellationToken>())
+                .Returns(new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent("Instructions")
-                }));
+                });
         }
 
-        // Build args from a single string in tests using the test-only splitter
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal([shouldSucceed ? 200 : 400], [(int)response.Status]);
@@ -86,25 +58,18 @@ public sealed class CliInstallCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        _cliInstallService.GetCliInstallInstructions(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        Service.GetCliInstallInstructions(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent("Instructions")
-            }));
-
-        var parseResult = _commandDefinition.Parse("--cli-type az");
+            });
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--cli-type", "az");
 
         // Assert
-        Assert.Equal([200], [(int)response.Status]);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ExtensionJsonContext.Default.CliInstallResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ExtensionJsonContext.Default.CliInstallResult);
-
-        Assert.NotNull(result);
         Assert.Equal("az", result.CliType);
         Assert.Equal("Instructions", result.InstallationInstructions);
     }
@@ -113,12 +78,10 @@ public sealed class CliInstallCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _cliInstallService.GetCliInstallInstructions(Arg.Any<string>(), Arg.Any<CancellationToken>()).ThrowsAsync(new Exception("Test error"));
-
-        var parseResult = _commandDefinition.Parse("--cli-type az");
+        Service.GetCliInstallInstructions(Arg.Any<string>(), Arg.Any<CancellationToken>()).ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--cli-type", "az");
 
         // Assert
         Assert.Equal([500], [(int)response.Status]);

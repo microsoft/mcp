@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text;
-using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
@@ -15,24 +14,15 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 /// <summary>
 /// Command to get platform landing zone modification guidance and recommendations.
 /// </summary>
-public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger)
-    : BaseAzureMigrateCommand<GetGuidanceOptions>()
-{
-    private const string CommandTitle = "Get Platform Landing Zone Modification Guidance";
-
-    /// <inheritdoc/>
-    public override string Id => "d4e8c9b2-5f3a-4d1c-8b7e-2a9f1c6d5e4b";
-
-    /// <inheritdoc/>
-    public override string Name => "getguidance";
-
-    /// <inheritdoc/>
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "d4e8c9b2-5f3a-4d1c-8b7e-2a9f1c6d5e4b",
+    Name = "getguidance",
+    Title = "Get Platform Landing Zone Modification Guidance",
+    Description = """
         Get how-to guidance for modifying, configuring, or customizing an existing Platform Landing Zone.
         Use this tool when user asks "how do I", "show me how to", "get guidance for", or asks about 
         disabling, enabling, turning off, changing, or modifying Landing Zone settings.
-        
+
         **Use this tool for questions about:**
         - How to turn off or disable Bastion, DDoS, DNS, gateways, Defender, or monitoring
         - How to change IP addresses, CIDR ranges, network topology, or regions
@@ -40,7 +30,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger)
         - How to change resource naming patterns or conventions
         - Finding or searching for specific policies within a Landing Zone
         - Listing all available policies by archetype
-        
+
         **Available scenarios:**
         - bastion: Turn off Bastion host
         - ddos: Enable or disable DDoS protection plan
@@ -57,25 +47,31 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger)
         - defender: Turn off Defender Plans
         - zero-trust: Implement Zero Trust Networking
         - slz: Implement Sovereign Landing Zone controls
-        
+
         **For policy searches:**
         - Use policy-name to search for a specific policy
         - Use list-policies=true to list ALL policies by archetype
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = true,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = true)]
+public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlatformLandingZoneGuidanceService guidanceService)
+    : BaseAzureMigrateCommand<GetGuidanceOptions>()
+{
+    private readonly IPlatformLandingZoneGuidanceService _guidanceService = guidanceService;
 
     /// <inheritdoc/>
-    public override string Title => CommandTitle;
 
     /// <inheritdoc/>
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = true,
-        ReadOnly = false,
-        LocalRequired = true,
-        Secret = false
-    };
+
+    /// <inheritdoc/>
+
+    /// <inheritdoc/>
+
+    /// <inheritdoc/>
 
     /// <inheritdoc/>
     protected override void RegisterOptions(Command command)
@@ -109,15 +105,14 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger)
 
         try
         {
-            IPlatformLandingZoneGuidanceService service = context.GetService<IPlatformLandingZoneGuidanceService>();
             var response = new StringBuilder();
 
-            var guidance = await service.GetGuidanceAsync(options.Scenario!, cancellationToken);
+            var guidance = await _guidanceService.GetGuidanceAsync(options.Scenario!, cancellationToken);
             response.AppendLine(guidance);
 
             if (options.ListPolicies)
             {
-                Dictionary<string, List<string>> allPolicies = await service.GetAllPoliciesAsync(cancellationToken);
+                Dictionary<string, List<string>> allPolicies = await _guidanceService.GetAllPoliciesAsync(cancellationToken);
                 response.AppendLine("\n--- All Policies by Archetype ---");
                 foreach (var (archetype, policies) in allPolicies.OrderBy(kv => kv.Key))
                 {
@@ -130,7 +125,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger)
             if (!string.IsNullOrWhiteSpace(options.PolicyName) &&
                 options.Scenario is "policy-enforcement" or "policy-assignment")
             {
-                List<PlatformLandingZoneGuidanceService.PolicyLocationResult> locations = await service.SearchPoliciesAsync(options.PolicyName, cancellationToken);
+                List<PlatformLandingZoneGuidanceService.PolicyLocationResult> locations = await _guidanceService.SearchPoliciesAsync(options.PolicyName, cancellationToken);
                 if (locations.Count > 0)
                 {
                     response.AppendLine("\n--- Matching Policies ---");
@@ -147,9 +142,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger)
                 }
             }
 
-            context.Response.Results = ResponseResult.Create(
-                new GetGuidanceCommandResult(response.ToString()),
-                AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
+            context.Response.Results = ResponseResult.Create(new(response.ToString()), AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
         }
         catch (Exception ex)
         {
@@ -160,6 +153,5 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger)
         return context.Response;
     }
 
-    internal record GetGuidanceCommandResult(
-        [property: JsonPropertyName("guidance")] string Guidance);
+    internal record GetGuidanceCommandResult(string Guidance);
 }

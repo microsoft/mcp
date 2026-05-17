@@ -10,6 +10,17 @@ public static class AppServiceOptionDefinitions
     public const string DatabaseServer = "database-server";
     public const string DatabaseName = "database";
     public const string ConnectionString = "connection-string";
+    public const string AppSettingNameName = "setting-name";
+    public const string AppSettingValueName = "setting-value";
+    public const string AppSettingUpdateTypeName = "setting-update-type";
+    public const string DeploymentIdName = "deployment-id";
+    public const string DetectorIdName = "detector-id";
+    public const string StartTimeName = "start-time";
+    public const string EndTimeName = "end-time";
+    public const string IntervalName = "interval";
+    public const string StateChangeName = "state-change";
+    public const string SoftRestartName = "soft-restart";
+    public const string WaitForCompletionName = "wait-for-completion";
 
     public static readonly Option<string> AppServiceName = new($"--{AppName}")
     {
@@ -38,6 +49,74 @@ public static class AppServiceOptionDefinitions
     public static readonly Option<string> ConnectionStringOption = new($"--{ConnectionString}")
     {
         Description = "The connection string for the database. If not provided, a default will be generated.",
+        Required = false
+    };
+
+    public static readonly Option<string> AppSettingName = new($"--{AppSettingNameName}")
+    {
+        Description = "The name of the application setting.",
+        Required = true
+    };
+
+    public static readonly Option<string> AppSettingValue = new($"--{AppSettingValueName}")
+    {
+        Description = "The value of the application setting. Required for add and set update types.",
+        Required = false
+    };
+
+    public static readonly Option<string> AppSettingUpdateType = new($"--{AppSettingUpdateTypeName}")
+    {
+        Description = "The type of update to perform on the application setting. Valid values are: add, set, delete.",
+        Required = true
+    };
+
+    public static readonly Option<string> DeploymentIdOption = new($"--{DeploymentIdName}")
+    {
+        Description = "The ID of the deployment.",
+        Required = false
+    };
+
+    public static readonly Option<string> DetectorId = new($"--{DetectorIdName}")
+    {
+        Description = "The ID of the diagnostic detector to run. Use the 'id' field from 'azmcp appservice webapp diagnostic list' output (e.g., LinuxContainerRecycle, LinuxMemoryDrillDown).",
+        Required = true
+    };
+
+    public static readonly Option<string> StartTime = new($"--{StartTimeName}")
+    {
+        Description = "The start time in ISO format (e.g., 2023-01-01T00:00:00Z).",
+        Required = false
+    };
+
+    public static readonly Option<string> EndTime = new($"--{EndTimeName}")
+    {
+        Description = "The end time in ISO format (e.g., 2023-01-01T00:00:00Z).",
+        Required = false
+    };
+
+    public static readonly Option<string> Interval = new($"--{IntervalName}")
+    {
+        Description = "The time interval (e.g., PT1H for 1 hour, PT5M for 5 minutes).",
+        Required = false
+    };
+
+    public static readonly Option<string> StateChange = new($"--{StateChangeName}")
+    {
+        Description = "The state change action to perform. Valid values are: start, stop, restart.",
+        Required = true
+    };
+
+    public static readonly Option<bool> SoftRestart = new($"--{SoftRestartName}")
+    {
+        Description = "When state-change is restart, indicates whether to perform a soft restart.",
+        DefaultValueFactory = _ => false,
+        Required = false
+    };
+
+    public static readonly Option<bool> WaitForCompletion = new($"--{WaitForCompletionName}")
+    {
+        Description = "When state-change is restart, indicates whether to synchronously wait for the state change operation to complete before returning.",
+        DefaultValueFactory = _ => false,
         Required = false
     };
 }

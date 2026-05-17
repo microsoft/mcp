@@ -2,39 +2,20 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.FunctionApp.Commands;
 using Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.Mcp.Tools.FunctionApp.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FunctionApp.UnitTests.FunctionApp;
 
-public sealed class FunctionAppGetCommandTests
+public sealed class FunctionAppGetCommandTests : CommandUnitTestsBase<FunctionAppGetCommand, IFunctionAppService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IFunctionAppService _service;
-    private readonly ILogger<FunctionAppGetCommand> _logger;
-    private readonly FunctionAppGetCommand _command;
-
-    public FunctionAppGetCommandTests()
-    {
-        _service = Substitute.For<IFunctionAppService>();
-        _logger = Substitute.For<ILogger<FunctionAppGetCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-    }
-
     [Theory]
     [InlineData("--subscription sub123", true)]
     [InlineData("--subscription sub123 --tenant tenant123", true)]
@@ -49,7 +30,7 @@ public sealed class FunctionAppGetCommandTests
                 new("functionApp1", null, "eastus", "plan1", "Running", "functionapp1.azurewebsites.net", null),
                 new("functionApp2", null, "westus", "plan2", "Stopped", "functionapp2.azurewebsites.net", null)
             };
-            _service.GetFunctionApp(
+            Service.GetFunctionApp(
                 Arg.Any<string>(),
                 Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
                 Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
@@ -59,11 +40,8 @@ public sealed class FunctionAppGetCommandTests
                 .Returns(testFunctionApps);
         }
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -87,7 +65,7 @@ public sealed class FunctionAppGetCommandTests
             new("functionApp1", "rg1", "eastus", "plan1", "Running", "functionapp1.azurewebsites.net", null),
             new("functionApp2", "rg2", "westus", "plan2", "Stopped", "functionapp2.azurewebsites.net", null)
         };
-        _service.GetFunctionApp(
+        Service.GetFunctionApp(
             Arg.Any<string>(),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
@@ -96,18 +74,12 @@ public sealed class FunctionAppGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedFunctionApps);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--subscription sub123");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription sub123");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
         // Verify the mock was called
-        await _service.Received(1).GetFunctionApp(
+        await Service.Received(1).GetFunctionApp(
             Arg.Any<string>(),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
@@ -115,9 +87,7 @@ public sealed class FunctionAppGetCommandTests
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
-        var json = JsonSerializer.Serialize(response.Results);
-
-        var result = JsonSerializer.Deserialize(json, FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedFunctionApps.Count, result.FunctionApps.Count);
@@ -133,7 +103,7 @@ public sealed class FunctionAppGetCommandTests
     public async Task ExecuteAsync_ReturnsEmptyWhenNoFunctionApp()
     {
         // Arrange
-        _service.GetFunctionApp(
+        Service.GetFunctionApp(
             Arg.Any<string>(),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
@@ -142,20 +112,12 @@ public sealed class FunctionAppGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--subscription sub123");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription sub123");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.FunctionApps);
     }
 
@@ -163,20 +125,17 @@ public sealed class FunctionAppGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.GetFunctionApp(
+        Service.GetFunctionApp(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<FunctionAppInfo>?>(new Exception("Test error")));
-
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--subscription sub123");
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -187,10 +146,9 @@ public sealed class FunctionAppGetCommandTests
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("get", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("get", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Theory]
@@ -201,20 +159,17 @@ public sealed class FunctionAppGetCommandTests
     {
         if (shouldSucceed)
         {
-            _service.GetFunctionApp(
+            Service.GetFunctionApp(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns([new FunctionAppInfo("app1", "rg1", "eastus", "plan1", "Running", "app1.azurewebsites.net", null)]);
+                .Returns([new("app1", "rg1", "eastus", "plan1", "Running", "app1.azurewebsites.net", null)]);
         }
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse(args);
-
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     }
@@ -223,7 +178,7 @@ public sealed class FunctionAppGetCommandTests
     public async Task ExecuteAsync_ReturnsFunctionApp()
     {
         var expected = new FunctionAppInfo("app1", "rg1", "eastus", "plan1", "Running", "app1.azurewebsites.net", null);
-        _service.GetFunctionApp(
+        Service.GetFunctionApp(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -232,17 +187,10 @@ public sealed class FunctionAppGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([expected]);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --function-app app1");
+        var response = await ExecuteCommandAsync("--subscription sub123 --resource-group rg1 --function-app app1");
 
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var result = ValidateAndDeserializeResponse(response, FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
 
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
-        Assert.NotNull(result);
         Assert.Equal(expected.Name, result.FunctionApps[0].Name);
         Assert.Equal(expected.ResourceGroupName, result.FunctionApps[0].ResourceGroupName);
     }
@@ -250,7 +198,7 @@ public sealed class FunctionAppGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsEmptyWhenNotFound()
     {
-        _service.GetFunctionApp(
+        Service.GetFunctionApp(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -259,18 +207,9 @@ public sealed class FunctionAppGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns((List<FunctionAppInfo>?)null);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --function-app app1");
+        var response = await ExecuteCommandAsync("--subscription sub123 --resource-group rg1 --function-app app1");
 
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
         Assert.Empty(result.FunctionApps);
     }
 }

@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.LiveTests;
@@ -62,7 +64,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyF
 
         var nodePool = nodePools.EnumerateArray().First();
         Assert.Equal(JsonValueKind.Object, nodePool.ValueKind);
-        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : nodepoolName, nodePool.GetProperty("name").GetString());
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : nodepoolName, nodePool.GetProperty("name").GetString());
 
         if (nodePool.TryGetProperty("mode", out var modeProperty))
         {
@@ -141,13 +143,14 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyF
         var errorDetails = result.Value;
         errorDetails.AssertProperty("message");
         var typeProperty = errorDetails.AssertProperty("type");
-        Assert.Equal("Exception", typeProperty.GetString());
+        Assert.Equal("RequestFailedException", typeProperty.GetString());
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_validate_required_parameters()
     {
-        // Missing cluster
+        // Missing cluster - validation catches it, no results returned
         var r1 = await CallToolAsync(
             "aks_nodepool_get",
             new()
@@ -158,7 +161,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyF
             });
         Assert.False(r1.HasValue);
 
-        // Missing resource-group
+        // Missing resource-group - validation catches it, no results returned
         var r2 = await CallToolAsync(
             "aks_nodepool_get",
             new()
@@ -169,7 +172,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyF
             });
         Assert.False(r2.HasValue);
 
-        // Missing subscription
+        // Missing subscription - falls back to default subscription, returns error for nonexistent resources
         var r3 = await CallToolAsync(
             "aks_nodepool_get",
             new()
@@ -178,7 +181,10 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyF
                 { "cluster", "cluster" },
                 { "nodepool", "np1" }
             });
-        Assert.False(r3.HasValue);
+        Assert.True(r3.HasValue);
+        r3.Value.AssertProperty("message");
+        var r3Type = r3.Value.AssertProperty("type");
+        Assert.Equal("RequestFailedException", r3Type.GetString());
     }
 
     [Fact]
@@ -188,7 +194,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyF
             "aks_nodepool_get",
             new()
             {
-                { "subscription", "invalid-subscription" },
+                { "subscription", "not-a-real-sub" },
                 { "resource-group", "rg" },
                 { "cluster", "cluster" },
                 { "nodepool", "np1" }
@@ -198,10 +204,11 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyF
         var errorDetails = result.Value;
         errorDetails.AssertProperty("message");
         var typeProperty = errorDetails.AssertProperty("type");
-        Assert.Equal("Exception", typeProperty.GetString());
+        Assert.Equal("ArgumentException", typeProperty.GetString());
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_handle_empty_subscription_gracefully()
     {
         var result = await CallToolAsync(
@@ -214,7 +221,10 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyF
                 { "nodepool", "np1" }
             });
 
-        // Should return validation error response with no results
-        Assert.False(result.HasValue);
+        // Empty subscription falls back to default, nonexistent resources return error
+        Assert.True(result.HasValue);
+        result.Value.AssertProperty("message");
+        var typeProperty = result.Value.AssertProperty("type");
+        Assert.Equal("RequestFailedException", typeProperty.GetString());
     }
 }

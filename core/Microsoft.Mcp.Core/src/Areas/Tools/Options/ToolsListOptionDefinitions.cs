@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Areas.Tools.Options;
+namespace Microsoft.Mcp.Core.Areas.Tools.Options;
 
 public static class ToolsListOptionDefinitions
 {

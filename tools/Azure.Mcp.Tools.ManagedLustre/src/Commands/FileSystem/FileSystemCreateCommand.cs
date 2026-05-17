@@ -1,46 +1,37 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
-public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> logger)
-    : BaseManagedLustreCommand<FileSystemCreateOptions>(logger)
-{
-    private const string CommandTitle = "Create Azure Managed Lustre FileSystem";
-
-    private new readonly ILogger<FileSystemCreateCommand> _logger = logger;
-
-    public override string Id => "814acadf-ee84-47f9-ad68-2d65ec7dbb07";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "814acadf-ee84-47f9-ad68-2d65ec7dbb07",
+    Name = "create",
+    Title = "Create Azure Managed Lustre FileSystem",
+    Description = """
         Create an Azure Managed Lustre (AMLFS) file system using the specified network, capacity, maintenance window and availability zone.
         Optionally provides possibility to define Blob Integration, customer managed key encryption and root squash configuration.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class FileSystemCreateCommand(IManagedLustreService service, ILogger<FileSystemCreateCommand> logger)
+    : BaseManagedLustreCommand<FileSystemCreateOptions>(logger)
+{
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IManagedLustreService _service = service;
+    private new readonly ILogger<FileSystemCreateCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {
@@ -98,7 +89,6 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
         return options;
     }
 
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
 
@@ -111,8 +101,7 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
 
             var options = BindOptions(parseResult);
 
-            var svc = context.GetService<IManagedLustreService>();
-            var fs = await svc.CreateFileSystemAsync(
+            var fs = await _service.CreateFileSystemAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.Name!,

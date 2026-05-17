@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
@@ -12,31 +11,22 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
-public sealed class SubnetSizeAskCommand(ILogger<SubnetSizeAskCommand> logger)
+[CommandMetadata(
+    Id = "3d3f6f27-218b-4915-9c1e-243dd53b16da",
+    Name = "ask",
+    Title = "Calculate AMLFS Subnet Size required number of IP Addresses",
+    Description = "Calculates the required subnet size for an Azure Managed Lustre file system given a SKU and size. Use to plan network deployment for AMLFS. Returns the number of required IPs.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<SubnetSizeAskCommand> logger)
     : BaseManagedLustreCommand<SubnetSizeAskOptions>(logger)
 {
-    private const string CommandTitle = "Calculate AMLFS Subnet Size required number of IP Addresses";
 
-    public override string Id => "3d3f6f27-218b-4915-9c1e-243dd53b16da";
-
-    public override string Name => "ask";
-
-    public override string Description =>
-        """
-        Calculates the required subnet size for an Azure Managed Lustre file system given a SKU and size. Use to plan network deployment for AMLFS. Returns the number of required IPs.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IManagedLustreService _service = service;
 
     private static readonly string[] AllowedSkus = [
         "AMLFS-Durable-Premium-40",
@@ -78,8 +68,7 @@ public sealed class SubnetSizeAskCommand(ILogger<SubnetSizeAskCommand> logger)
 
         try
         {
-            var svc = context.GetService<IManagedLustreService>();
-            var result = await svc.GetRequiredAmlFSSubnetsSize(
+            var result = await _service.GetRequiredAmlFSSubnetsSize(
                 options.Subscription!,
                 options.Sku!, options.Size,
                 options.Tenant,
@@ -89,7 +78,7 @@ public sealed class SubnetSizeAskCommand(ILogger<SubnetSizeAskCommand> logger)
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error calculating AMLFS subnet size. Options: {@Options}", options);
+            _logger.LogError(ex, "Error calculating AMLFS subnet size. Subscription: {Subscription}, Sku: {Sku}.", options.Subscription, options.Sku);
             HandleException(context, ex);
         }
         return context.Response;

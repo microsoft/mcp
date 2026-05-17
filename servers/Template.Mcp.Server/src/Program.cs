@@ -3,20 +3,24 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Commands;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Services.Caching;
-using Azure.Mcp.Core.Services.ProcessExecution;
-using Azure.Mcp.Core.Services.Telemetry;
-using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
-using ServiceStartCommand = Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
+using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Core.Services.ProcessExecution;
+using Microsoft.Mcp.Core.Services.Telemetry;
+using Microsoft.Mcp.Core.Services.Time;
 
 internal class Program
 {
@@ -44,7 +48,42 @@ internal class Program
             var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
-            var status = await parseResult.InvokeAsync();
+            var command = parseResult.CommandResult.Command;
+            int status = 0;
+
+            if (command is ExtendedCommand extendedCommand &&
+                (extendedCommand.BaseCommand is ServiceStartCommand || extendedCommand.BaseCommand is PluginTelemetryCommand))
+            {
+                // One of the special commands that need to be handled differently.
+                status = await parseResult.InvokeAsync();
+            }
+            else
+            {
+                // Command wasn't one of the registered ServerSetup commands, so bind up a Host of all the services
+                // to run the command.
+                var builder = Host.CreateApplicationBuilder();
+                builder.Logging.ClearProviders();
+                builder.Logging.AddEventSourceLogger();
+                ConfigureServices(builder.Services);
+                builder.Services.AddAzureMcpServer(new()
+                {
+                    Transport = TransportTypes.StdIo
+                });
+
+                using var host = builder.Build();
+
+                await InitializeServicesAsync(host.Services);
+                await host.StartAsync();
+
+                commandFactory = host.Services.GetRequiredService<ICommandFactory>();
+                rootCommand = commandFactory.RootCommand;
+                parseResult = rootCommand.Parse(args);
+
+                status = await parseResult.InvokeAsync();
+
+                await host.StopAsync();
+                await host.WaitForShutdownAsync();
+            }
 
             if (status == 0)
             {
@@ -69,8 +108,8 @@ internal class Program
     {
         return [
             // Register core areas
-            new Azure.Mcp.Core.Areas.Server.ServerSetup(),
-            new Azure.Mcp.Core.Areas.Tools.ToolsSetup()
+            new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
+            new Microsoft.Mcp.Core.Areas.Tools.ToolsSetup()
             // Register template areas
         ];
     }
@@ -91,7 +130,7 @@ internal class Program
     /// <item>
     /// <see cref="Main"/>'s command picking: The container used to populate instances of
     /// <see cref="IBaseCommand"/> and selected by <see cref="CommandFactory"/>
-    /// baesd on the command line input. This container is a local variable in
+    /// based on the command line input. This container is a local variable in
     /// <see cref="Main"/>, and it is not tied to
     /// <c>Microsoft.Extensions.Hosting.IHostBuilder</c> (stdio) nor any
     /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http).
@@ -117,7 +156,7 @@ internal class Program
     /// on <see cref="ITenantService"/> or <see cref="ICacheService"/>, both of which have
     /// transport-specific implementations. This method can add the stdio-specific
     /// implementation to allow the first container (used for command picking) to work,
-    /// but such transport-specific registrations must be overriden within
+    /// but such transport-specific registrations must be overridden within
     /// <see cref="ServiceStartCommand.ExecuteAsync"/> with the appropriate
     /// transport-specific implementation based on command line arguments.
     /// </para>
@@ -143,15 +182,28 @@ internal class Program
 
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ICacheService.
-        // The http-traport-specific implementations and configurations must be registered
+        // The http-transport-specific implementations and configurations must be registered
         // within ServiceStartCommand.ExecuteAsync().
-        services.AddSingleUserCliCacheService();
+        services.AddSingleUserCliCacheService(disabled: true);
 
         foreach (var area in Areas)
         {
             services.AddSingleton(area);
             area.ConfigureServices(services);
         }
+
+        // Until there are external servers to register, just use an empty registry
+        services.AddSingleton<IRegistryRoot>(new RegistryRoot());
+
+        // Until there are server instructions to provide, just use an empty provider
+        services.AddSingleton<IServerInstructionsProvider>(new NullServerInstructionsProvider());
+
+        // Until there is a consolidated tool list, just use an empty provider
+        services.AddSingleton<IConsolidatedToolDefinitionProvider>(new NullConsolidatedToolDefinitionProvider());
+
+        // Plugin telemetry is not supported in Template - register no-op providers
+        services.AddSingleton<IPluginFileReferenceAllowlistProvider>(new NullPluginFileReferenceAllowlistProvider());
+        services.AddSingleton<IPluginSkillNameAllowlistProvider>(new NullPluginSkillNameAllowlistProvider());
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)

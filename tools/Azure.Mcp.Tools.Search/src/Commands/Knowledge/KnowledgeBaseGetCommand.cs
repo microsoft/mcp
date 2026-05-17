@@ -1,49 +1,39 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Knowledge;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
-public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> logger) : GlobalCommand<KnowledgeBaseGetOptions>()
-{
-    private const string CommandTitle = "Get Azure AI Search Knowledge Base Details";
-    private readonly ILogger<KnowledgeBaseGetCommand> _logger = logger;
-
-    public override string Id => "e0e7c288-8d16-4d11-811d-9236dc86d9a8";
-
-    public override string Name => "get";
-
-    public override string Title => CommandTitle;
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "e0e7c288-8d16-4d11-811d-9236dc86d9a8",
+    Name = "get",
+    Title = "Get Azure AI Search Knowledge Base Details",
+    Description = """
         Gets the details of Azure AI Search knowledge bases. Knowledge bases encapsulate retrieval and reasoning
         capabilities over one or more knowledge sources or indexes. If a specific knowledge base name is not provided,
         the command will return details for all knowledge bases within the specified service.
 
         Required arguments:
         - service
-        """;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeBaseGetOptions>()
+{
+    private readonly ILogger<KnowledgeBaseGetCommand> _logger = logger;
+    private readonly ISearchService _searchService = searchService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -71,8 +61,7 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
 
         try
         {
-            var searchService = context.GetService<ISearchService>();
-            var bases = await searchService.ListKnowledgeBases(options.Service!, options.KnowledgeBase, options.RetryPolicy, cancellationToken);
+            var bases = await _searchService.ListKnowledgeBases(options.Service!, options.KnowledgeBase, options.RetryPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(bases ?? []), SearchJsonContext.Default.KnowledgeBaseGetCommandResult);
         }
         catch (Exception ex)
@@ -84,5 +73,5 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
         return context.Response;
     }
 
-    internal sealed record KnowledgeBaseGetCommandResult([property: JsonPropertyName("knowledgeBases")] List<Models.KnowledgeBaseInfo> KnowledgeBases);
+    internal sealed record KnowledgeBaseGetCommandResult(List<Models.KnowledgeBaseInfo> KnowledgeBases);
 }

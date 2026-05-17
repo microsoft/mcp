@@ -3,7 +3,7 @@
 
 using Azure.ResourceManager;
 
-namespace Azure.Mcp.Core.Services.Azure.Authentication;
+namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
 /// Provides configuration for Azure cloud environments.
@@ -20,4 +20,9 @@ public interface IAzureCloudConfiguration
     /// This determines the management endpoint used for Azure Resource Manager operations.
     /// </summary>
     ArmEnvironment ArmEnvironment { get; }
+
+    /// <summary>
+    /// Gets the type of Azure cloud environment.
+    /// </summary>
+    AzureCloudConfiguration.AzureCloud CloudType { get; }
 }

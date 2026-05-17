@@ -51,28 +51,20 @@ public class KeyVaultSetup : IAreaSetup
         var admin = new CommandGroup("admin", "Key Vault administration operations - Commands for administering a Managed HSM in Azure Key Vault.");
         keyVault.AddSubGroup(admin);
 
-        var keyGet = serviceProvider.GetRequiredService<KeyGetCommand>();
-        keys.AddCommand(keyGet.Name, keyGet);
-        var keyCreate = serviceProvider.GetRequiredService<KeyCreateCommand>();
-        keys.AddCommand(keyCreate.Name, keyCreate);
+        keys.AddCommand<KeyGetCommand>(serviceProvider);
+        keys.AddCommand<KeyCreateCommand>(serviceProvider);
 
-        var secretCreate = serviceProvider.GetRequiredService<SecretCreateCommand>();
-        secret.AddCommand(secretCreate.Name, secretCreate);
-        var secretGet = serviceProvider.GetRequiredService<SecretGetCommand>();
-        secret.AddCommand(secretGet.Name, secretGet);
+        secret.AddCommand<SecretCreateCommand>(serviceProvider);
+        secret.AddCommand<SecretGetCommand>(serviceProvider);
 
-        var certificateGet = serviceProvider.GetRequiredService<CertificateGetCommand>();
-        certificate.AddCommand(certificateGet.Name, certificateGet);
-        var certificateCreate = serviceProvider.GetRequiredService<CertificateCreateCommand>();
-        certificate.AddCommand(certificateCreate.Name, certificateCreate);
-        var certificateImport = serviceProvider.GetRequiredService<CertificateImportCommand>();
-        certificate.AddCommand(certificateImport.Name, certificateImport);
+        certificate.AddCommand<CertificateGetCommand>(serviceProvider);
+        certificate.AddCommand<CertificateCreateCommand>(serviceProvider);
+        certificate.AddCommand<CertificateImportCommand>(serviceProvider);
 
         var settings = new CommandGroup("settings", "Key Vault Managed HSM account settings operations - Commands for managing Key Vault Managed HSM account settings.");
         admin.AddSubGroup(settings);
 
-        var adminSettingsGet = serviceProvider.GetRequiredService<AdminSettingsGetCommand>();
-        settings.AddCommand(adminSettingsGet.Name, adminSettingsGet);
+        settings.AddCommand<AdminSettingsGetCommand>(serviceProvider);
 
         return keyVault;
     }

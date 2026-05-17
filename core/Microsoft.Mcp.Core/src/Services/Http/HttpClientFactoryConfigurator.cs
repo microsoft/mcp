@@ -5,11 +5,11 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 
-namespace Azure.Mcp.Core.Services.Http;
+namespace Microsoft.Mcp.Core.Services.Http;
 
 public static class HttpClientFactoryConfigurator
 {

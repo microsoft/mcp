@@ -19,15 +19,21 @@ public sealed class GroupSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<GroupListCommand>();
+        services.AddSingleton<ResourceListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var group = new CommandGroup(Name, "Resource group operations - Commands for listing and managing Azure resource groups in your subscriptions.", Title);
+        var group = new CommandGroup(Name, "Resource group operations - Commands for listing and managing Azure resource groups and their resources in your subscriptions.", Title);
 
         // Register Group commands
-        var listCommand = serviceProvider.GetRequiredService<GroupListCommand>();
-        group.AddCommand(listCommand.Name, listCommand);
+        group.AddCommand<GroupListCommand>(serviceProvider);
+
+        // Register Resource sub-group
+        var resource = new CommandGroup("resource", "Resource operations - Commands for listing resources within a resource group.");
+        group.AddSubGroup(resource);
+
+        resource.AddCommand<ResourceListCommand>(serviceProvider);
 
         return group;
     }

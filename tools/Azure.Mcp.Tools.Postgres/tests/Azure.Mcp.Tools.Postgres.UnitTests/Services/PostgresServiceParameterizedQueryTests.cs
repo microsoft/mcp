@@ -4,6 +4,7 @@
 using System.Data.Common;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Options;
@@ -29,6 +30,7 @@ public class PostgresServiceParameterizedQueryTests
     public PostgresServiceParameterizedQueryTests()
     {
         _resourceGroupService = Substitute.For<IResourceGroupService>();
+        var subscriptionService = Substitute.For<ISubscriptionService>();
         var tenantService = Substitute.For<ITenantService>();
 
         _entraTokenAuth = Substitute.For<IEntraTokenProvider>();
@@ -43,7 +45,7 @@ public class PostgresServiceParameterizedQueryTests
         _dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>(), Arg.Any<CancellationToken>())
             .Returns(Substitute.For<DbDataReader>());
 
-        _postgresService = new PostgresService(_resourceGroupService, tenantService, _entraTokenAuth, _dbProvider);
+        _postgresService = new PostgresService(_resourceGroupService, subscriptionService, tenantService, _entraTokenAuth, _dbProvider);
     }
 
     [Theory]

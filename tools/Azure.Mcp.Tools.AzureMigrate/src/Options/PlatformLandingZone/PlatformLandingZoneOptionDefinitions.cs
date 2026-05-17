@@ -94,6 +94,11 @@ public static class PlatformLandingZoneOptionDefinitions
     public const string MigrateProjectResourceIdName = "migrate-project-resource-id";
 
     /// <summary>
+    /// The location option name.
+    /// </summary>
+    public const string LocationName = "location";
+
+    /// <summary>
     /// The scenario key for platform landing zone modification.
     /// </summary>
     public static readonly Option<string> Scenario = new(
@@ -277,6 +282,17 @@ public static class PlatformLandingZoneOptionDefinitions
     )
     {
         Description = "The full resource ID of the Azure Migrate project for Platform Landing Zone (alternative to subscription/resourceGroup/migrateProjectName).",
+        Required = false
+    };
+
+    /// <summary>
+    /// The Azure region location for resource creation.
+    /// </summary>
+    public static readonly Option<string> Location = new(
+        $"--{LocationName}"
+    )
+    {
+        Description = "The Azure region location for creating new resources (e.g., 'eastus', 'westus2'). Required for 'createmigrateproject' action.",
         Required = false
     };
 }

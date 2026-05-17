@@ -24,6 +24,7 @@ public sealed class PlatformLandingZoneService(
     ILogger<PlatformLandingZoneService> logger)
     : BaseAzureResourceService(subscriptionService, tenantService), IPlatformLandingZoneService
 {
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private static readonly ConcurrentDictionary<string, PlatformLandingZoneParameters> ParameterCache = new();
 
     /// <inheritdoc/>
@@ -70,9 +71,23 @@ public sealed class PlatformLandingZoneService(
         try
         {
             var response = await httpHelper.GetAsync(url, cancellationToken);
-            return !string.IsNullOrEmpty(response);
+
+            if (string.IsNullOrEmpty(response))
+                return false;
+
+            using var doc = JsonDocument.Parse(response);
+            if (doc.RootElement.TryGetProperty("exists", out var existsProperty))
+            {
+                return existsProperty.GetBoolean();
+            }
+
+            return false;
         }
         catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return false;
+        }
+        catch (JsonException)
         {
             return false;
         }
@@ -154,8 +169,8 @@ public sealed class PlatformLandingZoneService(
     /// <inheritdoc/>
     public List<string> GetMissingParameters(PlatformLandingZoneContext context) => [];
 
-    private static string BuildUrl(PlatformLandingZoneContext ctx, string action) =>
-        $"{PlatformLandingZoneConstants.ArmBaseUrl}/subscriptions/{ctx.SubscriptionId}/resourceGroups/{ctx.ResourceGroupName}/providers/Microsoft.Migrate/MigrateProjects/{ctx.MigrateProjectName}/{action}?api-version={PlatformLandingZoneConstants.ApiVersion}";
+    private string BuildUrl(PlatformLandingZoneContext ctx, string action) =>
+        $"{_tenantService.CloudConfiguration.ArmEnvironment.Endpoint}subscriptions/{ctx.SubscriptionId}/resourceGroups/{ctx.ResourceGroupName}/providers/Microsoft.Migrate/MigrateProjects/{ctx.MigrateProjectName}/{action}?api-version={PlatformLandingZoneConstants.ApiVersion}";
 
     private static string GetCacheKey(PlatformLandingZoneContext ctx) =>
         $"{ctx.SubscriptionId}:{ctx.ResourceGroupName}:{ctx.MigrateProjectName}";

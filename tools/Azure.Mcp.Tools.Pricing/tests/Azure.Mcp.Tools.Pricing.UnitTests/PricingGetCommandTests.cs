@@ -2,45 +2,26 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Pricing.Commands;
 using Azure.Mcp.Tools.Pricing.Models;
 using Azure.Mcp.Tools.Pricing.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Pricing.UnitTests;
 
-public sealed class PricingGetCommandTests
+public sealed class PricingGetCommandTests : CommandUnitTestsBase<PricingGetCommand, IPricingService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IPricingService _pricingService;
-    private readonly ILogger<PricingGetCommand> _logger;
-
-    public PricingGetCommandTests()
-    {
-        _pricingService = Substitute.For<IPricingService>();
-        _logger = Substitute.For<ILogger<PricingGetCommand>>();
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_pricingService);
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        // Arrange & Act
-        var command = new PricingGetCommand(_logger);
-
-        // Assert
-        Assert.Equal("get", command.Name);
-        Assert.Equal("Get Azure Retail Pricing", command.Title);
-        Assert.Contains("Azure retail pricing", command.Description);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.ReadOnly);
+        Assert.Equal("get", Command.Name);
+        Assert.Equal("Get Azure Retail Pricing", Command.Title);
+        Assert.Contains("Azure retail pricing", Command.Description);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.ReadOnly);
     }
 
     [Theory]
@@ -74,7 +55,7 @@ public sealed class PricingGetCommandTests
             }
         };
 
-        _pricingService.GetPricesAsync(
+        Service.GetPricesAsync(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -86,19 +67,11 @@ public sealed class PricingGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedPrices);
 
-        var command = new PricingGetCommand(_logger);
-        var args = command.GetCommand().Parse(cliArgs);
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(cliArgs);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, PricingJsonContext.Default.PricingGetCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, PricingJsonContext.Default.PricingGetCommandResult);
         Assert.NotNull(result.Prices);
         Assert.Single(result.Prices);
         Assert.Equal("Standard_D4s_v5", result.Prices[0].ArmSkuName);
@@ -108,13 +81,8 @@ public sealed class PricingGetCommandTests
     [Fact]
     public async Task ExecuteAsync_WithNoFilters_ReturnsBadRequest()
     {
-        // Arrange
-        var command = new PricingGetCommand(_logger);
-        var args = command.GetCommand().Parse(""); // No arguments
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync("");
 
         // Assert
         Assert.NotNull(response);
@@ -126,7 +94,7 @@ public sealed class PricingGetCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoResults()
     {
         // Arrange
-        _pricingService.GetPricesAsync(
+        Service.GetPricesAsync(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -136,21 +104,13 @@ public sealed class PricingGetCommandTests
             Arg.Any<bool>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<PriceItem>());
-
-        var command = new PricingGetCommand(_logger);
-        var args = command.GetCommand().Parse("--sku NonExistentSku");
-        var context = new CommandContext(_serviceProvider);
+            .Returns([]);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--sku", "NonExistentSku");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, PricingJsonContext.Default.PricingGetCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, PricingJsonContext.Default.PricingGetCommandResult);
         Assert.Empty(result.Prices);
     }
 
@@ -159,7 +119,7 @@ public sealed class PricingGetCommandTests
     {
         // Arrange
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
-        _pricingService.GetPricesAsync(
+        Service.GetPricesAsync(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -169,14 +129,10 @@ public sealed class PricingGetCommandTests
             Arg.Any<bool>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<PriceItem>>(new Exception("Test error")));
-
-        var command = new PricingGetCommand(_logger);
-        var args = command.GetCommand().Parse("--sku Standard_D4s_v5");
-        var context = new CommandContext(_serviceProvider);
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--sku", "Standard_D4s_v5");
 
         // Assert
         Assert.NotNull(response);
@@ -188,7 +144,7 @@ public sealed class PricingGetCommandTests
     public async Task ExecuteAsync_WithIncludeSavingsPlan_PassesFlagToService()
     {
         // Arrange
-        _pricingService.GetPricesAsync(
+        Service.GetPricesAsync(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -198,17 +154,13 @@ public sealed class PricingGetCommandTests
             true, // includeSavingsPlan
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<PriceItem>());
-
-        var command = new PricingGetCommand(_logger);
-        var args = command.GetCommand().Parse("--sku Standard_D4s_v5 --include-savings-plan");
-        var context = new CommandContext(_serviceProvider);
+            .Returns([]);
 
         // Act
-        await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync("--sku", "Standard_D4s_v5", "--include-savings-plan");
 
         // Assert
-        await _pricingService.Received(1).GetPricesAsync(
+        await Service.Received(1).GetPricesAsync(
             "Standard_D4s_v5",
             null,
             null,
@@ -224,7 +176,7 @@ public sealed class PricingGetCommandTests
     public async Task ExecuteAsync_WithCurrency_PassesCurrencyToService()
     {
         // Arrange
-        _pricingService.GetPricesAsync(
+        Service.GetPricesAsync(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -234,17 +186,13 @@ public sealed class PricingGetCommandTests
             Arg.Any<bool>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<PriceItem>());
-
-        var command = new PricingGetCommand(_logger);
-        var args = command.GetCommand().Parse("--sku Standard_D4s_v5 --currency EUR");
-        var context = new CommandContext(_serviceProvider);
+            .Returns([]);
 
         // Act
-        await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync("--sku", "Standard_D4s_v5", "--currency", "EUR");
 
         // Assert
-        await _pricingService.Received(1).GetPricesAsync(
+        await Service.Received(1).GetPricesAsync(
             "Standard_D4s_v5",
             null,
             null,
@@ -260,11 +208,10 @@ public sealed class PricingGetCommandTests
     public void BindOptions_BindsAllOptionsCorrectly()
     {
         // Arrange
-        var command = new PricingGetCommand(_logger);
         var cliArgs = "--sku Standard_D4s_v5 --service \"Virtual Machines\" --region eastus " +
                       "--service-family Compute --price-type Consumption --currency EUR " +
                       "--include-savings-plan --filter \"isPrimaryMeterRegion eq true\"";
-        var args = command.GetCommand().Parse(cliArgs);
+        var args = CommandDefinition.Parse(cliArgs);
 
         // Assert - all options should parse without error
         Assert.Empty(args.Errors);

@@ -5,7 +5,7 @@ using System.Text.Json;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Speech.UnitTests.Models;
+namespace Azure.Mcp.Tools.Speech.UnitTests.Models.Realtime;
 
 public class RealtimeRecognitionWordResultTests
 {
@@ -31,7 +31,6 @@ public class RealtimeRecognitionWordResultTests
             Word = "Hello",
             Offset = 1000,
             Duration = 500,
-
         };
 
         // Assert
@@ -50,7 +49,6 @@ public class RealtimeRecognitionWordResultTests
             Word = "Hello",
             Offset = 1000,
             Duration = 500,
-
         };
 
         // Act
@@ -75,7 +73,7 @@ public class RealtimeRecognitionWordResultTests
         """;
 
         // Act
-        var result = JsonSerializer.Deserialize<RealtimeRecognitionWordResult>(json);
+        var result = JsonSerializer.Deserialize(json, SpeechJsonContext.Default.RealtimeRecognitionWordResult);
 
         // Assert
         Assert.NotNull(result);
@@ -98,7 +96,7 @@ public class RealtimeRecognitionWordResultTests
         """;
 
         // Act
-        var result = JsonSerializer.Deserialize<RealtimeRecognitionWordResult>(json);
+        var result = JsonSerializer.Deserialize(json, SpeechJsonContext.Default.RealtimeRecognitionWordResult);
 
         // Assert
         Assert.NotNull(result);

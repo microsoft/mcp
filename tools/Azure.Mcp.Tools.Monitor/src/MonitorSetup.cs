@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
@@ -9,7 +10,11 @@ using Azure.Mcp.Tools.Monitor.Commands.Table;
 using Azure.Mcp.Tools.Monitor.Commands.TableType;
 using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
+using Azure.Mcp.Tools.Monitor.Detectors;
+using Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Pipeline;
 using Azure.Mcp.Tools.Monitor.Services;
+using Azure.Mcp.Tools.Monitor.Tools;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
@@ -29,6 +34,43 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<IResourceResolverService, ResourceResolverService>();
         services.AddSingleton<IMonitorMetricsService, MonitorMetricsService>();
 
+        services.AddSingleton<ILanguageDetector, DotNetLanguageDetector>();
+        services.AddSingleton<ILanguageDetector, NodeJsLanguageDetector>();
+        services.AddSingleton<ILanguageDetector, PythonLanguageDetector>();
+        services.AddSingleton<IAppTypeDetector, DotNetAppTypeDetector>();
+        services.AddSingleton<IAppTypeDetector, NodeJsAppTypeDetector>();
+        services.AddSingleton<IAppTypeDetector, PythonAppTypeDetector>();
+        services.AddSingleton<IInstrumentationDetector, DotNetInstrumentationDetector>();
+        services.AddSingleton<IInstrumentationDetector, NodeJsInstrumentationDetector>();
+        services.AddSingleton<IInstrumentationDetector, PythonInstrumentationDetector>();
+
+        services.AddSingleton<IGenerator, AspNetCoreGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, AspNetCoreBrownfieldGenerator>();
+        services.AddSingleton<IGenerator, AspNetClassicGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, AspNetClassicBrownfieldGenerator>();
+        services.AddSingleton<IGenerator, WorkerServiceGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, WorkerServiceBrownfieldGenerator>();
+        services.AddSingleton<IGenerator, ConsoleBrownfieldGenerator>();
+        services.AddSingleton<IGenerator, DotNetEnhancementGenerator>();
+        services.AddSingleton<IGenerator, ExpressGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, FastifyGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, NestJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, NextJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, LangchainJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, PostgresNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, MongoDBNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, RedisNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, MySQLNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, WinstonNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, BunyanNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, ConsoleNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, PythonGreenfieldGenerator>();
+
+        services.AddSingleton<WorkspaceAnalyzer>();
+        services.AddSingleton<OrchestratorTool>();
+        services.AddSingleton<SendBrownfieldAnalysisTool>();
+        services.AddSingleton<SendEnhancementSelectTool>();
+
         services.AddSingleton<WorkspaceLogQueryCommand>();
         services.AddSingleton<ResourceLogQueryCommand>();
 
@@ -46,12 +88,27 @@ public class MonitorSetup : IAreaSetup
 
         services.AddSingleton<WebTestsGetCommand>();
         services.AddSingleton<WebTestsCreateOrUpdateCommand>();
+
+        services.AddSingleton<GetLearningResourceCommand>();
+        services.AddSingleton<OrchestratorStartCommand>();
+        services.AddSingleton<OrchestratorNextCommand>();
+        services.AddSingleton<SendBrownfieldAnalysisCommand>();
+        services.AddSingleton<SendEnhancementSelectCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Monitor command group
-        var monitor = new CommandGroup(Name, "Azure Monitor operations - Commands for querying and analyzing Azure Monitor logs and metrics.", Title);
+        var monitor = new CommandGroup(Name,
+            """
+            Monitor operations - Commands for managing Azure Monitor workspaces, querying and analyzing logs and metrics, listing
+            tables and table types, working with health models and entities, web tests, and orchestrating instrumentation
+            workflows. Use this tool to list Log Analytics workspaces, tables, and table types; run KQL queries against workspace
+            and resource logs; retrieve health for monitor entities; query metrics and metric definitions; inspect resource activity
+            logs; manage availability web tests; and guide instrumentation onboarding and enhancement flows. Covers Azure Monitor
+            observability workflows. Set learn=true to discover sub-commands.
+            """,
+            Title);
 
         // Create Monitor subgroups
         var workspaces = new CommandGroup("workspace", "Log Analytics workspace operations - Commands for managing Log Analytics workspaces.");
@@ -73,19 +130,15 @@ public class MonitorSetup : IAreaSetup
         resources.AddSubGroup(resourceLogs);
 
         // Register Monitor commands
+        workspaceLogs.AddCommand<WorkspaceLogQueryCommand>(serviceProvider);
 
-        var workspaceLogQuery = serviceProvider.GetRequiredService<WorkspaceLogQueryCommand>();
-        workspaceLogs.AddCommand(workspaceLogQuery.Name, workspaceLogQuery);
-        var resourceLogQuery = serviceProvider.GetRequiredService<ResourceLogQueryCommand>();
-        resourceLogs.AddCommand(resourceLogQuery.Name, resourceLogQuery);
+        resourceLogs.AddCommand<ResourceLogQueryCommand>(serviceProvider);
 
-        var workspaceList = serviceProvider.GetRequiredService<WorkspaceListCommand>();
-        workspaces.AddCommand(workspaceList.Name, workspaceList);
-        var tableList = serviceProvider.GetRequiredService<TableListCommand>();
-        monitorTable.AddCommand(tableList.Name, tableList);
+        workspaces.AddCommand<WorkspaceListCommand>(serviceProvider);
 
-        var tableTypeList = serviceProvider.GetRequiredService<TableTypeListCommand>();
-        monitorTableType.AddCommand(tableTypeList.Name, tableTypeList);
+        monitorTable.AddCommand<TableListCommand>(serviceProvider);
+
+        monitorTableType.AddCommand<TableTypeListCommand>(serviceProvider);
 
         var health = new CommandGroup("healthmodels", "Azure Monitor Health Models operations - Commands for working with Azure Monitor Health Models.");
         monitor.AddSubGroup(health);
@@ -93,32 +146,35 @@ public class MonitorSetup : IAreaSetup
         var entity = new CommandGroup("entity", "Entity operations - Commands for working with entities in Azure Monitor Health Models.");
         health.AddSubGroup(entity);
 
-        var entityGetHealth = serviceProvider.GetRequiredService<EntityGetHealthCommand>();
-        entity.AddCommand(entityGetHealth.Name, entityGetHealth);
+        entity.AddCommand<EntityGetHealthCommand>(serviceProvider);
 
         // Create Metrics command group and register commands
         var metrics = new CommandGroup("metrics", "Azure Monitor metrics operations - Commands for querying and analyzing Azure Monitor metrics.");
         monitor.AddSubGroup(metrics);
 
-        var metricsQuery = serviceProvider.GetRequiredService<MetricsQueryCommand>();
-        metrics.AddCommand(metricsQuery.Name, metricsQuery);
-        var metricsDefinitions = serviceProvider.GetRequiredService<MetricsDefinitionsCommand>();
-        metrics.AddCommand(metricsDefinitions.Name, metricsDefinitions);
+        metrics.AddCommand<MetricsQueryCommand>(serviceProvider);
+        metrics.AddCommand<MetricsDefinitionsCommand>(serviceProvider);
 
         var activityLog = new CommandGroup("activitylog", "Azure Monitor activity log operations - Commands for querying and analyzing activity logs for Azure resources.");
         monitor.AddSubGroup(activityLog);
 
-        var activityLogList = serviceProvider.GetRequiredService<ActivityLogListCommand>();
-        activityLog.AddCommand(activityLogList.Name, activityLogList);
+        activityLog.AddCommand<ActivityLogListCommand>(serviceProvider);
 
         // Register Monitor.WebTest sub-group commands
         var webTests = new CommandGroup("webtests", "Azure Monitor Web Test operations - Commands for working with Azure Availability/Web Tests.");
         monitor.AddSubGroup(webTests);
 
-        var webTestGet = serviceProvider.GetRequiredService<WebTestsGetCommand>();
-        webTests.AddCommand(webTestGet.Name, webTestGet);
-        var webTestCreateOrUpdate = serviceProvider.GetRequiredService<WebTestsCreateOrUpdateCommand>();
-        webTests.AddCommand(webTestCreateOrUpdate.Name, webTestCreateOrUpdate);
+        webTests.AddCommand<WebTestsGetCommand>(serviceProvider);
+        webTests.AddCommand<WebTestsCreateOrUpdateCommand>(serviceProvider);
+
+        var instrumentation = new CommandGroup("instrumentation", "Azure Monitor instrumentation operations - Commands for orchestrated onboarding and migration steps.");
+        monitor.AddSubGroup(instrumentation);
+
+        instrumentation.AddCommand<GetLearningResourceCommand>(serviceProvider);
+        instrumentation.AddCommand<OrchestratorStartCommand>(serviceProvider);
+        instrumentation.AddCommand<OrchestratorNextCommand>(serviceProvider);
+        instrumentation.AddCommand<SendBrownfieldAnalysisCommand>(serviceProvider);
+        instrumentation.AddCommand<SendEnhancementSelectCommand>(serviceProvider);
 
         return monitor;
     }

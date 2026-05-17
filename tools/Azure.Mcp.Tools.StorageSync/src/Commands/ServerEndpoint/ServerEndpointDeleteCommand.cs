@@ -2,41 +2,31 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
 
+[CommandMetadata(
+    Id = "ef6c2aa9-bb64-4f94-b18b-018e04b504c9",
+    Name = "delete",
+    Title = "Delete Server Endpoint",
+    Description = "Delete a server endpoint from a sync group.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServerEndpointDeleteCommand(ILogger<ServerEndpointDeleteCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<ServerEndpointDeleteOptions>
 {
-    private const string CommandTitle = "Delete Server Endpoint";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<ServerEndpointDeleteCommand> _logger = logger;
-
-    public override string Id => "ef6c2aa9-bb64-4f94-b18b-018e04b504c9";
-
-    public override string Name => "delete";
-
-    public override string Description => "Delete a server endpoint from a sync group.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -82,8 +72,7 @@ public sealed class ServerEndpointDeleteCommand(ILogger<ServerEndpointDeleteComm
                 cancellationToken);
 
             context.Response.Message = "Server endpoint deleted successfully";
-            var results = new ServerEndpointDeleteCommandResult("Server endpoint deleted successfully");
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.ServerEndpointDeleteCommandResult);
+            context.Response.Results = ResponseResult.Create(new("Server endpoint deleted successfully"), StorageSyncJsonContext.Default.ServerEndpointDeleteCommandResult);
         }
         catch (Exception ex)
         {

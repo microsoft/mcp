@@ -93,4 +93,10 @@ public class RequestOptions : BaseAzureMigrateOptions
     /// </summary>
     [JsonPropertyName("migrateProjectResourceId")]
     public string? MigrateProjectResourceId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the Azure region location for resource creation.
+    /// </summary>
+    [JsonPropertyName("location")]
+    public string? Location { get; set; }
 }

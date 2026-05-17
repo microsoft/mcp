@@ -1,0 +1,2129 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Environment REST APIs",
+    "version": "v1"
+  },
+  "schemes": [
+    "https"
+  ],
+  "host": "api.fabric.microsoft.com",
+  "basePath": "/v1",
+  "paths": {
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/sparkcompute?beta=true": {
+      "get": {
+        "tags": [
+          "Staging"
+        ],
+        "summary": "Get environment staging spark compute.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **April 30, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/get-spark-compute). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `beta` is still supported and behaves the same as `beta`).**\n\n## Deprecation Notice\n\nA new query parameter `beta` has been introduced to facilitate this transition:\n*   The `beta` query parameter currently defaults to `true`.\n*   Set the value of the `beta` query parameter to `false` to use the stable Release version of this API.\n*   Starting April 30, 2026, the default value for `beta` will change to `false`.\n\nTo ensure compatibility, explicitly set the `beta` parameter to your desired value (`true` or `false`).\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `beta` query parameter (**the default value for the `beta` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Response property `sparkProperties`'s type was changed from `object` to the list of `SparkProperty`.\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "Staging_Get_Spark_Compute_(beta)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the beta version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/staging/get-spark-compute).\nStarting April 30, 2026, the default value for `beta` will change to `false`.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-04-30",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **April 30, 2026**."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentSparkComputePreview"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment staging spark compute example": {
+            "$ref": "./examples/GetEnvironmentSparkComputePreview.json"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Staging"
+        ],
+        "summary": "Update environment staging spark compute. If you want to delete a spark property, set its value as null.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **April 30, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/update-spark-compute). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\n## Deprecation Notice\n\nA new query parameter `beta` has been introduced to facilitate this transition:\n*   The `beta` query parameter currently defaults to `true`.\n*   Set the value of the `beta` query parameter to `false` to use the stable Release version of this API.\n*   Starting April 30, 2026, the default value for `beta` will change to `false`.\n\nTo ensure compatibility, explicitly set the `beta` parameter to your desired value (`true` or `false`).\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `beta` query parameter (**the default value for the `beta` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Request and response property `sparkProperties`'s type was changed from `object` to the list of `SparkProperty`.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "Staging_Update_Spark_Compute_(beta)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the beta version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/staging/update-spark-compute).\nStarting April 30, 2026, the default value for `beta` will change to `false`.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-04-30",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **April 30, 2026**."
+            }
+          },
+          {
+            "name": "updateEnvironmentSparkComputeRequest",
+            "in": "body",
+            "description": "Update environment spark compute request payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateEnvironmentSparkComputeRequestPreview"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentSparkComputePreview"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update environment staging spark compute example": {
+            "$ref": "./examples/UpdateEnvironmentSparkComputePreview.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/sparkcompute?beta=true": {
+      "get": {
+        "tags": [
+          "Published"
+        ],
+        "summary": "Get environment spark compute.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **April 30, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/published/get-spark-compute). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\n## Deprecation Notice\n\nA new query parameter `beta` has been introduced to facilitate this transition:\n*   The `beta` query parameter currently defaults to `true`.\n*   Set the value of the `beta` query parameter to `false` to use the stable Release version of this API.\n*   Starting April 30, 2026, the default value for `beta` will change to `false`.\n\nTo ensure compatibility, explicitly set the `beta` parameter to your desired value (`true` or `false`).\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `beta` query parameter (**the default value for the `beta` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Response property `sparkProperties`'s type was changed from `object` to the list of `SparkProperty`.\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "Published_Get_Spark_Compute_(beta)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the beta version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/published/get-spark-compute).\nStarting April 30, 2026, the default value for `beta` will change to `false`.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-04-30",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **April 30, 2026**."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentSparkComputePreview"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment Spark compute example": {
+            "$ref": "./examples/GetEnvironmentSparkComputePreview.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/sparkcompute?beta=false": {
+      "get": {
+        "tags": [
+          "Staging"
+        ],
+        "summary": "Get environment staging spark compute.",
+        "description": "> [!NOTE]\n> This API is a release version of a beta version due to be deprecated on April 30, 2026.\n**When calling this API - callers must set the query parameter `beta` to the value `false`**.\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "Staging_GetSparkCompute",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-04-30",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **April 30, 2026**."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentSparkCompute"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment staging spark compute example": {
+            "$ref": "./examples/GetEnvironmentSparkCompute.json"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Staging"
+        ],
+        "summary": "Update environment staging spark compute. If you want to delete a spark property, set its value as null.",
+        "description": "> [!NOTE]\n> This API is a release version of a beta version due to be deprecated on April 30, 2026.\n**When calling this API - callers must set the query parameter `beta` to the value `false`**\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "Staging_UpdateSparkCompute",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-04-30",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **April 30, 2026**."
+            }
+          },
+          {
+            "name": "updateEnvironmentSparkComputeRequest",
+            "in": "body",
+            "description": "Update environment spark compute request payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateEnvironmentSparkComputeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentSparkCompute"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update environment staging spark compute example": {
+            "$ref": "./examples/UpdateEnvironmentSparkCompute.json"
+          },
+          "Update environment staging spark compute instance pool using pool ID example": {
+            "$ref": "./examples/UpdateEnvironmentSparkComputeInstancePoolWithId.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/sparkcompute?beta=false": {
+      "get": {
+        "tags": [
+          "Published"
+        ],
+        "summary": "Get environment spark compute.",
+        "description": "> [!NOTE]\n> This API is a release version of a beta version due to be deprecated on April 30, 2026.\n**When calling this API - callers must set the query parameter `beta` to the value `false`**\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "Published_GetSparkCompute",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-04-30",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **April 30, 2026**."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentSparkCompute"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment Spark compute example": {
+            "$ref": "./examples/GetEnvironmentSparkCompute.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments": {
+      "get": {
+        "summary": "Returns a list of environments from the specified workspace.",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_ListEnvironments",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "recursive",
+            "description": "Lists items in a folder and its nested folders, or just a folder only. True - All items in the folder and its nested folders are listed, False - Only items in the folder are listed. The default value is true.",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "rootFolderId",
+            "description": "This parameter allows users to filter items based on a specific root folder. If not provided, the workspace is used as the root folder.",
+            "type": "string",
+            "format": "uuid",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Environments"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Invalid item type",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List environments in workspace example": {
+            "$ref": "./examples/ListEnvironmentsInWorkspace.json"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates an environment in the specified workspace.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n ## Permissions \n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes\n\n Environment.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create an environment, the workspace must be on a supported Fabric capacity.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_CreateEnvironment",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "createEnvironmentRequest",
+            "description": "Create item request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CreateEnvironmentRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully created",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Environment"
+            }
+          },
+          "202": {
+            "description": "Request accepted, environment provisioning in progress",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Item type is invalid\n\n* ItemDisplayNameAlreadyInUse - Item display name is already used\n\n* CorruptedPayload - The provided payload is corrupted.\n\n* WorkspaceItemsLimitExceeded - Workspace item limit exceeded.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create an environment example": {
+            "$ref": "./examples/CreateEnvironmentWithoutDefinition.json"
+          },
+          "Create an environment with public definition example": {
+            "$ref": "./examples/CreateEnvironment.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}": {
+      "get": {
+        "summary": "Returns properties of the specified environment.",
+        "description": "## Permissions\n\n The caller must have *read* permissions for the environment.\n\n## Required Delegated Scopes\n\nEnvironment.Read.All or Item.Read.All or Environment.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetEnvironment",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "environmentId",
+            "description": "The environment ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully. Returns Environment object.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Environment"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get Environment Item example": {
+            "$ref": "./examples/GetEnvironment.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates the properties of the specified environment.",
+        "description": "## Permissions\n\n The caller must have *read and write* permissions for the environment. \n\n## Required Delegated Scopes\n\n Environment.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateEnvironment",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "environmentId",
+            "description": "The environment ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateEnvironmentRequest",
+            "description": "Update environment request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateEnvironmentRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Environment"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found. \n\n* InvalidRequest - Invalid update request",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a environment example": {
+            "$ref": "./examples/UpdateEnvironment.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes the specified environment.",
+        "description": "## Permissions\n\n The caller must have *write* permissions for the environment. \n\n## Required Delegated Scopes\n\n Environment.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_DeleteEnvironment",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "environmentId",
+            "description": "The environment ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "hardDelete",
+            "description": "Specifies whether to perform a hard delete. When set to `true`, the item is permanently deleted and cannot be recovered. When set to `false` or not specified, the item is soft-deleted if the item type supports it.",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InsufficientWorkspaceRole - User doesn't have sufficient workspace role.\n\n* FeatureNotAvailable - This could be due to the soft deletion feature not being available.\n\n* UnsupportedItemType - This could be due to the soft deletion feature not supported by the requested item type.\n\n* TenantSwitchDisabled - This could be due to the soft deletion feature being disabled by the tenant admin.\n\n* InvalidTargetItemStateForSoftDeletion - The item is in invalid states for soft deletion.\n\n* InvalidParentItemStateForSoftDeletion - The item's parent item is not in Active state.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete an environment example": {
+            "$ref": "./examples/DeleteEnvironment.json"
+          },
+          "Hard delete an environment example": {
+            "$ref": "./examples/HardDeleteEnvironment.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/getDefinition": {
+      "post": {
+        "summary": "Returns the specified environment public definition.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a environment's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the environment. \n\n## Required Delegated Scopes \n\n Environment.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations\n\n This API is blocked for a environment with an encrypted sensitivity label.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetEnvironmentDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "environmentId",
+            "description": "The environment ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "description": "The format of the environment public definition.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentDefinitionResponse"
+            }
+          },
+          "202": {
+            "description": "Request accepted. Retrieving the definition is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a environment definition example": {
+            "$ref": "./examples/GetEnvironmentDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/updateDefinition": {
+      "post": {
+        "summary": "Overrides the definition for the specified environment.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n \nUpdating the environment's definition, does not affect its sensitivity label. \n\n## Permissions\n\n The caller must have *read and write* permissions for the environment. \n## Required Delegated Scopes \n\n Environment.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateEnvironmentDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "environmentId",
+            "description": "The environment ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "updateMetadata",
+            "description": "When set to true and the .platform file is provided as part of the definition, the item's metadata is updated using the metadata in the .platform file",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "in": "body",
+            "name": "updateEnvironmentDefinitionRequest",
+            "description": "Update environment definition request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateEnvironmentDefinitionRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted. Update definition is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item. \n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a environment definition example": {
+            "$ref": "./examples/UpdateEnvironmentDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries?beta=false": {
+      "get": {
+        "summary": "Get a list of libraries staged into environment.",
+        "description": "> [!NOTE]\n> This API is a release version of a beta version due to be deprecated on April 30, 2026.\n**When calling this API - callers must set the query parameter `beta` to the value `false`**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_ListLibraries",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri",
+          "itemName": "libraries"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-04-30",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **April 30, 2026**."
+            }
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "Token to retrieve the next page of results, if available.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Libraries"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any staging libraries.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment staging libraries example": {
+            "$ref": "./examples/GetStagingLibraries.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries": {
+      "post": {
+        "summary": "Upload spark library into environment.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **April 30, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/upload-custom-library).\nThe new version introduces breaking changes and is not backward compatible.**\n\n## Deprecation Notice\n\nIt is recommended to migrate your integration to use the Release version.\n\nThe following incompatible changes were introduced in the Release version:\n*  The request URL structure has changed: the library name to be added is now specified directly in the URL path.\n* The request now supports `application/octet-stream` as `Content-Type` instead of `multipart/form-data`.\n\nThis API allows one file upload at a time. The supported file formats are .jar, .py, .whl, .tar.gz, or environment.yml.\n\n## Limitations\n\nThe maximum request size allowed is 100MB.\n\nNetwork issues may impact the upload size and may result in timeouts.\n\n## Content-Type\n\nThe library file needs to be upload using `Content-Type` as `multipart/form-data`.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_Upload_Custom_Library_(beta)",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a library with a valid format such as .jar, .py, .whl, .tar.gz, or environment.yml.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Upload environment staging libraries example": {
+            "$ref": "./examples/UploadCustomLibraryPreview.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes a library from environment. It supports deleting one file at a time.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **April 30, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/delete-custom-library).\nThe new version introduces breaking changes and is not backward compatible.**\n\n## Deprecation Notice\n\nIt is recommended to migrate your integration to use the Release version.\n\nThe following incompatible changes were introduced in the Release version:\n*  The request URL structure has changed: the library name to be removed is now specified directly in the URL path, rather than as a query parameter in the libraries collection.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "operationId": "Staging_Delete_Custom_Library_(beta)",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "libraryToDelete",
+            "in": "query",
+            "description": "The library file to be deleted. The library name needs to include its extension, for example samplefile.jar.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a library name with a valid format such as .jar, .py, .whl, .tar.gz, or environment.yml.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete environment staging libraries example": {
+            "$ref": "./examples/DeleteCustomLibraryPreview.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries?beta=true": {
+      "get": {
+        "summary": "Get environment staging libraries.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **April 30, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/list-libraries). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\n## Deprecation Notice\n\nA new query parameter `beta` has been introduced to facilitate this transition:\n*   The `beta` query parameter currently defaults to `true`.\n*   Set the value of the `beta` query parameter to `false` to use the stable Release version of this API.\n*   Starting April 30, 2026, the default value for `beta` will change to `false`.\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `beta` query parameter (**the default value for the `beta` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Different response format and schema structure\n*   Enhanced library properties in the response\n*   Updated field names and data types\n*   Improved error handling and messages\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_List_Libraries_(beta)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the beta version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/staging/list-libraries).\nStarting April 30, 2026, the default value for `beta` will change to `false`.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-04-30",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **April 30, 2026**."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/LibrariesPreview"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any staging libraries.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment staging libraries example": {
+            "$ref": "./examples/GetStagingLibrariesPreview.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries/{libraryName}": {
+      "post": {
+        "summary": "Upload spark library into environment.",
+        "description": "This API allows one file upload at a time. The supported file formats are .jar, .py, .whl, and .tar.gz. \n\n## Limitations\n\nThe maximum request size allowed is 100MB.\n\nNetwork issues may impact the upload size and may result in timeouts.\n\n## Content-Type\n\nThe library file needs to be upload using `Content-Type` as `application/octet-stream`.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_UploadCustomLibrary",
+        "consumes": [
+          "application/octet-stream"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "libraryName",
+            "in": "path",
+            "description": "The library name to be uploaded. The library name needs to include its extension, for example `samplefile.jar`.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a library with a valid format such as .jar, .py, .whl, .tar.gz.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Upload environment staging libraries example": {
+            "$ref": "./examples/UploadCustomLibrary.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a custom library from environment. It supports deleting one file at a time. The supported file formats are .jar, .py, .whl, and .tar.gz.",
+        "description": "## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "operationId": "Staging_DeleteCustomLibrary",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "libraryName",
+            "in": "path",
+            "description": "The library name to be deleted. The library name needs to include its extension if it is a custom library, for example `samplefile.jar`.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a name of a valid library.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete environment staging libraries example": {
+            "$ref": "./examples/DeleteCustomLibrary.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries/removeExternalLibrary": {
+      "post": {
+        "summary": "Delete a spark external library from an environment.",
+        "description": "\nThis API allows one library deletion at a time.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_RemoveExternalLibrary",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "removeExternalLibraryRequest",
+            "in": "body",
+            "description": "The external library request payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/RemoveExternalLibrariesRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a valid request",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete an external library from environment example": {
+            "$ref": "./examples/RemoveExternalLibraries.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries/importExternalLibraries": {
+      "post": {
+        "summary": "Upload spark external libraries as an `environment.yml` file into environment. It overrides the list of existing external libraries in environment.",
+        "description": "\nThis API allows file upload at a time. \n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_ImportExternalLibraries",
+        "consumes": [
+          "application/octet-stream"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a valid environment.yml.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Upload environment staging external libraries example": {
+            "$ref": "./examples/ImportExternalLibraries.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries/exportExternalLibraries": {
+      "get": {
+        "summary": "Export a set of external libraries saved in the environment in YML format.",
+        "description": "## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_ExportExternalLibraries",
+        "produces": [
+          "application/octet-stream"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any staging external libraries.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Export staging external libraries in environment.yml example": {
+            "$ref": "./examples/ExportStagingExternalLibraries.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/libraries?beta=false": {
+      "get": {
+        "summary": "Get environment published libraries.",
+        "description": "> [!NOTE]\n> This API is a release version of a beta version due to be deprecated on April 30, 2026.\n**When calling this API - callers must set the query parameter `beta` to the value `false` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`)**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Published"
+        ],
+        "operationId": "Published_ListLibraries",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri",
+          "itemName": "libraries"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "Token to retrieve the next page of results, if available.",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-04-30",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **April 30, 2026**."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Libraries"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any published libraries.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment published libraries example": {
+            "$ref": "./examples/GetPublishedLibraries.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/libraries?beta=true": {
+      "get": {
+        "summary": "Get environment published libraries.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **April 30, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/published/list-libraries). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\n## Deprecation Notice\n\nA new query parameter `beta` has been introduced to facilitate this transition:\n*   The `beta` query parameter currently defaults to `true`.\n*   Set the value of the `beta` query parameter to `false` to use the stable Release version of this API.\n*   Starting April 30, 2026, the default value for `beta` will change to `false`.\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `beta` query parameter (**the default value for the `beta` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Different response format and schema structure\n*   Enhanced library properties in the response\n*   Updated field names and data types\n*   Improved error handling and messages\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Published"
+        ],
+        "operationId": "Published_List_Libraries_(beta)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the beta version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/published/list-libraries).\nStarting April 30, 2026, the default value for `beta` will change to `false`.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-04-30",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **April 30, 2026**."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/LibrariesPreview"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any published libraries.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment published libraries example": {
+            "$ref": "./examples/GetPublishedLibrariesPreview.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/libraries/exportExternalLibraries": {
+      "get": {
+        "summary": "Export a set of external libraries published in the environment in `YML` format.",
+        "description": "## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Published"
+        ],
+        "operationId": "Published_ExportExternalLibraries",
+        "produces": [
+          "application/octet-stream"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any published external libraries.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Export published external libraries in environment.yml example": {
+            "$ref": "./examples/ExportPublishedExternalLibraries.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/publish?beta=false": {
+      "post": {
+        "summary": "Trigger an environment publish operation.",
+        "description": "> [!NOTE]\n> This API is a release version of a beta version due to be deprecated on April 30, 2026.\n**When calling this API - callers must set the query parameter `beta` to the value `false`**\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_PublishEnvironment",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-04-30",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **April 30, 2026**."
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Request accepted, publish operation is in progress. Returns the GA contract when `beta=false` (default after April 30, 2026).",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "description": "The number of seconds to wait before retrying the request.",
+                "type": "integer"
+              }
+            }
+          },
+          "200": {
+            "description": "Publish operation request has been submitted successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentProperties"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidEnvironmentPublish - Environment publish operation for version <*GUID* of the failed publish operation> failed due to error: Code = EnvironmentAnotherOngoingPublishProcess.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Publish environment example": {
+            "$ref": "./examples/PublishEnvironment.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/publish?beta=true": {
+      "post": {
+        "summary": "Trigger an environment publish operation.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This beta API will be deprecated on **April 30, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/items/publish-environment). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\n## Deprecation Notice\n\nA new query parameter `beta` has been introduced to facilitate this transition:\n*   The `beta` query parameter currently defaults to `true`.\n*   Set the value of the `beta` query parameter to `false` to use the stable Release version of this API.\n*   Starting April 30, 2026, the default value for `beta` will change to `false`.\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `beta` query parameter (**the default value for the `beta` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Response is following [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation) pattern and HTTP response code 202 may be returned.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_Publish_Environment_(beta)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the beta version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/items/publish-environment).\nStarting April 30, 2026, the default value for `beta` will change to `false`.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-04-30",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **April 30, 2026**."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Publish operation request has been submitted successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentProperties"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidEnvironmentPublish - Environment publish operation for version <*GUID* of the failed publish operation> failed due to error: Code = EnvironmentAnotherOngoingPublishProcess.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Publish environment example": {
+            "$ref": "./examples/PublishEnvironmentPreview.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/cancelPublish": {
+      "post": {
+        "summary": "Trigger an environment publish cancellation.",
+        "description": "## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_CancelPublishEnvironment",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentProperties"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidEnvironmentCancel - Environment cancel operation for version <*GUID* of the failed publish cancellation> failed due to error: Code = EnvironmentUpsupportedStateForCancel.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Publish environment cancellation example": {
+            "$ref": "./examples/PublishCancellation.json"
+          }
+        }
+      }
+    }
+  },
+  "responses": {},
+  "security": [],
+  "tags": []
+}

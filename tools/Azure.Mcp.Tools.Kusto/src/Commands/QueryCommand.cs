@@ -1,21 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCommand<QueryOptions>()
+[CommandMetadata(
+    Id = "d1e22074-53ce-4eef-8596-0ea134a9e317",
+    Name = "query",
+    Title = "Query Kusto Database",
+    Description = "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class QueryCommand(ILogger<QueryCommand> logger, IKustoService kustoService) : BaseDatabaseCommand<QueryOptions>()
 {
-    private const string CommandTitle = "Query Kusto Database";
     private readonly ILogger<QueryCommand> _logger = logger;
-
-    public override string Id => "d1e22074-53ce-4eef-8596-0ea134a9e317";
+    private readonly IKustoService _kustoService = kustoService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -30,23 +39,6 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
         return options;
     }
 
-    public override string Name => "query";
-
-    public override string Description =>
-        "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -59,11 +51,10 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
         try
         {
             List<JsonElement> results = [];
-            var kusto = context.GetService<IKustoService>();
 
             if (UseClusterUri(options))
             {
-                results = await kusto.QueryItemsAsync(
+                results = await _kustoService.QueryItemsAsync(
                     options.ClusterUri!,
                     options.Database!,
                     options.Query!,
@@ -74,7 +65,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
             }
             else
             {
-                results = await kusto.QueryItemsAsync(
+                results = await _kustoService.QueryItemsAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Database!,

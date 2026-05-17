@@ -1,47 +1,45 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 
-public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
-    : BaseLoadTestingCommand<TestCreateOptions>
-{
-    private const string _commandTitle = "Test Create";
-    private readonly ILogger<TestCreateCommand> _logger = logger;
-
-    public override string Id => "2153384b-02ea-47b3-a069-7f5f9a709d66";
-    public override string Name => "create";
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "2153384b-02ea-47b3-a069-7f5f9a709d66",
+    Name = "create",
+    Title = "Test Create",
+    Description = """
         Creates a new load test plan or configuration for performance testing scenarios. This command creates a basic URL-based load test that can be used to evaluate the performance
         and scalability of web applications and APIs. The test configuration defines target endpoint, load parameters, and test duration. Once we create a test plan, we can use that to trigger test runs to test the endpoints set using the 'azmcp loadtesting testrun create' command.
         This is NOT going to trigger or create any test runs and only will setup your test plan. Also, this is NOT going to create any test resource in azure. 
         It will only create a test in an already existing load test resource.
-        """;
-    public override string Title => _commandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger, ILoadTestingService loadTestingService)
+    : BaseLoadTestingCommand<TestCreateOptions>
+{
+    private readonly ILogger<TestCreateCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(LoadTestingOptionDefinitions.TestResource.AsRequired());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(LoadTestingOptionDefinitions.Test);
         command.Options.Add(LoadTestingOptionDefinitions.Description);
         command.Options.Add(LoadTestingOptionDefinitions.DisplayName);
@@ -75,11 +73,8 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
 
         try
         {
-            // Get the appropriate service from DI
-            var service = context.GetService<ILoadTestingService>();
-
             // Call service operation(s)
-            var results = await service.CreateTestAsync(
+            var results = await _loadTestingService.CreateTestAsync(
                 options.Subscription!,
                 options.TestResourceName!,
                 options.TestId!,

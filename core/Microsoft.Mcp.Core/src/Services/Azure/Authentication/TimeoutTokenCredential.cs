@@ -4,7 +4,7 @@
 using Azure.Core;
 using Azure.Identity;
 
-namespace Azure.Mcp.Core.Services.Azure.Authentication;
+namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 public class TimeoutTokenCredential(TokenCredential innerCredential, TimeSpan timeout) : TokenCredential
 {

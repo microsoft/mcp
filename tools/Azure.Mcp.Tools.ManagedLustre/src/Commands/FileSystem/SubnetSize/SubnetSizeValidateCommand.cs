@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
@@ -12,29 +11,22 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
-public sealed class SubnetSizeValidateCommand(ILogger<SubnetSizeValidateCommand> logger)
+[CommandMetadata(
+    Id = "b6317bba-e28c-445b-9133-9cfbfe677698",
+    Name = "validate",
+    Title = "Validate AMLFS subnet against SKU and size",
+    Description = "Validates that the provided subnet can host an Azure Managed Lustre filesystem for the given SKU and size.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class SubnetSizeValidateCommand(IManagedLustreService service, ILogger<SubnetSizeValidateCommand> logger)
     : BaseManagedLustreCommand<SubnetSizeValidateOptions>(logger)
 {
-    private const string CommandTitle = "Validate AMLFS subnet against SKU and size";
 
-    public override string Id => "b6317bba-e28c-445b-9133-9cfbfe677698";
-
-    public override string Name => "validate";
-
-    public override string Description =>
-        "Validates that the provided subnet can host an Azure Managed Lustre filesystem for the given SKU and size.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IManagedLustreService _service = service;
 
     private static readonly string[] AllowedSkus = [
         "AMLFS-Durable-Premium-40",
@@ -79,8 +71,7 @@ public sealed class SubnetSizeValidateCommand(ILogger<SubnetSizeValidateCommand>
                 return context.Response;
 
             var options = BindOptions(parseResult);
-            var svc = context.GetService<IManagedLustreService>();
-            var subnetIsValid = await svc.CheckAmlFSSubnetAsync(
+            var subnetIsValid = await _service.CheckAmlFSSubnetAsync(
                                 options.Subscription!,
                                 options.Sku!,
                                 options.Size,
@@ -90,7 +81,7 @@ public sealed class SubnetSizeValidateCommand(ILogger<SubnetSizeValidateCommand>
                                 options.RetryPolicy,
                                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new FileSystemCheckSubnetResult(subnetIsValid), ManagedLustreJsonContext.Default.FileSystemCheckSubnetResult);
+            context.Response.Results = ResponseResult.Create(new(subnetIsValid), ManagedLustreJsonContext.Default.FileSystemCheckSubnetResult);
         }
         catch (Exception ex)
         {

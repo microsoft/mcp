@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Aks.Options;
 using Azure.Mcp.Tools.Aks.Options.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
@@ -10,32 +8,25 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Cluster;
 
-public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseAksCommand<ClusterGetOptions>
+[CommandMetadata(
+    Id = "34e0d3d3-cbc5-4df8-8244-1439b97f3de5",
+    Name = "get",
+    Title = "Get Azure Kubernetes Service (AKS) Cluster Details",
+    Description = "List/enumerate all AKS (Azure Kubernetes Service) clusters in a subscription. Get/retrieve/show the details of a specific cluster if a name is provided.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksService aksService) : BaseAksCommand<ClusterGetOptions>
 {
-    private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
-
-    public override string Id => "34e0d3d3-cbc5-4df8-8244-1439b97f3de5";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "List/enumerate all AKS (Azure Kubernetes Service) clusters in a subscription. Get/retrieve/show the details of a specific cluster if a name is provided.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IAksService _aksService = aksService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -45,13 +36,10 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
         command.Validators.Add(commandResults =>
         {
             var clusterName = commandResults.GetValueOrDefault(AksOptionDefinitions.Cluster);
-            if (!string.IsNullOrEmpty(clusterName))
+            var resourceGroup = commandResults.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+            if (!string.IsNullOrEmpty(clusterName) && string.IsNullOrEmpty(resourceGroup))
             {
-                var resourceGroup = commandResults.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-                if (string.IsNullOrEmpty(resourceGroup))
-                {
-                    commandResults.AddError("When specifying a cluster name, the --resource-group option is required.");
-                }
+                commandResults.AddError("When specifying a cluster name, the --resource-group option is required.");
             }
         });
     }
@@ -59,8 +47,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
     protected override ClusterGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ClusterName = parseResult.GetValueOrDefault<string>(AksOptionDefinitions.Cluster.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.ClusterName = parseResult.GetValueOrDefault(AksOptionDefinitions.Cluster);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
         return options;
     }
 
@@ -75,8 +63,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
 
         try
         {
-            var aksService = context.GetService<IAksService>();
-            var clusters = await aksService.GetClusters(
+            var clusters = await _aksService.GetClusters(
                 options.Subscription!,
                 options.ClusterName,
                 options.ResourceGroup,
@@ -89,8 +76,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting AKS cluster. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ClusterName: {ClusterName}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options.ClusterName, options);
+                "Error getting AKS cluster. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ClusterName: {ClusterName}.",
+                options.Subscription, options.ResourceGroup, options.ClusterName);
             HandleException(context, ex);
         }
 

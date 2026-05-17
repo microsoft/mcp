@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "mcpb.cli": {
+      "version": "0.3.5",
+      "commands": [
+        "mcpb"
+      ]
+    }
+  }
+}

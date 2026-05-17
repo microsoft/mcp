@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ResourceHealth.Options.ServiceHealthEvents;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.Logging;
@@ -14,32 +13,25 @@ namespace Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
 /// <summary>
 /// Lists Azure service health events for a subscription, providing insights into ongoing or past service issues.
 /// </summary>
-public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsListCommand> logger)
+[CommandMetadata(
+    Id = "c3211c73-af20-4d8d-bed2-4f181e0e4c92",
+    Name = "list",
+    Title = "List Service Health Events",
+    Description = "List Azure service health events to track service issues that occurred in recent timeframes (last 30 days, weeks, months). Query subscription for planned maintenance, past or ongoing service incidents, advisories, and security events. Provides detailed information about resource availability state, potential issues, and timestamps. Returns: trackingId, title, summary, eventType, status, startTime, endTime, impactedServices. Access Azure Service Health portal data programmatically.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsListCommand> logger, IResourceHealthService resourceHealthService)
     : BaseResourceHealthCommand<ServiceHealthEventsListOptions>()
 {
-    private const string CommandTitle = "List Service Health Events";
     private readonly ILogger<ServiceHealthEventsListCommand> _logger = logger;
+    private readonly IResourceHealthService _resourceHealthService = resourceHealthService;
 
-    public override string Id => "c3211c73-af20-4d8d-bed2-4f181e0e4c92";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        List Azure service health events to track service issues that occurred in recent timeframes (last 30 days, weeks, months). Query subscription for planned maintenance, past or ongoing service incidents, advisories, and security events. Provides detailed information about resource availability state, potential issues, and timestamps. Returns: trackingId, title, summary, eventType, status, startTime, endTime, impactedServices. Access Azure Service Health portal data programmatically.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private static readonly HashSet<string> validEventTypes = new(StringComparer.OrdinalIgnoreCase) { "ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security" };
+    private static readonly HashSet<string> validStatuses = new(StringComparer.OrdinalIgnoreCase) { "Active", "Resolved" };
 
     protected override void RegisterOptions(Command command)
     {
@@ -57,8 +49,7 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
             // Validate event-type enum values
             if (commandResult.TryGetValue(ResourceHealthOptionDefinitions.EventType, out var eventType) && !string.IsNullOrEmpty(eventType))
             {
-                var validEventTypes = new[] { "ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security" };
-                if (!validEventTypes.Contains(eventType, StringComparer.OrdinalIgnoreCase))
+                if (!validEventTypes.Contains(eventType))
                 {
                     commandResult.AddError($"Invalid event-type '{eventType}'. Valid values are: {string.Join(", ", validEventTypes)}");
                 }
@@ -67,8 +58,7 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
             // Validate status enum values
             if (commandResult.TryGetValue(ResourceHealthOptionDefinitions.Status, out var status) && !string.IsNullOrEmpty(status))
             {
-                var validStatuses = new[] { "Active", "Resolved" };
-                if (!validStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
+                if (!validStatuses.Contains(status))
                 {
                     commandResult.AddError($"Invalid status '{status}'. Valid values are: {string.Join(", ", validStatuses)}");
                 }
@@ -99,10 +89,7 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
 
         try
         {
-            var resourceHealthService = context.GetService<IResourceHealthService>() ??
-                throw new InvalidOperationException("Resource Health service is not available.");
-
-            var events = await resourceHealthService.ListServiceHealthEventsAsync(
+            var events = await _resourceHealthService.ListServiceHealthEventsAsync(
                 options.Subscription!,
                 options.EventType,
                 options.Status,

@@ -1,42 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Quota.Commands;
 using Azure.Mcp.Tools.Quota.Commands.Region;
 using Azure.Mcp.Tools.Quota.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Quota.UnitTests.Commands.Region;
 
-public sealed class AvailabilityListCommandTests
+public sealed class AvailabilityListCommandTests : CommandUnitTestsBase<AvailabilityListCommand, IQuotaService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IQuotaService _quotaService;
-    private readonly ILogger<AvailabilityListCommand> _logger;
-    private readonly AvailabilityListCommand _command;
-    private readonly Command _commandDefinition;
-
-    public AvailabilityListCommandTests()
-    {
-        _quotaService = Substitute.For<IQuotaService>();
-        _logger = Substitute.For<ILogger<AvailabilityListCommand>>();
-
-        var services = new ServiceCollection();
-        services.AddSingleton(_quotaService);
-        _serviceProvider = services.BuildServiceProvider();
-
-        _command = new AvailabilityListCommand(_logger);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public async Task Should_check_azure_regions_success()
     {
@@ -53,35 +30,24 @@ public sealed class AvailabilityListCommandTests
             "centralus"
         };
 
-        _quotaService.GetAvailableRegionsForResourceTypesAsync(
-                Arg.Is<string[]>(array =>
-                    array.Length == 2 &&
-                    array.Contains("Microsoft.Web/sites") &&
-                    array.Contains("Microsoft.Storage/storageAccounts")),
-                subscriptionId,
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
+        Service.GetAvailableRegionsForResourceTypesAsync(
+            Arg.Is<string[]>(array =>
+                array.Length == 2 &&
+                array.Contains("Microsoft.Web/sites") &&
+                array.Contains("Microsoft.Storage/storageAccounts")),
+            subscriptionId,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
-        var args = _commandDefinition.Parse([
-            "--subscription", subscriptionId,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync("--subscription", subscriptionId, "--resource-types", resourceTypes);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results);
-
         // Verify the service was called with the correct parameters
-        await _quotaService.Received(1).GetAvailableRegionsForResourceTypesAsync(
+        await Service.Received(1).GetAvailableRegionsForResourceTypesAsync(
             Arg.Is<string[]>(array =>
                 array.Length == 2 &&
                 array.Contains("Microsoft.Web/sites") &&
@@ -93,10 +59,8 @@ public sealed class AvailabilityListCommandTests
             Arg.Any<CancellationToken>());
 
         // Verify the response structure
-        var json = JsonSerializer.Serialize(result.Results);
-        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.RegionCheckCommandResult);
+        var response = ValidateAndDeserializeResponse(result, QuotaJsonContext.Default.RegionCheckCommandResult);
 
-        Assert.NotNull(response);
         Assert.NotNull(response.AvailableRegions);
         Assert.Equal(5, response.AvailableRegions.Count);
 
@@ -124,36 +88,27 @@ public sealed class AvailabilityListCommandTests
             "northcentralus"
         };
 
-        _quotaService.GetAvailableRegionsForResourceTypesAsync(
-                Arg.Is<string[]>(array =>
-                    array.Length == 1 &&
-                    array.Contains("Microsoft.CognitiveServices/accounts")),
-                subscriptionId,
-                cognitiveServiceModelName,
-                Arg.Any<string?>(),
-                cognitiveServiceDeploymentSkuName,
-                Arg.Any<CancellationToken>())
+        Service.GetAvailableRegionsForResourceTypesAsync(
+            Arg.Is<string[]>(array =>
+                array.Length == 1 &&
+                array.Contains("Microsoft.CognitiveServices/accounts")),
+            subscriptionId,
+            cognitiveServiceModelName,
+            Arg.Any<string?>(),
+            cognitiveServiceDeploymentSkuName,
+            Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var result = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--resource-types", resourceTypes,
             "--cognitive-service-model-name", cognitiveServiceModelName,
-            "--cognitive-service-deployment-sku-name", cognitiveServiceDeploymentSkuName
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--cognitive-service-deployment-sku-name", cognitiveServiceDeploymentSkuName);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results);
-
         // Verify the service was called with the correct parameters
-        await _quotaService.Received(1).GetAvailableRegionsForResourceTypesAsync(
+        await Service.Received(1).GetAvailableRegionsForResourceTypesAsync(
             Arg.Is<string[]>(array =>
                 array.Length == 1 &&
                 array.Contains("Microsoft.CognitiveServices/accounts")),
@@ -164,10 +119,8 @@ public sealed class AvailabilityListCommandTests
             Arg.Any<CancellationToken>());
 
         // Verify the response structure
-        var json = JsonSerializer.Serialize(result.Results);
-        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.RegionCheckCommandResult);
+        var response = ValidateAndDeserializeResponse(result, QuotaJsonContext.Default.RegionCheckCommandResult);
 
-        Assert.NotNull(response);
         Assert.NotNull(response.AvailableRegions);
         Assert.Equal(3, response.AvailableRegions.Count);
 
@@ -184,15 +137,10 @@ public sealed class AvailabilityListCommandTests
         var subscriptionId = "test-subscription-id";
         var resourceTypes = "";
 
-        var args = _commandDefinition.Parse([
-            "--subscription", subscriptionId,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-types", resourceTypes);
 
         // Assert
         Assert.NotNull(result);
@@ -200,7 +148,7 @@ public sealed class AvailabilityListCommandTests
         Assert.Contains("Missing Required options: --resource-types", result.Message);
 
         // Verify the service was not called
-        await _quotaService.DidNotReceive().GetAvailableRegionsForResourceTypesAsync(
+        await Service.DidNotReceive().GetAvailableRegionsForResourceTypesAsync(
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -217,24 +165,19 @@ public sealed class AvailabilityListCommandTests
         var resourceTypes = "Microsoft.Web/sites";
         var expectedException = new Exception("Service error occurred");
 
-        _quotaService.GetAvailableRegionsForResourceTypesAsync(
-                Arg.Any<string[]>(),
-                subscriptionId,
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
+        Service.GetAvailableRegionsForResourceTypesAsync(
+            Arg.Any<string[]>(),
+            subscriptionId,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(expectedException);
 
-        var args = _commandDefinition.Parse([
-            "--subscription", subscriptionId,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-types", resourceTypes);
 
         // Assert
         Assert.NotNull(result);
@@ -251,35 +194,30 @@ public sealed class AvailabilityListCommandTests
 
         var expectedRegions = new List<string> { "eastus", "westus2" };
 
-        _quotaService.GetAvailableRegionsForResourceTypesAsync(
-                Arg.Is<string[]>(array =>
-                    array.Length == 3 &&
-                    array.Contains("Microsoft.Web/sites") &&
-                    array.Contains("Microsoft.Storage/storageAccounts") &&
-                    array.Contains("Microsoft.Compute/virtualMachines")),
-                subscriptionId,
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
+        Service.GetAvailableRegionsForResourceTypesAsync(
+            Arg.Is<string[]>(array =>
+                array.Length == 3 &&
+                array.Contains("Microsoft.Web/sites") &&
+                array.Contains("Microsoft.Storage/storageAccounts") &&
+                array.Contains("Microsoft.Compute/virtualMachines")),
+            subscriptionId,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
-        var args = _commandDefinition.Parse([
-            "--subscription", subscriptionId,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-types", resourceTypes);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
 
         // Verify the service was called with correctly parsed resource types
-        await _quotaService.Received(1).GetAvailableRegionsForResourceTypesAsync(
+        await Service.Received(1).GetAvailableRegionsForResourceTypesAsync(
             Arg.Is<string[]>(array =>
                 array.Length == 3 &&
                 array.Contains("Microsoft.Web/sites") &&
@@ -299,34 +237,23 @@ public sealed class AvailabilityListCommandTests
         var subscriptionId = "test-subscription-id";
         var resourceTypes = "Microsoft.Web/sites";
 
-        _quotaService.GetAvailableRegionsForResourceTypesAsync(
-                Arg.Any<string[]>(),
-                subscriptionId,
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
+        Service.GetAvailableRegionsForResourceTypesAsync(
+            Arg.Any<string[]>(),
+            subscriptionId,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var args = _commandDefinition.Parse([
-            "--subscription", subscriptionId,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-types", resourceTypes);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results); // Should be empty when no regions are found
+        var response = ValidateAndDeserializeResponse(result, QuotaJsonContext.Default.RegionCheckCommandResult);
 
-        var json = JsonSerializer.Serialize(result.Results);
-        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.RegionCheckCommandResult);
-
-        Assert.NotNull(response);
         Assert.Empty(response.AvailableRegions);
     }
 
@@ -342,34 +269,29 @@ public sealed class AvailabilityListCommandTests
 
         var expectedRegions = new List<string> { "eastus" };
 
-        _quotaService.GetAvailableRegionsForResourceTypesAsync(
-                Arg.Any<string[]>(),
-                subscriptionId,
-                cognitiveServiceModelName,
-                cognitiveServiceModelVersion,
-                cognitiveServiceDeploymentSkuName,
-                Arg.Any<CancellationToken>())
+        Service.GetAvailableRegionsForResourceTypesAsync(
+            Arg.Any<string[]>(),
+            subscriptionId,
+            cognitiveServiceModelName,
+            cognitiveServiceModelVersion,
+            cognitiveServiceDeploymentSkuName,
+            Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var result = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--resource-types", resourceTypes,
             "--cognitive-service-model-name", cognitiveServiceModelName,
             "--cognitive-service-model-version", cognitiveServiceModelVersion,
-            "--cognitive-service-deployment-sku-name", cognitiveServiceDeploymentSkuName
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--cognitive-service-deployment-sku-name", cognitiveServiceDeploymentSkuName);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
 
         // Verify the service was called with all cognitive service parameters
-        await _quotaService.Received(1).GetAvailableRegionsForResourceTypesAsync(
+        await Service.Received(1).GetAvailableRegionsForResourceTypesAsync(
             Arg.Is<string[]>(array =>
                 array.Length == 1 &&
                 array.Contains("Microsoft.CognitiveServices/accounts")),
@@ -387,15 +309,10 @@ public sealed class AvailabilityListCommandTests
         var subscriptionId = "test-subscription-id";
         var resourceTypes = "   ";
 
-        var args = _commandDefinition.Parse([
-            "--subscription", subscriptionId,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-types", resourceTypes);
 
         // Assert
         Assert.NotNull(result);
@@ -403,7 +320,7 @@ public sealed class AvailabilityListCommandTests
         Assert.Contains("Missing Required options: --resource-types", result.Message);
 
         // Verify the service was not called
-        await _quotaService.DidNotReceive().GetAvailableRegionsForResourceTypesAsync(
+        await Service.DidNotReceive().GetAvailableRegionsForResourceTypesAsync(
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -421,35 +338,30 @@ public sealed class AvailabilityListCommandTests
 
         var expectedRegions = new List<string> { "eastus", "westus2" };
 
-        _quotaService.GetAvailableRegionsForResourceTypesAsync(
-                Arg.Is<string[]>(array =>
-                    array.Length == 3 &&
-                    array.Contains("microsoft.web/SITES") &&
-                    array.Contains("MICROSOFT.Storage/storageaccounts") &&
-                    array.Contains("Microsoft.COMPUTE/VirtualMachines")),
-                subscriptionId,
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
+        Service.GetAvailableRegionsForResourceTypesAsync(
+            Arg.Is<string[]>(array =>
+                array.Length == 3 &&
+                array.Contains("microsoft.web/SITES") &&
+                array.Contains("MICROSOFT.Storage/storageaccounts") &&
+                array.Contains("Microsoft.COMPUTE/VirtualMachines")),
+            subscriptionId,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
-        var args = _commandDefinition.Parse([
-            "--subscription", subscriptionId,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-types", resourceTypes);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
 
         // Verify the service was called with resource types preserving original casing
-        await _quotaService.Received(1).GetAvailableRegionsForResourceTypesAsync(
+        await Service.Received(1).GetAvailableRegionsForResourceTypesAsync(
             Arg.Is<string[]>(array =>
                 array.Length == 3 &&
                 array.Contains("microsoft.web/SITES") &&
@@ -485,32 +397,23 @@ public sealed class AvailabilityListCommandTests
             "southeastasia"
         };
 
-        _quotaService.GetAvailableRegionsForResourceTypesAsync(
-                Arg.Is<string[]>(array => array.Length == 50),
-                subscriptionId,
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
+        Service.GetAvailableRegionsForResourceTypesAsync(
+            Arg.Is<string[]>(array => array.Length == 50),
+            subscriptionId,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
-        var args = _commandDefinition.Parse([
-            "--subscription", subscriptionId,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-types", resourceTypes);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results);
-
         // Verify the service was called with all 50 resource types
-        await _quotaService.Received(1).GetAvailableRegionsForResourceTypesAsync(
+        await Service.Received(1).GetAvailableRegionsForResourceTypesAsync(
             Arg.Is<string[]>(array => array.Length == 50),
             subscriptionId,
             null,
@@ -519,10 +422,8 @@ public sealed class AvailabilityListCommandTests
             Arg.Any<CancellationToken>());
 
         // Verify the response structure
-        var json = JsonSerializer.Serialize(result.Results);
-        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.RegionCheckCommandResult);
+        var response = ValidateAndDeserializeResponse(result, QuotaJsonContext.Default.RegionCheckCommandResult);
 
-        Assert.NotNull(response);
         Assert.NotNull(response.AvailableRegions);
         Assert.Equal(5, response.AvailableRegions.Count);
 

@@ -24,6 +24,16 @@ public sealed record WorkbookFilters
     public string? SourceId { get; init; }
 
     /// <summary>
+    /// Filter workbooks where display name contains this text (case-insensitive).
+    /// </summary>
+    public string? NameContains { get; init; }
+
+    /// <summary>
+    /// Filter workbooks modified after this date.
+    /// </summary>
+    public DateTimeOffset? ModifiedAfter { get; init; }
+
+    /// <summary>
     /// Creates an empty filter (no filtering applied).
     /// </summary>
     public static WorkbookFilters Empty => new();
@@ -31,5 +41,10 @@ public sealed record WorkbookFilters
     /// <summary>
     /// Checks if any filters are applied.
     /// </summary>
-    public bool HasFilters => !string.IsNullOrEmpty(Kind) || !string.IsNullOrEmpty(Category) || !string.IsNullOrEmpty(SourceId);
+    public bool HasFilters =>
+        !string.IsNullOrEmpty(Kind) ||
+        !string.IsNullOrEmpty(Category) ||
+        !string.IsNullOrEmpty(SourceId) ||
+        !string.IsNullOrEmpty(NameContains) ||
+        ModifiedAfter.HasValue;
 }

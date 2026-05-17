@@ -1,0 +1,12 @@
+﻿Additional. Containerization:
+    - If Dockerfiles exist, list their paths.
+    - If missing: Create dockerfiles for each application/service.
+        - Define a valid base image based on the project's language.
+        - Copy the required files into the container.
+        - Set the working directory.
+        - Install dependencies and build the project.
+        - Expose the listening ports.
+        - Define an entrypoint
+        - Create .dockerignore if required.
+    - Ensure the dockerfiles can be built using 'docker build'. Keep track of each dockerfile created, and its required docker build context path. Agent must create Dockerfile first before deployment!
+    - Output: Docker artifacts

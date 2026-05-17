@@ -4,7 +4,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-namespace Azure.Mcp.Core.Services.Azure.Authentication;
+namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
 /// Provides window handle information for native authentication dialogs.
@@ -26,16 +26,19 @@ public static partial class WindowHandleProvider
             try
             {
                 IntPtr display = XOpenDisplay(":1");
-                Console.WriteLine(display == IntPtr.Zero
+
+                // Do not write to standard output because it is interpreted as a JSON RPC response
+                // from the MCP server. Instead, write to standard error for diagnostics.
+                Console.Error.WriteLine(display == IntPtr.Zero
                     ? "No X display available. Running in headless mode."
                     : "X display is available.");
                 return display;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(ex.ToString());
-                Console.ResetColor();
+                // X11 display detection failed; running in headless mode.
+                // Avoid logging exception details to console to prevent information disclosure.
+                Console.Error.WriteLine($"Failed to detect X display. Running in headless mode. Exception type: {exception.GetType().FullName}");
             }
         }
 

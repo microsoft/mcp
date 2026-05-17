@@ -5,37 +5,28 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.ProcessExecution;
-using Azure.Mcp.Core.Services.Time;
 using Azure.Mcp.Tools.Extension.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.ProcessExecution;
+using Microsoft.Mcp.Core.Services.Time;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Extension.UnitTests;
 
-public sealed class AzqrCommandTests
+public sealed class AzqrCommandTests : CommandUnitTestsBase<AzqrCommand, IExternalProcessService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IExternalProcessService _processService;
     private readonly ISubscriptionService _subscriptionService;
     private readonly IDateTimeProvider _dateTimeProvider;
-    private readonly ILogger<AzqrCommand> _logger;
 
     public AzqrCommandTests()
     {
-        _processService = Substitute.For<IExternalProcessService>();
         _subscriptionService = Substitute.For<ISubscriptionService>();
         _dateTimeProvider = Substitute.For<IDateTimeProvider>();
-        _logger = Substitute.For<ILogger<AzqrCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_processService);
-        collection.AddSingleton(_subscriptionService);
-        collection.AddSingleton(_dateTimeProvider);
-        _serviceProvider = collection.BuildServiceProvider();
+        Services.AddSingleton(_subscriptionService);
+        Services.AddSingleton(_dateTimeProvider);
     }
 
     [Fact]
@@ -45,11 +36,7 @@ public sealed class AzqrCommandTests
         var fixedDateTime = new DateTime(2024, 1, 15, 10, 30, 45, DateTimeKind.Utc);
         _dateTimeProvider.UtcNow.Returns(fixedDateTime);
 
-        var command = new AzqrCommand(_logger);
-
         var mockSubscriptionId = "12345678-1234-1234-1234-123456789012";
-        var args = command.GetCommand().Parse($"--subscription {mockSubscriptionId}");
-        var context = new CommandContext(_serviceProvider);
 
         var expectedOutput = "Scan completed successfully";
         var reportFilePath = Path.Combine(Path.GetTempPath(), $"azqr-report-{mockSubscriptionId}-{fixedDateTime:yyyyMMdd-HHmmss}");
@@ -70,7 +57,7 @@ public sealed class AzqrCommandTests
         var originalAzqrPath = field?.GetValue(null);
         field?.SetValue(null, tempAzqrPath);
 
-        _processService.ExecuteAsync(
+        Service.ExecuteAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<IDictionary<string, string>?>(),
@@ -81,13 +68,13 @@ public sealed class AzqrCommandTests
         try
         {
             // Act
-            var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync("--subscription", mockSubscriptionId);
 
             // Assert
             Assert.NotNull(response);
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.Equal("azqr report generated successfully.", response.Message);
-            await _processService.Received().ExecuteAsync(
+            await Service.Received().ExecuteAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<IDictionary<string, string>?>(),
@@ -115,14 +102,8 @@ public sealed class AzqrCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingSubscriptionArgument()
     {
-        // Arrange
-        var command = new AzqrCommand(_logger);
-
-        var args = command.GetCommand().Parse(""); // No subscription specified
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync("");
 
         // Assert
         Assert.NotNull(response);

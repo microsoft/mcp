@@ -1,22 +1,29 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Concurrent;
 using System.Diagnostics;
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Areas;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
-public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrategy, ILogger<SingleProxyToolLoader> logger) : BaseToolLoader(logger)
+public sealed class SingleProxyToolLoader(
+    IMcpDiscoveryStrategy discoveryStrategy,
+    ILogger<SingleProxyToolLoader> logger,
+    IOptions<ToolLoaderOptions> options) : BaseToolLoader(logger)
 {
     private readonly IMcpDiscoveryStrategy _discoveryStrategy = discoveryStrategy ?? throw new ArgumentNullException(nameof(discoveryStrategy));
     private string? _cachedRootToolsJson;
-    private readonly Dictionary<string, string> _cachedToolListsJson = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, string> _cachedToolListsJson = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, IList<McpClientTool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
+    private readonly IOptions<ToolLoaderOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
 
     private const string ToolCallProxySchema = """
         {
@@ -28,7 +35,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             },
             "parameters": {
               "type": "object",
-              "description": "A key/value pair of parameters names nad values to pass to the tool call command."
+              "description": "A key/value pair of parameters names and values to pass to the tool call command."
             }
           },
           "additionalProperties": false
@@ -84,7 +91,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
                         To execute an action, set the "tool", "command", and convert the users intent into the "parameters" based on the discovered schema.
                         Always use this tool for any Azure or "azd" related operation requiring up-to-date, dynamic, and interactive capabilities.
                         Always include the "intent" parameter to specify the operation you want to perform.
-                    """,
+                        """,
                     Annotations = new ToolAnnotations(),
                     InputSchema = ToolSchema,
                 }
@@ -157,7 +164,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
                         The "tool" and "command" parameters are required when not learning
                         Run again with the "learn" argument to get a list of available tools and their parameters.
                         To learn about a specific tool, use the "tool" argument with the name of the tool.
-                    """
+                        """
                 }
             ]
         };
@@ -206,13 +213,36 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             return cachedJson;
         }
 
-        var clientOptions = CreateClientOptions(request.Server);
-        var client = await _discoveryStrategy.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
-        var listTools = await client.ListToolsAsync(cancellationToken: cancellationToken);
-        var toolsJson = JsonSerializer.Serialize(listTools, ServerJsonContext.Default.IListMcpClientTool);
+        var listTools = await GetToolListAsync(request, tool, cancellationToken);
+        var toolsJson = JsonSerializer.Serialize(listTools.Select(t => t.ProtocolTool), ServerJsonContext.Default.IEnumerableTool);
         _cachedToolListsJson[tool] = toolsJson;
 
         return toolsJson;
+    }
+
+    internal async Task<IList<McpClientTool>> GetAllToolsAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
+    {
+        if (_cachedAllToolLists.TryGetValue(tool, out var cachedList))
+        {
+            return cachedList;
+        }
+
+        var clientOptions = CreateClientOptions(request.Server);
+        var client = await _discoveryStrategy.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
+        var listTools = await client.ListToolsAsync(cancellationToken: cancellationToken);
+        var all = listTools.ToArray();
+
+        _cachedAllToolLists[tool] = all;
+        return all;
+    }
+
+    internal async Task<IList<McpClientTool>> GetToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
+    {
+        var allTools = await GetAllToolsAsync(request, tool, cancellationToken);
+        return allTools
+            .Where(t => !_options.Value.ReadOnly || (t.ProtocolTool.Annotations?.ReadOnlyHint == true))
+            .Where(t => !_options.Value.IsHttpMode || !McpHelper.HasHint(t.ProtocolTool, McpHelper.LocalRequiredHintMetaKey))
+            .ToArray();
     }
 
     private async Task<CallToolResult> RootLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, CancellationToken cancellationToken)
@@ -309,9 +339,52 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             .SetTag(TagName.ToolArea, tool)
             .SetTag(TagName.ToolName, command);
 
+        // Enforce mode restrictions at execution time: look up the actual tool and check its properties.
+        if (_options.Value.ReadOnly || _options.Value.IsHttpMode)
+        {
+            var allTools = await GetAllToolsAsync(request, tool, cancellationToken);
+            var resolvedTool = allTools.FirstOrDefault(t => string.Equals(t.ProtocolTool.Name, command, StringComparison.OrdinalIgnoreCase));
+
+            if (resolvedTool != null)
+            {
+                if (_options.Value.ReadOnly && resolvedTool.ProtocolTool.Annotations?.ReadOnlyHint != true)
+                {
+                    return McpHelper.InjectToolIdMetadata(new CallToolResult
+                    {
+                        Content =
+                        [
+                            new TextContentBlock
+                            {
+                                Text = $"Tool '{tool} {command}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
+                            }
+                        ],
+                        IsError = true,
+                    }, resolvedTool.ProtocolTool.Meta);
+                }
+
+                if (_options.Value.IsHttpMode && McpHelper.HasHint(resolvedTool.ProtocolTool, McpHelper.LocalRequiredHintMetaKey))
+                {
+                    return McpHelper.InjectToolIdMetadata(new CallToolResult
+                    {
+                        Content =
+                        [
+                            new TextContentBlock
+                            {
+                                Text = $"Tool '{tool} {command}' is not available. This server is running in HTTP mode and this tool requires local execution.",
+                            }
+                        ],
+                        IsError = true,
+                    }, resolvedTool.ProtocolTool.Meta);
+                }
+            }
+        }
+
         try
         {
             await NotifyProgressAsync(request, $"Calling {tool} {command}...", cancellationToken);
+
+            // Return without injecting tool metadata since this is a proxy and the actual tool execution happens in another server.
+            // Leave the other server responsible for injecting the correct tool metadata for observability and telemetry purposes.
             return await client.CallToolAsync(command, parameters, cancellationToken: cancellationToken);
         }
         catch (Exception ex)
@@ -492,6 +565,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
     protected override async ValueTask DisposeAsyncCore()
     {
         // Clear caching collections
+        _cachedAllToolLists.Clear();
         _cachedToolListsJson.Clear();
         _cachedRootToolsJson = null;
 

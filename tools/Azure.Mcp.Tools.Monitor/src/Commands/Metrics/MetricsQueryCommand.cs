@@ -16,32 +16,22 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
 /// <summary>
 /// Command for querying Azure Monitor metrics
 /// </summary>
-public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
+[CommandMetadata(
+    Id = "6e86ef31-04e1-4cec-8bda-5292d4bc3ad8",
+    Name = "query",
+    Title = "Query Azure Monitor Metrics",
+    Description = "Query Azure Monitor metrics for a resource. Returns time series data for the specified metrics.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger, IMonitorMetricsService metricsService)
     : BaseMetricsCommand<MetricsQueryOptions>
 {
-    private const string CommandTitle = "Query Azure Monitor Metrics";
     private readonly ILogger<MetricsQueryCommand> _logger = logger;
-
-    public override string Id => "6e86ef31-04e1-4cec-8bda-5292d4bc3ad8";
-
-    public override string Name => "query";
-
-    public override string Description =>
-        $"""
-        Query Azure Monitor metrics for a resource. Returns time series data for the specified metrics.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IMonitorMetricsService _metricsService = metricsService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -100,11 +90,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
         {
             string[] metricNames = [.. options.MetricNames!.Split(',').Select(t => t.Trim())];
 
-            // Get the metrics service from DI
-            var service = context.GetService<IMonitorMetricsService>();
-
-            // Call the metrics service method directly
-            var results = await service.QueryMetricsAsync(
+            var results = await _metricsService.QueryMetricsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.ResourceType,
@@ -167,8 +153,8 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
         catch (Exception ex)
         {            // Log error with all relevant context
             _logger.LogError(ex,
-                "Error querying metrics. ResourceGroup: {ResourceGroup}, ResourceType: {ResourceType}, ResourceName: {ResourceName}, MetricNames: {@MetricNames}, Options: {@Options}",
-                options.ResourceGroup, options.ResourceType, options.ResourceName, options.MetricNames, options);
+                "Error querying metrics. ResourceGroup: {ResourceGroup}, ResourceType: {ResourceType}, ResourceName: {ResourceName}, MetricNames: {@MetricNames}.",
+                options.ResourceGroup, options.ResourceType, options.ResourceName, options.MetricNames);
             HandleException(context, ex);
         }
 

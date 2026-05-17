@@ -12,7 +12,19 @@ public class MySqlServiceQueryValidationTests
     [InlineData("SELECT * FROM users LIMIT 100")]
     [InlineData("SELECT COUNT(*) FROM products LIMIT 1")]
     [InlineData("SELECT COUNT(*) FROM products;")]
-    [InlineData("SELECT COUNT(*) FROM products; -- comment")]
+    [InlineData("SELECT * FROM users WHERE name = 'C#Developer'")]
+    [InlineData("SELECT * FROM tags WHERE value LIKE '%#sale%'")]
+    [InlineData("SELECT * FROM users WHERE name = 'foo--bar'")]
+    [InlineData("SELECT * FROM users WHERE name = 'it\\'s a test -- ok'")]
+    [InlineData("SELECT * FROM users WHERE name = 'back\\\\slash'")]
+    [InlineData("SELECT * FROM user_deletions")]
+    [InlineData("SELECT * FROM datasets")]
+    [InlineData("SELECT * FROM skills")]
+    [InlineData("SELECT * FROM grants")]
+    [InlineData("SELECT * FROM reunion_events")]
+    [InlineData("SELECT preset FROM config")]
+    [InlineData("SELECT * FROM committees")]
+    [InlineData("SELECT VARCHAR(col) FROM t")]
     public void ValidateQuerySafety_WithSafeQueries_ShouldNotThrow(string query)
     {
         // Act & Assert - Should not throw any exception
@@ -84,9 +96,7 @@ public class MySqlServiceQueryValidationTests
     }
 
     [Theory]
-    [InlineData("SELECT * FROM users; DROP TABLE users")]
     [InlineData("SELECT * FROM users; SELECT * FROM products")]
-    [InlineData("SELECT * FROM users; SELECT * FROM products; --comment")]
     [InlineData("SELECT * FROM Logs; union select password from Users")]
     public void ValidateQuerySafety_WithMultipleStatements_ShouldThrowInvalidOperationException(string query)
     {
@@ -109,5 +119,30 @@ public class MySqlServiceQueryValidationTests
             exception.Message.Contains("Character conversion and obfuscation functions") ||
             exception.Message.Contains("dangerous keyword"),
             $"Expected obfuscation or keyword validation error, but got: {exception.Message}");
+    }
+
+    [Theory]
+    [InlineData("SELECT 1 -- line comment")]
+    [InlineData("SELECT 1 /* block comment */")]
+    [InlineData("SELECT 1 /*!50000 UNION SELECT user FROM mysql.user */")]
+    [InlineData("SELECT 1 # hash comment")]
+    public void ValidateQuerySafety_WithComments_ShouldThrowInvalidOperationException(string query)
+    {
+        // Act & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() => MySqlService.ValidateQuerySafety(query));
+
+        Assert.Contains("SQL comments are not allowed for security reasons", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("SELECT 1 UNION SELECT user FROM mysql.user")]
+    [InlineData("SELECT 1 INTERSECT SELECT 2")]
+    [InlineData("SELECT 1 EXCEPT SELECT 2")]
+    public void ValidateQuerySafety_WithSetOperations_ShouldThrowInvalidOperationException(string query)
+    {
+        // Act & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() => MySqlService.ValidateQuerySafety(query));
+
+        Assert.Contains("dangerous keyword", exception.Message);
     }
 }

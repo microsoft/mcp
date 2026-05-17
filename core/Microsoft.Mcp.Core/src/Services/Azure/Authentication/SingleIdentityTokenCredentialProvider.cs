@@ -4,7 +4,7 @@
 using Azure.Core;
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Core.Services.Azure.Authentication;
+namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
 /// Implementation of <see cref="IAzureTokenCredentialProvider"/> that uses and caches

@@ -1,41 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.Snapshot;
 using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
+[CommandMetadata(
+    Id = "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d",
+    Name = "get",
+    Title = "Get File Share Snapshot",
+    Description = "Get details of a specific file share snapshot or list all snapshots. If --snapshot-name is provided, returns a specific snapshot; otherwise, lists all snapshots for the file share.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFileSharesService service)
     : BaseFileSharesCommand<SnapshotGetOptions>(logger, service)
 {
-    private const string CommandTitle = "Get File Share Snapshot";
-
-    public override string Id => "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d";
-    public override string Name => "get";
-    public override string Description => "Get details of a specific file share snapshot or list all snapshots. If --snapshot-name is provided, returns a specific snapshot; otherwise, lists all snapshots for the file share.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -80,8 +69,7 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFile
                     options.RetryPolicy,
                     cancellationToken);
 
-                var singleResult = new SnapshotGetCommandResult([snapshot]);
-                context.Response.Results = ResponseResult.Create(singleResult, FileSharesJsonContext.Default.SnapshotGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new([snapshot]), FileSharesJsonContext.Default.SnapshotGetCommandResult);
 
                 _logger.LogInformation("Successfully retrieved snapshot. SnapshotName: {SnapshotName}", options.SnapshotName);
             }
@@ -99,8 +87,7 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFile
                     options.RetryPolicy,
                     cancellationToken);
 
-                var result = new SnapshotGetCommandResult(snapshots ?? []);
-                context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.SnapshotGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(snapshots ?? []), FileSharesJsonContext.Default.SnapshotGetCommandResult);
 
                 _logger.LogInformation("Successfully listed {Count} snapshots for file share {FileShareName}", snapshots?.Count ?? 0, options.FileShareName);
             }
@@ -114,5 +101,5 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFile
         return context.Response;
     }
 
-    internal record SnapshotGetCommandResult([property: JsonPropertyName("snapshots")] List<FileShareSnapshotInfo> Snapshots);
+    internal record SnapshotGetCommandResult(List<FileShareSnapshotInfo> Snapshots);
 }

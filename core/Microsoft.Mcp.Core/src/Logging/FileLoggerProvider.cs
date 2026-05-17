@@ -5,7 +5,7 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Core.Logging;
+namespace Microsoft.Mcp.Core.Logging;
 
 /// <summary>
 /// A file logger provider that writes logs to a file using a background thread for improved performance.

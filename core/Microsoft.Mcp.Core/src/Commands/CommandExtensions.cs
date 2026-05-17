@@ -3,10 +3,9 @@
 
 using System.Buffers;
 using System.Text;
-using Azure.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Helpers;
 
-namespace Azure.Mcp.Core.Commands;
+namespace Microsoft.Mcp.Core.Commands;
 
 /// <summary>
 /// Extensions for parsing command options from dictionary arguments
@@ -34,6 +33,15 @@ public static class CommandExtensions
             var option = command.Options.FirstOrDefault(o =>
                 string.Equals(NameNormalization.NormalizeOptionName(o.Name), key, StringComparison.OrdinalIgnoreCase)
                 || o.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a), key, StringComparison.OrdinalIgnoreCase)));
+
+            // Fallback: try matching with hyphens removed for camelCase compatibility (e.g., "resourceGroup" matches "resource-group")
+            if (option == null)
+            {
+                var normalizedKey = key.Replace("-", "");
+                option = command.Options.FirstOrDefault(o =>
+                    string.Equals(NameNormalization.NormalizeOptionName(o.Name).Replace("-", ""), normalizedKey, StringComparison.OrdinalIgnoreCase)
+                    || o.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a).Replace("-", ""), normalizedKey, StringComparison.OrdinalIgnoreCase)));
+            }
 
             if (option == null)
             {

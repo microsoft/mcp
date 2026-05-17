@@ -1,21 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableCommand<SampleOptions>
+[CommandMetadata(
+    Id = "41daed5c-bf44-4cdf-9f3c-1df775465e53",
+    Name = "sample",
+    Title = "Sample Kusto Table Data",
+    Description = "Return a sample of rows from a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService kustoService) : BaseTableCommand<SampleOptions>
 {
-    private const string CommandTitle = "Sample Kusto Table Data";
     private readonly ILogger<SampleCommand> _logger = logger;
-
-    public override string Id => "41daed5c-bf44-4cdf-9f3c-1df775465e53";
+    private readonly IKustoService _kustoService = kustoService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -30,23 +39,6 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
         return options;
     }
 
-    public override string Name => "sample";
-
-    public override string Description =>
-        "Return a sample of rows from a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -58,13 +50,15 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
 
         try
         {
-            var kusto = context.GetService<IKustoService>();
             List<JsonElement> results;
-            var query = $"{options.Table} | sample {options.Limit}";
+            // Validate limit is within safe bounds to prevent resource abuse
+            var safeLimit = Math.Clamp(options.Limit ?? 10, 1, 10000);
+
+            var query = $"{KustoService.EscapeKqlIdentifier(options.Table!)} | sample {safeLimit}";
 
             if (UseClusterUri(options))
             {
-                results = await kusto.QueryItemsAsync(
+                results = await _kustoService.QueryItemsAsync(
                     options.ClusterUri!,
                     options.Database!,
                     query,
@@ -75,7 +69,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
             }
             else
             {
-                results = await kusto.QueryItemsAsync(
+                results = await _kustoService.QueryItemsAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Database!,

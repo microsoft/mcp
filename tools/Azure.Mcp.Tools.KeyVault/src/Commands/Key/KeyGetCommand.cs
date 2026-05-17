@@ -2,40 +2,32 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
 
-public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionCommand<KeyGetOptions>
+[CommandMetadata(
+    Id = "c19a45a0-b963-427d-a087-35560a7f4e5b",
+    Name = "get",
+    Title = "Get Key Vault Key",
+    Description = """List all keys in your Key Vault or get a specific key by name. Shows all key names in the vault, or retrieves full key details including type, enabled status, and expiration dates. Use --include-managed to show managed keys.""",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<KeyGetOptions>
 {
-    private const string CommandTitle = "Get Key Vault Key";
     private readonly ILogger<KeyGetCommand> _logger = logger;
-
-    public override string Id => "c19a45a0-b963-427d-a087-35560a7f4e5b";
-
-    public override string Name => "get";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    public override string Description =>
-        """List all keys in your Key Vault or get a specific key by name. Shows all key names in the vault, or retrieves full key details including type, enabled status, and expiration dates. Use --include-managed to show managed keys.""";
+    private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -65,12 +57,10 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
 
         try
         {
-            var keyVaultService = context.GetService<IKeyVaultService>();
-
             if (string.IsNullOrEmpty(options.KeyName))
             {
                 // List all keys
-                var keys = await keyVaultService.ListKeys(
+                var keys = await _keyVaultService.ListKeys(
                     options.VaultName!,
                     options.IncludeManagedKeys,
                     options.Subscription!,
@@ -78,12 +68,12 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new KeyGetCommandResult(Keys: keys ?? [], Key: null), KeyVaultJsonContext.Default.KeyGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(Keys: keys ?? [], Key: null), KeyVaultJsonContext.Default.KeyGetCommandResult);
             }
             else
             {
                 // Get specific key
-                var key = await keyVaultService.GetKey(
+                var key = await _keyVaultService.GetKey(
                     options.VaultName!,
                     options.KeyName,
                     options.Subscription!,
@@ -100,7 +90,7 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
                     key.Properties.CreatedOn,
                     key.Properties.UpdatedOn);
 
-                context.Response.Results = ResponseResult.Create(new KeyGetCommandResult(Keys: null, Key: keyDetails), KeyVaultJsonContext.Default.KeyGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(Keys: null, Key: keyDetails), KeyVaultJsonContext.Default.KeyGetCommandResult);
             }
         }
         catch (Exception ex)

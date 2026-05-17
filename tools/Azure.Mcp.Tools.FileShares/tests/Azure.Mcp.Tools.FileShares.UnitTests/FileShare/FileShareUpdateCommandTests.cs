@@ -1,77 +1,36 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tools.FileShares.Commands.FileShare;
-using Azure.Mcp.Tools.FileShares.Models;
-using Azure.Mcp.Tools.FileShares.Options.FileShare;
-using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
-using NSubstitute;
-using NSubstitute.ExceptionExtensions;
-using Xunit;
+using Microsoft.Mcp.Tests.Client;
 
 namespace Azure.Mcp.Tools.FileShares.UnitTests.FileShare;
 
 /// <summary>
 /// Unit tests for FileShareUpdateCommand.
 /// </summary>
-public class FileShareUpdateCommandTests
+public class FileShareUpdateCommandTests : CommandUnitTestsBase<FileShareUpdateCommand, IFileSharesService>
 {
-    private readonly IFileSharesService _service;
-    private readonly ILogger<FileShareUpdateCommand> _logger;
-    private readonly FileShareUpdateCommand _command;
-    private readonly CommandContext _context;
-    private readonly System.CommandLine.Command _commandDefinition;
-
-    public FileShareUpdateCommandTests()
-    {
-        _service = Substitute.For<IFileSharesService>();
-        _logger = Substitute.For<ILogger<FileShareUpdateCommand>>();
-        _command = new(_logger, _service);
-
-        var collection = new ServiceCollection().AddSingleton(_service);
-        _context = new(collection.BuildServiceProvider());
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.NotNull(command);
-        Assert.Equal("update", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
-    }
-
-    [Fact]
-    public void Name_ReturnsCorrectValue()
-    {
-        Assert.Equal("update", _command.Name);
-    }
-
-    [Fact]
-    public void Title_ReturnsCorrectValue()
-    {
-        Assert.Equal("Update File Share", _command.Title);
+        Assert.Equal("update", Command.Name);
+        Assert.Equal("Update File Share", Command.Title);
+        Assert.Equal("update", CommandDefinition.Name);
     }
 
     [Fact]
     public void BindOptions_BindsNfsEncryptionInTransitCorrectly()
     {
-        var parseResult = _commandDefinition.Parse([
+        var parseResult = CommandDefinition.Parse([
             "--subscription", "test-sub",
             "--resource-group", "test-rg",
             "--name", "test-share",
             "--nfs-encryption-in-transit", "Disabled"
         ]);
 
-        var options = _command.GetType()
+        var options = Command.GetType()
             .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.Invoke(_command, [parseResult]) as FileShareCreateOrUpdateOptions;
+            ?.Invoke(Command, [parseResult]) as FileShareCreateOrUpdateOptions;
 
         Assert.NotNull(options);
         Assert.Equal("Disabled", options!.NfsEncryptionInTransit);
@@ -83,15 +42,15 @@ public class FileShareUpdateCommandTests
     [Fact]
     public void BindOptions_NfsEncryptionInTransitIsNullWhenNotProvided()
     {
-        var parseResult = _commandDefinition.Parse([
+        var parseResult = CommandDefinition.Parse([
             "--subscription", "test-sub",
             "--resource-group", "test-rg",
             "--name", "test-share"
         ]);
 
-        var options = _command.GetType()
+        var options = Command.GetType()
             .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.Invoke(_command, [parseResult]) as FileShareCreateOrUpdateOptions;
+            ?.Invoke(Command, [parseResult]) as FileShareCreateOrUpdateOptions;
 
         Assert.NotNull(options);
         Assert.Null(options!.NfsEncryptionInTransit);
@@ -125,7 +84,7 @@ public class FileShareUpdateCommandTests
                 ProvisionedThroughputMiBPerSec: null,
                 PublicNetworkAccess: null);
 
-            _service.PatchFileShareAsync(
+            Service.PatchFileShareAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -143,8 +102,8 @@ public class FileShareUpdateCommandTests
                 .Returns(expectedShare);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var parseResult = CommandDefinition.Parse(args);
+        var response = await Command.ExecuteAsync(Context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(shouldSucceed ? System.Net.HttpStatusCode.OK : System.Net.HttpStatusCode.BadRequest, response.Status);
     }
@@ -169,7 +128,7 @@ public class FileShareUpdateCommandTests
             ProvisionedThroughputMiBPerSec: null,
             PublicNetworkAccess: null);
 
-        _service.PatchFileShareAsync(
+        Service.PatchFileShareAsync(
             "sub",
             "rg",
             "share1",
@@ -186,7 +145,7 @@ public class FileShareUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedShare);
 
-        var parseResult = _commandDefinition.Parse([
+        var parseResult = CommandDefinition.Parse([
             "--subscription", "sub",
             "--resource-group", "rg",
             "--name", "share1",
@@ -194,10 +153,10 @@ public class FileShareUpdateCommandTests
             "--nfs-encryption-in-transit", "Enabled"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await Command.ExecuteAsync(Context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(System.Net.HttpStatusCode.OK, response.Status);
-        await _service.Received(1).PatchFileShareAsync(
+        await Service.Received(1).PatchFileShareAsync(
             "sub",
             "rg",
             "share1",
@@ -234,7 +193,7 @@ public class FileShareUpdateCommandTests
             ProvisionedThroughputMiBPerSec: null,
             PublicNetworkAccess: null);
 
-        _service.PatchFileShareAsync(
+        Service.PatchFileShareAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -251,13 +210,13 @@ public class FileShareUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedShare);
 
-        var parseResult = _commandDefinition.Parse([
+        var parseResult = CommandDefinition.Parse([
             "--subscription", "sub",
             "--resource-group", "rg",
             "--name", "share1"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await Command.ExecuteAsync(Context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(System.Net.HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -272,7 +231,7 @@ public class FileShareUpdateCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        _service.PatchFileShareAsync(
+        Service.PatchFileShareAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -289,13 +248,13 @@ public class FileShareUpdateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var parseResult = _commandDefinition.Parse([
+        var parseResult = CommandDefinition.Parse([
             "--subscription", "sub",
             "--resource-group", "rg",
             "--name", "share1"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await Command.ExecuteAsync(Context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(System.Net.HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);

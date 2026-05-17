@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
@@ -15,46 +12,38 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
-public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logger)
-    : BaseEventHubsCommand<NamespaceUpdateOptions>
-{
-    private const string CommandTitle = "Create or Update Event Hubs Namespace";
-
-    private readonly ILogger<NamespaceUpdateCommand> _logger = logger;
-
-    public override string Id => "225eb25d-52c5-4c3a-9eb4-066cf2b9da84";
-
-    public override string Name => "update";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "225eb25d-52c5-4c3a-9eb4-066cf2b9da84",
+    Name = "update",
+    Title = "Create or Update Event Hubs Namespace",
+    Description = """
         Create or Update a Namespace. This tool will either create a Namespace resource or 
         update a pre-existing Namespace resource within the specified resource group, depending on 
         whether or not the specified Namespace already exists. This tool may modify existing 
         configurations, and is considered to be destructive. This is a potentially long-running operation.
-        
+
         When updating an existing namespace, you only need to provide the properties you want to change.
         Unspecified properties will retain their existing values. At least one update property must be provided.
-        
+
         Common update scenarios:
         - Scale up/down by changing SKU tier or capacity
         - Enable/disable auto-inflate and set maximum throughput units
         - Enable/disable Kafka support
         - Modify tags for resource management
         - Enable/disable zone redundancy (Premium SKU only)
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logger, IEventHubsService service)
+    : BaseEventHubsCommand<NamespaceUpdateOptions>
+{
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        OpenWorld = false,
-        Destructive = true,    // Modifies existing resources
-        Idempotent = true,     // Same parameters produce same results
-        ReadOnly = false,      // Modifies data
-        Secret = false,        // Returns non-sensitive information
-        LocalRequired = false  // Pure cloud API calls
-    };
+    private readonly IEventHubsService _service = service;
+    private readonly ILogger<NamespaceUpdateCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {
@@ -133,8 +122,6 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
 
         try
         {
-            var eventHubsService = context.GetService<IEventHubsService>();
-
             // Parse tags if provided
             Dictionary<string, string>? tags = null;
             if (!string.IsNullOrEmpty(options.Tags))
@@ -149,7 +136,7 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 }
             }
 
-            var updatedNamespace = await eventHubsService.CreateOrUpdateNamespaceAsync(
+            var updatedNamespace = await _service.CreateOrUpdateNamespaceAsync(
                 options.Namespace!,
                 options.ResourceGroup!,
                 options.Subscription!,
@@ -167,9 +154,8 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new NamespaceUpdateCommandResult(updatedNamespace),
+                new(updatedNamespace),
                 EventHubsJsonContext.Default.NamespaceUpdateCommandResult);
-            context.Response.Status = HttpStatusCode.OK;
         }
         catch (Exception ex)
         {

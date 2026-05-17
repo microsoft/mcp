@@ -29,30 +29,19 @@ internal class CliInstallService(IHttpClientFactory httpClientFactory) : ICliIns
             throw new ArgumentException($"Unsupported OS type {RuntimeInformation.OSDescription}. Supported OS are: windows, macOS, linux");
         }
 
-        string instructionsUrl;
-        if (cliType == Constants.AzureCliType)
+        string instructionsUrl = cliType switch
         {
-            instructionsUrl = $"https://raw.githubusercontent.com/microsoft/GitHub-Copilot-for-Azure/refs/heads/main/docs/cli-install/{osStr}/az.md";
-        }
-        else if (cliType == Constants.AzureDeveloperCliType)
-        {
-            instructionsUrl = $"https://raw.githubusercontent.com/microsoft/GitHub-Copilot-for-Azure/refs/heads/main/docs/cli-install/{osStr}/azd.md";
-        }
-        else if (cliType == Constants.AzureFunctionsCoreToolsCliType)
-        {
-            instructionsUrl = $"https://raw.githubusercontent.com/microsoft/GitHub-Copilot-for-Azure/refs/heads/main/docs/cli-install/{osStr}/func.md";
-        }
-        else
-        {
-            throw new ArgumentException($"Invalid CLI type: {cliType}.");
-        }
+            Constants.AzureCliType => $"https://raw.githubusercontent.com/microsoft/GitHub-Copilot-for-Azure/refs/heads/main/docs/cli-install/{osStr}/az.md",
+            Constants.AzureDeveloperCliType => $"https://raw.githubusercontent.com/microsoft/GitHub-Copilot-for-Azure/refs/heads/main/docs/cli-install/{osStr}/azd.md",
+            Constants.AzureFunctionsCoreToolsCliType => $"https://raw.githubusercontent.com/microsoft/GitHub-Copilot-for-Azure/refs/heads/main/docs/cli-install/{osStr}/func.md",
+            _ => throw new ArgumentException($"Invalid CLI type: {cliType}.")
+        };
 
         using HttpRequestMessage requestMessage = new()
         {
             Method = HttpMethod.Get,
-            RequestUri = new Uri(instructionsUrl)
+            RequestUri = new(instructionsUrl)
         };
-        HttpResponseMessage responseMessage = await _httpClientFactory.CreateClient().SendAsync(requestMessage, cancellationToken);
-        return responseMessage;
+        return await _httpClientFactory.CreateClient().SendAsync(requestMessage, cancellationToken);
     }
 }

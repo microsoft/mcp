@@ -1,32 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Knowledge;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
-public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand> logger) : GlobalCommand<KnowledgeSourceGetOptions>()
-{
-    private const string CommandTitle = "Get Azure AI Search Knowledge Source Details";
-    private readonly ILogger<KnowledgeSourceGetCommand> _logger = logger;
-
-    public override string Id => "efc985cd-5381-4547-8ffb-89ffe992ea41";
-
-    public override string Name => "get";
-
-    public override string Title => CommandTitle;
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "efc985cd-5381-4547-8ffb-89ffe992ea41",
+    Name = "get",
+    Title = "Get Azure AI Search Knowledge Source Details",
+    Description = """
         Gets the details of Azure AI Search knowledge sources. A knowledge source may point directly at an
         existing Azure AI Search index, or may represent external data (e.g. a blob storage container) that has been
         indexed in Azure AI Search internally. These knowledge sources are used by knowledge bases during retrieval.
@@ -35,17 +25,17 @@ public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand>
 
         Required arguments:
         - service
-        """;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeSourceGetOptions>()
+{
+    private readonly ILogger<KnowledgeSourceGetCommand> _logger = logger;
+    private readonly ISearchService _searchService = searchService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -73,8 +63,7 @@ public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand>
 
         try
         {
-            var searchService = context.GetService<ISearchService>();
-            var sources = await searchService.ListKnowledgeSources(options.Service!, options.KnowledgeSource, options.RetryPolicy, cancellationToken);
+            var sources = await _searchService.ListKnowledgeSources(options.Service!, options.KnowledgeSource, options.RetryPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(sources ?? []), SearchJsonContext.Default.KnowledgeSourceGetCommandResult);
         }
         catch (Exception ex)
@@ -86,5 +75,5 @@ public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand>
         return context.Response;
     }
 
-    internal sealed record KnowledgeSourceGetCommandResult([property: JsonPropertyName("knowledgeSources")] List<Models.KnowledgeSourceInfo> KnowledgeSources);
+    internal sealed record KnowledgeSourceGetCommandResult(List<Models.KnowledgeSourceInfo> KnowledgeSources);
 }
