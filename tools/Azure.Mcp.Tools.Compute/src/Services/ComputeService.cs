@@ -2050,13 +2050,16 @@ public class ComputeService(
                     switch (cap.Name)
                     {
                         case "vCPUs":
-                            if (int.TryParse(cap.Value, out var v)) vCpus = v;
+                            if (int.TryParse(cap.Value, out var v))
+                                vCpus = v;
                             break;
                         case "MemoryGB":
-                            if (double.TryParse(cap.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var m)) memoryGb = m;
+                            if (double.TryParse(cap.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var m))
+                                memoryGb = m;
                             break;
                         case "MaxDataDiskCount":
-                            if (int.TryParse(cap.Value, out var d)) maxDataDisks = d;
+                            if (int.TryParse(cap.Value, out var d))
+                                maxDataDisks = d;
                             break;
                         case "AcceleratedNetworkingEnabled":
                             acceleratedNetworking = string.Equals(cap.Value, "True", StringComparison.OrdinalIgnoreCase);
@@ -2065,7 +2068,8 @@ public class ComputeService(
                             premiumIo = string.Equals(cap.Value, "True", StringComparison.OrdinalIgnoreCase);
                             break;
                         case "GPUs":
-                            if (int.TryParse(cap.Value, out var g)) gpus = g;
+                            if (int.TryParse(cap.Value, out var g))
+                                gpus = g;
                             break;
                         case "VMScaleSetsSupported":
                             vmScaleSetsSupported = string.Equals(cap.Value, "True", StringComparison.OrdinalIgnoreCase);
@@ -2074,8 +2078,10 @@ public class ComputeService(
                 }
             }
 
-            if (minVCpus.HasValue && (!vCpus.HasValue || vCpus.Value < minVCpus.Value)) continue;
-            if (minMemoryGb.HasValue && (!memoryGb.HasValue || memoryGb.Value < minMemoryGb.Value)) continue;
+            if (minVCpus.HasValue && (!vCpus.HasValue || vCpus.Value < minVCpus.Value))
+                continue;
+            if (minMemoryGb.HasValue && (!memoryGb.HasValue || memoryGb.Value < minMemoryGb.Value))
+                continue;
 
             var zones = sku.LocationInfo?
                 .SelectMany(li => li.Zones ?? Enumerable.Empty<string>())
@@ -2104,7 +2110,8 @@ public class ComputeService(
                 SpotHourlyUsd: null,
                 VMScaleSetsSupported: vmScaleSetsSupported));
 
-            if (results.Count >= limit) break;
+            if (results.Count >= limit)
+                break;
         }
 
         if (includePricing && results.Count > 0)
@@ -2153,23 +2160,29 @@ public class ComputeService(
 
             var httpClient = _httpClientFactory.CreateClient(RetailPricesClientName);
             using var resp = await httpClient.GetAsync(url, cancellationToken);
-            if (!resp.IsSuccessStatusCode) return (null, null);
+            if (!resp.IsSuccessStatusCode)
+                return (null, null);
 
             var json = await resp.Content.ReadAsStringAsync(cancellationToken);
             using var doc = System.Text.Json.JsonDocument.Parse(json);
-            if (!doc.RootElement.TryGetProperty("Items", out var items)) return (null, null);
+            if (!doc.RootElement.TryGetProperty("Items", out var items))
+                return (null, null);
 
             decimal? pay = null;
             decimal? spot = null;
             foreach (var item in items.EnumerateArray())
             {
-                if (!item.TryGetProperty("retailPrice", out var priceEl)) continue;
-                if (!item.TryGetProperty("productName", out var prodEl)) continue;
-                if (!item.TryGetProperty("skuName", out var skuEl)) continue;
+                if (!item.TryGetProperty("retailPrice", out var priceEl))
+                    continue;
+                if (!item.TryGetProperty("productName", out var prodEl))
+                    continue;
+                if (!item.TryGetProperty("skuName", out var skuEl))
+                    continue;
 
                 var productName = prodEl.GetString() ?? string.Empty;
                 var skuName = skuEl.GetString() ?? string.Empty;
-                if (productName.Contains("Windows", StringComparison.OrdinalIgnoreCase)) continue;
+                if (productName.Contains("Windows", StringComparison.OrdinalIgnoreCase))
+                    continue;
 
                 var price = priceEl.GetDecimal();
                 if (skuName.Contains("Spot", StringComparison.OrdinalIgnoreCase))
@@ -2228,7 +2241,8 @@ public class ComputeService(
             foreach (var kvp in s_imageAliases)
             {
                 results.Add(ToImageInfo(kvp.Key, kvp.Value));
-                if (results.Count >= limit) break;
+                if (results.Count >= limit)
+                    break;
             }
 
             // Optionally append shared-gallery images visible to this subscription.
@@ -2269,7 +2283,8 @@ public class ComputeService(
                     HyperVGeneration: null,
                     Source: "marketplace"));
 
-                if (results.Count >= limit) break;
+                if (results.Count >= limit)
+                    break;
             }
         }
         catch (RequestFailedException ex)
@@ -2307,7 +2322,8 @@ public class ComputeService(
 
             await foreach (var gallery in galleries)
             {
-                if (results.Count >= limit) return;
+                if (results.Count >= limit)
+                    return;
 
                 SharedGalleryImageCollection imageCollection;
                 try
@@ -2322,7 +2338,8 @@ public class ComputeService(
 
                 await foreach (var image in imageCollection.GetAllAsync(null, cancellationToken))
                 {
-                    if (results.Count >= limit) return;
+                    if (results.Count >= limit)
+                        return;
 
                     SharedGalleryImageVersionCollection versionCollection;
                     try
@@ -2348,7 +2365,8 @@ public class ComputeService(
                             HyperVGeneration: image.Data?.HyperVGeneration?.ToString(),
                             Source: "sharedGallery"));
 
-                        if (results.Count >= limit) return;
+                        if (results.Count >= limit)
+                            return;
                     }
                 }
             }
@@ -2602,7 +2620,7 @@ public class ComputeService(
 
             if (preferredFamily is not null)
             {
-                rationaleParts.Add($"hint suggests {preferredFamily}* family — verify SKU availability with compute_vm_sku_list");
+                rationaleParts.Add($"hint suggests {preferredFamily}* family — verify SKU availability with compute_vm_list_skus (or the top-level alias compute_list_skus)");
             }
 
             if (rationaleParts.Count == 0)

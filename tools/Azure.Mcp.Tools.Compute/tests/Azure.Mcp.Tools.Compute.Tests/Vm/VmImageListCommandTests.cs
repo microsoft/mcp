@@ -152,7 +152,7 @@ public class VmImageListCommandTests : CommandUnitTestsBase<VmImageListCommand, 
     [Fact]
     public async Task ExecuteAsync_PassesIncludeSharedGalleryFlag()
     {
-        // Default (flag absent): includeSharedGallery should be false.
+        // Flag present: --include-shared-gallery should flow through to the service as true.
         Service.ListVmImagesAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<bool>(),

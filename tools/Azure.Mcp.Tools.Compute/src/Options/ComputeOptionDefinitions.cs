@@ -475,7 +475,7 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> WorkloadHint = new($"--{WorkloadHintName}")
     {
-        Description = "Free-form workload hint to rank regions (e.g., 'gpu training', 'low latency for europe users', 'general dev/test'). Used by compute_vm_region_recommend.",
+        Description = "Free-form workload hint to rank regions (e.g., 'gpu training', 'low latency for europe users', 'general dev/test'). Used by compute_vm_recommend_region (also reachable as the top-level alias compute_recommend_region).",
         Required = false
     };
 

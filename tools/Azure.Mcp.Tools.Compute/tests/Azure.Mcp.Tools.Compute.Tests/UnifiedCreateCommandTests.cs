@@ -178,7 +178,7 @@ public class UnifiedCreateCommandTests : CommandUnitTestsBase<UnifiedCreateComma
             default, default, default, default, default,
             default, default, default, default, default,
             default, default, default, default, default,
-            default, default);
+            default, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -212,7 +212,7 @@ public class UnifiedCreateCommandTests : CommandUnitTestsBase<UnifiedCreateComma
             default, default, default, default, default,
             default, default, default, default, default,
             default, default, default, default, default,
-            default, default, default, default);
+            default, default, default, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -290,7 +290,7 @@ public class UnifiedCreateCommandTests : CommandUnitTestsBase<UnifiedCreateComma
             default, default, default, default, default,
             default, default, default, default, default,
             default, default, default, default, default,
-            default, default, default, default);
+            default, default, default, TestContext.Current.CancellationToken);
     }
 
     [Fact]
