@@ -1,7 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.FileShares.Commands.FileShare;
+using Azure.Mcp.Tools.FileShares.Models;
+using Azure.Mcp.Tools.FileShares.Options.FileShare;
+using Azure.Mcp.Tools.FileShares.Services;
+using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Azure.Mcp.Tools.FileShares.UnitTests.FileShare;
 

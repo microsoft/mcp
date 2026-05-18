@@ -648,7 +648,7 @@ public sealed class FileSharesService(
             {
                 LiveShares = new()
                 {
-                    FileShareCount = result.LiveSharesFileShareCount ?? 0
+                    FileShareCount = result.LiveSharesFileShareCount
                 }
             };
         }
