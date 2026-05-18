@@ -44,21 +44,20 @@ public class RetryPolicyOptionsTests
     }
 
     [Fact]
-    public void Policies_With_DifferentValues_But_UnsetFlags_AreEqual()
+    public void Policies_With_AllNullValues_AreEqual()
     {
-        // Create two policies differing in values but with no flags set (simulate deserialization or manual construction without flags)
-        var p1 = new RetryPolicyOptions { MaxRetries = 3, Mode = RetryMode.Exponential, DelaySeconds = 1, MaxDelaySeconds = 5, NetworkTimeoutSeconds = 30 };
-        var p2 = new RetryPolicyOptions { MaxRetries = 999, Mode = RetryMode.Fixed, DelaySeconds = 10, MaxDelaySeconds = 50, NetworkTimeoutSeconds = 0 };
-        // Since no Has* flags are set, differences are ignored.
+        // Policies with no values set are equal — both are "use SDK defaults"
+        var p1 = new RetryPolicyOptions();
+        var p2 = new RetryPolicyOptions();
         Assert.True(RetryPolicyOptions.AreEqual(p1, p2));
         Assert.True(p1 == p2);
     }
 
     [Fact]
-    public void Policies_With_Mismatched_Flags_NotEqual()
+    public void Policies_With_SomeValuesSet_VsNone_NotEqual()
     {
-        var pSpecified = GetPolicy(3, RetryMode.Exponential, 1, 5, 30); // flags set
-        var pUnspecified = new RetryPolicyOptions { MaxRetries = 3, Mode = RetryMode.Exponential, DelaySeconds = 1, MaxDelaySeconds = 5, NetworkTimeoutSeconds = 30 }; // flags unset
+        var pSpecified = GetPolicy(3, RetryMode.Exponential, 1, 5, 30);
+        var pUnspecified = new RetryPolicyOptions();
         Assert.False(RetryPolicyOptions.AreEqual(pSpecified, pUnspecified));
         Assert.True(pSpecified != pUnspecified);
     }
@@ -72,11 +71,6 @@ public class RetryPolicyOptionsTests
             DelaySeconds = delay,
             MaxDelaySeconds = maxDelay,
             NetworkTimeoutSeconds = timeout,
-            HasMaxRetries = true,
-            HasMode = true,
-            HasDelaySeconds = true,
-            HasMaxDelaySeconds = true,
-            HasNetworkTimeoutSeconds = true
         };
     }
 }
