@@ -184,39 +184,35 @@
     <Project Path="../../tools/Azure.Mcp.Tools.Deploy/src/Azure.Mcp.Tools.Deploy.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Deploy/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Deploy/tests/Azure.Mcp.Tools.Deploy.LiveTests/Azure.Mcp.Tools.Deploy.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.Deploy/tests/Azure.Mcp.Tools.Deploy.UnitTests/Azure.Mcp.Tools.Deploy.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Deploy/tests/Azure.Mcp.Tools.Deploy.Tests/Azure.Mcp.Tools.Deploy.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.DeviceRegistry/" />
   <Folder Name="/tools/Azure.Mcp.Tools.DeviceRegistry/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.DeviceRegistry/src/Azure.Mcp.Tools.DeviceRegistry.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.DeviceRegistry/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.DeviceRegistry/tests/Azure.Mcp.Tools.DeviceRegistry.LiveTests/Azure.Mcp.Tools.DeviceRegistry.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.DeviceRegistry/tests/Azure.Mcp.Tools.DeviceRegistry.UnitTests/Azure.Mcp.Tools.DeviceRegistry.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.DeviceRegistry/tests/Azure.Mcp.Tools.DeviceRegistry.Tests/Azure.Mcp.Tools.DeviceRegistry.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.EventGrid/" />
   <Folder Name="/tools/Azure.Mcp.Tools.EventGrid/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.EventGrid/src/Azure.Mcp.Tools.EventGrid.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.EventGrid/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.EventGrid/tests/Azure.Mcp.Tools.EventGrid.LiveTests/Azure.Mcp.Tools.EventGrid.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.EventGrid/tests/Azure.Mcp.Tools.EventGrid.UnitTests/Azure.Mcp.Tools.EventGrid.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.EventGrid/tests/Azure.Mcp.Tools.EventGrid.Tests/Azure.Mcp.Tools.EventGrid.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.EventHubs/" />
   <Folder Name="/tools/Azure.Mcp.Tools.EventHubs/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.EventHubs/src/Azure.Mcp.Tools.EventHubs.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.EventHubs/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.EventHubs/tests/Azure.Mcp.Tools.EventHubs.LiveTests/Azure.Mcp.Tools.EventHubs.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.EventHubs/tests/Azure.Mcp.Tools.EventHubs.UnitTests/Azure.Mcp.Tools.EventHubs.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.EventHubs/tests/Azure.Mcp.Tools.EventHubs.Tests/Azure.Mcp.Tools.EventHubs.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Extension/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Extension/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Extension/src/Azure.Mcp.Tools.Extension.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Extension/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Extension/tests/Azure.Mcp.Tools.Extension.UnitTests/Azure.Mcp.Tools.Extension.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Extension/tests/Azure.Mcp.Tools.Extension.Tests/Azure.Mcp.Tools.Extension.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.FileShares/" />
   <Folder Name="/tools/Azure.Mcp.Tools.FileShares/src/">
