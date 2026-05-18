@@ -2,6 +2,8 @@
   <PropertyGroup>
     <IsTestProject>true</IsTestProject>
     <OutputType>Exe</OutputType>
+    <HasLiveTests>true</HasLiveTests>
+    <HasUnitTests>true</HasUnitTests>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\core\Azure.Mcp.Core\tests\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj" />
