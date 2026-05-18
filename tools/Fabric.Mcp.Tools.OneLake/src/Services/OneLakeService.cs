@@ -1958,8 +1958,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         // touching other roles on the item (unlike the bulk PUT approach).
         var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/dataAccessRoles?preview=true&dataAccessRoleConflictPolicy=Overwrite";
         var requestBody = JsonSerializer.Serialize(roleDefinition, OneLakeJsonContext.Default.DataAccessRole);
-        await SendFabricApiRequestAsync(HttpMethod.Post, url, requestBody, cancellationToken: cancellationToken);
-        return roleDefinition;
+        var responseStream = await SendFabricApiRequestAsync(HttpMethod.Post, url, requestBody, cancellationToken: cancellationToken);
+        return await JsonSerializer.DeserializeAsync(responseStream, OneLakeJsonContext.Default.DataAccessRole, cancellationToken) ?? roleDefinition;
     }
 
     public async Task DeleteDataAccessRoleAsync(string workspaceId, string itemId, string roleName, CancellationToken cancellationToken = default)
@@ -2053,12 +2053,30 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task ModifyDiagnosticsAsync(string workspaceId, string diagnosticsConfigJson, CancellationToken cancellationToken = default)
     {
+        try
+        {
+            using var doc = JsonDocument.Parse(diagnosticsConfigJson);
+        }
+        catch (JsonException ex)
+        {
+            throw new ArgumentException($"Invalid diagnostics configuration JSON: {ex.Message}", nameof(diagnosticsConfigJson), ex);
+        }
+
         var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/onelake/settings/modifyDiagnostics";
         await SendFabricApiRequestAsync(HttpMethod.Post, url, diagnosticsConfigJson, cancellationToken: cancellationToken);
     }
 
     public async Task ModifyImmutabilityPolicyAsync(string workspaceId, string immutabilityPolicyJson, CancellationToken cancellationToken = default)
     {
+        try
+        {
+            using var doc = JsonDocument.Parse(immutabilityPolicyJson);
+        }
+        catch (JsonException ex)
+        {
+            throw new ArgumentException($"Invalid immutability policy JSON: {ex.Message}", nameof(immutabilityPolicyJson), ex);
+        }
+
         var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy";
         await SendFabricApiRequestAsync(HttpMethod.Post, url, immutabilityPolicyJson, cancellationToken: cancellationToken);
     }
