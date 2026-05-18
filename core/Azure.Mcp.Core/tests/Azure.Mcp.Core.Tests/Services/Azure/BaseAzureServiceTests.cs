@@ -219,11 +219,11 @@ public class BaseAzureServiceTests
     [InlineData(5, true, 5)]   // below cap, should remain unchanged
     [InlineData(10, true, 10)] // at cap, should remain unchanged
     [InlineData(20, true, 10)] // above cap, should be capped
-    [InlineData(20, false, null)] // HasMaxRetries = false, should not override default
+    [InlineData(20, false, null)] // null MaxRetries, should not override default
     public void ConfigureRetryPolicy_RespectsAndCapsMaxRetries(int maxRetries, bool hasMaxRetries, int? expectedMaxRetries)
     {
         // Arrange
-        var retryPolicy = new RetryPolicyOptions { MaxRetries = maxRetries, HasMaxRetries = hasMaxRetries };
+        var retryPolicy = new RetryPolicyOptions { MaxRetries = hasMaxRetries ? maxRetries : null };
         var clientOptions = new ArmClientOptions();
         var defaultClientOptions = new ArmClientOptions();
         // Act
@@ -239,11 +239,11 @@ public class BaseAzureServiceTests
     [InlineData(0.1, true, 0.1)]    // at lower cap, should remain unchanged
     [InlineData(120.0, true, 60.0)]      // above upper cap, should be capped to 60
     [InlineData(0.01, true, 0.1)]   // below lower cap, should be raised to 0.1
-    [InlineData(120.0, false, null)]   // HasDelaySeconds = false, should not override default
+    [InlineData(120.0, false, null)]   // null DelaySeconds, should not override default
     public void ConfigureRetryPolicy_RespectsAndClampsDelay(double delaySeconds, bool hasDelay, double? expectedDelay)
     {
         // Arrange
-        var retryPolicy = new RetryPolicyOptions { DelaySeconds = delaySeconds, HasDelaySeconds = hasDelay };
+        var retryPolicy = new RetryPolicyOptions { DelaySeconds = hasDelay ? delaySeconds : null };
         var clientOptions = new ArmClientOptions();
         var defaultClientOptions = new ArmClientOptions();
         // Act
@@ -259,11 +259,11 @@ public class BaseAzureServiceTests
     [InlineData(0.1, true, 0.1)]    // at lower cap, should remain unchanged
     [InlineData(120.0, true, 60.0)]      // above upper cap, should be capped to 60
     [InlineData(0.01, true, 0.1)]   // below lower cap, should be raised to 0.1
-    [InlineData(120.0, false, null)]   // HasMaxDelaySeconds = false, should not override default
+    [InlineData(120.0, false, null)]   // null MaxDelaySeconds, should not override default
     public void ConfigureRetryPolicy_RespectsAndClampsMaxDelay(double maxDelaySeconds, bool hasMaxDelay, double? expectedMaxDelay)
     {
         // Arrange
-        var retryPolicy = new RetryPolicyOptions { MaxDelaySeconds = maxDelaySeconds, HasMaxDelaySeconds = hasMaxDelay };
+        var retryPolicy = new RetryPolicyOptions { MaxDelaySeconds = hasMaxDelay ? maxDelaySeconds : null };
         var clientOptions = new ArmClientOptions();
         var defaultClientOptions = new ArmClientOptions();
         // Act
@@ -277,11 +277,11 @@ public class BaseAzureServiceTests
     [InlineData(30.0, true, 30.0)]       // within bounds, should remain unchanged
     [InlineData(300.0, true, 300.0)]     // at cap, should remain unchanged
     [InlineData(600.0, true, 300.0)]     // above cap, should be capped to 300
-    [InlineData(600.0, false, null)]   // HasNetworkTimeoutSeconds = false, should not override default
+    [InlineData(600.0, false, null)]   // null NetworkTimeoutSeconds, should not override default
     public void ConfigureRetryPolicy_RespectsAndCapsNetworkTimeout(double networkTimeoutSeconds, bool hasNetworkTimeout, double? expectedTimeout)
     {
         // Arrange
-        var retryPolicy = new RetryPolicyOptions { NetworkTimeoutSeconds = networkTimeoutSeconds, HasNetworkTimeoutSeconds = hasNetworkTimeout };
+        var retryPolicy = new RetryPolicyOptions { NetworkTimeoutSeconds = hasNetworkTimeout ? networkTimeoutSeconds : null };
         var clientOptions = new ArmClientOptions();
         var defaultClientOptions = new ArmClientOptions();
         // Act
