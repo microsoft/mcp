@@ -45,13 +45,9 @@ public class BaseAzureServiceRetryLimitsTests
             var retryPolicy = new RetryPolicyOptions
             {
                 MaxRetries = 100,
-                HasMaxRetries = true,
                 DelaySeconds = 200,
-                HasDelaySeconds = true,
                 MaxDelaySeconds = 500,
-                HasMaxDelaySeconds = true,
                 NetworkTimeoutSeconds = 1000,
-                HasNetworkTimeoutSeconds = true
             };
             var clientOptions = new ArmClientOptions();
 
@@ -80,9 +76,7 @@ public class BaseAzureServiceRetryLimitsTests
             var retryPolicy = new RetryPolicyOptions
             {
                 DelaySeconds = 0.001,
-                HasDelaySeconds = true,
                 MaxDelaySeconds = 0.005,
-                HasMaxDelaySeconds = true
             };
             var clientOptions = new ArmClientOptions();
 

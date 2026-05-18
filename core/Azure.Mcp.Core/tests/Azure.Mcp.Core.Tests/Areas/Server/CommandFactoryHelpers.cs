@@ -181,7 +181,8 @@ internal class CommandFactoryHelpers
             .AddSingleton(Substitute.For<IDateTimeProvider>())
             .AddSingleton(Substitute.For<IExternalProcessService>())
             .AddSingleton(Substitute.For<IAzureTokenCredentialProvider>())
-            .AddSingleton(Substitute.For<IAzureCloudConfiguration>());
+            .AddSingleton(Substitute.For<IAzureCloudConfiguration>())
+            .AddSingleton(Substitute.For<ISubscriptionResolver>());
 
         foreach (var area in areaSetups)
         {

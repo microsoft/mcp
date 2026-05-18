@@ -392,18 +392,6 @@ public sealed partial class SearchService(
         return results;
     }
 
-    private static void ConfigureRetryPolicy(SearchClientOptions options, RetryPolicyOptions? retryPolicy)
-    {
-        if (retryPolicy != null)
-        {
-            options.Retry.MaxRetries = retryPolicy.MaxRetries;
-            options.Retry.Mode = retryPolicy.Mode;
-            options.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
-            options.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
-            options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
-        }
-    }
-
     private static IndexInfo MapToIndexInfo(SearchIndex index)
         => new(index.Name, index.Description, [.. index.Fields.Select(MapToFieldInfo)]);
 

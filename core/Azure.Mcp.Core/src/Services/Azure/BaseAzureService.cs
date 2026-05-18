@@ -214,33 +214,33 @@ public abstract class BaseAzureService
     {
         if (retryPolicy != null)
         {
-            if (retryPolicy.HasDelaySeconds)
+            if (retryPolicy.DelaySeconds is { } delaySeconds)
             {
                 clientOptions.Retry.Delay = s_retryLimitsDisabled
-                    ? TimeSpan.FromSeconds(retryPolicy.DelaySeconds)
-                    : TimeSpan.FromSeconds(Math.Clamp(retryPolicy.DelaySeconds, MinAllowedDelaySeconds, MaxAllowedDelaySeconds));
+                    ? TimeSpan.FromSeconds(delaySeconds)
+                    : TimeSpan.FromSeconds(Math.Clamp(delaySeconds, MinAllowedDelaySeconds, MaxAllowedDelaySeconds));
             }
-            if (retryPolicy.HasMaxDelaySeconds)
+            if (retryPolicy.MaxDelaySeconds is { } maxDelaySeconds)
             {
                 clientOptions.Retry.MaxDelay = s_retryLimitsDisabled
-                    ? TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds)
-                    : TimeSpan.FromSeconds(Math.Clamp(retryPolicy.MaxDelaySeconds, MinAllowedDelaySeconds, MaxAllowedDelaySeconds));
+                    ? TimeSpan.FromSeconds(maxDelaySeconds)
+                    : TimeSpan.FromSeconds(Math.Clamp(maxDelaySeconds, MinAllowedDelaySeconds, MaxAllowedDelaySeconds));
             }
-            if (retryPolicy.HasMaxRetries)
+            if (retryPolicy.MaxRetries is { } maxRetries)
             {
                 clientOptions.Retry.MaxRetries = s_retryLimitsDisabled
-                    ? retryPolicy.MaxRetries
-                    : Math.Min(MaxAllowedRetries, retryPolicy.MaxRetries);
+                    ? maxRetries
+                    : Math.Min(MaxAllowedRetries, maxRetries);
             }
-            if (retryPolicy.HasMode)
+            if (retryPolicy.Mode is { } mode)
             {
-                clientOptions.Retry.Mode = retryPolicy.Mode;
+                clientOptions.Retry.Mode = mode;
             }
-            if (retryPolicy.HasNetworkTimeoutSeconds)
+            if (retryPolicy.NetworkTimeoutSeconds is { } networkTimeoutSeconds)
             {
                 clientOptions.Retry.NetworkTimeout = s_retryLimitsDisabled
-                    ? TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds)
-                    : TimeSpan.FromSeconds(Math.Min(MaxAllowedNetworkTimeoutSeconds, retryPolicy.NetworkTimeoutSeconds));
+                    ? TimeSpan.FromSeconds(networkTimeoutSeconds)
+                    : TimeSpan.FromSeconds(Math.Min(MaxAllowedNetworkTimeoutSeconds, networkTimeoutSeconds));
             }
         }
 
