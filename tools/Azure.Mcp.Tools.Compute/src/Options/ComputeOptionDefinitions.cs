@@ -335,6 +335,29 @@ public static class ComputeOptionDefinitions
         Required = false
     };
 
+    // Power state options
+    public const string PowerActionName = "power-action";
+    public const string NoWaitName = "no-wait";
+    public const string SkipShutdownName = "skip-shutdown";
+
+    public static readonly Option<string> PowerAction = new($"--{PowerActionName}")
+    {
+        Description = "The power action to apply to the VM (not the current power state). Accepted values: start, stop, deallocate, restart.",
+        Required = false
+    };
+
+    public static readonly Option<bool> NoWait = new($"--{NoWaitName}")
+    {
+        Description = "Return immediately without waiting for the operation to complete.",
+        Required = false
+    };
+
+    public static readonly Option<bool> SkipShutdown = new($"--{SkipShutdownName}")
+    {
+        Description = "Skip the graceful OS shutdown and force power off. Only compatible with the 'stop' state.",
+        Required = false
+    };
+
     // Delete options
     public const string ForceDeletionName = "force-deletion";
 
