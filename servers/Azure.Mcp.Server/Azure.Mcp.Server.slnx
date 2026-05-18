@@ -223,32 +223,28 @@
     <Project Path="../../tools/Azure.Mcp.Tools.FileShares/src/Azure.Mcp.Tools.FileShares.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.FileShares/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.FileShares/tests/Azure.Mcp.Tools.FileShares.LiveTests/Azure.Mcp.Tools.FileShares.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.FileShares/tests/Azure.Mcp.Tools.FileShares.UnitTests/Azure.Mcp.Tools.FileShares.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.FileShares/tests/Azure.Mcp.Tools.FileShares.Tests/Azure.Mcp.Tools.FileShares.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.FoundryExtensions/" />
   <Folder Name="/tools/Azure.Mcp.Tools.FoundryExtensions/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.FoundryExtensions/src/Azure.Mcp.Tools.FoundryExtensions.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.FoundryExtensions/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.FoundryExtensions/tests/Azure.Mcp.Tools.FoundryExtensions.LiveTests/Azure.Mcp.Tools.FoundryExtensions.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.FoundryExtensions/tests/Azure.Mcp.Tools.FoundryExtensions.UnitTests/Azure.Mcp.Tools.FoundryExtensions.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.FoundryExtensions/tests/Azure.Mcp.Tools.FoundryExtensions.Tests/Azure.Mcp.Tools.FoundryExtensions.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.FunctionApp/" />
   <Folder Name="/tools/Azure.Mcp.Tools.FunctionApp/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.FunctionApp/src/Azure.Mcp.Tools.FunctionApp.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.FunctionApp/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.FunctionApp/tests/Azure.Mcp.Tools.FunctionApp.LiveTests/Azure.Mcp.Tools.FunctionApp.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.FunctionApp/tests/Azure.Mcp.Tools.FunctionApp.UnitTests/Azure.Mcp.Tools.FunctionApp.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.FunctionApp/tests/Azure.Mcp.Tools.FunctionApp.Tests/Azure.Mcp.Tools.FunctionApp.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Functions/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Functions/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Functions/src/Azure.Mcp.Tools.Functions.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Functions/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Functions/tests/Azure.Mcp.Tools.Functions.LiveTests/Azure.Mcp.Tools.Functions.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.Functions/tests/Azure.Mcp.Tools.Functions.UnitTests/Azure.Mcp.Tools.Functions.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Functions/tests/Azure.Mcp.Tools.Functions.Tests/Azure.Mcp.Tools.Functions.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Grafana/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Grafana/src/">
