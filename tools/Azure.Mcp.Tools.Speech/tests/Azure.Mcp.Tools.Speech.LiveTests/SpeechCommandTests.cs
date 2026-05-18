@@ -106,6 +106,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 { "file", testAudioFile },
                 { "language", language },
             });
+        Assert.NotNull(result);
 
         // Assert
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
@@ -150,6 +151,8 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             });
 
         // Assert
+        Assert.NotNull(result);
+    
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
@@ -207,6 +210,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 { "profanity", profanityOption }
             });
 
+        Assert.NotNull(result);
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
@@ -247,6 +251,8 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             });
 
         // Assert
+        Assert.NotNull(result);
+
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
@@ -309,6 +315,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 });
 
             // Assert
+            Assert.NotNull(result);
             using var doc = JsonDocument.Parse(result.Value.GetRawText());
             var inner = doc.RootElement.GetProperty("result").GetRawText();
             var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
@@ -353,6 +360,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 });
 
             // Assert
+            Assert.NotNull(result);
             using var doc = JsonDocument.Parse(result.Value.GetRawText());
             var inner = doc.RootElement.GetProperty("result").GetRawText();
             var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
@@ -455,6 +463,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             });
 
         // Assert
+        Assert.NotNull(result);
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
