@@ -45,6 +45,7 @@ public class VmImageListCommandTests : CommandUnitTestsBase<VmImageListCommand, 
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<int?>(),
+                Arg.Any<bool>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
@@ -80,6 +81,7 @@ public class VmImageListCommandTests : CommandUnitTestsBase<VmImageListCommand, 
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<int?>(),
+            Arg.Any<bool>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -101,7 +103,7 @@ public class VmImageListCommandTests : CommandUnitTestsBase<VmImageListCommand, 
     {
         Service.ListVmImagesAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<int?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<bool>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(new List<VmImageInfo>());
 
@@ -121,6 +123,7 @@ public class VmImageListCommandTests : CommandUnitTestsBase<VmImageListCommand, 
             "ubuntu-24_04-lts",
             "server",
             3,
+            false,
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
@@ -131,7 +134,7 @@ public class VmImageListCommandTests : CommandUnitTestsBase<VmImageListCommand, 
     {
         Service.ListVmImagesAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<int?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<bool>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Not found"));
 
@@ -144,5 +147,98 @@ public class VmImageListCommandTests : CommandUnitTestsBase<VmImageListCommand, 
 
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PassesIncludeSharedGalleryFlag()
+    {
+        // Default (flag absent): includeSharedGallery should be false.
+        Service.ListVmImagesAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<bool>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(new List<VmImageInfo>());
+
+        await ExecuteCommandAsync(
+            "--subscription", _knownSubscription,
+            "--location", _knownLocation,
+            "--include-shared-gallery");
+
+        await Service.Received(1).ListVmImagesAsync(
+            _knownSubscription,
+            _knownLocation,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            true,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DefaultsIncludeSharedGalleryToFalse()
+    {
+        Service.ListVmImagesAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<bool>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(new List<VmImageInfo>());
+
+        await ExecuteCommandAsync(
+            "--subscription", _knownSubscription,
+            "--location", _knownLocation);
+
+        await Service.Received(1).ListVmImagesAsync(
+            _knownSubscription,
+            _knownLocation,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            false,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsSharedGalleryImageWithReferenceId()
+    {
+        // Verifies a Compute Gallery image surfaces through with its sharedGallery resource ID
+        // populated, so the unified-create flow can hand that ID directly back to --image.
+        var images = new List<VmImageInfo>
+        {
+            new("MyGoldenUbuntu", "Canonical", "ubuntu-24_04-lts", "server", "1.0.0",
+                "/sharedGalleries/contoso-gallery-id/images/golden-ubuntu/versions/1.0.0",
+                "Linux", "V2", "sharedGallery"),
+        };
+
+        Service.ListVmImagesAsync(
+            Arg.Is(_knownSubscription),
+            Arg.Is(_knownLocation),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Is(true),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(images);
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", _knownSubscription,
+            "--location", _knownLocation,
+            "--include-shared-gallery");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmImageListCommandResult);
+        Assert.Single(result.Images);
+        Assert.StartsWith("/sharedGalleries/", result.Images[0].Urn);
     }
 }

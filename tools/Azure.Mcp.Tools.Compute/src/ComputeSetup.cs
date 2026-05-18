@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
@@ -24,6 +25,12 @@ public class ComputeSetup : IAreaSetup
     {
         services.AddSingleton<IComputeService, ComputeService>();
 
+        // Named HttpClient for the unauthenticated Azure Retail Prices API used by vm list-skus --include-pricing.
+        services.AddHttpClient(ComputeService.RetailPricesClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
+
         // VM commands
         services.AddSingleton<VmGetCommand>();
         services.AddSingleton<VmCreateCommand>();
@@ -46,6 +53,9 @@ public class ComputeSetup : IAreaSetup
         services.AddSingleton<DiskDeleteCommand>();
         services.AddSingleton<DiskGetCommand>();
         services.AddSingleton<DiskUpdateCommand>();
+
+        // Unified top-level create (dispatches to VMSS Flex by default, single VM with --single-instance)
+        services.AddSingleton<UnifiedCreateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -53,9 +63,12 @@ public class ComputeSetup : IAreaSetup
         var compute = new CommandGroup(Name,
             """
             Compute operations - Commands for managing and monitoring Azure Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), and Managed Disks.
-            This tool provides comprehensive access to VM lifecycle management, instance monitoring, size discovery, and scale set operations.
-            Use this tool when you need to list, query, create, or monitor VMs and VMSS instances across subscriptions and resource groups.
-            Defaults to Standard_D2s_v5 VM size for VM and VMSS creation when not specified; the --image option is required.
+            VMSS Flex is the recommended default for new compute (it works equally well for 1 instance or N and is the GA orchestration mode);
+            a single standalone VM is a fallback for non-scalable workloads. Use `compute create` for the unified entry point that defaults to VMSS Flex,
+            or `compute vmss create` directly. Reach for `compute vm create` only when the workload truly cannot scale out.
+            This tool provides comprehensive access to VM/VMSS lifecycle management, instance monitoring, SKU/region/quota/image discovery,
+            and scale set operations. Top-level discovery commands (list-skus, list-images, check-quota, recommend-region) are available
+            both directly under `compute` and under `compute vm`.
             This tool is a hierarchical MCP command router where sub-commands are routed to MCP servers that require specific fields
             inside the "parameters" object. To invoke a command, set "command" and wrap its arguments in "parameters".
             Set "learn=true" to discover available sub-commands for different Azure Compute operations.
@@ -99,6 +112,18 @@ public class ComputeSetup : IAreaSetup
         disk.AddCommand<DiskDeleteCommand>(serviceProvider);
         disk.AddCommand<DiskGetCommand>(serviceProvider);
         disk.AddCommand<DiskUpdateCommand>(serviceProvider);
+
+        // Top-level unified create — recommended entry point. Dispatches to VMSS Flex by default; pass
+        // --single-instance to fall back to a single non-scalable VM.
+        compute.AddCommand<UnifiedCreateCommand>(serviceProvider);
+
+        // Top-level discovery aliases so the four guided-create commands are reachable without
+        // descending into the `vm` subgroup. Same class instances, same metadata IDs — just an
+        // additional registration under the root group.
+        compute.AddCommand<VmSkuListCommand>(serviceProvider);
+        compute.AddCommand<VmImageListCommand>(serviceProvider);
+        compute.AddCommand<VmQuotaCheckCommand>(serviceProvider);
+        compute.AddCommand<VmRegionRecommendCommand>(serviceProvider);
 
         return compute;
     }

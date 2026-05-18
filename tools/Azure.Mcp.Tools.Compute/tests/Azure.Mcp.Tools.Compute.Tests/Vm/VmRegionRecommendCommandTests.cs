@@ -128,4 +128,62 @@ public class VmRegionRecommendCommandTests : CommandUnitTestsBase<VmRegionRecomm
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_AzRichRegionsOutrankNonAzForVmssHint()
+    {
+        // For the unified VMSS Flex recommendation path, the service now applies a stronger weight to
+        // AZ-rich regions when the workload hint mentions scale/HA/production/vmss AND the caller
+        // requires availability zones. We verify two things at the command boundary:
+        //   (1) --workload-hint "vmss production" and --require-availability-zones flow through to
+        //       the service (so the scoring heuristic actually fires).
+        //   (2) The command preserves the service's ordering: an AZ-rich region with a higher score
+        //       lands ahead of a non-AZ region in the deserialized response.
+        var regions = new List<VmRegionRecommendation>
+        {
+            new("eastus", "East US", "United States", "Virginia", true, 140,
+                "Tier-1 region with 3 AZs — strongly preferred for VMSS Flex production workloads."),
+            new("westus3", "West US 3", "United States", "Phoenix", true, 130,
+                "Multi-AZ region — strong VMSS Flex fit."),
+            new("northcentralus", "North Central US", "United States", "Illinois", false, 60,
+                "No availability zones — not recommended for production VMSS Flex."),
+        };
+
+        Service.RecommendVmRegionsAsync(
+            Arg.Is(_knownSubscription),
+            Arg.Is<string?>("vmss production"),
+            Arg.Any<string?>(),
+            Arg.Is(true),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(regions);
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", _knownSubscription,
+            "--workload-hint", "vmss production",
+            "--require-availability-zones");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmRegionRecommendCommandResult);
+        Assert.Equal(3, result.Regions.Count);
+
+        // The first two results should be AZ-rich and outrank the non-AZ region.
+        Assert.True(result.Regions[0].AvailabilityZones);
+        Assert.True(result.Regions[1].AvailabilityZones);
+        Assert.False(result.Regions[2].AvailabilityZones);
+        Assert.True(result.Regions[0].Score > result.Regions[2].Score);
+        Assert.True(result.Regions[1].Score > result.Regions[2].Score);
+
+        await Service.Received(1).RecommendVmRegionsAsync(
+            _knownSubscription,
+            "vmss production",
+            Arg.Any<string?>(),
+            true,
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
 }

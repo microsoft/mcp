@@ -18,13 +18,19 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     Name = "recommend-region",
     Title = "Recommend Virtual Machine Region",
     Description = """
-        Suggest Azure regions for a new VM or VMSS based on workload hints, geography preference, and
-        Availability Zone requirements. Returns a ranked list of regions with a score and a short rationale.
-        Use --workload-hint to bias ranking by workload type (e.g., 'gpu training', 'general dev/test',
-        'database', 'web'), --geography-preference to bias by geography substring (e.g., 'us', 'europe', 'asia'),
-        and --require-availability-zones to filter out regions without multi-AZ support.
-        Use this tool during guided VM/VMSS create flows so a beginner can be offered a sensible default region
-        and an advanced user can compare a few ranked candidates before picking one for compute_vm_create.
+        Suggest Azure regions for a new VMSS Flex scale set or single VM based on workload hints, geography
+        preference, and Availability Zone requirements. Returns a ranked list of regions with a score and a
+        short rationale. Multi-AZ (3+ zone) regions are favored for VMSS Flex / HA workloads — pass
+        --workload-hint containing 'scale', 'vmss', 'ha', 'production', or 'prod' (or set
+        --require-availability-zones) to nearly triple the AZ weight so zone-rich regions like eastus,
+        westus3, and westeurope outrank single-zone regions.
+        Use --workload-hint to bias ranking by workload type (e.g., 'vmss production web', 'gpu training',
+        'general dev/test', 'database'), --geography-preference to bias by geography substring (e.g.,
+        'us', 'europe', 'asia'), and --require-availability-zones to filter out regions without multi-AZ
+        support.
+        Use this tool during guided VMSS Flex or single-VM create flows so a beginner can be offered a
+        sensible default region and an advanced user can compare a few ranked candidates before picking
+        one for compute_vmss_create or compute_vm_create.
         """,
     Destructive = false,
     Idempotent = true,

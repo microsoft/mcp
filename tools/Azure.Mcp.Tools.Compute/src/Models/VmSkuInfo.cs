@@ -22,4 +22,5 @@ public sealed record VmSkuInfo(
     [property: JsonPropertyName("zones")] IReadOnlyList<string>? Zones,
     [property: JsonPropertyName("restrictions")] IReadOnlyList<string>? Restrictions,
     [property: JsonPropertyName("payAsYouGoHourlyUsd")] decimal? PayAsYouGoHourlyUsd,
-    [property: JsonPropertyName("spotHourlyUsd")] decimal? SpotHourlyUsd);
+    [property: JsonPropertyName("spotHourlyUsd")] decimal? SpotHourlyUsd,
+    [property: JsonPropertyName("vmScaleSetsSupported")] bool? VMScaleSetsSupported);

@@ -11,4 +11,5 @@ public class VmImageListOptions : BaseComputeOptions
     public string? Offer { get; set; }
     public string? Sku { get; set; }
     public int? Top { get; set; }
+    public bool IncludeSharedGallery { get; set; }
 }

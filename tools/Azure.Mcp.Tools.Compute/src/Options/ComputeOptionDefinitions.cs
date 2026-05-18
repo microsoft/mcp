@@ -209,7 +209,7 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> VmSize = new($"--{VmSizeName}", "--size")
     {
-        Description = "The VM size (e.g., Standard_D2s_v3, Standard_B2s). Defaults to Standard_D2s_v5 if not specified",
+        Description = "The VM size used for the VM or for each scale set instance (e.g., Standard_D2s_v3, Standard_B2s). Defaults to Standard_D2s_v5 if not specified",
         Required = false
     };
 
@@ -221,19 +221,19 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> AdminUsername = new($"--{AdminUsernameName}")
     {
-        Description = "The admin username for the VM. Required for VM creation",
+        Description = "The admin username for the VM or scale set instance(s). Required for VM or VMSS creation",
         Required = false
     };
 
     public static readonly Option<string> AdminPassword = new($"--{AdminPasswordName}")
     {
-        Description = "The admin password for Windows VMs or when SSH key is not provided for Linux VMs",
+        Description = "The admin password for Windows VMs or scale set instances, or when SSH key is not provided for Linux VMs or scale set instances",
         Required = false
     };
 
     public static readonly Option<string> SshPublicKey = new($"--{SshPublicKeyName}")
     {
-        Description = "SSH public key for Linux VMs. Can be the key content or path to a file",
+        Description = "SSH public key for Linux VMs or scale set instances. Can be the key content or path to a file",
         Required = false
     };
 
@@ -285,7 +285,7 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> OsDiskType = new($"--{OsDiskTypeName}")
     {
-        Description = "OS disk type: 'Premium_LRS', 'StandardSSD_LRS', 'Standard_LRS'. Defaults based on VM size",
+        Description = "OS disk type: 'Premium_LRS', 'StandardSSD_LRS', 'Standard_LRS'. Defaults based on VM or scale set instance size",
         Required = false
     };
 
@@ -400,10 +400,12 @@ public static class ComputeOptionDefinitions
     public const string PublisherName = "publisher";
     public const string OfferName = "offer";
     public const string ImageSkuName = "image-sku";
+    public const string IncludeSharedGalleryName = "include-shared-gallery";
     public const string RequestedVCpusName = "requested-vcpus";
     public const string WorkloadHintName = "workload-hint";
     public const string GeographyPreferenceName = "geography-preference";
     public const string RequireAvailabilityZonesName = "require-availability-zones";
+    public const string SingleInstanceName = "single-instance";
 
     public static readonly Option<int?> MinVCpus = new($"--{MinVCpusName}")
     {
@@ -425,7 +427,7 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<int?> Top = new($"--{TopName}")
     {
-        Description = "Maximum number of results to return. Defaults to 50.",
+        Description = "Maximum number of results to return. Defaults to 20 for list-skus (SKU lists are large; raise explicitly if you need more) and 50 for list-images.",
         Required = false
     };
 
@@ -459,6 +461,12 @@ public static class ComputeOptionDefinitions
         Required = false
     };
 
+    public static readonly Option<bool> IncludeSharedGallery = new($"--{IncludeSharedGalleryName}")
+    {
+        Description = "If true, also enumerate image versions from Azure Compute Gallery (Shared Image Gallery) that this subscription has access to. Results carry source='sharedGallery' and a /sharedGalleries/.../images/.../versions/... resource ID in the urn field, which the create commands accept via --image. Off by default to keep the common marketplace listing fast.",
+        Required = false
+    };
+
     public static readonly Option<int?> RequestedVCpus = new($"--{RequestedVCpusName}")
     {
         Description = "Number of vCPUs you intend to deploy. Used to flag insufficient quota before a create is attempted.",
@@ -480,6 +488,12 @@ public static class ComputeOptionDefinitions
     public static readonly Option<bool> RequireAvailabilityZones = new($"--{RequireAvailabilityZonesName}")
     {
         Description = "If true, only recommend regions that support multiple Availability Zones.",
+        Required = false
+    };
+
+    public static readonly Option<bool> SingleInstance = new($"--{SingleInstanceName}")
+    {
+        Description = "If true, provision a single non-scalable VM instead of a VMSS Flex scale set. Use this only when the workload can never scale out, never needs zonal spread, and never needs rolling upgrades. Off by default — the unified compute_create defaults to VMSS Flex (Flex with InstanceCount=1 is supported and preferred over a standalone VM for everything else).",
         Required = false
     };
 }

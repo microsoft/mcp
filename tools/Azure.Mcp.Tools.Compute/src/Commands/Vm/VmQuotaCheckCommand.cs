@@ -19,12 +19,16 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     Title = "Check Virtual Machine Quota",
     Description = """
         Check current Azure Compute vCPU quota usage and limits in a region before attempting a create.
-        Returns per-family vCPU usage and limits (e.g., standardDSv5Family, standardNCSv3Family). Use
-        --family-prefix (case-insensitive) to narrow results to one family. Set --requested-vcpus to flag
-        the result as 'Insufficient' if available quota would not cover the requested vCPU count, and
-        'NearLimit' when current usage is above 80% of the limit.
-        Use this tool during guided VM/VMSS create flows to fail fast on quota issues rather than waiting
-        for the create to return QuotaExceeded. Wraps 'az vm list-usage' patterns via the .NET SDK.
+        Returns per-family vCPU usage and limits (e.g., standardDSv5Family, standardNCSv3Family), plus
+        the VMSS-relevant dimensions virtualMachineScaleSets, lowPriorityCores, and availabilitySets so the
+        guided VMSS Flex flow can plan replica count, spot pricing, and AZ layout in one shot. Use
+        --family-prefix (case-insensitive) to narrow per-family vCPU results to one family; the VMSS
+        dimensions are surfaced regardless. Set --requested-vcpus to flag the result as 'Insufficient' if
+        available quota would not cover the requested vCPU count, and 'NearLimit' when current usage is
+        above 80% of the limit.
+        Use this tool during guided VMSS Flex or single-VM create flows to fail fast on quota issues
+        rather than waiting for the create to return QuotaExceeded. Wraps 'az vm list-usage' patterns via
+        the .NET SDK.
         """,
     Destructive = false,
     Idempotent = true,

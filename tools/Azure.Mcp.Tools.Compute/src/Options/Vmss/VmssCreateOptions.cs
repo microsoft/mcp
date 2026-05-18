@@ -25,6 +25,14 @@ public class VmssCreateOptions : BaseComputeOptions
 
     public string? Subnet { get; set; }
 
+    public string? PublicIpAddress { get; set; }
+
+    public string? NetworkSecurityGroup { get; set; }
+
+    public bool NoPublicIp { get; set; }
+
+    public string? SourceAddressPrefix { get; set; }
+
     public int? InstanceCount { get; set; }
 
     public string? UpgradePolicy { get; set; }

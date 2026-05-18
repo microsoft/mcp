@@ -19,16 +19,14 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
     Name = "create",
     Title = "Create Virtual Machine Scale Set",
     Description = """
-        Create, deploy, or provision a new Azure Virtual Machine Scale Set (VMSS) for running multiple identical VM instances.
-        Use this to deploy a brand new VMSS that needs horizontal scaling, load balancing, or high availability across instances,
-        including specifying the initial instance count (e.g., 3 instances, 5 instances) and upgrade policy
-        (Manual, Automatic, or Rolling) at creation time.
+        Recommended default for new compute. Creates a VMSS Flex scale set, which works equally well for 1 instance or N
+        and is the GA Azure orchestration mode for both fixed-size and elastic workloads.
+        Prefer this over a single standalone VM unless the workload can never scale out.
         Equivalent to 'az vmss create'. Defaults to 2 instances and Standard_D2s_v5 size when not specified.
         The --image option is required and has no default; if the user does not specify an image, ask them which image to use
         (an alias such as 'Ubuntu2404' or 'Win2022Datacenter', a marketplace URN like 'publisher:offer:sku:version',
         or a shared gallery image ID starting with '/sharedGalleries/').
         For Linux VMSS with SSH, read the user's public key file (e.g., ~/.ssh/id_rsa.pub) and pass its content.
-        Do not use this for creating a single standalone VM (use VM create instead).
         """,
     Destructive = true,
     Idempotent = false,
@@ -69,6 +67,10 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComput
         // Network options
         command.Options.Add(ComputeOptionDefinitions.VirtualNetwork);
         command.Options.Add(ComputeOptionDefinitions.Subnet);
+        command.Options.Add(ComputeOptionDefinitions.PublicIpAddress);
+        command.Options.Add(ComputeOptionDefinitions.NetworkSecurityGroup);
+        command.Options.Add(ComputeOptionDefinitions.NoPublicIp);
+        command.Options.Add(ComputeOptionDefinitions.SourceAddressPrefix);
 
         // Additional options
         command.Options.Add(ComputeOptionDefinitions.Zone);
@@ -127,6 +129,10 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComput
         options.UpgradePolicy = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UpgradePolicy.Name);
         options.VirtualNetwork = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VirtualNetwork.Name);
         options.Subnet = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Subnet.Name);
+        options.PublicIpAddress = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.PublicIpAddress.Name);
+        options.NetworkSecurityGroup = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.NetworkSecurityGroup.Name);
+        options.NoPublicIp = parseResult.GetValueOrDefault<bool>(ComputeOptionDefinitions.NoPublicIp.Name);
+        options.SourceAddressPrefix = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.SourceAddressPrefix.Name);
         options.Zone = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Zone.Name);
         options.OsDiskSizeGb = parseResult.GetValueOrDefault<int?>(ComputeOptionDefinitions.OsDiskSizeGb.Name);
         options.OsDiskType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsDiskType.Name);
@@ -159,6 +165,10 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComput
                 options.OsType,
                 options.VirtualNetwork,
                 options.Subnet,
+                options.PublicIpAddress,
+                options.NetworkSecurityGroup,
+                options.NoPublicIp,
+                options.SourceAddressPrefix,
                 options.InstanceCount,
                 options.UpgradePolicy,
                 options.Zone,

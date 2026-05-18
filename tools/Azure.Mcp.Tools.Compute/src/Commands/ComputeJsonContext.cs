@@ -54,4 +54,5 @@ namespace Azure.Mcp.Tools.Compute.Commands;
 [JsonSerializable(typeof(List<VmQuotaInfo>))]
 [JsonSerializable(typeof(VmRegionRecommendation))]
 [JsonSerializable(typeof(List<VmRegionRecommendation>))]
+[JsonSerializable(typeof(UnifiedCreateCommand.UnifiedCreateCommandResult))]
 internal sealed partial class ComputeJsonContext : JsonSerializerContext;

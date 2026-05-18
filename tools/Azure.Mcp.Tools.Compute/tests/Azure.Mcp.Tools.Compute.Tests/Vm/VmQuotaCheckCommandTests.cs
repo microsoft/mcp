@@ -127,4 +127,40 @@ public class VmQuotaCheckCommandTests : CommandUnitTestsBase<VmQuotaCheckCommand
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsVmssQuotaDimensions()
+    {
+        // The service now surfaces three additional usage families beyond the per-SKU vCPU lines so
+        // the unified VMSS Flex create flow can sanity-check capacity headroom: scale set count,
+        // low-priority (Spot) cores, and availability set count. Assert each shows up in the response.
+        var quotas = new List<VmQuotaInfo>
+        {
+            new("standardDSv5Family", "Standard DSv5 Family vCPUs", "Count", 24, 100, 76, 24.0, false, "Sufficient"),
+            new("virtualMachineScaleSets", "Virtual Machine Scale Sets", "Count", 5, 2000, 1995, 0.25, false, "Sufficient"),
+            new("lowPriorityCores", "Total Regional Low-priority vCPUs", "Count", 0, 100, 100, 0.0, false, "Sufficient"),
+            new("availabilitySets", "Availability Sets", "Count", 2, 2500, 2498, 0.08, false, "Sufficient"),
+        };
+
+        Service.CheckVmQuotaAsync(
+            Arg.Is(_knownSubscription),
+            Arg.Is(_knownLocation),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(quotas);
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", _knownSubscription,
+            "--location", _knownLocation);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmQuotaCheckCommandResult);
+        Assert.Equal(4, result.Quotas.Count);
+        Assert.Contains(result.Quotas, q => q.Name == "virtualMachineScaleSets");
+        Assert.Contains(result.Quotas, q => q.Name == "lowPriorityCores");
+        Assert.Contains(result.Quotas, q => q.Name == "availabilitySets");
+    }
 }

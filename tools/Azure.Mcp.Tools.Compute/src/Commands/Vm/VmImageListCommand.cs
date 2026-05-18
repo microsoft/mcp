@@ -19,14 +19,18 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     Title = "List Virtual Machine Images",
     Description = """
         Discover Azure VM images that can be used as --image for compute_vm_create / compute_vmss_create.
-        Three modes:
+        Use during guided VMSS Flex or single-VM create flows so the user can pick a real, valid image
+        instead of guessing a URN — compute_vm_create / compute_vmss_create accept both aliases and URNs.
+        Modes:
         (1) No image filters: returns the alias catalog (e.g., 'Ubuntu2404', 'Win2022Datacenter') with the
             marketplace URN each alias currently maps to — useful for a beginner picker.
         (2) Single --alias: resolves that alias to its URN.
         (3) --publisher + --offer + --image-sku: lists concrete image versions from the marketplace catalog
             in --location (e.g., publisher='Canonical', offer='ubuntu-24_04-lts', image-sku='server').
-        Use this tool during guided VM/VMSS create flows so the user can pick a real, valid image instead
-        of guessing a URN. compute_vm_create accepts both aliases and URNs.
+        (4) --include-shared-gallery: additionally enumerates Azure Compute Gallery (Shared Image Gallery)
+            image versions visible to this subscription. Each carries source='sharedGallery' and a
+            /sharedGalleries/.../images/.../versions/... resource ID in the urn field, which create
+            commands accept via --image.
         """,
     Destructive = false,
     Idempotent = true,
@@ -48,6 +52,7 @@ public sealed class VmImageListCommand(ILogger<VmImageListCommand> logger, IComp
         command.Options.Add(ComputeOptionDefinitions.Publisher);
         command.Options.Add(ComputeOptionDefinitions.Offer);
         command.Options.Add(ComputeOptionDefinitions.ImageSku);
+        command.Options.Add(ComputeOptionDefinitions.IncludeSharedGallery);
         command.Options.Add(ComputeOptionDefinitions.Top);
     }
 
@@ -59,6 +64,7 @@ public sealed class VmImageListCommand(ILogger<VmImageListCommand> logger, IComp
         options.Publisher = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Publisher.Name);
         options.Offer = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Offer.Name);
         options.Sku = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.ImageSku.Name);
+        options.IncludeSharedGallery = parseResult.GetValueOrDefault<bool>(ComputeOptionDefinitions.IncludeSharedGallery.Name);
         options.Top = parseResult.GetValueOrDefault<int?>(ComputeOptionDefinitions.Top.Name);
         return options;
     }
@@ -85,6 +91,7 @@ public sealed class VmImageListCommand(ILogger<VmImageListCommand> logger, IComp
                 options.Offer,
                 options.Sku,
                 options.Top,
+                options.IncludeSharedGallery,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

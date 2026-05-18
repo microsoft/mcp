@@ -110,6 +110,10 @@ public interface IComputeService
         string? osType = null,
         string? virtualNetwork = null,
         string? subnet = null,
+        string? publicIpAddress = null,
+        string? networkSecurityGroup = null,
+        bool? noPublicIp = null,
+        string? sourceAddressPrefix = null,
         int? instanceCount = null,
         string? upgradePolicy = null,
         string? zone = null,
@@ -273,6 +277,7 @@ public interface IComputeService
         string? offer = null,
         string? sku = null,
         int? top = null,
+        bool includeSharedGallery = false,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
