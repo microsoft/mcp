@@ -30,6 +30,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
                 { "app", webappName },
                 { "detector-id", "LinuxMemoryDrillDown"}
             });
+        Assert.NotNull(result);
 
         var detectorsResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DetectorDiagnoseResult);
         Assert.NotNull(detectorsResult);
@@ -56,6 +57,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
                 { "end-time", DateTimeOffset.UtcNow.ToString("o") },
                 { "time-grain", "PT10M" }
             });
+        Assert.NotNull(result);
 
         var detectorsResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DetectorDiagnoseResult);
         Assert.NotNull(detectorsResult);

@@ -33,6 +33,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-value", "SomeValue" },
                 { "setting-update-type", "add" }
             });
+        Assert.NotNull(result);
 
         var updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotNull(updateResult);

@@ -43,6 +43,8 @@ public class DeploymentGetCommandLiveTests(ITestOutputHelper output, TestProxyFi
                 { "app", webappName }
             });
 
+        Assert.NotNull(result);
+
         var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DeploymentGetResult);
         Assert.NotNull(getResult);
         Assert.NotEmpty(getResult.Deployments);
@@ -66,6 +68,7 @@ public class DeploymentGetCommandLiveTests(ITestOutputHelper output, TestProxyFi
                 { "app", webappName },
                 { "deployment-id", deploymentId }
             });
+        Assert.NotNull(result);
 
         var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DeploymentGetResult);
         Assert.NotNull(getResult);

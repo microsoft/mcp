@@ -26,6 +26,7 @@ public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtur
             {
                 { "subscription", Settings.SubscriptionId }
             });
+        Assert.NotNull(result);
 
         var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.WebappGetResult);
         Assert.NotNull(getResult);
@@ -47,6 +48,7 @@ public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtur
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName }
             });
+        Assert.NotNull(result);
 
         var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.WebappGetResult);
         Assert.NotNull(getResult);
@@ -70,6 +72,7 @@ public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtur
                 { "resource-group", resourceGroupName },
                 { "app", webappName }
             });
+        Assert.NotNull(result);
 
         var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.WebappGetResult);
         Assert.NotNull(getResult);
