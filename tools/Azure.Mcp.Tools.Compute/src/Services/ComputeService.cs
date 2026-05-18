@@ -2585,10 +2585,12 @@ public class ComputeService(
         await foreach (var loc in subscriptionResource.GetLocationsAsync(includeExtendedLocations: false, cancellationToken))
         {
             var name = loc.Name ?? string.Empty;
-            if (string.IsNullOrEmpty(name)) continue;
+            if (string.IsNullOrEmpty(name))
+                continue;
 
             var hasZones = s_azRegions.Contains(name);
-            if (requireAvailabilityZones && !hasZones) continue;
+            if (requireAvailabilityZones && !hasZones)
+                continue;
 
             int score = 0;
             var rationaleParts = new List<string>();
@@ -2596,7 +2598,8 @@ public class ComputeService(
             if (s_regionPopularity.TryGetValue(name, out var popularity))
             {
                 score += popularity;
-                if (popularity >= 8) rationaleParts.Add("tier-1 region with broad SKU coverage");
+                if (popularity >= 8)
+                    rationaleParts.Add("tier-1 region with broad SKU coverage");
             }
 
             if (hasZones)
