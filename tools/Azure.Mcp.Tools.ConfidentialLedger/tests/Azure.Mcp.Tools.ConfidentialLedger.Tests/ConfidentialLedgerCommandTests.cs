@@ -3,13 +3,15 @@
 
 using System.Text.Json;
 using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
-namespace Azure.Mcp.Tools.ConfidentialLedger.LiveTests;
+namespace Azure.Mcp.Tools.ConfidentialLedger.Tests;
 
 public class ConfidentialLedgerCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture)
 {
+    [LiveTestOnly]
     [Fact]
     public async Task Should_append_entry_successfully()
     {
@@ -51,6 +53,7 @@ public class ConfidentialLedgerCommandTests(ITestOutputHelper output, LiveServer
         Output.WriteLine($"Successfully appended entry with transaction ID: {transactionIdStr}");
     }
 
+    [LiveTestOnly]
     [Fact]
     public async Task Should_append_entry_with_collection_id()
     {
@@ -88,6 +91,7 @@ public class ConfidentialLedgerCommandTests(ITestOutputHelper output, LiveServer
         Output.WriteLine($"Successfully appended entry to collection '{collectionId}' with transaction ID: {transactionId.GetString()}");
     }
 
+    [LiveTestOnly]
     [Fact]
     public async Task Should_get_entry()
     {

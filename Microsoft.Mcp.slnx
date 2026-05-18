@@ -205,7 +205,6 @@
     <Project Path="tools/Azure.Mcp.Tools.ConfidentialLedger/src/Azure.Mcp.Tools.ConfidentialLedger.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ConfidentialLedger/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.ConfidentialLedger/tests/Azure.Mcp.Tools.ConfidentialLedger.LiveTests/Azure.Mcp.Tools.ConfidentialLedger.LiveTests.csproj" />
     <Project Path="tools/Azure.Mcp.Tools.ConfidentialLedger/tests/Azure.Mcp.Tools.ConfidentialLedger.Tests/Azure.Mcp.Tools.ConfidentialLedger.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ContainerApps/" />
