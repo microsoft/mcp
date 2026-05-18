@@ -13,7 +13,7 @@ namespace Azure.Mcp.Tools.FileShares.Tests;
 /// Live tests for FileShares commands.
 /// These tests exercise the actual Azure FileShares resource provider with real resources.
 /// </summary>
-public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) 
+public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private string FileShare1Name => $"{Settings.ResourceBaseName}-fileshare-01";
