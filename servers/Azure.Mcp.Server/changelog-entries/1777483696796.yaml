@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added support for the AZURE_MCP_DANGEROUSLY_ALLOW_ADDITIONAL_KUSTO_HOSTS environment variable to allow additional trusted Kusto hostnames (comma-separated) for routing through internal proxies. Use with caution as this relaxes SSRF protections."
