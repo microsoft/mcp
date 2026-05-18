@@ -3,6 +3,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <HasLiveTests>true</HasLiveTests>
+    <HasUnitTests>true</HasUnitTests>
   </PropertyGroup>
 
   <ItemGroup>

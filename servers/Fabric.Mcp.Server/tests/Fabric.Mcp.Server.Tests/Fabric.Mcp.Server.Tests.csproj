@@ -2,6 +2,8 @@
   <PropertyGroup>
     <IsTestProject>true</IsTestProject>
     <OutputType>Exe</OutputType>
+    <HasLiveTests>false</HasLiveTests>
+    <HasUnitTests>true</HasUnitTests>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Fabric.Mcp.Server.csproj" />
