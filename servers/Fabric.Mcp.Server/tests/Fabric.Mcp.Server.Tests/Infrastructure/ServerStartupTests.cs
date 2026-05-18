@@ -3,7 +3,7 @@
 
 using Xunit;
 
-namespace Fabric.Mcp.Server.UnitTests.Infrastructure;
+namespace Fabric.Mcp.Server.Tests.Infrastructure;
 
 public class ServerStartupTests
 {

@@ -14,7 +14,7 @@ using Microsoft.Mcp.Core.Services.Time;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Server.UnitTests.Infrastructure;
+namespace Azure.Mcp.Server.Tests.Infrastructure;
 
 /// <summary>
 /// Tests to ensure specific tool names that Visual Studio depends on remain stable.

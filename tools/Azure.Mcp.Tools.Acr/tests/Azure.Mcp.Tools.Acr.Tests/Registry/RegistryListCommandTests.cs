@@ -14,7 +14,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Acr.UnitTests.Registry;
+namespace Azure.Mcp.Tools.Acr.Tests.Registry;
 
 public class RegistryListCommandTests : CommandUnitTestsBase<RegistryListCommand, IAcrService>
 {

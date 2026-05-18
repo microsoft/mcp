@@ -22,7 +22,7 @@
     <Project Path="./src/Azure.Mcp.Server.csproj" />
   </Folder>
   <Folder Name="/servers/Azure.Mcp.Server/tests/">
-    <Project Path="./tests/Azure.Mcp.Server.UnitTests/Azure.Mcp.Server.UnitTests.csproj" />
+    <Project Path="./tests/Azure.Mcp.Server.Tests/Azure.Mcp.Server.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Acr/" />
@@ -30,15 +30,14 @@
     <Project Path="../../tools/Azure.Mcp.Tools.Acr/src/Azure.Mcp.Tools.Acr.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Acr/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Acr/tests/Azure.Mcp.Tools.Acr.LiveTests/Azure.Mcp.Tools.Acr.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.Acr/tests/Azure.Mcp.Tools.Acr.UnitTests/Azure.Mcp.Tools.Acr.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Acr/tests/Azure.Mcp.Tools.Acr.Tests/Azure.Mcp.Tools.Acr.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Advisor/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Advisor/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Advisor/src/Azure.Mcp.Tools.Advisor.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Advisor/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Advisor/tests/Azure.Mcp.Tools.Advisor.UnitTests/Azure.Mcp.Tools.Advisor.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Advisor/tests/Azure.Mcp.Tools.Advisor.Tests/Azure.Mcp.Tools.Advisor.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Aks/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Aks/src/">

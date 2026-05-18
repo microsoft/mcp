@@ -3,7 +3,7 @@
 
 using Xunit;
 
-namespace Azure.Mcp.Server.UnitTests.Infrastructure;
+namespace Azure.Mcp.Server.Tests.Infrastructure;
 
 public class ConsolidatedModeTests
 {
@@ -79,7 +79,7 @@ public class ConsolidatedModeTests
         }
     }
 
-    private static async Task<string?> ReadJsonRpcResponseAsync(System.IO.StreamReader reader)
+    private static async Task<string?> ReadJsonRpcResponseAsync(StreamReader reader)
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         try

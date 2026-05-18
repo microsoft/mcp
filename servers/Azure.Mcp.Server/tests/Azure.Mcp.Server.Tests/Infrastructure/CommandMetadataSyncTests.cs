@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Xunit;
 
-namespace Azure.Mcp.Server.UnitTests.Infrastructure;
+namespace Azure.Mcp.Server.Tests.Infrastructure;
 
 public class CommandMetadataSyncTests
 {

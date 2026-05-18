@@ -12,7 +12,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Advisor.UnitTests.Recommendation;
+namespace Azure.Mcp.Tools.Advisor.Tests.Recommendation;
 
 public class RecommendationListCommandTests : CommandUnitTestsBase<RecommendationListCommand, IAdvisorService>
 {
