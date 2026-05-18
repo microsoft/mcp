@@ -106,8 +106,22 @@ public sealed class KustoClientTests
     // Log Analytics / App Insights
     [InlineData("https://mycluster.adx.loganalytics.azure.com")]
     [InlineData("https://mycluster.adx.applicationinsights.azure.com")]
+    // USSec (EagleX)
+    [InlineData("https://mycluster.kusto.core.eaglex.ic.gov")]
+    // USNat (SCloud)
+    [InlineData("https://mycluster.kusto.core.microsoft.scloud")]
+    // France
+    [InlineData("https://mycluster.kusto.sovcloud-api.fr")]
     // Germany
     [InlineData("https://mycluster.kusto.sovcloud-api.de")]
+    // Singapore
+    [InlineData("https://mycluster.kusto.sovcloud-api.sg")]
+    // PlayFab & Security
+    [InlineData("https://mycluster.playfabapi.com")]
+    [InlineData("https://mytenant.api.securityplatform.microsoft.com")]
+    [InlineData("https://mycluster.securitycenter.windows.com")]
+    // Azure Resource Graph
+    [InlineData("https://mycluster.arg.core.windows.net")]
     public void Constructor_AcceptsValidKustoClusterUris(string validClusterUri)
     {
         // Act - should not throw
@@ -125,8 +139,12 @@ public sealed class KustoClientTests
     [InlineData("https://ade.loganalytics.io")]
     [InlineData("https://adx.aimon.applicationinsights.azure.com")]
     [InlineData("https://adx.applicationinsights.azure.com")]
+    [InlineData("https://adx.int.applicationinsights.azure.com")]
+    [InlineData("https://adx.int.loganalytics.azure.com")]
+    [InlineData("https://adx.int.monitor.azure.com")]
     [InlineData("https://adx.loganalytics.azure.com")]
     [InlineData("https://adx.monitor.azure.com")]
+    [InlineData("https://api.securityplatform.microsoft.com")]
     // US Government exact hostnames
     [InlineData("https://adx.applicationinsights.azure.us")]
     [InlineData("https://adx.loganalytics.azure.us")]
@@ -135,10 +153,26 @@ public sealed class KustoClientTests
     [InlineData("https://adx.applicationinsights.azure.cn")]
     [InlineData("https://adx.loganalytics.azure.cn")]
     [InlineData("https://adx.monitor.azure.cn")]
+    // USSec (EagleX)
+    [InlineData("https://adx.applicationinsights.azure.eaglex.ic.gov")]
+    [InlineData("https://adx.loganalytics.azure.eaglex.ic.gov")]
+    [InlineData("https://adx.monitor.azure.eaglex.ic.gov")]
+    // USNat (SCloud)
+    [InlineData("https://adx.applicationinsights.azure.microsoft.scloud")]
+    [InlineData("https://adx.loganalytics.azure.microsoft.scloud")]
+    [InlineData("https://adx.monitor.azure.microsoft.scloud")]
+    // France
+    [InlineData("https://adx.applicationinsights.azure.fr")]
+    [InlineData("https://adx.loganalytics.azure.fr")]
+    [InlineData("https://adx.monitor.azure.fr")]
     // Germany
     [InlineData("https://adx.applicationinsights.azure.de")]
     [InlineData("https://adx.loganalytics.azure.de")]
     [InlineData("https://adx.monitor.azure.de")]
+    // Singapore
+    [InlineData("https://adx.applicationinsights.azure.sg")]
+    [InlineData("https://adx.loganalytics.azure.sg")]
+    [InlineData("https://adx.monitor.azure.sg")]
     public void Constructor_AcceptsValidKustoExactHostnames(string validClusterUri)
     {
         // Act - should not throw
@@ -194,6 +228,75 @@ public sealed class KustoClientTests
     }
 
     #endregion
+
+    [Fact]
+    public async Task ExecuteCommandAsync_WithAdeProxyUrl_PreservesFullResourcePathInOutgoingUri()
+    {
+        // Arrange
+        var tokenCredential = Substitute.For<TokenCredential>();
+        tokenCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<AccessToken>(new AccessToken("noop-token", DateTimeOffset.UtcNow.AddHours(1))));
+
+        var capture = new CapturingHandler();
+        using var httpClient = new HttpClient(capture);
+
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(httpClient);
+
+        const string adeUrl = "https://ade.applicationinsights.io/subscriptions/sub/resourcegroups/rg/providers/Microsoft.OperationalInsights/workspaces/ws";
+        var kustoClient = new KustoClient(adeUrl, tokenCredential, "azmcp", httpClientFactory);
+
+        // Act
+        _ = await kustoClient.ExecuteQueryCommandAsync("ws", "Foo | take 1", CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(capture.LastUri);
+        Assert.Equal(
+            "https://ade.applicationinsights.io/subscriptions/sub/resourcegroups/rg/providers/Microsoft.OperationalInsights/workspaces/ws/v1/rest/query",
+            capture.LastUri!.AbsoluteUri);
+    }
+
+    [Fact]
+    public async Task ExecuteControlCommandAsync_WithAdeProxyUrl_PreservesFullResourcePathInOutgoingUri()
+    {
+        // Arrange
+        var tokenCredential = Substitute.For<TokenCredential>();
+        tokenCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<AccessToken>(new AccessToken("noop-token", DateTimeOffset.UtcNow.AddHours(1))));
+
+        var capture = new CapturingHandler();
+        using var httpClient = new HttpClient(capture);
+
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(httpClient);
+
+        const string adeUrl = "https://ade.loganalytics.io/subscriptions/sub/resourcegroups/rg/providers/Microsoft.OperationalInsights/workspaces/ws/";
+        var kustoClient = new KustoClient(adeUrl, tokenCredential, "azmcp", httpClientFactory);
+
+        // Act
+        _ = await kustoClient.ExecuteControlCommandAsync("ws", ".show tables", CancellationToken.None);
+
+        // Assert - trailing slash normalized away, path preserved
+        Assert.NotNull(capture.LastUri);
+        Assert.Equal(
+            "https://ade.loganalytics.io/subscriptions/sub/resourcegroups/rg/providers/Microsoft.OperationalInsights/workspaces/ws/v1/rest/mgmt",
+            capture.LastUri!.AbsoluteUri);
+    }
+
+    private sealed class CapturingHandler : HttpMessageHandler
+    {
+        public Uri? LastUri { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            LastUri = request.RequestUri;
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"Tables": []}""", System.Text.Encoding.UTF8, "application/json")
+            };
+            return Task.FromResult(response);
+        }
+    }
 
     private sealed class MockHttpMessageHandler : HttpMessageHandler
     {
