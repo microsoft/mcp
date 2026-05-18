@@ -69,7 +69,14 @@ public class ServerStartupTests
         {
             if (!process.HasExited)
             {
-                process.Kill();
+                try
+                {
+                    process.Kill(entireProcessTree: true);
+                }
+                catch (InvalidOperationException)
+                {
+                    // The process exited between HasExited and Kill.
+                }
             }
         }
     }
