@@ -191,39 +191,35 @@
     <Project Path="tools/Azure.Mcp.Tools.Communication/src/Azure.Mcp.Tools.Communication.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Communication/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.Communication/tests/Azure.Mcp.Tools.Communication.LiveTests/Azure.Mcp.Tools.Communication.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.Communication/tests/Azure.Mcp.Tools.Communication.UnitTests/Azure.Mcp.Tools.Communication.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.Communication/tests/Azure.Mcp.Tools.Communication.Tests/Azure.Mcp.Tools.Communication.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Compute/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Compute/src/">
     <Project Path="tools/Azure.Mcp.Tools.Compute/src/Azure.Mcp.Tools.Compute.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Compute/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.Compute/tests/Azure.Mcp.Tools.Compute.LiveTests/Azure.Mcp.Tools.Compute.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.Compute/tests/Azure.Mcp.Tools.Compute.UnitTests/Azure.Mcp.Tools.Compute.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.Compute/tests/Azure.Mcp.Tools.Compute.Tests/Azure.Mcp.Tools.Compute.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ConfidentialLedger/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ConfidentialLedger/src/">
     <Project Path="tools/Azure.Mcp.Tools.ConfidentialLedger/src/Azure.Mcp.Tools.ConfidentialLedger.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ConfidentialLedger/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.ConfidentialLedger/tests/Azure.Mcp.Tools.ConfidentialLedger.LiveTests/Azure.Mcp.Tools.ConfidentialLedger.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.ConfidentialLedger/tests/Azure.Mcp.Tools.ConfidentialLedger.UnitTests/Azure.Mcp.Tools.ConfidentialLedger.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.ConfidentialLedger/tests/Azure.Mcp.Tools.ConfidentialLedger.Tests/Azure.Mcp.Tools.ConfidentialLedger.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ContainerApps/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ContainerApps/src/">
     <Project Path="tools/Azure.Mcp.Tools.ContainerApps/src/Azure.Mcp.Tools.ContainerApps.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ContainerApps/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.ContainerApps/tests/Azure.Mcp.Tools.ContainerApps.UnitTests/Azure.Mcp.Tools.ContainerApps.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.ContainerApps/tests/Azure.Mcp.Tools.ContainerApps.Tests/Azure.Mcp.Tools.ContainerApps.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Cosmos/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Cosmos/src/">
     <Project Path="tools/Azure.Mcp.Tools.Cosmos/src/Azure.Mcp.Tools.Cosmos.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Cosmos/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.Cosmos/tests/Azure.Mcp.Tools.Cosmos.LiveTests/Azure.Mcp.Tools.Cosmos.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.Cosmos/tests/Azure.Mcp.Tools.Cosmos.UnitTests/Azure.Mcp.Tools.Cosmos.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.Cosmos/tests/Azure.Mcp.Tools.Cosmos.Tests/Azure.Mcp.Tools.Cosmos.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Deploy/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Deploy/src/">
