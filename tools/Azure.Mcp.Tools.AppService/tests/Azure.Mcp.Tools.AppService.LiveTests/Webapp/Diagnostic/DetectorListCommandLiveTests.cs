@@ -29,7 +29,7 @@ public class DetectorListCommandLiveTests(ITestOutputHelper output, TestProxyFix
                 { "resource-group", resourceGroupName },
                 { "app", webappName }
             });
-        Assert.NotNull(result);
+        Assert.True(result.HasValue);
 
         var detectorsResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DetectorListResult);
         Assert.NotNull(detectorsResult);

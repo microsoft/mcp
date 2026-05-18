@@ -106,7 +106,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 { "file", testAudioFile },
                 { "language", language },
             });
-        Assert.NotNull(result);
+        Assert.True(result.HasValue);
 
         // Assert
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
@@ -151,7 +151,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             });
 
         // Assert
-        Assert.NotNull(result);
+        Assert.True(result.HasValue);
     
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
@@ -210,7 +210,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 { "profanity", profanityOption }
             });
 
-        Assert.NotNull(result);
+        Assert.True(result.HasValue);
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
@@ -251,7 +251,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             });
 
         // Assert
-        Assert.NotNull(result);
+        Assert.True(result.HasValue);
 
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
@@ -286,7 +286,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             });
 
         // Assert
-        Assert.NotNull(result);
+        Assert.True(result.HasValue);
 
         var resultText = result.ToString();
         Assert.NotNull(resultText);
@@ -315,7 +315,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 });
 
             // Assert
-            Assert.NotNull(result);
+            Assert.True(result.HasValue);
             using var doc = JsonDocument.Parse(result.Value.GetRawText());
             var inner = doc.RootElement.GetProperty("result").GetRawText();
             var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
@@ -360,7 +360,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 });
 
             // Assert
-            Assert.NotNull(result);
+            Assert.True(result.HasValue);
             using var doc = JsonDocument.Parse(result.Value.GetRawText());
             var inner = doc.RootElement.GetProperty("result").GetRawText();
             var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
@@ -410,7 +410,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 });
 
             // Assert
-            Assert.NotNull(result);
+            Assert.True(result.HasValue);
             var resultText = result.ToString();
             Assert.NotNull(resultText);
             Output.WriteLine("Recognition Result: " + resultText);
@@ -463,7 +463,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             });
 
         // Assert
-        Assert.NotNull(result);
+        Assert.True(result.HasValue);
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
@@ -505,7 +505,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             });
 
         // Should handle empty file gracefully
-        Assert.NotNull(result);
+        Assert.True(result.HasValue);
         var resultText = result.ToString();
         Assert.NotNull(resultText);
 
@@ -550,7 +550,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 });
 
             // Verify successful response
-            Assert.NotNull(result);
+            Assert.True(result.HasValue);
             var resultText = result.ToString();
             Assert.NotNull(resultText);
 
@@ -605,7 +605,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                     { "voice", voice }
                 });
 
-            Assert.NotNull(result);
+            Assert.True(result.HasValue);
             var resultText = result.ToString();
             Assert.NotNull(resultText);
 
@@ -658,7 +658,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                     { "format", format }
                 });
 
-            Assert.NotNull(result);
+            Assert.True(result.HasValue);
             var resultText = result.ToString();
             Assert.NotNull(resultText);
 
@@ -773,7 +773,7 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                     { "language", "en-US" }
                 });
 
-            Assert.NotNull(result);
+            Assert.True(result.HasValue);
             var resultText = result.ToString();
             Assert.NotNull(resultText);
 

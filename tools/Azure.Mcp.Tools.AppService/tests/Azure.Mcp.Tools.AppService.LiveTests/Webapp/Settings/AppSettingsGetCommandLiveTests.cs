@@ -29,7 +29,7 @@ public class AppSettingsGetCommandLiveTests(ITestOutputHelper output, TestProxyF
                 { "resource-group", resourceGroupName },
                 { "app", webappName }
             });
-        Assert.NotNull(result);
+        Assert.True(result.HasValue);
 
         var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsGetResult);
         Assert.NotNull(getResult);

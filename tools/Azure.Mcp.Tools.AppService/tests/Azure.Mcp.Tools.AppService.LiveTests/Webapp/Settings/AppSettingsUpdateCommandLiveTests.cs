@@ -33,7 +33,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-value", "SomeValue" },
                 { "setting-update-type", "add" }
             });
-        Assert.NotNull(result);
+        Assert.True(result.HasValue);
 
         var updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotNull(updateResult);
@@ -60,6 +60,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-value", "SomeValue" },
                 { "setting-update-type", "add" }
             });
+        Assert.True(result.HasValue);
 
         var updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotNull(updateResult);
@@ -77,6 +78,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-value", "SomeValue" },
                 { "setting-update-type", "add" }
             });
+        Assert.True(result.HasValue);
 
         updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotNull(updateResult);
@@ -104,6 +106,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-update-type", "set" }
             });
 
+        Assert.True(result.HasValue);
         var updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotNull(updateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
@@ -121,6 +124,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-update-type", "set" }
             });
 
+        Assert.True(result.HasValue);
         updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotNull(updateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
@@ -147,6 +151,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-update-type", "set" }
             });
 
+        Assert.True(result.HasValue);
         var updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotNull(updateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
@@ -163,6 +168,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-update-type", "delete" }
             });
 
+        Assert.True(result.HasValue);
         updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotNull(updateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
@@ -188,6 +194,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
                 { "setting-update-type", "delete" }
             });
 
+        Assert.True(result.HasValue);
         var updateResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.AppSettingsUpdateResult);
         Assert.NotNull(updateResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
