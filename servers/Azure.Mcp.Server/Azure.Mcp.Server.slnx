@@ -107,36 +107,35 @@
     <Project Path="../../tools/Azure.Mcp.Tools.AzureMigrate/src/Azure.Mcp.Tools.AzureMigrate.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureMigrate/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.AzureMigrate/tests/Azure.Mcp.Tools.AzureMigrate.LiveTests/Azure.Mcp.Tools.AzureMigrate.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.AzureMigrate/tests/Azure.Mcp.Tools.AzureMigrate.UnitTests/Azure.Mcp.Tools.AzureMigrate.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.AzureMigrate/tests/Azure.Mcp.Tools.AzureMigrate.Tests/Azure.Mcp.Tools.AzureMigrate.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraform/" />
   <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraform/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.AzureTerraform/src/Azure.Mcp.Tools.AzureTerraform.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraform/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.AzureTerraform/tests/Azure.Mcp.Tools.AzureTerraform.UnitTests/Azure.Mcp.Tools.AzureTerraform.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.AzureTerraform/tests/Azure.Mcp.Tools.AzureTerraform.Tests/Azure.Mcp.Tools.AzureTerraform.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraformBestPractices/" />
   <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraformBestPractices/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.AzureTerraformBestPractices/src/Azure.Mcp.Tools.AzureTerraformBestPractices.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraformBestPractices/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.AzureTerraformBestPractices/tests/Azure.Mcp.Tools.AzureTerraformBestPractices.UnitTests/Azure.Mcp.Tools.AzureTerraformBestPractices.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.AzureTerraformBestPractices/tests/Azure.Mcp.Tools.AzureTerraformBestPractices.Tests/Azure.Mcp.Tools.AzureTerraformBestPractices.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.BicepSchema/" />
   <Folder Name="/tools/Azure.Mcp.Tools.BicepSchema/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.BicepSchema/src/Azure.Mcp.Tools.BicepSchema.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.BicepSchema/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.BicepSchema/tests/Azure.Mcp.Tools.BicepSchema.UnitTests/Azure.Mcp.Tools.BicepSchema.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.BicepSchema/tests/Azure.Mcp.Tools.BicepSchema.Tests/Azure.Mcp.Tools.BicepSchema.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.CloudArchitect/" />
   <Folder Name="/tools/Azure.Mcp.Tools.CloudArchitect/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.CloudArchitect/src/Azure.Mcp.Tools.CloudArchitect.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.CloudArchitect/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.CloudArchitect/tests/Azure.Mcp.Tools.CloudArchitect.UnitTests/Azure.Mcp.Tools.CloudArchitect.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.CloudArchitect/tests/Azure.Mcp.Tools.CloudArchitect.Tests/Azure.Mcp.Tools.CloudArchitect.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Communication/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Communication/src/">
