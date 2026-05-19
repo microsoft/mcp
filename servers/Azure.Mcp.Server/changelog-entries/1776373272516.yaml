@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added compute vm power-state tool for managing VM power state (start/stop/restart/deallocate)"
