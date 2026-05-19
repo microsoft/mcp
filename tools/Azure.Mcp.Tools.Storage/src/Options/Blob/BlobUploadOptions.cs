@@ -9,8 +9,8 @@ namespace Azure.Mcp.Tools.Storage.Options.Blob;
 
 public class BlobUploadOptions : ISubscriptionOption
 {
-    [Option(OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
+    [Option("The local file path to read content from or to write content to. This should be the full path to the file on your local system.")]
+    public required string LocalFilePath { get; set; }
 
     [Option("The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').")]
     public required string Account { get; set; }
@@ -21,14 +21,14 @@ public class BlobUploadOptions : ISubscriptionOption
     [Option("The name of the blob to access within the container. This should be the full path within the container (e.g., 'file.txt' or 'folder/file.txt').")]
     public required string Blob { get; set; }
 
-    [Option(Name = "local-file-path", Description = "The local file path to read content from or to write content to. This should be the full path to the file on your local system.")]
-    public required string LocalFilePath { get; set; }
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
 
     [Option(OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
     // TODO: Remove unused option — registered and visible to the user but never consumed by the command
-    [Option(Name = "auth-method", Description = OptionDescriptions.AuthMethod)]
+    [Option(OptionDescriptions.AuthMethod)]
     public AuthMethod? AuthMethod { get; set; }
 
     [Option(Name = "retry")]

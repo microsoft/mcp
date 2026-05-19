@@ -9,17 +9,17 @@ namespace Azure.Mcp.Tools.Storage.Options.Table;
 
 public class TableListOptions : ISubscriptionOption
 {
-    [Option(OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
-
     [Option("The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').")]
     public required string Account { get; set; }
+
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
 
     [Option(OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
     // TODO: Remove unused option — registered and visible to the user but never consumed by the command
-    [Option(Name = "auth-method", Description = OptionDescriptions.AuthMethod)]
+    [Option(OptionDescriptions.AuthMethod)]
     public AuthMethod? AuthMethod { get; set; }
 
     [Option(Name = "retry")]

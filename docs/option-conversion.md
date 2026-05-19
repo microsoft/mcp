@@ -32,9 +32,6 @@ The new pattern uses `[Option]` attributes on a flat options POCO. `OptionBinder
 // NEW: options are just a POCO with attributes
 public class BlobUploadOptions : ISubscriptionOption
 {
-    [Option(OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
-
     [Option("The name of the Azure Storage account.")]
     public required string Account { get; set; }
 
@@ -44,8 +41,11 @@ public class BlobUploadOptions : ISubscriptionOption
     [Option("The blob name/path within the container.")]
     public required string Blob { get; set; }
 
-    [Option(Name = "local-file-path", Description = "The local file path to read content from.")]
+    [Option("The local file path to read content from.")]
     public required string LocalFilePath { get; set; }
+
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
 
     [Option(OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
@@ -108,11 +108,12 @@ Replace the options class hierarchy with a single flat POCO that implements `ISu
 > This also means nullability may change. A property like `Account` was `string?` in the old model because `BaseStorageOptions` was shared across commands that registered it as both required and optional. In the new model, if every use of `--account` for a given command is required, declare it as `required string Account` — no `?`. **Favor accuracy per-command over reusability across commands.**
 
 **Conventions:**
-- **Name**: Derived automatically from the property name in kebab-case (e.g., `LocalFilePath` → `--local-file-path`). Use `[Option(Name = "...")]` to override.
+- **Name**: Derived automatically from the property name in kebab-case (e.g., `LocalFilePath` → `--local-file-path`). Only use `[Option(Name = "...")]` when the convention doesn't produce the desired name (e.g., `RetryPolicy` → `--retry` instead of `--retry-policy`). **Do not** specify `Name =` when it matches the default.
 - **Required**: Determined by nullability. Use `required` keyword or non-nullable types for required options. Use `?` for optional.
 - **Description**: Pass as the constructor argument `[Option("description")]` or via `[Option(Description = "...")]`.
 - **Shared descriptions**: Use constants from `OptionDescriptions` (e.g., `OptionDescriptions.Subscription`, `OptionDescriptions.Tenant`).
 - **Nested objects**: Use `[Option(Name = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `RetryPolicyOptions` with `[Option(Name = "retry")]` produces `--retry-delay`, `--retry-max-retries`, etc.
+- **Property ordering**: List command-specific options first, then sink common/infrastructure options to the bottom in this order: `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`, `RetryPolicy`. This keeps the most relevant options visible at a glance.
 
 **Before (hierarchy of 6 classes):**
 ```
@@ -128,9 +129,6 @@ GlobalOptions                → Tenant, AuthMethod, RetryPolicy
 ```csharp
 public class BlobUploadOptions : ISubscriptionOption
 {
-    [Option(OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
-
     [Option("The name of the Azure Storage account.")]
     public required string Account { get; set; }
 
@@ -140,8 +138,11 @@ public class BlobUploadOptions : ISubscriptionOption
     [Option("The blob name/path within the container.")]
     public required string Blob { get; set; }
 
-    [Option(Name = "local-file-path", Description = "The local file path to read content from.")]
+    [Option("The local file path to read content from.")]
     public required string LocalFilePath { get; set; }
+
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
 
     [Option(OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
@@ -278,9 +279,6 @@ The options class stays flat — no inheritance. It just implements the interfac
 ```csharp
 public class BlobUploadOptions : ISubscriptionOption, IBlobOption
 {
-    [Option(OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
-
     [Option("The name of the Azure Storage account.")]
     public required string Account { get; set; }
 
@@ -290,8 +288,11 @@ public class BlobUploadOptions : ISubscriptionOption, IBlobOption
     [Option("The blob name/path within the container.")]
     public required string Blob { get; set; }
 
-    [Option(Name = "local-file-path", Description = "The local file path to read content from.")]
+    [Option("The local file path to read content from.")]
     public required string LocalFilePath { get; set; }
+
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
 
     [Option(OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
