@@ -261,9 +261,12 @@ public class AppLensService(
     {
         if (resourceType.Equals("microsoft.web/sites", StringComparison.OrdinalIgnoreCase))
         {
-            return resourceKind.Equals("app", StringComparison.OrdinalIgnoreCase)
-                || resourceKind.Equals("linux", StringComparison.OrdinalIgnoreCase)
-                || resourceKind.Equals("functionapp", StringComparison.OrdinalIgnoreCase);
+            // Azure returns compound kinds (e.g. "app,linux", "functionapp,linux", "app,linux,container")
+            // so we split by comma and check if any component matches a supported kind.
+            var kinds = resourceKind.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            return kinds.Any(k => k.Equals("app", StringComparison.OrdinalIgnoreCase)
+                || k.Equals("linux", StringComparison.OrdinalIgnoreCase)
+                || k.Equals("functionapp", StringComparison.OrdinalIgnoreCase));
         }
 
         return resourceType.Equals("microsoft.containerservice/managedclusters", StringComparison.OrdinalIgnoreCase)
