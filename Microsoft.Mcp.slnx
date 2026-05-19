@@ -326,30 +326,28 @@
     <Project Path="tools/Azure.Mcp.Tools.Marketplace/src/Azure.Mcp.Tools.Marketplace.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Marketplace/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.Marketplace/tests/Azure.Mcp.Tools.Marketplace.LiveTests/Azure.Mcp.Tools.Marketplace.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.Marketplace/tests/Azure.Mcp.Tools.Marketplace.UnitTests/Azure.Mcp.Tools.Marketplace.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.Marketplace/tests/Azure.Mcp.Tools.Marketplace.Tests/Azure.Mcp.Tools.Marketplace.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Monitor/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Monitor/src/">
     <Project Path="tools/Azure.Mcp.Tools.Monitor/src/Azure.Mcp.Tools.Monitor.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Monitor/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.Monitor/tests/Azure.Mcp.Tools.Monitor.LiveTests/Azure.Mcp.Tools.Monitor.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.Monitor/tests/Azure.Mcp.Tools.Monitor.UnitTests/Azure.Mcp.Tools.Monitor.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.Monitor/tests/Azure.Mcp.Tools.Monitor.Tests/Azure.Mcp.Tools.Monitor.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.MySql/" />
   <Folder Name="/tools/Azure.Mcp.Tools.MySql/src/">
     <Project Path="tools/Azure.Mcp.Tools.MySql/src/Azure.Mcp.Tools.MySql.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.MySql/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.MySql/tests/Azure.Mcp.Tools.MySql.UnitTests/Azure.Mcp.Tools.MySql.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.MySql/tests/Azure.Mcp.Tools.MySql.Tests/Azure.Mcp.Tools.MySql.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Policy/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Policy/src/">
     <Project Path="tools/Azure.Mcp.Tools.Policy/src/Azure.Mcp.Tools.Policy.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Policy/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.Policy/tests/Azure.Mcp.Tools.Policy.UnitTests/Azure.Mcp.Tools.Policy.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.Policy/tests/Azure.Mcp.Tools.Policy.Tests/Azure.Mcp.Tools.Policy.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Postgres/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Postgres/src/">
