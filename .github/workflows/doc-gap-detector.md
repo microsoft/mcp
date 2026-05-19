@@ -183,7 +183,7 @@ Run these commands in order. Each must succeed before proceeding to the next:
 
 1. `dotnet build servers/Azure.Mcp.Server/` — confirms the server project compiles cleanly
 2. `dotnet build tools/Azure.Mcp.Tools.<Service>/src/` — confirms the affected toolset compiles
-3. `dotnet test tools/Azure.Mcp.Tools.<Service>/tests/Azure.Mcp.Tools.<Service>.UnitTests/` — runs unit tests for the affected toolset
+3. `dotnet test tools/Azure.Mcp.Tools.<Service>/tests/Azure.Mcp.Tools.<Service>.Tests/ -filter "TestType!=Live"` — runs unit tests for the affected toolset
 4. `.\eng\common\spelling\Invoke-Cspell.ps1` — checks spelling in new or modified documentation
 
 </details>
