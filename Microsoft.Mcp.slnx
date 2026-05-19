@@ -384,32 +384,28 @@
     <Project Path="tools/Azure.Mcp.Tools.Search/src/Azure.Mcp.Tools.Search.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Search/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.Search/tests/Azure.Mcp.Tools.Search.LiveTests/Azure.Mcp.Tools.Search.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.Search/tests/Azure.Mcp.Tools.Search.UnitTests/Azure.Mcp.Tools.Search.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.Search/tests/Azure.Mcp.Tools.Search.Tests/Azure.Mcp.Tools.Search.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ServiceBus/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ServiceBus/src/">
     <Project Path="tools/Azure.Mcp.Tools.ServiceBus/src/Azure.Mcp.Tools.ServiceBus.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ServiceBus/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.ServiceBus/tests/Azure.Mcp.Tools.ServiceBus.LiveTests/Azure.Mcp.Tools.ServiceBus.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.ServiceBus/tests/Azure.Mcp.Tools.ServiceBus.UnitTests/Azure.Mcp.Tools.ServiceBus.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.ServiceBus/tests/Azure.Mcp.Tools.ServiceBus.Tests/Azure.Mcp.Tools.ServiceBus.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ServiceFabric/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ServiceFabric/src/">
     <Project Path="tools/Azure.Mcp.Tools.ServiceFabric/src/Azure.Mcp.Tools.ServiceFabric.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ServiceFabric/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.ServiceFabric/tests/Azure.Mcp.Tools.ServiceFabric.LiveTests/Azure.Mcp.Tools.ServiceFabric.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.ServiceFabric/tests/Azure.Mcp.Tools.ServiceFabric.UnitTests/Azure.Mcp.Tools.ServiceFabric.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.ServiceFabric/tests/Azure.Mcp.Tools.ServiceFabric.Tests/Azure.Mcp.Tools.ServiceFabric.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.SignalR/" />
   <Folder Name="/tools/Azure.Mcp.Tools.SignalR/src/">
     <Project Path="tools/Azure.Mcp.Tools.SignalR/src/Azure.Mcp.Tools.SignalR.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.SignalR/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.SignalR/tests/Azure.Mcp.Tools.SignalR.LiveTests/Azure.Mcp.Tools.SignalR.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.SignalR/tests/Azure.Mcp.Tools.SignalR.UnitTests/Azure.Mcp.Tools.SignalR.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.SignalR/tests/Azure.Mcp.Tools.SignalR.Tests/Azure.Mcp.Tools.SignalR.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Speech/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Speech/src/">
@@ -417,7 +413,7 @@
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Speech/tests/">
     <Project Path="tools/Azure.Mcp.Tools.Speech/tests/Azure.Mcp.Tools.Speech.LiveTests/Azure.Mcp.Tools.Speech.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.Speech/tests/Azure.Mcp.Tools.Speech.UnitTests/Azure.Mcp.Tools.Speech.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.Speech/tests/Azure.Mcp.Tools.Speech.Tests/Azure.Mcp.Tools.Speech.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Sql/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Sql/src/">
