@@ -310,39 +310,35 @@
     <Project Path="../../tools/Azure.Mcp.Tools.Postgres/src/Azure.Mcp.Tools.Postgres.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Postgres/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Postgres/tests/Azure.Mcp.Tools.Postgres.LiveTests/Azure.Mcp.Tools.Postgres.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.Postgres/tests/Azure.Mcp.Tools.Postgres.UnitTests/Azure.Mcp.Tools.Postgres.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Postgres/tests/Azure.Mcp.Tools.Postgres.Tests/Azure.Mcp.Tools.Postgres.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Pricing/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Pricing/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Pricing/src/Azure.Mcp.Tools.Pricing.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Pricing/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Pricing/tests/Azure.Mcp.Tools.Pricing.LiveTests/Azure.Mcp.Tools.Pricing.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.Pricing/tests/Azure.Mcp.Tools.Pricing.UnitTests/Azure.Mcp.Tools.Pricing.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Pricing/tests/Azure.Mcp.Tools.Pricing.Tests/Azure.Mcp.Tools.Pricing.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Quota/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Quota/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Quota/src/Azure.Mcp.Tools.Quota.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Quota/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Quota/tests/Azure.Mcp.Tools.Quota.LiveTests/Azure.Mcp.Tools.Quota.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.Quota/tests/Azure.Mcp.Tools.Quota.UnitTests/Azure.Mcp.Tools.Quota.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Quota/tests/Azure.Mcp.Tools.Quota.Tests/Azure.Mcp.Tools.Quota.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Redis/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Redis/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Redis/src/Azure.Mcp.Tools.Redis.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Redis/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Redis/tests/Azure.Mcp.Tools.Redis.LiveTests/Azure.Mcp.Tools.Redis.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.Redis/tests/Azure.Mcp.Tools.Redis.UnitTests/Azure.Mcp.Tools.Redis.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Redis/tests/Azure.Mcp.Tools.Redis.Tests/Azure.Mcp.Tools.Redis.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ResourceHealth/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ResourceHealth/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.ResourceHealth/src/Azure.Mcp.Tools.ResourceHealth.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ResourceHealth/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.ResourceHealth/tests/Azure.Mcp.Tools.ResourceHealth.UnitTests/Azure.Mcp.Tools.ResourceHealth.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.ResourceHealth/tests/Azure.Mcp.Tools.ResourceHealth.Tests/Azure.Mcp.Tools.ResourceHealth.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Search/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Search/src/">
