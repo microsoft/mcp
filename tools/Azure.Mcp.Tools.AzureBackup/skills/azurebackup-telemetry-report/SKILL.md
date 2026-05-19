@@ -166,11 +166,12 @@ Is success == true?
         └─ NO →
             Is StatusCode 400/403/404?
               └─ YES → "Customer (4xx)"
-            Is ExceptionType Azure.RequestFailedException with 5xx?
-              └─ YES → "Azure Service"
-            Is ExceptionType System.AggregateException?
-              └─ YES → "Azure Service"
-            Otherwise → "Unknown" (investigate)
+              └─ NO →
+                  Is ExceptionType Azure.RequestFailedException with 5xx?
+                    └─ YES → "Azure Service"
+                  Is ExceptionType System.AggregateException?
+                    └─ YES → "Azure Service"
+                  Otherwise → "Unknown" (investigate)
 ```
 
 ## Known Bug IDs
@@ -179,16 +180,16 @@ These are the bugs triaged from the original telemetry analysis (April 2026):
 
 | Bug | Tool | Description | Fix PR | Release |
 |-----|------|-------------|--------|---------|
-| BUG-1 | backup_status, protecteditem_get | ArgumentNullException on null ResourceType in MapArmResourceTypeToBackupDataSourceType | #2518 (partial), #2621 (defense-in-depth) | beta.7 (partial), beta.11 (pending) |
+| BUG-1 | backup_status, protecteditem_get | ArgumentNullException on null ResourceType in MapArmResourceTypeToBackupDataSourceType | #2518 (partial), #2621 (defense-in-depth) | beta.7 (partial), pending |
 | BUG-2 | protecteditem_protect | VM pre-discovery loop timeout | #2470 | beta.6 |
-| BUG-3 | protectableitem_list, find-unprotected | Workload normalization ArgumentException in ValidateAndParseResourceTypeFilter | #2518 (partial), #2621 (relaxed regex) | beta.7 (partial), beta.11 (pending) |
+| BUG-3 | protectableitem_list, find-unprotected | Workload normalization ArgumentException in ValidateAndParseResourceTypeFilter | #2518 (partial), #2621 (relaxed regex) | beta.7 (partial), pending |
 | BUG-4 | soft-delete | Deprecated BackupResourceVaultConfig API | #2518 | beta.7 |
 | BUG-5 | enable-crr | Deprecated BackupResourceConfig API | #2518 | beta.7 |
 | BUG-6 | vault_get | FormatException on subscription name (non-GUID) | #2518 | beta.7 |
 | BUG-7 | protecteditem_protect | DPP vault missing managed identity | #2470 | beta.6 |
 | BUG-8 | recoverypoint_get | Null container in resolution | #2518 | beta.7 |
 | NEW-1 | vault_get | AggregateException — pre-existing auth race (Azure Service, not MCP bug) | Not filed | — |
-| NEW-2 | job_get | FormatException in DPP SDK — XmlConvert.ToTimeSpan fails during DataProtectionBackupJobProperties.Deserialize (Azure SDK bug, not MCP code) | #2621 (workaround catch), [azure-sdk#59306](https://github.com/Azure/azure-sdk-for-net/issues/59306) (upstream) | beta.11 (pending) |
+| NEW-2 | job_get | FormatException in DPP SDK — XmlConvert.ToTimeSpan fails during DataProtectionBackupJobProperties.Deserialize (Azure SDK bug, not MCP code) | #2621 (workaround catch), [azure-sdk#59306](https://github.com/Azure/azure-sdk-for-net/issues/59306) (upstream) | pending |
 
 > **Note:** PR #2518 title says "Fix 5 telemetry-triaged bugs (BUG-3,4,5,6,8)" but the
 > actual merged code also includes the BUG-1 fix. However, the #2518 fixes for BUG-1 and
