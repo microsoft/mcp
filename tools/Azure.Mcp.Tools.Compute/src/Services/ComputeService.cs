@@ -465,37 +465,48 @@ public class ComputeService(
                 }
             }
 
-            // Create NIC (always new)
+            // Create NIC (only if it doesn't already exist; pre-existing NICs are not tracked
+            // so they survive rollback — matches the contract for NSG/VNet/PIP above).
             var nicCollection = resourceGroup.GetNetworkInterfaces();
-            var nicData = new NetworkInterfaceData
+            ResourceIdentifier? nicResourceId;
+            try
             {
-                Location = new(location)
-            };
+                var existingNic = await nicCollection.GetAsync(nicName, cancellationToken: cancellationToken);
+                nicResourceId = existingNic.Value.Id;
+            }
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                var nicData = new NetworkInterfaceData
+                {
+                    Location = new(location)
+                };
 
-            var ipConfig = new NetworkInterfaceIPConfigurationData
-            {
-                Name = "ipconfig1",
-                Primary = true,
-                PrivateIPAllocationMethod = NetworkIPAllocationMethod.Dynamic,
-                Subnet = new() { Id = subnetResource.Value.Id }
-            };
+                var ipConfig = new NetworkInterfaceIPConfigurationData
+                {
+                    Name = "ipconfig1",
+                    Primary = true,
+                    PrivateIPAllocationMethod = NetworkIPAllocationMethod.Dynamic,
+                    Subnet = new() { Id = subnetResource.Value.Id }
+                };
 
-            if (publicIpResource != null)
-            {
-                ipConfig.PublicIPAddress = new() { Id = publicIpResource.Id };
+                if (publicIpResource != null)
+                {
+                    ipConfig.PublicIPAddress = new() { Id = publicIpResource.Id };
+                }
+
+                nicData.IPConfigurations.Add(ipConfig);
+
+                var nicOperation = await nicCollection.CreateOrUpdateAsync(
+                    WaitUntil.Started,
+                    nicName,
+                    nicData,
+                    cancellationToken);
+                await WaitForLroCompletionAsync(nicOperation, cancellationToken);
+                nicResourceId = nicOperation.Value.Id;
+                tracker.Track(nicResourceId);
             }
 
-            nicData.IPConfigurations.Add(ipConfig);
-
-            var nicOperation = await nicCollection.CreateOrUpdateAsync(
-                WaitUntil.Started,
-                nicName,
-                nicData,
-                cancellationToken);
-            await WaitForLroCompletionAsync(nicOperation, cancellationToken);
-            tracker.Track(nicOperation.Value.Id);
-
-            return (nicOperation.Value.Id, tracker);
+            return (nicResourceId, tracker);
         }
         catch
         {
@@ -1259,6 +1270,7 @@ public class ComputeService(
             // Create or get VNet
             var vnetCollection = resourceGroup.GetVirtualNetworks();
             VirtualNetworkResource vnetResource;
+            bool vnetWasCreated = false;
 
             try
             {
@@ -1289,6 +1301,7 @@ public class ComputeService(
                 await WaitForLroCompletionAsync(vnetOperation, cancellationToken);
                 vnetResource = vnetOperation.Value;
                 tracker.Track(vnetResource.Id);
+                vnetWasCreated = true;
             }
 
             // Get subnet
@@ -1314,7 +1327,15 @@ public class ComputeService(
                     cancellationToken);
                 await WaitForLroCompletionAsync(subnetOperation, cancellationToken);
                 subnetResource = subnetOperation.Value;
-                // Don't track subnet separately — it's deleted with the VNet
+
+                // Only track the subnet for rollback when the VNet was pre-existing.
+                // If we created the VNet, the subnet is removed automatically when the
+                // VNet is deleted, so tracking it would cause a redundant (and likely 404)
+                // delete attempt.
+                if (!vnetWasCreated)
+                {
+                    tracker.Track(subnetResource.Id);
+                }
             }
 
             return (subnetResource.Id, tracker);

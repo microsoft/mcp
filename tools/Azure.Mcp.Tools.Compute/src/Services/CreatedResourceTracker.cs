@@ -51,5 +51,9 @@ internal sealed class CreatedResourceTracker(ILogger logger)
                 logger.LogWarning(ex, "Failed to roll back resource {ResourceId}. Manual cleanup required.", id);
             }
         }
+
+        // Clear the list so HasResources reflects post-rollback state and a stray
+        // second call doesn't re-issue deletes for the same IDs.
+        _createdResources.Clear();
     }
 }

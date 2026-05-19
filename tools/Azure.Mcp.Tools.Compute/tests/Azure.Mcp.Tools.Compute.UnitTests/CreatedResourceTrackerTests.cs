@@ -162,4 +162,29 @@ public class CreatedResourceTrackerTests
 
         armClient.Received(1).GetGenericResource(id);
     }
+
+    [Fact]
+    public async Task RollbackAsync_ClearsTrackedResourcesAfterCompletion()
+    {
+        var tracker = new CreatedResourceTracker(_logger);
+        var id = new ResourceIdentifier("/subscriptions/sub123/resourceGroups/rg/providers/Microsoft.Network/networkSecurityGroups/nsg1");
+        tracker.Track(id);
+        Assert.True(tracker.HasResources);
+
+        var armClient = Substitute.For<ArmClient>();
+        var mockResource = Substitute.For<GenericResource>();
+        mockResource.DeleteAsync(WaitUntil.Completed, Arg.Any<CancellationToken>())
+            .Returns(Substitute.For<ArmOperation>());
+        armClient.GetGenericResource(id).Returns(mockResource);
+
+        await tracker.RollbackAsync(armClient);
+
+        // Tracker should be empty after rollback so a second invocation is a no-op.
+        Assert.False(tracker.HasResources);
+
+        await tracker.RollbackAsync(armClient);
+
+        // The resource should only have been deleted once across both calls.
+        armClient.Received(1).GetGenericResource(id);
+    }
 }
