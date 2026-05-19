@@ -1,0 +1,21 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
+using Azure.Mcp.Tools.StorageSync.Services;
+using Microsoft.Mcp.Tests.Client;
+using Xunit;
+
+namespace Azure.Mcp.Tools.StorageSync.Tests.Commands.ServerEndpoint;
+
+public class ServerEndpointGetCommandTests : CommandUnitTestsBase<ServerEndpointGetCommand, IStorageSyncService>
+{
+    [Fact]
+    public void Constructor_InitializesCommandCorrectly()
+    {
+        Assert.Equal("get", CommandDefinition.Name);
+        Assert.Equal("get", Command.Name);
+    }
+}
+
+

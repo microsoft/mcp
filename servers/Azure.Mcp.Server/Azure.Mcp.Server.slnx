@@ -366,7 +366,6 @@
     <Project Path="../../tools/Azure.Mcp.Tools.Speech/src/Azure.Mcp.Tools.Speech.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Speech/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Speech/tests/Azure.Mcp.Tools.Speech.LiveTests/Azure.Mcp.Tools.Speech.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.Speech/tests/Azure.Mcp.Tools.Speech.Tests/Azure.Mcp.Tools.Speech.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Sql/" />
@@ -374,39 +373,35 @@
     <Project Path="../../tools/Azure.Mcp.Tools.Sql/src/Azure.Mcp.Tools.Sql.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Sql/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Sql/tests/Azure.Mcp.Tools.Sql.LiveTests/Azure.Mcp.Tools.Sql.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.Sql/tests/Azure.Mcp.Tools.Sql.UnitTests/Azure.Mcp.Tools.Sql.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Sql/tests/Azure.Mcp.Tools.Sql.Tests/Azure.Mcp.Tools.Sql.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Storage/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Storage/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Storage/src/Azure.Mcp.Tools.Storage.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Storage/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.LiveTests/Azure.Mcp.Tools.Storage.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.UnitTests/Azure.Mcp.Tools.Storage.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/Azure.Mcp.Tools.Storage.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.StorageSync/" />
   <Folder Name="/tools/Azure.Mcp.Tools.StorageSync/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.StorageSync/src/Azure.Mcp.Tools.StorageSync.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.StorageSync/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.StorageSync/tests/Azure.Mcp.Tools.StorageSync.LiveTests/Azure.Mcp.Tools.StorageSync.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.StorageSync/tests/Azure.Mcp.Tools.StorageSync.UnitTests/Azure.Mcp.Tools.StorageSync.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.StorageSync/tests/Azure.Mcp.Tools.StorageSync.Tests/Azure.Mcp.Tools.StorageSync.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.VirtualDesktop/" />
   <Folder Name="/tools/Azure.Mcp.Tools.VirtualDesktop/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.VirtualDesktop/src/Azure.Mcp.Tools.VirtualDesktop.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.VirtualDesktop/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.VirtualDesktop/tests/Azure.Mcp.Tools.VirtualDesktop.LiveTests/Azure.Mcp.Tools.VirtualDesktop.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.VirtualDesktop/tests/Azure.Mcp.Tools.VirtualDesktop.UnitTests/Azure.Mcp.Tools.VirtualDesktop.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.VirtualDesktop/tests/Azure.Mcp.Tools.VirtualDesktop.Tests/Azure.Mcp.Tools.VirtualDesktop.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.WellArchitectedFramework/" />
   <Folder Name="/tools/Azure.Mcp.Tools.WellArchitectedFramework/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.WellArchitectedFramework/src/Azure.Mcp.Tools.WellArchitectedFramework.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.WellArchitectedFramework/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.WellArchitectedFramework/tests/Azure.Mcp.Tools.WellArchitectedFramework.UnitTests/Azure.Mcp.Tools.WellArchitectedFramework.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.WellArchitectedFramework/tests/Azure.Mcp.Tools.WellArchitectedFramework.Tests/Azure.Mcp.Tools.WellArchitectedFramework.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Workbooks/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Workbooks/src/">
