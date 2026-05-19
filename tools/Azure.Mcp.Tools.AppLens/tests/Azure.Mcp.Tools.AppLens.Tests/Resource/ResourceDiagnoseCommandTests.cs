@@ -424,6 +424,9 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
     [InlineData("microsoft.web/sites", "functionapp,linux", true)]
     [InlineData("microsoft.web/sites", "functionapp,linux,container", true)]
     [InlineData("microsoft.web/sites", "app,container,windows", true)]
+    [InlineData("microsoft.web/sites", "app, linux", true)]           // whitespace around components
+    [InlineData("microsoft.web/sites", "App,Linux", true)]            // mixed casing in compound kind
+    [InlineData("microsoft.web/sites", "FunctionApp, Linux", true)]   // mixed casing with whitespace
     [InlineData("microsoft.containerservice/managedclusters", "", true)]
     [InlineData("Microsoft.ContainerService/managedClusters", "", true)]
     [InlineData("microsoft.apimanagement/service", "", true)]

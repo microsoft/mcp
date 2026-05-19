@@ -254,6 +254,13 @@ public class AppLensService(
         return [.. results];
     }
 
+    private static readonly HashSet<string> SupportedWebSiteKinds = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "app",
+        "linux",
+        "functionapp",
+    };
+
     /// <summary>
     /// Checks whether a resource type (and optionally kind) is supported by AppLens diagnostics.
     /// </summary>
@@ -264,9 +271,7 @@ public class AppLensService(
             // Azure returns compound kinds (e.g. "app,linux", "functionapp,linux", "app,linux,container")
             // so we split by comma and check if any component matches a supported kind.
             var kinds = resourceKind.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            return kinds.Any(k => k.Equals("app", StringComparison.OrdinalIgnoreCase)
-                || k.Equals("linux", StringComparison.OrdinalIgnoreCase)
-                || k.Equals("functionapp", StringComparison.OrdinalIgnoreCase));
+            return kinds.Any(SupportedWebSiteKinds.Contains);
         }
 
         return resourceType.Equals("microsoft.containerservice/managedclusters", StringComparison.OrdinalIgnoreCase)
