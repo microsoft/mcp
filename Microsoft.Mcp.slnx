@@ -301,40 +301,35 @@
     <Project Path="tools/Azure.Mcp.Tools.Grafana/src/Azure.Mcp.Tools.Grafana.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Grafana/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.Grafana/tests/Azure.Mcp.Tools.Grafana.LiveTests/Azure.Mcp.Tools.Grafana.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.Grafana/tests/Azure.Mcp.Tools.Grafana.UnitTests/Azure.Mcp.Tools.Grafana.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.Grafana/tests/Azure.Mcp.Tools.Grafana.Tests/Azure.Mcp.Tools.Grafana.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.KeyVault/" />
   <Folder Name="/tools/Azure.Mcp.Tools.KeyVault/src/">
     <Project Path="tools/Azure.Mcp.Tools.KeyVault/src/Azure.Mcp.Tools.KeyVault.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.KeyVault/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.LiveTests/Azure.Mcp.Tools.KeyVault.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.UnitTests/Azure.Mcp.Tools.KeyVault.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.Tests/Azure.Mcp.Tools.KeyVault.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Kusto/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Kusto/src/">
     <Project Path="tools/Azure.Mcp.Tools.Kusto/src/Azure.Mcp.Tools.Kusto.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Kusto/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.Kusto/tests/Azure.Mcp.Tools.Kusto.LiveTests/Azure.Mcp.Tools.Kusto.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.Kusto/tests/Azure.Mcp.Tools.Kusto.UnitTests/Azure.Mcp.Tools.Kusto.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.Kusto/tests/Azure.Mcp.Tools.Kusto.Tests/Azure.Mcp.Tools.Kusto.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.LoadTesting/" />
   <Folder Name="/tools/Azure.Mcp.Tools.LoadTesting/src/">
     <Project Path="tools/Azure.Mcp.Tools.LoadTesting/src/Azure.Mcp.Tools.LoadTesting.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.LoadTesting/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.LoadTesting/tests/Azure.Mcp.Tools.LoadTesting.LiveTests/Azure.Mcp.Tools.LoadTesting.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.LoadTesting/tests/Azure.Mcp.Tools.LoadTesting.UnitTests/Azure.Mcp.Tools.LoadTesting.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.LoadTesting/tests/Azure.Mcp.Tools.LoadTesting.Tests/Azure.Mcp.Tools.LoadTesting.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ManagedLustre/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ManagedLustre/src/">
     <Project Path="tools/Azure.Mcp.Tools.ManagedLustre/src/Azure.Mcp.Tools.ManagedLustre.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ManagedLustre/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.ManagedLustre/tests/Azure.Mcp.Tools.ManagedLustre.LiveTests/Azure.Mcp.Tools.ManagedLustre.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.ManagedLustre/tests/Azure.Mcp.Tools.ManagedLustre.UnitTests/Azure.Mcp.Tools.ManagedLustre.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.ManagedLustre/tests/Azure.Mcp.Tools.ManagedLustre.Tests/Azure.Mcp.Tools.ManagedLustre.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Marketplace/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Marketplace/src/">
