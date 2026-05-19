@@ -910,6 +910,76 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         return new OperationResult("Succeeded", null, $"Multi-User Authorization disabled on vault '{vaultName}'.");
     }
 
+    public async Task<OperationResult> ConfigureEncryptionAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string keyVaultUri, string keyName, string identityType,
+        string? keyVersion, string? userAssignedIdentityId,
+        string? tenant, RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(keyVaultUri), keyVaultUri),
+            (nameof(keyName), keyName),
+            (nameof(identityType), identityType));
+
+        var isSystemAssigned = "SystemAssigned".Equals(identityType, StringComparison.OrdinalIgnoreCase);
+        var isUserAssigned = "UserAssigned".Equals(identityType, StringComparison.OrdinalIgnoreCase);
+
+        if (!isSystemAssigned && !isUserAssigned)
+        {
+            throw new ArgumentException(
+                $"Invalid identity type '{identityType}' for CMK encryption. Supported values: 'SystemAssigned', 'UserAssigned'.");
+        }
+
+        if (isUserAssigned && string.IsNullOrWhiteSpace(userAssignedIdentityId))
+        {
+            throw new ArgumentException(
+                "The --user-assigned-identity-id parameter is required when --identity-type is 'UserAssigned'.");
+        }
+
+        // Build the full key URI: {keyVaultUri}/keys/{keyName}[/{keyVersion}]
+        var kvUri = keyVaultUri.TrimEnd('/');
+        var keyUriString = string.IsNullOrEmpty(keyVersion)
+            ? $"{kvUri}/keys/{keyName}"
+            : $"{kvUri}/keys/{keyName}/{keyVersion}";
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+
+        var kekIdentity = new BackupVaultCmkKekIdentity
+        {
+            IdentityType = isSystemAssigned
+                ? BackupVaultCmkKekIdentityType.SystemAssigned
+                : BackupVaultCmkKekIdentityType.UserAssigned,
+            IdentityId = isUserAssigned ? userAssignedIdentityId : null
+        };
+
+        var patchData = new DataProtectionBackupVaultPatch
+        {
+            Properties = new DataProtectionBackupVaultPatchProperties
+            {
+                SecuritySettings = new BackupVaultSecuritySettings
+                {
+                    EncryptionSettings = new BackupVaultEncryptionSettings
+                    {
+                        State = BackupVaultEncryptionState.Enabled,
+                        KeyUri = new Uri(keyUriString),
+                        KekIdentity = kekIdentity
+                    }
+                }
+            }
+        };
+
+        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+
+        return new OperationResult("Succeeded", null,
+            $"Customer-Managed Key encryption configured on vault '{vaultName}' using key '{keyName}' from '{kvUri}'.");
+    }
+
 
     private static BackupVaultInfo MapToVaultInfo(DataProtectionBackupVaultData data, string? resourceGroup)
     {

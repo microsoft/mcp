@@ -76,21 +76,20 @@ If you are contributing significant changes, or if the issue is already assigned
   - `Fabric.Mcp.Core` - Fabric.Mcp.Core, depends on Azure.Mcp.Core (fabric uses azure)
   - `Microsoft.Mcp.Core` - Microsoft.Mcp.Core library
 - `servers\`
-  - `{server}.Mcp.Server - Individual servers (e.g. `Azure.Mcp.Server`, `Fabric.Mcp.Server`)
+  - `{Server}.Mcp.Server - Individual servers (e.g. `Azure.Mcp.Server`, `Fabric.Mcp.Server`)
     - `src` - Source for the server
     - `tests` - Any unit or live tests for the server
     - `README.md` - Specific readme for this server
     - `CHANGELOG.md` - Specific changelog for this server
 - `tools/` - Service-specific implementations
-  - `{server}.Mcp.Tools.{tool-name}/` - Individual server tools (e.g., `Azure.Mcp.Tools.KeyVault`, `Fabric.Mcp.Tools.Admin`)
+  - `{Server}.Mcp.Tools.{ToolArea}/` - Individual server tools (e.g., `Azure.Mcp.Tools.KeyVault`, `Fabric.Mcp.Tools.Admin`)
     - `src` - Service specific code
       - `Commands/` - Command implementations
       - `Models/` - Service specific models
       - `Services/` - Service implementations and interfaces
       - `Options/` - Service specific command options
     - `tests/` - Service specific tests
-      - `{server}.Mcp.Tools.{tool-name}.UnitTests/` - Unit tests require no authentication or test resources
-      - `{server}.Mcp.Tools.{tool-name}.LiveTests/` - Live tests depend on Azure resources and authentication
+      - `{Server}.Mcp.Tools.{ToolArea}.Tests/` - Unit tests (no Azure resources) and Integration tests (requires Azure)
       - `test-resources.bicep` - Infrastructure templates for testing
 - `eng/` - Shared tools, templates, CLI helpers
 - `docs/` - Central documentation and onboarding materials

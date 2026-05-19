@@ -33,6 +33,13 @@ public static class CommandHelper
         // Get subscription from command line option or fallback to default subscription
         var subscriptionValue = parseResult.GetValueOrDefault(OptionDefinitions.Common.Subscription);
 
+        return GetSubscription(subscriptionValue);
+    }
+
+    public static string? GetSubscription(string? subscriptionValue)
+    {
+        subscriptionValue = subscriptionValue?.Trim('"', '\'');
+
         if (!string.IsNullOrEmpty(subscriptionValue) && !IsPlaceholder(subscriptionValue))
         {
             return subscriptionValue;

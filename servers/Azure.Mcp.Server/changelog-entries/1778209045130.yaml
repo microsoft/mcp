@@ -1,0 +1,2 @@
+section: "Features Added"
+description: "Added `azurebackup security configure-encryption` command to enable Customer-Managed Key (CMK) encryption on Recovery Services vaults and Backup vaults using Azure Key Vault keys."

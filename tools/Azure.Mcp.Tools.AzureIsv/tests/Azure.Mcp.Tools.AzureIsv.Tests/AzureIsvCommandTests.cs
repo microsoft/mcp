@@ -1,0 +1,36 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Text.Json;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Helpers;
+using Xunit;
+
+namespace Azure.Mcp.Tools.AzureIsv.Tests;
+
+public class AzureIsvCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+{
+    [Fact]
+    public async Task Should_list_datadog_monitored_resources()
+    {
+        // Skipping test if Tenant is not 'Customer LED Tenant'
+        if (Settings.TenantId != "888d76fa-54b2-4ced-8ee5-aac1585adee7" && Settings.TestMode != TestMode.Playback)
+        {
+            Assert.Skip("Test skipped because Tenant is not 'Customer LED Tenant'.");
+        }
+        var result = await CallToolAsync(
+            "datadog_monitoredresources_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "datadog-resource", Settings.ResourceBaseName }
+            });
+
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+    }
+}
