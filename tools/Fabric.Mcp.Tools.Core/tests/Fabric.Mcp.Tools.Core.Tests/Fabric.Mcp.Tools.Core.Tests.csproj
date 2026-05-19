@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <OutputType>Exe</OutputType>
+    <HasLiveTests>false</HasLiveTests>
+    <HasUnitTests>true</HasUnitTests>
   </PropertyGroup>
 
   <ItemGroup>

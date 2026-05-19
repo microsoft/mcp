@@ -4,6 +4,7 @@
 using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Core.Pipeline;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -15,6 +16,7 @@ using Azure.Monitor.Query.Logs;
 using Azure.Monitor.Query.Logs.Models;
 using Azure.ResourceManager.OperationalInsights;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -52,14 +54,7 @@ public class MonitorService(
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
         options.Audience = GetLogsQueryAudience();
 
-        if (retryPolicy != null)
-        {
-            options.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
-            options.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
-            options.Retry.MaxRetries = retryPolicy.MaxRetries;
-            options.Retry.Mode = retryPolicy.Mode;
-            options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
-        }
+        options.ConfigureRetryOptions(retryPolicy);
         options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
         var client = new LogsQueryClient(credential, options);
         var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
@@ -117,14 +112,7 @@ public class MonitorService(
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
         options.Audience = GetLogsQueryAudience();
 
-        if (retryPolicy != null)
-        {
-            options.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
-            options.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
-            options.Retry.MaxRetries = retryPolicy.MaxRetries;
-            options.Retry.Mode = retryPolicy.Mode;
-            options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
-        }
+        options.ConfigureRetryOptions(retryPolicy);
         options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
         var client = new LogsQueryClient(credential, options);
 
@@ -259,14 +247,7 @@ public class MonitorService(
             var options = AddDefaultPolicies(new LogsQueryClientOptions());
             options.Audience = GetLogsQueryAudience();
 
-            if (retryPolicy != null)
-            {
-                options.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
-                options.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
-                options.Retry.MaxRetries = retryPolicy.MaxRetries;
-                options.Retry.Mode = retryPolicy.Mode;
-                options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
-            }
+            options.ConfigureRetryOptions(retryPolicy);
             options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
             var client = new LogsQueryClient(credential, options);
             var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
