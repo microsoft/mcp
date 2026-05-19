@@ -354,6 +354,17 @@ dotnet run --project servers/Azure.Mcp.Server/src -- storage blob upload --help
 
 **Option names and required status must not change** — this is a public API.
 
+#### Known pre-existing inconsistencies
+
+Some commands on `main` already have minor description differences due to older one-generic commands using locally instantiated `RetryPolicyOptions` with slightly different description text. These show up in before/after diffs but are **not** caused by conversion:
+
+| Option | Command | Description on `main` |
+|---|---|---|
+| `--retry-max-retries` | `appconfig kv lock set` | "Maximum number of retry attempts before giving up." |
+| `--retry-max-retries` | All other commands (240+) | "Maximum number of retry attempts for failed operations before giving up." |
+
+If your diff flags only these known discrepancies, it's safe to proceed. The inconsistency lives in the unconverted command's own `RetryPolicyOptions` instance (not in shared infrastructure) and will be resolved when that command is converted to the two-generic pattern.
+
 #### Distinguishing unused options from removable inherited properties
 
 During comparison you may find two categories of discrepancies:
