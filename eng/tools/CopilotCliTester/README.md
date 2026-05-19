@@ -57,7 +57,7 @@ CopilotCliTester/
     │   ├── TestPrompt.cs         # Test prompt record (Section, Tool, Prompt, Namespace)
     │   ├── TestResult.cs         # Test result record
     │   ├── TestStatus.cs         # TestStatus enum (PASS/FAIL/ERROR)
-    │   ├── AgentRunConfig.cs     # Agent session configuration
+    │   ├── AgentRunConfig.cs      # Agent session configuration
     │   ├── AgentMetadata.cs      # Collected AgentSessionEvent list from a session
     │   ├── AgentSessionEvent.cs  # Normalized event with Type and Data dictionary
     │   ├── SystemPromptConfig.cs # System prompt with Mode and Content
