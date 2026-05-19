@@ -24,11 +24,11 @@ getAzureMcpEvents_ToolCalls(ago(7d), now())
 | extend StatusCode = toint(extract(@"StatusCode.*?(\d+)", 1, ExMsg))
 | extend ErrorCategory = case(
     success == true, "Success",
+    ExType in ("System.FormatException", "System.ArgumentNullException", "System.ArgumentException", "System.InvalidOperationException"), "McpToolBug",
     StatusCode >= 400 and StatusCode < 500, "Customer",
     ExType == "System.Collections.Generic.KeyNotFoundException", "Customer",
     ExType == "Azure.RequestFailedException" and StatusCode >= 500, "AzureService",
     ExType == "System.AggregateException", "AzureService",
-    ExType in ("System.FormatException", "System.ArgumentNullException", "System.ArgumentException", "System.InvalidOperationException"), "McpToolBug",
     "Unknown")
 | summarize
     Total = count(),
@@ -62,11 +62,11 @@ getAzureMcpEvents_ToolCalls(TwoWeeksAgo, now())
 | extend StatusCode = toint(extract(@"StatusCode.*?(\d+)", 1, ExMsg))
 | extend ErrorCategory = case(
     success == true, "Success",
+    ExType in ("System.FormatException", "System.ArgumentNullException", "System.ArgumentException", "System.InvalidOperationException"), "McpToolBug",
     StatusCode >= 400 and StatusCode < 500, "Customer",
     ExType == "System.Collections.Generic.KeyNotFoundException", "Customer",
     ExType == "Azure.RequestFailedException" and StatusCode >= 500, "AzureService",
     ExType == "System.AggregateException", "AzureService",
-    ExType in ("System.FormatException", "System.ArgumentNullException", "System.ArgumentException", "System.InvalidOperationException"), "McpToolBug",
     "Unknown")
 | summarize
     Total = count(),
@@ -111,11 +111,11 @@ getAzureMcpEvents_ToolCalls(ago(7d), now())
     ExType = tostring(customDimensions["exception.type"])
 | extend StatusCode = toint(extract(@"StatusCode.*?(\d+)", 1, ExMsg))
 | extend ErrorCategory = case(
+    ExType in ("System.FormatException", "System.ArgumentNullException", "System.ArgumentException", "System.InvalidOperationException"), "McpToolBug",
     StatusCode >= 400 and StatusCode < 500, "Customer",
     ExType == "System.Collections.Generic.KeyNotFoundException", "Customer",
     ExType == "Azure.RequestFailedException" and StatusCode >= 500, "AzureService",
     ExType == "System.AggregateException", "AzureService",
-    ExType in ("System.FormatException", "System.ArgumentNullException", "System.ArgumentException", "System.InvalidOperationException"), "McpToolBug",
     "Unknown")
 | summarize Count = count()
     by ToolName, StatusCode, ErrorCategory, ExType
