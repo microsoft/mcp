@@ -1,0 +1,4 @@
+pr: 2673
+changes:
+  - section: "Bugs Fixed"
+    description: "Update App Lens tool to support App resources that contain compound kind values"
