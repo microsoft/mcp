@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.IO;
 using System.Net;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Options;
@@ -54,6 +55,12 @@ public sealed class AzApiDocsGetCommand(
             ApiVersion = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.ApiVersion.Name)
         };
     }
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        InvalidDataException => HttpStatusCode.BadRequest,
+        _ => base.GetStatusCode(ex)
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
