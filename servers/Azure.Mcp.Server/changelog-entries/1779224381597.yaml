@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added Azure File Shares snapshot, private endpoint connection, and provisioning recommendation commands. Updated FileShares SDK to 2026-06-01."
