@@ -1,0 +1,221 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Text.Json;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
+using Xunit;
+
+namespace Azure.Mcp.Tools.Search.Tests;
+
+public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+{
+    private const string IndexName = "products";
+    private const string SanitizedValue = "sanitized";
+    private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
+
+    public override bool EnableDefaultSanitizerAdditions => false;
+
+    protected override async ValueTask LoadSettingsAsync()
+    {
+        await base.LoadSettingsAsync();
+        if (Settings.TestMode == TestMode.Playback)
+        {
+            Settings.ResourceBaseName = SanitizedValue;
+        }
+    }
+
+    /// <summary>
+    /// AZSDK3493 = $..name
+    /// </summary>
+    public override List<string> DisabledDefaultSanitizers =>
+    [
+        ..base.DisabledDefaultSanitizers,
+        "AZSDK3493"
+    ];
+
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
+    [
+        new(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.ResourceBaseName,
+            Value = SanitizedValue,
+        }),
+        new(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.SubscriptionId,
+            Value = EmptyGuid,
+        }),
+    ];
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        .. base.BodyKeySanitizers,
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName")
+        {
+            Value = SanitizedValue
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..vectorSearch.vectorizers[*].azureOpenAIParameters.authIdentity.userAssignedIdentity")
+        {
+            Regex = "user[aA]ssignedIdentities/([^?\\/]+)",
+            GroupForReplace = "1",
+            Value = "sanitized-identity"
+        })
+    ];
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers =>
+    [
+        new(new UriRegexSanitizerBody
+        {
+            Regex = "resource[Gg]roups/([^?\\/]+)",
+            Value = SanitizedValue,
+            GroupForReplace = "1"
+        })
+    ];
+
+    [Fact]
+    public async Task Should_list_search_services_by_subscription_id()
+    {
+        Assert.NotNull(Settings.SubscriptionId);
+
+        var result = await CallToolAsync(
+            "search_service_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId }
+            });
+
+        var services = result.AssertProperty("services");
+        Assert.Equal(JsonValueKind.Array, services.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_list_search_services_by_subscription_name()
+    {
+        var result = await CallToolAsync(
+            "search_service_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionName }
+            });
+
+        var services = result.AssertProperty("services");
+        Assert.Equal(JsonValueKind.Array, services.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_list_search_indexes_with_service_name()
+    {
+        var result = await CallToolAsync(
+            "search_index_get",
+            new()
+            {
+                { "service", Settings.ResourceBaseName }
+            });
+
+        var indexes = result.AssertProperty("indexes");
+        Assert.Equal(JsonValueKind.Array, indexes.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_get_index_details()
+    {
+        var result = await CallToolAsync(
+            "search_index_get",
+            new()
+            {
+                { "service", Settings.ResourceBaseName },
+                { "index", IndexName }
+            });
+
+        var indexes = result.AssertProperty("indexes");
+        Assert.Equal(JsonValueKind.Array, indexes.ValueKind);
+        Assert.Single(indexes.EnumerateArray());
+
+        var index = indexes.EnumerateArray().First();
+        Assert.Equal(JsonValueKind.Object, index.ValueKind);
+
+        var name = index.AssertProperty("name");
+        Assert.Equal(IndexName, name.GetString());
+    }
+
+    [Fact]
+    public async Task Should_query_search_index()
+    {
+        var result = await CallToolAsync(
+            "search_index_query",
+            new()
+            {
+                { "service", Settings.ResourceBaseName },
+                { "index", IndexName },
+                { "query", "*" }
+            });
+
+        Assert.NotNull(result);
+        Assert.Equal(JsonValueKind.Array, result.Value.ValueKind);
+        Assert.True(result.Value.GetArrayLength() > 0);
+    }
+
+    [Fact]
+    public async Task Should_list_search_indexes()
+    {
+        var result = await CallToolAsync(
+            "search_index_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "service", Settings.ResourceBaseName },
+                { "resource-group", Settings.ResourceGroupName }
+            });
+
+        var indexesArray = result.AssertProperty("indexes");
+        Assert.Equal(JsonValueKind.Array, indexesArray.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_describe_search_index()
+    {
+        var result = await CallToolAsync(
+            "search_index_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "service", Settings.ResourceBaseName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "index", "products" }
+            });
+
+        var indexes = result.AssertProperty("indexes");
+        Assert.Equal(JsonValueKind.Array, indexes.ValueKind);
+        Assert.Single(indexes.EnumerateArray());
+
+        var index = indexes.EnumerateArray().First();
+        Assert.Equal(JsonValueKind.Object, index.ValueKind);
+
+        var name = index.AssertProperty("name");
+        Assert.Equal("products", name.GetString());
+    }
+
+    [Fact(Skip = "Invalid test assertion")]
+    public async Task Should_query_search_index_with_documents_property()
+    {
+        var result = await CallToolAsync(
+            "search_index_query",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "service", Settings.ResourceBaseName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "index", "products" },
+                { "query", "*" }
+            });
+
+        // TODO: results is an array, there is no documents property
+        var docs = result.AssertProperty("documents");
+        Assert.Equal(JsonValueKind.Array, docs.ValueKind);
+    }
+}
