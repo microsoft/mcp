@@ -5,18 +5,15 @@ using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
 
-namespace Azure.Mcp.Tools.Storage.Options.Blob.Container;
+namespace Azure.Mcp.Tools.Storage.Options.Table;
 
-public class ContainerCreateOptions : ISubscriptionOption
+public class TableListOptions : ISubscriptionOption
 {
     [Option(OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
     [Option("The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').")]
     public required string Account { get; set; }
-
-    [Option("The name of the container to access within the storage account.")]
-    public required string Container { get; set; }
 
     [Option(OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
