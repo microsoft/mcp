@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
@@ -18,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Fabric.Mcp.Tools.Core.csproj" />
+    <ProjectReference Include="..\..\src\Fabric.Mcp.Tools.DataFactory.csproj" />
     <ProjectReference Include="$(RepoRoot)core\Microsoft.Mcp.Core\tests\Microsoft.Mcp.Tests\Microsoft.Mcp.Tests.csproj" />
   </ItemGroup>
 

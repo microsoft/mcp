@@ -408,7 +408,6 @@
     <Project Path="../../tools/Azure.Mcp.Tools.Workbooks/src/Azure.Mcp.Tools.Workbooks.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Workbooks/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Workbooks/tests/Azure.Mcp.Tools.Workbooks.LiveTests/Azure.Mcp.Tools.Workbooks.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.Workbooks/tests/Azure.Mcp.Tools.Workbooks.UnitTests/Azure.Mcp.Tools.Workbooks.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Workbooks/tests/Azure.Mcp.Tools.Workbooks.Tests/Azure.Mcp.Tools.Workbooks.Tests.csproj" />
   </Folder>
 </Solution>
