@@ -228,8 +228,8 @@ public class ComputeService(
         }
         catch
         {
-            _logger.LogWarning("VM creation failed. Rolling back newly created network resources.");
-            await networkTracker.RollbackAsync(armClient);
+            _logger.LogWarning("VM creation failed. Starting background rollback of newly created network resources.");
+            StartBackgroundRollback(networkTracker, armClient, "VM");
             throw;
         }
 
@@ -935,10 +935,29 @@ public class ComputeService(
         }
         catch
         {
-            _logger.LogWarning("VMSS creation failed. Rolling back newly created network resources.");
-            await networkTracker.RollbackAsync(armClient);
+            _logger.LogWarning("VMSS creation failed. Starting background rollback of newly created network resources.");
+            StartBackgroundRollback(networkTracker, armClient, "VMSS");
             throw;
         }
+    }
+
+    private void StartBackgroundRollback(CreatedResourceTracker tracker, ArmClient armClient, string operation)
+    {
+        // Fire-and-forget: rollback can take several minutes (e.g. NicReservedForAnotherVm holds the NIC for ~180s
+        // after a failed VM PUT). Returning to the caller without waiting keeps the command responsive while
+        // rollback runs in the background on the long-lived server process.
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await tracker.RollbackAsync(armClient);
+                _logger.LogInformation("Background rollback for failed {Operation} creation completed.", operation);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Background rollback for failed {Operation} creation encountered an error.", operation);
+            }
+        });
     }
 
     public async Task<VmssUpdateResult> UpdateVmssAsync(

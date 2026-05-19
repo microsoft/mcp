@@ -35,25 +35,82 @@ internal sealed class CreatedResourceTracker(ILogger logger)
         for (var i = _createdResources.Count - 1; i >= 0; i--)
         {
             var id = _createdResources[i];
-            try
-            {
-                logger.LogInformation("Rolling back: deleting {ResourceId}", id);
-                var genericResource = armClient.GetGenericResource(id);
-                await genericResource.DeleteAsync(WaitUntil.Completed, rollbackToken);
-                logger.LogInformation("Rolled back: {ResourceId}", id);
-            }
-            catch (RequestFailedException ex) when (ex.Status == 404)
-            {
-                logger.LogDebug("Resource already deleted during rollback: {ResourceId}", id);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "Failed to roll back resource {ResourceId}. Manual cleanup required.", id);
-            }
+            await DeleteWithRetryAsync(armClient, id, rollbackToken);
         }
 
         // Clear the list so HasResources reflects post-rollback state and a stray
         // second call doesn't re-issue deletes for the same IDs.
         _createdResources.Clear();
     }
+
+    /// <summary>
+    /// Delete a single resource with bounded retries to handle transient/expected
+    /// conflicts that resolve on their own.
+    /// Specifically handles Azure RP's NIC reservation: when a VM PUT fails, the
+    /// NIC remains reserved for that VM for ~180 seconds; deleting it during that
+    /// window returns HTTP 400 NicReservedForAnotherVm. Retrying after a backoff
+    /// lets the reservation expire so the cascade (NIC -> VNet -> NSG) can proceed.
+    /// Other dependency-conflict errors (e.g. InUseSubnetCannotBeDeleted) are also
+    /// retried since they typically clear once a prior resource in the rollback
+    /// chain finishes deleting on the server side.
+    /// </summary>
+    private async Task DeleteWithRetryAsync(ArmClient armClient, ResourceIdentifier id, CancellationToken cancellationToken)
+    {
+        // Backoff schedule. Total wait budget covers Azure's 180s NIC reservation
+        // with margin for the actual delete LROs themselves.
+        var delays = new[]
+        {
+            TimeSpan.FromSeconds(15),
+            TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(45),
+            TimeSpan.FromSeconds(60),
+            TimeSpan.FromSeconds(60),
+        };
+
+        var attempt = 0;
+        while (true)
+        {
+            try
+            {
+                logger.LogInformation("Rolling back: deleting {ResourceId} (attempt {Attempt})", id, attempt + 1);
+                var genericResource = armClient.GetGenericResource(id);
+                await genericResource.DeleteAsync(WaitUntil.Completed, cancellationToken);
+                logger.LogInformation("Rolled back: {ResourceId}", id);
+                return;
+            }
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                logger.LogDebug("Resource already deleted during rollback: {ResourceId}", id);
+                return;
+            }
+            catch (RequestFailedException ex) when (IsRetriableRollbackError(ex) && attempt < delays.Length)
+            {
+                logger.LogInformation(
+                    "Rollback delete of {ResourceId} returned {ErrorCode}; retrying in {Delay}s.",
+                    id, ex.ErrorCode, delays[attempt].TotalSeconds);
+                try
+                {
+                    await Task.Delay(delays[attempt], cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    logger.LogWarning("Rollback delete of {ResourceId} aborted: rollback budget exhausted. Manual cleanup required.", id);
+                    return;
+                }
+                attempt++;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to roll back resource {ResourceId}. Manual cleanup required.", id);
+                return;
+            }
+        }
+    }
+
+    private static bool IsRetriableRollbackError(RequestFailedException ex) =>
+        ex.Status == 400 && ex.ErrorCode is
+            "NicReservedForAnotherVm" or
+            "InUseSubnetCannotBeDeleted" or
+            "InUseNetworkSecurityGroupCannotBeDeleted" or
+            "InUseRouteTableCannotBeDeleted";
 }

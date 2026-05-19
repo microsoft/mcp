@@ -187,4 +187,39 @@ public class CreatedResourceTrackerTests
         // The resource should only have been deleted once across both calls.
         armClient.Received(1).GetGenericResource(id);
     }
+
+    [Fact]
+    public async Task RollbackAsync_RetriesOnNicReservedForAnotherVm()
+    {
+        // Simulates Azure RP holding a NIC reservation for ~180s after a VM PUT
+        // fails. The first delete attempt returns 400 NicReservedForAnotherVm;
+        // a subsequent retry should succeed once the reservation expires.
+        var tracker = new CreatedResourceTracker(_logger);
+        var nicId = new ResourceIdentifier("/subscriptions/sub123/resourceGroups/rg/providers/Microsoft.Network/networkInterfaces/nic1");
+        tracker.Track(nicId);
+
+        var armClient = Substitute.For<ArmClient>();
+        var mockResource = Substitute.For<GenericResource>();
+        var callCount = 0;
+        mockResource.DeleteAsync(WaitUntil.Completed, Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                callCount++;
+                if (callCount == 1)
+                {
+                    throw new RequestFailedException(
+                        status: 400,
+                        message: "Nic reserved for another VM",
+                        errorCode: "NicReservedForAnotherVm",
+                        innerException: null);
+                }
+                return Substitute.For<ArmOperation>();
+            });
+        armClient.GetGenericResource(nicId).Returns(mockResource);
+
+        await tracker.RollbackAsync(armClient);
+
+        Assert.Equal(2, callCount);
+        Assert.False(tracker.HasResources);
+    }
 }
