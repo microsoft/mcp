@@ -3,6 +3,5 @@ changes:
     description: |
       Fixed multiple bugs in the App Configuration toolset:
       - Store lookup no longer passes subscription as both the store identifier and the error context argument; "store not found" messages now correctly name the missing store instead of echoing the subscription value
-      - Setting a key-value with a malformed tag (missing the required `key=value` separator) now returns a 400 validation error with a clear message instead of silently creating a tag with an empty value
       - The user-supplied retry policy is now applied to all data-plane key-value operations (get, set, delete, lock); previously it was only applied to the ARM store-discovery call, causing custom retry settings to have no effect on actual configuration reads and writes
-      - The `kv delete` command response now includes an `existed` field (`true` if the key was present and deleted, `false` if it was already absent), allowing callers to distinguish a successful deletion from a no-op on a non-existent key
+      - The `kv delete` command response now includes an `existed` field (`true` if the key was present and deleted, `false` if it was already absent) and a human-readable `message`, allowing callers to distinguish a successful deletion from a no-op on a non-existent key

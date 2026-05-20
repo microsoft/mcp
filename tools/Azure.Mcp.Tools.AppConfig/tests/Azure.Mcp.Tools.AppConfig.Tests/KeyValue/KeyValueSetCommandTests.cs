@@ -153,27 +153,4 @@ public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("required", response.Message.ToLower());
     }
-
-    [Fact]
-    public async Task ExecuteAsync_Returns400_WhenTagFormatIsInvalid()
-    {
-        // Arrange — service throws when a tag without '=' is supplied
-        Service.SetKeyValue(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new ArgumentException("Invalid tag format 'InvalidTag'. Tags must be in 'key=value' format.", "tags"));
-
-        // Act
-        var response = await ExecuteCommandAsync(
-            "--subscription", "sub123",
-            "--account", "account1",
-            "--key", "my-key",
-            "--value", "my-value",
-            "--tags", "InvalidTag");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Invalid tag format", response.Message);
-    }
 }

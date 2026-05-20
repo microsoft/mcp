@@ -146,9 +146,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
                 }
                 else
                 {
-                    throw new ArgumentException(
-                        $"Invalid tag format '{tagPair}'. Tags must be in 'key=value' format.",
-                        nameof(tags));
+                    setting.Tags[parts[0]] = string.Empty;
                 }
             }
         }

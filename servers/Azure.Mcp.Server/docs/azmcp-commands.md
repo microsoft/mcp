@@ -509,7 +509,6 @@ azmcp appconfig kv lock set --subscription <subscription> \
                             [--lock]
 
 # Set a key-value setting
-# Note: --tags values must be in 'key=value' format (e.g., --tags env=prod team=backend)
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appconfig kv set --subscription <subscription> \
                        --account <account> \
