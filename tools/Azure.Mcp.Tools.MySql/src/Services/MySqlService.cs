@@ -343,12 +343,9 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
     {
         var subscriptionResource = await _subscriptionService.GetSubscription(subscriptionId, cancellationToken: cancellationToken);
         var serverList = new List<string>();
-        await foreach (var rg in subscriptionResource.GetResourceGroups().GetAllAsync(cancellationToken: cancellationToken))
+        await foreach (MySqlFlexibleServerResource server in subscriptionResource.GetMySqlFlexibleServersAsync(cancellationToken: cancellationToken))
         {
-            await foreach (MySqlFlexibleServerResource server in rg.GetMySqlFlexibleServers().GetAllAsync(cancellationToken: cancellationToken))
-            {
-                serverList.Add(server.Data.Name);
-            }
+            serverList.Add(server.Data.Name);
         }
         return serverList;
     }
