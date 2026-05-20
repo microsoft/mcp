@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Storage.Models;
@@ -19,13 +21,11 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
     Description = """
         List/get/show blobs in a blob container in Storage account. Use this tool to list the blobs in a container or
         get details for a specific blob. If no blob specified, lists all blobs present in the container, optionally
-        filtering on a prefix. The prefix is ignored if a blob is specified.
-
-        Required: --account, --container, --subscription
-        Optional: --blob, --tenant, --prefix
-
-        Returns: blob name, size, lastModified, contentType, contentHash, metadata, and blob properties.
-        Do not use this tool to list containers in the storage account.
+        filtering on a prefix. The prefix is ignored if a blob is specified. The results may also be filtered by
+        selecting which fields to include in the output. If no fields are selected, all fields will be included.
+        The details returned include blob name, size, last modified time, content type, content hash, metadata, and
+        blob properties. This tool is not intended to list containers in the storage account; use the appropriate
+        command for that operation.
         """,
     Destructive = false,
     Idempotent = true,
@@ -54,7 +54,21 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
                 cancellationToken
             );
 
-            context.Response.Results = ResponseResult.Create(new BlobGetCommandResult(details ?? []), StorageJsonContext.Default.BlobGetCommandResult);
+            if (!string.IsNullOrEmpty(options.SelectedFields))
+            {
+                var dynamicOptions = new JsonSerializerOptions()
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+                    TypeInfoResolver = new CommandResponseSelectProperties(options.SelectedFields.Split(','), StorageJsonContext.Default, typeof(BlobInfo))
+                };
+                context.Response.Results = ResponseResult.Create(new BlobGetCommandResult(details ?? []), dynamicOptions.GetTypeInfo(typeof(BlobGetCommandResult)));
+            }
+            else
+            {
+                context.Response.Results = ResponseResult.Create(new(details ?? []), StorageJsonContext.Default.BlobGetCommandResult);
+            }
+
             return context.Response;
         }
         catch (Exception ex)

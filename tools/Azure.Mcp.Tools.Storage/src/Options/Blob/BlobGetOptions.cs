@@ -27,6 +27,9 @@ public class BlobGetOptions : ISubscriptionOption
     [Option(OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
+    [Option("Comma-separated list of specific fields to include in the output. If not specified, all fields will be included.")]
+    public string? SelectedFields { get; set; }
+
     // TODO: Remove unused option — registered and visible to the user but never consumed by the command
     [Option(OptionDescriptions.AuthMethod)]
     public AuthMethod? AuthMethod { get; set; }

@@ -36,10 +36,8 @@ public sealed class ResponseResult
         _typeInfo = typeInfo;
     }
 
-    public static ResponseResult Create<T>(T result, JsonTypeInfo<T> typeInfo)
-    {
-        return new ResponseResult(result, typeInfo);
-    }
+    public static ResponseResult Create<T>(T result, JsonTypeInfo<T> typeInfo) => new(result, typeInfo);
+    public static ResponseResult Create(object? result, JsonTypeInfo typeInfo) => new(result, typeInfo);
 
     public void Write(Utf8JsonWriter writer)
     {
