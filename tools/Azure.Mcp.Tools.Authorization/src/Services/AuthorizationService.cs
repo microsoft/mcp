@@ -16,7 +16,9 @@ namespace Azure.Mcp.Tools.Authorization.Services;
 public class AuthorizationService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AuthorizationService> logger)
     : BaseAzureResourceService(subscriptionService, tenantService), IAuthorizationService
 {
+    private const string ApproveReviewResult = "Approve";
     private const string RoleAssignmentApprovalsApiVersion = "2021-01-01-preview";
+    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AuthorizationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<ResourceQueryResults<RoleAssignment>> ListRoleAssignmentsAsync(
@@ -73,6 +75,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(scope), scope));
+        var resolvedTenantId = await GetSubscriptionTenantIdAsync(subscription, tenantId, retryPolicy, cancellationToken);
 
         var approvalsPath = $"{NormalizeScope(scope)}/providers/Microsoft.Authorization/roleAssignmentApprovals";
         var requestUri = CreateArmUri($"{approvalsPath}?api-version={RoleAssignmentApprovalsApiVersion}&%24filter=asApprover()");
@@ -80,7 +83,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
         using var responseDocument = await SendArmRequestAsync(
             HttpMethod.Get,
             requestUri,
-            tenantId,
+            resolvedTenantId,
             retryPolicy,
             cancellationToken: cancellationToken);
 
@@ -116,6 +119,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
             (nameof(approval), approval),
             (nameof(stage), stage),
             (nameof(justification), justification));
+        var resolvedTenantId = await GetSubscriptionTenantIdAsync(subscription, tenantId, retryPolicy, cancellationToken);
 
         var stagePath = GetApprovalStagePath(scope, approval, stage);
         var requestUri = CreateArmUri($"{stagePath}?api-version={RoleAssignmentApprovalsApiVersion}");
@@ -124,7 +128,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
         using var responseDocument = await SendArmRequestAsync(
             HttpMethod.Patch,
             requestUri,
-            tenantId,
+            resolvedTenantId,
             retryPolicy,
             content,
             cancellationToken);
@@ -181,7 +185,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
             writer.WriteStartObject();
             writer.WritePropertyName("properties");
             writer.WriteStartObject();
-            writer.WriteString("reviewResult", "Approve");
+            writer.WriteString("reviewResult", ApproveReviewResult);
             writer.WriteString("justification", justification);
             writer.WriteEndObject();
             writer.WriteEndObject();
@@ -249,14 +253,29 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
         return new()
         {
             Id = GetStringProperty(item, "id"),
-            DisplayName = GetStringProperty(item, "displayName") ?? GetStringProperty(properties, "displayName"),
+            DisplayName = GetStringProperty(item, properties, "displayName"),
             AssignedToMe = GetBoolProperty(item, "assignedToMe") ?? GetBoolProperty(properties, "assignedToMe"),
-            Status = GetStringProperty(item, "status") ?? GetStringProperty(properties, "status"),
-            ReviewResult = GetStringProperty(item, "reviewResult") ?? GetStringProperty(properties, "reviewResult"),
-            ReviewedBy = GetStringProperty(item, "reviewedBy") ?? GetStringProperty(properties, "reviewedBy"),
-            ReviewedDateTime = GetStringProperty(item, "reviewedDateTime") ?? GetStringProperty(properties, "reviewedDateTime"),
-            Justification = GetStringProperty(item, "justification") ?? GetStringProperty(properties, "justification")
+            Status = GetStringProperty(item, properties, "status"),
+            ReviewResult = GetStringProperty(item, properties, "reviewResult"),
+            ReviewedBy = GetStringProperty(item, properties, "reviewedBy"),
+            ReviewedDateTime = GetStringProperty(item, properties, "reviewedDateTime"),
+            Justification = GetStringProperty(item, properties, "justification")
         };
+    }
+
+    private async Task<string?> GetSubscriptionTenantIdAsync(
+        string subscription,
+        string? tenantId,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            return tenantId;
+        }
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
+        return subscriptionResource.Data.TenantId?.ToString();
     }
 
     private static bool IsPendingApprovalStage(RoleAssignmentApprovalStage stage)
@@ -293,6 +312,11 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
             : null;
     }
 
+    private static string? GetStringProperty(JsonElement item, JsonElement properties, string propertyName)
+    {
+        return GetStringProperty(item, propertyName) ?? GetStringProperty(properties, propertyName);
+    }
+
     private static bool? GetBoolProperty(JsonElement item, string propertyName)
     {
         if (!TryGetProperty(item, propertyName, out var property))
@@ -312,6 +336,11 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
     {
         if (item.ValueKind == JsonValueKind.Object)
         {
+            if (item.TryGetProperty(propertyName, out property))
+            {
+                return true;
+            }
+
             foreach (var candidate in item.EnumerateObject())
             {
                 if (candidate.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
