@@ -12,7 +12,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Storage.UnitTests.Blob;
+namespace Azure.Mcp.Tools.Storage.Tests.Blob;
 
 public class BlobUploadCommandTests : SubscriptionCommandUnitTestsBase<BlobUploadCommand, IStorageService>
 {
