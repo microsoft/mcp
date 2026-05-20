@@ -18,6 +18,8 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
 {
     private const string ApproveReviewResult = "Approve";
     private const string RoleAssignmentApprovalsApiVersion = "2021-01-01-preview";
+    // BaseAzureResourceService keeps its subscription service private; this service also needs it
+    // to resolve the tenant for direct ARM REST calls.
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AuthorizationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -191,7 +193,8 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
             writer.WriteEndObject();
         }
 
-        return new ByteArrayContent(stream.ToArray())
+        var contentBytes = stream.ToArray();
+        return new ByteArrayContent(contentBytes)
         {
             Headers = { ContentType = new("application/json") }
         };
@@ -334,21 +337,9 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
 
     private static bool TryGetProperty(JsonElement item, string propertyName, out JsonElement property)
     {
-        if (item.ValueKind == JsonValueKind.Object)
+        if (item.ValueKind == JsonValueKind.Object && item.TryGetProperty(propertyName, out property))
         {
-            if (item.TryGetProperty(propertyName, out property))
-            {
-                return true;
-            }
-
-            foreach (var candidate in item.EnumerateObject())
-            {
-                if (candidate.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
-                {
-                    property = candidate.Value;
-                    return true;
-                }
-            }
+            return true;
         }
 
         property = default;
