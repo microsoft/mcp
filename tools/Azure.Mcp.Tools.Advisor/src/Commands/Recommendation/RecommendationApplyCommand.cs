@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Concurrent;
 using System.Net;
 using System.Reflection;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
@@ -16,7 +17,7 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
 {
     private const string CommandTitle = "Apply Advisor Recommendations";
     private readonly ILogger<RecommendationApplyCommand> _logger = logger;
-    private static readonly Dictionary<string, string> s_advisorRecommendationRulesCache = new();
+    private static readonly ConcurrentDictionary<string, string> s_advisorRecommendationRulesCache = new();
     private static readonly HashSet<string> s_availableResources = new(StringComparer.OrdinalIgnoreCase);
 
     public override string Id => "174fd0df-a11a-4139-b987-efd57611f62f";
@@ -24,7 +25,7 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
     public override string Name => "apply";
 
     public override string Description =>
-        @"This tool applies advisor recommendations to create or modify IaaC files (like ARM, Bicep) for Azure resources. It returns the rules that can be applied to the IaaC file.";
+        @"This tool applies advisor recommendations to create or modify IaaC files (like ARM, Terraform) for Azure resources. It returns the rules that can be applied to the IaaC file.";
 
     public override string Title => CommandTitle;
 
@@ -131,7 +132,7 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
     {
         Assembly assembly = typeof(RecommendationApplyCommand).Assembly;
 
-        // Handle multiple files separated by comma
+        // Locate and read the embedded resource for the specified file name.
         string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly, resourceFileName);
         return EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
     }

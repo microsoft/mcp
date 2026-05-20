@@ -87,7 +87,7 @@
           }
         ]
       },
-      "fix": "used",
+      "fix": "Set the App Service Plan instance count to at least 2.",
       "ARM_Fix": {
         "type": "propertyUpdate",
         "operations": [
