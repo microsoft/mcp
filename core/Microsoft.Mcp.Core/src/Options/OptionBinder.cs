@@ -244,13 +244,18 @@ public static class OptionBinder
                 name =>
                 {
                     var option = new Option<string>(name);
-                    option.AcceptOnlyFromAmong(Enum.GetNames(underlyingEnum));
+                    EnumOptionValidator.Configure(option, underlyingEnum);
                     return option;
                 },
                 (pr, n) =>
                 {
                     var stringValue = pr.GetValueOrDefault<string>(n);
-                    if (stringValue is null) return null;
+
+                    if (stringValue is null)
+                    {
+                        return null;
+                    }
+
                     return Enum.Parse(underlyingEnum, stringValue, ignoreCase: true);
                 });
 
@@ -265,9 +270,18 @@ public static class OptionBinder
 
     private static Type? GetUnderlyingEnumType(Type type)
     {
-        if (type.IsEnum) return type;
+        if (type.IsEnum)
+        {
+            return type;
+        }
+
         Type? nullable = Nullable.GetUnderlyingType(type);
-        if (nullable is not null && nullable.IsEnum) return nullable;
+
+        if (nullable is not null && nullable.IsEnum)
+        {
+            return nullable;
+        }
+
         return null;
     }
 
