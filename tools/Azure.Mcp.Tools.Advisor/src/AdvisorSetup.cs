@@ -32,9 +32,7 @@ public class AdvisorSetup : IAreaSetup
 
         // Register Advisor commands
         recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
-
-        var recommendationApply = serviceProvider.GetRequiredService<RecommendationApplyCommand>();
-        recommendation.AddCommand(recommendationApply.Name, recommendationApply);
+        recommendation.AddCommand<RecommendationApplyCommand>(serviceProvider);
 
         return advisor;
     }

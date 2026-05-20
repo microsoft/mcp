@@ -329,11 +329,11 @@ azmcp server info
 ```bash
 # List Advisor recommendations in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendations list --subscription <subscription>
+azmcp advisor recommendation list --subscription <subscription>
 
 # Apply Advisor recommendation to create or modify IaaC files (like ARM, Bicep) for Azure resources
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendations apply --resource <resource>
+azmcp advisor recommendation apply --resource <resource>
 ```
 
 ### Azure AI Search Operations
