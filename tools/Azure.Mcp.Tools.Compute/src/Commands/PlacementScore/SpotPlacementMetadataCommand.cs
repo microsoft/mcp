@@ -10,13 +10,16 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Compute.Commands.PlacementScore;
 
-public sealed class SpotPlacementMetadataCommand(ILogger<SpotPlacementMetadataCommand> logger)
-    : BaseComputePlacementCommand<SpotPlacementMetadataOptions>()
+public sealed class SpotPlacementMetadataCommand(
+    ILogger<SpotPlacementMetadataCommand> logger,
+    IComputePlacementService placementService)
+    : BaseComputePlacementCommand<BaseComputePlacementOptions>()
 {
     private const string CommandTitle = "Get Spot Placement Scores Metadata";
-    private readonly ILogger<SpotPlacementMetadataCommand> _logger = logger;
+    private readonly ILogger<SpotPlacementMetadataCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputePlacementService _placementService = placementService ?? throw new ArgumentNullException(nameof(placementService));
 
-    public override string Id => "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+    public override string Id => "3dc42585-4e1c-44ef-8651-598595f46f9d";
 
     public override string Name => "get";
 
@@ -53,9 +56,7 @@ public sealed class SpotPlacementMetadataCommand(ILogger<SpotPlacementMetadataCo
 
         try
         {
-            var service = context.GetService<IComputePlacementService>();
-
-            var metadata = await service.GetSpotPlacementMetadataAsync(
+            var metadata = await _placementService.GetSpotPlacementMetadataAsync(
                 options.Location!,
                 options.Subscription!,
                 options.Tenant,
@@ -63,7 +64,7 @@ public sealed class SpotPlacementMetadataCommand(ILogger<SpotPlacementMetadataCo
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new SpotPlacementMetadataCommandResult(metadata),
+                new(metadata),
                 ComputePlacementJsonContext.Default.SpotPlacementMetadataCommandResult);
         }
         catch (Exception ex)

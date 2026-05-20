@@ -11,13 +11,16 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Compute.Commands.PlacementScore;
 
-public sealed class SpotPlacementScoreCommand(ILogger<SpotPlacementScoreCommand> logger)
+public sealed class SpotPlacementScoreCommand(
+    ILogger<SpotPlacementScoreCommand> logger,
+    IComputePlacementService placementService)
     : BaseComputePlacementCommand<SpotPlacementScoreOptions>()
 {
     private const string CommandTitle = "Generate Spot Placement Scores";
-    private readonly ILogger<SpotPlacementScoreCommand> _logger = logger;
+    private readonly ILogger<SpotPlacementScoreCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputePlacementService _placementService = placementService ?? throw new ArgumentNullException(nameof(placementService));
 
-    public override string Id => "b2c3d4e5-f6a7-8901-bcde-f12345678901";
+    public override string Id => "20dc3399-aa77-4d1c-bb3a-41f6b4bac669";
 
     public override string Name => "generate";
 
@@ -50,6 +53,20 @@ public sealed class SpotPlacementScoreCommand(ILogger<SpotPlacementScoreCommand>
         command.Options.Add(ComputePlacementOptionDefinitions.DesiredSizes);
         command.Options.Add(ComputePlacementOptionDefinitions.DesiredCount);
         command.Options.Add(ComputePlacementOptionDefinitions.AvailabilityZones);
+        command.Validators.Add(result =>
+        {
+            var desiredLocations = result.GetValueOrDefault<string[]>(ComputePlacementOptionDefinitions.DesiredLocations.Name);
+            if (desiredLocations is { Length: > 3 })
+            {
+                result.AddError("--desired-locations must contain between 1 and 3 regions.");
+            }
+
+            var desiredCount = result.GetValueOrDefault<int>(ComputePlacementOptionDefinitions.DesiredCount.Name);
+            if (desiredCount is < 1 or > 1000)
+            {
+                result.AddError("--desired-count must be between 1 and 1000.");
+            }
+        });
     }
 
     protected override SpotPlacementScoreOptions BindOptions(ParseResult parseResult)
@@ -76,9 +93,7 @@ public sealed class SpotPlacementScoreCommand(ILogger<SpotPlacementScoreCommand>
 
         try
         {
-            var service = context.GetService<IComputePlacementService>();
-
-            var scores = await service.GetSpotPlacementScoresAsync(
+            var scores = await _placementService.GetSpotPlacementScoresAsync(
                 options.Location!,
                 options.Subscription!,
                 options.DesiredLocations!,
@@ -90,7 +105,7 @@ public sealed class SpotPlacementScoreCommand(ILogger<SpotPlacementScoreCommand>
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new SpotPlacementScoreCommandResult(scores),
+                new(scores),
                 ComputePlacementJsonContext.Default.SpotPlacementScoreCommandResult);
         }
         catch (Exception ex)

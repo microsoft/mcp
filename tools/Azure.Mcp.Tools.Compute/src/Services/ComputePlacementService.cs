@@ -9,18 +9,15 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.ResourceManager.Compute.Recommender;
 using Azure.ResourceManager.Compute.Recommender.Models;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Compute.Services;
 
 public class ComputePlacementService(
     ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILogger<ComputePlacementService> logger)
+    ITenantService tenantService)
     : BaseAzureService(tenantService), IComputePlacementService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
-    private readonly ILogger<ComputePlacementService> _logger = logger;
 
     public async Task<SpotPlacementMetadataInfo> GetSpotPlacementMetadataAsync(
         string location,
@@ -37,8 +34,7 @@ public class ComputePlacementService(
         var subscriptionId = subscriptionResource.Data.SubscriptionId;
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-        var resourceId = ComputeRecommenderDiagnosticResource.CreateResourceIdentifier(
-            subscriptionId, new AzureLocation(location));
+        var resourceId = ComputeRecommenderDiagnosticResource.CreateResourceIdentifier(subscriptionId, new(location));
         var diagnosticResource = armClient.GetComputeRecommenderDiagnosticResource(resourceId);
 
         var result = await diagnosticResource.GetAsync(cancellationToken);
@@ -70,8 +66,7 @@ public class ComputePlacementService(
         var subscriptionId = subscriptionResource.Data.SubscriptionId;
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-        var resourceId = ComputeRecommenderDiagnosticResource.CreateResourceIdentifier(
-            subscriptionId, new AzureLocation(location));
+        var resourceId = ComputeRecommenderDiagnosticResource.CreateResourceIdentifier(subscriptionId, new(location));
         var diagnosticResource = armClient.GetComputeRecommenderDiagnosticResource(resourceId);
 
         var content = new ComputeRecommenderGenerateContent

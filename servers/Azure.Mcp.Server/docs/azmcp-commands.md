@@ -1766,14 +1766,14 @@ azmcp compute placementscore spot generate --subscription <subscription> \
 - `spot generate`: A list of placement scores (High / Medium / Low) per SKU / region / availability zone, plus quota availability, indicating the likelihood that a Spot VM of the requested size can be allocated. Rate limited to 4 calls per 60 minutes per subscription.
 
 **Parameters:**
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `--subscription` | Yes | Azure subscription ID or name (requires at least Reader role) |
-| `--location` | Yes | ARM region used for API routing (e.g., `eastus`, `westus2`) |
-| `--desired-locations` | Yes (generate) | One or more ARM regions to evaluate (1–3 recommended) |
-| `--desired-sizes` | Yes (generate) | One or more VM SKU names (e.g., `Standard_D2_v2`, `Standard_D4s_v3`) |
-| `--desired-count` | No | Number of VMs to evaluate (1–1000). Defaults to `1` |
-| `--availability-zones` | No | Whether to include zone-level scores. Defaults to `true` |
+| Parameter | Description |
+|-----------|-------------|
+| `--subscription` | Azure subscription ID or name (requires at least Reader role). |
+| `--location` | ARM region used as the API endpoint for the Spot Placement Scores diagnostic resource (e.g., `eastus`, `westus2`). This routes the request to the closest Microsoft.Compute control-plane endpoint — it does **not** restrict which regions are scored. Use `--desired-locations` to specify the regions to evaluate. |
+| `--desired-locations` | (`spot generate` only) One or more ARM regions to score (1–3 recommended). |
+| `--desired-sizes` | (`spot generate` only) One or more VM SKU names (e.g., `Standard_D2_v2`, `Standard_D4s_v3`). |
+| `--desired-count` | (`spot generate` only) Number of VMs to evaluate (1–1000). Defaults to `1`. |
+| `--availability-zones` | (`spot generate` only) Whether to include zone-level scores. Defaults to `true`. |
 
 ### Azure Confidential Ledger Operations
 
