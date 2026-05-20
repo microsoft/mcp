@@ -191,6 +191,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
             writer.WriteString("justification", justification);
             writer.WriteEndObject();
             writer.WriteEndObject();
+            writer.Flush();
         }
 
         var contentBytes = stream.ToArray();
@@ -257,7 +258,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
         {
             Id = GetStringProperty(item, "id"),
             DisplayName = GetStringProperty(item, properties, "displayName"),
-            AssignedToMe = GetBoolProperty(item, "assignedToMe") ?? GetBoolProperty(properties, "assignedToMe"),
+            AssignedToMe = GetBoolProperty(item, properties, "assignedToMe"),
             Status = GetStringProperty(item, properties, "status"),
             ReviewResult = GetStringProperty(item, properties, "reviewResult"),
             ReviewedBy = GetStringProperty(item, properties, "reviewedBy"),
@@ -333,6 +334,11 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
             JsonValueKind.False => false,
             _ => null
         };
+    }
+
+    private static bool? GetBoolProperty(JsonElement item, JsonElement properties, string propertyName)
+    {
+        return GetBoolProperty(item, propertyName) ?? GetBoolProperty(properties, propertyName);
     }
 
     private static bool TryGetProperty(JsonElement item, string propertyName, out JsonElement property)
