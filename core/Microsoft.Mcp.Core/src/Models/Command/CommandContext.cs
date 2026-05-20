@@ -28,13 +28,31 @@ public class CommandContext
     public Activity? Activity { get; }
 
     /// <summary>
+    /// The MCP server handling the current tool call
+    /// </summary>
+    public McpServer? McpServer { get; }
+
+    /// <summary>
     /// Creates a new command context
     /// </summary>
     /// <param name="serviceProvider">The service provider for dependency injection</param>
+    /// <param name="activity">The current telemetry activity, if available</param>
     public CommandContext(IServiceProvider serviceProvider, Activity? activity = default)
+        : this(serviceProvider, activity, null)
+    {
+    }
+
+    /// <summary>
+    /// Creates a new command context
+    /// </summary>
+    /// <param name="serviceProvider">The service provider for dependency injection</param>
+    /// <param name="activity">The current telemetry activity, if available</param>
+    /// <param name="mcpServer">The MCP server handling the current tool call</param>
+    public CommandContext(IServiceProvider serviceProvider, Activity? activity, McpServer? mcpServer)
     {
         _serviceProvider = serviceProvider;
         Activity = activity;
+        McpServer = mcpServer;
         Response = new CommandResponse
         {
             Status = HttpStatusCode.OK,
