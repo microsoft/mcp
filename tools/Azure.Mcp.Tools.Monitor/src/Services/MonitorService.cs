@@ -118,34 +118,46 @@ public class MonitorService(
 
         var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
 
-        var response = await client.QueryWorkspaceAsync(
-            workspaceId,
-            query,
-            new(TimeSpan.FromDays(timeSpanDays)),
-            options: null,
-            cancellationToken
-        );
-
-        var results = new List<JsonNode>();
-        if (response.Value.Table != null)
+        try
         {
-            var rows = response.Value.Table.Rows;
-            var columns = response.Value.Table.Columns;
+            var response = await client.QueryWorkspaceAsync(
+                workspaceId,
+                query,
+                new(TimeSpan.FromDays(timeSpanDays)),
+                options: null,
+                cancellationToken
+            );
 
-            if (rows != null && columns != null && rows.Any())
+            var results = new List<JsonNode>();
+            if (response.Value.Table != null)
             {
-                foreach (var row in rows)
+                var rows = response.Value.Table.Rows;
+                var columns = response.Value.Table.Columns;
+
+                if (rows != null && columns != null && rows.Any())
                 {
-                    var rowDict = new JsonObject();
-                    for (int i = 0; i < columns.Count; i++)
+                    foreach (var row in rows)
                     {
-                        rowDict[columns[i].Name] = JsonValue.Create(row[i]?.ToString() ?? "null");
+                        var rowDict = new JsonObject();
+                        for (int i = 0; i < columns.Count; i++)
+                        {
+                            rowDict[columns[i].Name] = JsonValue.Create(row[i]?.ToString() ?? "null");
+                        }
+                        results.Add(rowDict);
                     }
-                    results.Add(rowDict);
                 }
             }
+            return results;
         }
-        return results;
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            throw new KeyNotFoundException($"Workspace '{workspaceId}' not found.", ex);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error querying workspace '{WorkspaceId}'. Query: {Query}", workspaceId, query);
+            throw;
+        }
     }
 
     public async Task<List<string>> ListTables(
@@ -178,8 +190,9 @@ public class MonitorService(
             .ConfigureAwait(false);
 
         return [.. tables
-            .Where(table => string.IsNullOrEmpty(tableType) || table.Data.Schema.TableType.ToString() == tableType)
-            .Select(table => table.Data.Name ?? string.Empty) // ensure non-null
+            .Where(table => string.IsNullOrEmpty(tableType) ||
+                string.Equals(table.Data.Schema.TableType?.ToString(), tableType, StringComparison.OrdinalIgnoreCase))
+            .Select(table => table.Data.Name ?? string.Empty)
             .Where(name => !string.IsNullOrEmpty(name))
             .OrderBy(name => name)];
     }
@@ -277,15 +290,16 @@ public class MonitorService(
     }
 
     // Helper to build the query string with table and limit
-    private static string BuildQuery(string query, string table, int? limit)
+    // Helper to build the query string with table and limit; internal for testability
+    internal static string BuildQuery(string query, string table, int? limit)
     {
         if (!string.IsNullOrEmpty(query) && s_predefinedQueries.ContainsKey(query.Trim().ToLower()))
         {
             query = s_predefinedQueries[query.Trim().ToLower()];
             query = query.Replace(TablePlaceholder, KqlSanitizer.EscapeIdentifier(table));
         }
-        // Add limit if not present
-        if (limit.HasValue && !query.Contains("limit", StringComparison.CurrentCultureIgnoreCase))
+        // Add limit if not present; use OrdinalIgnoreCase to avoid locale-sensitive comparison (e.g. Turkish locale)
+        if (limit.HasValue && !query.Contains("limit", StringComparison.OrdinalIgnoreCase))
         {
             query = $"{query}\n| limit {limit}";
         }
@@ -379,11 +393,10 @@ public class MonitorService(
         string subscriptionId = resourceIdentifier.SubscriptionId
             ?? throw new ArgumentException($"Unable to extract subscription ID from resource ID: {resourceId}");
 
-        // Get the activity logs from the Azure Management API
-        var activityLogs = await CallActivityLogApiAsync(subscriptionId, resourceId, hours, eventLevel, tenant, retryPolicy, cancellationToken);
+        // Get the activity logs from the Azure Management API — top is passed to limit server-side pagination
+        var activityLogs = await CallActivityLogApiAsync(subscriptionId, resourceId, hours, eventLevel, top, tenant, retryPolicy, cancellationToken);
 
-        // Take only the requested number of logs
-        return activityLogs.Take(top).ToList();
+        return activityLogs;
     }
 
     private async Task<List<ActivityLogEventData>> CallActivityLogApiAsync(
@@ -391,6 +404,7 @@ public class MonitorService(
         string resourceId,
         double hours,
         ActivityLogEventLevel? eventLevel,
+        int top,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
@@ -399,11 +413,9 @@ public class MonitorService(
 
         string endpoint = GetLogActivityEndpointString(subscriptionId);
 
-        // Build the query parameters
+        // Build the query parameters — include $top to constrain server-side results and reduce unnecessary pages
         var uriBuilder = new UriBuilder(endpoint);
-
-        // Build the query parameters
-        string query = $"api-version={ActivityLogApiVersion}";
+        string query = $"api-version={ActivityLogApiVersion}&$top={top}";
 
         // Create the time filter
         DateTimeOffset startDate = DateTimeOffset.UtcNow.AddHours(-hours).ToUniversalTime();
@@ -414,7 +426,7 @@ public class MonitorService(
 
         if (eventLevel != null)
         {
-            filter += $" and levels eq '{eventLevel}'";
+            filter += $" and level eq '{eventLevel}'";
         }
 
         query += $"&$filter={Uri.EscapeDataString(filter)}";
@@ -422,16 +434,20 @@ public class MonitorService(
 
         var accessToken = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
-        // Make paginated requests
+        // Make paginated requests, stopping as soon as the requested count is reached
         string? nextRequestUrl = uriBuilder.Uri.ToString();
         do
         {
             ActivityLogListResponse listResponse = await MakeActivityLogRequestAsync(nextRequestUrl, accessToken.Token, cancellationToken);
             returnValue.AddRange(listResponse.Value);
+            if (returnValue.Count >= top)
+            {
+                break;
+            }
             nextRequestUrl = listResponse.NextLink;
         } while (!string.IsNullOrEmpty(nextRequestUrl));
 
-        return returnValue;
+        return returnValue.Take(top).ToList();
     }
 
     private async Task<ActivityLogListResponse> MakeActivityLogRequestAsync(string url, string token, CancellationToken cancellationToken)

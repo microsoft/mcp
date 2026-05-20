@@ -1,0 +1,10 @@
+changes:
+  - section: "Bug Fixes"
+    description: |
+      Fix several correctness, reliability, and performance issues in the Monitor toolset:
+      - Activity log level filtering now works correctly. The OData filter used the wrong field name ('levels' instead of 'level'), causing the API to silently ignore the filter and return all severity levels regardless of what was requested.
+      - Workspace log queries no longer require --resource-group. The option was incorrectly enforced on all Monitor commands, including workspace queries that never use it. It is now only required on the commands that actually need it.
+      - Table-type filtering is now case-insensitive. Passing 'customlog' instead of 'CustomLog' previously returned an empty list with no error. Filtering now matches regardless of casing.
+      - Query limit detection is now locale-safe. The 'limit' keyword check used a culture-sensitive comparison that could fail in Turkish locale, causing a duplicate limit clause and invalid KQL. This now uses ordinal comparison.
+      - QueryWorkspace now logs and classifies errors correctly. Exceptions previously propagated as bare stack traces; they are now caught, logged with context, and 404s are surfaced as a clear 'not found' error.
+      - Activity log pagination now stops as soon as the requested number of results is collected. Previously, all pages were fetched into memory before truncation, causing unnecessary ARM round-trips and potential timeouts on busy subscriptions.
