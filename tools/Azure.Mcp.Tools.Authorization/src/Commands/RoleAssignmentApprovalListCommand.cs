@@ -66,7 +66,7 @@ public sealed class RoleAssignmentApprovalListCommand(ILogger<RoleAssignmentAppr
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new(approvals ?? []),
+                new(approvals),
                 AuthorizationJsonContext.Default.RoleAssignmentApprovalListCommandResult);
         }
         catch (Exception ex)
