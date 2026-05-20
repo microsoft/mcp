@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.MySql.Commands;
 
@@ -14,7 +16,7 @@ namespace Azure.Mcp.Tools.MySql.Commands;
     Id = "77e60b50-5c16-4879-96b1-6a40d9c08a37",
     Name = "list",
     Title = "List MySQL Resources",
-    Description = "List MySQL servers, databases, or tables in your subscription. Returns all servers by default. Specify --server to list databases on that server, or --server and --database to list tables in a specific database.",
+    Description = "List MySQL servers, databases, or tables in your subscription. Returns all servers in the subscription by default, or servers in a resource group when --resource-group is specified. Specify --server to list databases on that server, or --server and --database to list tables in a specific database.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -28,13 +30,24 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(MySqlOptionDefinitions.ServerOptional);
         command.Options.Add(MySqlOptionDefinitions.DatabaseOptional);
+        command.Options.Add(MySqlOptionDefinitions.User.AsOptional());
         command.Validators.Add(result =>
         {
-            // Validate that --server is provided when --database is specified
-            if (!string.IsNullOrEmpty(result.GetValueOrDefault<string?>(MySqlOptionDefinitions.DatabaseOptional.Name)) &&
-                string.IsNullOrEmpty(result.GetValueOrDefault<string?>(MySqlOptionDefinitions.ServerOptional.Name)))
+            var server = result.GetValueOrDefault<string?>(MySqlOptionDefinitions.ServerOptional.Name);
+            var database = result.GetValueOrDefault<string?>(MySqlOptionDefinitions.DatabaseOptional.Name);
+            var user = result.GetValueOrDefault<string?>(MySqlOptionDefinitions.User.Name);
+
+            // --user is required when performing data-plane operations (listing databases or tables)
+            if (!string.IsNullOrEmpty(server) && string.IsNullOrEmpty(user))
+            {
+                result.AddError("The --user parameter is required when --server is specified.");
+            }
+
+            // --server is required when --database is specified
+            if (!string.IsNullOrEmpty(database) && string.IsNullOrEmpty(server))
             {
                 result.AddError("The --server parameter is required when --database is specified.");
             }
@@ -44,6 +57,8 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
     protected override MySqlDatabaseOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.User = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.User.Name);
         options.Server = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.ServerOptional.Name);
         options.Database = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.DatabaseOptional.Name);
         return options;
@@ -83,7 +98,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                 // List databases on specified server
                 List<string> databases = await _mysqlService.ListDatabasesAsync(
                     options.Subscription!,
-                    options.ResourceGroup!,
+                    options.ResourceGroup ?? string.Empty,
                     options.User!,
                     options.Server!,
                     cancellationToken);
@@ -92,13 +107,23 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                     new(null, databases ?? [], null),
                     MySqlJsonContext.Default.MySqlListCommandResult);
             }
-            else
+            else if (!string.IsNullOrEmpty(options.ResourceGroup))
             {
-                // List servers in resource group
+                // List servers scoped to a specific resource group
                 List<string> servers = await _mysqlService.ListServersAsync(
                     options.Subscription!,
-                    options.ResourceGroup!,
-                    options.User!,
+                    options.ResourceGroup,
+                    cancellationToken);
+
+                context.Response.Results = ResponseResult.Create(
+                    new(servers ?? [], null, null),
+                    MySqlJsonContext.Default.MySqlListCommandResult);
+            }
+            else
+            {
+                // List all servers in the subscription
+                List<string> servers = await _mysqlService.ListServersInSubscriptionAsync(
+                    options.Subscription!,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -115,5 +140,5 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
         return context.Response;
     }
 
-    public record MySqlListCommandResult(List<string>? Servers, List<string>? Databases, List<string>? Tables);
+    internal record MySqlListCommandResult(List<string>? Servers, List<string>? Databases, List<string>? Tables);
 }

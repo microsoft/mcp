@@ -20,15 +20,10 @@ public abstract class BaseMySqlCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(MySqlOptionDefinitions.User);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.User = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.User.Name);
-        return options;
+        return base.BindOptions(parseResult);
     }
 }

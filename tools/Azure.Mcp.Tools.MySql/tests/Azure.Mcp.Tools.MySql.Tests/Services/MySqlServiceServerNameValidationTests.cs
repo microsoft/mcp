@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
@@ -21,10 +22,11 @@ public class MySqlServiceServerNameValidationTests
     public MySqlServiceServerNameValidationTests()
     {
         var resourceGroupService = Substitute.For<IResourceGroupService>();
+        var subscriptionService = Substitute.For<ISubscriptionService>();
         var tenantService = Substitute.For<ITenantService>();
         var logger = Substitute.For<ILogger<MySqlService>>();
 
-        _mysqlService = new MySqlService(resourceGroupService, tenantService, logger);
+        _mysqlService = new MySqlService(resourceGroupService, subscriptionService, tenantService, logger);
     }
 
     [Theory]

@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fix multiple MySQL toolset issues: support subscription-wide server listing when --resource-group is omitted (MY-02/MY-04), separate row and query length limit constants for clarity (MY-03), replace plain Exception with KeyNotFoundException for not-found scenarios (MY-06), extract ValidateQuerySafety regex to static readonly field for correctness and AOT safety (MY-07), remove --user requirement from ARM-only server commands (MY-08), seal MySqlService class (MY-10), change two public command result records to internal (MY-11)."
