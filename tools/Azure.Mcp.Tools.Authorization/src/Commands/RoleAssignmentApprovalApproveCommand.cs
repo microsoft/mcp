@@ -46,10 +46,10 @@ public sealed class RoleAssignmentApprovalApproveCommand(ILogger<RoleAssignmentA
     protected override RoleAssignmentApprovalApproveOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Scope = parseResult.GetValueOrDefault<string>(OptionDefinitions.Authorization.Scope.Name);
-        options.Approval = parseResult.GetValueOrDefault<string>(AuthorizationOptionDefinitions.Approval.Name);
-        options.Stage = parseResult.GetValueOrDefault<string>(AuthorizationOptionDefinitions.Stage.Name);
-        options.Justification = parseResult.GetValueOrDefault<string>(AuthorizationOptionDefinitions.Justification.Name);
+        options.Scope = parseResult.GetValueOrDefault(OptionDefinitions.Authorization.Scope);
+        options.Approval = parseResult.GetValueOrDefault(AuthorizationOptionDefinitions.Approval);
+        options.Stage = parseResult.GetValueOrDefault(AuthorizationOptionDefinitions.Stage);
+        options.Justification = parseResult.GetValueOrDefault(AuthorizationOptionDefinitions.Justification);
         return options;
     }
 

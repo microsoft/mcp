@@ -43,7 +43,7 @@ public sealed class RoleAssignmentApprovalListCommand(ILogger<RoleAssignmentAppr
     protected override RoleAssignmentApprovalListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Scope = parseResult.GetValueOrDefault<string>(OptionDefinitions.Authorization.Scope.Name);
+        options.Scope = parseResult.GetValueOrDefault(OptionDefinitions.Authorization.Scope);
         return options;
     }
 

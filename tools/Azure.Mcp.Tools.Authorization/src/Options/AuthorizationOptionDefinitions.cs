@@ -11,19 +11,16 @@ public static class AuthorizationOptionDefinitions
 
     public static readonly Option<string> Approval = new($"--{ApprovalName}")
     {
-        Description = "The Azure RBAC PIM role assignment approval name or full approval resource ID. Use role approval list to discover pending approvals.",
-        Required = true
+        Description = "The Azure RBAC PIM role assignment approval name or full approval resource ID. Use role approval list to discover pending approvals."
     };
 
     public static readonly Option<string> Stage = new($"--{StageName}")
     {
-        Description = "The Azure RBAC PIM approval stage name or full stage resource ID. Use role approval list to discover pending approval stages.",
-        Required = true
+        Description = "The Azure RBAC PIM approval stage name or full stage resource ID. Use role approval list to discover pending approval stages."
     };
 
     public static readonly Option<string> Justification = new($"--{JustificationName}")
     {
-        Description = "The business justification to record when approving the Azure RBAC PIM request.",
-        Required = true
+        Description = "The business justification to record when approving the Azure RBAC PIM request."
     };
 }
