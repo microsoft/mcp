@@ -1,0 +1,13 @@
+changes:
+  - section: "Bugs Fixed"
+    description: |
+      Fixed multiple issues in the EventHubs toolset:
+
+      - Namespace delete now reports "not found" instead of "deleted successfully" when the namespace does not exist.
+      - Namespace list now uses a single subscription-scoped ARM call instead of one call per resource group.
+      - Namespace get now validates all required parameters before making any network call.
+      - Invalid SKU tier now returns a clear error instead of silently defaulting to Standard. SKU tier and Event Hub status matching are now case-insensitive.
+      - Event Hub status (`--status`) is now correctly applied when updating. Previously it was accepted but silently discarded.
+      - Consumer group create now returns a clear not-found error when the parent resource group, namespace, or Event Hub does not exist.
+      - Not-found conditions across all EventHubs methods now return HTTP 404 instead of HTTP 500.
+

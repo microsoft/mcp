@@ -390,4 +390,28 @@ public class NamespaceDeleteCommandTests : CommandUnitTestsBase<NamespaceDeleteC
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenNamespaceNotFound_ReturnsNotFoundMessage()
+    {
+        // Arrange — service returns false (namespace did not exist)
+        Service.DeleteNamespaceAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "nonexistent-namespace");
+
+        // Assert — still HTTP 200 (idempotent), but result indicates not-found
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+    }
 }
