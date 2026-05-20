@@ -33,7 +33,7 @@ public sealed class SampleCommand(
         try
         {
             // Validate limit is within safe bounds to prevent resource abuse
-            var safeLimit = Math.Clamp(options.Limit, 1, 10000);
+            var safeLimit = Math.Clamp(options.Limit ?? 10, 1, 10000);
 
             var query = $"{KustoService.EscapeKqlIdentifier(options.Table)} | sample {safeLimit}";
 
