@@ -784,7 +784,7 @@ azmcp appservice webapp diagnostic list --subscription "my-subscription" \
 ```
 
 ```bash
-# Diagnose an App Service Web App with detector
+# Diagnose an App Service Web App with detector ID
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice webapp diagnostic diagnose --subscription <subscription> \
                                             --resource-group <resource-group> \
@@ -795,19 +795,19 @@ azmcp appservice webapp diagnostic diagnose --subscription <subscription> \
                                             [--interval <interval>]
 
 # Examples:
-# Diagnose the Web App with detector
+# Diagnose the Web App with detector ID
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
                                             --resource-group "my-resource-group" \
                                             --app "my-web-app" \
-                                            --detector-id "detector"
+                                            --detector-id "LinuxMemoryDrillDown"
 
-# Diagnose the Web App with detector between start and end time with interval
+# Diagnose the Web App with detector ID between start and end time with interval
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
                                             --resource-group "my-resource-group" \
                                             --app "my-web-app" \
-                                            --detector-id "detector"
+                                            --detector-id "LinuxMemoryDrillDown"
                                             --start-time "2026-01-01T00:00:00Z" \
                                             --end-time "2026-01-01T23:59:59Z" \
                                             --interval "PT1H"
