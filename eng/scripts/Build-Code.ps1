@@ -116,7 +116,7 @@ function BuildServer($server) {
             $script:exitCode = 1
             return
         }
-        
+
         # Even if we call the script with the SmokeTest switch, we can only run the test if the built platform is supported on the current OS
         $currentRid = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier
         if ($SmokeTest) {
@@ -136,6 +136,9 @@ function BuildServer($server) {
                             # difficult to read in the logs, so we want to avoid logging it on success.
                             # For example, at the time of writing this, Azure MCP's tools list is >20k lines long.
                             Write-Error $toolListResponse
+                        }
+                        else {
+                            Write-Host "Smoke test passed for '$exeName'. 'tools list' command executed successfully and returned 200 status code." -ForegroundColor Green
                         }
                     }
                 }
