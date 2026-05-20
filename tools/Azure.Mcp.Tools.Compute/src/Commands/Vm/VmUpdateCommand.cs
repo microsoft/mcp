@@ -53,9 +53,14 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger, IComputeSer
         // Resource group is required for update
         command.Validators.Add(commandResult =>
         {
-            // Custom validation: At least one update property must be specified
+            // Custom validation: At least one update property must be specified.
+            // Note: Tags may be an empty string ("") to clear all tags — use GetResult to detect
+            // whether the option was explicitly passed even with an empty value, since HasOptionResult
+            // returns false for empty-string tokens.
+            var tagsProvided = commandResult.GetResult(ComputeOptionDefinitions.Tags) is not null;
+
             if (string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name)) &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name)) &&
+                !tagsProvided &&
                 string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.LicenseType.Name)) &&
                 string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.BootDiagnostics.Name)) &&
                 string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UserData.Name)))

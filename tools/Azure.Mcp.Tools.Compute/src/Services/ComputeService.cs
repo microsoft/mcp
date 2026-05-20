@@ -969,14 +969,22 @@ public class ComputeService(
 
         if (tags != null)
         {
-            // Parse tags in key=value,key2=value2 format
-            var tagPairs = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var pair in tagPairs)
+            if (string.IsNullOrEmpty(tags))
             {
-                var keyValue = pair.Split('=', 2);
-                if (keyValue.Length == 2)
+                // Empty string explicitly clears all existing tags
+                patch.Tags.Clear();
+            }
+            else
+            {
+                // Parse tags in key=value,key2=value2 format
+                var tagPairs = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var pair in tagPairs)
                 {
-                    patch.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
+                    var keyValue = pair.Split('=', 2);
+                    if (keyValue.Length == 2)
+                    {
+                        patch.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
+                    }
                 }
             }
             needsUpdate = true;
@@ -1061,14 +1069,22 @@ public class ComputeService(
 
         if (tags != null)
         {
-            // Parse tags in key=value,key2=value2 format
-            var tagPairs = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var pair in tagPairs)
+            if (string.IsNullOrEmpty(tags))
             {
-                var keyValue = pair.Split('=', 2);
-                if (keyValue.Length == 2)
+                // Empty string explicitly clears all existing tags
+                patch.Tags.Clear();
+            }
+            else
+            {
+                // Parse tags in key=value,key2=value2 format
+                var tagPairs = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var pair in tagPairs)
                 {
-                    patch.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
+                    var keyValue = pair.Split('=', 2);
+                    if (keyValue.Length == 2)
+                    {
+                        patch.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
+                    }
                 }
             }
             needsUpdate = true;
