@@ -18,6 +18,9 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
     : BaseAzureResourceService(subscriptionService, tenantService), IAuthorizationService
 {
     private const string ApproveReviewResult = "Approve";
+    private const string InProgressStatus = "InProgress";
+    private const string NotStartedStatus = "NotStarted";
+    private const string PendingStatus = "Pending";
     private const string RoleAssignmentApprovalsApiVersion = "2021-01-01-preview";
     // BaseAzureResourceService keeps its subscription service private; this service also needs it
     // to resolve the tenant for direct ARM REST calls.
@@ -291,9 +294,9 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
     private static bool IsPendingStatus(string? status)
     {
         return string.IsNullOrEmpty(status)
-            || status.Equals("Pending", StringComparison.OrdinalIgnoreCase)
-            || status.Equals("InProgress", StringComparison.OrdinalIgnoreCase)
-            || status.Equals("NotStarted", StringComparison.OrdinalIgnoreCase);
+            || status.Equals(PendingStatus, StringComparison.OrdinalIgnoreCase)
+            || status.Equals(InProgressStatus, StringComparison.OrdinalIgnoreCase)
+            || status.Equals(NotStartedStatus, StringComparison.OrdinalIgnoreCase);
     }
 
     private static JsonElement GetObjectProperty(JsonElement item, string propertyName)
