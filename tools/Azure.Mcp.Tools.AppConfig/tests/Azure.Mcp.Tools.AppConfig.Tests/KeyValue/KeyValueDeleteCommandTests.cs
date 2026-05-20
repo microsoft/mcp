@@ -43,6 +43,7 @@ public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCom
 
         Assert.Equal("my-key", result.Key);
         Assert.True(result.Existed);
+        Assert.Equal("Key 'my-key' deleted successfully.", result.Message);
     }
 
     [Fact]
@@ -74,6 +75,7 @@ public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCom
         Assert.Equal("my-key", result.Key);
         Assert.Equal("prod", result.Label);
         Assert.True(result.Existed);
+        Assert.Equal("Key 'my-key' deleted successfully.", result.Message);
     }
 
     [Fact]
@@ -95,6 +97,7 @@ public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCom
 
         Assert.Equal("nonexistent-key", result.Key);
         Assert.False(result.Existed);
+        Assert.Equal("Key 'nonexistent-key' did not exist in store 'account1'.", result.Message);
     }
 
     [Fact]

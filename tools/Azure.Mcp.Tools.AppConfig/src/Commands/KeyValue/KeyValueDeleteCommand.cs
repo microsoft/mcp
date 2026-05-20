@@ -50,7 +50,10 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger,
                 options.Label,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(options.Key, options.Label, existed), AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
+            var message = existed
+                ? $"Key '{options.Key}' deleted successfully."
+                : $"Key '{options.Key}' did not exist in store '{options.Account}'.";
+            context.Response.Results = ResponseResult.Create(new(options.Key, options.Label, existed, message), AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
         }
         catch (Exception ex)
         {
@@ -61,5 +64,5 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger,
         return context.Response;
     }
 
-    internal record KeyValueDeleteCommandResult(string? Key, string? Label, bool Existed);
+    internal record KeyValueDeleteCommandResult(string? Key, string? Label, bool Existed, string Message);
 }
