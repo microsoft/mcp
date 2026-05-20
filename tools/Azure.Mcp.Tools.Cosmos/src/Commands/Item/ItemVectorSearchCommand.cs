@@ -39,7 +39,7 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
         base.RegisterOptions(command);
         command.Options.Add(CosmosOptionDefinitions.VectorProperty);
         command.Options.Add(CosmosOptionDefinitions.SelectProperties);
-        command.Options.Add(CosmosOptionDefinitions.Count);
+        command.Options.Add(CosmosOptionDefinitions.VectorSearchCount);
         command.Options.Add(CosmosOptionDefinitions.Embedding);
         command.Options.Add(CosmosOptionDefinitions.SearchText);
         command.Options.Add(CosmosOptionDefinitions.OpenAIEndpoint);
@@ -71,7 +71,7 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
                 }
             }
 
-            var count = result.GetValueOrDefault<int>(CosmosOptionDefinitions.Count.Name);
+            var count = result.GetValueOrDefault<int>(CosmosOptionDefinitions.VectorSearchCount.Name);
             if (count < 1 || count > 50)
             {
                 result.AddError("--count must be between 1 and 50.");
@@ -109,7 +109,7 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
         var options = base.BindOptions(parseResult);
         options.VectorProperty = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.VectorProperty.Name);
         options.SelectProperties = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.SelectProperties.Name);
-        options.Count = parseResult.GetValueOrDefault<int>(CosmosOptionDefinitions.Count.Name);
+        options.Count = parseResult.GetValueOrDefault<int>(CosmosOptionDefinitions.VectorSearchCount.Name);
         options.Embedding = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.Embedding.Name);
         options.SearchText = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.SearchText.Name);
         options.OpenAIEndpoint = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.OpenAIEndpoint.Name);

@@ -323,7 +323,8 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
         var container = client.GetContainer(databaseName, containerName);
 
-        var queryDef = new QueryDefinition($"SELECT TOP {sampleSize} * FROM c");
+        var queryDef = new QueryDefinition("SELECT TOP @sampleSize * FROM c")
+            .WithParameter("@sampleSize", sampleSize);
         var iterator = container.GetItemQueryStreamIterator(
             queryDef,
             requestOptions: new QueryRequestOptions { MaxItemCount = sampleSize });
@@ -423,7 +424,8 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
         var container = client.GetContainer(databaseName, containerName);
 
-        var queryDef = new QueryDefinition($"SELECT TOP {count} * FROM c ORDER BY c._ts DESC");
+        var queryDef = new QueryDefinition("SELECT TOP @topN * FROM c ORDER BY c._ts DESC")
+            .WithParameter("@topN", count);
         var iterator = container.GetItemQueryStreamIterator(
             queryDef,
             requestOptions: new QueryRequestOptions { MaxItemCount = count });
@@ -562,7 +564,8 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         var container = client.GetContainer(databaseName, containerName);
 
         var queryDef = new QueryDefinition(
-                $"SELECT TOP {count} * FROM c WHERE FullTextContains(c.{property}, @searchPhrase)")
+                $"SELECT TOP @topN * FROM c WHERE FullTextContains(c.{property}, @searchPhrase)")
+            .WithParameter("@topN", count)
             .WithParameter("@searchPhrase", searchPhrase);
 
         var iterator = container.GetItemQueryStreamIterator(

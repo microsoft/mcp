@@ -48,7 +48,7 @@ public class ItemListRecentCommandTests
 
     [Theory]
     [InlineData("0")]
-    [InlineData("101")]
+    [InlineData("21")]
     public async Task ExecuteAsync_RejectsOutOfRangeCount(string count)
     {
         var response = await ExecuteCommandAsync(

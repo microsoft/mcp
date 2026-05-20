@@ -38,9 +38,9 @@ public sealed class ContainerSchemaGetCommand(ILogger<ContainerSchemaGetCommand>
         command.Validators.Add(result =>
         {
             var size = result.GetValueOrDefault<int>(CosmosOptionDefinitions.SampleSize.Name);
-            if (size < 1 || size > 100)
+            if (size < 1 || size > 20)
             {
-                result.AddError("--sample-size must be between 1 and 100.");
+                result.AddError("--sample-size must be between 1 and 20.");
             }
         });
     }

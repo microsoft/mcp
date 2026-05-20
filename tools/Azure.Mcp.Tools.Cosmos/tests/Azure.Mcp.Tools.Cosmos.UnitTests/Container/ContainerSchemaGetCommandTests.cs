@@ -64,7 +64,7 @@ public class ContainerSchemaGetCommandTests
 
     [Theory]
     [InlineData("0")]
-    [InlineData("101")]
+    [InlineData("21")]
     public async Task ExecuteAsync_RejectsOutOfRangeSampleSize(string sampleSize)
     {
         var response = await ExecuteCommandAsync(

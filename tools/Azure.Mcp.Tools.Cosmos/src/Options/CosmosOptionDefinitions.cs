@@ -79,6 +79,15 @@ public static class CosmosOptionDefinitions
         DefaultValueFactory = _ => 10
     };
 
+    public static readonly Option<int> VectorSearchCount = new(
+        $"--{CountName}"
+    )
+    {
+        Description = "Maximum number of documents to return (1-50). Defaults to 10.",
+        Required = false,
+        DefaultValueFactory = _ => 10
+    };
+
     public static readonly Option<int> SampleSize = new(
         $"--{SampleSizeName}"
     )
