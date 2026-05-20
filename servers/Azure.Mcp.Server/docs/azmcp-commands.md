@@ -853,6 +853,8 @@ azmcp azurebackup vault update --subscription <subscription> \
 
 ```bash
 # Creates a backup policy for a specified workload type with schedule and retention rules.
+# Supports daily/weekly/hourly schedules, multi-tier retention (daily/weekly/monthly/yearly), and archive
+# tiering for Recovery Services vaults (RSV). Backup vaults (DPP) do not currently support archive tiering.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup policy create --subscription <subscription> \
                                 --resource-group <resource-group> \
@@ -860,8 +862,60 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 --policy <policy> \
                                 --workload-type <workload-type> \
                                 [--vault-type <vault-type>] \
-                                [--schedule-time <schedule-time>] \
-                                [--daily-retention-days <daily-retention-days>]
+                                # --- Common schedule (RSV + DPP) ---
+                                [--time-zone <time-zone>] \
+                                [--schedule-frequency <Daily|Weekly|Hourly>] \
+                                [--schedule-times <HH:mm[,HH:mm...]>] \
+                                [--schedule-days-of-week <day[,day...]>] \
+                                [--hourly-interval-hours <4|6|8|12|24>] \
+                                [--hourly-window-start-time <HH:mm>] \
+                                [--hourly-window-duration-hours <4-24>] \
+                                # --- Retention (RSV + DPP) ---
+                                [--daily-retention-days <int>] \
+                                [--weekly-retention-weeks <int>] \
+                                [--weekly-retention-days-of-week <day[,day...]>] \
+                                [--monthly-retention-months <int>] \
+                                [--monthly-retention-week-of-month <First|Second|Third|Fourth|Last>] \
+                                [--monthly-retention-days-of-week <day[,day...]>] \
+                                [--monthly-retention-days-of-month <int[,int...]>] \
+                                [--yearly-retention-years <int>] \
+                                [--yearly-retention-months <month[,month...]>] \
+                                [--yearly-retention-week-of-month <First|Second|Third|Fourth|Last>] \
+                                [--yearly-retention-days-of-week <day[,day...]>] \
+                                [--yearly-retention-days-of-month <int[,int...]>] \
+                                [--archive-tier-mode <CopyOnExpiry|TierAfter>] \
+                                [--archive-tier-after-days <int>] \
+                                # --- RSV-VM only ---
+                                [--policy-sub-type <Standard|Enhanced>] \
+                                [--instant-rp-retention-days <int>] \
+                                [--instant-rp-resource-group <resource-group>] \
+                                [--snapshot-consistency <ApplicationConsistent|FileSystemConsistent|Crash>] \
+                                # --- RSV VmWorkload (SQL/SAPHANA/SAPASE) ---
+                                [--full-schedule-frequency <Daily|Weekly>] \
+                                [--full-schedule-days-of-week <day[,day...]>] \
+                                [--differential-schedule-days-of-week <day[,day...]>] \
+                                [--differential-retention-days <int>] \
+                                [--incremental-schedule-days-of-week <day[,day...]>] \
+                                [--incremental-retention-days <int>] \
+                                [--log-frequency-minutes <15-240>] \
+                                [--log-retention-days <int>] \
+                                [--is-compression <true|false>] \
+                                [--is-sql-compression <true|false>] \
+                                # --- Stage 2: smart tiering / snapshot / vault-tier copy / backup mode / PITR / tags / AKS ---
+                                [--smart-tier <true|false>] \
+                                [--enable-snapshot-backup <true|false>] \
+                                [--snapshot-instant-rp-retention-days <int>] \
+                                [--snapshot-instant-rp-resource-group <resource-group>] \
+                                [--enable-vault-tier-copy <true|false>] \
+                                [--vault-tier-copy-after-days <int>] \
+                                [--backup-mode <Continuous|Vaulted>] \
+                                [--pitr-retention-days <int>] \
+                                [--policy-tags <key=value[,key=value...]>] \
+                                [--aks-snapshot-resource-group <resource-group>] \
+                                [--aks-included-namespaces <ns[,ns...]>] \
+                                [--aks-excluded-namespaces <ns[,ns...]>] \
+                                [--aks-label-selectors <selector[,selector...]>] \
+                                [--aks-include-cluster-scope-resources <true|false>]
 
 # Updates an existing RSV backup policy's schedule or retention settings. The policy must already exist in the vault.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1014,6 +1068,21 @@ azmcp azurebackup security configure-mua --subscription <subscription> \
                                          --vault <vault> \
                                          [--vault-type <vault-type>] \
                                          [--resource-guard-id <resource-guard-id>]
+```
+
+```bash
+# Configures Customer-Managed Key (CMK) encryption on a vault using a key from Azure Key Vault.
+# Supports both RSV and DPP vaults. Requires managed identity with Key Vault Crypto Service Encryption User role.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup security configure-encryption --subscription <subscription> \
+                                                --resource-group <resource-group> \
+                                                --vault <vault> \
+                                                --key-vault-uri <key-vault-uri> \
+                                                --key-name <key-name> \
+                                                --identity-type <identity-type> \
+                                                [--vault-type <vault-type>] \
+                                                [--key-version <key-version>] \
+                                                [--user-assigned-identity-id <user-assigned-identity-id>]
 ```
 
 ### Azure CLI Operations
@@ -1422,6 +1491,84 @@ azmcp compute vm delete --subscription "my-subscription" \
 | `--resource-group`, `-g` | Yes | Resource group name |
 | `--vm-name` | Yes | Name of the virtual machine to delete |
 | `--force-deletion` | No | Force delete the VM even if running or failed (Azure API forceDeletion) |
+
+```bash
+# Change Virtual Machine Power State
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm power-state --subscription <subscription> \
+                             --resource-group <resource-group> \
+                             --vm-name <vm-name> \
+                             --power-action <start|stop|deallocate|restart> \
+                             [--no-wait] \
+                             [--skip-shutdown]
+
+# Examples:
+
+# Start a VM
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm power-state --subscription "my-subscription" \
+                             --resource-group "my-rg" \
+                             --vm-name "my-vm" \
+                             --power-action start
+
+# Stop a VM (graceful shutdown)
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm power-state --subscription "my-subscription" \
+                             --resource-group "my-rg" \
+                             --vm-name "my-vm" \
+                             --power-action stop
+
+# Stop a VM immediately (skip OS shutdown)
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm power-state --subscription "my-subscription" \
+                             --resource-group "my-rg" \
+                             --vm-name "my-vm" \
+                             --power-action stop \
+                             --skip-shutdown
+
+# Deallocate a VM (release compute resources, stop billing)
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm power-state --subscription "my-subscription" \
+                             --resource-group "my-rg" \
+                             --vm-name "my-vm" \
+                             --power-action deallocate
+
+# Restart a VM
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm power-state --subscription "my-subscription" \
+                             --resource-group "my-rg" \
+                             --vm-name "my-vm" \
+                             --power-action restart
+
+# Start a VM without waiting for completion
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm power-state --subscription "my-subscription" \
+                             --resource-group "my-rg" \
+                             --vm-name "my-vm" \
+                             --power-action start \
+                             --no-wait
+```
+
+**Command Behavior:**
+- Changes the power state of a virtual machine. Equivalent to `az vm start/stop/deallocate/restart`.
+- **start**: Powers on a stopped or deallocated VM.
+- **stop**: Shuts down the OS and powers off the VM (VM is still allocated and billing continues). Use `--skip-shutdown` to force power off without OS shutdown.
+- **deallocate**: Shuts down the OS, powers off the VM, and releases compute resources (billing stops for compute).
+- **restart**: Restarts the VM (equivalent to stop then start).
+- **With `--no-wait`**: Returns immediately after initiating the operation without waiting for completion.
+
+**Returns:**
+- VM name, ID, resource group, requested power action, completion status, and a status message.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vm-name` | Yes | Name of the virtual machine |
+| `--power-action` | Yes | Power action to apply (not the current power state): `start`, `stop`, `deallocate`, or `restart` |
+| `--no-wait` | No | Return immediately without waiting for the operation to complete |
+| `--skip-shutdown` | No | Skip OS shutdown when stopping (force power off). Only valid with `--power-action stop` |
 
 #### Virtual Machine Scale Sets
 

@@ -1,0 +1,231 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Text.Json;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Helpers;
+using Xunit;
+
+namespace Azure.Mcp.Tools.Aks.Tests;
+
+public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+{
+    [Fact]
+    public async Task Should_get_nodepool_for_cluster()
+    {
+        // Get a real cluster to target
+        var listResult = await CallToolAsync(
+            "aks_cluster_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId }
+            });
+
+        var clusters = listResult.AssertProperty("clusters");
+        Assert.True(clusters.GetArrayLength() > 0, "Expected at least one AKS cluster for testing nodepool get command");
+
+        var firstCluster = clusters.EnumerateArray().First();
+        var clusterName = RegisterOrRetrieveVariable("firstClusterName", firstCluster.GetProperty("name").GetString()!);
+        var resourceGroupName = RegisterOrRetrieveVariable("firstResourceGroupName", firstCluster.GetProperty("resourceGroupName").GetString()!);
+
+        // Find a node pool to query
+        var nodepoolList = await CallToolAsync(
+            "aks_nodepool_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "cluster", clusterName }
+            });
+
+        var nodePools = nodepoolList.AssertProperty("nodePools");
+        Assert.True(nodePools.GetArrayLength() > 0, "Expected at least one node pool in the cluster");
+
+        var firstPool = nodePools.EnumerateArray().First();
+        var nodepoolName = RegisterOrRetrieveVariable("firstNodepoolName", firstPool.GetProperty("name").GetString()!);
+
+        // Get details for that node pool
+        var nodepoolGet = await CallToolAsync(
+            "aks_nodepool_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "cluster", clusterName },
+                { "nodepool", nodepoolName }
+            });
+
+        nodePools = nodepoolGet.AssertProperty("nodePools");
+        Assert.Equal(JsonValueKind.Array, nodePools.ValueKind);
+        Assert.Single(nodePools.EnumerateArray());
+
+        var nodePool = nodePools.EnumerateArray().First();
+        Assert.Equal(JsonValueKind.Object, nodePool.ValueKind);
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : nodepoolName, nodePool.GetProperty("name").GetString());
+
+        if (nodePool.TryGetProperty("mode", out var modeProperty))
+        {
+            Assert.False(string.IsNullOrEmpty(modeProperty.GetString()));
+        }
+
+        if (nodePool.TryGetProperty("provisioningState", out var stateProperty))
+        {
+            Assert.False(string.IsNullOrEmpty(stateProperty.GetString()));
+        }
+
+        nodePool.AssertProperty("orchestratorVersion");
+        nodePool.AssertProperty("currentOrchestratorVersion");
+        nodePool.AssertProperty("enableAutoScaling");
+        nodePool.AssertProperty("maxPods");
+        nodePool.AssertProperty("osSKU");
+        nodePool.AssertProperty("nodeImageVersion");
+
+        // Enriched node pool fields (presence/type checks)
+        if (nodePool.TryGetProperty("tags", out var tags))
+        {
+            Assert.True(tags.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+        }
+        if (nodePool.TryGetProperty("spotMaxPrice", out var spot))
+        {
+            Assert.True(spot.ValueKind is JsonValueKind.Number or JsonValueKind.Null);
+        }
+        if (nodePool.TryGetProperty("workloadRuntime", out var wr))
+        {
+            Assert.True(wr.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+        }
+        if (nodePool.TryGetProperty("networkProfile", out var np))
+        {
+            Assert.True(np.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+            if (np.ValueKind == JsonValueKind.Object)
+            {
+                if (np.TryGetProperty("allowedHostPorts", out var ahp))
+                {
+                    Assert.True(ahp.ValueKind is JsonValueKind.Array or JsonValueKind.Null);
+                }
+                if (np.TryGetProperty("applicationSecurityGroups", out var asg))
+                {
+                    Assert.True(asg.ValueKind is JsonValueKind.Array or JsonValueKind.Null);
+                }
+                if (np.TryGetProperty("nodePublicIPTags", out var ipt))
+                {
+                    Assert.True(ipt.ValueKind is JsonValueKind.Array or JsonValueKind.Null);
+                }
+            }
+        }
+        if (nodePool.TryGetProperty("podSubnetID", out var podSubnet))
+        {
+            Assert.True(podSubnet.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+        }
+        if (nodePool.TryGetProperty("vnetSubnetID", out var vnetSubnet))
+        {
+            Assert.True(vnetSubnet.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+        }
+    }
+
+    [Fact]
+    public async Task Should_handle_nonexistent_nodepool_gracefully()
+    {
+        var result = await CallToolAsync(
+            "aks_nodepool_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", "nonexistent-rg" },
+                { "cluster", "nonexistent-cluster" },
+                { "nodepool", "nonexistent-nodepool" }
+            });
+
+        // Should return runtime error details in results
+        Assert.True(result.HasValue);
+        var errorDetails = result.Value;
+        errorDetails.AssertProperty("message");
+        var typeProperty = errorDetails.AssertProperty("type");
+        Assert.Equal("RequestFailedException", typeProperty.GetString());
+    }
+
+    [Fact]
+    [LiveTestOnly]
+    public async Task Should_validate_required_parameters()
+    {
+        // Missing cluster - validation catches it, no results returned
+        var r1 = await CallToolAsync(
+            "aks_nodepool_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", "rg" },
+                { "nodepool", "np1" }
+            });
+        Assert.False(r1.HasValue);
+
+        // Missing resource-group - validation catches it, no results returned
+        var r2 = await CallToolAsync(
+            "aks_nodepool_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "cluster", "cluster" },
+                { "nodepool", "np1" }
+            });
+        Assert.False(r2.HasValue);
+
+        // Missing subscription - falls back to default subscription, returns error for nonexistent resources
+        var r3 = await CallToolAsync(
+            "aks_nodepool_get",
+            new()
+            {
+                { "resource-group", "rg" },
+                { "cluster", "cluster" },
+                { "nodepool", "np1" }
+            });
+        Assert.True(r3.HasValue);
+        r3.Value.AssertProperty("message");
+        var r3Type = r3.Value.AssertProperty("type");
+        Assert.Equal("RequestFailedException", r3Type.GetString());
+    }
+
+    [Fact]
+    public async Task Should_handle_invalid_subscription_gracefully()
+    {
+        var result = await CallToolAsync(
+            "aks_nodepool_get",
+            new()
+            {
+                { "subscription", "not-a-real-sub" },
+                { "resource-group", "rg" },
+                { "cluster", "cluster" },
+                { "nodepool", "np1" }
+            });
+
+        Assert.True(result.HasValue);
+        var errorDetails = result.Value;
+        errorDetails.AssertProperty("message");
+        var typeProperty = errorDetails.AssertProperty("type");
+        Assert.Equal("ArgumentException", typeProperty.GetString());
+    }
+
+    [Fact]
+    [LiveTestOnly]
+    public async Task Should_handle_empty_subscription_gracefully()
+    {
+        var result = await CallToolAsync(
+            "aks_nodepool_get",
+            new()
+            {
+                { "subscription", "" },
+                { "resource-group", "rg" },
+                { "cluster", "cluster" },
+                { "nodepool", "np1" }
+            });
+
+        // Empty subscription falls back to default, nonexistent resources return error
+        Assert.True(result.HasValue);
+        result.Value.AssertProperty("message");
+        var typeProperty = result.Value.AssertProperty("type");
+        Assert.Equal("RequestFailedException", typeProperty.GetString());
+    }
+}

@@ -7,6 +7,8 @@ using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
@@ -111,7 +113,42 @@ internal class Program
 
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
-            var status = await parseResult.InvokeAsync();
+            var command = parseResult.CommandResult.Command;
+            int status = 0;
+
+            if (command is ExtendedCommand extendedCommand &&
+                (extendedCommand.BaseCommand is ServiceStartCommand || extendedCommand.BaseCommand is PluginTelemetryCommand))
+            {
+                // One of the special commands that need to be handled differently.
+                status = await parseResult.InvokeAsync();
+            }
+            else
+            {
+                // Command wasn't one of the registered ServerSetup commands, so bind up a Host of all the services
+                // to run the command.
+                var builder = Host.CreateApplicationBuilder();
+                builder.Logging.ClearProviders();
+                builder.Logging.AddEventSourceLogger();
+                ConfigureServices(builder.Services);
+                builder.Services.AddAzureMcpServer(new()
+                {
+                    Transport = TransportTypes.StdIo
+                });
+
+                using var host = builder.Build();
+
+                await InitializeServicesAsync(host.Services);
+                await host.StartAsync();
+
+                commandFactory = host.Services.GetRequiredService<ICommandFactory>();
+                rootCommand = commandFactory.RootCommand;
+                parseResult = rootCommand.Parse(args);
+
+                status = await parseResult.InvokeAsync();
+
+                await host.StopAsync();
+                await host.WaitForShutdownAsync();
+            }
 
             if (status == 0)
             {
@@ -209,9 +246,7 @@ internal class Program
     }
 
     private static void WriteResponse(CommandResponse response)
-    {
-        Console.WriteLine(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse));
-    }
+        => Console.WriteLine(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse));
 
     /// <summary>
     /// <para>
@@ -288,6 +323,7 @@ internal class Program
         services.AddSingleton<IResourceGroupService, ResourceGroupService>();
         services.AddSingleton<ISubscriptionService, SubscriptionService>();
         services.AddSingleton<ICommandFactory, CommandFactory>();
+        services.AddSingleton<ISubscriptionResolver, SubscriptionResolver>();
 
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ITenantService and ICacheService.

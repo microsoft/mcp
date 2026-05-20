@@ -1146,6 +1146,67 @@ public class ComputeService(
         }
     }
 
+    public async Task<VmPowerStateResult> ChangeVmPowerStateAsync(
+        string vmName,
+        string resourceGroup,
+        string subscription,
+        string powerAction,
+        bool noWait = false,
+        bool skipShutdown = false,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var resourceGroupResource = rgResource.Value;
+
+        var vmCollection = resourceGroupResource.GetVirtualMachines();
+        var vmResponse = await vmCollection.GetAsync(vmName, cancellationToken: cancellationToken);
+        var vmResource = vmResponse.Value;
+
+        ArmOperation operation = powerAction.ToLowerInvariant() switch
+        {
+            "start" => await vmResource.PowerOnAsync(WaitUntil.Started, cancellationToken),
+            "stop" => await vmResource.PowerOffAsync(WaitUntil.Started, skipShutdown, cancellationToken),
+            "deallocate" => await vmResource.DeallocateAsync(WaitUntil.Started, cancellationToken: cancellationToken),
+            "restart" => await vmResource.RestartAsync(WaitUntil.Started, cancellationToken),
+            _ => throw new ArgumentException($"Invalid power action '{powerAction}'. Accepted values: start, stop, deallocate, restart.", nameof(powerAction))
+        };
+
+        if (!noWait)
+        {
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+        }
+
+        var completed = !noWait;
+
+        // When --no-wait is used, surface the ARM long-running-operation tracking URL so callers
+        // can poll the status of the specific power-state request. Prefer Azure-AsyncOperation
+        // (returns a status document with InProgress/Succeeded/Failed) and fall back to Location.
+        string? statusUri = null;
+        if (noWait)
+        {
+            var rawResponse = operation.GetRawResponse();
+            if (rawResponse?.Headers != null &&
+                !rawResponse.Headers.TryGetValue("Azure-AsyncOperation", out statusUri))
+            {
+                rawResponse.Headers.TryGetValue("Location", out statusUri);
+            }
+        }
+
+        var message = completed
+            ? $"Virtual machine '{vmName}' {powerAction} operation completed successfully."
+            : statusUri is not null
+                ? $"Virtual machine '{vmName}' {powerAction} operation initiated. Poll 'statusUri' to track completion."
+                : $"Virtual machine '{vmName}' {powerAction} operation initiated. Use instance view to check status.";
+
+        return new VmPowerStateResult(vmName, vmResource.Id.ToString(), resourceGroup, powerAction, message, completed, statusUri);
+    }
+
     public async Task<bool> DeleteVmssAsync(
         string vmssName,
         string resourceGroup,

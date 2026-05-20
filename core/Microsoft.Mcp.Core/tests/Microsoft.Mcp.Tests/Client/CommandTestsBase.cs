@@ -12,6 +12,7 @@ using Xunit;
 
 namespace Microsoft.Mcp.Tests.Client;
 
+[Trait("TestType", "Live")]
 public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixture liveServerFixture)
     : IAsyncLifetime, IDisposable, IClassFixture<LiveServerFixture>
 {

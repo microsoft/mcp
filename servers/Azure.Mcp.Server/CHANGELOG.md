@@ -2,15 +2,54 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.10 (Unreleased)
+## 3.0.0-beta.11 (2026-05-19)
 
 ### Features Added
 
-### Breaking Changes
+- Added a tool for managing VM power state (start/stop/restart/deallocate) called `compute_vm_power-state`. [[#2498](https://github.com/microsoft/mcp/pull/2498)]
+- Overhauled the `azurebackup_policy_create` tool with comprehensive schedule, retention, archive tiering, and advanced backup capabilities across RSV and DPP vaults, including 38+ new flags, a pre-flight `PolicyCreateValidator`, and expanded workload-type alias support. [[#2504](https://github.com/microsoft/mcp/pull/2504)]
+- Added a new tool called `azurebackup_security_configure_encryption` to enable Customer-Managed Key (CMK) encryption on Recovery Services vaults and Backup vaults using Azure Key Vault keys. [[#2609](https://github.com/microsoft/mcp/pull/2609)]
+- Added ARM MCP registry integration and exposed ARM MCP tools in Azure MCP so users can discover and invoke ARM-focused capabilities. [[#2571](https://github.com/microsoft/mcp/pull/2571)]
 
 ### Bugs Fixed
 
+- Fixed `azurebackup_policy_create` body shapes for DPP vault-tier copy, vaulted Blob/ADLS, SAP HANA snapshot, and RSV smart-tier to match Az CLI and service schemas. Removed unused DPP-only flags. [[#2504](https://github.com/microsoft/mcp/pull/2504)]
+- Improved Azure Resource Health error handling to preserve non-success ARM response details and return clearer guidance for conflict responses such as missing or in-progress `Microsoft.ResourceHealth` provider registration. [[#2577](https://github.com/microsoft/mcp/pull/2577)]
+- Fixed the following Azure Backup issues: [[#2621](https://github.com/microsoft/mcp/pull/2621)]
+  - Fixed a null-reference crash in `azurebackup_backup_status` by adding a null guard in `MapArmResourceTypeToBackupDataSourceType`
+  - Fixed `azurebackup_governance_find-unprotected` to support nested ARM resource types (e.g., `Microsoft.Sql/servers/databases`) by relaxing the resource type regex from single-segment to multi-segment
+  - Fixed the following RSV-backed Azure Backup tools to accept subscription names (in addition to IDs) by removing the GUID-only `ValidateSubscriptionFormat` check that violated MCP conventions:
+    - `azurebackup_vault_create`
+    - `azurebackup_vault_get`
+    - `azurebackup_vault_update`
+    - `azurebackup_policy_create`
+    - `azurebackup_policy_get`
+    - `azurebackup_protecteditem_protect`
+    - `azurebackup_protecteditem_get`
+    - `azurebackup_protecteditem_undelete`
+    - `azurebackup_protectableitem_list`
+    - `azurebackup_job_get`
+    - `azurebackup_recoverypoint_get`
+    - `azurebackup_governance_immutability`
+    - `azurebackup_governance_soft-delete`
+    - `azurebackup_disasterrecovery_enable-crr`
+  - Fixed serialization issue in `azurebackup_job_get` by handling `FormatException`s thrown from the Azure SDK's `XmlConvert.ToTimeSpan` in `DppBackupOperations.ListJobsAsync`
+  - Fixed telemetry tags not being emitted by returning `"auto"`/`"unspecified"` instead of `null` for unset values, since `Activity.AddTag(key, null)` is a no-op in .NET
+
+#### Dependency Updates
+
+- Updated the following dependencies: [[#2667](https://github.com/microsoft/mcp/pull/2667)]
+  - `Azure.Core`: `1.51.1` → `1.55.0`
+  - `Azure.Identity`: `1.17.0` → `1.21.0`
+  - `Azure.Identity.Broker`: `1.3.1` → `1.6.0`
+  - `System.ClientModel`: `1.9.0` → `1.11.0`
+
+## 3.0.0-beta.10 (2026-05-07)
+
 ### Other Changes
+
+- Fixed `PluginTelemetryCommand` tool name validation to use the host-created CommandFactory, ensuring the full registered tool set is validated correctly. [[#2583](https://github.com/microsoft/mcp/pull/2583)]
+- Improved MSAL exception handling by capturing richer PII-safe telemetry details and mapping `MsalServiceException` and `MsalClientException` more accurately. [[#2587](https://github.com/microsoft/mcp/pull/2587)]
 
 ## 3.0.0-beta.9 (2026-05-05)
 

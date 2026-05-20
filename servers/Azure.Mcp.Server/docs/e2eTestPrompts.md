@@ -150,6 +150,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azurebackup_job_get | Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group> |
 | azurebackup_policy_create | Create a backup policy named <policy_name> for AzureIaasVM in vault <vault_name> in resource group <resource_group> |
 | azurebackup_policy_create | Set up a new backup policy called <policy_name> for AzureFileShare workload in vault <vault_name> under resource group <resource_group> |
+| azurebackup_policy_create | Create an Enhanced VM backup policy <policy_name> with hourly schedule every 4 hours starting 08:00 for 12 hours in vault <vault_name> under resource group <resource_group> |
+| azurebackup_policy_create | Create a weekly VM policy <policy_name> on Mondays at 03:00 with 8 weekly, 12 monthly, 5 yearly retention and archive after 90 days in vault <vault_name> under resource group <resource_group> |
+| azurebackup_policy_create | Create a SQL backup policy <policy_name> with daily full at 02:00, differential on Wednesdays, and 60-minute log frequency in vault <vault_name> under resource group <resource_group> |
+| azurebackup_policy_create | Create an Azure Disk backup policy <policy_name> with daily, weekly, and monthly retention tiers and vault tier copy enabled in vault <vault_name> under resource group <resource_group> |
 | azurebackup_policy_update | Update backup policy <policy_name> in vault <vault_name> in resource group <resource_group> to change the schedule time to 04:00 |
 | azurebackup_policy_update | Modify the daily retention to 60 days for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> |
 | azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> |
@@ -164,6 +168,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azurebackup_protecteditem_undelete | Undelete the accidentally deleted backup for VM <datasource_id> in vault <vault_name> under resource group <resource_group> |
 | azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> |
 | azurebackup_recoverypoint_get | List available recovery points for <item_name> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_security_configure-encryption | Configure customer-managed key encryption on vault <vault_name> in resource group <resource_group> using key <key_name> from key vault <key_vault_uri> with system-assigned identity |
+| azurebackup_security_configure-encryption | Enable CMK encryption on vault <vault_name> using user-assigned identity <identity_id> and key <key_name> from <key_vault_uri> |
+| azurebackup_security_configure-encryption | Set up customer-managed encryption for backup vault <vault_name> in <resource_group> |
 | azurebackup_security_configure-mua | Enable multi-user authorization on vault <vault_name> in resource group <resource_group> with resource guard <resource_guard_id> |
 | azurebackup_security_configure-mua | Disable MUA on vault <vault_name> in resource group <resource_group> |
 | azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' |
@@ -241,7 +248,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vm_get | List all virtual machines in my subscription |
 | compute_vm_get | Show me all VMs in my subscription |
 | compute_vm_get | What virtual machines do I have? |
-| compute_vm_get | List virtual machines in resource group <resource-group-name> |
+| compute_vm_get | Get all virtual machines in resource group <resource-group-name> |
 | compute_vm_get | Show me VMs in resource group <resource-group-name> |
 | compute_vm_get | What VMs are in resource group <resource-group-name>? |
 | compute_vm_get | Get details for virtual machine <vm-name> in resource group <resource-group-name> |
@@ -260,9 +267,17 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vm_delete | Remove virtual machine <vm-name> from resource group <resource-group-name> |
 | compute_vm_delete | Destroy VM <vm-name> in resource group <resource-group-name> |
 | compute_vm_delete | Force delete VM <vm-name> in resource group <resource-group-name> using force-deletion |
+| compute_vm_power-state | Power on and start VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_power-state | Stop the running virtual machine <vm-name> and power it off in resource group <resource-group-name> |
+| compute_vm_power-state | Deallocate VM <vm-name> in resource group <resource-group-name> to release compute resources while keeping the VM |
+| compute_vm_power-state | Restart VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_power-state | Stop VM <vm-name> in resource group <resource-group-name> and skip the OS shutdown |
+| compute_vm_power-state | Start VM <vm-name> in resource group <resource-group-name> without waiting for completion |
+| compute_vm_power-state | Power off and shut down VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_power-state | Deallocate and power off VM <vm-name> to stop billing for compute resources while preserving the VM |
 | compute_vmss_create | Create a virtual machine scale set named <vmss-name> in resource group <resource-group-name> |
 | compute_vmss_create | Create a VMSS with 3 instances in <resource-group-name> |
-| compute_vmss_create | Deploy a scale set with Rolling upgrade policy and 5 instances |
+| compute_vmss_create | Deploy a virtual machine scale set with Rolling upgrade policy and 5 instances |
 | compute_vmss_create | Create Linux VMSS with SSH authentication in <resource-group-name> |
 | compute_vmss_get | List all virtual machine scale sets in my subscription |
 | compute_vmss_get | List virtual machine scale sets in resource group <resource-group-name> |

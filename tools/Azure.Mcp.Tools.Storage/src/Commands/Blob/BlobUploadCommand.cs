@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Storage.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob;
@@ -25,40 +26,21 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
     ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
-public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorageService storageService) : BaseBlobCommand<BlobUploadOptions>
+public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorageService storageService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<BlobUploadOptions, BlobUploadResult>(subscriptionResolver)
 {
     private readonly ILogger<BlobUploadCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BlobUploadOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(StorageOptionDefinitions.LocalFilePath);
-    }
-
-    protected override BlobUploadOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.LocalFilePath = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.LocalFilePath.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var result = await _storageService.UploadBlob(
-                options.Account!,
-                options.Container!,
-                options.Blob!,
-                options.LocalFilePath!,
+                options.Account,
+                options.Container,
+                options.Blob,
+                options.LocalFilePath,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
