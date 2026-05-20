@@ -192,7 +192,10 @@ public sealed class SreAgentSetup : IAreaSetup
         sreAgent.AddSubGroup(docs);
         sreAgent.AddSubGroup(architecture);
 
-        incidents.AddCommand<IncidentsActiveListCommand>(serviceProvider);
+        var incidentsActive = new CommandGroup("active", "Active incident listing and management.");
+        incidents.AddSubGroup(incidentsActive);
+        incidentsActive.AddCommand<IncidentsActiveListCommand>(serviceProvider);
+
         incidents.AddCommand<IncidentsCreateCommand>(serviceProvider);
         incidents.AddCommand<IncidentsPlansListCommand>(serviceProvider);
         incidents.AddCommand<IncidentsPlansCreateCommand>(serviceProvider);

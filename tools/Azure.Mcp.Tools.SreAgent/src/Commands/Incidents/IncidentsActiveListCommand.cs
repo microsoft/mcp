@@ -11,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
-[CommandMetadata(Id = "659a3697-9c8c-46e1-b568-9b929d637cb4", Name = "active-list", Title = "List Active Incidents", Description = "List active incident-like threads.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+[CommandMetadata(Id = "659a3697-9c8c-46e1-b568-9b929d637cb4", Name = "list", Title = "List Active Incidents", Description = "List active incident-like threads.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
 public sealed class IncidentsActiveListCommand(ILogger<IncidentsActiveListCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<IncidentRemoteOptions>
 {
     private readonly ILogger<IncidentsActiveListCommand> _logger = logger;

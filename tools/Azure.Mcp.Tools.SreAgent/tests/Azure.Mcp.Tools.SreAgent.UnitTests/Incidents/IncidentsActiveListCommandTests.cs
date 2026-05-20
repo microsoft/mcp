@@ -21,7 +21,7 @@ public class IncidentsActiveListCommandTests : CommandUnitTestsBase<IncidentsAct
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = Command.GetCommand();
-        Assert.Equal("active-list", command.Name);
+        Assert.Equal("list", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }

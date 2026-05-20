@@ -16,8 +16,8 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Agents;
 [CommandMetadata(
     Id = "7385f6f1-c535-4edb-908a-65d6e78ed51a",
     Name = "get",
-    Title = "Get SRE Sub-Agent",
-    Description = "Gets a sub-agent definition from a targeted SRE Agent resource. Required: --subscription, --agent, --name.",
+    Title = "Get SRE Agent",
+    Description = "Gets an Azure SRE Agent resource by name. Required: --subscription, --agent.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -34,14 +34,12 @@ public sealed class AgentsGetCommand(ILogger<AgentsGetCommand> logger, ISreAgent
     {
         base.RegisterOptions(command);
         command.Options.Add(SreAgentOptionDefinitions.Agent.AsRequired());
-        command.Options.Add(SreAgentOptionDefinitions.Name);
     }
 
     protected override AgentsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Agent = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Agent.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
         return options;
     }
 
@@ -56,26 +54,31 @@ public sealed class AgentsGetCommand(ILogger<AgentsGetCommand> logger, ISreAgent
 
         try
         {
-            var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
-                _sreAgentService,
+            var agents = await _sreAgentService.ListAgentsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
-                options.Agent!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
-            var agent = await _sreAgentService.GetSubAgentAsync(endpoint, options.Name!, options.Tenant, cancellationToken);
+            var agent = agents.FirstOrDefault(a => string.Equals(a.Name, options.Agent, StringComparison.OrdinalIgnoreCase));
+            if (agent is null)
+            {
+                context.Response.Status = System.Net.HttpStatusCode.NotFound;
+                context.Response.Message = $"SRE Agent '{options.Agent}' not found.";
+                return context.Response;
+            }
+
             context.Response.Results = ResponseResult.Create(new(agent), SreAgentJsonContext.Default.AgentsGetCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting SRE sub-agent {Name} from agent resource {Agent}.", options.Name, options.Agent);
+            _logger.LogError(ex, "Error getting SRE Agent resource {Agent}. Subscription: {Subscription}.", options.Agent, options.Subscription);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record AgentsGetCommandResult(SreSubAgent Agent);
+    internal record AgentsGetCommandResult(SreAgentResource Agent);
 }
