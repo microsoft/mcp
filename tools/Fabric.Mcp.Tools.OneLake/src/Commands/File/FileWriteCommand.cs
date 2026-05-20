@@ -1,42 +1,36 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 [HiddenCommand]
+[CommandMetadata(
+    Id = "ca454f68-3c44-47e3-bd88-6596a1d2c368",
+    Name = "write",
+    Title = "Write OneLake File",
+    Description = "Write content to a file in OneLake storage. Can write text content directly or upload from a local file.",
+    Destructive = true,
+    Idempotent = false,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false)]
 public sealed class FileWriteCommand(
     ILogger<FileWriteCommand> logger,
     IOneLakeService oneLakeService) : GlobalCommand<FileWriteOptions>()
 {
     private readonly ILogger<FileWriteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "ca454f68-3c44-47e3-bd88-6596a1d2c368";
-    public override string Name => "write";
-    public override string Title => "Write OneLake File";
-    public override string Description => "Write content to a file in OneLake storage. Can write text content directly or upload from a local file.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -155,8 +149,8 @@ public sealed class FileWriteCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error writing file {FilePath} to workspace {WorkspaceId}, item {ItemId}. Options: {@Options}",
-                options.FilePath, options.WorkspaceId, options.ItemId, options);
+            _logger.LogError(ex, "Error writing file {FilePath} to workspace {WorkspaceId}, item {ItemId}.",
+                options.FilePath, options.WorkspaceId, options.ItemId);
             HandleException(context, ex);
         }
 

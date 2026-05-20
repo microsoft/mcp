@@ -4,7 +4,6 @@
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -12,6 +11,7 @@ using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
@@ -369,7 +369,7 @@ public sealed class NamespaceToolLoader(
             // Enforce read-only mode at execution time
             if ((_options.Value.ReadOnly ?? false) && !cmd.Metadata.ReadOnly)
             {
-                return new CallToolResult
+                return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
                     Content =
                     [
@@ -379,13 +379,13 @@ public sealed class NamespaceToolLoader(
                         }
                     ],
                     IsError = true,
-                };
+                }, cmd.Id);
             }
 
             // Enforce HTTP mode restrictions at execution time
             if (_options.Value.IsHttpMode && cmd.Metadata.LocalRequired)
             {
-                return new CallToolResult
+                return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
                     Content =
                     [
@@ -395,15 +395,14 @@ public sealed class NamespaceToolLoader(
                         }
                     ],
                     IsError = true,
-                };
+                }, cmd.Id);
             }
 
             // Check if this tool requires elicitation for sensitive or destructive operations
-            var metadata = cmd.Metadata;
             var elicitationResult = await HandleElicitationAsync(
                 request,
                 $"{namespaceName} {command}",
-                metadata,
+                cmd,
                 _options.Value.DangerouslyDisableElicitation,
                 _logger,
                 cancellationToken);
@@ -418,7 +417,11 @@ public sealed class NamespaceToolLoader(
             var realCommand = cmd.GetCommand();
 
             ParseResult commandOptions;
-            if (realCommand.Options.Count == 1 && IsRawMcpToolInputOption(realCommand.Options[0]))
+            var effectiveOptions = realCommand.Options
+                .Where(o => !CommandFactory.IsLearnOption(o))
+                .ToList();
+
+            if (effectiveOptions.Count == 1 && IsRawMcpToolInputOption(effectiveOptions[0]))
             {
                 commandOptions = realCommand.ParseFromRawMcpToolInput(parameters);
             }
@@ -475,14 +478,14 @@ public sealed class NamespaceToolLoader(
 
                 // Add original response content
                 finalResponse.Content.Add(new TextContentBlock { Text = jsonResponse });
-                return finalResponse;
+                return McpHelper.InjectToolIdMetadata(finalResponse, cmd.Id);
             }
 
-            return new CallToolResult
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
             {
                 Content = [new TextContentBlock { Text = jsonResponse }],
                 IsError = isError
-            };
+            }, cmd.Id);
         }
         catch (Exception ex)
         {
@@ -616,25 +619,25 @@ public sealed class NamespaceToolLoader(
             Title = command.Title,
         };
 
-        JsonObject? meta = null;
+        JsonObject meta = [new(McpHelper.ToolIdMetaKey, command.Id)];
         // Add Secret metadata to tool.Meta if the property exists
         if (metadata.Secret)
         {
-            meta ??= new();
-            meta["SecretHint"] = metadata.Secret;
+            meta[McpHelper.SecretHintMetaKey] = metadata.Secret;
         }
         // Add LocalRequired metadata to tool.Meta if the property exists
         if (metadata.LocalRequired)
         {
-            meta ??= new();
-            meta["LocalRequiredHint"] = metadata.LocalRequired;
+            meta[McpHelper.LocalRequiredHintMetaKey] = metadata.LocalRequired;
         }
         tool.Meta = meta;
 
         var schema = new ToolInputSchema();
-        var options = command.GetCommand().Options;
+        var options = command.GetCommand().Options
+            .Where(o => !CommandFactory.IsLearnOption(o))
+            .ToList();
 
-        if (options?.Count > 0)
+        if (options.Count > 0)
         {
             if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
             {

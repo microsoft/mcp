@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
@@ -13,17 +11,20 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Postgres.Commands;
 
-public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : BasePostgresCommand<BasePostgresOptions>(logger)
+[CommandMetadata(
+    Id = "8a12c3f4-2e5d-4b3a-9f2c-5e6d7f8a9b0c",
+    Name = "list",
+    Title = "List PostgreSQL Resources",
+    Description = "List PostgreSQL servers, databases, or tables. Returns all servers in the subscription by default (optionally scoped to a --resource-group). Specify --server to list databases on that server, or --server and --database to list tables in a specific database. --user is required when --server is provided.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class PostgresListCommand(IPostgresService postgresService, ILogger<PostgresListCommand> logger) : BasePostgresCommand<BasePostgresOptions>(logger)
 {
-    public override string Id => "8a12c3f4-2e5d-4b3a-9f2c-5e6d7f8a9b0c";
-
-    public override string Name => "list";
-
-    public override string Description => "List PostgreSQL servers, databases, or tables. Returns all servers in the subscription by default (optionally scoped to a --resource-group). Specify --server to list databases on that server, or --server and --database to list tables in a specific database. --user is required when --server is provided.";
-
-    public override string Title => "List PostgreSQL Resources";
-
-    public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false };
+    private readonly IPostgresService _postgresService = postgresService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -64,6 +65,8 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        BasePostgresOptions? options = null;
+
         try
         {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -71,15 +74,13 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
                 return context.Response;
             }
 
-            var options = BindOptions(parseResult);
-
-            IPostgresService postgresService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
+            options = BindOptions(parseResult);
 
             // Route based on provided parameters
             if (!string.IsNullOrEmpty(options.Database))
             {
                 // List tables in specified database
-                List<string> tables = await postgresService.ListTablesAsync(
+                List<string> tables = await _postgresService.ListTablesAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.AuthType!,
@@ -96,7 +97,7 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
             else if (!string.IsNullOrEmpty(options.Server))
             {
                 // List databases on specified server
-                List<string> databases = await postgresService.ListDatabasesAsync(
+                List<string> databases = await _postgresService.ListDatabasesAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.AuthType!,
@@ -112,7 +113,7 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
             else
             {
                 // List all servers in the subscription (optionally scoped to a resource group)
-                List<string> servers = await postgresService.ListServersAsync(
+                List<string> servers = await _postgresService.ListServersAsync(
                     options.Subscription!,
                     options.ResourceGroup,
                     cancellationToken);
@@ -124,7 +125,7 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, BindOptions(parseResult));
+            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Server: {Server}, Database: {Database}.", Name, options?.Subscription, options?.ResourceGroup, options?.Server, options?.Database);
             HandleException(context, ex);
         }
 

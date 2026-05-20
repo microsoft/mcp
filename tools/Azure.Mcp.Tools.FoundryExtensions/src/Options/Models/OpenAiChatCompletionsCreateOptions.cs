@@ -3,7 +3,7 @@
 
 using System.ComponentModel;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 

@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Security.KeyVault.Administration;
 using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
 
@@ -169,7 +169,7 @@ public sealed class KeyVaultService(
         return await client.GetCertificateAsync(certificateName, cancellationToken);
     }
 
-    public async Task<CertificateOperation> CreateCertificate(
+    public async Task<KeyVaultCertificateWithPolicy> CreateCertificate(
         string vaultName,
         string certificateName,
         string subscriptionId,
@@ -182,7 +182,9 @@ public sealed class KeyVaultService(
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateCertificateClient(vaultName, credential, retryPolicy);
 
-        return await client.StartCreateCertificateAsync(certificateName, CertificatePolicy.Default, cancellationToken: cancellationToken);
+        var certificateOperation = await client.StartCreateCertificateAsync(certificateName, CertificatePolicy.Default, cancellationToken: cancellationToken);
+        await WaitForLroCompletionAsync(certificateOperation, cancellationToken);
+        return certificateOperation.Value;
     }
 
     public async Task<KeyVaultCertificateWithPolicy> ImportCertificate(

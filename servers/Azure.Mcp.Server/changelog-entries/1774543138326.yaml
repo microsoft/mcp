@@ -1,3 +1,0 @@
-changes:
-  - section: "Breaking Changes"
-    description: "Removed support for custom URL-based authority hosts (e.g., `https://...`) in the `--cloud` option. Only well-known cloud name values are now accepted: `AzureCloud`, `AzurePublicCloud`, `Public`, `AzurePublic`, `AzureChinaCloud`, `China`, `AzureChina`, `AzureUSGovernment`, `AzureUSGovernmentCloud`, `USGov`, and `USGovernment`. Unrecognized values now throw an `ArgumentException` instead of silently defaulting to the public cloud."

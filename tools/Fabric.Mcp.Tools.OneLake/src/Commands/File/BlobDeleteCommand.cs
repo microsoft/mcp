@@ -2,42 +2,36 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 [HiddenCommand]
+[CommandMetadata(
+    Id = "48561b8d-6f19-45ae-86fa-9feeb8f75e8e",
+    Name = "delete",
+    Title = "Delete OneLake Blob",
+    Description = "Delete a blob from OneLake using the blob endpoint while returning request metadata for auditing.",
+    Destructive = true,
+    Idempotent = false,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false)]
 public sealed class BlobDeleteCommand(
     ILogger<BlobDeleteCommand> logger,
     IOneLakeService oneLakeService) : GlobalCommand<BlobDeleteOptions>()
 {
     private readonly ILogger<BlobDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "48561b8d-6f19-45ae-86fa-9feeb8f75e8e";
-    public override string Name => "delete";
-    public override string Title => "Delete OneLake Blob";
-    public override string Description => "Delete a blob from OneLake using the blob endpoint while returning request metadata for auditing.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -111,8 +105,8 @@ public sealed class BlobDeleteCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting blob {BlobPath} in workspace {WorkspaceId}, item {ItemId}. Options: {@Options}",
-                options.FilePath, options.WorkspaceId, options.ItemId, options);
+            _logger.LogError(ex, "Error deleting blob {BlobPath} in workspace {WorkspaceId}, item {ItemId}.",
+                options.FilePath, options.WorkspaceId, options.ItemId);
             HandleException(context, ex);
         }
 

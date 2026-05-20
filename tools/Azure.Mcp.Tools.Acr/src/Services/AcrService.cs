@@ -5,12 +5,13 @@ using System.Text.Json;
 using Azure.Containers.ContainerRegistry;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Acr.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Acr.Services;
 
@@ -72,7 +73,7 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         if (!string.IsNullOrEmpty(reg.LoginServer))
         {
             var acrEndpointString = $"https://{reg.LoginServer}";
-            EndpointValidator.ValidateAzureServiceEndpoint(acrEndpointString, "acr");
+            EndpointValidator.ValidateAzureServiceEndpoint(acrEndpointString, "acr", TenantService.CloudConfiguration.ArmEnvironment);
         }
 
         // Build data-plane client for this login server

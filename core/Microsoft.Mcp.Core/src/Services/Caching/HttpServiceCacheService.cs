@@ -1,4 +1,7 @@
-﻿namespace Azure.Mcp.Core.Services.Caching;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace Microsoft.Mcp.Core.Services.Caching;
 
 /// <summary>
 /// An implementation of <see cref="ICacheService"/> for multi-user web API scenarios.

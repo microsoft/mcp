@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
-using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-
 namespace Azure.Mcp.Tools.FileShares.Options;
 
 /// <summary>

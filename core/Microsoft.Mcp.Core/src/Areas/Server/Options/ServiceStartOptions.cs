@@ -102,4 +102,10 @@ public class ServiceStartOptions
     /// </summary>
     [JsonIgnore]
     public bool IsHttpMode => Transport == TransportTypes.Http;
+
+    /// <summary>
+    /// Gets or sets whether caching is disabled.
+    /// </summary>
+    [JsonPropertyName("disableCaching")]
+    public bool DisableCaching { get; set; } = false;
 }

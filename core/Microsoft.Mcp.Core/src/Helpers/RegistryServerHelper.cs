@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 
-namespace Azure.Mcp.Core.Helpers;
+namespace Microsoft.Mcp.Core.Helpers;
 
 public sealed class RegistryServerHelper
 {

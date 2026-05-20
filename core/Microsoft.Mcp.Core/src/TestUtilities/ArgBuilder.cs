@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.TestUtilities;
+namespace Microsoft.Mcp.Core.TestUtilities;
 
 public static class ArgBuilder
 {

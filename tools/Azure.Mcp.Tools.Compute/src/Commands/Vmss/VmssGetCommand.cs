@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
@@ -10,36 +9,26 @@ using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
+[CommandMetadata(
+    Id = "a5e2f7i9-8j6h-8e0i-2g1f-3h6i7j8e9f0g",
+    Name = "get",
+    Title = "Get Virtual Machine Scale Set(s)",
+    Description = "List, show, or get Azure Virtual Machine Scale Sets (VMSS) and their instances in a subscription or resource group. Show all scale sets or get a specific VMSS by name. Get VMSS instance details by instance ID. Returns scale set details including name, location, SKU, capacity, upgrade policy, and individual VM instance information. Do not use this for single standalone VMs (use VM get instead).",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmssGetOptions>(false)
 {
-    private const string CommandTitle = "Get Virtual Machine Scale Set(s)";
     private readonly ILogger<VmssGetCommand> _logger = logger;
     private readonly IComputeService _computeService = computeService;
-
-    public override string Id => "a5e2f7i9-8j6h-8e0i-2g1f-3h6i7j8e9f0g";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        List or get Azure Virtual Machine Scale Sets (VMSS) and their instances in a subscription or resource group. Returns scale set details including name, location, SKU, capacity, upgrade policy, and individual VM instance information.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -131,8 +120,8 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error retrieving VMSS. VmssName: {VmssName}, InstanceId: {InstanceId}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                options.VmssName, options.InstanceId, options.ResourceGroup, options.Subscription, options);
+                "Error retrieving VMSS. VmssName: {VmssName}, InstanceId: {InstanceId}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}.",
+                options.VmssName, options.InstanceId, options.ResourceGroup, options.Subscription);
             HandleException(context, ex);
         }
 

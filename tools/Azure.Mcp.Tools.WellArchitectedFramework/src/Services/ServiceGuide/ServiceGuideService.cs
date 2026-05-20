@@ -3,8 +3,8 @@
 
 using System.Reflection;
 using System.Text.Json;
-using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Tools.WellArchitectedFramework.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using ServiceGuideModel = Azure.Mcp.Tools.WellArchitectedFramework.Models.ServiceGuide;
 
 namespace Azure.Mcp.Tools.WellArchitectedFramework.Services.ServiceGuide;

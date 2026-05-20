@@ -2,40 +2,31 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
 
+[CommandMetadata(
+    Id = "96f096a2-d36f-4361-aa74-4e393e7f48a5",
+    Name = "changedetection",
+    Title = "Trigger Change Detection",
+    Description = "Trigger change detection on a cloud endpoint to sync file changes.",
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndpointTriggerChangeDetectionCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<CloudEndpointTriggerChangeDetectionOptions>
 {
-    private const string CommandTitle = "Trigger Change Detection";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<CloudEndpointTriggerChangeDetectionCommand> _logger = logger;
-
-    public override string Id => "96f096a2-d36f-4361-aa74-4e393e7f48a5";
-
-    public override string Name => "changedetection";
-
-    public override string Description => "Trigger change detection on a cloud endpoint to sync file changes.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.ResourceManager.FileShares;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FileShares.Services;
 
@@ -176,10 +177,11 @@ public sealed class FileSharesService(
         }
 
         var operation = await resourceGroupResource.Value.GetFileShares().CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             fileShareName,
             fileShareData,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation(
             "Successfully created or updated file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Location: {Location}",
@@ -223,7 +225,7 @@ public sealed class FileSharesService(
 
             if (provisionedStorageInGiB.HasValue)
             {
-                patch.Properties = new Azure.ResourceManager.FileShares.Models.FileSharePatchProperties();
+                patch.Properties = new();
 
                 if (provisionedStorageInGiB.HasValue)
                 {
@@ -242,12 +244,12 @@ public sealed class FileSharesService(
 
                 if (!string.IsNullOrEmpty(publicNetworkAccess))
                 {
-                    patch.Properties.PublicNetworkAccess = new Azure.ResourceManager.FileShares.Models.FileSharePublicNetworkAccess(publicNetworkAccess);
+                    patch.Properties.PublicNetworkAccess = new(publicNetworkAccess);
                 }
 
                 if (!string.IsNullOrEmpty(nfsRootSquash))
                 {
-                    patch.Properties.NfsProtocolRootSquash = new Azure.ResourceManager.FileShares.Models.ShareRootSquash(nfsRootSquash);
+                    patch.Properties.NfsProtocolRootSquash = new(nfsRootSquash);
                 }
 
                 if (allowedSubnets != null && allowedSubnets.Length > 0)
@@ -293,7 +295,8 @@ public sealed class FileSharesService(
         var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
 
         // Use UpdateAsync to patch the file share
-        var operation = await fileShareResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
+        var operation = await fileShareResource.Value.UpdateAsync(WaitUntil.Started, patch, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation(
             "Successfully patched file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
@@ -322,7 +325,8 @@ public sealed class FileSharesService(
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
 
-            await fileShareResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            var deleteOperation = await fileShareResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
@@ -408,10 +412,11 @@ public sealed class FileSharesService(
         }
 
         var operation = await snapshotCollection.CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             snapshotName,
             snapshotData,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation(
             "Successfully created snapshot. Snapshot: {SnapshotName}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
@@ -532,9 +537,10 @@ public sealed class FileSharesService(
 
         // Use UpdateAsync to patch the snapshot
         var operation = await existingSnapshot.Value.UpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             patch,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation(
             "Successfully updated snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
@@ -569,7 +575,8 @@ public sealed class FileSharesService(
 
             // Get the snapshot and delete it
             var snapshotResource = await snapshotCollection.GetAsync(snapshotId, cancellationToken);
-            await snapshotResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            var deleteOperation = await snapshotResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
@@ -643,9 +650,7 @@ public sealed class FileSharesService(
         try
         {
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var azureLocation = new Azure.Core.AzureLocation(location);
-
-            var response = await subscriptionResource.GetUsageDataAsync(azureLocation, cancellationToken);
+            var response = await subscriptionResource.GetUsageDataAsync(new(location), cancellationToken);
 
             var result = response.Value;
 
@@ -653,9 +658,9 @@ public sealed class FileSharesService(
                 "Retrieved usage data. FileShareCount: {Count}, Subscription: {Subscription}, Location: {Location}",
                 result.LiveSharesFileShareCount, subscription, location);
 
-            return new FileShareUsageDataResult
+            return new()
             {
-                LiveShares = new LiveSharesUsageData
+                LiveShares = new()
                 {
                     FileShareCount = result.LiveSharesFileShareCount ?? 0
                 }
@@ -817,16 +822,16 @@ public sealed class FileSharesService(
             // Create updated connection data
             var connectionData = new FileSharePrivateEndpointConnectionData
             {
-                Properties = new Azure.ResourceManager.FileShares.Models.FileSharePrivateEndpointConnectionProperties(
-                    new Azure.ResourceManager.FileShares.Models.FileSharePrivateLinkServiceConnectionState
-                    {
-                        Status = new Azure.ResourceManager.FileShares.Models.FileSharesPrivateEndpointServiceConnectionStatus(status),
-                        Description = description
-                    })
+                Properties = new(new()
+                {
+                    Status = new(status),
+                    Description = description
+                })
             };
 
             var operation = await fileShareResource.Value.GetFileSharePrivateEndpointConnections()
-                .CreateOrUpdateAsync(WaitUntil.Completed, connectionName, connectionData, cancellationToken);
+                .CreateOrUpdateAsync(WaitUntil.Started, connectionName, connectionData, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully updated private endpoint connection. Connection: {ConnectionName}, FileShare: {FileShareName}, Status: {Status}",

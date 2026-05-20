@@ -8,12 +8,10 @@ public static class MarketplaceOptionDefinitions
     public const string ProductIdName = "product-id";
     public const string IncludeStopSoldPlansName = "include-stop-sold-plans";
     public const string LanguageName = "language";
-    public const string MarketName = "market";
     public const string LookupOfferInTenantLevelName = "lookup-offer-in-tenant-level";
     public const string PlanIdName = "plan-id";
     public const string SkuIdName = "sku-id";
     public const string IncludeServiceInstructionTemplatesName = "include-service-instruction-templates";
-    public const string PricingAudienceName = "pricing-audience";
     public const string SearchName = "search";
     public const string FilterName = "filter";
     public const string OrderByName = "orderby";
@@ -39,12 +37,6 @@ public static class MarketplaceOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> Market = new($"--{MarketName}")
-    {
-        Description = "Product market code (e.g., 'US' for United States, 'UK' for United Kingdom).",
-        Required = false
-    };
-
     public static readonly Option<bool> LookupOfferInTenantLevel = new($"--{LookupOfferInTenantLevelName}")
     {
         Description = "Check against tenant private audience when retrieving the product.",
@@ -66,12 +58,6 @@ public static class MarketplaceOptionDefinitions
     public static readonly Option<bool> IncludeServiceInstructionTemplates = new($"--{IncludeServiceInstructionTemplatesName}")
     {
         Description = "Include service instruction templates in the response.",
-        Required = false
-    };
-
-    public static readonly Option<string> PricingAudience = new($"--{PricingAudienceName}")
-    {
-        Description = "Pricing audience for the request header.",
         Required = false
     };
 

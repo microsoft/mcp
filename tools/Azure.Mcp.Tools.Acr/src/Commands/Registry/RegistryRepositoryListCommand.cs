@@ -1,43 +1,35 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Acr.Options;
 using Azure.Mcp.Tools.Acr.Options.Registry;
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Acr.Commands.Registry;
 
+[CommandMetadata(
+    Id = "adc6eb20-ad98-4624-954d-61581f6fbca9",
+    Name = "list",
+    Title = "List Container Registry Repositories",
+    Description = """
+        List repositories in Azure Container Registries. By default, lists repositories for all registries in the subscription.
+        You can narrow the scope using --resource-group and/or --registry to list repositories for a specific registry only.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryListCommand> logger, IAcrService acrService)
     : BaseAcrCommand<RegistryRepositoryListOptions>
 {
-    private const string CommandTitle = "List Container Registry Repositories";
     private readonly ILogger<RegistryRepositoryListCommand> _logger = logger;
     private readonly IAcrService _acrService = acrService;
-    public override string Id => "adc6eb20-ad98-4624-954d-61581f6fbca9";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        List repositories in Azure Container Registries. By default, lists repositories for all registries in the subscription.
-        You can narrow the scope using --resource-group and/or --registry to list repositories for a specific registry only.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -48,7 +40,7 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
     protected override RegistryRepositoryListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Registry ??= parseResult.GetValueOrDefault<string>(AcrOptionDefinitions.Registry.Name);
+        options.Registry ??= parseResult.GetValueOrDefault(AcrOptionDefinitions.Registry);
         return options;
     }
 

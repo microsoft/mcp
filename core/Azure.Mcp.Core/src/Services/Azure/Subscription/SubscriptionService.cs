@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Core.Services.Azure.Subscription;
 
@@ -95,7 +95,7 @@ public class SubscriptionService(
     {
         var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
         var subscription = subscriptions.FirstOrDefault(s => s.DisplayName.Equals(subscriptionName, StringComparison.OrdinalIgnoreCase)) ??
-            throw new Exception($"Could not find subscription with name {subscriptionName}");
+            throw new ArgumentException($"Could not find subscription with name {subscriptionName}", nameof(subscriptionName));
 
         return subscription.SubscriptionId;
     }
@@ -104,7 +104,7 @@ public class SubscriptionService(
     {
         var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
         var subscription = subscriptions.FirstOrDefault(s => s.SubscriptionId.Equals(subscriptionId, StringComparison.OrdinalIgnoreCase)) ??
-            throw new Exception($"Could not find subscription with ID {subscriptionId}");
+            throw new ArgumentException($"Could not find subscription with ID {subscriptionId}", nameof(subscriptionId));
 
         return subscription.DisplayName;
     }

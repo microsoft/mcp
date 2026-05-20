@@ -4,6 +4,7 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.AppContainers;
 using Azure.ResourceManager.AppService;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.Deploy.Services.Util;
 
@@ -78,13 +79,13 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
     }
 
     private static string GetContainerAppLogsQuery(string containerAppName, int limit) =>
-        $"ContainerAppConsoleLogs_CL | where ContainerAppName_s == '{containerAppName}' | order by _timestamp_d desc | project TimeGenerated, Log_s | take {limit}";
+        $"ContainerAppConsoleLogs_CL | where ContainerAppName_s == '{KqlSanitizer.EscapeStringValue(containerAppName)}' | order by _timestamp_d desc | project TimeGenerated, Log_s | take {limit}";
 
     private static string GetAppServiceLogsQuery(string appServiceResourceId, int limit) =>
-        $"AppServiceConsoleLogs | where _ResourceId == '{appServiceResourceId.ToLowerInvariant()}' | order by TimeGenerated desc | project TimeGenerated, ResultDescription | take {limit}";
+        $"AppServiceConsoleLogs | where _ResourceId == '{KqlSanitizer.EscapeStringValue(appServiceResourceId.ToLowerInvariant())}' | order by TimeGenerated desc | project TimeGenerated, ResultDescription | take {limit}";
 
     private static string GetFunctionAppLogsQuery(string functionAppName, int limit) =>
-        $"AppTraces | where AppRoleName == '{functionAppName}' | order by TimeGenerated desc | project TimeGenerated, Message | take {limit}";
+        $"AppTraces | where AppRoleName == '{KqlSanitizer.EscapeStringValue(functionAppName)}' | order by TimeGenerated desc | project TimeGenerated, Message | take {limit}";
 
     public async Task<string> QueryAppLogsAsync(ResourceType resourceType, string serviceName, int? limit = null, CancellationToken cancellationToken = default)
     {

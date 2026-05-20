@@ -2,9 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
@@ -12,33 +9,30 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 
 /// <summary>
 /// Command to list OneLake items in a workspace using the OneLake data plane API.
 /// </summary>
+[CommandMetadata(
+    Id = "61eb86d8-3879-4d2d-969a-6c96f2e0ce0d",
+    Name = "list_items",
+    Title = "List OneLake Items",
+    Description = "Lists OneLake items in a Fabric workspace using the high-level OneLake API. Use this when the user needs to see what items exist in a workspace. Returns item names, types, and metadata.",
+    Destructive = false,
+    Idempotent = true,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false)]
 public sealed class OneLakeItemListCommand(
     ILogger<OneLakeItemListCommand> logger,
     IOneLakeService oneLakeService) : GlobalCommand<OneLakeItemListOptions>()
 {
     private readonly ILogger<OneLakeItemListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "61eb86d8-3879-4d2d-969a-6c96f2e0ce0d";
-    public override string Name => "list_items";
-    public override string Title => "List OneLake Items";
-    public override string Description => "Lists OneLake items in a Fabric workspace using the high-level OneLake API. Use this when the user needs to see what items exist in a workspace. Returns item names, types, and metadata.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -90,7 +84,7 @@ public sealed class OneLakeItemListCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing OneLake items in workspace {WorkspaceId}. Options: {@Options}", options.WorkspaceId, options);
+            _logger.LogError(ex, "Error listing OneLake items in workspace {WorkspaceId}.", options.WorkspaceId);
             HandleException(context, ex);
         }
 

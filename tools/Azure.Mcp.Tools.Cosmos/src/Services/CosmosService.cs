@@ -1,15 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.CosmosDB;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Cosmos.Services;
 
@@ -66,8 +69,10 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
 
         if (retryPolicy != null)
         {
-            clientOptions.MaxRetryAttemptsOnRateLimitedRequests = retryPolicy.MaxRetries;
-            clientOptions.MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
+            if (retryPolicy.MaxRetries is { } maxRetries)
+                clientOptions.MaxRetryAttemptsOnRateLimitedRequests = maxRetries;
+            if (retryPolicy.MaxDelaySeconds is { } maxDelaySeconds)
+                clientOptions.MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(maxDelaySeconds);
         }
 
         clientOptions.HttpClientFactory = () => _httpClientFactory.CreateClient();
@@ -267,7 +272,14 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
 
         var container = client.GetContainer(databaseName, containerName);
         var baseQuery = string.IsNullOrEmpty(query) ? "SELECT * FROM c" : query;
-        var queryDef = new QueryDefinition(baseQuery);
+
+        var (parameterizedQuery, queryParameters) = ParameterizeStringLiterals(baseQuery);
+        var queryDef = new QueryDefinition(parameterizedQuery);
+
+        foreach (var (name, value) in queryParameters)
+        {
+            queryDef = queryDef.WithParameter(name, value);
+        }
 
         var items = new List<JsonElement>();
         var queryIterator = container.GetItemQueryStreamIterator(
@@ -284,6 +296,9 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
 
         return items;
     }
+
+    internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>
+        SqlQueryParameterizer.Parameterize(query, SqlQueryParameterizer.SqlDialect.Standard);
 
     private static readonly TimeSpan s_disposeTimeout = TimeSpan.FromSeconds(2);
 
@@ -303,6 +318,12 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to retrieve cached CosmosClient keys during disposal");
+            return;
+        }
+
+        // If no keys were returned, there's nothing to dispose
+        if (keys == null)
+        {
             return;
         }
 

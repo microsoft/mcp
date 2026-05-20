@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Services.Azure.Models;
+namespace Microsoft.Mcp.Core.Services.Azure.Models;
 
 /// <summary>
 /// A class representing the Resource Sku data model.

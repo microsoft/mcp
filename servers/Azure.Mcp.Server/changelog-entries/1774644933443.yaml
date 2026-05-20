@@ -1,4 +1,0 @@
-pr: 2262
-changes:
-  - section: "Bugs Fixed"
-    description: "Removed reference to parameter that doesn't exist in Storage container create tool"

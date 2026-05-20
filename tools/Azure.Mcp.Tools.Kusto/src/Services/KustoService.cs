@@ -2,14 +2,16 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Validation;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 
@@ -49,9 +51,11 @@ public sealed class KustoService(
             throw new ArgumentException("Identifier is empty after removing escape characters.", nameof(identifier));
         }
 
-        // Use KQL bracket notation with escaped single quotes
-        return $"['{unescaped.Replace("'", "''")}']";
+        return KqlSanitizer.EscapeIdentifier(unescaped);
     }
+
+    internal static string SanitizeKqlStringLiterals(string query) =>
+        KqlSanitizer.SanitizeStringLiterals(query);
 
     // Provider cache key generator
     private static string GetProviderCacheKey(string clusterUri, string? tenant, string suffix)
@@ -62,6 +66,7 @@ public sealed class KustoService(
 
     public async Task<ResourceQueryResults<string>> ListClustersAsync(
         string subscriptionId,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -70,7 +75,7 @@ public sealed class KustoService(
 
         var clusters = await ExecuteResourceQueryAsync(
             "Microsoft.Kusto/clusters",
-            resourceGroup: null, // all resource groups
+            resourceGroup: resourceGroup,
             subscriptionId,
             retryPolicy,
             item => ConvertToClusterModel(item).ClusterName,
@@ -254,9 +259,12 @@ public sealed class KustoService(
             (nameof(databaseName), databaseName),
             (nameof(query), query));
 
+        KqlQueryValidator.ValidateQuerySafety(query);
+
         var cslQueryProvider = await GetOrCreateCslQueryProviderAsync(clusterUri, tenant, cancellationToken);
         var result = new List<JsonElement>();
-        var kustoResult = await cslQueryProvider.ExecuteQueryCommandAsync(databaseName, query, cancellationToken);
+        var sanitizedQuery = SanitizeKqlStringLiterals(query);
+        var kustoResult = await cslQueryProvider.ExecuteQueryCommandAsync(databaseName, sanitizedQuery, cancellationToken);
         if (kustoResult.RootElement.ValueKind == JsonValueKind.Null)
         {
             return result;

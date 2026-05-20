@@ -4,11 +4,11 @@
 using System.IO.Compression;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Services.Helpers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Functions.Services;
 
@@ -34,19 +34,35 @@ public sealed class FunctionsService(
     private const long MaxFileSizeBytes = 1_048_576; // 1 MB
     private const long MaxTreeSizeBytes = 5_242_880; // 5 MB for tree API response
 
-    private const string FunctionTemplateMergeInstructions =
+    private const string NewModeInstructions =
         """
-        ## Merging Template Files with Existing Project
+        ## Template Files
 
-        **Project files** (host.json, local.settings.json, etc.) may already exist if you used `functions project get`.
-        - **local.settings.json**: Merge new "Values" entries with existing ones. Do not overwrite existing connection strings.
-        - **host.json**: Keep existing extensionBundle settings. Merge other configuration sections.
-        - **requirements.txt / package.json / pom.xml**: Add new dependencies, avoid duplicates.
-        - **.funcignore**: Merge ignore patterns, avoid duplicates.
+        This template includes three file sets:
+        - **Files**: All template files combined - use this for new (greenfield) projects
+        - **FunctionFiles**: Function code and related files (code, infra, docs)
+        - **ProjectFiles**: Project configuration files (host.json, local.settings.json, etc.)
 
-        **Function files** are new files to add to the project:
+        For new projects, use the 'Files' list to create all files at once.
+        """;
+
+    private const string AddModeInstructions =
+        """
+        ## Template Files (Add Mode)
+
+        This response contains two file sets for adding a function to an existing project:
+        - **FunctionFiles**: Function code and related files to add
+        - **ProjectFiles**: Project configuration files that may need merging
+
+        Merge ProjectFiles carefully with existing project files:
+        - **local.settings.json**: Merge "Values" entries, don't overwrite existing connection strings
+        - **host.json**: Keep existing extensionBundle settings, merge other sections
+        - **requirements.txt / package.json / pom.xml**: Add new dependencies, avoid duplicates
+        If anything conflicts, ask the user before overwriting.
+
+        Function files placement by language:
         - Python: Add/merge function code into `function_app.py`
-        - TypeScript: Place files in `src/functions/`
+        - TypeScript/JavaScript: Place files in `src/functions/`
         - Java: Place files in `src/main/java/com/function/`
         - C#: Place files in the project root alongside the .csproj
         """;
@@ -164,6 +180,7 @@ public sealed class FunctionsService(
         string language,
         string template,
         string? runtimeVersion,
+        TemplateOutput output = TemplateOutput.New,
         CancellationToken cancellationToken = default)
     {
         var normalizedLanguage = language.ToLowerInvariant();
@@ -208,14 +225,34 @@ public sealed class FunctionsService(
         if (!GitHubUrlValidator.IsValidRepositoryUrl(entry.RepositoryUrl))
         {
             throw new InvalidOperationException(
-                $"Invalid repository URL in manifest. Only Azure and Azure-Samples organizations are allowed.");
+                $"Invalid repository URL in manifest. Only Azure, Azure-Samples, and Microsoft organizations are allowed.");
         }
 
         var allFiles = await FetchTemplateFilesAsync(entry, normalizedLanguage, runtimeVersion, cancellationToken);
 
+        // Separate files into function and project files (used in both modes for backward compatibility)
         var functionFiles = allFiles.Where(f => !_languageMetadata.KnownProjectFiles.Contains(GitHubUrlValidator.GetFileName(f.FileName))).ToList();
         var projectFiles = allFiles.Where(f => _languageMetadata.KnownProjectFiles.Contains(GitHubUrlValidator.GetFileName(f.FileName))).ToList();
 
+        if (output == TemplateOutput.Add)
+        {
+            // Add mode: return separated files with merge instructions (no combined Files list)
+            return new FunctionTemplateResult
+            {
+                Language = normalizedLanguage,
+                TemplateName = ExtractTemplateName(entry),
+                DisplayName = entry.DisplayName,
+                Description = entry.LongDescription ?? entry.ShortDescription,
+                BindingType = entry.BindingType,
+                Resource = entry.Resource,
+                FunctionFiles = functionFiles,
+                ProjectFiles = projectFiles,
+                MergeInstructions = AddModeInstructions
+            };
+        }
+
+        // Default: TemplateOutput.New (--output New) - return all files together
+        // Also populate FunctionFiles/ProjectFiles for backward compatibility with existing consumers
         return new FunctionTemplateResult
         {
             Language = normalizedLanguage,
@@ -224,9 +261,10 @@ public sealed class FunctionsService(
             Description = entry.LongDescription ?? entry.ShortDescription,
             BindingType = entry.BindingType,
             Resource = entry.Resource,
+            Files = allFiles.ToList(),
             FunctionFiles = functionFiles,
             ProjectFiles = projectFiles,
-            MergeInstructions = FunctionTemplateMergeInstructions
+            MergeInstructions = NewModeInstructions
         };
     }
 

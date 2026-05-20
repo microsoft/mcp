@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
@@ -14,36 +13,28 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
+[CommandMetadata(
+    Id = "b8c9d0e1-8901-cdef-1234-567890123456",
+    Name = "get",
+    Title = "Get Microsoft Foundry Resource Details",
+    Description = """
+        Gets detailed information about Microsoft Foundry (Cognitive Services) resources, including endpoint URL,
+        location, SKU, and provisioning state. If a specific resource name is provided, returns details for that
+        resource only. If no resource name is provided, lists all Microsoft Foundry resources in the subscription
+        or resource group. Use this tool when users need endpoint information, want to discover available AI
+        resources, or need to check the configuration of a Foundry account. To list OpenAI model deployments
+        within a resource, use the openai models-list command instead.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<ResourceGetOptions>()
 {
-    private const string CommandTitle = "Get Microsoft Foundry Resource Details";
     private readonly ILogger<ResourceGetCommand> _logger = logger;
     private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
-
-    public override string Id => "b8c9d0e1-8901-cdef-1234-567890123456";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Gets detailed information about Microsoft Foundry (Cognitive Services) resources, including endpoint URL,
-        location, SKU, and all deployed models with their configuration. If a specific resource name is provided,
-        returns details for that resource only. If no resource name is provided, lists all Microsoft Foundry resources
-        in the subscription or resource group. Use this tool when users need endpoint information, want to discover
-        available AI resources, or need to see all models deployed on AI resources.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -107,13 +98,13 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoun
         {
             if (string.IsNullOrEmpty(options.ResourceName))
             {
-                _logger.LogError(ex, "Error listing AI resources. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                    options.Subscription, options.ResourceGroup, options);
+                _logger.LogError(ex, "Error listing AI resources. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}.",
+                    options.Subscription, options.ResourceGroup);
             }
             else
             {
-                _logger.LogError(ex, "Error getting AI resource. ResourceName: {ResourceName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                    options.ResourceName, options.ResourceGroup, options.Subscription, options);
+                _logger.LogError(ex, "Error getting AI resource. ResourceName: {ResourceName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}.",
+                    options.ResourceName, options.ResourceGroup, options.Subscription);
             }
             HandleException(context, ex);
         }

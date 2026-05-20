@@ -2,40 +2,31 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 
+[CommandMetadata(
+    Id = "a11e024a-62e6-4237-8d7d-4b9b8439f50e",
+    Name = "create",
+    Title = "Create Key Vault Certificate",
+    Description = "Create/issue/generate a new certificate in an Azure Key Vault using the default certificate policy. Required: --vault, --certificate, --subscription. Optional: --tenant <tenant>. Returns: name, id, keyId, secretId, cer (base64), thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuerName. Creates a new certificate version if it already exists.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<CertificateCreateOptions>
 {
-    private const string CommandTitle = "Create Key Vault Certificate";
     private readonly ILogger<CertificateCreateCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
-
-    public override string Id => "a11e024a-62e6-4237-8d7d-4b9b8439f50e";
-
-    public override string Name => "create";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    public override string Description =>
-        "Create/issue/generate a new certificate in an Azure Key Vault using the default certificate policy. Required: --vault, --certificate, --subscription. Optional: --tenant <tenant>. Returns: name, id, keyId, secretId, cer (base64), thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuerName. Creates a new certificate version if it already exists.";
 
     protected override void RegisterOptions(Command command)
     {
@@ -63,17 +54,13 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
 
         try
         {
-            var operation = await _keyVaultService.CreateCertificate(
+            var certificate = await _keyVaultService.CreateCertificate(
                 options.VaultName!,
                 options.CertificateName!,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
-
-            // Wait for the certificate operation to complete
-            var completedOperation = await operation.WaitForCompletionAsync(cancellationToken);
-            var certificate = completedOperation.Value;
 
             context.Response.Results = ResponseResult.Create(
                 new(

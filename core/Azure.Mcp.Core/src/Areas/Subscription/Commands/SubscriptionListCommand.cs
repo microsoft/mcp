@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Areas.Subscription.Models;
 using Azure.Mcp.Core.Areas.Subscription.Options;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
@@ -12,32 +11,21 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Core.Areas.Subscription.Commands;
 
-public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger) : GlobalCommand<SubscriptionListOptions>()
+[CommandMetadata(
+    Id = "72bbe80e-ca42-4a43-8f02-45495bca1179",
+    Name = "list",
+    Title = "List Azure Subscriptions",
+    Description = "List all Azure subscriptions for the current account. Returns subscriptionId, displayName, state, tenantId, and isDefault for each subscription. The isDefault field indicates the user's default subscription as resolved from the Azure CLI profile (configured via 'az account set') or, if not set there, from the AZURE_SUBSCRIPTION_ID environment variable. When the user has not specified a subscription, prefer the subscription where isDefault is true. If no default can be determined from either source and multiple subscriptions exist, ask the user which subscription to use.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false)]
+public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger, ISubscriptionService subscriptionService) : GlobalCommand<SubscriptionListOptions>()
 {
-    private const string CommandTitle = "List Azure Subscriptions";
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
-
-    public override string Id => "72bbe80e-ca42-4a43-8f02-45495bca1179";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        "List all Azure subscriptions for the current account. Returns subscriptionId, displayName, state, tenantId, and isDefault for each subscription. " +
-        "The isDefault field indicates the user's default subscription as resolved from the Azure CLI profile (configured via 'az account set') or, if not set there, from the AZURE_SUBSCRIPTION_ID environment variable. " +
-        "When the user has not specified a subscription, prefer the subscription where isDefault is true. " +
-        "If no default can be determined from either source and multiple subscriptions exist, ask the user which subscription to use.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly ISubscriptionService _subscriptionService = subscriptionService;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -50,10 +38,9 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
         try
         {
-            var subscriptionService = context.GetService<ISubscriptionService>();
-            var subscriptions = await subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
+            var subscriptions = await _subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
 
-            var defaultSubscriptionId = subscriptionService.GetDefaultSubscriptionId();
+            var defaultSubscriptionId = _subscriptionService.GetDefaultSubscriptionId();
             var subscriptionInfos = MapToSubscriptionInfos(subscriptions, defaultSubscriptionId);
 
             context.Response.Results = ResponseResult.Create(

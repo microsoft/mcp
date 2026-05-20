@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.WebTests;
@@ -10,39 +8,32 @@ using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
-public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdateCommand> logger) : BaseMonitorWebTestsCommand<WebTestsCreateOrUpdateOptions>
-{
-    private const string CommandTitle = "Create or update a web test in Azure Monitor";
-
-    private readonly ILogger<WebTestsCreateOrUpdateCommand> _logger = logger;
-
-    public override string Id => "aa5a22bc-6a04-4bc0-a963-b6e462b5cdc4";
-
-    public override string Name => "createorupdate";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "aa5a22bc-6a04-4bc0-a963-b6e462b5cdc4",
+    Name = "createorupdate",
+    Title = "Create or update a web test in Azure Monitor",
+    Description = """
         Create or update a standard web test in Azure Monitor to monitor endpoint availability.
         Use this to set up new web tests or modify existing ones with monitoring configurations like URL, frequency, locations, and expected responses.
         Automatically creates a new test if it doesn't exist, or updates an existing test with new settings.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdateCommand> logger, IMonitorWebTestService monitorWebTestService) : BaseMonitorWebTestsCommand<WebTestsCreateOrUpdateOptions>
+{
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly ILogger<WebTestsCreateOrUpdateCommand> _logger = logger;
+    private readonly IMonitorWebTestService _monitorWebTestService = monitorWebTestService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -75,19 +66,19 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
 
         command.Validators.Add(commandResult =>
         {
-            var locations = commandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.Locations.Name);
+            var locations = commandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.Locations);
             if (locations != null && locations.Length == 0)
             {
                 commandResult.AddError("If locations are specified, at least one location must be provided.");
             }
 
-            var requestUrl = commandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.RequestUrl.Name);
+            var requestUrl = commandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.RequestUrl);
             if (requestUrl != null && !Uri.TryCreate(requestUrl, UriKind.Absolute, out _))
             {
                 commandResult.AddError("The request url option must be a valid absolute URL.");
             }
 
-            var timeoutInSeconds = commandResult.GetValueWithoutDefault<int?>(MonitorOptionDefinitions.WebTest.TimeoutInSeconds.Name);
+            var timeoutInSeconds = commandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.TimeoutInSeconds);
             if (timeoutInSeconds.HasValue && timeoutInSeconds > 120)
             {
                 commandResult.AddError("The timeout cannot be greater than 2 minutes.");
@@ -99,27 +90,27 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
     {
         var options = base.BindOptions(parseResult);
 
-        options.ResourceName = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.WebTest.WebTestResourceName.Name)!;
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.AppInsightsComponentId = parseResult.CommandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.AppInsightsComponentId.Name);
-        options.Location = parseResult.CommandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.ResourceLocation.Name);
-        options.Locations = parseResult.CommandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.Locations.Name);
-        options.RequestUrl = parseResult.CommandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.RequestUrl.Name);
-        options.WebTestName = parseResult.CommandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.WebTestName.Name);
-        options.Description = parseResult.CommandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.Description.Name);
-        options.Enabled = parseResult.CommandResult.GetValueWithoutDefault<bool?>(MonitorOptionDefinitions.WebTest.Enabled.Name);
-        options.ExpectedStatusCode = parseResult.CommandResult.GetValueWithoutDefault<int?>(MonitorOptionDefinitions.WebTest.ExpectedStatusCode.Name);
-        options.FollowRedirects = parseResult.CommandResult.GetValueWithoutDefault<bool?>(MonitorOptionDefinitions.WebTest.FollowRedirects.Name);
-        options.FrequencyInSeconds = parseResult.CommandResult.GetValueWithoutDefault<int?>(MonitorOptionDefinitions.WebTest.FrequencyInSeconds.Name);
-        options.Headers = parseResult.CommandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.Headers.Name);
-        options.HttpVerb = parseResult.CommandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.HttpVerb.Name);
-        options.IgnoreStatusCode = parseResult.CommandResult.GetValueWithoutDefault<bool?>(MonitorOptionDefinitions.WebTest.IgnoreStatusCode.Name);
-        options.ParseRequests = parseResult.CommandResult.GetValueWithoutDefault<bool?>(MonitorOptionDefinitions.WebTest.ParseRequests.Name);
-        options.RequestBody = parseResult.CommandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.RequestBody.Name);
-        options.RetryEnabled = parseResult.CommandResult.GetValueWithoutDefault<bool?>(MonitorOptionDefinitions.WebTest.RetryEnabled.Name);
-        options.SslCheck = parseResult.CommandResult.GetValueWithoutDefault<bool?>(MonitorOptionDefinitions.WebTest.SslCheck.Name);
-        options.SslLifetimeCheckInDays = parseResult.CommandResult.GetValueWithoutDefault<int?>(MonitorOptionDefinitions.WebTest.SslLifetimeCheckInDays.Name);
-        options.TimeoutInSeconds = parseResult.CommandResult.GetValueWithoutDefault<int?>(MonitorOptionDefinitions.WebTest.TimeoutInSeconds.Name);
+        options.ResourceName = parseResult.GetValueOrDefault(MonitorOptionDefinitions.WebTest.WebTestResourceName)!;
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.AppInsightsComponentId = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.AppInsightsComponentId);
+        options.Location = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.ResourceLocation);
+        options.Locations = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.Locations);
+        options.RequestUrl = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.RequestUrl);
+        options.WebTestName = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.WebTestName);
+        options.Description = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.Description);
+        options.Enabled = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.Enabled);
+        options.ExpectedStatusCode = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.ExpectedStatusCode);
+        options.FollowRedirects = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.FollowRedirects);
+        options.FrequencyInSeconds = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.FrequencyInSeconds);
+        options.Headers = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.Headers);
+        options.HttpVerb = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.HttpVerb);
+        options.IgnoreStatusCode = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.IgnoreStatusCode);
+        options.ParseRequests = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.ParseRequests);
+        options.RequestBody = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.RequestBody);
+        options.RetryEnabled = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.RetryEnabled);
+        options.SslCheck = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.SslCheck);
+        options.SslLifetimeCheckInDays = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.SslLifetimeCheckInDays);
+        options.TimeoutInSeconds = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.TimeoutInSeconds);
 
         return options;
     }
@@ -134,13 +125,11 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
         var options = BindOptions(parseResult);
         try
         {
-            var monitorWebTestService = context.GetService<IMonitorWebTestService>();
-
             // Check if the web test exists
             WebTestDetailedInfo? existingWebTest = null;
             try
             {
-                existingWebTest = await monitorWebTestService.GetWebTest(
+                existingWebTest = await _monitorWebTestService.GetWebTest(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.ResourceName!,
@@ -178,7 +167,7 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
                 var locationsArray = options.Locations!.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
                 var headersDictionary = options.Headers == null ? new Dictionary<string, string>(0) : OptionParsingHelpers.ParseKeyValuePairStringToDictionary(options.Headers);
 
-                webTest = await monitorWebTestService.CreateWebTest(
+                webTest = await _monitorWebTestService.CreateWebTest(
                     subscription: options.Subscription!,
                     resourceGroup: options.ResourceGroup!,
                     resourceName: options.ResourceName!,
@@ -211,7 +200,7 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
                 var locationsArray = options.Locations?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
                 var headersDictionary = options.Headers == null ? null : OptionParsingHelpers.ParseKeyValuePairStringToDictionary(options.Headers);
 
-                webTest = await monitorWebTestService.UpdateWebTest(
+                webTest = await _monitorWebTestService.UpdateWebTest(
                     subscription: options.Subscription!,
                     resourceGroup: options.ResourceGroup!,
                     resourceName: options.ResourceName!,

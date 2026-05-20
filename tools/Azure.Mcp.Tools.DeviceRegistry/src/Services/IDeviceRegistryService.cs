@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.DeviceRegistry.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.DeviceRegistry.Services;
 

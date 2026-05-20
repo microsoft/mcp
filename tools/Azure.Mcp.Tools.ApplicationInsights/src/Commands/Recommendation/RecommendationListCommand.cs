@@ -4,36 +4,34 @@
 using System.CommandLine;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ApplicationInsights.Options;
 using Azure.Mcp.Tools.ApplicationInsights.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
 
-public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IApplicationInsightsService applicationInsightsService) : SubscriptionCommand<RecommendationListOptions>()
-{
-    private const string CommandTitle = "List Application Insights Recommendations";
-    private readonly ILogger<RecommendationListCommand> _logger = logger;
-    private readonly IApplicationInsightsService _applicationInsightsService = applicationInsightsService;
-
-    public override string Id => "8d259f21-43b3-4962-bec8-de616b8b5f0d";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "8d259f21-43b3-4962-bec8-de616b8b5f0d",
+    Name = "list",
+    Title = "List Application Insights Recommendations",
+    Description = """
         List Application Insights Code Optimization Recommendations in a subscription. Optionally filter by resource group when --resource-group is provided.
         Returns the code optimization recommendations based on the profiler data.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, LocalRequired = false, OpenWorld = false, Secret = false, ReadOnly = true };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IApplicationInsightsService applicationInsightsService) : SubscriptionCommand<RecommendationListOptions>()
+{
+    private readonly ILogger<RecommendationListCommand> _logger = logger;
+    private readonly IApplicationInsightsService _applicationInsightsService = applicationInsightsService;
 
     protected override void RegisterOptions(Command command)
     {

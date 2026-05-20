@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Tests.Helpers;
 
 namespace Microsoft.Mcp.Tests.Client.Helpers;
@@ -30,7 +27,7 @@ public sealed class PlaybackAwareTokenCredentialProvider : IAzureTokenCredential
     {
         if (_testModeAccessor() == TestMode.Playback)
         {
-            return Task.FromResult<TokenCredential>(_playbackCredential);
+            return Task.FromResult(_playbackCredential);
         }
 
         return _liveProvider.Value.GetTokenCredentialAsync(tenantId, cancellation);

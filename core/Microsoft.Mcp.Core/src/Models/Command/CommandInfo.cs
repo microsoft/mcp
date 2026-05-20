@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
 
-namespace Azure.Mcp.Core.Models.Command;
+namespace Microsoft.Mcp.Core.Models.Command;
 
 public class CommandInfo
 {

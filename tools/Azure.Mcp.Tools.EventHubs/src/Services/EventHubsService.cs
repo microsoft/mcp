@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -10,6 +9,7 @@ using Azure.Mcp.Tools.EventHubs.Models;
 using Azure.ResourceManager.EventHubs;
 using Azure.ResourceManager.EventHubs.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventHubs.Services;
 
@@ -194,7 +194,8 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
         // Create or update the namespace
         var operation = await resourceGroupResource.Value.GetEventHubsNamespaces()
-            .CreateOrUpdateAsync(WaitUntil.Completed, namespaceName, namespaceData, cancellationToken);
+            .CreateOrUpdateAsync(WaitUntil.Started, namespaceName, namespaceData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         if (operation?.Value == null)
         {
@@ -231,7 +232,8 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
             var namespaceResource = await GetGenericResourceAsync(armClient, namespaceId, cancellationToken);
 
             // Delete the namespace
-            await namespaceResource.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            var deleteOperation = await namespaceResource.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted Event Hubs namespace '{NamespaceName}' from resource group '{ResourceGroup}'",
@@ -381,7 +383,8 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         }
 
         var operation = await namespaceResource.Value.GetEventHubs()
-            .CreateOrUpdateAsync(WaitUntil.Completed, eventHubName, eventHubData, cancellationToken);
+            .CreateOrUpdateAsync(WaitUntil.Started, eventHubName, eventHubData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         if (operation?.Value == null)
         {
@@ -430,7 +433,8 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
                 return false;
             }
 
-            await eventHubResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            var deleteOperation = await eventHubResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
             return true;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
@@ -470,10 +474,11 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         }
 
         var operation = await eventHubResource.Value.GetEventHubsConsumerGroups().CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             consumerGroupName,
             consumerGroupData,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         var consumerGroupResource = operation.Value;
         if (string.IsNullOrEmpty(consumerGroupResource.Id))
@@ -542,7 +547,8 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
                 return false;
             }
 
-            await consumerGroupResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            var deleteOperation = await consumerGroupResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
             return true;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)

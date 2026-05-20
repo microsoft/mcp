@@ -3,9 +3,9 @@
 
 using System.Reflection;
 using System.Text;
-using Azure.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Helpers;
 
-namespace Microsoft.Mcp.Core.Areas.Server.Commands;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
 
 // This is intentionally placed after the namespace declaration to avoid
 // conflicts with Microsoft.Mcp.Core.Areas.Server.Options

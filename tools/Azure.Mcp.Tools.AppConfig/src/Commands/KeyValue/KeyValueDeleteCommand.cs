@@ -9,35 +9,26 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 
-public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger, IAppConfigService appConfigService)
-    : BaseKeyValueCommand<KeyValueDeleteOptions>()
-{
-    private const string CommandTitle = "Delete App Configuration Key-Value Setting";
-    private readonly ILogger<KeyValueDeleteCommand> _logger = logger;
-    private readonly IAppConfigService _appConfigService = appConfigService;
-
-    public override string Id => "f885a499-82ec-4897-a788-fb6b4615ab06";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "f885a499-82ec-4897-a788-fb6b4615ab06",
+    Name = "delete",
+    Title = "Delete App Configuration Key-Value Setting",
+    Description = """
         Delete a key-value pair from an App Configuration store. This command removes the specified key-value pair from the store.
         If a label is specified, only the labeled version is deleted. If no label is specified, the key-value with the matching
         key and the default label will be deleted.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger, IAppConfigService appConfigService)
+    : BaseKeyValueCommand<KeyValueDeleteOptions>()
+{
+    private readonly ILogger<KeyValueDeleteCommand> _logger = logger;
+    private readonly IAppConfigService _appConfigService = appConfigService;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

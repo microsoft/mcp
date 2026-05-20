@@ -17,7 +17,6 @@ public class AdvisorSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAdvisorService, AdvisorService>();
-
         services.AddSingleton<RecommendationListCommand>();
         services.AddSingleton<RecommendationApplyCommand>();
     }
@@ -32,8 +31,7 @@ public class AdvisorSetup : IAreaSetup
         advisor.AddSubGroup(recommendation);
 
         // Register Advisor commands
-        var recommendationList = serviceProvider.GetRequiredService<RecommendationListCommand>();
-        recommendation.AddCommand(recommendationList.Name, recommendationList);
+        recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
 
         var recommendationApply = serviceProvider.GetRequiredService<RecommendationApplyCommand>();
         recommendation.AddCommand(recommendationApply.Name, recommendationApply);

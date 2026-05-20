@@ -9,34 +9,25 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Acr.Commands.Registry;
 
-public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger, IAcrService acrService) : BaseAcrCommand<RegistryListOptions>
-{
-    private const string CommandTitle = "List Container Registries";
-    private readonly ILogger<RegistryListCommand> _logger = logger;
-    private readonly IAcrService _acrService = acrService;
-
-    public override string Id => "796f8778-2fa7-4343-87ad-06bdcf6b296c";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "796f8778-2fa7-4343-87ad-06bdcf6b296c",
+    Name = "list",
+    Title = "List Container Registries",
+    Description = """
         List Azure Container Registries in a subscription. Optionally filter by resource group. Each registry result
         includes: name, location, loginServer, skuName, skuTier. If no registries are found the tool returns null results
         (consistent with other list commands).
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger, IAcrService acrService) : BaseAcrCommand<RegistryListOptions>
+{
+    private readonly ILogger<RegistryListCommand> _logger = logger;
+    private readonly IAcrService _acrService = acrService;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -61,8 +52,8 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger, IAc
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing container registries. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options);
+                "Error listing container registries. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}.",
+                options.Subscription, options.ResourceGroup);
             HandleException(context, ex);
         }
 

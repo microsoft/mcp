@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Extension.Commands;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.Extension;
 
@@ -41,17 +41,13 @@ public sealed class ExtensionSetup : IAreaSetup
 
         if (exposeExternalProcessCommands)
         {
-            var azqr = serviceProvider.GetRequiredService<AzqrCommand>();
-            extension.AddCommand(azqr.Name, azqr);
+            extension.AddCommand<AzqrCommand>(serviceProvider);
         }
 
         var cli = new CommandGroup("cli", "Commands for helping users to use CLI tools for Azure services operations. Includes operations for generating Azure CLI commands and getting installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Core Function Tools CLI (func).");
         extension.AddSubGroup(cli);
-        var cliGenerateCommand = serviceProvider.GetRequiredService<CliGenerateCommand>();
-        cli.AddCommand(cliGenerateCommand.Name, cliGenerateCommand);
-
-        var cliInstallCommand = serviceProvider.GetRequiredService<CliInstallCommand>();
-        cli.AddCommand(cliInstallCommand.Name, cliInstallCommand);
+        cli.AddCommand<CliGenerateCommand>(serviceProvider);
+        cli.AddCommand<CliInstallCommand>(serviceProvider);
         return extension;
     }
 

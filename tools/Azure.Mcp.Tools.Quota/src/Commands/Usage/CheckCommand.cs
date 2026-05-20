@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Options;
 using Azure.Mcp.Tools.Quota.Options.Usage;
@@ -10,34 +9,26 @@ using Azure.Mcp.Tools.Quota.Services;
 using Azure.Mcp.Tools.Quota.Services.Util;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Usage;
 
-public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<CheckOptions>()
+[CommandMetadata(
+    Id = "81f64603-5a56-4f74-90f8-395da69a99d3",
+    Name = "check",
+    Title = "Check Azure resources usage and quota in a region",
+    Description = "This tool will check the usage and quota information for Azure resources in a region.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class CheckCommand(ILogger<CheckCommand> logger, IQuotaService quotaService) : SubscriptionCommand<CheckOptions>()
 {
-    private const string CommandTitle = "Check Azure resources usage and quota in a region";
     private readonly ILogger<CheckCommand> _logger = logger;
-
-    public override string Id => "81f64603-5a56-4f74-90f8-395da69a99d3";
-
-    public override string Name => "check";
-
-    public override string Description =>
-        """
-        This tool will check the usage and quota information for Azure resources in a region.
-        """;
-
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IQuotaService _quotaService = quotaService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -73,8 +64,7 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
                 .Select(rt => rt.Trim())
                 .Where(rt => !string.IsNullOrWhiteSpace(rt))
                 .ToList();
-            var quotaService = context.GetService<IQuotaService>();
-            Dictionary<string, List<UsageInfo>> toolResult = await quotaService.GetAzureQuotaAsync(
+            Dictionary<string, List<UsageInfo>> toolResult = await _quotaService.GetAzureQuotaAsync(
                 resourceTypes,
                 options.Subscription!,
                 options.Region,

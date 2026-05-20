@@ -4,7 +4,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Core.Logging;
+namespace Microsoft.Mcp.Core.Logging;
 
 /// <summary>
 /// Extension methods for configuring file logging for support scenarios.
