@@ -19,6 +19,8 @@ public sealed class AuthorizationSetup : IAreaSetup
     {
         services.AddSingleton<IAuthorizationService, AuthorizationService>();
 
+        services.AddSingleton<RoleAssignmentApprovalApproveCommand>();
+        services.AddSingleton<RoleAssignmentApprovalListCommand>();
         services.AddSingleton<RoleAssignmentListCommand>();
     }
 
@@ -33,8 +35,14 @@ public sealed class AuthorizationSetup : IAreaSetup
             "Role assignment operations - Commands for listing and managing Azure RBAC role assignments for a given scope.");
         authorization.AddSubGroup(roleAssignment);
 
+        var roleAssignmentApproval = new CommandGroup("approval",
+            "Role assignment approval operations - Commands for discovering and approving Azure RBAC Privileged Identity Management (PIM) role assignment requests.");
+        authorization.AddSubGroup(roleAssignmentApproval);
+
         // Register role assignment commands
         roleAssignment.AddCommand<RoleAssignmentListCommand>(serviceProvider);
+        roleAssignmentApproval.AddCommand<RoleAssignmentApprovalApproveCommand>(serviceProvider);
+        roleAssignmentApproval.AddCommand<RoleAssignmentApprovalListCommand>(serviceProvider);
 
         return authorization;
     }
