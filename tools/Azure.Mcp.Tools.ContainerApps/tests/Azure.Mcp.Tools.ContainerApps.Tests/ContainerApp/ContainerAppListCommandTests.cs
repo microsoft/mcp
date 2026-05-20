@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ContainerApps.Commands;
 using Azure.Mcp.Tools.ContainerApps.Commands.ContainerApp;
 using Azure.Mcp.Tools.ContainerApps.Models;
@@ -17,7 +18,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ContainerApps.Tests.ContainerApp;
 
-public class ContainerAppListCommandTests : CommandUnitTestsBase<ContainerAppListCommand, IContainerAppsService>
+public class ContainerAppListCommandTests : SubscriptionCommandUnitTestsBase<ContainerAppListCommand, IContainerAppsService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
