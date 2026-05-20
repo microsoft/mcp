@@ -6,6 +6,7 @@ using System.Net;
 using Azure;
 using Azure.Core;
 using Azure.Identity;
+using Microsoft.Identity.Client;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
@@ -83,20 +84,20 @@ public abstract class GlobalCommand<
         {
             var policy = new RetryPolicyOptions();
 
-            policy.HasMaxRetries = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.MaxRetries.Name, out int maxRetries);
-            policy.MaxRetries = maxRetries;
+            if (parseResult.TryGetValue(OptionDefinitions.RetryPolicy.MaxRetries.Name, out int maxRetries))
+                policy.MaxRetries = maxRetries;
 
-            policy.HasDelaySeconds = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.Delay.Name, out double delaySeconds);
-            policy.DelaySeconds = delaySeconds;
+            if (parseResult.TryGetValue(OptionDefinitions.RetryPolicy.Delay.Name, out double delaySeconds))
+                policy.DelaySeconds = delaySeconds;
 
-            policy.HasMaxDelaySeconds = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.MaxDelay.Name, out double maxDelaySeconds);
-            policy.MaxDelaySeconds = maxDelaySeconds;
+            if (parseResult.TryGetValue(OptionDefinitions.RetryPolicy.MaxDelay.Name, out double maxDelaySeconds))
+                policy.MaxDelaySeconds = maxDelaySeconds;
 
-            policy.HasMode = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.Mode.Name, out RetryMode mode);
-            policy.Mode = mode;
+            if (parseResult.TryGetValue(OptionDefinitions.RetryPolicy.Mode.Name, out RetryMode mode))
+                policy.Mode = mode;
 
-            policy.HasNetworkTimeoutSeconds = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.NetworkTimeout.Name, out double networkTimeoutSeconds);
-            policy.NetworkTimeoutSeconds = networkTimeoutSeconds;
+            if (parseResult.TryGetValue(OptionDefinitions.RetryPolicy.NetworkTimeout.Name, out double networkTimeoutSeconds))
+                policy.NetworkTimeoutSeconds = networkTimeoutSeconds;
 
             // Only assign if at least one flag set (defensive)
             if (policy.HasMaxRetries || policy.HasDelaySeconds || policy.HasMaxDelaySeconds || policy.HasMode || policy.HasNetworkTimeoutSeconds)
@@ -115,15 +116,24 @@ public abstract class GlobalCommand<
         RequestFailedException rfEx => HandleRequestFailedException(rfEx),
         HttpRequestException httpEx =>
             $"Service unavailable or network connectivity issues. Details: {httpEx.Message}",
+        TimeoutException timeoutEx =>
+            $"The operation timed out. Details: {timeoutEx.Message.TrimEnd('.')}",
+        TaskCanceledException canceledEx =>
+            $"The operation timed out or was canceled. Details: {canceledEx.Message.TrimEnd('.')}",
         _ => ex.Message  // Just return the actual exception message
     };
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
+        ArgumentException => HttpStatusCode.BadRequest,
         KeyNotFoundException => HttpStatusCode.NotFound,
         AuthenticationFailedException => HttpStatusCode.Unauthorized,
         RequestFailedException rfEx => (HttpStatusCode)rfEx.Status,
+        MsalServiceException msalServiceEx => (HttpStatusCode)msalServiceEx.StatusCode,
         HttpRequestException httpEx => httpEx.StatusCode ?? HttpStatusCode.ServiceUnavailable,
+        InvalidOperationException => HttpStatusCode.UnprocessableEntity,
+        TimeoutException => HttpStatusCode.GatewayTimeout,
+        TaskCanceledException => HttpStatusCode.GatewayTimeout,
         _ => HttpStatusCode.InternalServerError
     };
 

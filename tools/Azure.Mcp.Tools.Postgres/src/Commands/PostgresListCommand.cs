@@ -11,18 +11,20 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Postgres.Commands;
 
+[CommandMetadata(
+    Id = "8a12c3f4-2e5d-4b3a-9f2c-5e6d7f8a9b0c",
+    Name = "list",
+    Title = "List PostgreSQL Resources",
+    Description = "List PostgreSQL servers, databases, or tables. Returns all servers in the subscription by default (optionally scoped to a --resource-group). Specify --server to list databases on that server, or --server and --database to list tables in a specific database. --user is required when --server is provided.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class PostgresListCommand(IPostgresService postgresService, ILogger<PostgresListCommand> logger) : BasePostgresCommand<BasePostgresOptions>(logger)
 {
     private readonly IPostgresService _postgresService = postgresService;
-    public override string Id => "8a12c3f4-2e5d-4b3a-9f2c-5e6d7f8a9b0c";
-
-    public override string Name => "list";
-
-    public override string Description => "List PostgreSQL servers, databases, or tables. Returns all servers in the subscription by default (optionally scoped to a --resource-group). Specify --server to list databases on that server, or --server and --database to list tables in a specific database. --user is required when --server is provided.";
-
-    public override string Title => "List PostgreSQL Resources";
-
-    public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false };
 
     protected override void RegisterOptions(Command command)
     {

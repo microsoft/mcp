@@ -12,29 +12,22 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
 
-public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logger) : GlobalCommand<WorkloadCommandOptions>()
+[CommandMetadata(
+    Id = "97229a98-c1ae-4255-a6e2-07631c2a42c5",
+    Name = "workload-api-spec",
+    Title = "Workload API Specification",
+    Description = "Retrieves the complete OpenAPI specification for a specific Fabric workload. Use this when the user needs detailed API documentation for a workload like notebooks or reports. Returns full API spec in JSON format.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false)]
+public sealed class GetWorkloadApisCommand(IFabricPublicApiService service, ILogger<GetWorkloadApisCommand> logger)
+    : GlobalCommand<WorkloadCommandOptions>()
 {
-    private const string CommandTitle = "Workload API Specification";
     private readonly ILogger<GetWorkloadApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    public override string Id => "97229a98-c1ae-4255-a6e2-07631c2a42c5";
-
-    public override string Name => "workload-api-spec";
-
-    public override string Description =>
-        "Retrieves the complete OpenAPI specification for a specific Fabric workload. Use this when the user needs detailed API documentation for a workload like notebooks or reports. Returns full API spec in JSON format.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
 
     protected override void RegisterOptions(Command command)
     {
@@ -67,15 +60,14 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
                 return context.Response;
             }
 
-            var fabricService = context.GetService<IFabricPublicApiService>();
-            var apis = await fabricService.GetWorkloadPublicApis(options.WorkloadType, cancellationToken);
+            var apis = await _service.GetWorkloadPublicApis(options.WorkloadType, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
         }
         catch (HttpRequestException httpEx)
         {
             _logger.LogError(httpEx, "HTTP error getting Fabric public APIs for workload {}", options.WorkloadType);
-            if (httpEx.StatusCode == System.Net.HttpStatusCode.NotFound)
+            if (httpEx.StatusCode == HttpStatusCode.NotFound)
             {
                 context.Response.Status = HttpStatusCode.NotFound;
                 context.Response.Message = $"No workload of type '{options.WorkloadType}' exists. A full list of supported workloads can be found using the list_workloads command";

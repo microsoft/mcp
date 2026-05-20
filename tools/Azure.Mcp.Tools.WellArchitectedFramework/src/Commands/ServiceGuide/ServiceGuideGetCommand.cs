@@ -11,35 +11,25 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.WellArchitectedFramework.Commands.ServiceGuide;
 
+[CommandMetadata(
+    Id = "a7d4e9f2-8c3b-4a1e-9f5d-6b2c8e4a7d3f",
+    Name = "get",
+    Title = "Get Well-Architected Framework Service Guide",
+    Description = """
+        Get Azure Well-Architected Framework guidance for a specific Azure service, or list all supported services when no service is specified. When a service is provided, returns architectural best practices, design patterns, and recommendations based on the five pillars: reliability, security, cost optimization, operational excellence, and performance efficiency.
+        Optional: --service: A single Azure service name. Service name format: case-insensitive; hyphens, underscores, spaces, and name variations allowed; use double quotes (not single quotes) for names with spaces. e.g., cosmos-db, Cosmos_DB, "Cosmos DB", cosmosdb, cosmos-database, cosmosdatabase
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logger, IServiceGuideService serviceGuideService)
     : BaseCommand<ServiceGuideGetOptions>
 {
-    private const string CommandTitle = "Get Well-Architected Framework Service Guide";
     private readonly ILogger<ServiceGuideGetCommand> _logger = logger;
     private readonly IServiceGuideService _serviceGuideService = serviceGuideService;
-
-    public override string Id => "a7d4e9f2-8c3b-4a1e-9f5d-6b2c8e4a7d3f";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "Get Azure Well-Architected Framework guidance for a specific Azure service, " +
-        "or list all supported services when no service is specified. " +
-        "When a service is provided, returns architectural best practices, design patterns, and recommendations based on the five pillars: " +
-        "reliability, security, cost optimization, operational excellence, and performance efficiency. " +
-        "Optional: --service: " + WellArchitectedFrameworkOptionDefinitions.ServiceNameDescription;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

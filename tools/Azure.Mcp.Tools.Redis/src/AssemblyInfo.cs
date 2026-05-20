@@ -3,5 +3,4 @@
 
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Azure.Mcp.Tools.Redis.UnitTests")]
-[assembly: InternalsVisibleTo("Azure.Mcp.Tools.Redis.LiveTests")]
+[assembly: InternalsVisibleTo("Azure.Mcp.Tools.Redis.Tests")]

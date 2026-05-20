@@ -12,28 +12,20 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Database;
 
+[CommandMetadata(
+    Id = "81a28bca-014c-4738-9e1a-654d77cb2dd8",
+    Name = "query",
+    Title = "Query PostgreSQL Database",
+    Description = "Executes a SQL query on an Azure Database for PostgreSQL server to search for specific terms, retrieve records, or perform SELECT operations.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogger<DatabaseQueryCommand> logger) : BaseDatabaseCommand<DatabaseQueryOptions>(logger)
 {
     private readonly IPostgresService _postgresService = postgresService;
-    private const string CommandTitle = "Query PostgreSQL Database";
-
-    public override string Id => "81a28bca-014c-4738-9e1a-654d77cb2dd8";
-
-    public override string Name => "query";
-
-    public override string Description => "Executes a SQL query on an Azure Database for PostgreSQL server to search for specific terms, retrieve records, or perform SELECT operations.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

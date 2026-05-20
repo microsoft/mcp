@@ -14,17 +14,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 
+[CommandMetadata(
+    Id = "da7f163e-471c-4d7d-ae00-d41f5f4b939e",
+    Name = "update",
+    Title = "Update Backup Vault",
+    Description = "Updates vault-level settings including storage redundancy, soft delete, immutability, and managed identity.",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<VaultUpdateOptions>()
 {
-    private const string CommandTitle = "Update Backup Vault";
     private readonly ILogger<VaultUpdateCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override string Id => "da7f163e-471c-4d7d-ae00-d41f5f4b939e";
-    public override string Name => "update";
-    public override string Description => "Updates vault-level settings including storage redundancy, soft delete, immutability, and managed identity.";
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = true, Idempotent = true, OpenWorld = false, ReadOnly = false, LocalRequired = false, Secret = false };
 
     protected override void RegisterOptions(Command command)
     {
@@ -98,6 +102,8 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
         }
 
         var options = BindOptions(parseResult);
+
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
         try
         {

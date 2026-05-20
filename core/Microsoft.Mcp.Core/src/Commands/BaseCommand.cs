@@ -3,10 +3,13 @@
 
 using System.CommandLine.Parsing;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using System.Reflection;
 using System.Text.Json.Nodes;
 using Azure;
 using Azure.Mcp.Core.Areas.Server;
+using Microsoft.Identity.Client;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
@@ -20,18 +23,33 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
 
     private readonly Command _command;
 
+    [UnconditionalSuppressMessage("Trimming", "IL2075:UnrecognizedReflectionPattern",
+        Justification = "CommandMetadataAttribute is only applied to concrete command types that are rooted by DI service registration.")]
     protected BaseCommand()
     {
-        _command = new Command(Name, Description);
+        var attr = GetType().GetCustomAttribute<CommandMetadataAttribute>();
+        if (attr is not null)
+        {
+            Id = attr.Id;
+            Name = attr.Name;
+            Description = attr.Description;
+            Title = attr.Title;
+            Metadata = attr.ToToolMetadata();
+        }
+
+        ValidateMetadataConfiguration();
+
+        _command = new ExtendedCommand(this, Name, Description);
         RegisterOptions(_command);
     }
 
+    public virtual string Id { get; protected set; } = null!;
+    public virtual string Name { get; protected set; } = null!;
+    public virtual string Description { get; protected set; } = null!;
+    public virtual string Title { get; protected set; } = null!;
+    public virtual ToolMetadata Metadata { get; protected set; } = null!;
+
     public Command GetCommand() => _command;
-    public abstract string Id { get; }
-    public abstract string Name { get; }
-    public abstract string Description { get; }
-    public abstract string Title { get; }
-    public abstract ToolMetadata Metadata { get; }
 
     protected virtual void RegisterOptions(Command command)
     {
@@ -74,21 +92,29 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
             response.Results = null;
             return;
         }
-        else if (ex is RequestFailedException failedException)
+
+        // Start with adding the status code of the exception.
+        var exceptionDetails = new JsonObject([new("StatusCode", (int)GetStatusCode(ex))]);
+        if (ex is RequestFailedException failedException)
         {
             // For RequestFailedException, we can include the error code and request ID.
-            context.Activity?.SetTag(TagName.ExceptionMessage, new JsonObject([
-                new("StatusCode", failedException.Status),
-                new("ErrorCode", failedException.ErrorCode),
-                new("RequestId", failedException.GetRawResponse()?.ClientRequestId)
-            ]));
+            exceptionDetails.Add("ErrorCode", failedException.ErrorCode);
+            exceptionDetails.Add("RequestId", failedException.GetRawResponse()?.ClientRequestId);
         }
-        else
+        else if (ex is MsalServiceException msalServiceException)
         {
-            // All other cases, include the status code for now until we can determine a better way to capture error
-            // details without risking PII leakage.
-            context.Activity?.SetTag(TagName.ExceptionMessage, new JsonObject([new("StatusCode", (int)GetStatusCode(ex))]));
+            // For MsalServiceException, we can include the error code and correlation ID.
+            exceptionDetails.Add("ErrorCode", msalServiceException.ErrorCode);
+            exceptionDetails.Add("CorrelationId", msalServiceException.CorrelationId);
         }
+        else if (ex is MsalClientException msalClientException)
+        {
+            // For MsalClientException, we can include the error code and correlation ID.
+            exceptionDetails.Add("ErrorCode", msalClientException.ErrorCode);
+            exceptionDetails.Add("CorrelationId", msalClientException.CorrelationId);
+        }
+
+        context.Activity?.SetTag(TagName.ExceptionMessage, exceptionDetails);
 
         var result = new ExceptionResult(
             Message: ex.Message ?? string.Empty,
@@ -111,6 +137,8 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
         ArgumentException => HttpStatusCode.BadRequest,  // Bad Request for invalid arguments
         InvalidOperationException => HttpStatusCode.UnprocessableEntity,  // Unprocessable Entity for configuration errors
         HttpRequestException httpEx => httpEx.StatusCode ?? HttpStatusCode.ServiceUnavailable,
+        RequestFailedException reqFailedEx => (HttpStatusCode)reqFailedEx.Status,
+        MsalServiceException msalServiceEx => (HttpStatusCode)msalServiceEx.StatusCode,
         _ => HttpStatusCode.InternalServerError  // Internal Server Error for unexpected errors
     };
 
@@ -163,6 +191,23 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
             response.Status = statusCode;
             response.Message = errorMessage;
         }
+    }
+
+    private void ValidateMetadataConfiguration()
+    {
+        if (!string.IsNullOrWhiteSpace(Id) &&
+            !string.IsNullOrWhiteSpace(Name) &&
+            !string.IsNullOrWhiteSpace(Description) &&
+            !string.IsNullOrWhiteSpace(Title) &&
+            Metadata is not null)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(
+            $"Command type '{GetType().FullName}' is missing required command metadata. " +
+            "Apply [CommandMetadata] to the command class or override Id, Name, Description, Title, and Metadata " +
+            "with non-null values that are available during BaseCommand construction.");
     }
 }
 

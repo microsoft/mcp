@@ -14,37 +14,28 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
-public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
-    : SubscriptionCommand<ServerGetOptions>
-{
-    private const string CommandTitle = "Get SQL Server";
-
-    private readonly ILogger<ServerGetCommand> _logger = logger;
-
-    public override string Id => "7f9a1c3e-5b7d-4a6c-8e0f-2b4d6a8c0e1f";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "7f9a1c3e-5b7d-4a6c-8e0f-2b4d6a8c0e1f",
+    Name = "get",
+    Title = "Get SQL Server",
+    Description = """
         Show, get, or list Azure SQL servers in a resource group. Shows details for a specific Azure SQL server
         by name, or lists all Azure SQL servers in the specified resource group. Use to show, display, or
         retrieve Azure SQL server information. Equivalent to 'az sql server show' (show one Azure SQL server) or
         'az sql server list' (list all Azure SQL servers in a resource group). Returns server information
         including configuration details and current state.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCommand> logger)
+    : SubscriptionCommand<ServerGetOptions>
+{
+    private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<ServerGetCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {
@@ -72,11 +63,9 @@ public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
 
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
             if (!string.IsNullOrEmpty(options.Server))
             {
-                var server = await sqlService.GetServerAsync(
+                var server = await _sqlService.GetServerAsync(
                     options.Server,
                     options.ResourceGroup!,
                     options.Subscription!,
@@ -87,7 +76,7 @@ public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
             }
             else
             {
-                var servers = await sqlService.ListServersAsync(
+                var servers = await _sqlService.ListServersAsync(
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.RetryPolicy,

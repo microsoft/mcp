@@ -16,39 +16,25 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 /// <summary>
 /// Command to update an Azure managed disk.
 /// </summary>
+[CommandMetadata(
+    Id = "4a9b2c3d-6e7f-5b8c-9d0e-1f2a3b4c5d6e",
+    Name = "update",
+    Title = "Update Managed Disk",
+    Description = "Updates or modifies properties of an existing Azure managed disk that was previously created. If resource group is not specified, the disk is located by name within the subscription. Supports changing disk size (can only increase), storage SKU, IOPS and throughput limits (UltraSSD only), max shares for shared disk attachments, on-demand bursting, tags, encryption settings, disk access, and performance tier. Modify the network access policy to DenyAll, AllowAll, or AllowPrivate on an existing disk. Only specified properties are updated; unspecified properties remain unchanged.",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class DiskUpdateCommand(
-    ILogger<DiskUpdateCommand> logger)
+    ILogger<DiskUpdateCommand> logger,
+    IComputeService computeService)
     : BaseComputeCommand<DiskUpdateOptions>(false)
 {
-    private const string CommandTitle = "Update Managed Disk";
-    private const string CommandDescription =
-        "Updates or modifies properties of an existing Azure managed disk that was previously created. "
-        + "If resource group is not specified, the disk is located by name within the subscription. "
-        + "Supports changing disk size (can only increase), storage SKU, IOPS and throughput limits (UltraSSD only), "
-        + "max shares for shared disk attachments, on-demand bursting, tags, "
-        + "encryption settings, disk access, and performance tier. "
-        + "Modify the network access policy to DenyAll, AllowAll, or AllowPrivate on an existing disk. "
-        + "Only specified properties are updated; unspecified properties remain unchanged.";
 
     private readonly ILogger<DiskUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    public override string Id => "4a9b2c3d-6e7f-5b8c-9d0e-1f2a3b4c5d6e";
-
-    public override string Name => "update";
-
-    public override string Title => CommandTitle;
-
-    public override string Description => CommandDescription;
-
-    public override ToolMetadata Metadata => new()
-    {
-        OpenWorld = false,
-        Destructive = true,
-        Idempotent = true,
-        ReadOnly = false,
-        Secret = false,
-        LocalRequired = false
-    };
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override void RegisterOptions(Command command)
     {
@@ -131,8 +117,6 @@ public sealed class DiskUpdateCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var computeService = context.GetService<IComputeService>();
-
             // If resource group is not provided, search for the disk by name in the subscription
             if (string.IsNullOrEmpty(options.ResourceGroup))
             {
@@ -140,7 +124,7 @@ public sealed class DiskUpdateCommand(
                     "Resource group not specified, searching for disk {DiskName} in subscription {Subscription}",
                     options.Disk, options.Subscription);
 
-                var disks = await computeService.ListDisksAsync(
+                var disks = await _computeService.ListDisksAsync(
                     options.Subscription!,
                     null,
                     options.Tenant,
@@ -177,7 +161,7 @@ public sealed class DiskUpdateCommand(
                 "Updating disk {DiskName} in resource group {ResourceGroup}",
                 options.Disk, options.ResourceGroup);
 
-            var disk = await computeService.UpdateDiskAsync(
+            var disk = await _computeService.UpdateDiskAsync(
                 options.Disk!,
                 options.ResourceGroup!,
                 options.Subscription!,

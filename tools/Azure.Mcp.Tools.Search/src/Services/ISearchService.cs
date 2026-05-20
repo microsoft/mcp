@@ -10,6 +10,7 @@ public interface ISearchService
 {
     Task<List<string>> ListServices(
         string subscription,
+        string? resourceGroup = null,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

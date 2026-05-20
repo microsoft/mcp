@@ -95,7 +95,7 @@ public class SubscriptionService(
     {
         var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
         var subscription = subscriptions.FirstOrDefault(s => s.DisplayName.Equals(subscriptionName, StringComparison.OrdinalIgnoreCase)) ??
-            throw new Exception($"Could not find subscription with name {subscriptionName}");
+            throw new ArgumentException($"Could not find subscription with name {subscriptionName}", nameof(subscriptionName));
 
         return subscription.SubscriptionId;
     }
@@ -104,7 +104,7 @@ public class SubscriptionService(
     {
         var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
         var subscription = subscriptions.FirstOrDefault(s => s.SubscriptionId.Equals(subscriptionId, StringComparison.OrdinalIgnoreCase)) ??
-            throw new Exception($"Could not find subscription with ID {subscriptionId}");
+            throw new ArgumentException($"Could not find subscription with ID {subscriptionId}", nameof(subscriptionId));
 
         return subscription.DisplayName;
     }
