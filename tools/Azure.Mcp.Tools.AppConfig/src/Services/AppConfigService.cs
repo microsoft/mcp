@@ -144,7 +144,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
                         setting.Tags[tagKey] = parts[1];
                     }
                 }
-                else
+                else if (parts.Length == 1 && !string.IsNullOrEmpty(parts[0]))
                 {
                     setting.Tags[parts[0]] = string.Empty;
                 }
