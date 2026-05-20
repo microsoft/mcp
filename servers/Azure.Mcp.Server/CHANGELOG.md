@@ -33,8 +33,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
     - `azurebackup_governance_immutability`
     - `azurebackup_governance_soft-delete`
     - `azurebackup_disasterrecovery_enable-crr`
-- Fixed serialization issue in `azurebackup_job_get` by handling `FormatException`s thrown from the Azure SDK's `XmlConvert.ToTimeSpan` in `DppBackupOperations.ListJobsAsync`
-- Fixed telemetry tags not being emitted by returning `"auto"`/`"unspecified"` instead of `null` for unset values, since `Activity.AddTag(key, null)` is a no-op in .NET
+  - Fixed serialization issue in `azurebackup_job_get` by handling `FormatException`s thrown from the Azure SDK's `XmlConvert.ToTimeSpan` in `DppBackupOperations.ListJobsAsync`
+  - Fixed telemetry tags not being emitted by returning `"auto"`/`"unspecified"` instead of `null` for unset values, since `Activity.AddTag(key, null)` is a no-op in .NET
 - Removed restrictions on what kinds of web sites the AppLens tool can diagnose. [[#2596](https://github.com/microsoft/mcp/pull/2596)]
 
 #### Dependency Updates
