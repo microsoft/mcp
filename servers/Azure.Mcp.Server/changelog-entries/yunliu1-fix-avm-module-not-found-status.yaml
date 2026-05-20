@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed AVM module-not-found errors returning HTTP 422 instead of 400 by using ArgumentException for invalid module names"
