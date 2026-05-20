@@ -98,7 +98,7 @@ Before writing tests, validate all inputs are handled correctly:
 
 ### Phase 3: Unit Tests
 
-File: `tests/Azure.Mcp.Tools.AzureBackup.UnitTests/{Group}/{Resource}{Operation}CommandTests.cs`
+File: `tests/Azure.Mcp.Tools.AzureBackup.Tests/{Group}/{Resource}{Operation}CommandTests.cs`
 
 #### Required Test Methods
 
@@ -124,16 +124,16 @@ public sealed class MyNewCommandTests : CommandUnitTestsBase<MyNewCommand, IAzur
 #### Run Unit Tests
 
 ```powershell
-dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.UnitTests `
+dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests `
   /p:NuGetAudit=false `
-  --filter "FullyQualifiedName~MyNewCommandTests"
+  --filter "Category!=Live&FullyQualifiedName~MyNewCommandTests"
 ```
 
 Verify **all tests pass** before proceeding.
 
 ### Phase 4: Live Tests
 
-File: `tests/Azure.Mcp.Tools.AzureBackup.LiveTests/AzureBackupCommandTests.cs`
+File: `tests/Azure.Mcp.Tools.AzureBackup.Tests/AzureBackupCommandTests.cs`
 
 #### 4a. Add Test Methods
 
@@ -182,13 +182,13 @@ $settings = @{
     ResourceGroupName = "<your-rg>"
     ResourceBaseName = "<your-base>"
 } | ConvertTo-Json
-$settings | Set-Content "tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.LiveTests\.testsettings.json"
+$settings | Set-Content "tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests\.testsettings.json"
 
 # Kill any stale proxy/server processes
 Stop-Process -Name "Azure.Sdk.Tools.TestProxy","azmcp" -Force -ErrorAction SilentlyContinue
 
 # Run tests in Record mode
-dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.LiveTests `
+dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests `
   /p:NuGetAudit=false --filter "FullyQualifiedName~MyNewCommand"
 ```
 
@@ -197,7 +197,7 @@ dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.
 ```powershell
 # Push recorded sessions to azure-sdk-assets
 .proxy\Azure.Sdk.Tools.TestProxy push `
-  -a tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.LiveTests\assets.json
+  -a tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests\assets.json
 ```
 
 This updates the `Tag` field in `assets.json`. **Commit the updated `assets.json`.**
@@ -207,11 +207,11 @@ This updates the `Tag` field in `assets.json`. **Commit the updated `assets.json
 ```powershell
 # Switch to Playback mode
 $settings = @{ TestMode = "Playback"; SubscriptionId = "..."; TenantId = "..."; ResourceGroupName = "..."; ResourceBaseName = "..." } | ConvertTo-Json
-$settings | Set-Content "tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.LiveTests\.testsettings.json"
+$settings | Set-Content "tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests\.testsettings.json"
 
 Stop-Process -Name "Azure.Sdk.Tools.TestProxy","azmcp" -Force -ErrorAction SilentlyContinue
 
-dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.LiveTests `
+dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests `
   /p:NuGetAudit=false --filter "FullyQualifiedName~MyNewCommand"
 ```
 
@@ -245,13 +245,13 @@ dotnet format Microsoft.Mcp.slnx `
 #### 5c. Full Unit Tests
 
 ```powershell
-dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.UnitTests /p:NuGetAudit=false
+dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests /p:NuGetAudit=false
 ```
 
 #### 5d. Full Live Tests (Playback)
 
 ```powershell
-dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.LiveTests /p:NuGetAudit=false
+dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests /p:NuGetAudit=false
 ```
 
 #### 5e. Spell Check
@@ -375,9 +375,8 @@ tools/Azure.Mcp.Tools.AzureBackup/
 │   └── Models/
 │       └── AzureBackupTelemetryTags.cs                # Telemetry
 └── tests/
-    ├── Azure.Mcp.Tools.AzureBackup.UnitTests/
-    │   └── {Group}/{Resource}{Operation}CommandTests.cs
-    ├── Azure.Mcp.Tools.AzureBackup.LiveTests/
+    ├── Azure.Mcp.Tools.AzureBackup.Tests/
+    │   ├── {Group}/{Resource}{Operation}CommandTests.cs
     │   ├── AzureBackupCommandTests.cs                 # Add tests here
     │   └── assets.json                                # Recording tag
     ├── test-resources.bicep                           # Azure infra
@@ -392,4 +391,4 @@ Study these existing implementations as templates:
 - **Create with validation:** `Commands/Policy/PolicyCreateCommand.cs`
 - **Governance toggle:** `Commands/Governance/GovernanceSoftDeleteCommand.cs`
 - **Security command:** `Commands/Security/SecurityConfigureMuaCommand.cs`
-- **Unit tests:** `tests/Azure.Mcp.Tools.AzureBackup.UnitTests/Policy/PolicyCreateCommandTests.cs`
+- **Unit tests:** `tests/Azure.Mcp.Tools.AzureBackup.Tests/Policy/PolicyCreateCommandTests.cs`

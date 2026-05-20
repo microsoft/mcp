@@ -45,15 +45,9 @@ Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 function FilterTestProjects {
     $testProjects = Get-ChildItem -Path "$RepoRoot" -Recurse -Filter "*Tests.csproj" -File
     | Where-Object {
-        if ($_.Name -like '*.LiveTests.csproj') {
-            return $TestType -in @('Live', 'Recorded', 'All')
-        } elseif ($_.Name -like '*.UnitTests.csproj') {
-            return $TestType -in @('Unit', 'All')
-        } elseif ($_.Name -like "*Tests.csproj") {
-            $testProjectDetails = & "$($PSScriptRoot)/Get-ProjectProperties.ps1" -Path $_.FullName
-            return ($testProjectDetails.HasLiveTests -and $TestType -in @('Live', 'Recorded', 'All')) -or
-                   ($testProjectDetails.HasUnitTests -and $TestType -in @('Unit', 'All'))
-        }
+        $testProjectDetails = & "$($PSScriptRoot)/Get-ProjectProperties.ps1" -Path $_.FullName
+        return ($testProjectDetails.HasLiveTests -and $TestType -in @('Live', 'Recorded', 'All')) -or
+                ($testProjectDetails.HasUnitTests -and $TestType -in @('Unit', 'All'))
     }
     | ForEach-Object { @{
         FullName = $_.FullName
@@ -324,7 +318,7 @@ try {
     $command = "dotnet test $coverageArg $resultsArg $loggerArg"
 
     if ($filterArg) {
-        $command += "--filter `"$filterArg`""
+        $command += " --filter `"$filterArg`""
     }
 
     Invoke-LoggedMsBuildCommand -Command $command -AllowedExitCodes @(0, 1)

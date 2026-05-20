@@ -20,7 +20,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     Name = "create",
     Title = "Create Virtual Machine",
     Description = """
-        Create, deploy, or provision a single Azure Virtual Machine (VM).
+        Create, deploy, or provision a single Azure Virtual Machine (VM) with its OS disk.
         Use this to launch a new Linux or Windows VM with SSH key or password authentication.
         Automatically creates networking resources (VNet, subnet, NSG, NIC, public IP) when not specified.
         Equivalent to 'az vm create'. Defaults to Standard_D2s_v5 VM size when not specified.
@@ -28,7 +28,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
         (an alias such as 'Ubuntu2404' or 'Win2022Datacenter', a marketplace URN like 'publisher:offer:sku:version',
         or a shared gallery image ID starting with '/sharedGalleries/').
         For Linux VMs with SSH, read the user's public key file (e.g., ~/.ssh/id_rsa.pub) and pass its content.
-        Do not use this for creating Virtual Machine Scale Sets with multiple identical instances (use VMSS create instead).
+        Do not use this for Virtual Machine Scale Sets with multiple identical instances (use VMSS create instead).
         """,
     Destructive = true,
     Idempotent = false,

@@ -81,10 +81,10 @@
 # ServiceOwners:                       @ankiga-MSFT
 
 # PRLabel: %tools-Aks
-/tools/Azure.Mcp.Tools.Aks/            @anuchandy @feiskyer @gossion @jongio @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Aks/            @feiskyer @gossion @jongio @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Aks
-# ServiceOwners:                       @anuchandy @feiskyer @gossion @jongio
+# ServiceOwners:                       @feiskyer @gossion @jongio
 
 # PRLabel: %tools-AppConfig
 /tools/Azure.Mcp.Tools.AppConfig/      @conniey @JonathanCrd @microsoft/azure-mcp
@@ -189,7 +189,7 @@
 # ServiceOwners:                       @alzimmermsft @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Core
-# ServiceOwners:                       @alzimmermsft @anannya03 @anuchandy @g2vinay @xiangyan99 @microsoft/azure-mcp
+# ServiceOwners:                       @alzimmermsft @anannya03 @g2vinay @xiangyan99 @microsoft/azure-mcp
 
 # PRLabel: %tools-CosmosDB
 /tools/Azure.Mcp.Tools.Cosmos/         @sajeetharan @xiangyan99 @microsoft/azure-mcp
@@ -345,10 +345,10 @@
 # ServiceOwners:                       @pablocastro @microsoft/azure-mcp
 
 # PRLabel: %tools-ServiceBus
-/tools/Azure.Mcp.Tools.ServiceBus/     @anuchandy @conniey @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.ServiceBus/     @conniey @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ServiceBus
-# ServiceOwners:                       @anuchandy @conniey @EldertGrootenboer @shankarsama
+# ServiceOwners:                       @conniey @EldertGrootenboer @shankarsama
 
 # PRLabel: %tools-ServiceFabric
 /tools/Azure.Mcp.Tools.ServiceFabric/  @linmeng08 @jkochhar @microsoft/azure-mcp
@@ -427,7 +427,7 @@
 # ServiceOwners:                       @matteing
 
 # ServiceLabel: %remote-mcp
-# ServiceOwners:                       @anuchandy @g2vinay @JasonYeMSFT @srnagar @vukelich @microsoft/azure-mcp
+# ServiceOwners:                       @g2vinay @JasonYeMSFT @srnagar @vukelich @microsoft/azure-mcp
 
 ##################
 # Fabric MCP

@@ -5,7 +5,12 @@ using System.Text.Json.Serialization;
 
 namespace ToolSelection.Models;
 
-[JsonSourceGenerationOptions(WriteIndented = true, PropertyNameCaseInsensitive = true)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    WriteIndented = true,
+    PropertyNameCaseInsensitive = true
+)]
 [JsonSerializable(typeof(ListToolsResult))]
 [JsonSerializable(typeof(List<Tool>))]
 [JsonSerializable(typeof(Tool))]

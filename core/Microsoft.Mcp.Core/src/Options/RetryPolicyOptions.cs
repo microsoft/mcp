@@ -8,38 +8,43 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Microsoft.Mcp.Core.Options;
 
 /// <summary>
-/// Represents retry policy configuration for Azure SDK clients
+/// Represents retry policy configuration for Azure SDK clients.
+/// All value properties are nullable — null means "use SDK default."
 /// </summary>
 public class RetryPolicyOptions : IComparable<RetryPolicyOptions>, IEquatable<RetryPolicyOptions>
 {
     [JsonPropertyName(OptionDefinitions.RetryPolicy.DelayName)]
-    public double DelaySeconds { get; set; }
+    [Option(Name = "delay", Description = "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.")]
+    public double? DelaySeconds { get; set; }
 
     [JsonPropertyName(OptionDefinitions.RetryPolicy.MaxDelayName)]
-    public double MaxDelaySeconds { get; set; }
+    [Option(Name = "max-delay", Description = "Maximum delay in seconds between retries, regardless of the retry strategy.")]
+    public double? MaxDelaySeconds { get; set; }
 
     [JsonPropertyName(OptionDefinitions.RetryPolicy.MaxRetriesName)]
-    public int MaxRetries { get; set; }
+    [Option(Name = "max-retries", Description = "Maximum number of retry attempts for failed operations before giving up.")]
+    public int? MaxRetries { get; set; }
 
     [JsonPropertyName(OptionDefinitions.RetryPolicy.ModeName)]
-    public RetryMode Mode { get; set; }
+    [Option(Name = "mode", Description = "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.")]
+    public RetryMode? Mode { get; set; }
 
     [JsonPropertyName(OptionDefinitions.RetryPolicy.NetworkTimeoutName)]
-    public double NetworkTimeoutSeconds { get; set; }
+    [Option(Name = "network-timeout", Description = "Network operation timeout in seconds. Operations taking longer than this will be cancelled.")]
+    public double? NetworkTimeoutSeconds { get; set; }
 
-    // Flags indicating which options were explicitly provided by the caller.
-    // This allows us to only override the Azure SDK defaults for the specified settings.
-    public bool HasDelaySeconds { get; set; }
-    public bool HasMaxDelaySeconds { get; set; }
-    public bool HasMaxRetries { get; set; }
-    public bool HasMode { get; set; }
-    public bool HasNetworkTimeoutSeconds { get; set; }
+    // Derived flags indicating which options were explicitly provided by the caller.
+    [JsonIgnore]
+    public bool HasDelaySeconds => DelaySeconds.HasValue;
+    [JsonIgnore]
+    public bool HasMaxDelaySeconds => MaxDelaySeconds.HasValue;
+    [JsonIgnore]
+    public bool HasMaxRetries => MaxRetries.HasValue;
+    [JsonIgnore]
+    public bool HasMode => Mode.HasValue;
+    [JsonIgnore]
+    public bool HasNetworkTimeoutSeconds => NetworkTimeoutSeconds.HasValue;
 
-    /// <summary>
-    /// Compares this retry policy with another policy to check if all settings match
-    /// </summary>
-    /// <param name="other">The retry policy to compare with</param>
-    /// <returns>True if both policies have identical settings or are both null, false otherwise</returns>
     public static bool AreEqual(RetryPolicyOptions? policy1, RetryPolicyOptions? policy2)
     {
         if (ReferenceEquals(policy1, policy2))
@@ -52,11 +57,11 @@ public class RetryPolicyOptions : IComparable<RetryPolicyOptions>, IEquatable<Re
             return false;
         }
 
-        return policy1.HasMaxRetries == policy2.HasMaxRetries && (!policy1.HasMaxRetries || policy1.MaxRetries == policy2.MaxRetries) &&
-            policy1.HasMode == policy2.HasMode && (!policy1.HasMode || policy1.Mode == policy2.Mode) &&
-            policy1.HasDelaySeconds == policy2.HasDelaySeconds && (!policy1.HasDelaySeconds || policy1.DelaySeconds == policy2.DelaySeconds) &&
-            policy1.HasMaxDelaySeconds == policy2.HasMaxDelaySeconds && (!policy1.HasMaxDelaySeconds || policy1.MaxDelaySeconds == policy2.MaxDelaySeconds) &&
-            policy1.HasNetworkTimeoutSeconds == policy2.HasNetworkTimeoutSeconds && (!policy1.HasNetworkTimeoutSeconds || policy1.NetworkTimeoutSeconds == policy2.NetworkTimeoutSeconds);
+        return policy1.MaxRetries == policy2.MaxRetries &&
+            policy1.Mode == policy2.Mode &&
+            policy1.DelaySeconds == policy2.DelaySeconds &&
+            policy1.MaxDelaySeconds == policy2.MaxDelaySeconds &&
+            policy1.NetworkTimeoutSeconds == policy2.NetworkTimeoutSeconds;
     }
 
     public int CompareTo(RetryPolicyOptions? other)
@@ -64,54 +69,30 @@ public class RetryPolicyOptions : IComparable<RetryPolicyOptions>, IEquatable<Re
         if (other == null)
             return 1;
 
-        // Compare by whether MaxRetries was specified, then value
-        var retryComparison = HasMaxRetries.CompareTo(other.HasMaxRetries);
-        if (retryComparison != 0)
-            return retryComparison;
-        retryComparison = MaxRetries.CompareTo(other.MaxRetries);
-        if (retryComparison != 0)
-            return retryComparison;
+        var cmp = Nullable.Compare(MaxRetries, other.MaxRetries);
+        if (cmp != 0)
+            return cmp;
 
-        // Then by Mode specification
-        var modeComparison = HasMode.CompareTo(other.HasMode);
-        if (modeComparison != 0)
-            return modeComparison;
-        modeComparison = Mode.CompareTo(other.Mode);
-        if (modeComparison != 0)
-            return modeComparison;
+        cmp = Nullable.Compare(Mode, other.Mode);
+        if (cmp != 0)
+            return cmp;
 
-        // Then by delay settings (specified flag then value)
-        var delayFlagComparison = HasDelaySeconds.CompareTo(other.HasDelaySeconds);
-        if (delayFlagComparison != 0)
-            return delayFlagComparison;
-        var delayComparison = DelaySeconds.CompareTo(other.DelaySeconds);
-        if (delayComparison != 0)
-            return delayComparison;
+        cmp = Nullable.Compare(DelaySeconds, other.DelaySeconds);
+        if (cmp != 0)
+            return cmp;
 
-        var maxDelayFlagComparison = HasMaxDelaySeconds.CompareTo(other.HasMaxDelaySeconds);
-        if (maxDelayFlagComparison != 0)
-            return maxDelayFlagComparison;
-        var maxDelayComparison = MaxDelaySeconds.CompareTo(other.MaxDelaySeconds);
-        if (maxDelayComparison != 0)
-            return maxDelayComparison;
+        cmp = Nullable.Compare(MaxDelaySeconds, other.MaxDelaySeconds);
+        if (cmp != 0)
+            return cmp;
 
-        // Finally by network timeout flag then value
-        var networkTimeoutFlagComparison = HasNetworkTimeoutSeconds.CompareTo(other.HasNetworkTimeoutSeconds);
-        if (networkTimeoutFlagComparison != 0)
-            return networkTimeoutFlagComparison;
-        return NetworkTimeoutSeconds.CompareTo(other.NetworkTimeoutSeconds);
+        return Nullable.Compare(NetworkTimeoutSeconds, other.NetworkTimeoutSeconds);
     }
 
     public bool Equals(RetryPolicyOptions? other) => AreEqual(this, other);
 
     public override bool Equals(object? obj) => obj is RetryPolicyOptions other && Equals(other);
 
-    public override int GetHashCode()
-    {
-        var h1 = HashCode.Combine(HasMaxRetries, MaxRetries, HasMode, Mode, HasDelaySeconds);
-        var h2 = HashCode.Combine(DelaySeconds, HasMaxDelaySeconds, MaxDelaySeconds, HasNetworkTimeoutSeconds, NetworkTimeoutSeconds);
-        return HashCode.Combine(h1, h2);
-    }
+    public override int GetHashCode() => HashCode.Combine(MaxRetries, Mode, DelaySeconds, MaxDelaySeconds, NetworkTimeoutSeconds);
 
     public static bool operator ==(RetryPolicyOptions? left, RetryPolicyOptions? right) => AreEqual(left, right);
 

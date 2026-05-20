@@ -20,8 +20,10 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
     Name = "create",
     Title = "Create Virtual Machine Scale Set",
     Description = """
-        Create, deploy, or provision an Azure Virtual Machine Scale Set (VMSS) for running multiple identical VM instances.
-        Use this to deploy workloads that need horizontal scaling, load balancing, or high availability across instances.
+        Create, deploy, or provision a new Azure Virtual Machine Scale Set (VMSS) for running multiple identical VM instances.
+        Use this to deploy a brand new VMSS that needs horizontal scaling, load balancing, or high availability across instances,
+        including specifying the initial instance count (e.g., 3 instances, 5 instances) and upgrade policy
+        (Manual, Automatic, or Rolling) at creation time.
         Equivalent to 'az vmss create'. Defaults to 2 instances and Standard_D2s_v5 size when not specified.
         The --image option is required and has no default; if the user does not specify an image, ask them which image to use
         (an alias such as 'Ubuntu2404' or 'Win2022Datacenter', a marketplace URN like 'publisher:offer:sku:version',

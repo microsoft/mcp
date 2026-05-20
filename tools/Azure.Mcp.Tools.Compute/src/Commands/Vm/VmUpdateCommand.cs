@@ -19,9 +19,10 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     Name = "update",
     Title = "Update Virtual Machine",
     Description = """
-        Update, modify, or reconfigure an existing Azure Virtual Machine (VM).
-        Use this to resize a VM, update tags, configure boot diagnostics, or change user data.
+        Update, modify, or reconfigure an existing Azure Virtual Machine (VM) configuration.
+        Use this to add or change tags on a VM, resize a VM to a different size, enable or configure boot diagnostics, or update user data.
         Equivalent to 'az vm update'. The VM may need to be deallocated before resizing to certain sizes.
+        Do not use this to change VM power state (start, stop, deallocate, restart); use VM power-state instead.
         Do not use this to create a new VM (use VM create) or to update Virtual Machine Scale Sets (use VMSS update).
         """,
     Destructive = true,
@@ -85,7 +86,6 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger, IComputeSer
         }
 
         var options = BindOptions(parseResult);
-
 
         try
         {

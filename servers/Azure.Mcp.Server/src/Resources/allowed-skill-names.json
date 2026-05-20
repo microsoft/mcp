@@ -17,6 +17,7 @@
   "azure-prepare",
   "azure-quotas",
   "azure-rbac",
+  "azure-reliability",
   "azure-resource-lookup",
   "azure-resource-visualizer",
   "azure-storage",

@@ -331,25 +331,11 @@ function Get-PathsToTest {
         $testResourcesPath = "$path/tests"
         $rootedTestResourcesPath = "$($using:RepoRoot)/$testResourcesPath"
         $hasTestResources = Test-Path "$rootedTestResourcesPath/test-resources.bicep"
-        $hasUnifiedTests = Test-Path "$rootedTestResourcesPath/$projectName.Tests.csproj"
-        $testProjectDetails = $hasUnifiedTests ? (& "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj") : $null
-        $hasLiveTests = $false
-        # At this time there are two ways to denote if a project has live and unit tests.
-        # 1. Separate projects for live and unit tests, e.g. Azure.Mcp.Server.UnitTests.csproj and Azure.Mcp.Server.LiveTests.csproj
-        # 2. A single project with a property group that has <HasLiveTests>true</HasLiveTests> and/or <HasUnitTests>true</HasUnitTests>
-        # Eventually everything will migrate to the second approach, but for now we need to support both.
-        if ((Get-ChildItem $rootedTestResourcesPath -Filter '*.LiveTests.csproj' -Recurse).Count -gt 0) {
-            $hasLiveTests = $true
-        } elseif ($hasUnifiedTests) {
-            $hasLiveTests = $testProjectDetails.HasLiveTests
-        }
+        $hasTestsProject = Test-Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj"
+        $testProjectDetails = $hasTestsProject ? (& "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj") : $null
+        $hasLiveTests = $hasTestsProject -and $testProjectDetails.HasLiveTests
         $hasRecordedTests = $hasLiveTests -and (Get-ChildItem $rootedTestResourcesPath -Filter 'assets.json' -Recurse).Count -gt 0
-        $hasUnitTests = $false
-        if ((Get-ChildItem $rootedTestResourcesPath -Filter '*.UnitTests.csproj' -Recurse).Count -gt 0) {
-            $hasUnitTests = $true
-        } elseif ($hasUnifiedTests) {
-            $hasUnitTests = $testProjectDetails.HasUnitTests
-        }
+        $hasUnitTests = $hasTestsProject -and $testProjectDetails.HasUnitTests
 
         $sourcePath = Join-Path $using:RepoRoot $path "src"
 

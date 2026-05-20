@@ -18,12 +18,13 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     Name = "delete",
     Title = "Delete Virtual Machine",
     Description = """
-        Delete, remove, or destroy an Azure Virtual Machine (VM).
-        Use this to permanently remove a VM that is no longer needed.
+        Delete, remove, or destroy an Azure Virtual Machine (VM) permanently.
+        Use this only when the VM is no longer needed and should be permanently removed.
         Equivalent to 'az vm delete'. This operation is irreversible and the VM data will be lost.
         Use --force-deletion to force delete the VM even if it is in a running or failed state
         (passes forceDeletion=true to the Azure API).
         Associated resources like disks, NICs, and public IPs are NOT automatically deleted.
+        Do not use this to stop or pause a VM; use the VM power-state command instead.
         Do not use this to delete Virtual Machine Scale Sets (use VMSS delete instead).
         """,
     Destructive = true,

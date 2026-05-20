@@ -6,9 +6,6 @@ using global::DataFactory.MCP.Models.Pipeline;
 
 namespace Fabric.Mcp.Tools.DataFactory.Models;
 
-[JsonSourceGenerationOptions(
-    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(ListPipelinesCommandResult))]
 [JsonSerializable(typeof(CreatePipelineCommandResult))]
 [JsonSerializable(typeof(GetPipelineCommandResult))]
@@ -16,6 +13,10 @@ namespace Fabric.Mcp.Tools.DataFactory.Models;
 [JsonSerializable(typeof(ListDataflowsCommandResult))]
 [JsonSerializable(typeof(CreateDataflowCommandResult))]
 [JsonSerializable(typeof(ExecuteQueryCommandResult))]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 public partial class DataFactoryJsonContext : JsonSerializerContext
 {
 }

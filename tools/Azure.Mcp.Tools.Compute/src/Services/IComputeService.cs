@@ -157,6 +157,18 @@ public interface IComputeService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
+    // Power state operations
+    Task<VmPowerStateResult> ChangeVmPowerStateAsync(
+        string vmName,
+        string resourceGroup,
+        string subscription,
+        string powerAction,
+        bool noWait = false,
+        bool skipShutdown = false,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
     Task<bool> DeleteVmssAsync(
         string vmssName,
         string resourceGroup,

@@ -11,7 +11,11 @@ namespace ToolMetadataExporter.Models;
 [JsonSerializable(typeof(McpToolEvent))]
 [JsonSerializable(typeof(McpToolEventType))]
 [JsonSerializable(typeof(List<McpToolEvent>))]
-[JsonSourceGenerationOptions(Converters = [typeof(JsonStringEnumConverter<McpToolEventType>)])]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    Converters = [typeof(JsonStringEnumConverter<McpToolEventType>)]
+)]
 public partial class ModelsSerializationContext : JsonSerializerContext
 {
 }
