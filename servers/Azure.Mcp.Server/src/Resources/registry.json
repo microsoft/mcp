@@ -28,6 +28,13 @@
             "description": "MCP server with tools to use Azure Resource Graph to retrieve and filter information about Azure resources in a customer's subscription, and tools to manage ARM template deployments.",
             "toolPrefix": "arm_",
             "oauthScopes": ["22bfbae3-f4e7-485f-be43-8cee15065084/.default"]
+        },
+        "enterprise": {
+            "url": "https://mcp.svc.cloud.microsoft/enterprise",
+            "title": "Microsoft MCP Server for Enterprise",
+            "description": "Access Microsoft Entra data by converting natural-language queries into Microsoft Graph API calls. Supports read-only enterprise IT scenarios including security posture, privileged access, application risk, access governance, device readiness, and audit telemetry.",
+            "toolPrefix": "enterprise_",
+            "oauthScopes": ["api://e8c77dc2-69b3-43f4-bc51-3213c9d915b4/.default"]
         }
     }
 }
