@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Buffers;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
@@ -181,8 +182,8 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
 
     private static ByteArrayContent CreateApprovalContent(string justification)
     {
-        using var stream = new MemoryStream();
-        using (var writer = new Utf8JsonWriter(stream))
+        var buffer = new ArrayBufferWriter<byte>();
+        using (var writer = new Utf8JsonWriter(buffer))
         {
             writer.WriteStartObject();
             writer.WritePropertyName("properties");
@@ -194,7 +195,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
             writer.Flush();
         }
 
-        var contentBytes = stream.ToArray();
+        var contentBytes = buffer.WrittenMemory.ToArray();
         return new ByteArrayContent(contentBytes)
         {
             Headers = { ContentType = new("application/json") }
@@ -254,7 +255,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
     private static RoleAssignmentApprovalStage ConvertToRoleAssignmentApprovalStage(JsonElement item)
     {
         var properties = GetObjectProperty(item, "properties");
-        return new()
+        return new RoleAssignmentApprovalStage
         {
             Id = GetStringProperty(item, "id"),
             DisplayName = GetStringProperty(item, properties, "displayName"),
