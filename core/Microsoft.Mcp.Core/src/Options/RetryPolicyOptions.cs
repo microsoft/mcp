@@ -22,7 +22,7 @@ public class RetryPolicyOptions : IComparable<RetryPolicyOptions>, IEquatable<Re
     public double? MaxDelaySeconds { get; set; }
 
     [JsonPropertyName(OptionDefinitions.RetryPolicy.MaxRetriesName)]
-    [Option(Name = "max-retries", Description = "Maximum number of retry attempts before giving up.")]
+    [Option(Name = "max-retries", Description = "Maximum number of retry attempts for failed operations before giving up.")]
     public int? MaxRetries { get; set; }
 
     [JsonPropertyName(OptionDefinitions.RetryPolicy.ModeName)]

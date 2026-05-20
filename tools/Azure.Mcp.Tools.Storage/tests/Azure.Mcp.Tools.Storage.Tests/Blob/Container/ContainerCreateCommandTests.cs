@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.Tests.Blob.Container;
 
-public class ContainerCreateCommandTests : CommandUnitTestsBase<ContainerCreateCommand, IStorageService>
+public class ContainerCreateCommandTests : SubscriptionCommandUnitTestsBase<ContainerCreateCommand, IStorageService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
