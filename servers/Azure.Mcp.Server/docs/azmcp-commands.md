@@ -3542,20 +3542,17 @@ azmcp resourcehealth health-events list --subscription <subscription> \
 ```bash
 # Returns runtime and details about the Service Bus queue
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp servicebus queue details --subscription <subscription> \
-                               --namespace <service-bus-namespace> \
+azmcp servicebus queue details --namespace <service-bus-namespace> \
                                --queue <queue>
 
 # Gets runtime details a Service Bus topic
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp servicebus topic details --subscription <subscription> \
-                               --namespace <service-bus-namespace> \
+azmcp servicebus topic details --namespace <service-bus-namespace> \
                                --topic <topic>
 
 # Gets runtime details and message counts for a Service Bus subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp servicebus topic subscription details --subscription <subscription> \
-                                            --namespace <service-bus-namespace> \
+azmcp servicebus topic subscription details --namespace <service-bus-namespace> \
                                             --topic <topic> \
                                             --subscription-name <subscription-name>
 ```
