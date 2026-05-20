@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Concurrent;
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
@@ -17,93 +18,101 @@ namespace Microsoft.Mcp.Core.Options;
 public static class OptionBinder
 {
     /// <summary>
-    /// Centralized registry of supported option types. Each entry provides both the
-    /// option factory (for registration) and value binder (for parsing). If a type
-    /// is not in this dictionary and is not an enum, it is unsupported and will be
-    /// rejected at option registration time.
+    /// To prevent native AOT builds from trimming away the filled generic Options<T> methods, we have to maintain a
+    /// centralized factory pattern. Each entry provides both the option factory (for registration) and value binder
+    /// (for parsing). If a type is not in this dictionary and is not an enum, it is unsupported and will be rejected
+    /// at option registration time.
     /// </summary>
-    private static readonly Dictionary<Type, OptionTypeHandler> s_typeHandlers = new()
+    private static readonly ConcurrentDictionary<Type, OptionTypeHandler> s_typeHandlers = new()
     {
         // String
         [typeof(string)] = new(name => new Option<string>(name), (pr, n) => pr.GetValueOrDefault<string>(n)),
+        [typeof(string[])] = new(name => new Option<string[]>(name), (pr, n) => pr.GetValueOrDefault<string[]>(n)),
 
         // Boolean
         [typeof(bool)] = new(name => new Option<bool>(name), (pr, n) => pr.GetValueOrDefault<bool>(n)),
         [typeof(bool?)] = new(name => new Option<bool?>(name), (pr, n) => pr.GetValueOrDefault<bool?>(n)),
+        [typeof(bool[])] = new(name => new Option<bool[]>(name), (pr, n) => pr.GetValueOrDefault<bool[]>(n)),
 
         // Int
         [typeof(int)] = new(name => new Option<int>(name), (pr, n) => pr.GetValueOrDefault<int>(n)),
         [typeof(int?)] = new(name => new Option<int?>(name), (pr, n) => pr.GetValueOrDefault<int?>(n)),
+        [typeof(int[])] = new(name => new Option<int[]>(name), (pr, n) => pr.GetValueOrDefault<int[]>(n)),
 
         // Long
         [typeof(long)] = new(name => new Option<long>(name), (pr, n) => pr.GetValueOrDefault<long>(n)),
         [typeof(long?)] = new(name => new Option<long?>(name), (pr, n) => pr.GetValueOrDefault<long?>(n)),
+        [typeof(long[])] = new(name => new Option<long[]>(name), (pr, n) => pr.GetValueOrDefault<long[]>(n)),
 
         // Short
         [typeof(short)] = new(name => new Option<short>(name), (pr, n) => pr.GetValueOrDefault<short>(n)),
         [typeof(short?)] = new(name => new Option<short?>(name), (pr, n) => pr.GetValueOrDefault<short?>(n)),
+        [typeof(short[])] = new(name => new Option<short[]>(name), (pr, n) => pr.GetValueOrDefault<short[]>(n)),
 
         // Byte
         [typeof(byte)] = new(name => new Option<byte>(name), (pr, n) => pr.GetValueOrDefault<byte>(n)),
         [typeof(byte?)] = new(name => new Option<byte?>(name), (pr, n) => pr.GetValueOrDefault<byte?>(n)),
+        [typeof(byte[])] = new(name => new Option<byte[]>(name), (pr, n) => pr.GetValueOrDefault<byte[]>(n)),
 
         // SByte
         [typeof(sbyte)] = new(name => new Option<sbyte>(name), (pr, n) => pr.GetValueOrDefault<sbyte>(n)),
         [typeof(sbyte?)] = new(name => new Option<sbyte?>(name), (pr, n) => pr.GetValueOrDefault<sbyte?>(n)),
+        [typeof(sbyte[])] = new(name => new Option<sbyte[]>(name), (pr, n) => pr.GetValueOrDefault<sbyte[]>(n)),
 
         // UShort
         [typeof(ushort)] = new(name => new Option<ushort>(name), (pr, n) => pr.GetValueOrDefault<ushort>(n)),
         [typeof(ushort?)] = new(name => new Option<ushort?>(name), (pr, n) => pr.GetValueOrDefault<ushort?>(n)),
+        [typeof(ushort[])] = new(name => new Option<ushort[]>(name), (pr, n) => pr.GetValueOrDefault<ushort[]>(n)),
 
         // UInt
         [typeof(uint)] = new(name => new Option<uint>(name), (pr, n) => pr.GetValueOrDefault<uint>(n)),
         [typeof(uint?)] = new(name => new Option<uint?>(name), (pr, n) => pr.GetValueOrDefault<uint?>(n)),
+        [typeof(uint[])] = new(name => new Option<uint[]>(name), (pr, n) => pr.GetValueOrDefault<uint[]>(n)),
 
         // ULong
         [typeof(ulong)] = new(name => new Option<ulong>(name), (pr, n) => pr.GetValueOrDefault<ulong>(n)),
         [typeof(ulong?)] = new(name => new Option<ulong?>(name), (pr, n) => pr.GetValueOrDefault<ulong?>(n)),
+        [typeof(ulong[])] = new(name => new Option<ulong[]>(name), (pr, n) => pr.GetValueOrDefault<ulong[]>(n)),
 
         // Float
         [typeof(float)] = new(name => new Option<float>(name), (pr, n) => pr.GetValueOrDefault<float>(n)),
         [typeof(float?)] = new(name => new Option<float?>(name), (pr, n) => pr.GetValueOrDefault<float?>(n)),
+        [typeof(float[])] = new(name => new Option<float[]>(name), (pr, n) => pr.GetValueOrDefault<float[]>(n)),
 
         // Double
         [typeof(double)] = new(name => new Option<double>(name), (pr, n) => pr.GetValueOrDefault<double>(n)),
         [typeof(double?)] = new(name => new Option<double?>(name), (pr, n) => pr.GetValueOrDefault<double?>(n)),
+        [typeof(double[])] = new(name => new Option<double[]>(name), (pr, n) => pr.GetValueOrDefault<double[]>(n)),
 
         // Decimal
         [typeof(decimal)] = new(name => new Option<decimal>(name), (pr, n) => pr.GetValueOrDefault<decimal>(n)),
         [typeof(decimal?)] = new(name => new Option<decimal?>(name), (pr, n) => pr.GetValueOrDefault<decimal?>(n)),
+        [typeof(decimal[])] = new(name => new Option<decimal[]>(name), (pr, n) => pr.GetValueOrDefault<decimal[]>(n)),
 
         // Char
         [typeof(char)] = new(name => new Option<char>(name), (pr, n) => pr.GetValueOrDefault<char>(n)),
         [typeof(char?)] = new(name => new Option<char?>(name), (pr, n) => pr.GetValueOrDefault<char?>(n)),
+        [typeof(char[])] = new(name => new Option<char[]>(name), (pr, n) => pr.GetValueOrDefault<char[]>(n)),
 
         // DateTime
         [typeof(DateTime)] = new(name => new Option<DateTime>(name), (pr, n) => pr.GetValueOrDefault<DateTime>(n)),
         [typeof(DateTime?)] = new(name => new Option<DateTime?>(name), (pr, n) => pr.GetValueOrDefault<DateTime?>(n)),
+        [typeof(DateTime[])] = new(name => new Option<DateTime[]>(name), (pr, n) => pr.GetValueOrDefault<DateTime[]>(n)),
 
         // DateTimeOffset
         [typeof(DateTimeOffset)] = new(name => new Option<DateTimeOffset>(name), (pr, n) => pr.GetValueOrDefault<DateTimeOffset>(n)),
         [typeof(DateTimeOffset?)] = new(name => new Option<DateTimeOffset?>(name), (pr, n) => pr.GetValueOrDefault<DateTimeOffset?>(n)),
+        [typeof(DateTimeOffset[])] = new(name => new Option<DateTimeOffset[]>(name), (pr, n) => pr.GetValueOrDefault<DateTimeOffset[]>(n)),
 
         // TimeSpan
         [typeof(TimeSpan)] = new(name => new Option<TimeSpan>(name), (pr, n) => pr.GetValueOrDefault<TimeSpan>(n)),
         [typeof(TimeSpan?)] = new(name => new Option<TimeSpan?>(name), (pr, n) => pr.GetValueOrDefault<TimeSpan?>(n)),
+        [typeof(TimeSpan[])] = new(name => new Option<TimeSpan[]>(name), (pr, n) => pr.GetValueOrDefault<TimeSpan[]>(n)),
 
         // Guid
         [typeof(Guid)] = new(name => new Option<Guid>(name), (pr, n) => pr.GetValueOrDefault<Guid>(n)),
         [typeof(Guid?)] = new(name => new Option<Guid?>(name), (pr, n) => pr.GetValueOrDefault<Guid?>(n)),
-
-        // Uri
-        [typeof(Uri)] = new(name => new Option<Uri>(name), (pr, n) => pr.GetValueOrDefault<Uri>(n)),
-
-        // Arrays
-        [typeof(string[])] = new(name => new Option<string[]>(name), (pr, n) => pr.GetValueOrDefault<string[]>(n)),
-        [typeof(int[])] = new(name => new Option<int[]>(name), (pr, n) => pr.GetValueOrDefault<int[]>(n)),
-        [typeof(bool[])] = new(name => new Option<bool[]>(name), (pr, n) => pr.GetValueOrDefault<bool[]>(n)),
-        [typeof(long[])] = new(name => new Option<long[]>(name), (pr, n) => pr.GetValueOrDefault<long[]>(n)),
-        [typeof(double[])] = new(name => new Option<double[]>(name), (pr, n) => pr.GetValueOrDefault<double[]>(n)),
+        [typeof(Guid[])] = new(name => new Option<Guid[]>(name), (pr, n) => pr.GetValueOrDefault<Guid[]>(n)),
     };
 
     /// <summary>
@@ -240,7 +249,7 @@ public static class OptionBinder
         Type? underlyingEnum = GetUnderlyingEnumType(type);
         if (underlyingEnum is not null)
         {
-            var enumHandler = new OptionTypeHandler(
+            return s_typeHandlers.GetOrAdd(type, _ => new OptionTypeHandler(
                 name =>
                 {
                     var option = new Option<string>(name);
@@ -257,15 +266,11 @@ public static class OptionBinder
                     }
 
                     return Enum.Parse(underlyingEnum, stringValue, ignoreCase: true);
-                });
-
-            // Cache for subsequent lookups of this enum type
-            s_typeHandlers[type] = enumHandler;
-            return enumHandler;
+                }));
         }
 
         throw new InvalidOperationException(
-            $"Unsupported option type '{type}'. Register it in OptionBinder.TypeHandlers.");
+            $"Unsupported option type '{type}'. Add a handler to s_typeHandlers in OptionBinder, or override RegisterOptions/BindOptions in the command.");
     }
 
     private static Type? GetUnderlyingEnumType(Type type)
