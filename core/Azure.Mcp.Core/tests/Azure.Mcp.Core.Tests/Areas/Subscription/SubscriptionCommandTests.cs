@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
@@ -16,6 +18,11 @@ namespace Azure.Mcp.Core.Tests.Areas.Subscription;
 
 public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, IStorageService>
 {
+    public SubscriptionCommandTests()
+    {
+        Services.AddSingleton<ISubscriptionResolver, SubscriptionResolver>();
+    }
+
     [Fact]
     public void Validate_WithEnvironmentVariableOnly_PassesValidation()
     {

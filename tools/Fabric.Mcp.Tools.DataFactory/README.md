@@ -85,7 +85,7 @@ dotnet build src/Fabric.Mcp.Tools.DataFactory.csproj
 ### Testing
 
 ```bash
-dotnet test tests/Fabric.Mcp.Tools.DataFactory.UnitTests/Fabric.Mcp.Tools.DataFactory.UnitTests.csproj
+dotnet test tests/Fabric.Mcp.Tools.DataFactory.Tests/Fabric.Mcp.Tools.DataFactory.Tests.csproj
 ```
 
 ### Project Structure
@@ -100,7 +100,7 @@ tools/Fabric.Mcp.Tools.DataFactory/
 │   ├── Options/              # Command option definitions
 │   └── DataFactoryAreaSetup.cs  # DI registration
 └── tests/
-    └── Fabric.Mcp.Tools.DataFactory.UnitTests/
+    └── Fabric.Mcp.Tools.DataFactory.Tests/
         ├── DataFactoryAreaSetupTests.cs
         └── Commands/         # Per-command unit tests
 ```
