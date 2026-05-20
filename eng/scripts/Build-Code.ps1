@@ -122,33 +122,76 @@ function BuildServer($server) {
         if ($SmokeTest) {
             if ($runtime -eq $currentRid) {
                 Write-Host "Running smoke test for $exeName" -ForegroundColor Yellow
+                $stdoutFile = [System.IO.Path]::GetTempFileName()
+                $stderrFile = [System.IO.Path]::GetTempFileName()
                 try {
-                    $toolListResponse = & $exePath tools list
-                    if ($LASTEXITCODE -ne 0) {
-                        # Call returned a non-zero exit code, log response without attempting to parse as JSON as the
-                        # response may be an error message rather than the expected JSON tools list.
-                        Write-Error $toolListResponse
+                    $proc = Start-Process -FilePath $exePath -ArgumentList @('tools', 'list') `
+                        -NoNewWindow -Wait -PassThru `
+                        -RedirectStandardOutput $stdoutFile `
+                        -RedirectStandardError $stderrFile
+
+                    $procExitCode = $proc.ExitCode
+                    $stdout = Get-Content -LiteralPath $stdoutFile -Raw -ErrorAction SilentlyContinue
+                    $stderr = Get-Content -LiteralPath $stderrFile -Raw -ErrorAction SilentlyContinue
+                    if ($null -eq $stdout) { $stdout = '' }
+                    if ($null -eq $stderr) { $stderr = '' }
+
+                    $smokeFailed = $false
+                    $failureReason = ''
+
+                    if ($procExitCode -ne 0) {
+                        $smokeFailed = $true
+                        $failureReason = "exit code $procExitCode (expected 0)"
                     }
                     else {
-                        $toolListJson = ConvertFrom-Json ($toolListResponse | Join-String)
-                        if ($toolListJson.status -ne 200) {
-                            # Only log the response if there was an error. tools list is unbounded on size and can be
-                            # difficult to read in the logs, so we want to avoid logging it on success.
-                            # For example, at the time of writing this, Azure MCP's tools list is >20k lines long.
-                            Write-Error $toolListResponse
+                        $toolListJson = $null
+                        try {
+                            $toolListJson = ConvertFrom-Json $stdout -ErrorAction Stop
                         }
-                        else {
-                            Write-Host "Smoke test passed for '$exeName'. 'tools list' command executed successfully and returned 200 status code." -ForegroundColor Green
+                        catch {
+                            $smokeFailed = $true
+                            $failureReason = "could not parse stdout as JSON: $($_.Exception.Message)"
+                        }
+
+                        if (-not $smokeFailed -and $toolListJson.status -ne 200) {
+                            $smokeFailed = $true
+                            $failureReason = "non-200 status in response (got $($toolListJson.status))"
                         }
                     }
+
+                    if ($smokeFailed) {
+                        # tools list is unbounded on size, but on failure the response is the error payload,
+                        # which is what we want to log so the failure is actionable in CI.
+                        LogError "Smoke test failed for '$exeName': $failureReason"
+                        Write-Host "--- stdout ---" -ForegroundColor Yellow
+                        if ([string]::IsNullOrEmpty($stdout)) { Write-Host '(empty)' } else { Write-Host $stdout }
+                        Write-Host "--- stderr ---" -ForegroundColor Yellow
+                        if ([string]::IsNullOrEmpty($stderr)) { Write-Host '(empty)' } else { Write-Host $stderr }
+                        Write-Host "--- end smoke test output ---" -ForegroundColor Yellow
+                        $script:exitCode = 1
+                        return
+                    }
+
+                    Write-Host "Smoke test passed for '$exeName'. 'tools list' command executed successfully and returned 200 status code." -ForegroundColor Green
                 }
                 catch {
-                    LogError "Smoke test failed for '$exeName'. Executable did not run successfully."
+                    LogError "Smoke test failed for '$exeName' while invoking the executable: $($_.Exception.Message)"
+                    $stdout = Get-Content -LiteralPath $stdoutFile -Raw -ErrorAction SilentlyContinue
+                    $stderr = Get-Content -LiteralPath $stderrFile -Raw -ErrorAction SilentlyContinue
+                    Write-Host "--- stdout ---" -ForegroundColor Yellow
+                    if ([string]::IsNullOrEmpty($stdout)) { Write-Host '(empty)' } else { Write-Host $stdout }
+                    Write-Host "--- stderr ---" -ForegroundColor Yellow
+                    if ([string]::IsNullOrEmpty($stderr)) { Write-Host '(empty)' } else { Write-Host $stderr }
+                    Write-Host "--- end smoke test output ---" -ForegroundColor Yellow
                     $script:exitCode = 1
                     return
                 }
+                finally {
+                    Remove-Item -LiteralPath $stdoutFile -Force -ErrorAction SilentlyContinue
+                    Remove-Item -LiteralPath $stderrFile -Force -ErrorAction SilentlyContinue
+                }
             }
-            else { 
+            else {
                 Write-Host "Skipping smoke test for cross platorm build (current platform: $currentRid, build platform: $runtime)" -ForegroundColor Yellow
             }
         }
