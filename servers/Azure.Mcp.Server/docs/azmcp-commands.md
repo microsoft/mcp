@@ -484,6 +484,7 @@ azmcp appconfig account list --subscription <subscription> \
                             [--resource-group <resource-group>]
 
 # Delete a key-value setting
+# Returns: { key, label, existed } — 'existed' is true if the key was present and deleted, false if it was already absent
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appconfig kv delete --subscription <subscription> \
                           --account <account> \
@@ -508,6 +509,7 @@ azmcp appconfig kv lock set --subscription <subscription> \
                             [--lock]
 
 # Set a key-value setting
+# Note: --tags values must be in 'key=value' format (e.g., --tags env=prod team=backend)
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appconfig kv set --subscription <subscription> \
                        --account <account> \

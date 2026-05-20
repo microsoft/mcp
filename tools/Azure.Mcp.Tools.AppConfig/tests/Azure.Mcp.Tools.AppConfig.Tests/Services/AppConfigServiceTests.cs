@@ -34,6 +34,22 @@ public class AppConfigServiceTests
         Assert.Contains("additionalFilter:", methodSource);
     }
 
+    /// <summary>
+    /// Regression guard (AC-01): ensures FindAppConfigStore does not have a redundant
+    /// subscriptionIdentifier parameter that duplicates subscription.
+    /// </summary>
+    [Fact]
+    public void FindAppConfigStore_DoesNotHaveRedundantSubscriptionIdentifierParameter()
+    {
+        var method = typeof(AppConfigService).GetMethod(
+            "FindAppConfigStore",
+            BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(method);
+
+        var paramNames = method!.GetParameters().Select(p => p.Name).ToArray();
+        Assert.DoesNotContain("subscriptionIdentifier", paramNames);
+    }
+
     private static string ReadFindAppConfigStoreSource()
     {
         var sourceFile = Path.Combine(

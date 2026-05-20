@@ -144,17 +144,18 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
                         setting.Tags[tagKey] = parts[1];
                     }
                 }
-                else if (parts.Length == 1 && !string.IsNullOrEmpty(parts[0]))
+                else
                 {
-                    // Handle tags that don't follow key=value format
-                    setting.Tags[parts[0]] = string.Empty;
+                    throw new ArgumentException(
+                        $"Invalid tag format '{tagPair}'. Tags must be in 'key=value' format.",
+                        nameof(tags));
                 }
             }
         }
 
         await client.SetConfigurationSettingAsync(setting, cancellationToken: cancellationToken);
     }
-    public async Task DeleteKeyValue(
+    public async Task<bool> DeleteKeyValue(
         string accountName,
         string key,
         string subscription,
@@ -165,12 +166,13 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(key), key), (nameof(subscription), subscription));
         var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy, cancellationToken);
-        await client.DeleteConfigurationSettingAsync(key, label, cancellationToken: cancellationToken);
+        var response = await client.DeleteConfigurationSettingAsync(key, label, cancellationToken: cancellationToken);
+        return response.Status == 200;
     }
 
     private async Task<ConfigurationClient> GetConfigurationClient(string accountName, string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var configStore = await FindAppConfigStore(subscription, tenant, accountName, subscription, retryPolicy, cancellationToken);
+        var configStore = await FindAppConfigStore(subscription, tenant, accountName, retryPolicy, cancellationToken);
         var endpoint = configStore.Endpoint;
         if (string.IsNullOrEmpty(endpoint))
         {
@@ -182,7 +184,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         var credential = await GetCredential(tenant, cancellationToken);
         var options = new ConfigurationClientOptions();
         options.Audience = GetAppConfigurationAudience();
-        AddDefaultPolicies(options);
+        ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
 
         var endpointUri = new Uri(endpoint);
         var httpClient = _httpClientFactory.CreateClient();
@@ -196,7 +198,6 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         string subscription,
         string? tenant,
         string accountName,
-        string subscriptionIdentifier,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
@@ -209,7 +210,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
             additionalFilter: $"name =~ '{EscapeKqlString(accountName)}'",
             tenant: tenant,
             cancellationToken: cancellationToken)
-            ?? throw new KeyNotFoundException($"App Configuration store '{accountName}' not found for subscription '{subscriptionIdentifier}'.");
+            ?? throw new KeyNotFoundException($"App Configuration store '{accountName}' not found for subscription '{subscription}'.");
     }
 
     /// <summary>

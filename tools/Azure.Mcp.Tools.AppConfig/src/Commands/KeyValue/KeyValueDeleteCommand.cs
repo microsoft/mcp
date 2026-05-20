@@ -41,7 +41,7 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger,
 
         try
         {
-            await _appConfigService.DeleteKeyValue(
+            var existed = await _appConfigService.DeleteKeyValue(
                 options.Account!,
                 options.Key!,
                 options.Subscription!,
@@ -50,7 +50,7 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger,
                 options.Label,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(options.Key, options.Label), AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
+            context.Response.Results = ResponseResult.Create(new(options.Key, options.Label, existed), AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
         }
         catch (Exception ex)
         {
@@ -61,5 +61,5 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger,
         return context.Response;
     }
 
-    internal record KeyValueDeleteCommandResult(string? Key, string? Label);
+    internal record KeyValueDeleteCommandResult(string? Key, string? Label, bool Existed);
 }
