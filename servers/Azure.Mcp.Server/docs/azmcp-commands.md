@@ -2050,7 +2050,11 @@ azmcp containerapps list --subscription <subscription> \
 # List Azure Container Apps in a subscription in a specific tenant
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp containerapps list --subscription <subscription> \
-                         [--tenant <tenant-id>]
+# List Azure Container Apps
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp containerapps list --subscription <subscription> \
+                                         [--resource-group <resource-group>] \
+                                         [--tenant <tenant-id>]
 ```
 
 ### Azure Container Registry (ACR) Operations
