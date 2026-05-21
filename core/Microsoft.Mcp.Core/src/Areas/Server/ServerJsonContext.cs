@@ -6,7 +6,6 @@ using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Metadata;
 using ModelContextProtocol.Protocol;
-using static Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading.NamespaceToolLoader;
 
 namespace Microsoft.Mcp.Core.Areas.Server;
 
@@ -18,8 +17,8 @@ namespace Microsoft.Mcp.Core.Areas.Server;
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(Tool))]
 [JsonSerializable(typeof(IEnumerable<Tool>))]
-[JsonSerializable(typeof(LearnToolInfo))]
-[JsonSerializable(typeof(IEnumerable<LearnToolInfo>))]
+[JsonSerializable(typeof(ToolCommandInfo))]
+[JsonSerializable(typeof(IEnumerable<ToolCommandInfo>))]
 [JsonSerializable(typeof(ToolInputSchema))]
 [JsonSerializable(typeof(ToolPropertySchema))]
 [JsonSerializable(typeof(ToolMetadata))]

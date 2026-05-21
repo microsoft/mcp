@@ -19,7 +19,7 @@ using ModelContextProtocol.Protocol;
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
-/// A tool loader that exposes Azure command groups as hierarchical namespace tools with direct in-process execution.
+/// A tool loader that exposes command groups as hierarchical namespace tools with direct in-process execution.
 /// Provides the same functionality as <see cref="ServerToolLoader"/> but without spawning child azmcp processes.
 /// Supports learn functionality for progressive discovery of commands within each namespace.
 /// </summary>
@@ -78,7 +78,7 @@ public sealed class NamespaceToolLoader(
             "properties": {
             "intent": {
                 "type": "string",
-                "description": "The intent of the Azure operation to perform."
+                "description": "The intent of the operation to perform."
             },
             "command": {
                 "type": "string",
@@ -445,7 +445,9 @@ public sealed class NamespaceToolLoader(
 
             if (jsonResponse.Contains("Missing required options", StringComparison.OrdinalIgnoreCase))
             {
-                var childToolSpecJson = GetChildToolJson(request, namespaceName, command);
+                var childTool = GetChildToolList(request, namespaceName)
+                    .First(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase));
+                var childToolSpecJson = JsonSerializer.Serialize(new ToolCommandInfo(childTool), ServerJsonContext.Default.ToolCommandInfo);
 
                 _logger.LogWarning("Namespace {Namespace} command {Command} requires additional parameters.", namespaceName, command);
 
@@ -511,8 +513,8 @@ public sealed class NamespaceToolLoader(
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string namespaceName, CancellationToken cancellationToken)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
-        var learnTools = GetChildToolList(request, namespaceName).Select(t => new LearnToolInfo(t.Name, t.InputSchema.GetProperty("properties"), t.InputSchema.GetProperty("required"))).ToList();
-        var learnToolsJson = JsonSerializer.Serialize(learnTools, ServerJsonContext.Default.IEnumerableLearnToolInfo);
+        var learnTools = GetChildToolList(request, namespaceName).Select(t => new ToolCommandInfo(t));
+        var learnToolsJson = JsonSerializer.Serialize(learnTools, ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
         var learnResponse = new CallToolResult
         {
@@ -531,7 +533,7 @@ public sealed class NamespaceToolLoader(
             IsError = false
         };
         var response = learnResponse;
-        if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
+        if (request.Server.ClientCapabilities?.Sampling != null && !string.IsNullOrWhiteSpace(intent))
         {
             var availableTools = GetChildToolList(request, namespaceName);
             (string? commandName, IDictionary<string, JsonElement> parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, namespaceName, availableTools, cancellationToken);
@@ -583,15 +585,6 @@ public sealed class NamespaceToolLoader(
         _cachedToolLists[namespaceName] = list;
 
         return list;
-    }
-
-    internal record LearnToolInfo(string Command, JsonElement Parameters, JsonElement Required);
-
-    private string GetChildToolJson(RequestContext<CallToolRequestParams> request, string namespaceName, string commandName)
-    {
-        var tools = GetChildToolList(request, namespaceName);
-        var tool = tools.First(t => string.Equals(t.Name, commandName, StringComparison.OrdinalIgnoreCase));
-        return JsonSerializer.Serialize(tool, ServerJsonContext.Default.Tool);
     }
 
     /// <summary>
@@ -692,11 +685,6 @@ public sealed class NamespaceToolLoader(
         return flatParams;
     }
 
-    private static bool SupportsSampling(McpServer server)
-    {
-        return server?.ClientCapabilities?.Sampling != null;
-    }
-
     private static async Task NotifyProgressAsync(RequestContext<CallToolRequestParams> request, string message, CancellationToken cancellationToken)
     {
         var progressToken = request.Params?.ProgressToken;
@@ -724,7 +712,7 @@ public sealed class NamespaceToolLoader(
 
         JsonElement toolParams = GetParametersJsonElement(request);
         var toolParamsJson = toolParams.GetRawText();
-        var availableToolsJson = JsonSerializer.Serialize(availableTools, ServerJsonContext.Default.IEnumerableTool);
+        var availableToolsJson = JsonSerializer.Serialize(availableTools.Select(t => new ToolCommandInfo(t)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
         var samplingRequest = new CreateMessageRequestParams
         {

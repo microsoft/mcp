@@ -17,7 +17,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
 /// A tool loader that creates MCP tools from the registered command factory.
-/// Exposes AzureMcp commands as MCP tools that can be invoked through the MCP protocol.
+/// Exposes MCP commands as MCP tools that can be invoked through the MCP protocol.
 /// </summary>
 public sealed class CommandFactoryToolLoader(
     IServiceProvider serviceProvider,

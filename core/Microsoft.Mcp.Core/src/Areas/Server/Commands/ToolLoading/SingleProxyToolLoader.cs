@@ -48,11 +48,11 @@ public sealed class SingleProxyToolLoader(
           "properties": {
             "intent": {
               "type": "string",
-              "description": "The intent of the azure operation to perform."
+              "description": "The intent of the operation to perform."
             },
             "tool": {
               "type": "string",
-              "description": "The azure tool to use to execute the operation."
+              "description": "The tool to use to execute the operation."
             },
             "command": {
               "type": "string",
@@ -102,7 +102,7 @@ public sealed class SingleProxyToolLoader(
     }
 
     /// <summary>
-    /// Handles invocation of the Azure proxy tool, routing requests to the correct Azure tool or command.
+    /// Handles invocation of the proxy tool, routing requests to the correct tool or command.
     /// </summary>
     /// <param name="request">The request context containing parameters and metadata.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
@@ -431,7 +431,7 @@ public sealed class SingleProxyToolLoader(
 
     private async Task<string?> GetToolNameFromIntentAsync(RequestContext<CallToolRequestParams> request, string intent, string toolsJson, CancellationToken cancellationToken)
     {
-        await NotifyProgressAsync(request, "Learning about Azure capabilities...", cancellationToken);
+        await NotifyProgressAsync(request, "Learning about capabilities...", cancellationToken);
 
         var samplingRequest = new CreateMessageRequestParams
         {
@@ -442,7 +442,7 @@ public sealed class SingleProxyToolLoader(
                     Role = Role.Assistant,
                     Content = [new TextContentBlock{
                         Text = $"""
-                            The following is a list of available tools for the Azure server.
+                            The following is a list of available tools for the server.
 
                             Your task:
                             - Select a single tool that best matches the user's intent and return the name of the tool.

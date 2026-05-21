@@ -122,7 +122,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         return ValueTask.CompletedTask;
     }
 
-    protected static McpClientOptions CreateClientOptions(McpServer server)
+    protected McpClientOptions CreateClientOptions(McpServer server)
     {
         McpClientHandlers handlers = new();
 
