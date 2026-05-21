@@ -36,7 +36,7 @@ public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> l
     {
         var o = base.BindOptions(parseResult);
         o.Kind = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Kind.Name);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
         o.Description = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Description.Name);
         o.ModelOrType = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.ModelOrType.Name);
         o.Tools = parseResult.GetValueOrDefault<string[]>(SreAgentOptionDefinitions.Tools.Name);
@@ -73,7 +73,7 @@ public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> l
 
     private static string Generate(WorkflowsGenerateOptions o)
     {
-        var safe = SreAgentPortedCommandHelpers.SanitizeKebabCase(o.Name!);
+        var safe = SreAgentPortedCommandHelpers.SanitizeKebabCase(o.Name);
 
         if (string.Equals(o.Kind, "agent", StringComparison.OrdinalIgnoreCase))
         {

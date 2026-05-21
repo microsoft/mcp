@@ -41,7 +41,7 @@ public sealed class ConnectorsGetCommand(ILogger<ConnectorsGetCommand> logger, I
     {
         var options = base.BindOptions(parseResult);
         options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
-        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name);
+        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
         return options;
     }
 
@@ -56,7 +56,7 @@ public sealed class ConnectorsGetCommand(ILogger<ConnectorsGetCommand> logger, I
         try
         {
             var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(_sreAgentService, options, cancellationToken);
-            var connector = await _sreAgentService.GetConnectorAsync(options.Subscription!, resourceGroup, options.Agent!, options.Name!, options.Tenant, cancellationToken);
+            var connector = await _sreAgentService.GetConnectorAsync(options.Subscription!, resourceGroup, options.Agent!, options.Name, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new ConnectorsGetCommandResult(connector), SreAgentJsonContext.Default.ConnectorsGetCommandResult);
         }
         catch (Exception ex)

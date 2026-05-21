@@ -41,7 +41,7 @@ public sealed class HooksDeleteCommand(ILogger<HooksDeleteCommand> logger, ISreA
     {
         var options = base.BindOptions(parseResult);
         options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
-        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name);
+        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
         options.Confirm = parseResult.GetValueOrDefault<bool>(SreAgentOptionDefinitions.Confirm.Name);
         return options;
     }
@@ -62,8 +62,8 @@ public sealed class HooksDeleteCommand(ILogger<HooksDeleteCommand> logger, ISreA
             }
 
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(_sreAgentService, options, cancellationToken);
-            await _sreAgentService.DeleteHookAsync(endpoint, options.Name!, options.Tenant, cancellationToken);
-            context.Response.Results = ResponseResult.Create(new HooksDeleteCommandResult(true, options.Name!), SreAgentJsonContext.Default.HooksDeleteCommandResult);
+            await _sreAgentService.DeleteHookAsync(endpoint, options.Name, options.Tenant, cancellationToken);
+            context.Response.Results = ResponseResult.Create(new HooksDeleteCommandResult(true, options.Name), SreAgentJsonContext.Default.HooksDeleteCommandResult);
         }
         catch (Exception ex)
         {

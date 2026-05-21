@@ -27,7 +27,7 @@ public sealed class CommonPromptsDeleteCommand(ILogger<CommonPromptsDeleteComman
     protected override CommonPromptsDeleteOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
         o.Confirm = parseResult.GetValueOrDefault<bool>(SreAgentOptionDefinitions.Confirm.Name);
         return o;
     }
@@ -44,7 +44,7 @@ public sealed class CommonPromptsDeleteCommand(ILogger<CommonPromptsDeleteComman
                 throw new InvalidOperationException($"Refusing to delete common prompt '{o.Name}': destructive operation requires --confirm true.");
             }
             var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
-            await _sreAgentService.DeleteCommonPromptAsync(endpoint, o.Name!, o.Tenant, cancellationToken);
+            await _sreAgentService.DeleteCommonPromptAsync(endpoint, o.Name, o.Tenant, cancellationToken);
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ Common prompt '{o.Name}' deleted.");
         }
         catch (Exception ex) { _logger.LogError(ex, "Error deleting common prompt"); HandleException(context, ex); }

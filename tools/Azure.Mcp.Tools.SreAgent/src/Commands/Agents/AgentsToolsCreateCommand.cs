@@ -49,7 +49,7 @@ public sealed class AgentsToolsCreateCommand(ILogger<AgentsToolsCreateCommand> l
     {
         var options = base.BindOptions(parseResult);
         options.Agent = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Agent.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
         options.ToolType = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.ToolType.Name);
         options.Description = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Description.Name);
         options.Connector = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Connector.Name);
@@ -74,7 +74,7 @@ public sealed class AgentsToolsCreateCommand(ILogger<AgentsToolsCreateCommand> l
             var properties = CreateProperties(options);
             var request = new SreAgentToolCreateRequest
             {
-                Name = options.Name!,
+                Name = options.Name,
                 Properties = properties
             };
 

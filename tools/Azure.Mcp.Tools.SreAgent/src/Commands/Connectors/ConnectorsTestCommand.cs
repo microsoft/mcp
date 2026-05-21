@@ -41,7 +41,7 @@ public sealed class ConnectorsTestCommand(ILogger<ConnectorsTestCommand> logger,
     {
         var options = base.BindOptions(parseResult);
         options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
-        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name);
+        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
         return options;
     }
 
@@ -56,7 +56,7 @@ public sealed class ConnectorsTestCommand(ILogger<ConnectorsTestCommand> logger,
         try
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(_sreAgentService, options, cancellationToken);
-            var result = await _sreAgentService.TestConnectorAsync(endpoint, options.Name!, options.Tenant, cancellationToken);
+            var result = await _sreAgentService.TestConnectorAsync(endpoint, options.Name, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new ConnectorsTestCommandResult(result), SreAgentJsonContext.Default.ConnectorsTestCommandResult);
         }
         catch (Exception ex)

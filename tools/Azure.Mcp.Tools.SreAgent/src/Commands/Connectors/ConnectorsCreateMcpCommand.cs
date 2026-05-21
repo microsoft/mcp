@@ -49,7 +49,7 @@ public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpComman
     {
         var options = base.BindOptions(parseResult);
         options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
-        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name);
+        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
         options.Type = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Type);
         options.Command = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Command);
         options.Args = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Args);
@@ -141,7 +141,7 @@ public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpComman
             };
 
             var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(_sreAgentService, options, cancellationToken);
-            var created = await _sreAgentService.CreateOrUpdateConnectorAsync(options.Subscription!, resourceGroup, options.Agent!, options.Name!, connector, options.Tenant, cancellationToken);
+            var created = await _sreAgentService.CreateOrUpdateConnectorAsync(options.Subscription!, resourceGroup, options.Agent!, options.Name, connector, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new ConnectorsCreateMcpCommandResult(created), SreAgentJsonContext.Default.ConnectorsCreateMcpCommandResult);
         }
         catch (Exception ex)

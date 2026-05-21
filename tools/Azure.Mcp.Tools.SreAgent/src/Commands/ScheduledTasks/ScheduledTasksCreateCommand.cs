@@ -30,7 +30,7 @@ public sealed class ScheduledTasksCreateCommand(ILogger<ScheduledTasksCreateComm
     protected override ScheduledTasksCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
         options.CronExpression = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.CronExpression.Name);
         options.Message = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Message.Name);
         options.Description = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Description.Name);
@@ -47,7 +47,7 @@ public sealed class ScheduledTasksCreateCommand(ILogger<ScheduledTasksCreateComm
         try
         {
             var endpoint = await ResolveEndpointAsync(_sreAgentService, options, cancellationToken);
-            var request = new SreAgentScheduledTaskCreateRequest(options.Name!, options.Agent!, options.CronExpression!, options.Message!, options.Description ?? options.Name!);
+            var request = new SreAgentScheduledTaskCreateRequest(options.Name, options.Agent!, options.CronExpression!, options.Message!, options.Description ?? options.Name);
             var task = await _sreAgentService.CreateScheduledTaskAsync(endpoint, request, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new ScheduledTasksGetCommand.ScheduledTasksGetCommandResult(task), SreAgentJsonContext.Default.ScheduledTasksGetCommandResult);
         }

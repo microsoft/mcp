@@ -5,7 +5,7 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Incidents;
 
 public class IncidentConnectorPagerDutyOptions : BaseSreAgentOptions
 {
-    public string? Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public string? ApiKeyEnv { get; set; }
     public string? Subdomain { get; set; }
 }

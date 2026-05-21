@@ -41,7 +41,7 @@ public sealed class IncidentsPlansCreateCommand(ILogger<IncidentsPlansCreateComm
     protected override IncidentPlanCreateOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
         o.Severity = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Severity.Name);
         o.TriggerCondition = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.TriggerCondition.Name);
         o.Services = parseResult.GetValueOrDefault<string[]>(SreAgentOptionDefinitions.Services.Name);
@@ -60,7 +60,7 @@ public sealed class IncidentsPlansCreateCommand(ILogger<IncidentsPlansCreateComm
         try
         {
             var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
-            var planId = SreAgentPortedCommandHelpers.SanitizeKebabCase(o.Name!);
+            var planId = SreAgentPortedCommandHelpers.SanitizeKebabCase(o.Name);
             var filterId = planId;
             var handlerId = $"{planId}-handler";
             var priorities = SeverityToPriorities.TryGetValue(o.Severity!, out var p) ? p : [];

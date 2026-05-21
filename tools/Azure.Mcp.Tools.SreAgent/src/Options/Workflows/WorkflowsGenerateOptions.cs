@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Workflows;
 public class WorkflowsGenerateOptions : GlobalOptions
 {
     public string? Kind { get; set; }
-    public string? Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string? ModelOrType { get; set; }
     public string[]? Tools { get; set; }

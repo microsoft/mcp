@@ -41,7 +41,7 @@ public sealed class ConnectorsDeleteCommand(ILogger<ConnectorsDeleteCommand> log
     {
         var options = base.BindOptions(parseResult);
         options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
-        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name);
+        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
         options.Confirm = parseResult.GetValueOrDefault<bool>(SreAgentOptionDefinitions.Confirm.Name);
         return options;
     }
@@ -62,8 +62,8 @@ public sealed class ConnectorsDeleteCommand(ILogger<ConnectorsDeleteCommand> log
             }
 
             var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(_sreAgentService, options, cancellationToken);
-            await _sreAgentService.DeleteConnectorAsync(options.Subscription!, resourceGroup, options.Agent!, options.Name!, options.Tenant, cancellationToken);
-            context.Response.Results = ResponseResult.Create(new ConnectorsDeleteCommandResult(true, options.Name!), SreAgentJsonContext.Default.ConnectorsDeleteCommandResult);
+            await _sreAgentService.DeleteConnectorAsync(options.Subscription!, resourceGroup, options.Agent!, options.Name, options.Tenant, cancellationToken);
+            context.Response.Results = ResponseResult.Create(new ConnectorsDeleteCommandResult(true, options.Name), SreAgentJsonContext.Default.ConnectorsDeleteCommandResult);
         }
         catch (Exception ex)
         {

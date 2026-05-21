@@ -5,7 +5,7 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Incidents;
 
 public class IncidentConnectorServiceNowOptions : BaseSreAgentOptions
 {
-    public string? Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public string? InstanceUrl { get; set; }
     public string? AuthType { get; set; }
     public string? TokenEnv { get; set; }

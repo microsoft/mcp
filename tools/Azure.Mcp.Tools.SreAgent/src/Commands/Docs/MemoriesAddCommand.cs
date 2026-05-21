@@ -27,7 +27,7 @@ public sealed class MemoriesAddCommand(ILogger<MemoriesAddCommand> logger, ISreA
     protected override MemoriesAddOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
         o.Content = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Content.Name);
         return o;
     }
@@ -40,7 +40,7 @@ public sealed class MemoriesAddCommand(ILogger<MemoriesAddCommand> logger, ISreA
         try
         {
             var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
-            var safe = SreAgentPortedCommandHelpers.SanitizeFileName(o.Name!);
+            var safe = SreAgentPortedCommandHelpers.SanitizeFileName(o.Name);
             var file = safe.EndsWith(".md", StringComparison.OrdinalIgnoreCase) ? safe : $"{safe}.md";
             await _sreAgentService.UploadMemoryAsync(endpoint, file, o.Content!, o.Tenant, cancellationToken);
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ Memory '{file}' added to knowledge base. It will be available for RAG retrieval after indexing.");

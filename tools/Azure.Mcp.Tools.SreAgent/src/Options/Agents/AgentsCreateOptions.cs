@@ -5,7 +5,7 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Agents;
 
 public class AgentsCreateOptions : BaseSreAgentOptions
 {
-    public string? Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     public string? Description { get; set; }
 

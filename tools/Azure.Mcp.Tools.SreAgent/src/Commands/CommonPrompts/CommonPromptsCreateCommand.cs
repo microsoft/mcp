@@ -27,7 +27,7 @@ public sealed class CommonPromptsCreateCommand(ILogger<CommonPromptsCreateComman
     protected override CommonPromptsCreateOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
         o.Content = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Content.Name);
         return o;
     }
@@ -40,7 +40,7 @@ public sealed class CommonPromptsCreateCommand(ILogger<CommonPromptsCreateComman
         try
         {
             var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
-            await _sreAgentService.CreateOrUpdateCommonPromptAsync(endpoint, o.Name!, o.Content!, o.Tenant, cancellationToken);
+            await _sreAgentService.CreateOrUpdateCommonPromptAsync(endpoint, o.Name, o.Content!, o.Tenant, cancellationToken);
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ Common prompt '{o.Name}' saved.");
         }
         catch (Exception ex) { _logger.LogError(ex, "Error creating common prompt"); HandleException(context, ex); }

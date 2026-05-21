@@ -30,7 +30,7 @@ public sealed class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetupPagerdu
     protected override IncidentConnectorPagerDutyOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
         o.ApiKeyEnv = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.ApiKeyEnv.Name);
         o.Subdomain = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Subdomain.Name);
         return o;
@@ -52,7 +52,7 @@ public sealed class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetupPagerdu
             var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(_sreAgentService, o, cancellationToken);
             try
             {
-                await _sreAgentService.GetConnectorAsync(o.Subscription!, resourceGroup, o.Agent!, o.Name!, o.Tenant, cancellationToken);
+                await _sreAgentService.GetConnectorAsync(o.Subscription!, resourceGroup, o.Agent!, o.Name, o.Tenant, cancellationToken);
                 SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"Connector '{o.Name}' already exists. Use `connectors -> test` to verify, or `connectors -> delete` to recreate.");
                 return context.Response;
             }
@@ -79,7 +79,7 @@ public sealed class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetupPagerdu
                     }
                 }
             };
-            await _sreAgentService.CreateOrUpdateConnectorAsync(o.Subscription!, resourceGroup, o.Agent!, o.Name!, connector, o.Tenant, cancellationToken);
+            await _sreAgentService.CreateOrUpdateConnectorAsync(o.Subscription!, resourceGroup, o.Agent!, o.Name, connector, o.Tenant, cancellationToken);
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ PagerDuty connector '{o.Name}' created (API key resolved from ${o.ApiKeyEnv}).\n\n**Next steps:**\n1. Run `connectors -> test` to verify the connection\n2. Add PagerDuty tools to your agent via `yaml -> apply`\n3. Create an incident response plan with `incidents -> create_plan`");
         }
         catch (Exception ex)

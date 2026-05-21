@@ -27,7 +27,7 @@ public sealed class MemoriesDeleteCommand(ILogger<MemoriesDeleteCommand> logger,
     protected override MemoriesDeleteOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
         o.Confirm = parseResult.GetValueOrDefault<bool>(SreAgentOptionDefinitions.Confirm.Name);
         return o;
     }
@@ -44,7 +44,7 @@ public sealed class MemoriesDeleteCommand(ILogger<MemoriesDeleteCommand> logger,
                 throw new InvalidOperationException($"Refusing to delete memory '{o.Name}': destructive operation requires --confirm true.");
             }
             var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
-            await _sreAgentService.DeleteMemoryAsync(endpoint, o.Name!, o.Tenant, cancellationToken);
+            await _sreAgentService.DeleteMemoryAsync(endpoint, o.Name, o.Tenant, cancellationToken);
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ Document '{o.Name}' deleted from knowledge base.");
         }
         catch (Exception ex) { _logger.LogError(ex, "Error deleting memory"); HandleException(context, ex); }

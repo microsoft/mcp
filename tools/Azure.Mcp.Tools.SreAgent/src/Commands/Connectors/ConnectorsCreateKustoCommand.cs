@@ -43,7 +43,7 @@ public sealed class ConnectorsCreateKustoCommand(ILogger<ConnectorsCreateKustoCo
     {
         var options = base.BindOptions(parseResult);
         options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
-        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name);
+        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
         options.ClusterUrl = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.ClusterUrl);
         options.Database = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Database);
         return options;
@@ -79,7 +79,7 @@ public sealed class ConnectorsCreateKustoCommand(ILogger<ConnectorsCreateKustoCo
             };
 
             var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(_sreAgentService, options, cancellationToken);
-            var created = await _sreAgentService.CreateOrUpdateConnectorAsync(options.Subscription!, resourceGroup, options.Agent!, options.Name!, connector, options.Tenant, cancellationToken);
+            var created = await _sreAgentService.CreateOrUpdateConnectorAsync(options.Subscription!, resourceGroup, options.Agent!, options.Name, connector, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new ConnectorsCreateKustoCommandResult(created), SreAgentJsonContext.Default.ConnectorsCreateKustoCommandResult);
         }
         catch (Exception ex)

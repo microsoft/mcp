@@ -5,7 +5,7 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Incidents;
 
 public class IncidentPlanCreateOptions : BaseSreAgentOptions
 {
-    public string? Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public string? Severity { get; set; }
     public string? TriggerCondition { get; set; }
     public string[]? Services { get; set; }

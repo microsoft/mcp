@@ -41,7 +41,7 @@ public sealed class AgentsToolsGetCommand(ILogger<AgentsToolsGetCommand> logger,
     {
         var options = base.BindOptions(parseResult);
         options.Agent = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Agent.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
         return options;
     }
 
@@ -65,7 +65,7 @@ public sealed class AgentsToolsGetCommand(ILogger<AgentsToolsGetCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            var tool = await _sreAgentService.GetAgentToolAsync(endpoint, options.Name!, options.Tenant, cancellationToken);
+            var tool = await _sreAgentService.GetAgentToolAsync(endpoint, options.Name, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(tool), SreAgentJsonContext.Default.AgentsToolsGetCommandResult);
         }
         catch (Exception ex)

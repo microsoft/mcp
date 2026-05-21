@@ -45,7 +45,7 @@ public sealed class AgentsCreateCommand(ILogger<AgentsCreateCommand> logger, ISr
     {
         var options = base.BindOptions(parseResult);
         options.Agent = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Agent.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
         options.Description = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Description.Name);
         options.Instructions = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Instructions.Name);
         options.Tools = parseResult.GetValueOrDefault<string[]>(SreAgentOptionDefinitions.Tools.Name);
@@ -75,7 +75,7 @@ public sealed class AgentsCreateCommand(ILogger<AgentsCreateCommand> logger, ISr
 
             var request = new SreSubAgentCreateRequest
             {
-                Name = options.Name!,
+                Name = options.Name,
                 Properties = new SreSubAgentProperties
                 {
                     HandoffDescription = options.Description,

@@ -203,6 +203,7 @@ public sealed class SreAgentService(
     /// <summary>
     /// Resolves the resource group of a SRE Agent by name, scoped to the subscription.
     /// Used by ARM connector operations when the caller does not supply --resource-group.
+    /// Uses a single-resource Resource Graph query filtered by name to avoid fetching all agents.
     /// </summary>
     public async Task<string> ResolveAgentResourceGroupAsync(
         string subscription,
@@ -214,8 +215,16 @@ public sealed class SreAgentService(
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
         ArgumentException.ThrowIfNullOrWhiteSpace(agentName);
 
-        var agents = await ListAgentsAsync(subscription, resourceGroup: null, tenant, retryPolicy, cancellationToken);
-        var agent = agents.FirstOrDefault(a => string.Equals(a.Name, agentName, StringComparison.OrdinalIgnoreCase));
+        var agent = await ExecuteSingleResourceQueryAsync(
+            SreAgentResourceType,
+            resourceGroup: null,
+            subscription: subscription,
+            retryPolicy: retryPolicy,
+            converter: ConvertToSreAgentResource,
+            additionalFilter: $"name =~ '{EscapeKqlString(agentName)}'",
+            tenant: tenant,
+            cancellationToken: cancellationToken);
+
         if (agent is null || string.IsNullOrWhiteSpace(agent.ResourceGroup))
         {
             throw new InvalidOperationException($"SRE Agent resource '{agentName}' was not found in subscription '{subscription}'.");

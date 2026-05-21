@@ -26,7 +26,7 @@ public sealed class CommonPromptsGetCommand(ILogger<CommonPromptsGetCommand> log
     protected override CommonPromptsGetOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
         return o;
     }
 
@@ -38,7 +38,7 @@ public sealed class CommonPromptsGetCommand(ILogger<CommonPromptsGetCommand> log
         try
         {
             var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
-            var prompt = await _sreAgentService.GetCommonPromptAsync(endpoint, o.Name!, o.Tenant, cancellationToken);
+            var prompt = await _sreAgentService.GetCommonPromptAsync(endpoint, o.Name, o.Tenant, cancellationToken);
             if (prompt is null)
             { SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"Common prompt '{o.Name}' not found."); return context.Response; }
             var body = prompt.Properties?.Prompt ?? string.Empty;

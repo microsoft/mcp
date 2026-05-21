@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.SreAgent.Options.ScheduledTasks;
 public class ScheduledTasksCreateOptions : BaseSreAgentOptions
 {
     [JsonPropertyName("name")]
-    public string? Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     [JsonPropertyName("cron-expression")]
     public string? CronExpression { get; set; }

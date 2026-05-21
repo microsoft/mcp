@@ -41,7 +41,7 @@ public sealed class HooksGetCommand(ILogger<HooksGetCommand> logger, ISreAgentSe
     {
         var options = base.BindOptions(parseResult);
         options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
-        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name);
+        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
         return options;
     }
 
@@ -56,7 +56,7 @@ public sealed class HooksGetCommand(ILogger<HooksGetCommand> logger, ISreAgentSe
         try
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(_sreAgentService, options, cancellationToken);
-            var hook = await _sreAgentService.GetHookAsync(endpoint, options.Name!, options.Tenant, cancellationToken);
+            var hook = await _sreAgentService.GetHookAsync(endpoint, options.Name, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new HooksGetCommandResult(hook), SreAgentJsonContext.Default.HooksGetCommandResult);
         }
         catch (Exception ex)

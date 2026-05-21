@@ -42,7 +42,7 @@ public sealed class SkillsDeleteCommand(ILogger<SkillsDeleteCommand> logger, ISr
     {
         var options = base.BindOptions(parseResult);
         options.Agent = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Agent.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
         options.Confirm = parseResult.GetValueOrDefault<bool>(SreAgentOptionDefinitions.Confirm.Name);
         return options;
     }
@@ -72,7 +72,7 @@ public sealed class SkillsDeleteCommand(ILogger<SkillsDeleteCommand> logger, ISr
                 options.RetryPolicy,
                 cancellationToken);
 
-            var result = await _sreAgentService.DeleteSkillAsync(endpoint, options.Name!, options.Tenant, cancellationToken);
+            var result = await _sreAgentService.DeleteSkillAsync(endpoint, options.Name, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result), SreAgentJsonContext.Default.SkillsDeleteCommandResult);
         }
         catch (Exception ex)

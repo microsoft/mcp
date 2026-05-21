@@ -43,7 +43,7 @@ public sealed class SkillsCreateCommand(ILogger<SkillsCreateCommand> logger, ISr
     {
         var options = base.BindOptions(parseResult);
         options.Agent = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Agent.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name);
+        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
         options.Content = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Content.Name);
         options.Description = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Description.Name);
         return options;
@@ -71,7 +71,7 @@ public sealed class SkillsCreateCommand(ILogger<SkillsCreateCommand> logger, ISr
 
             var request = new SreSkillCreateRequest
             {
-                Name = options.Name!,
+                Name = options.Name,
                 Properties = new SreSkillProperties
                 {
                     SkillContent = options.Content,
