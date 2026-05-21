@@ -2,7 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
+using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Architecture;
+using Azure.Mcp.Tools.SreAgent.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -11,9 +14,6 @@ using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using Xunit;
-using System.Text.Json;
-using Azure.Mcp.Tools.SreAgent.Models;
-using Azure.Mcp.Tools.SreAgent.Commands;
 
 namespace Azure.Mcp.Tools.SreAgent.UnitTests.Architecture;
 
