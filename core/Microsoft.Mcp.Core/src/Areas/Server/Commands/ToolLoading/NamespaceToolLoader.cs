@@ -78,7 +78,7 @@ public sealed class NamespaceToolLoader(
             "properties": {
             "intent": {
                 "type": "string",
-                "description": "The intent of the azure operation to perform."
+                "description": "The intent of the Azure operation to perform."
             },
             "command": {
                 "type": "string",
@@ -281,15 +281,15 @@ public sealed class NamespaceToolLoader(
         return new CallToolResult
         {
             Content =
-                [
-                    new TextContentBlock {
+            [
+                new TextContentBlock {
                     Text = """
-                        The "command" parameters are required when not learning
+                        The "command" parameter is required when not learning.
                         Run again with the "learn" argument to get a list of available tools and their parameters.
-                        To learn about a specific tool, use the "tool" argument with the name of the tool.
+                        To learn about a specific tool, use the "command" argument with the name of the tool.
                     """
                 }
-                ],
+            ],
             IsError = false
         };
     }
@@ -511,7 +511,8 @@ public sealed class NamespaceToolLoader(
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string namespaceName, CancellationToken cancellationToken)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
-        var toolsJson = GetChildToolListJson(request, namespaceName);
+        var learnTools = GetChildToolList(request, namespaceName).Select(t => new LearnToolInfo(t.Name, t.InputSchema.GetProperty("properties"), t.InputSchema.GetProperty("required"))).ToList();
+        var learnToolsJson = JsonSerializer.Serialize(learnTools, ServerJsonContext.Default.IEnumerableLearnToolInfo);
 
         var learnResponse = new CallToolResult
         {
@@ -521,9 +522,9 @@ public sealed class NamespaceToolLoader(
                     Text = $"""
                         Here are the available command and their parameters for '{namespaceName}' tool.
                         If you do not find a suitable command, run again with the "learn=true" to get a list of available commands and their parameters.
-                        Next, identify the command you want to execute and run again with the "command" and "parameters" arguments.
+                        Next, identify the command you want to execute and run again with the "command" and "parameters" arguments, respecting "required" parameters if present.
 
-                        {toolsJson}
+                        {learnToolsJson}
                         """
                 }
             ],
@@ -584,11 +585,7 @@ public sealed class NamespaceToolLoader(
         return list;
     }
 
-    private string GetChildToolListJson(RequestContext<CallToolRequestParams> request, string namespaceName)
-    {
-        var listTools = GetChildToolList(request, namespaceName);
-        return JsonSerializer.Serialize(listTools, ServerJsonContext.Default.IEnumerableTool);
-    }
+    internal record LearnToolInfo(string Command, JsonElement Parameters, JsonElement Required);
 
     private string GetChildToolJson(RequestContext<CallToolRequestParams> request, string namespaceName, string commandName)
     {

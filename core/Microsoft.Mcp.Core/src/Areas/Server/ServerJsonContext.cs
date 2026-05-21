@@ -5,8 +5,8 @@ using System.Text.Json.Serialization;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Metadata;
-using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using static Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading.NamespaceToolLoader;
 
 namespace Microsoft.Mcp.Core.Areas.Server;
 
@@ -18,6 +18,8 @@ namespace Microsoft.Mcp.Core.Areas.Server;
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(Tool))]
 [JsonSerializable(typeof(IEnumerable<Tool>))]
+[JsonSerializable(typeof(LearnToolInfo))]
+[JsonSerializable(typeof(IEnumerable<LearnToolInfo>))]
 [JsonSerializable(typeof(ToolInputSchema))]
 [JsonSerializable(typeof(ToolPropertySchema))]
 [JsonSerializable(typeof(ToolMetadata))]
@@ -26,7 +28,7 @@ namespace Microsoft.Mcp.Core.Areas.Server;
 [JsonSerializable(typeof(List<ConsolidatedToolDefinition>))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
 )]
 internal sealed partial class ServerJsonContext : JsonSerializerContext
 {
