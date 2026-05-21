@@ -2038,18 +2038,6 @@ azmcp confidentialledger entries get --ledger <ledger-name> \
 ### Azure Container Apps Operations
 
 ```bash
-# List Azure Container Apps in a subscription
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp containerapps list --subscription <subscription>
-
-# List Azure Container Apps in a specific resource group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp containerapps list --subscription <subscription> \
-                         [--resource-group <resource-group>]
-
-# List Azure Container Apps in a subscription in a specific tenant
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp containerapps list --subscription <subscription> \
 # List Azure Container Apps
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp containerapps list --subscription <subscription> \
