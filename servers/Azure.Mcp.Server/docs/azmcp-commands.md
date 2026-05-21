@@ -2433,6 +2433,7 @@ azmcp fileshares fileshare create --subscription <subscription> \
                                   [--provisioned-throughput-mib-per-sec <throughput>] \
                                   [--public-network-access <Enabled|Disabled>] \
                                   [--nfs-root-squash <NoRootSquash|RootSquash|AllSquash>] \
+                                  [--nfs-encryption-in-transit <Enabled|Disabled>] \
                                   [--allowed-subnets <comma-separated-subnet-ids>] \
                                   [--tags <json-tags>]
 
@@ -2446,6 +2447,7 @@ azmcp fileshares fileshare update --subscription <subscription> \
                                   [--provisioned-throughput-mib-per-sec <throughput>] \
                                   [--public-network-access <Enabled|Disabled>] \
                                   [--nfs-root-squash <NoRootSquash|RootSquash|AllSquash>] \
+                                  [--nfs-encryption-in-transit <Enabled|Disabled>] \
                                   [--allowed-subnets <comma-separated-subnet-ids>] \
                                   [--tags <json-tags>]
 
