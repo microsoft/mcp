@@ -102,7 +102,7 @@
 /tools/Azure.Mcp.Tools.ApplicationInsights/  @regexrowboat @xiaomi7732 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ApplicationInsights
-# ServiceOwners:                       @regexrowboat @xiaomi7732
+# ServiceOwners:                             @regexrowboat @xiaomi7732
 
 # PRLabel: %tools-AppService
 /tools/Azure.Mcp.Tools.AppService/         @KarishmaGhiya @microsoft/azure-mcp
