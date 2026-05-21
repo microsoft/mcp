@@ -49,7 +49,7 @@
 # ServiceOwners:                       @chidozieononiwu @hallipr @microsoft/azure-mcp
 
 # ServiceLabel: %packages-PyPi
-# ServiceOwners:                       @xiangyan99 @microsoft/azure-mcp
+# ServiceOwners:                       @microsoft/azure-mcp
 
 # ServiceLabel: %packages-VSIX
 # ServiceOwners:                       @g2vinay @hallipr @microsoft/azure-mcp
@@ -114,13 +114,13 @@
 # ServiceOwners:                       @ArthurMa1978 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Authentication
-# ServiceOwners:                       @anannya03 @g2vinay @xiangyan99 @microsoft/azure-mcp
+# ServiceOwners:                       @anannya03 @g2vinay @microsoft/azure-mcp
 
 # PRLabel: %tools-Authorization
-/tools/Azure.Mcp.Tools.Authorization/  @jongio @vurhanau @xiangyan99 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Authorization/  @jongio @vurhanau @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Authorization
-# ServiceOwners:                       @vurhanau @xiangyan99
+# ServiceOwners:                       @vurhanau
 
 # PRLabel: %tools-AzureBackup
 /tools/Azure.Mcp.Tools.AzureBackup/        @shrja @microsoft/azure-mcp
@@ -189,13 +189,13 @@
 # ServiceOwners:                       @alzimmermsft @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Core
-# ServiceOwners:                       @alzimmermsft @anannya03 @g2vinay @xiangyan99 @microsoft/azure-mcp
+# ServiceOwners:                       @alzimmermsft @anannya03 @g2vinay @microsoft/azure-mcp
 
 # PRLabel: %tools-CosmosDB
-/tools/Azure.Mcp.Tools.Cosmos/         @sajeetharan @xiangyan99 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Cosmos/         @sajeetharan @microsoft/azure-mcp
 
 # ServiceLabel: %tools-CosmosDB
-# ServiceOwners:                       @sajeetharan @xiangyan99
+# ServiceOwners:                       @sajeetharan
 
 # PRLabel: %tools-Deploy
 /tools/Azure.Mcp.Tools.Deploy/         @qianwens @xfz11 @wchigit @microsoft/azure-mcp
@@ -228,10 +228,10 @@
 # ServiceOwners:                       @ankushbindlish2 @kszobi
 
 # PRLabel: %tools-FoundryExtensions
-/tools/Azure.Mcp.Tools.FoundryExtensions/     @jayzzh @xiangyan99 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.FoundryExtensions/     @jayzzh @microsoft/azure-mcp
 
 # ServiceLabel: %tools-FoundryExtensions
-# ServiceOwners:                       @jayzzh @xiangyan99
+# ServiceOwners:                       @jayzzh
 
 # PRLabel: %tools-FunctionApp
 /tools/Azure.Mcp.Tools.FunctionApp/   @jongio @microsoft/azure-mcp
@@ -246,10 +246,10 @@
 # ServiceOwners:                             @manvkaur @vrdmr
 
 # PRLabel: %tools-Grafana
-/tools/Azure.Mcp.Tools.Grafana/        @weng5e @xiangyan99 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Grafana/        @weng5e @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Grafana
-# ServiceOwners:                       @weng5e @xiangyan99
+# ServiceOwners:                       @weng5e
 
 # PRLabel: %tools-ISV
 /tools/Azure.Mcp.Tools.AzureIsv/       @agrimayadav @pachaturvedi @microsoft/azure-mcp
@@ -309,7 +309,7 @@
 # ServiceOwners:                       @msalaman
 
 # PRLabel: %tools-Postgres
-/tools/Azure.Mcp.Tools.Postgres/       @kk-src @maxluk @shreyaaithal @xiangyan99 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Postgres/       @kk-src @maxluk @shreyaaithal @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Postgres
 # ServiceOwners:                       @kk-src @maxluk @shreyaaithal
@@ -327,10 +327,10 @@
 # ServiceOwners:                       @qianwens @xfz11 @wchigit
 
 # PRLabel: %tools-Redis
-/tools/Azure.Mcp.Tools.Redis/           @philon-msft @sharedferret @xiangyan99 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Redis/           @philon-msft @sharedferret @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Redis
-# ServiceOwners:                        @carldc @philon-msft @xiangyan99
+# ServiceOwners:                        @carldc @philon-msft
 
 # PRLabel: %tools-ResourceHealth
 /tools/Azure.Mcp.Tools.ResourceHealth/     @shdesmu @microsoft/azure-mcp
@@ -375,7 +375,7 @@
 # ServiceOwners:                     @akromm @achyuth-ms @AV25242 @ericshape @jeremyfrosti @mitesh-pv @microsoft/azure-mcp
 
 # PRLabel: %tools-Storage
-/tools/Azure.Mcp.Tools.Storage/        @alzimmermsft @jongio @xiangyan99 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Storage/        @alzimmermsft @jongio @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Storage
 # ServiceOwners:                       @alzimmermsft  @jongio
@@ -387,7 +387,7 @@
 # ServiceOwners:                       @ankushbindlish2 @kszobi
 
 # PRLabel: %tools-Authorization
-/tools/Azure.Mcp.Tools.Authorization/  @vurhanau @jongio @xiangyan99 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Authorization/  @vurhanau @jongio @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Authorization
 # ServiceOwners:                       @vurhanau
