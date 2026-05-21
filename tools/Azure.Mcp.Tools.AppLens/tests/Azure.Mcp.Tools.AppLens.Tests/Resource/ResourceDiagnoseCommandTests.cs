@@ -271,7 +271,7 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenServiceThrowsInvalidOperationException()
+    public async Task ExecuteAsync_Returns422_WhenServiceThrowsInvalidOperationException()
     {
         // Arrange - this covers cases like AppLens session failure (not resource-not-found)
         Service.DiagnoseResourceAsync(
