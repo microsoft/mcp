@@ -122,6 +122,22 @@ public class ContainerAppListCommandTests : CommandUnitTestsBase<ContainerAppLis
     }
 
     [Fact]
+    public async Task ExecuteAsync_PropagatesTenantToService()
+    {
+        // Arrange
+        var expectedApps = new ResourceQueryResults<ContainerAppInfo>([new("app1", null, null, null, null)], false);
+        Service.ListContainerApps("sub", Arg.Any<string>(), "my-tenant", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .Returns(expectedApps);
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--tenant", "my-tenant");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListContainerApps("sub", Arg.Any<string>(), "my-tenant", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ReturnsExpectedContainerAppProperties()
     {
         // Arrange
