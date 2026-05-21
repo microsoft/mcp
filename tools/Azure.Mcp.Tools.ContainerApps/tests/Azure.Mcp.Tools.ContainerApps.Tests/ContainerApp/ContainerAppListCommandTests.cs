@@ -42,7 +42,7 @@ public class ContainerAppListCommandTests : CommandUnitTestsBase<ContainerAppLis
             // Arrange
             if (shouldSucceed)
             {
-                Service.ListContainerApps(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Service.ListContainerApps(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                     .Returns(new ResourceQueryResults<ContainerAppInfo>(
                     [
                         new("app1", "eastus", "rg1", "/subscriptions/sub/resourceGroups/rg1/providers/Microsoft.App/managedEnvironments/env1", "Succeeded"),
@@ -77,7 +77,7 @@ public class ContainerAppListCommandTests : CommandUnitTestsBase<ContainerAppLis
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        Service.ListContainerApps(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListContainerApps(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -94,7 +94,7 @@ public class ContainerAppListCommandTests : CommandUnitTestsBase<ContainerAppLis
     {
         // Arrange
         var expectedApps = new ResourceQueryResults<ContainerAppInfo>([new("app1", null, null, null, null)], false);
-        Service.ListContainerApps("sub", "rg", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListContainerApps("sub", "rg", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedApps);
 
         // Act
@@ -103,14 +103,14 @@ public class ContainerAppListCommandTests : CommandUnitTestsBase<ContainerAppLis
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        await Service.Received(1).ListContainerApps("sub", "rg", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListContainerApps("sub", "rg", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_EmptyList_ReturnsEmptyResults()
     {
         // Arrange
-        Service.ListContainerApps("sub", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListContainerApps("sub", null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<ContainerAppInfo>([], false));
 
         // Act
@@ -126,7 +126,7 @@ public class ContainerAppListCommandTests : CommandUnitTestsBase<ContainerAppLis
     {
         // Arrange
         var containerApp = new ContainerAppInfo("myapp", "eastus", "myrg", "/subscriptions/sub/resourceGroups/myrg/providers/Microsoft.App/managedEnvironments/myenv", "Succeeded");
-        Service.ListContainerApps("sub", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListContainerApps("sub", null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<ContainerAppInfo>([containerApp], false));
 
         // Act
