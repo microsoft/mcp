@@ -109,14 +109,14 @@ public sealed class InsightsGetCommand(
     protected override InsightsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        var subscription = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.SubscriptionName);
+        var subscription = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription);
 
         if (!string.IsNullOrEmpty(subscription))
         {
             options.Subscription = subscription.Trim('"', '\'');
         }
 
-        options.Query = parseResult.GetValueOrDefault<string>(InsightsOptionDefinitions.QueryName);
+        options.Query = parseResult.GetValueOrDefault<string>(InsightsOptionDefinitions.Query);
         return options;
     }
 
