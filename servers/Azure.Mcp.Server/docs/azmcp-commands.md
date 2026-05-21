@@ -3754,7 +3754,7 @@ azmcp sreagent skills list --subscription <subscription> \
                            --agent <agent-name>
 
 # Create or update a skill on an SRE Agent resource
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent skills create --subscription <subscription> \
                              --resource-group <resource-group> \
                              --agent <agent-name> \
@@ -3806,7 +3806,7 @@ azmcp sreagent hooks delete --subscription <subscription> \
                             --confirm true
 
 # Activate or deactivate a hook for a thread
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent hooks thread activate --subscription <subscription> \
                                      --resource-group <resource-group> \
                                      --agent <agent-name> \
@@ -3831,13 +3831,13 @@ azmcp sreagent threads get --subscription <subscription> \
                            --thread <thread-id>
 
 # Create a new thread
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent threads create --subscription <subscription> \
                               --resource-group <resource-group> \
                               --agent <agent-name>
 
 # Send a message to an existing thread
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent threads send-message --subscription <subscription> \
                                     --resource-group <resource-group> \
                                     --agent <agent-name> \
@@ -3845,7 +3845,7 @@ azmcp sreagent threads send-message --subscription <subscription> \
                                     --message <message>
 
 # Delete a thread (requires --confirm true)
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent threads delete --subscription <subscription> \
                               --resource-group <resource-group> \
                               --agent <agent-name> \
@@ -3853,7 +3853,6 @@ azmcp sreagent threads delete --subscription <subscription> \
                               --confirm true
 
 # Run an investigation prompt
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent threads investigate --subscription <subscription> \
                                    --resource-group <resource-group> \
                                    --agent <agent-name> \
@@ -3870,7 +3869,7 @@ azmcp sreagent scheduledtasks list --subscription <subscription> \
                                    --agent <agent-name>
 
 # Create a scheduled task
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent scheduledtasks create --subscription <subscription> \
                                      --resource-group <resource-group> \
                                      --agent <agent-name> \
@@ -3879,8 +3878,11 @@ azmcp sreagent scheduledtasks create --subscription <subscription> \
                                      --schedule <cron-expression>
 
 # Pause / resume / delete (delete requires --confirm true)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent scheduledtasks pause  --subscription <subscription> --resource-group <rg> --agent <agent> --task <task-id>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent scheduledtasks resume --subscription <subscription> --resource-group <rg> --agent <agent> --task <task-id>
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent scheduledtasks delete --subscription <subscription> --resource-group <rg> --agent <agent> --task <task-id> --confirm true
 ```
 
@@ -3888,7 +3890,6 @@ azmcp sreagent scheduledtasks delete --subscription <subscription> --resource-gr
 
 ```bash
 # List active incidents
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent incidents active-list --subscription <subscription> \
                                      --resource-group <resource-group> \
                                      --agent <agent-name>
@@ -3906,7 +3907,9 @@ azmcp sreagent incidents create --subscription <subscription> \
                                 --steps <step-1> <step-2>
 
 # Configure PagerDuty / ServiceNow connectors
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp sreagent incidents setup-pagerduty   --subscription <s> --resource-group <rg> --agent <a> --api-key-env <env>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp sreagent incidents setup-servicenow  --subscription <s> --resource-group <rg> --agent <a> --instance-url <url> --auth-type <type>
 ```
 
@@ -3920,9 +3923,11 @@ azmcp sreagent workflows generate --kind <agent|tool> \
                                   --description <description>
 
 # Validate YAML content
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent workflows validate --kind <agent|tool> --yaml-content <yaml>
 
 # Apply a YAML workflow to an SRE Agent resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent workflows apply --subscription <s> --resource-group <rg> --agent <a> --yaml-content <yaml>
 ```
 
@@ -3930,6 +3935,7 @@ azmcp sreagent workflows apply --subscription <s> --resource-group <rg> --agent 
 
 ```bash
 # Get documentation for a topic
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent docs get --topic <topic>
 
 # Search and manage knowledge base memories
@@ -3941,9 +3947,13 @@ azmcp sreagent docs memories delete --subscription <s> --resource-group <rg> --a
 azmcp sreagent architecture generate --requirements <text>
 
 # Manage common prompts
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent commonprompts list   --subscription <s> --resource-group <rg> --agent <a>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent commonprompts get    --subscription <s> --resource-group <rg> --agent <a> --name <prompt-name>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent commonprompts create --subscription <s> --resource-group <rg> --agent <a> --name <prompt-name> --content <body>
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent commonprompts delete --subscription <s> --resource-group <rg> --agent <a> --name <prompt-name> --confirm true
 ```
 
