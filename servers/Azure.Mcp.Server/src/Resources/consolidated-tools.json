@@ -3963,7 +3963,7 @@
         "sreagent_hooks_get",
         "sreagent_hooks_list",
         "sreagent_hooks_thread_list",
-        "sreagent_incidents_active-list",
+        "sreagent_incidents_active_list",
         "sreagent_incidents_plans-list",
         "sreagent_scheduledtasks_get",
         "sreagent_scheduledtasks_list",
