@@ -482,38 +482,28 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
         var container = client.GetContainer(databaseName, containerName);
 
+        // TODO: When Microsoft.Azure.Cosmos.Aot covers ReadItemStreamAsync + CosmosException, restore the
+        // cheaper point-read branch (ReadItemStreamAsync with new PartitionKey(partitionKey) and a typed
+        // CosmosException catch for 404). Both currently drag the legacy FeedResponseBinder/HybridRow/Newtonsoft
+        // call graph into the trim closure and break AOT. Until then we use the query-stream API for both
+        // single-partition and cross-partition reads.
+        var requestOptions = new QueryRequestOptions { MaxItemCount = 1 };
         if (!string.IsNullOrEmpty(partitionKey))
         {
-            try
-            {
-                using var response = await container.ReadItemStreamAsync(id, new PartitionKey(partitionKey), cancellationToken: cancellationToken);
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    return null;
-                }
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new Exception(response.ErrorMessage);
-                }
-
-                using var doc = await JsonDocument.ParseAsync(response.Content, cancellationToken: cancellationToken);
-                return doc.RootElement.Clone();
-            }
-            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                return null;
-            }
+            requestOptions.PartitionKey = new PartitionKey(partitionKey);
         }
 
         var queryDef = new QueryDefinition("SELECT * FROM c WHERE c.id = @id").WithParameter("@id", id);
-        var iterator = container.GetItemQueryStreamIterator(
-            queryDef,
-            requestOptions: new QueryRequestOptions { MaxItemCount = 1 });
+        var iterator = container.GetItemQueryStreamIterator(queryDef, requestOptions: requestOptions);
 
         while (iterator.HasMoreResults)
         {
             using var response = await iterator.ReadNextAsync(cancellationToken);
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
             if (!response.IsSuccessStatusCode)
             {
                 throw new Exception(response.ErrorMessage);
