@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppConfig.Commands.Account;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 

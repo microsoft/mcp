@@ -426,14 +426,21 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     /// Backup Status API. Returns null for DPP-only resource types (disks, blobs, etc.)
     /// that are not supported by the RSV BackupStatus API.
     /// </summary>
-    private static BackupDataSourceType? MapArmResourceTypeToBackupDataSourceType(string armResourceType) =>
-        armResourceType switch
+    private static BackupDataSourceType? MapArmResourceTypeToBackupDataSourceType(string? armResourceType)
+    {
+        if (string.IsNullOrEmpty(armResourceType))
+        {
+            return null;
+        }
+
+        return armResourceType switch
         {
             "microsoft.compute/virtualmachines" => BackupDataSourceType.Vm,
             "microsoft.storage/storageaccounts" => BackupDataSourceType.AzureFileShare,
             "microsoft.sql/servers/databases" => BackupDataSourceType.SqlDatabase,
             _ => null // DPP-only types handled via DPP vault lookup
         };
+    }
 
     public async Task<List<UnprotectedResourceInfo>> FindUnprotectedResourcesAsync(
         string subscription, string? resourceTypeFilter, string? resourceGroup,
@@ -686,6 +693,19 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             : await dppOps.DisableMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
     }
 
+    public async Task<OperationResult> ConfigureEncryptionAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string keyVaultUri, string keyName, string identityType,
+        string? keyVersion, string? userAssignedIdentityId,
+        string? vaultType, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        return VaultTypeResolver.IsRsv(resolved)
+            ? await rsvOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, retryPolicy, cancellationToken)
+            : await dppOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, retryPolicy, cancellationToken);
+    }
+
 
     private async Task<string> ResolveVaultTypeAsync(
         string vaultName, string resourceGroup, string subscription,
@@ -781,6 +801,6 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         return types;
     }
 
-    [GeneratedRegex(@"^[A-Za-z0-9]+\.[A-Za-z0-9]+/[A-Za-z0-9]+$")]
+    [GeneratedRegex(@"^[A-Za-z0-9]+\.[A-Za-z0-9]+(/[A-Za-z0-9]+)+$")]
     private static partial Regex ArmResourceTypeRegex();
 }

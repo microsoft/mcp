@@ -111,6 +111,7 @@ public sealed class FileSharesService(
         int? provisionedThroughputMiBPerSec = null,
         string? publicNetworkAccess = null,
         string? nfsRootSquash = null,
+        string? nfsEncryptionInTransit = null,
         string[]? allowedSubnets = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
@@ -157,8 +158,14 @@ public sealed class FileSharesService(
         if (!string.IsNullOrEmpty(publicNetworkAccess))
             fileShareData.Properties.PublicNetworkAccess = new(publicNetworkAccess);
 
-        if (!string.IsNullOrEmpty(nfsRootSquash))
-            fileShareData.Properties.NfsProtocolRootSquash = new(nfsRootSquash);
+        if (!string.IsNullOrEmpty(nfsRootSquash) || !string.IsNullOrEmpty(nfsEncryptionInTransit))
+        {
+            fileShareData.Properties.NfsProtocolProperties ??= new();
+            if (!string.IsNullOrEmpty(nfsRootSquash))
+                fileShareData.Properties.NfsProtocolProperties.RootSquash = new(nfsRootSquash);
+            if (!string.IsNullOrEmpty(nfsEncryptionInTransit))
+                fileShareData.Properties.NfsProtocolProperties.EncryptionInTransitRequired = new(nfsEncryptionInTransit);
+        }
 
         if (allowedSubnets != null && allowedSubnets.Length > 0)
         {
@@ -199,6 +206,7 @@ public sealed class FileSharesService(
         int? provisionedThroughputMiBPerSec = null,
         string? publicNetworkAccess = null,
         string? nfsRootSquash = null,
+        string? nfsEncryptionInTransit = null,
         string[]? allowedSubnets = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
@@ -219,46 +227,12 @@ public sealed class FileSharesService(
 
         // Set properties that are explicitly provided
         if (provisionedStorageInGiB.HasValue || provisionedIOPerSec.HasValue || provisionedThroughputMiBPerSec.HasValue ||
-            !string.IsNullOrEmpty(publicNetworkAccess) || !string.IsNullOrEmpty(nfsRootSquash) || allowedSubnets?.Length > 0)
+            !string.IsNullOrEmpty(publicNetworkAccess) || !string.IsNullOrEmpty(nfsRootSquash) || !string.IsNullOrEmpty(nfsEncryptionInTransit) || allowedSubnets?.Length > 0)
         {
             patch.Properties = new();
 
             if (provisionedStorageInGiB.HasValue)
             {
-                patch.Properties = new();
-
-                if (provisionedStorageInGiB.HasValue)
-                {
-                    patch.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
-                }
-
-                if (provisionedIOPerSec.HasValue)
-                {
-                    patch.Properties.ProvisionedIOPerSec = provisionedIOPerSec.Value;
-                }
-
-                if (provisionedThroughputMiBPerSec.HasValue)
-                {
-                    patch.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec.Value;
-                }
-
-                if (!string.IsNullOrEmpty(publicNetworkAccess))
-                {
-                    patch.Properties.PublicNetworkAccess = new(publicNetworkAccess);
-                }
-
-                if (!string.IsNullOrEmpty(nfsRootSquash))
-                {
-                    patch.Properties.NfsProtocolRootSquash = new(nfsRootSquash);
-                }
-
-                if (allowedSubnets != null && allowedSubnets.Length > 0)
-                {
-                    foreach (var subnet in allowedSubnets)
-                    {
-                        patch.Properties.PublicAccessAllowedSubnets.Add(subnet);
-                    }
-                }
                 patch.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
             }
 
@@ -271,16 +245,28 @@ public sealed class FileSharesService(
             {
                 patch.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec.Value;
             }
-        }
 
-        if (!string.IsNullOrEmpty(publicNetworkAccess) && patch.Properties != null)
-        {
-            patch.Properties.PublicNetworkAccess = new(publicNetworkAccess);
-        }
+            if (!string.IsNullOrEmpty(publicNetworkAccess))
+            {
+                patch.Properties.PublicNetworkAccess = new(publicNetworkAccess);
+            }
 
-        if (!string.IsNullOrEmpty(nfsRootSquash) && patch.Properties != null)
-        {
-            patch.Properties.NfsProtocolRootSquash = new(nfsRootSquash);
+            if (!string.IsNullOrEmpty(nfsRootSquash) || !string.IsNullOrEmpty(nfsEncryptionInTransit))
+            {
+                patch.Properties.NfsProtocolProperties ??= new();
+                if (!string.IsNullOrEmpty(nfsRootSquash))
+                    patch.Properties.NfsProtocolProperties.RootSquash = new(nfsRootSquash);
+                if (!string.IsNullOrEmpty(nfsEncryptionInTransit))
+                    patch.Properties.NfsProtocolProperties.EncryptionInTransitRequired = new(nfsEncryptionInTransit);
+            }
+
+            if (allowedSubnets != null && allowedSubnets.Length > 0)
+            {
+                foreach (var subnet in allowedSubnets)
+                {
+                    patch.Properties.PublicAccessAllowedSubnets.Add(subnet);
+                }
+            }
         }
 
         if (tags is { Count: > 0 })
@@ -662,7 +648,7 @@ public sealed class FileSharesService(
             {
                 LiveShares = new()
                 {
-                    FileShareCount = result.LiveSharesFileShareCount ?? 0
+                    FileShareCount = result.LiveSharesFileShareCount
                 }
             };
         }

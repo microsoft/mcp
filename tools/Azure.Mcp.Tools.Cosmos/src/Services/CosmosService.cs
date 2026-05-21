@@ -72,8 +72,10 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
 
         if (retryPolicy != null)
         {
-            clientOptions.MaxRetryAttemptsOnRateLimitedRequests = retryPolicy.MaxRetries;
-            clientOptions.MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
+            if (retryPolicy.MaxRetries is { } maxRetries)
+                clientOptions.MaxRetryAttemptsOnRateLimitedRequests = maxRetries;
+            if (retryPolicy.MaxDelaySeconds is { } maxDelaySeconds)
+                clientOptions.MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(maxDelaySeconds);
         }
 
         clientOptions.HttpClientFactory = () => _httpClientFactory.CreateClient();

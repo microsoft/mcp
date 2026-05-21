@@ -10,9 +10,7 @@ This document is the authoritative guide for adding new commands ("toolset comma
 All new Azure services and their commands should use the Toolset pattern:
 
 - **Toolset code** goes in `tools/Azure.Mcp.Tools.{Toolset}/src` (e.g., `tools/Azure.Mcp.Tools.Storage/src`)
-- **Tests** go in `tools/Azure.Mcp.Tools.{Toolset}/tests`, divided into UnitTests and LiveTests:
-  -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests` (e.g., `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.UnitTests`)
-  -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests` (e.g., `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.LiveTests`)
+- **Tests** go in `tools/Azure.Mcp.Tools.{Toolset}/tests` (e.g., `tools/Azure.Mcp.Tools.Storage/tests`)
 
 This keeps all code, options, models, JSON serialization contexts, and tests for a toolset together. See `tools/Azure.Mcp.Tools.Storage` for a reference implementation.
 
@@ -27,7 +25,7 @@ If your command interacts with Azure resources (storage accounts, databases, VMs
 - ✅ **MUST include** RBAC role assignments for test application
 - ✅ **MUST validate** with `az bicep build --file tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
 - ✅ **MUST test deployment** with `./eng/scripts/Deploy-TestResources.ps1 -Tool 'Azure.Mcp.Tools.{Toolset}'`
-- ✅ **MUST include** live tests in `Azure.Mcp.Tools.{Toolset}.LiveTests`
+- ✅ **MUST include** live tests in `Azure.Mcp.Tools.{Toolset}/tests/`
 - ✅ **MUST record** live tests for playback using `RecordedCommandTestsBase` (see [`/docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md))
 
 ### **Non-Azure Commands (No Test Infrastructure Needed)**
@@ -116,8 +114,8 @@ Every new command (whether purely computational or Azure-resource backed) requir
 4. Service interface: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/I{ServiceName}Service.cs`
 5. Service implementation: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/{ServiceName}Service.cs`
     - Most toolsets have one primary service; some may have multiple where domain boundaries justify separation
-6. Unit test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests/{Resource}/{Resource}{Operation}CommandTests.cs`
-7. Live test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests/{Toolset}CommandTests.cs`
+6. Unit test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/{Resource}/{Resource}{Operation}CommandTests.cs`
+7. Live test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/{Toolset}CommandTests.cs`
 8. Command registration in RegisterCommands(): `tools/Azure.Mcp.Tools.{Toolset}/src/{Toolset}Setup.cs`
 9. Toolset registration in RegisterAreas(): `servers/Azure.Mcp.Server/src/Program.cs`
 10. **Live test infrastructure** (for Azure service commands):
@@ -1550,7 +1548,7 @@ public async Task ExecuteAsync_HandlesServiceError()
     Service.Operation().ThrowsAsync(new ServiceException("Test error"));
 
     // Act
-    var response = await ExecuteCommandAsync("--param value");
+    var response = await ExecuteCommandAsync("--param", "value");
 
     // Assert
     Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -1563,7 +1561,7 @@ public async Task ExecuteAsync_HandlesServiceError()
 When developing new commands, run only your specific tests to save time:
 ```bash
 # Run all tests from the test project directory:
-pushd ./tools/Azure.Mcp.Tools.YourToolset/tests/Azure.Mcp.Tools.YourToolset.UnitTests  #or .LiveTests
+pushd ./tools/Azure.Mcp.Tools.YourToolset/tests/Azure.Mcp.Tools.YourToolset.Tests
 
 # Run only tests for your specific command class
 dotnet test --filter "FullyQualifiedName~YourCommandNameTests" --verbosity normal
@@ -1710,7 +1708,7 @@ catch {
 }
 ```
 
-**4. Update Live Tests to Use Deployed Resources**
+**3. Update Live Tests to Use Deployed Resources**
 
 Integration tests should use the deployed infrastructure:
 
@@ -1766,7 +1764,7 @@ public class {Toolset}CommandTests(ITestOutputHelper output)
 }
 ```
 
-**5. Deploy and Test Resources**
+**4. Deploy and Test Resources**
 
 Use the deployment script with your toolset:
 
@@ -1775,8 +1773,8 @@ Use the deployment script with your toolset:
 ./eng/scripts/Deploy-TestResources.ps1 -Tools "{Toolset}"
 
 # Run live tests
-pushd 'tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests'
-dotnet test
+pushd 'tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests'
+dotnet test --filter "Category=Live"
 ```
 
 Live test scenarios should include:
@@ -2302,7 +2300,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
 ### Live Test Project Configuration Issues
 
 **Issue: Live tests fail with "MCP server process exited unexpectedly" and "azmcp.exe not found"**
-- **Cause**: Incorrect project configuration in `Azure.Mcp.Tools.{Toolset}.LiveTests.csproj`
+- **Cause**: Incorrect project configuration in `Azure.Mcp.Tools.{Toolset}.Tests.csproj`
 - **Common Problem**: Referencing the toolset project (`Azure.Mcp.Tools.{Toolset}`) instead of the CLI project
 - **Solution**: Live test projects must reference `Azure.Mcp.Server.csproj` and include specific project properties
 - **Required Configuration**:

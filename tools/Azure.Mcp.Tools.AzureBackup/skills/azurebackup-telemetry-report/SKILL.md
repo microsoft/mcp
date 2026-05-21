@@ -88,13 +88,13 @@ git diff <last-release-tag>..upstream/main --stat -- tools/Azure.Mcp.Tools.Azure
 Also count tests on main (checkout `upstream/main` test files first):
 ```bash
 # Runnable unit test count = [Fact] + [InlineData] (each InlineData is a separate test run)
-$facts = (Select-String "\[Fact\]" tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.UnitTests/**/*.cs | Measure-Object).Count
-$inlines = (Select-String "\[InlineData" tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.UnitTests/**/*.cs | Measure-Object).Count
+$facts = (Select-String "\[Fact\]" tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.Tests/**/*.cs | Measure-Object).Count
+$inlines = (Select-String "\[InlineData" tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.Tests/**/*.cs | Measure-Object).Count
 # Total runnable = $facts + $inlines
 
 # Live test count — count only [Fact] (each method has [Fact]; [LiveTestOnly] is an
 # additional attribute on the same method, so counting both would double-count)
-Select-String "\[Fact\]" tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.LiveTests/*.cs | Measure-Object
+Select-String "\[Fact\]" tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.Tests/*.cs | Measure-Object
 
 # Registered tools
 Select-String "AddCommand" tools/Azure.Mcp.Tools.AzureBackup/src/AzureBackupSetup.cs | Measure-Object

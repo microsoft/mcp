@@ -57,6 +57,7 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<DisasterRecoveryEnableCrrCommand>();
 
         services.AddSingleton<SecurityConfigureMuaCommand>();
+        services.AddSingleton<SecurityConfigureEncryptionCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -114,9 +115,10 @@ public sealed class AzureBackupSetup : IAreaSetup
         azureBackup.AddSubGroup(disasterrecovery);
         disasterrecovery.AddCommand<DisasterRecoveryEnableCrrCommand>(serviceProvider);
 
-        var security = new CommandGroup("security", "Security operations - Configure Multi-User Authorization (MUA) for backup vaults.");
+        var security = new CommandGroup("security", "Security operations - Configure Multi-User Authorization (MUA) and Customer-Managed Key (CMK) encryption for backup vaults.");
         azureBackup.AddSubGroup(security);
         security.AddCommand<SecurityConfigureMuaCommand>(serviceProvider);
+        security.AddCommand<SecurityConfigureEncryptionCommand>(serviceProvider);
 
         return azureBackup;
     }

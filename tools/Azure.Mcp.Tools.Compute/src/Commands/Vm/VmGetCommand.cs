@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     Id = "c1a8b3e5-4f2d-4a6e-8c7b-9d2e3f4a5b6c",
     Name = "get",
     Title = "Get Virtual Machine(s)",
-    Description = "List or get Azure Virtual Machine (VM) configuration and properties in a resource group. By default, returns VM details including name, location, size, provisioning state, and OS type. When retrieving a specific VM with --vm-name and --instance-view, the response also includes power state (running/stopped/deallocated). Use this tool to retrieve VM configuration details.",
+    Description = "List or get all Azure Virtual Machines (VMs) in a subscription, or query VMs in a specific resource group. Show all VMs or retrieve a specific VM by name. Returns read-only VM details including name, location, VM size, provisioning state, OS type, and network interfaces. Use --instance-view to query and check the current runtime status and power state of a VM along with provisioning state. This is a read-only inspection and inventory tool for viewing VM configuration, properties, and runtime status.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

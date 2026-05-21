@@ -25,10 +25,17 @@ jobs:
     inputs:
       versionSpec: '22.x'
 
-  - pwsh: >
-      ./eng/scripts/Build-Local.ps1
-      -ServerName $(ServerName)
-      -VerifyNpx
+  - pwsh: |
+      $serverName = $env:SERVERNAME
+
+      if ([string]::IsNullOrWhiteSpace($serverName)) {
+        ./eng/scripts/Build-Local.ps1 -VerifyNpx
+      }
+      else {
+        ./eng/scripts/Build-Local.ps1 -ServerName $serverName -VerifyNpx
+      }
+
+      exit $LastExitCode
     displayName: "Build local package"
     workingDirectory: $(Build.SourcesDirectory)
 

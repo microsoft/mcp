@@ -1,0 +1,4 @@
+pr: 2596
+changes:
+  - section: "Bugs Fixed"
+    description: "Remove restrictions on what kinds of web sites the AppLens tool can diagnose."

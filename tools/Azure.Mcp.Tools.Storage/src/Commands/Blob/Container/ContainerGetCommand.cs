@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Storage.Models;
-using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 
@@ -34,39 +33,18 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IStorageService storageService) : BaseStorageCommand<ContainerGetOptions>()
+public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IStorageService storageService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ContainerGetOptions, ContainerGetCommand.ContainerGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ContainerGetCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ContainerGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(StorageOptionDefinitions.Container.AsOptional());
-        command.Options.Add(StorageOptionDefinitions.ContainerPrefix.AsOptional());
-    }
-
-    protected override ContainerGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Container = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Container.Name);
-        options.Prefix = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.ContainerPrefix.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var containers = await _storageService.GetContainerDetails(
-                options.Account!,
+                options.Account,
                 options.Container,
                 options.Subscription!,
                 options.Prefix,
@@ -75,7 +53,7 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
                 cancellationToken
             );
 
-            context.Response.Results = ResponseResult.Create(new(containers ?? []), StorageJsonContext.Default.ContainerGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new ContainerGetCommandResult(containers ?? []), StorageJsonContext.Default.ContainerGetCommandResult);
             return context.Response;
         }
         catch (Exception ex)
@@ -93,5 +71,5 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
         }
     }
 
-    internal record ContainerGetCommandResult(List<ContainerInfo> Containers);
+    public record ContainerGetCommandResult(List<ContainerInfo> Containers);
 }
