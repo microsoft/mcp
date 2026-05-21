@@ -3,6 +3,9 @@
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="Azure.Mcp.Tools.Insights.UnitTests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
