@@ -9,8 +9,8 @@ namespace Azure.Mcp.Tools.Kusto.Options;
 
 public class ClusterGetOptions : ISubscriptionOption
 {
-    [Option("Kusto Cluster name.")]
-    public required string Cluster { get; set; }
+    [Option("Kusto Cluster name.", Name = "cluster")]
+    public required string ClusterName { get; set; }
 
     [Option(OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }

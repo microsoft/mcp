@@ -36,7 +36,7 @@ public sealed class ClusterGetCommand(
         {
             var cluster = await kustoService.GetClusterAsync(
                 options.Subscription!,
-                options.Cluster,
+                options.ClusterName,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -46,7 +46,7 @@ public sealed class ClusterGetCommand(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An exception occurred getting Kusto cluster details. Cluster: {Cluster}.", options.Cluster);
+            logger.LogError(ex, "An exception occurred getting Kusto cluster details. Cluster: {Cluster}.", options.ClusterName);
             HandleException(context, ex);
         }
 
