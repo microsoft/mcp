@@ -154,6 +154,33 @@ public class BlobUploadOptions : ISubscriptionOption
 
 > **Tip**: Copy option descriptions from the `option` array in `.work/azure-tools-before.json` or from the old `StorageOptionDefinitions` / `OptionDefinitions.Common` static fields to keep them identical.
 
+#### Toolset-scoped description constants (`{Toolset}OptionDescriptions`)
+
+If the same description string appears on multiple options classes within a toolset (e.g., `"Kusto Cluster name."` on `QueryOptions`, `DatabaseListOptions`, `TableListOptions`, etc.), extract it into a `{Toolset}OptionDescriptions` class:
+
+```csharp
+// Options/KustoOptionDescriptions.cs
+namespace Azure.Mcp.Tools.Kusto.Options;
+
+internal static class KustoOptionDescriptions
+{
+    public const string Cluster = "Kusto Cluster name.";
+    public const string ClusterUri = "Kusto Cluster URI.";
+    public const string Database = "Kusto Database name.";
+    public const string Table = "Kusto Table name.";
+    public const string Query = "Kusto query to execute. Uses KQL syntax.";
+    public const string Limit = "The maximum number of results to return. Must be a positive integer between 1 and 10000. Default is 10.";
+}
+```
+
+Then reference them in `[Option]` attributes:
+```csharp
+[Option(KustoOptionDescriptions.Database)]
+public required string Database { get; set; }
+```
+
+This replaces the old `{Toolset}OptionDefinitions` class — keep only the `const string` descriptions, delete the `Option<T>` static fields and the `readonly` helpers. If all descriptions in the old class are already in `OptionDescriptions` (the shared core constants), you can delete it entirely.
+
 ### Step 3: Change the Command Base Class
 
 **Old:** Chain of `BaseCommand<T>` → `GlobalCommand<T>` → `SubscriptionCommand<T>` → `BaseXxxCommand<T>`
@@ -397,6 +424,26 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
 
 > **Prefer string args over constructing options directly.** Using `ExecuteCommandAsync("--account", ...)` tests the full pipeline: `[Option]` attribute registration, `OptionBinder` parsing, and `SubscriptionResolver` post-processing. Constructing `TOptions` by hand only tests `ExecuteAsync` logic.
 
+### Step 9: Delete Dead Code
+
+After converting all commands in a toolset, the following files become dead code:
+
+| Delete | Reason |
+|---|---|
+| `{Toolset}OptionDefinitions.cs` | `Option<T>` static fields are no longer used; descriptions migrate to `{Toolset}OptionDescriptions` or get inlined |
+| Intermediate base options classes (`BaseAdvisorOptions`, `BaseBlobOptions`, etc.) | Properties now live in the flat POCOs |
+| Intermediate base command classes (`BaseAdvisorCommand`, `BaseBlobCommand`, etc.) | `RegisterOptions`/`BindOptions` logic is gone; shared error handling moves to the leaf command |
+| Old `using` imports for `System.CommandLine` in options files | No longer needed — options are plain POCOs |
+
+**When to keep a file:**
+- If you created a `{Toolset}OptionDescriptions.cs` with shared constants, keep it
+- If a base command has non-option logic (e.g., `GetErrorMessage` override shared by multiple commands), convert it to a helper or leave it as a base class — but strip the old `RegisterOptions`/`BindOptions` overrides
+
+**Verify nothing references deleted files:**
+```powershell
+dotnet build tools/Azure.Mcp.Tools.{Toolset}/src
+```
+
 ## Quick Reference: Old vs New
 
 | Aspect | Old (one-generic) | New (two-generic) |
@@ -423,6 +470,8 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
 - [ ] Remove manual `Validate()` call — use `ValidateOptions()` override if needed
 - [ ] Remove `RegisterOptions` / `BindOptions` overrides
 - [ ] Convert or remove intermediate base command classes (use interface constraints if keeping)
+- [ ] Convert `{Toolset}OptionDefinitions` → `{Toolset}OptionDescriptions` (keep description constants, delete `Option<T>` fields)
+- [ ] Delete dead options base classes (e.g., `BaseStorageOptions`, `BaseBlobOptions`) — their properties are now in the flat POCO
 - [ ] Re-parent test classes to `SubscriptionCommandUnitTestsBase<TCommand, TService>`
 - [ ] Verify option parity via `tools list` output
 - [ ] Build and run tests
