@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed four Key Vault bugs: ListKeys now correctly includes all keys (managed and non-managed) when --include-managed is true instead of returning only managed keys; AdminSettingsGetCommand now applies retry policy; KeyType option now lists all 4 valid types (RSA, RSA-HSM, EC, EC-HSM); ImportCertificate now returns HTTP 400 for invalid certificate data instead of HTTP 500"
