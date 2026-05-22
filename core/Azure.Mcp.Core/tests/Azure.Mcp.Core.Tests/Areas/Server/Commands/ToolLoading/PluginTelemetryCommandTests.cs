@@ -46,7 +46,9 @@ public class PluginTelemetryCommandTests
         {
             RootCommandGroupName = "azmcp",
             Name = "Azure.Mcp.Server.Test",
+            ShortName = "azure",
             DisplayName = "Azure MCP Server (Test)",
+            Description = "Azure MCP Server (Test) description",
             Version = "1.0.0-test"
         }));
         services.AddSingleton(Substitute.For<ITelemetryService>());

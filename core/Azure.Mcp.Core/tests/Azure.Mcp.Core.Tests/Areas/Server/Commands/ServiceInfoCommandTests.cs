@@ -18,8 +18,10 @@ public class ServiceInfoCommandTests : CommandUnitTestsBase<ServiceInfoCommand, 
         _mcpServerConfiguration = new McpServerConfiguration
         {
             Name = "Test-Name?",
+            ShortName = "test",
             Version = "Test-Version?",
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
         Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(_mcpServerConfiguration));
