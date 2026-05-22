@@ -126,7 +126,7 @@ function CreateTestSolution {
 
 function Create-CoverageReport {
     # Find the coverage file
-    $coverageFile = Get-ChildItem -Path $TestResultsPath -Recurse -Filter "coverage.cobertura.xml"
+    $coverageFile = Get-ChildItem -Path $TestResultsPath -Recurse -Filter "coverage.cobertura.*.xml"
     | Where-Object { $_.FullName.Replace('\','/') -notlike "*/in/*" }
     | Select-Object -First 1
 
@@ -300,9 +300,9 @@ try {
     $resultsArg = "--results-directory '$TestResultsPath'"
     $loggerArg = "--report-xunit-trx --output 'Detailed'"
     $filterArg = switch ($TestType) {
-        'Live' { "--filter-trait `"TestType=Live`"" }
-        'Unit' { "--filter-not-trait `"TestType=Live`"" }
-        'Recorded' { "--filter-trait `"TestType=Live`"" }
+        'Live' { "--filter-trait 'TestType=Live'" }
+        'Unit' { "--filter-not-trait 'TestType=Live'" }
+        'Recorded' { "--filter-trait 'TestType=Live'" }
         default { "" }
     }
 

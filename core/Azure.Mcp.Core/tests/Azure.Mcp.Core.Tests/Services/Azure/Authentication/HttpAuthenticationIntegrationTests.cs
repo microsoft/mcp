@@ -10,6 +10,7 @@ using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Services.Azure.Authentication;
@@ -30,7 +31,13 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
 
     public async ValueTask InitializeAsync()
     {
-        Assert.SkipWhen(TestExtensions.IsRunningFromDotnetTest(), TestExtensions.RunningFromDotnetTestReason);
+        Assert.SkipWhen(TestExtensions.IsRunningInNonInteractiveEnvironment(), TestExtensions.RunningInNonInteractiveEnvironment);
+
+        LiveTestSettings? settings = null;
+        LiveTestSettings.TryLoadTestSettings(out settings);
+
+        Assert.SkipWhen(settings?.TestMode != TestMode.Live,
+            "HTTP authentication tests are skipped because test settings indicate non-live mode or settings file is missing.");
 
         // Get AAD configuration from environment variables
         var tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID");
@@ -63,9 +70,6 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
             ["AzureAd__ClientId"] = clientId,
             ["ASPNETCORE_ENVIRONMENT"] = "Development"
         };
-
-        LiveTestSettings? settings = null;
-        LiveTestSettings.TryLoadTestSettings(out settings);
 
         var (_, serverUrl) = await McpTestUtilities.CreateMcpClientAsync(
             executablePath,

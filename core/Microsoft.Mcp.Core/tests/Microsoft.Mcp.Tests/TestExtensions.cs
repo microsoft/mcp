@@ -8,10 +8,10 @@ namespace Microsoft.Mcp.Tests;
 
 public static class TestExtensions
 {
-    public const string RunningFromDotnetTestReason =
-        "Test skipped when running from dotnet test. This test requires interactive environment.";
+    public const string RunningInNonInteractiveEnvironment =
+        "Test skipped when running in a non-interactive environment (dotnet test or DevOps). This test requires interactive environment.";
 
-    public static bool IsRunningFromDotnetTest()
+    public static bool IsRunningInNonInteractiveEnvironment()
     {
         bool isVsCode = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VSCODE_CLI")) ||
                        !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VSCODE_PID")) ||
@@ -23,8 +23,17 @@ public static class TestExtensions
         }
 
         // Check for environment variables that indicate we're running from dotnet test
-        return !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VSTEST_HOST_DEBUG")) ||
+        bool isDotnetTest = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VSTEST_HOST_DEBUG")) ||
                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DOTNET_HOST_PATH"));
+
+        if (isDotnetTest)
+        {
+            return true;
+        }
+
+        // Check for environment variables that indicate we're running in a CI environment, which is also non-interactive
+        return !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CI")) ||
+            !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("TF_BUILD"));
     }
 
     public static JsonElement AssertProperty(this JsonElement? element, string propertyName)
