@@ -14,7 +14,7 @@ jobs:
     inputs:
       versionSpec: '22.x'
 
-  - ${{ if endsWith(parameters.Repository, '-pr') }}:
+  - ${{ if endsWith(variables['Build.Repository.Name'], '-pr') }}:
     - template: /eng/common/pipelines/templates/steps/login-to-github.yml
       parameters:
         TokenOwners: ['Microsoft']

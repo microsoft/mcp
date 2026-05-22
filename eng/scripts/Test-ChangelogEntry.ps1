@@ -38,7 +38,7 @@ try {
         Write-Error "Failed to determine changed files with 'git diff --name-only --diff-filter=AM $diffRange'. $gitError"
         exit 1
     }
-    $hasChangelog = $changedFiles | Where-Object { $_ -match 'changelog-entries/.*\.yml$' -or $_ -match 'CHANGELOG\.md'}
+    $hasChangelog = $changedFiles | Where-Object { $_ -match 'changelog-entries/.*\.ya?ml$' -or $_ -match 'CHANGELOG\.md'}
 
     if ($hasChangelog) {
         Write-Host "Found changelog entry: $($hasChangelog -join ', ')"
