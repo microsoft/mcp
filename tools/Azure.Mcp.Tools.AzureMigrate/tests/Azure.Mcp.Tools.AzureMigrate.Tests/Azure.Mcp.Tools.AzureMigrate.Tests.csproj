@@ -9,17 +9,14 @@
     <OutputType>Exe</OutputType>
     <HasLiveTests>true</HasLiveTests>
     <HasUnitTests>true</HasUnitTests>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="NSubstitute" />
-    <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.v3.assert" />
-    <PackageReference Include="xunit.v3.extensibility.core" />
-    <PackageReference Include="xunit.runner.visualstudio">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="coverlet.MTP" />
   </ItemGroup>
 
   <ItemGroup>

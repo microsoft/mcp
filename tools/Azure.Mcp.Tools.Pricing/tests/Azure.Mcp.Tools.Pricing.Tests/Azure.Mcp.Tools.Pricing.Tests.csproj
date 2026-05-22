@@ -4,13 +4,13 @@
     <OutputType>Exe</OutputType>
     <HasLiveTests>true</HasLiveTests>
     <HasUnitTests>true</HasUnitTests>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NSubstitute" />
     <PackageReference Include="NSubstitute.Analyzers.CSharp" />
-    <PackageReference Include="xunit.v3" />
-    <PackageReference Include="xunit.runner.visualstudio" />
-    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="coverlet.MTP" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj" />
