@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
 using Azure.Mcp.Tools.Compute.Services;
@@ -141,5 +142,5 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, ICo
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmPowerStateCommandResult(Models.VmPowerStateResult PowerState);
+    internal record VmPowerStateCommandResult([property: JsonPropertyName("PowerState")] Models.VmPowerStateResult PowerState);
 }
