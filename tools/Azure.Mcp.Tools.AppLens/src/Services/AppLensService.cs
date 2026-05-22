@@ -52,7 +52,7 @@ public class AppLensService(
 
         if (findResult is DidNotFindResourceResult notFound)
         {
-            throw new InvalidOperationException(notFound.Message);
+            return new DiagnosticResult([notFound.Message], [], string.Empty, string.Empty);
         }
 
         var foundResource = (FoundResourceResult)findResult;
