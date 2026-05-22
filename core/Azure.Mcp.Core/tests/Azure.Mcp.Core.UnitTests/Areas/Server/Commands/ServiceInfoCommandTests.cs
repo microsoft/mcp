@@ -32,8 +32,10 @@ public class ServiceInfoCommandTests
         _mcpServerConfiguration = new McpServerConfiguration
         {
             Name = "Test-Name?",
+            ShortName = "test",
             Version = "Test-Version?",
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
         _command = new(Microsoft.Extensions.Options.Options.Create(_mcpServerConfiguration), _logger);

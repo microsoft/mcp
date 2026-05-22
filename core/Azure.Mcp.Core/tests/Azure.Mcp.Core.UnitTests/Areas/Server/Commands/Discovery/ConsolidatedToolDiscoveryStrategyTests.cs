@@ -24,8 +24,10 @@ public class ConsolidatedToolDiscoveryStrategyTests
         var configurationOptions = Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
         {
             Name = "Test Server",
+            ShortName = "test",
             Version = "Test Version",
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         });
 

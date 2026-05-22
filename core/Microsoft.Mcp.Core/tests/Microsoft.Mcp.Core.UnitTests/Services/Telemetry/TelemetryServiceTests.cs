@@ -24,9 +24,11 @@ public class TelemetryServiceTests
     private readonly McpServerConfiguration _testConfiguration = new()
     {
         Name = "TestService",
+        ShortName = "test",
         Version = "1.0.0",
         IsTelemetryEnabled = true,
         DisplayName = "Test Display",
+        Description = "Test Description",
         RootCommandGroupName = "azmcp"
     };
     private readonly IOptions<McpServerConfiguration> _mockOptions;
@@ -159,9 +161,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
 
@@ -191,9 +195,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
 
@@ -224,9 +230,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
 
@@ -263,9 +271,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
         var operationName = "an-activity-id";
@@ -297,9 +307,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
 
@@ -342,9 +354,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
         var operationName = "an-activity-id";
@@ -385,9 +399,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
         var operationName = "an-activity-id";
@@ -449,9 +465,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
         var operationName = "an-activity-id";
