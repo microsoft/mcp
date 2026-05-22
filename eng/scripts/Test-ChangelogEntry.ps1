@@ -24,12 +24,9 @@ try {
         exit 0
     }
     Write-Host "DEBUG: Running 'gh pr view $prNumber --json labels --jq .labels[].name'"
-    $rawLabels = gh pr view $prNumber --json labels --jq '.labels[].name' 2>&1
+    $labels = gh pr view $prNumber --json labels --jq '.labels[].name' 2>&1
     Write-Host "DEBUG: gh exit code = $LASTEXITCODE"
-    Write-Host "DEBUG: Raw labels output = '$rawLabels'"
-    # Split into array to handle single-string or multi-line output
-    $labels = @($rawLabels) | ForEach-Object { $_ -split "`n" } | ForEach-Object { $_.Trim() } | Where-Object { $_ }
-    Write-Host "DEBUG: Parsed labels = '$($labels -join ', ')'"
+    Write-Host "DEBUG: Labels returned = '$($labels -join ', ')'"
     if ($labels -contains 'skip-changelog') {
         Write-Host "'skip-changelog' label found — skipping."
         exit 0
