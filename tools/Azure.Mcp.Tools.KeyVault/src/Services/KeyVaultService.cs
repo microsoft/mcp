@@ -36,7 +36,7 @@ public sealed class KeyVaultService(
         var client = CreateKeyClient(vaultName, credential, retryPolicy);
         var keys = new List<string>();
 
-        await foreach (var key in client.GetPropertiesOfKeysAsync(cancellationToken).Where(x => includeManagedKeys || x.Managed != true))
+        await foreach (var key in client.GetPropertiesOfKeysAsync(cancellationToken).Where(x => includeManagedKeys || !x.Managed))
         {
             keys.Add(key.Name);
         }
