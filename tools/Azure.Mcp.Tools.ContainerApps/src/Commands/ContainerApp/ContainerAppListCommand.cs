@@ -43,6 +43,7 @@ public sealed class ContainerAppListCommand(ILogger<ContainerAppListCommand> log
             var containerApps = await _containerAppsService.ListContainerApps(
                 options.Subscription!,
                 options.ResourceGroup,
+                options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 

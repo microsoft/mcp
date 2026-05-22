@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed not-found conditions in SubscriptionService, TenantService, and ResourceGroupService returning HTTP 500/400 instead of HTTP 404"
