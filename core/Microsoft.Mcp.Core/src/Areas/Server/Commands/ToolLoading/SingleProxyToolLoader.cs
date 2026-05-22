@@ -15,36 +15,22 @@ using ModelContextProtocol.Protocol;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
-public sealed class SingleProxyToolLoader : BaseToolLoader
+public sealed class SingleProxyToolLoader(
+    IMcpDiscoveryStrategy discoveryStrategy,
+    ILogger<SingleProxyToolLoader> logger,
+    IOptions<ToolLoaderOptions> options,
+    IOptions<McpServerConfiguration> serverConfiguration) : BaseToolLoader(logger)
 {
-    private readonly IMcpDiscoveryStrategy _discoveryStrategy;
+    private readonly IMcpDiscoveryStrategy _discoveryStrategy = discoveryStrategy ?? throw new ArgumentNullException(nameof(discoveryStrategy));
+    private readonly IOptions<ToolLoaderOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly string _toolName = serverConfiguration?.Value.ShortName ?? throw new ArgumentNullException(nameof(serverConfiguration));
+    private readonly string _toolDescription = serverConfiguration!.Value.Description;
+    private readonly string _displayName = serverConfiguration!.Value.DisplayName;
+    private readonly JsonElement _toolSchema = BuildToolSchema(serverConfiguration!.Value.ShortName);
+
     private string? _cachedRootToolsJson;
     private readonly ConcurrentDictionary<string, string> _cachedToolListsJson = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, IList<McpClientTool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
-    private readonly IOptions<ToolLoaderOptions> _options;
-    private readonly string _toolName;
-    private readonly string _toolDescription;
-    private readonly string _displayName;
-    private readonly JsonElement _toolSchema;
-
-    public SingleProxyToolLoader(
-        IMcpDiscoveryStrategy discoveryStrategy,
-        ILogger<SingleProxyToolLoader> logger,
-        IOptions<ToolLoaderOptions> options,
-        IOptions<McpServerConfiguration> serverConfiguration) : base(logger)
-    {
-        _discoveryStrategy = discoveryStrategy ?? throw new ArgumentNullException(nameof(discoveryStrategy));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-        ArgumentNullException.ThrowIfNull(serverConfiguration);
-
-        var configuration = serverConfiguration.Value
-            ?? throw new ArgumentNullException(nameof(serverConfiguration));
-
-        _toolName = configuration.ShortName;
-        _toolDescription = configuration.Description;
-        _displayName = configuration.DisplayName;
-        _toolSchema = BuildToolSchema(_toolName);
-    }
 
     private const string ToolCallProxySchema = """
         {
