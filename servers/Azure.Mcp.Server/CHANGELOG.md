@@ -2,15 +2,23 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.12 (Unreleased)
+## 3.0.0-beta.12 (2026-05-22)
 
 ### Features Added
 
-### Breaking Changes
+- Added the new `nfs-encryption-in-transit` option to Azure File Shares `create`/`update` commands. [[#2648](https://github.com/microsoft/mcp/pull/2648)]
 
 ### Bugs Fixed
 
+- Updated Container App tools to accept a `tenant` parameter. [[#2702](https://github.com/microsoft/mcp/pull/2702)]
+- Fixed not-found conditions in `SubscriptionService`, `TenantService`, and `ResourceGroupService` returning HTTP `500`/`400` instead of HTTP `404`. [[#2703](https://github.com/microsoft/mcp/pull/2703)]
+- Updated App Lens tools to return a response with a "resource not found" message instead of throwing an exception when no resource matches the given name, so telemetry no longer reports these expected cases as tool failures. [[#2700](https://github.com/microsoft/mcp/pull/2700)]
+
 ### Other Changes
+
+#### Dependency Updates
+
+- Upgraded `Azure.ResourceManager.FileShares` to GA version from `1.0.0-beta.2` to `1.0.0`. [[#2648](https://github.com/microsoft/mcp/pull/2648)]
 
 ## 3.0.0-beta.11 (2026-05-20)
 
