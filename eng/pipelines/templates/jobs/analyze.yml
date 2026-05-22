@@ -14,16 +14,16 @@ jobs:
     inputs:
       versionSpec: '22.x'
 
-  - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+  - ${{ if endsWith(parameters.Repository, '-pr') }}:
     - template: /eng/common/pipelines/templates/steps/login-to-github.yml
+      parameters:
+        TokenOwners: ['Microsoft']
   
   - task: Powershell@2
     displayName: "Run source analysis"
     inputs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Analyze-Code.ps1
-    env:
-      GH_TOKEN: $(azuresdk-github-pat)
 
   # Run AOT analysis only on Linux x64
   - template: /eng/pipelines/templates/steps/analyze-aot-compact.yml
