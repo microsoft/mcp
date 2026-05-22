@@ -273,6 +273,11 @@ public static class ServiceCollectionExtensions
                 options.DisplayName = rootConfiguration[nameof(McpServerConfiguration.DisplayName)]
                     ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.DisplayName)}' is required.");
 
+                options.ShortName = rootConfiguration[nameof(McpServerConfiguration.ShortName)]
+                    ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.ShortName)}' is required.");
+                options.Description = rootConfiguration[nameof(McpServerConfiguration.Description)]
+                    ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.Description)}' is required.");
+
                 // Assembly.GetEntryAssembly is used to retrieve the version of the server application as that is
                 // the assembly that will run the tool calls.
                 var entryAssembly = Assembly.GetEntryAssembly()
