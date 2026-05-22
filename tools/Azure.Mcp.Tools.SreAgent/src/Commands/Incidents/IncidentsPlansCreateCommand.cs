@@ -12,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
-[CommandMetadata(Id = "84d958db-8de0-456d-a1d5-99d372f33c80", Name = "plans-create", Title = "Create Incident Response Plan", Description = "Create and enable an incident response plan with a filter and handler.", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+[CommandMetadata(Id = "84d958db-8de0-456d-a1d5-99d372f33c80", Name = "plans_create", Title = "Create Incident Response Plan", Description = "Create and enable an incident response plan with a filter and handler.", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
 public sealed class IncidentsPlansCreateCommand(ILogger<IncidentsPlansCreateCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<IncidentPlanCreateOptions>
 {
     private static readonly Dictionary<string, string[]> SeverityToPriorities = new(StringComparer.OrdinalIgnoreCase)
@@ -41,14 +41,14 @@ public sealed class IncidentsPlansCreateCommand(ILogger<IncidentsPlansCreateComm
     protected override IncidentPlanCreateOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
-        o.Severity = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Severity.Name);
-        o.TriggerCondition = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.TriggerCondition.Name);
-        o.Services = parseResult.GetValueOrDefault<string[]>(SreAgentOptionDefinitions.Services.Name);
-        o.Steps = parseResult.GetValueOrDefault<string[]>(SreAgentOptionDefinitions.Steps.Name);
-        o.Escalation = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Escalation.Name);
-        o.RunbookUrl = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.RunbookUrl.Name);
-        o.AgentMode = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.AgentMode.Name);
+        o.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
+        o.Severity = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Severity);
+        o.TriggerCondition = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.TriggerCondition);
+        o.Services = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Services);
+        o.Steps = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Steps);
+        o.Escalation = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Escalation);
+        o.RunbookUrl = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.RunbookUrl);
+        o.AgentMode = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.AgentMode);
         return o;
     }
 

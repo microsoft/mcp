@@ -39,7 +39,7 @@ public sealed class SkillsListCommand(ILogger<SkillsListCommand> logger, ISreAge
     protected override SkillsListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Agent = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Agent.Name);
+        options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
         return options;
     }
 

@@ -42,7 +42,7 @@ public sealed class HooksDeleteCommand(ILogger<HooksDeleteCommand> logger, ISreA
         var options = base.BindOptions(parseResult);
         options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
         options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
-        options.Confirm = parseResult.GetValueOrDefault<bool>(SreAgentOptionDefinitions.Confirm.Name);
+        options.Confirm = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Confirm);
         return options;
     }
 

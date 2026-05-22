@@ -40,8 +40,8 @@ public sealed class AgentsToolsGetCommand(ILogger<AgentsToolsGetCommand> logger,
     protected override AgentsToolsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Agent = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Agent.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
+        options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
+        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
         return options;
     }
 

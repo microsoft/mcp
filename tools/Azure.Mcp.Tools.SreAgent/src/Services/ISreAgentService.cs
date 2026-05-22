@@ -18,6 +18,17 @@ public interface ISreAgentService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Gets a single Azure SRE Agent resource by name using a targeted Resource Graph query.
+    /// </summary>
+    Task<SreAgentResource?> GetAgentAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string agentName = "",
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
     #region Agents + Skills (sub-agent A)
 
     Task<SreSubAgent> GetSubAgentAsync(string endpoint, string name, string? tenant = null, CancellationToken cancellationToken = default);

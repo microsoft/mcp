@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -21,7 +21,7 @@ public class ConnectorsCreateKustoCommandTests : CommandUnitTestsBase<Connectors
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = Command.GetCommand();
-        Assert.Equal("create-kusto", command.Name);
+        Assert.Equal("create_kusto", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
@@ -47,16 +47,14 @@ public class ConnectorsCreateKustoCommandTests : CommandUnitTestsBase<Connectors
         TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
-            Service.ListAgentsAsync(
+            Service.GetAgentAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
+                Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentResource>
-                {
-                    new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-                });
+                .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
             Service.CreateOrUpdateConnectorAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -83,16 +81,14 @@ public class ConnectorsCreateKustoCommandTests : CommandUnitTestsBase<Connectors
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.CreateOrUpdateConnectorAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -113,16 +109,14 @@ public class ConnectorsCreateKustoCommandTests : CommandUnitTestsBase<Connectors
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.CreateOrUpdateConnectorAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -142,16 +136,14 @@ public class ConnectorsCreateKustoCommandTests : CommandUnitTestsBase<Connectors
     [Fact]
     public async Task BindOptions_BindsOptionsCorrectly()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.CreateOrUpdateConnectorAsync(
             "sub", "rg", "agent1", "connector1", Arg.Any<AgentConnectorEnvelope>(), null, Arg.Any<CancellationToken>())
             .Returns(new AgentConnector { Name = "connector1" });

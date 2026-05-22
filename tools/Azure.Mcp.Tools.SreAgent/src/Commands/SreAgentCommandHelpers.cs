@@ -19,14 +19,14 @@ internal static class SreAgentCommandHelpers
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
-        var agents = await sreAgentService.ListAgentsAsync(
+        var agent = await sreAgentService.GetAgentAsync(
             subscription,
             resourceGroup,
+            agentName,
             tenant,
             retryPolicy,
             cancellationToken);
 
-        var agent = agents.FirstOrDefault(a => string.Equals(a.Name, agentName, StringComparison.OrdinalIgnoreCase));
         if (agent is null)
         {
             throw new InvalidOperationException($"SRE Agent resource '{agentName}' was not found in the selected subscription and resource group.");

@@ -12,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
 
-[CommandMetadata(Id = "723c42ee-186d-4dfb-bc81-8437257f190d", Name = "memories-search", Title = "Search Memories", Description = "Search knowledge base documents.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+[CommandMetadata(Id = "723c42ee-186d-4dfb-bc81-8437257f190d", Name = "memories_search", Title = "Search Memories", Description = "Search knowledge base documents.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
 public sealed class MemoriesSearchCommand(ILogger<MemoriesSearchCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<MemoriesSearchOptions>
 {
     private readonly ILogger<MemoriesSearchCommand> _logger = logger;
@@ -27,7 +27,7 @@ public sealed class MemoriesSearchCommand(ILogger<MemoriesSearchCommand> logger,
     protected override MemoriesSearchOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Query = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Query.Name);
+        o.Query = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Query);
         return o;
     }
 

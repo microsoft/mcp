@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -21,7 +21,7 @@ public class IncidentsPlansListCommandTests : CommandUnitTestsBase<IncidentsPlan
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = Command.GetCommand();
-        Assert.Equal("plans-list", command.Name);
+        Assert.Equal("plans_list", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
@@ -42,16 +42,14 @@ public class IncidentsPlansListCommandTests : CommandUnitTestsBase<IncidentsPlan
     {
         if (shouldSucceed)
         {
-            Service.ListAgentsAsync(
+            Service.GetAgentAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
+                Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentResource>
-                {
-                    new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-                });
+                .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
             Service.ListIncidentFiltersAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new List<IncidentFilter>());
@@ -74,16 +72,14 @@ public class IncidentsPlansListCommandTests : CommandUnitTestsBase<IncidentsPlan
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
         Service.ListIncidentFiltersAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
@@ -97,16 +93,14 @@ public class IncidentsPlansListCommandTests : CommandUnitTestsBase<IncidentsPlan
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
         Service.ListIncidentFiltersAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new List<IncidentFilter>());
@@ -122,16 +116,14 @@ public class IncidentsPlansListCommandTests : CommandUnitTestsBase<IncidentsPlan
     [Fact]
     public async Task BindOptions_BindsOptionsCorrectly()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             "sub",
             null,
+            "agent1",
             "tenant1",
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
         Service.ListIncidentFiltersAsync(Arg.Any<string>(), "tenant1", Arg.Any<CancellationToken>())
             .Returns(new List<IncidentFilter>());

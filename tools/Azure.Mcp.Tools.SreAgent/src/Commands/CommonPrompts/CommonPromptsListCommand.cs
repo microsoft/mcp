@@ -27,7 +27,7 @@ public sealed class CommonPromptsListCommand(ILogger<CommonPromptsListCommand> l
     protected override CommonPromptsListOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Search = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Search.Name);
+        o.Search = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Search);
         return o;
     }
 

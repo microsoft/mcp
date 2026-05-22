@@ -10,7 +10,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
-[CommandMetadata(Id = "ab471ff4-7b46-4a0c-a54a-9a0371dcdd01", Name = "plans-list", Title = "List Incident Response Plans", Description = "List incident response plans configured on an SRE Agent.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+[CommandMetadata(Id = "ab471ff4-7b46-4a0c-a54a-9a0371dcdd01", Name = "plans_list", Title = "List Incident Response Plans", Description = "List incident response plans configured on an SRE Agent.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
 public sealed class IncidentsPlansListCommand(ILogger<IncidentsPlansListCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<IncidentRemoteOptions>
 {
     private readonly ILogger<IncidentsPlansListCommand> _logger = logger;

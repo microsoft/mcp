@@ -27,7 +27,7 @@ public sealed class ScheduledTasksGetCommand(ILogger<ScheduledTasksGetCommand> l
     protected override ScheduledTasksGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TaskId = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.TaskId.Name);
+        options.TaskId = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.TaskId);
         return options;
     }
 

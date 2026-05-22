@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -21,7 +21,7 @@ public class IncidentsSetupPagerdutyCommandTests : CommandUnitTestsBase<Incident
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = Command.GetCommand();
-        Assert.Equal("setup-pagerduty", command.Name);
+        Assert.Equal("setup_pagerduty", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
@@ -44,16 +44,14 @@ public class IncidentsSetupPagerdutyCommandTests : CommandUnitTestsBase<Incident
         if (shouldSucceed)
         {
             Environment.SetEnvironmentVariable("KEY_VAR", "test-key");
-            Service.ListAgentsAsync(
+            Service.GetAgentAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
+                Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentResource>
-                {
-                    new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-                });
+                .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
             Service.ResolveAgentResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
                 .Returns("rg");
             Service.GetConnectorAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
@@ -78,16 +76,14 @@ public class IncidentsSetupPagerdutyCommandTests : CommandUnitTestsBase<Incident
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         Environment.SetEnvironmentVariable("KEY_VAR", "test-key");
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.ResolveAgentResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns("rg");
         Service.GetConnectorAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
@@ -105,16 +101,14 @@ public class IncidentsSetupPagerdutyCommandTests : CommandUnitTestsBase<Incident
     public async Task ExecuteAsync_DeserializationValidation()
     {
         Environment.SetEnvironmentVariable("KEY_VAR", "test-key");
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.ResolveAgentResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns("rg");
         Service.GetConnectorAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
@@ -132,16 +126,14 @@ public class IncidentsSetupPagerdutyCommandTests : CommandUnitTestsBase<Incident
     public async Task BindOptions_BindsOptionsCorrectly()
     {
         Environment.SetEnvironmentVariable("KEY_VAR", "test-key");
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             "sub",
             null,
+            "agent1",
             "tenant1",
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.ResolveAgentResourceGroupAsync("sub", "agent1", "tenant1", Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns("rg");
         Service.GetConnectorAsync("sub", "rg", "agent1", Arg.Any<string>(), "tenant1", Arg.Any<CancellationToken>())

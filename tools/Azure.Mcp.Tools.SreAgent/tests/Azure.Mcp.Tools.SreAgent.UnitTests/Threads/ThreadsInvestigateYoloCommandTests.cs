@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -21,7 +21,7 @@ public class ThreadsInvestigateYoloCommandTests : CommandUnitTestsBase<ThreadsIn
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = Command.GetCommand();
-        Assert.Equal("investigate-with-agent-yolo", command.Name);
+        Assert.Equal("investigate_yolo", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
@@ -46,16 +46,14 @@ public class ThreadsInvestigateYoloCommandTests : CommandUnitTestsBase<ThreadsIn
         TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
-            Service.ListAgentsAsync(
+            Service.GetAgentAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
+                Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentResource>
-                {
-                    new() { Name = "test-agent", Endpoint = "https://test.azuresre.ai" }
-                });
+                .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
             Service.CreateThreadAsync(
                 Arg.Any<string>(),
@@ -98,16 +96,14 @@ public class ThreadsInvestigateYoloCommandTests : CommandUnitTestsBase<ThreadsIn
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "test-agent", Endpoint = "https://test.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
         Service.CreateThreadAsync(
             Arg.Any<string>(),
@@ -145,16 +141,14 @@ public class ThreadsInvestigateYoloCommandTests : CommandUnitTestsBase<ThreadsIn
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "test-agent", Endpoint = "https://test.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
         Service.CreateThreadAsync(
             Arg.Any<string>(),
@@ -172,16 +166,14 @@ public class ThreadsInvestigateYoloCommandTests : CommandUnitTestsBase<ThreadsIn
     [Fact]
     public async Task BindOptions_BindsOptionsCorrectly()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "test-agent", Endpoint = "https://test.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
         Service.CreateThreadAsync(
             "https://test.azuresre.ai",

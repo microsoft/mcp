@@ -39,7 +39,7 @@ public sealed class AgentsGetCommand(ILogger<AgentsGetCommand> logger, ISreAgent
     protected override AgentsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Agent = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Agent.Name);
+        options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
         return options;
     }
 
@@ -54,14 +54,14 @@ public sealed class AgentsGetCommand(ILogger<AgentsGetCommand> logger, ISreAgent
 
         try
         {
-            var agents = await _sreAgentService.ListAgentsAsync(
+            var agent = await _sreAgentService.GetAgentAsync(
                 options.Subscription!,
                 options.ResourceGroup,
+                options.Agent!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
-            var agent = agents.FirstOrDefault(a => string.Equals(a.Name, options.Agent, StringComparison.OrdinalIgnoreCase));
             if (agent is null)
             {
                 context.Response.Status = System.Net.HttpStatusCode.NotFound;

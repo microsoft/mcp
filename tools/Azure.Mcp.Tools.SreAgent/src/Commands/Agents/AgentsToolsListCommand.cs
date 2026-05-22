@@ -39,7 +39,7 @@ public sealed class AgentsToolsListCommand(ILogger<AgentsToolsListCommand> logge
     protected override AgentToolsListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Agent = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Agent.Name);
+        options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
         return options;
     }
 

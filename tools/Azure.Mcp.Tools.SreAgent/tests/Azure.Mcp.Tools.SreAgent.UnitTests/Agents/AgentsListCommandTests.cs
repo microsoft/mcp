@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -39,10 +39,7 @@ public class AgentsListCommandTests : CommandUnitTestsBase<AgentsListCommand, IS
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentResource>
-                {
-                    new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-                });
+                .Returns(new List<SreAgentResource> { new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" } });
         }
 
         var response = await ExecuteCommandAsync(args);

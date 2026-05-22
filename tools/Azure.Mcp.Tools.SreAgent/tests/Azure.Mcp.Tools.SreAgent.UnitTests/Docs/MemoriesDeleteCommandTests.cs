@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -21,7 +21,7 @@ public class MemoriesDeleteCommandTests : CommandUnitTestsBase<MemoriesDeleteCom
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = Command.GetCommand();
-        Assert.Equal("memories-delete", command.Name);
+        Assert.Equal("memories_delete", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
@@ -45,16 +45,14 @@ public class MemoriesDeleteCommandTests : CommandUnitTestsBase<MemoriesDeleteCom
         TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
-            Service.ListAgentsAsync(
+            Service.GetAgentAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
+                Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentResource>
-                {
-                    new() { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" }
-                });
+                .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
             Service.DeleteMemoryAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -78,16 +76,14 @@ public class MemoriesDeleteCommandTests : CommandUnitTestsBase<MemoriesDeleteCom
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
         Service.DeleteMemoryAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -104,16 +100,14 @@ public class MemoriesDeleteCommandTests : CommandUnitTestsBase<MemoriesDeleteCom
     [Fact]
     public async Task ExecuteAsync_RequiresConfirmFlag()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent", "--name", "memory.md");
 
@@ -125,16 +119,14 @@ public class MemoriesDeleteCommandTests : CommandUnitTestsBase<MemoriesDeleteCom
     [Fact]
     public async Task ExecuteAsync_DeletesWhenConfirmed()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
         Service.DeleteMemoryAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -21,7 +21,7 @@ public class IncidentsPlansCreateCommandTests : CommandUnitTestsBase<IncidentsPl
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = Command.GetCommand();
-        Assert.Equal("plans-create", command.Name);
+        Assert.Equal("plans_create", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
@@ -45,16 +45,14 @@ public class IncidentsPlansCreateCommandTests : CommandUnitTestsBase<IncidentsPl
     {
         if (shouldSucceed)
         {
-            Service.ListAgentsAsync(
+            Service.GetAgentAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
+                Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentResource>
-                {
-                    new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-                });
+                .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
             Service.CreateOrUpdateIncidentFilterAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<IncidentFilterPayload>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(Task.CompletedTask);
@@ -79,16 +77,14 @@ public class IncidentsPlansCreateCommandTests : CommandUnitTestsBase<IncidentsPl
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
         Service.CreateOrUpdateIncidentFilterAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<IncidentFilterPayload>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
@@ -102,16 +98,14 @@ public class IncidentsPlansCreateCommandTests : CommandUnitTestsBase<IncidentsPl
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
         Service.CreateOrUpdateIncidentFilterAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<IncidentFilterPayload>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
@@ -129,16 +123,14 @@ public class IncidentsPlansCreateCommandTests : CommandUnitTestsBase<IncidentsPl
     [Fact]
     public async Task BindOptions_BindsOptionsCorrectly()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             "sub",
             null,
+            "agent1",
             "tenant1",
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
         Service.CreateOrUpdateIncidentFilterAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<IncidentFilterPayload>(), "tenant1", Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);

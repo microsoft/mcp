@@ -3958,13 +3958,13 @@
         "sreagent_connectors_get",
         "sreagent_connectors_list",
         "sreagent_docs_get",
-        "sreagent_docs_memories-list",
-        "sreagent_docs_memories-search",
+        "sreagent_docs_memories_list",
+        "sreagent_docs_memories_search",
         "sreagent_hooks_get",
         "sreagent_hooks_list",
         "sreagent_hooks_thread_list",
         "sreagent_incidents_active_list",
-        "sreagent_incidents_plans-list",
+        "sreagent_incidents_plans_list",
         "sreagent_scheduledtasks_get",
         "sreagent_scheduledtasks_list",
         "sreagent_skills_list",
@@ -4041,9 +4041,9 @@
         "sreagent_agents_delete",
         "sreagent_agents_tools_create",
         "sreagent_commonprompts_delete",
-        "sreagent_connectors_create-kusto",
+        "sreagent_connectors_create_kusto",
         "sreagent_connectors_delete",
-        "sreagent_docs_memories-delete",
+        "sreagent_docs_memories_delete",
         "sreagent_hooks_delete",
         "sreagent_hooks_thread_activate",
         "sreagent_hooks_thread_deactivate",
@@ -4081,7 +4081,7 @@
         }
       },
       "mappedToolList": [
-        "sreagent_connectors_create-mcp"
+        "sreagent_connectors_create_mcp"
       ]
     },
     {
@@ -4150,8 +4150,8 @@
         }
       },
       "mappedToolList": [
-        "sreagent_incidents_setup-pagerduty",
-        "sreagent_incidents_setup-servicenow"
+        "sreagent_incidents_setup_pagerduty",
+        "sreagent_incidents_setup_servicenow"
       ]
     },
     {
@@ -4184,10 +4184,10 @@
         }
       },
       "mappedToolList": [
-        "sreagent_docs_memories-add",
-        "sreagent_docs_memories-reindex",
+        "sreagent_docs_memories_add",
+        "sreagent_docs_memories_reindex",
         "sreagent_incidents_create",
-        "sreagent_incidents_plans-create"
+        "sreagent_incidents_plans_create"
       ]
     },
     {
@@ -4222,9 +4222,9 @@
       "mappedToolList": [
         "sreagent_scheduledtasks_create",
         "sreagent_threads_create",
-        "sreagent_threads_investigate-with-agent",
-        "sreagent_threads_investigate-with-agent-yolo",
-        "sreagent_threads_send-message"
+        "sreagent_threads_investigate",
+        "sreagent_threads_investigate_yolo",
+        "sreagent_threads_send_message"
       ]
     },
     {

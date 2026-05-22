@@ -38,9 +38,11 @@ public sealed class SreAgentService(
     // Audience for SRE Agent data-plane tokens. Matches SRE_API_AUDIENCE in the Node CLI
     // (src/Agent/Agent.Cli.Node/src/services/auth.ts).
     private static readonly string[] DataPlaneScopes = ["59f0a04a-b322-4310-adc9-39ac41e9631e/.default"];
-    private static readonly string[] ArmScopes = ["https://management.azure.com/.default"];
-    private const string ArmHost = "https://management.azure.com";
     private const string ArmApiVersion = "2025-05-01-preview";
+
+    // ARM endpoint and scope are resolved from the cloud configuration to support sovereign clouds.
+    private string ArmHost => TenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
+    private string[] ArmScopes => [TenantService.CloudConfiguration.ArmEnvironment.DefaultScope];
 
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ILogger<SreAgentService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -64,6 +66,28 @@ public sealed class SreAgentService(
             cancellationToken: cancellationToken);
 
         return results.Results ?? [];
+    }
+
+    public async Task<SreAgentResource?> GetAgentAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string agentName = "",
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
+        ArgumentException.ThrowIfNullOrWhiteSpace(agentName);
+
+        return await ExecuteSingleResourceQueryAsync(
+            SreAgentResourceType,
+            resourceGroup,
+            subscription,
+            retryPolicy,
+            ConvertToSreAgentResource,
+            additionalFilter: $"name =~ '{EscapeKqlString(agentName)}'",
+            tenant: tenant,
+            cancellationToken: cancellationToken);
     }
 
     /// <summary>

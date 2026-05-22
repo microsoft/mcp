@@ -13,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
-[CommandMetadata(Id = "49de8921-8331-4328-9de2-f8b216af7dbf", Name = "setup-pagerduty", Title = "Set up PagerDuty Connector", Description = "Create a PagerDuty MCP connector using an API key from an environment variable.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = true, LocalRequired = false)]
+[CommandMetadata(Id = "49de8921-8331-4328-9de2-f8b216af7dbf", Name = "setup_pagerduty", Title = "Setup PagerDuty Connector", Description = "Create a PagerDuty MCP connector using an API key from an environment variable.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = true, LocalRequired = false)]
 public sealed class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetupPagerdutyCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<IncidentConnectorPagerDutyOptions>
 {
     private readonly ILogger<IncidentsSetupPagerdutyCommand> _logger = logger;
@@ -30,9 +30,9 @@ public sealed class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetupPagerdu
     protected override IncidentConnectorPagerDutyOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
-        o.ApiKeyEnv = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.ApiKeyEnv.Name);
-        o.Subdomain = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Subdomain.Name);
+        o.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
+        o.ApiKeyEnv = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.ApiKeyEnv);
+        o.Subdomain = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Subdomain);
         return o;
     }
 

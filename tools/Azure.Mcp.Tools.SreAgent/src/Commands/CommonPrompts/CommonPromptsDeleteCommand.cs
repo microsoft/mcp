@@ -27,8 +27,8 @@ public sealed class CommonPromptsDeleteCommand(ILogger<CommonPromptsDeleteComman
     protected override CommonPromptsDeleteOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
-        o.Confirm = parseResult.GetValueOrDefault<bool>(SreAgentOptionDefinitions.Confirm.Name);
+        o.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
+        o.Confirm = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Confirm);
         return o;
     }
 

@@ -28,8 +28,8 @@ public sealed class ScheduledTasksDeleteCommand(ILogger<ScheduledTasksDeleteComm
     protected override ScheduledTasksDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TaskId = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.TaskId.Name);
-        options.Confirm = parseResult.GetValueOrDefault<bool>(SreAgentOptionDefinitions.Confirm.Name);
+        options.TaskId = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.TaskId);
+        options.Confirm = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Confirm);
         return options;
     }
 

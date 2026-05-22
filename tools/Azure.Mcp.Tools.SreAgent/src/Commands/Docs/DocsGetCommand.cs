@@ -23,7 +23,7 @@ public sealed class DocsGetCommand(ILogger<DocsGetCommand> logger) : GlobalComma
     protected override DocsGetOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Topic = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Topic.Name);
+        o.Topic = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Topic);
         return o;
     }
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)

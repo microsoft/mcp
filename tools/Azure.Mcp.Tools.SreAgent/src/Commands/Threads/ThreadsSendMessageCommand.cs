@@ -12,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
 
-[CommandMetadata(Id = "35c72f68-e2b3-4e7b-bb89-4f1d4a6f2104", Name = "send-message", Title = "Send Thread Message", Description = "Send a message to an existing SRE Agent thread.", Destructive = false, Idempotent = false, OpenWorld = true, ReadOnly = false, Secret = false, LocalRequired = false)]
+[CommandMetadata(Id = "35c72f68-e2b3-4e7b-bb89-4f1d4a6f2104", Name = "send_message", Title = "Send Thread Message", Description = "Send a message to an existing SRE Agent thread.", Destructive = false, Idempotent = false, OpenWorld = true, ReadOnly = false, Secret = false, LocalRequired = false)]
 public sealed class ThreadsSendMessageCommand(ILogger<ThreadsSendMessageCommand> logger, ISreAgentService sreAgentService) : ThreadsCommandBase<ThreadsSendMessageOptions>
 {
     private readonly ILogger<ThreadsSendMessageCommand> _logger = logger;
@@ -28,8 +28,8 @@ public sealed class ThreadsSendMessageCommand(ILogger<ThreadsSendMessageCommand>
     protected override ThreadsSendMessageOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ThreadId = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.ThreadId.Name);
-        options.Message = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Message.Name);
+        options.ThreadId = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.ThreadId);
+        options.Message = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Message);
         return options;
     }
 

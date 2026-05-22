@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -45,16 +45,14 @@ public class ConnectorsDeleteCommandTests : CommandUnitTestsBase<ConnectorsDelet
         TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
-            Service.ListAgentsAsync(
+            Service.GetAgentAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
+                Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentResource>
-                {
-                    new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-                });
+                .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
             Service.DeleteConnectorAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -80,16 +78,14 @@ public class ConnectorsDeleteCommandTests : CommandUnitTestsBase<ConnectorsDelet
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.DeleteConnectorAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -109,16 +105,14 @@ public class ConnectorsDeleteCommandTests : CommandUnitTestsBase<ConnectorsDelet
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.DeleteConnectorAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -137,16 +131,14 @@ public class ConnectorsDeleteCommandTests : CommandUnitTestsBase<ConnectorsDelet
     [Fact]
     public async Task BindOptions_BindsOptionsCorrectly()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.DeleteConnectorAsync("sub", "rg", "agent1", "connector1", null, Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 

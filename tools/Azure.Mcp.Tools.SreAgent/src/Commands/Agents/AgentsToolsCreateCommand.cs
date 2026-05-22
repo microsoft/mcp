@@ -48,15 +48,15 @@ public sealed class AgentsToolsCreateCommand(ILogger<AgentsToolsCreateCommand> l
     protected override AgentsToolsCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Agent = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Agent.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
-        options.ToolType = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.ToolType.Name);
-        options.Description = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Description.Name);
-        options.Connector = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Connector.Name);
-        options.Database = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Database.Name);
-        options.Query = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Query.Name);
-        options.UrlTemplate = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.UrlTemplate.Name);
-        options.Parameters = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Parameters.Name);
+        options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
+        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
+        options.ToolType = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.ToolType);
+        options.Description = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Description);
+        options.Connector = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Connector);
+        options.Database = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Database);
+        options.Query = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Query);
+        options.UrlTemplate = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.UrlTemplate);
+        options.Parameters = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Parameters);
         return options;
     }
 

@@ -30,10 +30,10 @@ public sealed class ScheduledTasksCreateCommand(ILogger<ScheduledTasksCreateComm
     protected override ScheduledTasksCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
-        options.CronExpression = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.CronExpression.Name);
-        options.Message = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Message.Name);
-        options.Description = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Description.Name);
+        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
+        options.CronExpression = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.CronExpression);
+        options.Message = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Message);
+        options.Description = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Description);
         return options;
     }
 

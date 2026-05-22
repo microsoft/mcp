@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -43,16 +43,14 @@ public class CommonPromptsListCommandTests : CommandUnitTestsBase<CommonPromptsL
         TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
-            Service.ListAgentsAsync(
+            Service.GetAgentAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
+                Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentResource>
-                {
-                    new() { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" }
-                });
+                .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
             Service.ListCommonPromptsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
@@ -76,16 +74,14 @@ public class CommonPromptsListCommandTests : CommandUnitTestsBase<CommonPromptsL
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
         Service.ListCommonPromptsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -102,16 +98,14 @@ public class CommonPromptsListCommandTests : CommandUnitTestsBase<CommonPromptsL
     [Fact]
     public async Task ExecuteAsync_PassesSearchFilter()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
         Service.ListCommonPromptsAsync(
             Arg.Any<string>(),
             "test-search",

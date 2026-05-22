@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -43,16 +43,14 @@ public class ThreadsListCommandTests : CommandUnitTestsBase<ThreadsListCommand, 
         TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
-            Service.ListAgentsAsync(
+            Service.GetAgentAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
+                Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentResource>
-                {
-                    new() { Name = "test-agent", Endpoint = "https://test.azuresre.ai" }
-                });
+                .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
             Service.ListThreadsAsync(
                 Arg.Any<string>(),
@@ -80,16 +78,14 @@ public class ThreadsListCommandTests : CommandUnitTestsBase<ThreadsListCommand, 
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "test-agent", Endpoint = "https://test.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
         Service.ListThreadsAsync(
             Arg.Any<string>(),
@@ -113,16 +109,14 @@ public class ThreadsListCommandTests : CommandUnitTestsBase<ThreadsListCommand, 
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "test-agent", Endpoint = "https://test.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
         Service.ListThreadsAsync(
             Arg.Any<string>(),
@@ -139,16 +133,14 @@ public class ThreadsListCommandTests : CommandUnitTestsBase<ThreadsListCommand, 
     [Fact]
     public async Task BindOptions_BindsOptionsCorrectly()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "test-agent", Endpoint = "https://test.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
         Service.ListThreadsAsync("https://test.azuresre.ai", null, Arg.Any<CancellationToken>())
             .Returns(new List<SreAgentThread>());

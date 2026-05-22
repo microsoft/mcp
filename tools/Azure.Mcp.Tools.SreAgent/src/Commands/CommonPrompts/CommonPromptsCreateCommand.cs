@@ -27,8 +27,8 @@ public sealed class CommonPromptsCreateCommand(ILogger<CommonPromptsCreateComman
     protected override CommonPromptsCreateOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
-        o.Content = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Content.Name);
+        o.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
+        o.Content = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Content);
         return o;
     }
 

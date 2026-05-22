@@ -14,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
-[CommandMetadata(Id = "78c3a0cc-9185-44bf-93db-11be7f39a9b4", Name = "setup-servicenow", Title = "Set up ServiceNow Connector", Description = "Create a ServiceNow MCP connector using credentials from environment variables.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = true, LocalRequired = false)]
+[CommandMetadata(Id = "78c3a0cc-9185-44bf-93db-11be7f39a9b4", Name = "setup_servicenow", Title = "Setup ServiceNow Connector", Description = "Create a ServiceNow MCP connector using credentials from environment variables.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = true, LocalRequired = false)]
 public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServicenowCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<IncidentConnectorServiceNowOptions>
 {
     private readonly ILogger<IncidentsSetupServicenowCommand> _logger = logger;
@@ -34,12 +34,12 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
     protected override IncidentConnectorServiceNowOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
-        o.InstanceUrl = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.InstanceUrl.Name);
-        o.AuthType = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.AuthType.Name);
-        o.TokenEnv = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.TokenEnv.Name);
-        o.UsernameEnv = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.UsernameEnv.Name);
-        o.PasswordEnv = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.PasswordEnv.Name);
+        o.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
+        o.InstanceUrl = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.InstanceUrl);
+        o.AuthType = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.AuthType);
+        o.TokenEnv = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.TokenEnv);
+        o.UsernameEnv = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.UsernameEnv);
+        o.PasswordEnv = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.PasswordEnv);
         return o;
     }
 

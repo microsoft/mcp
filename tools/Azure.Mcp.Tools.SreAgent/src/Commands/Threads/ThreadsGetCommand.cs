@@ -27,7 +27,7 @@ public sealed class ThreadsGetCommand(ILogger<ThreadsGetCommand> logger, ISreAge
     protected override ThreadsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ThreadId = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.ThreadId.Name);
+        options.ThreadId = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.ThreadId);
         return options;
     }
 

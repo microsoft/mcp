@@ -42,10 +42,10 @@ public sealed class SkillsCreateCommand(ILogger<SkillsCreateCommand> logger, ISr
     protected override SkillsCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Agent = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Agent.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
-        options.Content = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Content.Name);
-        options.Description = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Description.Name);
+        options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
+        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
+        options.Content = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Content);
+        options.Description = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Description);
         return options;
     }
 

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -21,7 +21,7 @@ public class MemoriesListCommandTests : CommandUnitTestsBase<MemoriesListCommand
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = Command.GetCommand();
-        Assert.Equal("memories-list", command.Name);
+        Assert.Equal("memories_list", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
@@ -41,16 +41,14 @@ public class MemoriesListCommandTests : CommandUnitTestsBase<MemoriesListCommand
         TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
-            Service.ListAgentsAsync(
+            Service.GetAgentAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
+                Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentResource>
-                {
-                    new() { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" }
-                });
+                .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
             Service.ListMemoriesAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
@@ -73,16 +71,14 @@ public class MemoriesListCommandTests : CommandUnitTestsBase<MemoriesListCommand
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
         Service.ListMemoriesAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -98,16 +94,14 @@ public class MemoriesListCommandTests : CommandUnitTestsBase<MemoriesListCommand
     [Fact]
     public async Task ExecuteAsync_ReturnsDocumentList()
     {
-        Service.ListAgentsAsync(
+        Service.GetAgentAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource>
-            {
-                new() { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" }
-            });
+            .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
         Service.ListMemoriesAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
@@ -65,6 +64,4 @@ internal static class SreAgentPortedCommandHelpers
             ["extendedProperties"] = extendedProperties
         }
     };
-
-    public static string Percent(double score) => (score * 100).ToString("0", CultureInfo.InvariantCulture);
 }

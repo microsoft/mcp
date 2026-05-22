@@ -27,7 +27,7 @@ public sealed class ThreadsCreateCommand(ILogger<ThreadsCreateCommand> logger, I
     protected override ThreadsCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Message = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Message.Name);
+        options.Message = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Message);
         return options;
     }
 

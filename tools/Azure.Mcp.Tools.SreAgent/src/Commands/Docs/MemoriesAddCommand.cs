@@ -11,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
 
-[CommandMetadata(Id = "06255dae-7848-45f9-8cfc-b48bed1fe763", Name = "memories-add", Title = "Add Memory", Description = "Upload markdown content to the SRE Agent knowledge base.", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+[CommandMetadata(Id = "06255dae-7848-45f9-8cfc-b48bed1fe763", Name = "memories_add", Title = "Add Memory", Description = "Upload markdown content to the SRE Agent knowledge base.", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
 public sealed class MemoriesAddCommand(ILogger<MemoriesAddCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<MemoriesAddOptions>
 {
     private readonly ILogger<MemoriesAddCommand> _logger = logger;
@@ -27,8 +27,8 @@ public sealed class MemoriesAddCommand(ILogger<MemoriesAddCommand> logger, ISreA
     protected override MemoriesAddOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
-        o.Content = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Content.Name);
+        o.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
+        o.Content = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Content);
         return o;
     }
 

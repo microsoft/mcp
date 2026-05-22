@@ -219,7 +219,7 @@ namespace Azure.Mcp.Tools.SreAgent.LiveTests
         public async Task Should_list_incident_plans()
         {
             var result = await CallToolAsync(
-                "sreagent_incidents_plans-list",
+                "sreagent_incidents_plans_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -234,7 +234,7 @@ namespace Azure.Mcp.Tools.SreAgent.LiveTests
         public async Task Should_list_memories()
         {
             var result = await CallToolAsync(
-                "sreagent_docs_memories-list",
+                "sreagent_docs_memories_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -296,7 +296,7 @@ namespace Azure.Mcp.Tools.SreAgent.LiveTests
 
             // Add
             var addResult = await CallToolAsync(
-                "sreagent_docs_memories-add",
+                "sreagent_docs_memories_add",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -309,7 +309,7 @@ namespace Azure.Mcp.Tools.SreAgent.LiveTests
 
             // Search (best-effort; indexing may be asynchronous)
             var searchResult = await CallToolAsync(
-                "sreagent_docs_memories-search",
+                "sreagent_docs_memories_search",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -321,7 +321,7 @@ namespace Azure.Mcp.Tools.SreAgent.LiveTests
 
             // Delete
             var deleteResult = await CallToolAsync(
-                "sreagent_docs_memories-delete",
+                "sreagent_docs_memories_delete",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -337,7 +337,7 @@ namespace Azure.Mcp.Tools.SreAgent.LiveTests
         public async Task Should_reindex_memories()
         {
             var result = await CallToolAsync(
-                "sreagent_docs_memories-reindex",
+                "sreagent_docs_memories_reindex",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -355,7 +355,7 @@ namespace Azure.Mcp.Tools.SreAgent.LiveTests
 
             // Create (HTTP type with a placeholder endpoint)
             var createResult = await CallToolAsync(
-                "sreagent_connectors_create-mcp",
+                "sreagent_connectors_create_mcp",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },

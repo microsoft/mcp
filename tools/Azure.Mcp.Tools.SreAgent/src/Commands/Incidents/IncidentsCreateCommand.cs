@@ -29,10 +29,10 @@ public sealed class IncidentsCreateCommand(ILogger<IncidentsCreateCommand> logge
     protected override IncidentCreateOptions BindOptions(ParseResult parseResult)
     {
         var o = base.BindOptions(parseResult);
-        o.Severity = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Severity.Name);
-        o.Title = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Title.Name);
-        o.Description = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Description.Name);
-        o.Services = parseResult.GetValueOrDefault<string[]>(SreAgentOptionDefinitions.Services.Name);
+        o.Severity = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Severity);
+        o.Title = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Title);
+        o.Description = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Description);
+        o.Services = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Services);
         return o;
     }
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)

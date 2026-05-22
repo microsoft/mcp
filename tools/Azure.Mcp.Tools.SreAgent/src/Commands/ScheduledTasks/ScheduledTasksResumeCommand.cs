@@ -26,7 +26,7 @@ public sealed class ScheduledTasksResumeCommand(ILogger<ScheduledTasksResumeComm
     protected override ScheduledTasksResumeOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TaskId = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.TaskId.Name);
+        options.TaskId = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.TaskId);
         return options;
     }
 

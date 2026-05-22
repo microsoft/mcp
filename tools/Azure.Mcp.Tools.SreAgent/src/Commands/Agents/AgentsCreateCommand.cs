@@ -44,12 +44,12 @@ public sealed class AgentsCreateCommand(ILogger<AgentsCreateCommand> logger, ISr
     protected override AgentsCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Agent = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Agent.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Name.Name) ?? string.Empty;
-        options.Description = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Description.Name);
-        options.Instructions = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.Instructions.Name);
-        options.Tools = parseResult.GetValueOrDefault<string[]>(SreAgentOptionDefinitions.Tools.Name);
-        options.Handoffs = parseResult.GetValueOrDefault<string[]>(SreAgentOptionDefinitions.Handoffs.Name);
+        options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
+        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
+        options.Description = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Description);
+        options.Instructions = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Instructions);
+        options.Tools = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Tools);
+        options.Handoffs = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Handoffs);
         return options;
     }
 

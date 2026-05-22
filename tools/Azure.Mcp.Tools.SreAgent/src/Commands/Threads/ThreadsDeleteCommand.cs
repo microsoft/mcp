@@ -28,8 +28,8 @@ public sealed class ThreadsDeleteCommand(ILogger<ThreadsDeleteCommand> logger, I
     protected override ThreadsDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ThreadId = parseResult.GetValueOrDefault<string>(SreAgentOptionDefinitions.ThreadId.Name);
-        options.Confirm = parseResult.GetValueOrDefault<bool>(SreAgentOptionDefinitions.Confirm.Name);
+        options.ThreadId = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.ThreadId);
+        options.Confirm = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Confirm);
         return options;
     }
 

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -44,8 +44,8 @@ public class AgentsGetCommandTests : CommandUnitTestsBase<AgentsGetCommand, ISre
         TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
-            Service.ListAgentsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentResource> { new() { Name = "myagent", Endpoint = "https://test.azuresre.ai" } });
+            Service.GetAgentAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://test.azuresre.ai" });
         }
 
         var response = await ExecuteCommandAsync(args);
@@ -64,8 +64,8 @@ public class AgentsGetCommandTests : CommandUnitTestsBase<AgentsGetCommand, ISre
     public async Task ExecuteAsync_DeserializationValidation()
     {
         var testAgent = new SreAgentResource { Name = "myagent", Endpoint = "https://test.azuresre.ai", Location = "eastus2" };
-        Service.ListAgentsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource> { testAgent });
+        Service.GetAgentAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(testAgent);
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent");
 
@@ -78,7 +78,7 @@ public class AgentsGetCommandTests : CommandUnitTestsBase<AgentsGetCommand, ISre
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        Service.ListAgentsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetAgentAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent");
@@ -90,15 +90,16 @@ public class AgentsGetCommandTests : CommandUnitTestsBase<AgentsGetCommand, ISre
     [Fact]
     public async Task BindOptions_BindsOptionsCorrectly()
     {
-        Service.ListAgentsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentResource> { new() { Name = "myagent" } });
+        Service.GetAgentAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(new SreAgentResource { Name = "myagent" });
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await Service.Received(1).ListAgentsAsync(
+        await Service.Received(1).GetAgentAsync(
             "sub",
             Arg.Any<string?>(),
+            "myagent",
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
