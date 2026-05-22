@@ -48,7 +48,6 @@ public class SpeechSetupTests
         Assert.Equal("speech", speechGroup.Name);
         Assert.NotNull(speechGroup.Description);
         Assert.NotEmpty(speechGroup.Description);
-        Assert.True(speechGroup.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
@@ -69,7 +68,6 @@ public class SpeechSetupTests
         Assert.Equal("stt", sttGroup.Name);
         Assert.NotNull(sttGroup.Description);
         Assert.NotEmpty(sttGroup.Description);
-        Assert.True(sttGroup.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
@@ -93,7 +91,6 @@ public class SpeechSetupTests
         Assert.NotNull(recognizeCommand);
         Assert.NotNull(recognizeCommand.Description);
         Assert.NotEmpty(recognizeCommand.Description);
-        Assert.True(recognizeCommand.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

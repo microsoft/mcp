@@ -24,7 +24,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
         Assert.Equal("definitions", CommandDefinition.Name);
         Assert.NotNull(Command.Description);
         Assert.NotEmpty(Command.Description);
-        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

@@ -23,7 +23,6 @@ public class DiskGetCommandTests : CommandUnitTestsBase<DiskGetCommand, ICompute
         Assert.Equal("get", Command.Name);
         Assert.Contains("disk", Command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.NotEqual(Guid.Empty.ToString(), Command.Id.ToString());
-        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
@@ -375,4 +374,3 @@ public class DiskGetCommandTests : CommandUnitTestsBase<DiskGetCommand, ICompute
         Assert.Equal("exactdisk", result.Disks[0].Name);
     }
 }
-

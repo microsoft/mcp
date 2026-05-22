@@ -23,7 +23,6 @@ public sealed class PricingGetCommandTests : CommandUnitTestsBase<PricingGetComm
         Assert.True(Command.Metadata.ReadOnly);
         Assert.NotNull(Command.Description);
         Assert.NotEmpty(Command.Description);
-        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Theory]

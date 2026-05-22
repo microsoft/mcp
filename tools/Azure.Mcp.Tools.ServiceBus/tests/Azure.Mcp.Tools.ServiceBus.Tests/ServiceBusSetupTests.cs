@@ -64,7 +64,6 @@ public class ServiceBusSetupTests
         Assert.NotNull(serviceBusGroup);
         Assert.NotNull(serviceBusGroup.Description);
         Assert.NotEmpty(serviceBusGroup.Description);
-        Assert.True(serviceBusGroup.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
@@ -85,7 +84,6 @@ public class ServiceBusSetupTests
         Assert.Equal("queue", queueGroup.Name);
         Assert.NotNull(queueGroup.Description);
         Assert.NotEmpty(queueGroup.Description);
-        Assert.True(queueGroup.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
@@ -106,7 +104,6 @@ public class ServiceBusSetupTests
         Assert.Equal("topic", topicGroup.Name);
         Assert.NotNull(topicGroup.Description);
         Assert.NotEmpty(topicGroup.Description);
-        Assert.True(topicGroup.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

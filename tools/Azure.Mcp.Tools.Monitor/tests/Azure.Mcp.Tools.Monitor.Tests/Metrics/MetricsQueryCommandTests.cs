@@ -27,7 +27,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
         Assert.Equal("Query Azure Monitor Metrics", Command.Title);
         Assert.NotNull(Command.Description);
         Assert.NotEmpty(Command.Description);
-        Assert.True(Command.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

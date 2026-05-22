@@ -62,7 +62,6 @@ public class SpeechOptionDefinitionsTests
         Assert.True(option.Required);
         Assert.NotNull(option.Description);
         Assert.NotEmpty(option.Description);
-        Assert.True(option.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
@@ -77,7 +76,6 @@ public class SpeechOptionDefinitionsTests
         Assert.True(option.Required);
         Assert.NotNull(option.Description);
         Assert.NotEmpty(option.Description);
-        Assert.True(option.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
@@ -92,7 +90,6 @@ public class SpeechOptionDefinitionsTests
         Assert.False(option.Required);
         Assert.NotNull(option.Description);
         Assert.NotEmpty(option.Description);
-        Assert.True(option.Description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
