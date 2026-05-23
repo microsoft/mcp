@@ -11,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Workflows;
 
-[CommandMetadata(Id = "6cb0ff68-d279-44bc-9935-84f0b181240b", Name = "generate", Title = "Generate Workflow YAML", Description = "Generate validated YAML for SRE Agent agents or tools.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+[CommandMetadata(Id = "6cb0ff68-d279-44bc-9935-84f0b181240b", Name = "generate", Title = "Generate Workflow YAML", Description = "Generate a YAML workflow definition for a named SRE Agent tool or agent. Creates validated YAML configuration for ExtendedAgent, KustoTool, or LinkTool resources.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
 public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> logger) : GlobalCommand<WorkflowsGenerateOptions>
 {
     private readonly ILogger<WorkflowsGenerateCommand> _logger = logger;

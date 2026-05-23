@@ -977,7 +977,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | sreagent_scheduledtasks_pause | Pause the scheduled task <task_id> on SRE Agent <agent_name> |
 | sreagent_scheduledtasks_resume | Resume the scheduled task <task_id> on SRE Agent <agent_name> |
 | sreagent_incidents_active_list | List the active incidents on SRE Agent <agent_name> |
-| sreagent_incidents_create | Create an incident response plan named <plan> for SRE Agent <agent_name> |
+| sreagent_incidents_create | Create a new incident investigation for SRE Agent <agent_name> with title <title> |
 | sreagent_incidents_setup_pagerduty | Connect SRE Agent <agent_name> to PagerDuty |
 | sreagent_incidents_setup_servicenow | Connect SRE Agent <agent_name> to ServiceNow |
 | sreagent_workflows_generate | Generate a YAML workflow for a tool named <tool_name> |
@@ -986,7 +986,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | sreagent_docs_get | Show me the SRE Agent documentation for the topic <topic> |
 | sreagent_docs_memories_search | Search the SRE Agent knowledge base for <text> |
 | sreagent_docs_memories_add | Add a document called <name> to the SRE Agent knowledge base |
-| sreagent_architecture_generate | Generate an architecture document for the following requirements |
+| sreagent_architecture_plan | Plan an SRE Agent architecture for the following requirements: <requirements> |
 | sreagent_commonprompts_list | List the common prompts on SRE Agent <agent_name> |
 | sreagent_commonprompts_get | Show me the common prompt <prompt_name> on SRE Agent <agent_name> |
 | sreagent_commonprompts_create | Create a common prompt called <prompt_name> on SRE Agent <agent_name> |

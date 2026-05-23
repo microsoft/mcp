@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Skills;
     Id = "a052cd8d-05a5-44ed-8ee1-ef131c8b0321",
     Name = "delete",
     Title = "Delete SRE Agent Tool",
-    Description = "Deletes a custom tool from a targeted SRE Agent resource. Required: --subscription, --agent, --name, --confirm true.",
+    Description = "Deletes a custom skill from a targeted SRE Agent resource. Required: --subscription, --agent, --name, --confirm true.",
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

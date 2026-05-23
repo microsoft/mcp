@@ -11,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
 
-[CommandMetadata(Id = "06255dae-7848-45f9-8cfc-b48bed1fe763", Name = "memories_add", Title = "Add Memory", Description = "Upload markdown content to the SRE Agent knowledge base.", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+[CommandMetadata(Id = "06255dae-7848-45f9-8cfc-b48bed1fe763", Name = "memories_add", Title = "Add Memory", Description = "Add a document to the SRE Agent knowledge base by name. Uploads markdown content that will be indexed for RAG-based knowledge retrieval.", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
 public sealed class MemoriesAddCommand(ILogger<MemoriesAddCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<MemoriesAddOptions>
 {
     private readonly ILogger<MemoriesAddCommand> _logger = logger;
