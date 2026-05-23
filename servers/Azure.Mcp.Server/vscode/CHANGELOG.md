@@ -4,13 +4,18 @@
 
 ### Added
 
-- Added the new `nfs-encryption-in-transit` option to Azure File Shares `create`/`update` commands. [[#2648](https://github.com/microsoft/mcp/pull/2648)]
+- Added a new `--nfs-encryption-in-transit` option to File Shares `create`/`update` tools. [[#2648](https://github.com/microsoft/mcp/pull/2648)]
 
 ### Fixed
 
-- Updated Container App tools to accept a `tenant` parameter. [[#2702](https://github.com/microsoft/mcp/pull/2702)]
+- Updated Container App tools to accept a `--tenant` parameter. [[#2702](https://github.com/microsoft/mcp/pull/2702)]
 - Fixed not-found conditions in `SubscriptionService`, `TenantService`, and `ResourceGroupService` returning HTTP `500`/`400` instead of HTTP `404`. [[#2703](https://github.com/microsoft/mcp/pull/2703)]
 - Updated App Lens tools to return a response with a "resource not found" message instead of throwing an exception when no resource matches the given name, so telemetry no longer reports these expected cases as tool failures. [[#2700](https://github.com/microsoft/mcp/pull/2700)]
+- Fixed issues in Key Vault tools: [[#2671](https://github.com/microsoft/mcp/pull/2671)]
+  - `keyvault admin settings get` now correctly applies the default retry policy
+  - `keyvault certificate import` now returns HTTP status code `400` for invalid certificate data instead of `500`
+  - `keyvault key create` now accepts the correct valid types (RSA, RSA-HSM, EC, EC-HSM) for the `--key-type` parameter
+  - `keyvault key list` now includes all keys (managed and non-managed) when `--include-managed` is `true` instead of returning only managed keys
 
 ## 3.0.11 (2026-05-20) (pre-release)
 
