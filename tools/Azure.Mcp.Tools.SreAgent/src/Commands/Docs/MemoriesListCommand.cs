@@ -10,7 +10,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
 
-[CommandMetadata(Id = "387de9fa-0d29-4b44-b43c-c7d328a751d4", Name = "memories_list", Title = "List Memories", Description = "List knowledge base documents.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+[CommandMetadata(Id = "387de9fa-0d29-4b44-b43c-c7d328a751d4", Name = "memories_list", Title = "List Memories", Description = "Retrieve a complete list of all indexed knowledge base documents stored in an SRE Agent's memory. Returns all document names and metadata without any search filter or query. Use this to browse everything in the knowledge base before searching.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
 public sealed class MemoriesListCommand(ILogger<MemoriesListCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<MemoryRemoteOptions>
 {
     private readonly ILogger<MemoriesListCommand> _logger = logger;
