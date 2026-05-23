@@ -24,7 +24,8 @@ public static class TestExtensions
 
         // Check for environment variables that indicate we're running from dotnet test
         bool isDotnetTest = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VSTEST_HOST_DEBUG")) ||
-               !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DOTNET_HOST_PATH"));
+               !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DOTNET_HOST_PATH")) ||
+               !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TESTINGPLATFORM_TELEMETRY_OPTOUT"));
 
         if (isDotnetTest)
         {

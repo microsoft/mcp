@@ -36,7 +36,7 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
         LiveTestSettings? settings = null;
         LiveTestSettings.TryLoadTestSettings(out settings);
 
-        Assert.SkipWhen(settings?.TestMode != TestMode.Live,
+        Assert.SkipWhen(settings == null || settings.TestMode != TestMode.Live,
             "HTTP authentication tests are skipped because test settings indicate non-live mode or settings file is missing.");
 
         // Get AAD configuration from environment variables
