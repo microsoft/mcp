@@ -127,7 +127,7 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
         var errorDetails = result.Value;
         errorDetails.AssertProperty("message");
         var typeProperty = errorDetails.AssertProperty("type");
-        Assert.Equal("ArgumentException", typeProperty.GetString());
+        Assert.Equal("KeyNotFoundException", typeProperty.GetString());
     }
 
     [Fact]
