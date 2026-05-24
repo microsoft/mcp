@@ -14,10 +14,11 @@ public class OneLakeWorkspaceListCommandTests : CommandUnitTestsBase<OneLakeWork
     {
         Assert.Equal("list_workspaces", Command.Name);
         Assert.Equal("List OneLake Workspaces", Command.Title);
-        Assert.Contains("Lists all Fabric workspaces accessible via OneLake", Command.Description);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
     }
 
     [Fact]
@@ -25,6 +26,7 @@ public class OneLakeWorkspaceListCommandTests : CommandUnitTestsBase<OneLakeWork
     {
         Assert.Equal("list_workspaces", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }
 }

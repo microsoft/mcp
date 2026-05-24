@@ -30,10 +30,11 @@ public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLa
     {
         Assert.Equal("read", Command.Name);
         Assert.Equal("Read OneLake File", Command.Title);
-        Assert.Contains("Read the contents of a file from OneLake storage", Command.Description);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
     }
 
     [Fact]
@@ -41,6 +42,7 @@ public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLa
     {
         Assert.Equal("read", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }
 

@@ -374,4 +374,3 @@ public class DiskGetCommandTests : CommandUnitTestsBase<DiskGetCommand, ICompute
         Assert.Equal("exactdisk", result.Disks[0].Name);
     }
 }
-
