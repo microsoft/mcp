@@ -1426,13 +1426,12 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         // Note: the GUID suffix is non-deterministic across record/playback runs but the
         // existing recording was captured with the original name; tests-proxy URL matching
         // works because the policy name only appears inside ARM PUT URLs that are sanitized.
-        var policyName = $"{Settings.ResourceBaseName}-cosmos-policy-{Guid.NewGuid().ToString("N")[..8]}";
-        var cosmosDbAccountName = Settings.DeploymentOutputs?.GetValueOrDefault("COSMOSDBACCOUNTNAME");
+        var policyName = RegisterOrRetrieveVariable("createdCosmosDbProtectPolicyName", $"{Settings.ResourceBaseName}-cosmos-policy-{Guid.NewGuid().ToString("N")[..8]}");
+        var cosmosDbAccountName = RegisterOrRetrieveDeploymentOutputVariable("cosmosDbAccountName", "COSMOSDBACCOUNTNAME");
 
         if (string.IsNullOrEmpty(cosmosDbAccountName))
         {
-            Output.WriteLine("Skipping CosmosDB protect test - COSMOSDBACCOUNTNAME not set in deployment outputs.");
-            return;
+            Assert.Skip("COSMOSDBACCOUNTNAME deployment output is missing; cannot exercise CosmosDB protect E2E.");
         }
 
         var cosmosDbAccountId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{cosmosDbAccountName}";
@@ -1891,18 +1890,14 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task BackupStatus_CosmosDbAccount_ReturnsStatusFromDppVault_Successfully()
     {
-        var cosmosDbAccountId = Settings.DeploymentOutputs?.GetValueOrDefault("COSMOSDBACCOUNTID");
+        var cosmosDbAccountId = RegisterOrRetrieveDeploymentOutputVariable("cosmosDbAccountId", "COSMOSDBACCOUNTID");
         if (string.IsNullOrEmpty(cosmosDbAccountId))
         {
-            Output.WriteLine("Skipping CosmosDB backup_status test - COSMOSDBACCOUNTID not set in deployment outputs.");
-            return;
+            Assert.Skip("COSMOSDBACCOUNTID deployment output is missing; cannot exercise backup_status regression.");
         }
 
-        // Cosmos DB is deployed into a preview-enabled region (see test-resources.bicep
-        // cosmosLocation parameter), which is independent of the resource group's location.
-        var location = Settings.DeploymentOutputs?.GetValueOrDefault("COSMOSDBACCOUNTLOCATION")
-                       ?? Settings.DeploymentOutputs?.GetValueOrDefault("LOCATION")
-                       ?? "eastus2euap";
+        // Cosmos DB is co-located with the DPP vault (see test-resources.bicep cosmosLocation parameter).
+        var location = RegisterOrRetrieveDeploymentOutputVariable("cosmosDbAccountLocation", "COSMOSDBACCOUNTLOCATION");
 
         var result = await CallToolAsync(
             "azurebackup_backup_status",

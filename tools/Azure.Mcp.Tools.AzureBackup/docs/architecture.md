@@ -303,7 +303,7 @@ The toolset exposes **15 commands** organized in **9 command groups**:
 | Azure Data Lake Storage | `AzureDataLakeStorage` | adls, datalake | `.../storageAccounts/blobServices` | Operational | Continuous |
 | Azure Cosmos DB (preview) | `CosmosDB` | cosmosdb, cosmos | `Microsoft.DocumentDB/databaseAccounts` | Vault | Full (weekly, P1W) |
 
-> **Cosmos DB notes (preview):** Supports NoSQL and MongoDB (RU) APIs only. Source account must have native continuous (PITR) backup enabled and public network access. Backup vault must be in the same region as the Cosmos DB primary write region. Available in: East Asia, Germany North, South India, West Central US, Southeast US 3, Austria East, Jio India West. Unsupported: NSP-bound accounts, hierarchical partition keys, PPAF, cross-region restore, item-level restore, restore to Serverless or throughput-limited target accounts.
+> **Cosmos DB notes (preview):** Supports NoSQL and MongoDB (RU) APIs only. Source account must have native continuous (PITR) backup enabled and public network access. Backup vault must be in the same region as the Cosmos DB primary write region. Unsupported: NSP-bound accounts, hierarchical partition keys, PPAF, cross-region restore, item-level restore, restore to Serverless or throughput-limited target accounts.
 
 ### `policy create`  -  Feature Support Matrix
 

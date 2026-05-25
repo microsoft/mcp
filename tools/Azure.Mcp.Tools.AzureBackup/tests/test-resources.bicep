@@ -8,8 +8,8 @@ param baseName string = take(resourceGroup().name, 20)
 @description('The location of the resource. By default, this is the same as the resource group.')
 param location string = resourceGroup().location
 
-@description('The location for the Cosmos DB account. Azure Backup for Cosmos DB (DPP, preview) is only available in select regions (e.g. eastus2euap, centraluseuap). Defaults to eastus2euap so the bicep is deployable into resource groups in non-preview regions.')
-param cosmosLocation string = 'eastus2euap'
+@description('The location for the Cosmos DB account and the DPP backup vault. Azure Backup for Cosmos DB (DPP, preview) requires both to be in the same region (and in a preview-enabled region such as eastus2euap or centraluseuap). Defaults to the resource group location; override (along with the RG location) when targeting a preview region.')
+param cosmosLocation string = location
 
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
@@ -40,6 +40,9 @@ resource rsvBackupConfig 'Microsoft.RecoveryServices/vaults/backupconfig@2024-04
 }
 
 // Backup Vault (Data Protection / DPP) - GeoRedundant for CRR support
+// Note: Cosmos DB (preview) DPP backup requires the vault to be in the same region as the Cosmos DB primary write region.
+// `cosmosLocation` defaults to `location`, so by default the DPP vault and the Cosmos DB account are co-located.
+// When overriding `cosmosLocation`, set `location` to the same preview-enabled region.
 resource dppVault 'Microsoft.DataProtection/backupVaults@2024-04-01' = {
   name: '${baseName}-dpp'
   location: location
@@ -279,4 +282,4 @@ resource appCosmosDbBackupContributorRoleAssignment 'Microsoft.Authorization/rol
 output cosmosDbAccountId string = cosmosDbAccount.id
 output cosmosDbAccountName string = cosmosDbAccount.name
 output cosmosDbAccountLocation string = cosmosLocation
-output location string = location
+output resourceGroupLocation string = location
