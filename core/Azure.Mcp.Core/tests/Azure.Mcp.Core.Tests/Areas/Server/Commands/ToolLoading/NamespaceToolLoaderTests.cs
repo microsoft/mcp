@@ -1022,9 +1022,11 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     }
 
     [Fact]
-    public void TryEmitSubscriptionTag_DoesNothing_WhenSubscriptionIsEmpty()
+    public void TryEmitSubscriptionTag_EmitsEmptyString_MatchingMcpRuntimeBehavior()
     {
         // Arrange
+        // McpRuntime.CallToolHandler emits the AzSubscriptionGuid tag for any non-null string,
+        // including empty. This test guards against drift between the two emission sites.
         var parameters = new Dictionary<string, JsonElement>
         {
             ["subscription"] = JsonSerializer.SerializeToElement(string.Empty),
@@ -1037,7 +1039,8 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         NamespaceToolLoader.TryEmitSubscriptionTag(parameters, activity);
 
         // Assert
-        Assert.Null(activity.GetTagItem(Microsoft.Mcp.Core.Services.Telemetry.AzureTagName.SubscriptionGuid));
+        var tag = activity.GetTagItem(Microsoft.Mcp.Core.Services.Telemetry.AzureTagName.SubscriptionGuid);
+        Assert.Equal(string.Empty, tag);
     }
 
     [Fact]

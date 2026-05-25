@@ -699,8 +699,11 @@ public sealed class NamespaceToolLoader(
                 return;
             }
 
+            // Match McpRuntime.CallToolHandler: emit the tag for any non-null string,
+            // including empty values, so telemetry is consistent between direct-tool and
+            // namespace-mode invocations.
             var subscription = kvp.Value.GetString();
-            if (!string.IsNullOrEmpty(subscription))
+            if (subscription != null)
             {
                 activity.AddTag(AzureTagName.SubscriptionGuid, subscription);
             }
