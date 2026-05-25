@@ -38,6 +38,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<Models.RecommendationFilters?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
         }
@@ -72,6 +73,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<Models.RecommendationFilters?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<Models.Recommendation>(expectedRecommendations, false));
 
@@ -91,6 +93,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<Models.RecommendationFilters?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -102,6 +105,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<Models.RecommendationFilters?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
 
@@ -122,6 +126,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<Models.RecommendationFilters?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -139,7 +144,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
     {
         // Arrange
         var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
-        Service.ListRecommendationsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListRecommendationsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<Models.RecommendationFilters?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
         // Act
@@ -148,5 +153,63 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsFiltersToService()
+    {
+        // Arrange
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--category", "Security",
+            "--impact", "High",
+            "--resource-type", "Microsoft.Storage/storageAccounts",
+            "--resource", "mystorage",
+            "--search", "encryption");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal("Security", captured!.Category);
+        Assert.Equal("High", captured.Impact);
+        Assert.Equal("Microsoft.Storage/storageAccounts", captured.ResourceType);
+        Assert.Equal("mystorage", captured.Resource);
+        Assert.Equal("encryption", captured.Search);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OmittedFiltersAreNull()
+    {
+        // Arrange
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Null(captured!.Category);
+        Assert.Null(captured.Impact);
+        Assert.Null(captured.ResourceType);
+        Assert.Null(captured.Resource);
+        Assert.Null(captured.Search);
     }
 }

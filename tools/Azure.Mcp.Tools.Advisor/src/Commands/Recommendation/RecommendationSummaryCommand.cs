@@ -14,24 +14,33 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 
 [CommandMetadata(
-    Id = "e3f09221-523a-4107-a715-823cebd97902",
-    Name = "list",
-    Title = "List Advisor Recommendations",
-    Description = "List Azure advisor recommendations in a subscription. Supports optional filters: --category, --impact, --resource-type, --resource, --search.",
+    Id = "9f6a9d4e-6e8a-4d1c-9a7a-7e1f3b2d4a55",
+    Name = "summary",
+    Title = "Summarize Advisor Recommendations",
+    Description = "Group Azure Advisor recommendations by a chosen field and return the top N buckets by count. " +
+        "Required: --group-by (one of 'recommendation', 'category', 'impact', 'resource-type', 'resource'). " +
+        "Optional: --top (default 5, clamped to 1-50), plus the same filters as 'list' (--category, --impact, --resource-type, --resource, --search). " +
+        "Filters are applied first, then aggregation runs over the filtered set.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IAdvisorService advisorService)
-    : BaseAdvisorCommand<RecommendationListOptions>(logger)
+public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCommand> logger, IAdvisorService advisorService)
+    : BaseAdvisorCommand<RecommendationSummaryOptions>(logger)
 {
+    private const int MinTop = 1;
+    private const int MaxTop = 50;
+    private const int DefaultTop = 5;
+
     private readonly IAdvisorService _advisorService = advisorService;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(AdvisorOptionDefinitions.GroupBy.AsRequired());
+        command.Options.Add(AdvisorOptionDefinitions.Top.AsOptional());
         command.Options.Add(AdvisorOptionDefinitions.Category.AsOptional());
         command.Options.Add(AdvisorOptionDefinitions.Impact.AsOptional());
         command.Options.Add(AdvisorOptionDefinitions.ResourceType.AsOptional());
@@ -39,9 +48,13 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         command.Options.Add(AdvisorOptionDefinitions.Search.AsOptional());
     }
 
-    protected override RecommendationListOptions BindOptions(ParseResult parseResult)
+    protected override RecommendationSummaryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
+        options.GroupBy = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.GroupBy);
+        options.Top = parseResult.CommandResult.HasOptionResult(AdvisorOptionDefinitions.Top)
+            ? parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Top)
+            : (int?)null;
         options.Category = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Category);
         options.Impact = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Impact);
         options.ResourceType = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.ResourceType);
@@ -59,6 +72,17 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
 
         var options = BindOptions(parseResult);
 
+        var groupBy = options.GroupBy?.Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(groupBy) || !RecommendationAggregator.AllowedGroupBy.Contains(groupBy))
+        {
+            context.Response.Status = HttpStatusCode.BadRequest;
+            context.Response.Message =
+                $"Invalid --group-by value '{options.GroupBy}'. Allowed values: {string.Join(", ", RecommendationAggregator.AllowedGroupBy)}.";
+            return context.Response;
+        }
+
+        var top = Math.Clamp(options.Top ?? DefaultTop, MinTop, MaxTop);
+
         try
         {
             var filters = new Models.RecommendationFilters(
@@ -68,23 +92,29 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 Resource: options.Resource,
                 Search: options.Search);
 
-            var recommendations = await _advisorService.ListRecommendationsAsync(
+            var summary = await _advisorService.SummarizeRecommendationsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.RetryPolicy,
+                groupBy,
+                top,
                 filters,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(recommendations?.Results ?? [], recommendations?.AreResultsTruncated ?? false),
-                AdvisorJsonContext.Default.RecommendationListResult);
+            context.Response.Results = ResponseResult.Create(
+                new RecommendationSummaryResult(summary),
+                AdvisorJsonContext.Default.RecommendationSummaryResult);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, " +
-                "Category: {Category}, Impact: {Impact}, ResourceType: {ResourceType}, Resource: {Resource}, HasSearch: {HasSearch}.",
+                "Error summarizing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, " +
+                "GroupBy: {GroupBy}, Top: {Top}, Category: {Category}, Impact: {Impact}, ResourceType: {ResourceType}, " +
+                "Resource: {Resource}, HasSearch: {HasSearch}.",
                 options.Subscription,
                 options.ResourceGroup,
+                groupBy,
+                top,
                 options.Category,
                 options.Impact,
                 options.ResourceType,
@@ -99,12 +129,12 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Advisor recommendation not found. Verify the subscription, resource group, and that you have access.",
+            "Advisor recommendations not found. Verify the subscription, resource group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed accessing the Advisor recommendations. Verify you have appropriate permissions. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record RecommendationListResult(List<Models.Recommendation> Recommendations, bool AreResultsTruncated);
+    internal record RecommendationSummaryResult(Models.RecommendationSummary Summary);
 }
