@@ -133,4 +133,73 @@ public class ProtectableItemListCommandTests : CommandUnitTestsBase<ProtectableI
         Assert.Contains(options, o => o.Name == "--workload-type");
         Assert.Contains(options, o => o.Name == "--container");
     }
+
+    // NEW-4: --workload-type must be rejected at the command boundary with a 400-class
+    // validation error rather than leaking the inner ArgumentException from the service
+    // layer as a 500. The validator's accepted set must mirror the service-layer guard.
+
+    [Theory]
+    [InlineData("SQL")]
+    [InlineData("sql")]                 // case-insensitive
+    [InlineData("SQLDatabase")]         // alias
+    [InlineData("SQLInstance")]
+    [InlineData("SAPHana")]
+    [InlineData("SAPHanaDatabase")]
+    [InlineData("SAPHanaSystem")]
+    [InlineData("SAPHanaDBInstance")]
+    [InlineData("SAPHanaDBI")]          // alias
+    [InlineData("VM")]
+    [InlineData("IaaSVM")]              // alias
+    [InlineData("VirtualMachine")]      // alias
+    [InlineData("FileShare")]
+    [InlineData("AzureFileShare")]      // alias
+    [InlineData("AFS")]                 // alias
+    [InlineData("SAPAse")]
+    [InlineData("SAPAseDatabase")]      // alias
+    [InlineData("ASE")]                 // alias
+    [InlineData("Sybase")]              // alias
+    public async Task ExecuteAsync_AcceptsKnownWorkloadType(string workloadType)
+    {
+        // Arrange
+        Service.ListProtectableItemsAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is<string?>(workloadType), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--workload-type", workloadType);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Theory]
+    [InlineData("Cosmos")]              // not an RSV workload
+    [InlineData("AzureDisk")]           // DPP-only, not an RSV protectable item
+    [InlineData("garbage")]
+    [InlineData("'); DROP TABLE--")]    // OData-injection style input
+    public async Task ExecuteAsync_RejectsUnknownWorkloadType_AsValidationError(string workloadType)
+    {
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--workload-type", workloadType);
+
+        // Assert: validation error (400), not service-layer 500
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Unknown workload type", response.Message);
+        Assert.Contains(workloadType, response.Message);
+
+        // And the service is never invoked once validation has rejected the input.
+        await Service.DidNotReceive().ListProtectableItemsAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
 }

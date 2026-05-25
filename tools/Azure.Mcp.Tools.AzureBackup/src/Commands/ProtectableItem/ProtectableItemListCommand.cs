@@ -39,6 +39,21 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
         base.RegisterOptions(command);
         command.Options.Add(AzureBackupOptionDefinitions.WorkloadType);
         command.Options.Add(AzureBackupOptionDefinitions.Container);
+        command.Validators.Add(commandResult =>
+        {
+            // NEW-4: reject unknown --workload-type at the command boundary so it surfaces
+            // as a 400 ValidationError instead of leaking the inner ArgumentException
+            // from the service layer as a 500.
+            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.WorkloadType.Name))
+            {
+                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.WorkloadType.Name);
+                if (!string.IsNullOrWhiteSpace(value) &&
+                    !WorkloadTypeNormalizer.IsSupported(value))
+                {
+                    commandResult.AddError(WorkloadTypeNormalizer.FormatUnknownMessage(value));
+                }
+            }
+        });
     }
 
     protected override ProtectableItemListOptions BindOptions(ParseResult parseResult)
