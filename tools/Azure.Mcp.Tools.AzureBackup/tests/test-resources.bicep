@@ -8,6 +8,9 @@ param baseName string = take(resourceGroup().name, 20)
 @description('The location of the resource. By default, this is the same as the resource group.')
 param location string = resourceGroup().location
 
+@description('The location for the Cosmos DB account. Azure Backup for Cosmos DB (DPP, preview) is only available in select regions (e.g. eastus2euap, centraluseuap). Defaults to eastus2euap so the bicep is deployable into resource groups in non-preview regions.')
+param cosmosLocation string = 'eastus2euap'
+
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
@@ -193,3 +196,87 @@ resource appStorageBackupContributorRoleAssignment 'Microsoft.Authorization/role
 output storageAccountId string = testStorageAccount.id
 output storageAccountName string = testStorageAccount.name
 output fileShareName string = testFileShare.name
+
+// ─── Resources for CosmosDB Backup E2E Tests ───
+
+// Cosmos DB account (NoSQL API) for DPP backup testing
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
+  name: take('${replace(baseName, '-', '')}cosmos', 44)
+  location: cosmosLocation
+  kind: 'GlobalDocumentDB'
+  properties: {
+    databaseAccountOfferType: 'Standard'
+    locations: [
+      {
+        locationName: cosmosLocation
+        failoverPriority: 0
+      }
+    ]
+    consistencyPolicy: {
+      defaultConsistencyLevel: 'Session'
+    }
+    // Continuous backup mode (required for Azure Backup DPP long-term protection)
+    backupPolicy: {
+      type: 'Continuous'
+      continuousModeProperties: {
+        tier: 'Continuous7Days'
+      }
+    }
+  }
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+// Cosmos DB Operator role for DPP vault MSI on the Cosmos DB account
+// Required for the backup vault to manage backup operations
+resource cosmosDbOperatorRoleDef 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  name: '230815da-be43-4aae-9cb4-875f7bd000aa' // Cosmos DB Operator
+}
+
+resource dppCosmosDbOperatorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(cosmosDbOperatorRoleDef.id, dppVault.id, cosmosDbAccount.id)
+  scope: cosmosDbAccount
+  properties: {
+    principalId: dppVault.identity.principalId
+    roleDefinitionId: cosmosDbOperatorRoleDef.id
+    principalType: 'ServicePrincipal'
+    description: 'Cosmos DB Operator for DPP vault MSI'
+  }
+}
+
+// Reader role for DPP vault MSI on the Cosmos DB account resource group
+// Some DPP datasources require Reader on the RG
+resource readerRoleDef 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  name: 'acdd72a7-3385-48ef-bd42-f606fba81ae7' // Reader
+}
+
+resource dppReaderOnRgForCosmosDb 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(readerRoleDef.id, dppVault.id, resourceGroup().id, 'cosmosdb')
+  properties: {
+    principalId: dppVault.identity.principalId
+    roleDefinitionId: readerRoleDef.id
+    principalType: 'ServicePrincipal'
+    description: 'Reader for DPP vault MSI on RG (CosmosDB backup)'
+  }
+}
+
+// Backup Contributor for the test app on the Cosmos DB account
+resource appCosmosDbBackupContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(backupContributorRoleDefinition.id, testApplicationOid, cosmosDbAccount.id)
+  scope: cosmosDbAccount
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: backupContributorRoleDefinition.id
+    description: 'Backup Contributor for ${testApplicationOid} on CosmosDB'
+  }
+}
+
+output cosmosDbAccountId string = cosmosDbAccount.id
+output cosmosDbAccountName string = cosmosDbAccount.name
+output cosmosDbAccountLocation string = cosmosLocation
+output location string = location
