@@ -13,6 +13,8 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 
@@ -439,6 +441,11 @@ public sealed class NamespaceToolLoader(
                 .SetTag(TagName.ToolId, cmd.Id)
                 .SetTag(TagName.IsServerCommandInvoked, true);
 
+            // In namespace mode the McpRuntime sees only the outer {intent, command, parameters}
+            // envelope, so it cannot emit AzSubscriptionGuid from the top-level arguments. Emit it
+            // here from the inner parameter dictionary so per-subscription telemetry is captured.
+            TryEmitSubscriptionTag(parameters, currentActivity);
+
             var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions, cancellationToken);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
@@ -670,6 +677,36 @@ public sealed class NamespaceToolLoader(
 
         return option.Aliases.Any(alias =>
             string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    internal static void TryEmitSubscriptionTag(IDictionary<string, JsonElement>? parameters, Activity? activity)
+    {
+        if (activity == null || parameters == null || parameters.Count == 0)
+        {
+            return;
+        }
+
+        var normalizedSubscriptionName = NameNormalization.NormalizeOptionName(OptionDefinitions.Common.Subscription.Name);
+        foreach (var kvp in parameters)
+        {
+            if (!string.Equals(kvp.Key, normalizedSubscriptionName, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (kvp.Value.ValueKind != JsonValueKind.String)
+            {
+                return;
+            }
+
+            var subscription = kvp.Value.GetString();
+            if (!string.IsNullOrEmpty(subscription))
+            {
+                activity.AddTag(AzureTagName.SubscriptionGuid, subscription);
+            }
+
+            return;
+        }
     }
 
     internal static Dictionary<string, JsonElement> GetParametersFromArgs(IDictionary<string, JsonElement>? args)

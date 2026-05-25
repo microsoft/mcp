@@ -958,4 +958,112 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
         GC.SuppressFinalize(this);
     }
+
+    [Fact]
+    public void TryEmitSubscriptionTag_AddsTag_WhenSubscriptionParameterIsString()
+    {
+        // Arrange
+        const string expectedSubscription = "11111111-1111-1111-1111-111111111111";
+        var parameters = new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["subscription"] = JsonSerializer.SerializeToElement(expectedSubscription),
+            ["vault"] = JsonSerializer.SerializeToElement("myvault"),
+        };
+
+        using var activity = new System.Diagnostics.Activity("test-activity");
+        activity.Start();
+
+        // Act
+        NamespaceToolLoader.TryEmitSubscriptionTag(parameters, activity);
+
+        // Assert
+        var tag = activity.GetTagItem(Microsoft.Mcp.Core.Services.Telemetry.AzureTagName.SubscriptionGuid);
+        Assert.Equal(expectedSubscription, tag);
+    }
+
+    [Fact]
+    public void TryEmitSubscriptionTag_MatchesKeyCaseInsensitively()
+    {
+        // Arrange
+        const string expectedSubscription = "22222222-2222-2222-2222-222222222222";
+        var parameters = new Dictionary<string, JsonElement>(StringComparer.Ordinal)
+        {
+            ["Subscription"] = JsonSerializer.SerializeToElement(expectedSubscription),
+        };
+
+        using var activity = new System.Diagnostics.Activity("test-activity");
+        activity.Start();
+
+        // Act
+        NamespaceToolLoader.TryEmitSubscriptionTag(parameters, activity);
+
+        // Assert
+        var tag = activity.GetTagItem(Microsoft.Mcp.Core.Services.Telemetry.AzureTagName.SubscriptionGuid);
+        Assert.Equal(expectedSubscription, tag);
+    }
+
+    [Fact]
+    public void TryEmitSubscriptionTag_DoesNothing_WhenNoSubscriptionParameter()
+    {
+        // Arrange
+        var parameters = new Dictionary<string, JsonElement>
+        {
+            ["vault"] = JsonSerializer.SerializeToElement("myvault"),
+        };
+
+        using var activity = new System.Diagnostics.Activity("test-activity");
+        activity.Start();
+
+        // Act
+        NamespaceToolLoader.TryEmitSubscriptionTag(parameters, activity);
+
+        // Assert
+        Assert.Null(activity.GetTagItem(Microsoft.Mcp.Core.Services.Telemetry.AzureTagName.SubscriptionGuid));
+    }
+
+    [Fact]
+    public void TryEmitSubscriptionTag_DoesNothing_WhenSubscriptionIsEmpty()
+    {
+        // Arrange
+        var parameters = new Dictionary<string, JsonElement>
+        {
+            ["subscription"] = JsonSerializer.SerializeToElement(string.Empty),
+        };
+
+        using var activity = new System.Diagnostics.Activity("test-activity");
+        activity.Start();
+
+        // Act
+        NamespaceToolLoader.TryEmitSubscriptionTag(parameters, activity);
+
+        // Assert
+        Assert.Null(activity.GetTagItem(Microsoft.Mcp.Core.Services.Telemetry.AzureTagName.SubscriptionGuid));
+    }
+
+    [Fact]
+    public void TryEmitSubscriptionTag_DoesNothing_WhenActivityIsNull()
+    {
+        // Arrange
+        var parameters = new Dictionary<string, JsonElement>
+        {
+            ["subscription"] = JsonSerializer.SerializeToElement("abc"),
+        };
+
+        // Act & Assert (must not throw)
+        NamespaceToolLoader.TryEmitSubscriptionTag(parameters, activity: null);
+    }
+
+    [Fact]
+    public void TryEmitSubscriptionTag_DoesNothing_WhenParametersAreNull()
+    {
+        // Arrange
+        using var activity = new System.Diagnostics.Activity("test-activity");
+        activity.Start();
+
+        // Act
+        NamespaceToolLoader.TryEmitSubscriptionTag(parameters: null, activity);
+
+        // Assert
+        Assert.Null(activity.GetTagItem(Microsoft.Mcp.Core.Services.Telemetry.AzureTagName.SubscriptionGuid));
+    }
 }
