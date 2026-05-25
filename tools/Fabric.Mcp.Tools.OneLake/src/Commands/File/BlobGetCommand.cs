@@ -14,6 +14,8 @@ using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
 
+namespace Fabric.Mcp.Tools.OneLake.Commands.File;
+
 [CommandMetadata(
     Id = "75d6cb4c-4e81-4e69-a4ec-eca53a7dacd9",
     Name = "download_file",
