@@ -182,6 +182,8 @@ public class ProtectableItemListCommandTests : CommandUnitTestsBase<ProtectableI
     [InlineData("AzureDisk")]           // DPP-only, not an RSV protectable item
     [InlineData("garbage")]
     [InlineData("'); DROP TABLE--")]    // OData-injection style input
+    [InlineData(" ")]                   // whitespace must not bypass validation
+    [InlineData("\t  ")]                // tabs + spaces -- still whitespace
     public async Task ExecuteAsync_RejectsUnknownWorkloadType_AsValidationError(string workloadType)
     {
         // Act

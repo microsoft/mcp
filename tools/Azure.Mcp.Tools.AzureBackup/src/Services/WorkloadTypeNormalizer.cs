@@ -13,7 +13,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Services;
 /// </summary>
 /// <remarks>
 /// Kept intentionally in sync (by hand) with the service-layer switch. If you add a new
-/// alias to either side, add it here too. A unit test asserts the two sets agree.
+/// alias to either side, add it here too.
 /// </remarks>
 internal static class WorkloadTypeNormalizer
 {
