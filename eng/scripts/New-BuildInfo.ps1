@@ -201,13 +201,6 @@ function Split-PropertyGroup {
 function Get-PathsToTest {
     Write-Host "Getting paths to test"
 
-    # When "core" is modified, include storage and keyVault as the canary service tools.
-    # TODO: These should be sourced from csproj files
-    $canaryPaths = @{
-        "core/Azure.Mcp.Core"= @('tools/Azure.Mcp.Tools.Storage', 'tools/Azure.Mcp.Tools.KeyVault')
-        "core/Microsoft.Mcp.Core"= @('tools/Azure.Mcp.Tools.Storage', 'tools/Azure.Mcp.Tools.KeyVault')
-    }
-
     # While there is a "core" directory at the repo root, we consider the "core" path to be all of the repo outside of the
     # "tools" directory.
     # This lets us make simple statements like:
@@ -241,7 +234,6 @@ function Get-PathsToTest {
     #   tools/Azure.Mcp.Tools.Storage
     #   core/Fabric.Mcp.Core
     #   servers/Azure.Mcp.Server
-
     $projectDirectoryPattern = '^(tools|servers|core)/[^/]+'
 
     $normalizedPaths = $paths
@@ -249,6 +241,10 @@ function Get-PathsToTest {
         | Where-Object { $_ -match $projectDirectoryPattern }
         | ForEach-Object { $Matches[0] }
         | Sort-Object -Unique
+
+    # Get the list of .csproj files under each path to determine which projects we need to inspect for test resources and test types.
+    # This is also used in pull request builds to determine which paths have changes that impact .csproj files and therefore require testing.
+    $crprojPaths = $normalizedPaths | ForEach-Object { (Get-ChildItem $_ -Recurse -File -Filter '*.csproj').FullName }
 
     if($isPullRequestBuild) {
         # Set of files that don't require build or test when changed
@@ -266,6 +262,10 @@ function Get-PathsToTest {
 
         # If we're in a pull request, use the set of changed files to narrow down the set of paths to test.
         $changedFiles = Get-ChangedFiles
+        # Track whether the Core libraries changed.
+        $azureCoreChanged = ($changedFiles | Where-Object { $_ -match '^core/Azure.Mcp.Core/src/' }).Count -gt 0
+        $fabricCoreChanged = ($changedFiles | Where-Object { $_ -match '^core/Fabric.Mcp.Core/src/' }).Count -gt 0
+        $microsoftCoreChanged = ($changedFiles | Where-Object { $_ -match '^core/Microsoft.Mcp.Core/src/' }).Count -gt 0
         # Assuming $changedFiles = [
         #   tools/Azure.Mcp.Tools.Storage/src/someFile.cs    <- "Azure.Mcp.Tools.Storage"
         #   tools/Azure.Mcp.Tools.Monitoring/README.md       <- "Azure.Mcp.Tools.Monitoring"
@@ -295,14 +295,8 @@ function Get-PathsToTest {
             Write-Host "Changed paths detected: $($changedPaths -join ', ')"
         }
 
-        $pathsToTest = $changedPaths
-        # If any affected path has "canaries", add them to the paths to test
-        foreach ($canaryKey in $canaryPaths.Keys) {
-            if($changedPaths -contains $canaryKey) {
-                $canaries = $canaryPaths[$canaryKey]
-                Write-Host "$canaryKey changes detected. Including canary paths: $($canaries -join ', ')" -ForegroundColor Cyan
-                $pathsToTest += $canaries
-            }
+        if ($pathsToTest -notcontains 'core/Microsoft.Mcp.Core') {
+            $pathsToTest = $changedPaths
         }
 
         # Always include Azure.Mcp.Server to run ConsolidatedModeTests.cs in all PRs
@@ -652,13 +646,12 @@ function Get-BuildMatrices {
 
             # we do not currently have a method to get an arm64 mac or windows agent at this time, so we will have to skip $runUnitTests for those platforms
             # if a set of unit tests exists, we should run them
-            $runUnitTests = !!($pathsToTest | Where-Object { $_.hasUnitTests })
+            $runUnitTests = !!($pathsToTest | Where-Object { $_.hasUnitTests -or $_.hasRecordedTests })
 
             # except for certain platforms
             if ($platform.native -or $platform.specialPurpose -or ($arch -like '*arm64*' -and $os -ne 'linux')) {
                 $runUnitTests = $false
             }
-            $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
             $publishCoverage = $runUnitTests -and -not ($arch -like '*arm64*')
 
             $hostArchitecture = if ($needsArm64Hardware) { 'Arm64' } else { '' }
@@ -674,7 +667,6 @@ function Get-BuildMatrices {
                 OSVmImage = $vmImage
                 HostArchitecture = $hostArchitecture
                 RunUnitTests = $runUnitTests
-                RunRecordedTests = $runRecordedTests
                 PublishCoverage = $publishCoverage
             }
 
