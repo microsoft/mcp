@@ -528,7 +528,7 @@ The `[Option]` attribute drives automatic option registration and binding via `O
 - `OptionBinder` discovers all `[Option]`-attributed properties on the concrete class and handles both registration (adding to the CLI parser) and binding (populating from parse results) automatically.
 - **Required vs optional** is determined entirely by nullability: `required` keyword or non-nullable types = required; `?` = optional. No `.AsRequired()`/`.AsOptional()` calls needed.
 - **No shared state**: Each command gets its own options instance per request — thread-safe by design.
-- **Implement `ISubscriptionOption`** if the command needs `Subscription`/`Tenant`. This enables `ISubscriptionResolver` post-processing.
+- **Implement `ISubscriptionOption`** if the command needs optional `string? Subscription`. This enables post-processing by `SubscriptionCommand` and `ISubscriptionResolver`.
 - **Implement additional option interfaces** (e.g., `IStorageAccountOption`) only when base command classes need type-safe access to specific properties for shared behavior like validation.
 - **Validation** is done via `ValidateOptions(TOptions, ValidationResult)` override in the command class — not via `Command.Validators.Add`.
 - **No manual registration or binding**: Remove all `RegisterOptions`/`BindOptions` overrides. If you find yourself writing these, you're using the old pattern.
