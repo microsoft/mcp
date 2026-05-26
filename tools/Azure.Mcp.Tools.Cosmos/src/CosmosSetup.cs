@@ -23,7 +23,7 @@ public class CosmosSetup : IAreaSetup
 
         services.AddSingleton<CosmosListCommand>();
         services.AddSingleton<ItemQueryCommand>();
-        services.AddSingleton<ContainerSchemaGetCommand>();
+        services.AddSingleton<ContainerSchemaInferCommand>();
         services.AddSingleton<ItemListRecentCommand>();
         services.AddSingleton<ItemGetCommand>();
         services.AddSingleton<ItemTextSearchCommand>();
@@ -48,7 +48,7 @@ public class CosmosSetup : IAreaSetup
         // Schema operations on a container
         var schema = new CommandGroup("schema", "Cosmos DB container schema operations - Commands for inferring the shape of documents inside a container.");
         cosmosContainer.AddSubGroup(schema);
-        schema.AddCommand<ContainerSchemaGetCommand>(serviceProvider);
+        schema.AddCommand<ContainerSchemaInferCommand>(serviceProvider);
 
         // Create items subgroup for Cosmos
         var cosmosItem = new CommandGroup("item", "Cosmos DB item operations - Commands for querying, retrieving, and searching documents within your Cosmos DB containers.");

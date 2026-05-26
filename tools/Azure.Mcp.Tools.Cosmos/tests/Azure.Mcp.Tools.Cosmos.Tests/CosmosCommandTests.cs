@@ -229,11 +229,11 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     }
 
     [Fact]
-    public async Task Should_get_container_schema()
+    public async Task Should_infer_container_schema()
     {
         var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var result = await CallToolAsync(
-            "cosmos_database_container_schema_get",
+            "cosmos_database_container_schema_infer",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

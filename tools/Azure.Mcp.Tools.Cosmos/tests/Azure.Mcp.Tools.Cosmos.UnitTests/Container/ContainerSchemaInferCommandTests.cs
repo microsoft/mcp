@@ -15,8 +15,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.UnitTests.Container;
 
-public class ContainerSchemaGetCommandTests
-    : CommandUnitTestsBase<Azure.Mcp.Tools.Cosmos.Commands.Container.ContainerSchemaGetCommand, ICosmosService>
+public class ContainerSchemaInferCommandTests
+    : CommandUnitTestsBase<Azure.Mcp.Tools.Cosmos.Commands.Container.ContainerSchemaInferCommand, ICosmosService>
 {
     [Fact]
     public void Name_IsCorrect() => Assert.Equal("get", Command.Name);
@@ -57,7 +57,7 @@ public class ContainerSchemaGetCommandTests
             "--container", "c",
             "--sample-size", "5");
 
-        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.ContainerSchemaGetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.ContainerSchemaInferCommandResult);
         Assert.Equal(5, result.SampleSize);
         Assert.Equal(2, result.Properties.Count);
     }

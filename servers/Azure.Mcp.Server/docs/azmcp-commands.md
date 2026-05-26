@@ -2097,7 +2097,7 @@ azmcp cosmos database container item query --subscription <subscription> \
 
 # Infer an approximate schema for a Cosmos DB container by sampling documents.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp cosmos database container schema get --subscription <subscription> \
+azmcp cosmos database container schema infer --subscription <subscription> \
                                            --account <account> \
                                            --database <database> \
                                            --container <container> \

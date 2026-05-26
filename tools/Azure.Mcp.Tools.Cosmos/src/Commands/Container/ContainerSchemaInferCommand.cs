@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Container;
 
 [CommandMetadata(
     Id = "f1c6a0e2-3d40-4b3f-9a37-2dc1f6cf4a12",
-    Name = "get",
+    Name = "infer",
     Title = "Infer Cosmos DB Container Schema",
     Description = "Infer an approximate schema for a Cosmos DB container by sampling documents and reporting the top-level properties along with their inferred types and the number of sampled documents in which each appeared.",
     Destructive = false,
@@ -25,10 +25,10 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Container;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ContainerSchemaGetCommand(ILogger<ContainerSchemaGetCommand> logger, ICosmosService cosmosService)
-    : BaseContainerCommand<ContainerSchemaGetOptions>()
+public sealed class ContainerSchemaInferCommand(ILogger<ContainerSchemaInferCommand> logger, ICosmosService cosmosService)
+    : BaseContainerCommand<ContainerSchemaInferOptions>()
 {
-    private readonly ILogger<ContainerSchemaGetCommand> _logger = logger;
+    private readonly ILogger<ContainerSchemaInferCommand> _logger = logger;
     private readonly ICosmosService _cosmosService = cosmosService;
 
     protected override void RegisterOptions(Command command)
@@ -45,7 +45,7 @@ public sealed class ContainerSchemaGetCommand(ILogger<ContainerSchemaGetCommand>
         });
     }
 
-    protected override ContainerSchemaGetOptions BindOptions(ParseResult parseResult)
+    protected override ContainerSchemaInferOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.SampleSize = parseResult.GetValueOrDefault<int>(CosmosOptionDefinitions.SampleSize.Name);
@@ -75,8 +75,8 @@ public sealed class ContainerSchemaGetCommand(ILogger<ContainerSchemaGetCommand>
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new ContainerSchemaGetCommandResult(schema.SampleSize, schema.Properties),
-                CosmosJsonContext.Default.ContainerSchemaGetCommandResult);
+                new ContainerSchemaInferCommandResult(schema.SampleSize, schema.Properties),
+                CosmosJsonContext.Default.ContainerSchemaInferCommandResult);
         }
         catch (Exception ex)
         {
@@ -100,5 +100,5 @@ public sealed class ContainerSchemaGetCommand(ILogger<ContainerSchemaGetCommand>
         _ => base.GetStatusCode(ex)
     };
 
-    internal record ContainerSchemaGetCommandResult(int SampleSize, IReadOnlyList<Models.SchemaProperty> Properties);
+    internal record ContainerSchemaInferCommandResult(int SampleSize, IReadOnlyList<Models.SchemaProperty> Properties);
 }

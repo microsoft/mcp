@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands;
 
 [JsonSerializable(typeof(CosmosListCommand.CosmosListCommandResult))]
 [JsonSerializable(typeof(ItemQueryCommand.ItemQueryCommandResult))]
-[JsonSerializable(typeof(ContainerSchemaGetCommand.ContainerSchemaGetCommandResult))]
+[JsonSerializable(typeof(ContainerSchemaInferCommand.ContainerSchemaInferCommandResult))]
 [JsonSerializable(typeof(ItemListRecentCommand.ItemListRecentCommandResult))]
 [JsonSerializable(typeof(ItemGetCommand.ItemGetCommandResult))]
 [JsonSerializable(typeof(ItemTextSearchCommand.ItemTextSearchCommandResult))]
