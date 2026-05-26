@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added 'azmcp advisor recommendation summary' command to aggregate recommendations grouped by recommendation, category, impact, resource-type, or resource. Also added optional --category, --impact, --resource-type, --resource, and --search filters to 'azmcp advisor recommendation list'."

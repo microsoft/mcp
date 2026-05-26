@@ -9,6 +9,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | advisor_recommendation_list | List all recommendations in my subscription |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> |
+| advisor_recommendation_list | Show me high-impact Security recommendations in subscription <subscription> |
+| advisor_recommendation_list | List Cost recommendations for storage accounts in subscription <subscription> |
+| advisor_recommendation_list | Find Advisor recommendations mentioning "right-size" in subscription <subscription> |
+| advisor_recommendation_summary | Summarize Advisor recommendations in subscription <subscription> by category |
+| advisor_recommendation_summary | Show the top 10 most common Advisor recommendations in subscription <subscription> |
+| advisor_recommendation_summary | Group Advisor recommendations by impact in subscription <subscription> |
+| advisor_recommendation_summary | Which resource types have the most high-impact recommendations in subscription <subscription>? |
 
 ## Azure AI Search
 
