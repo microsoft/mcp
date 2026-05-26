@@ -2,96 +2,71 @@
 // Licensed under the MIT License.
 
 using System.Text;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Options.Incidents;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
-[CommandMetadata(Id = "78c3a0cc-9185-44bf-93db-11be7f39a9b4", Name = "setup_servicenow", Title = "Setup ServiceNow Connector", Description = "Connect an SRE Agent to ServiceNow. Creates a ServiceNow MCP connector to enable incident management integration using credentials from environment variables.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = true, LocalRequired = false)]
-public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServicenowCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<IncidentConnectorServiceNowOptions>
+[CommandMetadata(Id = "78c3a0cc-9185-44bf-93db-11be7f39a9b4", Name = "setup-servicenow", Title = "Set up ServiceNow Connector", Description = "Create a ServiceNow MCP connector using credentials from environment variables.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = true, LocalRequired = false)]
+public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServicenowCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<IncidentConnectorServiceNowOptions, SreAgentTextResult>(subscriptionResolver)
 {
     private readonly ILogger<IncidentsSetupServicenowCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, IncidentConnectorServiceNowOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SreAgentOptionDefinitions.Name);
-        command.Options.Add(SreAgentOptionDefinitions.InstanceUrl);
-        command.Options.Add(SreAgentOptionDefinitions.AuthType.AsRequired());
-        command.Options.Add(SreAgentOptionDefinitions.TokenEnv);
-        command.Options.Add(SreAgentOptionDefinitions.UsernameEnv);
-        command.Options.Add(SreAgentOptionDefinitions.PasswordEnv);
-    }
-
-    protected override IncidentConnectorServiceNowOptions BindOptions(ParseResult parseResult)
-    {
-        var o = base.BindOptions(parseResult);
-        o.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
-        o.InstanceUrl = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.InstanceUrl);
-        o.AuthType = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.AuthType);
-        o.TokenEnv = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.TokenEnv);
-        o.UsernameEnv = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.UsernameEnv);
-        o.PasswordEnv = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.PasswordEnv);
-        return o;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            return context.Response;
-        var o = BindOptions(parseResult);
         try
         {
-            if (!Uri.TryCreate(o.InstanceUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps ||
+            if (!Uri.TryCreate(options.InstanceUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps ||
                 !(uri.Host.EndsWith(".service-now.com", StringComparison.OrdinalIgnoreCase) ||
                   uri.Host.EndsWith(".servicenowservices.com", StringComparison.OrdinalIgnoreCase)))
                 throw new ArgumentException("ServiceNow instance URL must be an https URL on *.service-now.com or *.servicenowservices.com.");
 
-            var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(_sreAgentService, o, cancellationToken);
+            var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(_sreAgentService, options, cancellationToken);
             try
             {
-                await _sreAgentService.GetConnectorAsync(o.Subscription!, resourceGroup, o.Agent!, o.Name, o.Tenant, cancellationToken);
-                SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"Connector '{o.Name}' already exists. Use `connectors -> test` to verify, or `connectors -> delete` to recreate.");
+                await _sreAgentService.GetConnectorAsync(options.Subscription!, resourceGroup, options.Agent!, options.Name, options.Tenant, cancellationToken);
+                SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"Connector '{options.Name}' already exists. Use `connectors -> test` to verify, or `connectors -> delete` to recreate.");
                 return context.Response;
             }
             catch (HttpRequestException) { }
 
-            var normalized = o.InstanceUrl!.TrimEnd('/');
+            var normalized = options.InstanceUrl!.TrimEnd('/');
             var ext = new Dictionary<string, object>
             {
                 ["type"] = "http",
                 ["endpoint"] = $"{normalized}/api/sn_mcp/mcp"
             };
-            if (string.Equals(o.AuthType, "BearerToken", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(options.AuthType, "BearerToken", StringComparison.OrdinalIgnoreCase))
             {
-                if (string.IsNullOrWhiteSpace(o.TokenEnv))
+                if (string.IsNullOrWhiteSpace(options.TokenEnv))
                 {
                     throw new ArgumentException("tokenEnv is required for BearerToken auth");
                 }
-                var token = Environment.GetEnvironmentVariable(o.TokenEnv);
+                var token = Environment.GetEnvironmentVariable(options.TokenEnv);
                 if (string.IsNullOrWhiteSpace(token))
                 {
-                    throw new InvalidOperationException($"ServiceNow bearer token environment variable '{o.TokenEnv}' is not set.");
+                    throw new InvalidOperationException($"ServiceNow bearer token environment variable '{options.TokenEnv}' is not set.");
                 }
                 ext["authType"] = "BearerToken";
                 ext["bearerToken"] = token;
             }
             else
             {
-                if (string.IsNullOrWhiteSpace(o.UsernameEnv) || string.IsNullOrWhiteSpace(o.PasswordEnv))
+                if (string.IsNullOrWhiteSpace(options.UsernameEnv) || string.IsNullOrWhiteSpace(options.PasswordEnv))
                 {
                     throw new ArgumentException("usernameEnv and passwordEnv are required for BasicAuth");
                 }
-                var username = Environment.GetEnvironmentVariable(o.UsernameEnv);
-                var password = Environment.GetEnvironmentVariable(o.PasswordEnv);
+                var username = Environment.GetEnvironmentVariable(options.UsernameEnv);
+                var password = Environment.GetEnvironmentVariable(options.PasswordEnv);
                 if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
                 {
                     throw new InvalidOperationException("ServiceNow username/password environment variables are not set.");
@@ -105,18 +80,18 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
 
             var connector = new AgentConnectorEnvelope
             {
-                Name = o.Name,
+                Name = options.Name,
                 Properties = new AgentConnector
                 {
-                    Name = o.Name,
+                    Name = options.Name,
                     DataConnectorType = "Mcp",
                     DataSource = normalized,
                     Identity = string.Empty,
                     ExtendedProperties = ext
                 }
             };
-            await _sreAgentService.CreateOrUpdateConnectorAsync(o.Subscription!, resourceGroup, o.Agent!, o.Name, connector, o.Tenant, cancellationToken);
-            SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ ServiceNow connector '{o.Name}' created ({normalized}).\n\n**Next steps:**\n1. Run `connectors -> test` to verify the connection\n2. Add ServiceNow tools to your agent via `yaml -> apply`\n3. Create an incident response plan with `incidents -> create_plan`");
+            await _sreAgentService.CreateOrUpdateConnectorAsync(options.Subscription!, resourceGroup, options.Agent!, options.Name, connector, options.Tenant, cancellationToken);
+            SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"Γ£à ServiceNow connector '{options.Name}' created ({normalized}).\n\n**Next steps:**\n1. Run `connectors -> test` to verify the connection\n2. Add ServiceNow tools to your agent via `yaml -> apply`\n3. Create an incident response plan with `incidents -> create_plan`");
         }
         catch (Exception ex)
         {

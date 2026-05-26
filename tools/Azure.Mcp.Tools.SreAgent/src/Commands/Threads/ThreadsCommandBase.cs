@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
-using Azure.Mcp.Tools.SreAgent.Options.Threads;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
 
 public abstract class ThreadsCommandBase<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : SreAgentDataPlaneCommand<TOptions>
-    where TOptions : BaseSreAgentOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult> : SubscriptionCommand<TOptions, TResult>
+    where TOptions : class, ISreAgentOption
 {
     protected const string FollowUpPrompt = "Please proceed with the investigation using all available tools and information. Use your best judgment and provide your complete findings including root cause analysis and recommended next steps.";
 
@@ -32,10 +32,15 @@ public abstract class ThreadsCommandBase<
         "resource group", "tenant id", "cluster name", "connection string", "credentials", "access key"
     ];
 
-    protected override void RegisterOptions(Command command)
+    protected ThreadsCommandBase(ISubscriptionResolver subscriptionResolver) : base(subscriptionResolver)
     {
-        base.RegisterOptions(command);
     }
+
+    protected static Task<string> ResolveEndpointAsync(
+        ISreAgentService sreAgentService,
+        ISreAgentOption options,
+        CancellationToken cancellationToken)
+        => SreAgentCommandHelpers.ResolveAgentEndpointAsync(sreAgentService, options, cancellationToken);
 
     protected static SreAgentThreadCreateRequest CreateThreadRequest(string message, string agentName)
     {
@@ -157,52 +162,6 @@ public abstract class ThreadsCommandBase<
     {
         var user = Environment.GetEnvironmentVariable("USER") ?? Environment.GetEnvironmentVariable("USERNAME") ?? fallback;
         return (user, user == fallback ? "MCP User" : user);
-    }
-
-    protected static async Task<SreAgentInvestigationResult> RunInvestigationAsync(
-        ISreAgentService sreAgentService,
-        ThreadsInvestigateOptions options,
-        bool autoApprove,
-        CancellationToken cancellationToken)
-    {
-        var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(sreAgentService, options, cancellationToken);
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds)));
-
-        var thread = await sreAgentService.CreateThreadAsync(endpoint, CreateThreadRequest(options.Message!, options.Agent!), options.Tenant, timeout.Token);
-        var threadId = thread?.Id;
-        if (string.IsNullOrWhiteSpace(threadId))
-        {
-            return new(null, "failed", 0, true, "Thread created but no ID was returned.", []);
-        }
-
-        var messages = await PollForCompletionAsync(sreAgentService, endpoint, threadId, options.Tenant, TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds)), autoApprove, timeout.Token);
-        var followUps = 0;
-        while (followUps < Math.Max(0, options.MaxIterations))
-        {
-            var action = ClassifyFollowUp(messages);
-            if (action == FollowUpAction.None)
-            {
-                break;
-            }
-
-            if (action == FollowUpAction.NeedsData && !autoApprove)
-            {
-                return new(threadId, "needs-data", followUps, true, LastAgentText(messages), messages);
-            }
-
-            if (action == FollowUpAction.NeedsData && autoApprove)
-            {
-                await ApprovePendingApprovalsAsync(sreAgentService, endpoint, messages, options.Tenant, timeout.Token);
-            }
-
-            await sreAgentService.SendThreadMessageAsync(endpoint, threadId, CreateMessageRequest(FollowUpPrompt), options.Tenant, timeout.Token);
-            messages = await PollForCompletionAsync(sreAgentService, endpoint, threadId, options.Tenant, TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds)), autoApprove, timeout.Token);
-            followUps++;
-        }
-
-        var status = followUps >= Math.Max(0, options.MaxIterations) ? "max-iterations-reached" : "completed";
-        return new(threadId, status, followUps, false, null, messages);
     }
 
     protected enum FollowUpAction

@@ -1,21 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Options.Connectors;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
 
 [CommandMetadata(
     Id = "069f5411-fae7-4446-a7fc-53d7dc4b3c03",
-    Name = "create_kusto",
+    Name = "create-kusto",
     Title = "Create SRE Agent Kusto Connector",
     Description = "Create or update a Kusto connector on an Azure SRE Agent resource.",
     Destructive = true,
@@ -24,39 +24,14 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class ConnectorsCreateKustoCommand(ILogger<ConnectorsCreateKustoCommand> logger, ISreAgentService sreAgentService)
-    : BaseSreAgentCommand<ConnectorsCreateKustoOptions>
+public sealed class ConnectorsCreateKustoCommand(ILogger<ConnectorsCreateKustoCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ConnectorsCreateKustoOptions, ConnectorsCreateKustoCommand.ConnectorsCreateKustoCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ConnectorsCreateKustoCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ConnectorsCreateKustoOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SreAgentOptionDefinitions.Agent.AsRequired());
-        command.Options.Add(SreAgentOptionDefinitions.Name.AsRequired());
-        command.Options.Add(SreAgentOptionDefinitions.ClusterUrl.AsRequired());
-        command.Options.Add(SreAgentOptionDefinitions.Database);
-    }
-
-    protected override ConnectorsCreateKustoOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
-        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
-        options.ClusterUrl = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.ClusterUrl);
-        options.Database = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Database);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
         try
         {
             // SRE Agent requires the Kusto data source to be of the form
@@ -91,6 +66,6 @@ public sealed class ConnectorsCreateKustoCommand(ILogger<ConnectorsCreateKustoCo
         return context.Response;
     }
 
-    internal record ConnectorsCreateKustoCommandResult(AgentConnector Connector);
+    public record ConnectorsCreateKustoCommandResult(AgentConnector Connector);
 }
 

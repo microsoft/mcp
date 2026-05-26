@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options.Incidents;
 using Azure.Mcp.Tools.SreAgent.Services;
@@ -10,20 +12,18 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
-[CommandMetadata(Id = "ab471ff4-7b46-4a0c-a54a-9a0371dcdd01", Name = "plans_list", Title = "List Incident Response Plans", Description = "List incident response plans configured on an SRE Agent.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
-public sealed class IncidentsPlansListCommand(ILogger<IncidentsPlansListCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<IncidentRemoteOptions>
+[CommandMetadata(Id = "ab471ff4-7b46-4a0c-a54a-9a0371dcdd01", Name = "plans-list", Title = "List Incident Response Plans", Description = "List incident response plans configured on an SRE Agent.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+public sealed class IncidentsPlansListCommand(ILogger<IncidentsPlansListCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<IncidentRemoteOptions, SreAgentTextResult>(subscriptionResolver)
 {
     private readonly ILogger<IncidentsPlansListCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, IncidentRemoteOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            return context.Response;
-        var options = BindOptions(parseResult);
         try
         {
-            var endpoint = await ResolveEndpointAsync(_sreAgentService, options, cancellationToken);
+            var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(_sreAgentService, options, cancellationToken);
             var filters = (await _sreAgentService.ListIncidentFiltersAsync(endpoint, options.Tenant, cancellationToken))
                 .Where(f => f.IsDeleted != true)
                 .ToList();
@@ -47,7 +47,7 @@ public sealed class IncidentsPlansListCommand(ILogger<IncidentsPlansListCommand>
         foreach (var filter in filters)
         {
             handlersByFilterId.TryGetValue(filter.Id ?? string.Empty, out var handler);
-            var status = filter.IsEnabled == true ? "🟢 Enabled" : "🔴 Disabled";
+            var status = filter.IsEnabled == true ? "≡ƒƒó Enabled" : "≡ƒö┤ Disabled";
             lines.Add($"## {handler?.Name ?? filter.Id} ({status})");
             lines.Add($"- **Filter ID:** {filter.Id}");
             if (!string.IsNullOrWhiteSpace(filter.ImpactedService))
@@ -60,13 +60,13 @@ public sealed class IncidentsPlansListCommand(ILogger<IncidentsPlansListCommand>
                 lines.Add($"- **Agent:** {filter.HandlingAgent}");
             if (!string.IsNullOrWhiteSpace(filter.AgentMode))
                 lines.Add($"- **Mode:** {filter.AgentMode}");
-            lines.Add(handler is null ? "- **Handler:** ⚠️ None configured" : $"- **Handler:** {handler.Id} ({handler.IncidentProcessingGuide?.Count ?? 0} steps)");
+            lines.Add(handler is null ? "- **Handler:** ΓÜá∩╕Å None configured" : $"- **Handler:** {handler.Id} ({handler.IncidentProcessingGuide?.Count ?? 0} steps)");
             lines.Add(string.Empty);
         }
         var orphaned = handlers.Where(h => !filters.Any(f => string.Equals(f.Id, h.IncidentFilterId, StringComparison.OrdinalIgnoreCase))).ToList();
         if (orphaned.Count > 0)
         {
-            lines.Add("## ⚠️ Orphaned Handlers (no matching filter)");
+            lines.Add("## ΓÜá∩╕Å Orphaned Handlers (no matching filter)");
             lines.Add(string.Empty);
             foreach (var h in orphaned)
                 lines.Add($"- **{h.Name ?? h.Id}** (filter: {h.IncidentFilterId})");
