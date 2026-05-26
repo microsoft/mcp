@@ -56,19 +56,12 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         var rsvInner = rsvFault.Flatten().InnerExceptions.FirstOrDefault() ?? rsvFault;
         var dppInner = dppFault.Flatten().InnerExceptions.FirstOrDefault() ?? dppFault;
 
-        if (rsvInner is RequestFailedException rsvReq &&
-            dppInner is RequestFailedException dppReq &&
-            rsvReq.Status == dppReq.Status)
-        {
-            return rsvReq;
-        }
-
-        var message =
+        var combinedMessage =
             $"Both RSV and DPP {operationDescription} failed. " +
             $"RSV error: {rsvInner.GetType().Name}: {rsvInner.Message} " +
             $"DPP error: {dppInner.GetType().Name}: {dppInner.Message}";
 
-        return new InvalidOperationException(message, rsvInner);
+        return new InvalidOperationException(combinedMessage, rsvInner);
     }
 
     /// <summary>
@@ -93,8 +86,10 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string location, string? sku, string? storageType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        // Perform validations that don't require a network call first so invalid input
+        // fails fast without going through ResolveSubscriptionIdAsync (which may call ARM).
         VaultTypeResolver.ValidateVaultType(vaultType);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
 
         return VaultTypeResolver.IsRsv(vaultType)
             ? await rsvOps.CreateVaultAsync(vaultName, resourceGroup, subscription, location, sku, storageType, tenant, retryPolicy, cancellationToken)

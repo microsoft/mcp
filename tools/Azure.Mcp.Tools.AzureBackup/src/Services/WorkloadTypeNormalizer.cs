@@ -22,9 +22,9 @@ internal static class WorkloadTypeNormalizer
     /// throws so that error text stays consistent regardless of which side rejects.
     /// </summary>
     public const string SupportedTokensDescription =
-        "SQL (or SQLDatabase), SQLInstance, SAPHana (or SAPHanaDatabase), SAPHanaSystem, " +
-        "SAPHanaDBInstance (or SAPHanaDBI), VM (or IaaSVM, VirtualMachine), " +
-        "FileShare (or AzureFileShare, AFS), SAPAse (or SAPAseDatabase, ASE, Sybase)";
+        "SQL or SQLDatabase, SQLInstance, SAPHana or SAPHanaDatabase, SAPHanaSystem, " +
+        "SAPHanaDBInstance or SAPHanaDBI, VM, IaaSVM, or VirtualMachine, " +
+        "FileShare, AzureFileShare, or AFS, SAPAse, SAPAseDatabase, ASE, or Sybase";
 
     /// <summary>
     /// Returns <c>true</c> when <paramref name="workloadType"/> is a recognised alias.
@@ -56,6 +56,6 @@ internal static class WorkloadTypeNormalizer
     /// supported tokens, suitable for a System.CommandLine validator.
     /// </summary>
     public static string FormatUnknownMessage(string? workloadType) =>
-        $"Unknown workload type '{workloadType}'. Supported values: {SupportedTokensDescription}.";
+        $"Unknown workload type '{workloadType}'. Supported values (case-insensitive): {SupportedTokensDescription}.";
 }
 

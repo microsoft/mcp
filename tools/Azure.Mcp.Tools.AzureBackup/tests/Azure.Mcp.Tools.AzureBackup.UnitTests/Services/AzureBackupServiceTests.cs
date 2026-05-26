@@ -228,20 +228,24 @@ public class AzureBackupServiceTests
     }
 
     [Fact]
-    public async Task ListVaultsAsync_BothFailWithSameStatus_ThrowsInnerRequestFailedException()
+    public async Task ListVaultsAsync_BothFailWithSameStatus_ThrowsInvalidOperationWithBothMessages()
     {
-        // NEW-1: when both backends fail with the same HTTP status, surface a single
-        // RequestFailedException so the customer sees the actual status code & service
-        // message instead of an opaque AggregateException.
+        // NEW-1: when both backends fail with the same HTTP status, the two services can
+        // carry meaningfully different ErrorCodes / messages, so neither side is dropped -
+        // both inner messages are folded into the resulting InvalidOperationException's
+        // message and the RSV exception is preserved as InnerException for diagnostics.
         _rsvOps.ListVaultsAsync("22222222-2222-2222-2222-222222222222", null, null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "RSV error"));
         _dppOps.ListVaultsAsync("22222222-2222-2222-2222-222222222222", null, null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "DPP error"));
 
-        var ex = await Assert.ThrowsAsync<RequestFailedException>(() =>
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _service.ListVaultsAsync("22222222-2222-2222-2222-222222222222", null, null, null, null, CancellationToken.None));
 
-        Assert.Equal(403, ex.Status);
+        Assert.Contains("RSV error", ex.Message);
+        Assert.Contains("DPP error", ex.Message);
+        Assert.IsType<RequestFailedException>(ex.InnerException);
+        Assert.Equal(403, ((RequestFailedException)ex.InnerException!).Status);
     }
 
     [Fact]
