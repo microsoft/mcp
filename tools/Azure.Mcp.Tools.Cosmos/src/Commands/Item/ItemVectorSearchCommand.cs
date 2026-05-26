@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Globalization;
 using System.Net;
 using Azure.Mcp.Tools.Cosmos.Models;
 using Azure.Mcp.Tools.Cosmos.Options;
@@ -21,7 +20,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     Id = "5e6f7a8b-9c0d-4e1f-a2b3-c4d5e6f7a8b9",
     Name = "vector-search",
     Title = "Vector Search Cosmos DB Documents",
-    Description = "Perform a vector similarity search on Cosmos DB. Use Azure OpenAI to generate an embedding by supplying --search-text along with --openai-endpoint and --embedding-deployment or provide a precomputed embedding via --embedding as comma-separated float values. The container must have a vector index on --vector-property.",
+    Description = "Perform a vector similarity search on Cosmos DB. Supplies --search-text to an Azure OpenAI embedding deployment (--openai-endpoint and --embedding-deployment) to generate the query vector. The container must have a vector index on --vector-property.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -40,7 +39,6 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
         command.Options.Add(CosmosOptionDefinitions.VectorProperty);
         command.Options.Add(CosmosOptionDefinitions.SelectProperties);
         command.Options.Add(CosmosOptionDefinitions.VectorSearchCount);
-        command.Options.Add(CosmosOptionDefinitions.Embedding);
         command.Options.Add(CosmosOptionDefinitions.SearchText);
         command.Options.Add(CosmosOptionDefinitions.OpenAIEndpoint);
         command.Options.Add(CosmosOptionDefinitions.EmbeddingDeployment);
@@ -76,31 +74,6 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
             {
                 result.AddError("--count must be between 1 and 50.");
             }
-
-            var embedding = result.GetValueOrDefault<string?>(CosmosOptionDefinitions.Embedding.Name);
-            var searchText = result.GetValueOrDefault<string?>(CosmosOptionDefinitions.SearchText.Name);
-
-            if (string.IsNullOrWhiteSpace(embedding) && string.IsNullOrWhiteSpace(searchText))
-            {
-                result.AddError("Either --embedding or --search-text must be supplied.");
-                return;
-            }
-
-            if (!string.IsNullOrWhiteSpace(embedding) && !string.IsNullOrWhiteSpace(searchText))
-            {
-                result.AddError("--embedding and --search-text are mutually exclusive.");
-                return;
-            }
-
-            if (!string.IsNullOrWhiteSpace(searchText))
-            {
-                var endpoint = result.GetValueOrDefault<string?>(CosmosOptionDefinitions.OpenAIEndpoint.Name);
-                var deployment = result.GetValueOrDefault<string?>(CosmosOptionDefinitions.EmbeddingDeployment.Name);
-                if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(deployment))
-                {
-                    result.AddError("--openai-endpoint and --embedding-deployment are required when --search-text is supplied.");
-                }
-            }
         });
     }
 
@@ -110,10 +83,9 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
         options.VectorProperty = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.VectorProperty.Name);
         options.SelectProperties = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.SelectProperties.Name);
         options.Count = parseResult.GetValueOrDefault<int>(CosmosOptionDefinitions.VectorSearchCount.Name);
-        options.Embedding = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.Embedding.Name);
-        options.SearchText = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.SearchText.Name);
-        options.OpenAIEndpoint = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.OpenAIEndpoint.Name);
-        options.EmbeddingDeployment = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.EmbeddingDeployment.Name);
+        options.SearchText = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.SearchText.Name);
+        options.OpenAIEndpoint = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.OpenAIEndpoint.Name);
+        options.EmbeddingDeployment = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.EmbeddingDeployment.Name);
         options.EmbeddingDimensions = parseResult.GetValueOrDefault<int?>(CosmosOptionDefinitions.EmbeddingDimensions.Name);
         return options;
     }
@@ -132,19 +104,11 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
             var selectProperties = options.SelectProperties!
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-            float[] embedding;
-            if (!string.IsNullOrWhiteSpace(options.Embedding))
-            {
-                embedding = ParseEmbedding(options.Embedding!);
-            }
-            else
-            {
-                embedding = await _cosmosService.GenerateEmbedding(
-                    options.SearchText!,
-                    new EmbeddingRequest(options.OpenAIEndpoint!, options.EmbeddingDeployment!, options.EmbeddingDimensions),
-                    options.Tenant,
-                    cancellationToken);
-            }
+            var embedding = await _cosmosService.GenerateEmbedding(
+                options.SearchText!,
+                new EmbeddingRequest(options.OpenAIEndpoint!, options.EmbeddingDeployment!, options.EmbeddingDimensions),
+                options.Tenant,
+                cancellationToken);
 
             var items = await _cosmosService.VectorSearch(
                 options.Account!,
@@ -172,26 +136,6 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
         }
 
         return context.Response;
-    }
-
-    private static float[] ParseEmbedding(string value)
-    {
-        var parts = value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (parts.Length == 0)
-        {
-            throw new ArgumentException("--embedding must contain at least one number.", nameof(value));
-        }
-
-        var result = new float[parts.Length];
-        for (var i = 0; i < parts.Length; i++)
-        {
-            if (!float.TryParse(parts[i], NumberStyles.Float, CultureInfo.InvariantCulture, out result[i]))
-            {
-                throw new ArgumentException($"--embedding contains a value that is not a valid number: '{parts[i]}'.", nameof(value));
-            }
-        }
-
-        return result;
     }
 
     protected override string GetErrorMessage(Exception ex) => ex switch

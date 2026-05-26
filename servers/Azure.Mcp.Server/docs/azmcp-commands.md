@@ -2130,8 +2130,9 @@ azmcp cosmos database container item text-search --subscription <subscription> \
                                                  --search-phrase <phrase> \
                                                  [--count 10]
 
-# Vector similarity search against a Cosmos DB container. Provide --embedding (CSV floats)
-# or --search-text plus --openai-endpoint and --embedding-deployment to generate one.
+# Vector similarity search against a Cosmos DB container. Provide --search-text plus
+# --openai-endpoint and --embedding-deployment; the tool generates the query vector
+# via Azure OpenAI and runs the search against the configured vector index.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos database container item vector-search --subscription <subscription> \
                                                    --account <account> \
@@ -2139,11 +2140,10 @@ azmcp cosmos database container item vector-search --subscription <subscription>
                                                    --container <container> \
                                                    --vector-property <vector-property> \
                                                    --select-properties <p1,p2,...> \
+                                                   --search-text "free-form text" \
+                                                   --openai-endpoint <endpoint> \
+                                                   --embedding-deployment <deployment> \
                                                    [--count 10] \
-                                                   [--embedding "0.1,0.2,..."] \
-                                                   [--search-text "free-form text"] \
-                                                   [--openai-endpoint <endpoint>] \
-                                                   [--embedding-deployment <deployment>] \
                                                    [--embedding-dimensions <n>]
 ```
 

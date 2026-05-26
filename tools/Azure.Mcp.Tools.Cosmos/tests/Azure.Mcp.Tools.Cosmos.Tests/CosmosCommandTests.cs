@@ -386,7 +386,7 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     }
 
     [Fact]
-    public async Task Should_vector_search_documents_with_openai()
+    public async Task Should_vector_search_documents()
     {
         var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var openAiEndpoint = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIENDPOINT", "Sanitized");
@@ -418,30 +418,6 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         // it should rank first by cosine similarity against the "hello world" query embedding.
         var topId = items.EnumerateArray().First().GetProperty("id").GetString();
         Assert.Equal("vec-greeting", topId);
-    }
-
-    [Fact]
-    public async Task Should_vector_search_documents_with_embedding()
-    {
-        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
-        // VectorItems requires 1536 dimensions; provide a uniform precomputed vector.
-        var embedding = string.Join(",", Enumerable.Repeat("0.1", 1536));
-        var result = await CallToolAsync(
-            "cosmos_database_container_item_vector-search",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "account", resourceBaseName },
-                { "database", "ToDoList" },
-                { "container", "VectorItems" },
-                { "vector-property", "vector" },
-                { "select-properties", "id" },
-                { "embedding", embedding },
-                { "count", 3 }
-            });
-
-        var items = result.AssertProperty("items");
-        Assert.Equal(JsonValueKind.Array, items.ValueKind);
     }
 
     private static string GetStringOrNameElementString(JsonElement element, string propertyName)

@@ -17,7 +17,6 @@ public static class CosmosOptionDefinitions
     public const string SearchPhraseName = "search-phrase";
     public const string VectorPropertyName = "vector-property";
     public const string SelectPropertiesName = "select-properties";
-    public const string EmbeddingName = "embedding";
     public const string SearchTextName = "search-text";
     public const string OpenAIEndpointName = "openai-endpoint";
     public const string EmbeddingDeploymentName = "embedding-deployment";
@@ -144,32 +143,28 @@ public static class CosmosOptionDefinitions
         Required = true
     };
 
-    public static readonly Option<string?> Embedding = new(
-        $"--{EmbeddingName}"
-    )
-    {
-        Description = "Comma-separated list of floating-point numbers representing a precomputed embedding vector (e.g., '0.12,-0.34,0.56'). Mutually exclusive with --search-text."
-    };
-
-    public static readonly Option<string?> SearchText = new(
+    public static readonly Option<string> SearchText = new(
         $"--{SearchTextName}"
     )
     {
-        Description = "Free-form text to embed via Azure OpenAI before searching. Requires --openai-endpoint and --embedding-deployment. Mutually exclusive with --embedding."
+        Description = "Free-form text to embed via Azure OpenAI before searching.",
+        Required = true
     };
 
-    public static readonly Option<string?> OpenAIEndpoint = new(
+    public static readonly Option<string> OpenAIEndpoint = new(
         $"--{OpenAIEndpointName}"
     )
     {
-        Description = "Azure OpenAI endpoint (e.g., 'https://my-endpoint.openai.azure.com/') used to generate the embedding when --search-text is supplied."
+        Description = "Azure OpenAI endpoint (e.g., 'https://my-endpoint.openai.azure.com/') used to generate the embedding from --search-text.",
+        Required = true
     };
 
-    public static readonly Option<string?> EmbeddingDeployment = new(
+    public static readonly Option<string> EmbeddingDeployment = new(
         $"--{EmbeddingDeploymentName}"
     )
     {
-        Description = "Name of the Azure OpenAI embedding deployment (e.g., 'text-embedding-ada-002') used when --search-text is supplied."
+        Description = "Name of the Azure OpenAI embedding deployment (e.g., 'text-embedding-3-small') used to generate the embedding from --search-text.",
+        Required = true
     };
 
     public static readonly Option<int?> EmbeddingDimensions = new(

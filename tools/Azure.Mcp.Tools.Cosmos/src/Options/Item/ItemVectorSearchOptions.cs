@@ -16,9 +16,6 @@ public class ItemVectorSearchOptions : BaseContainerOptions
     [JsonPropertyName(CosmosOptionDefinitions.CountName)]
     public int? Count { get; set; }
 
-    [JsonPropertyName(CosmosOptionDefinitions.EmbeddingName)]
-    public string? Embedding { get; set; }
-
     [JsonPropertyName(CosmosOptionDefinitions.SearchTextName)]
     public string? SearchText { get; set; }
 
