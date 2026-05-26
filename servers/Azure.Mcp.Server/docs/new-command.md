@@ -505,9 +505,9 @@ public class {Resource}{Operation}Options : ISubscriptionOption
 ```
 
 IMPORTANT:
-- Options classes are **flat** — no inheritance hierarchy. Implement `ISubscriptionOption` if the command needs subscription/tenant.
-- Use `[Option]` attributes to declare each option. `OptionBinder` handles registration and binding automatically.
-- Use `required` keyword or non-nullable types for required options. Use `?` for optional options.
+- Options classes are **flat** — no inheritance hierarchy. Implement `ISubscriptionOption` if the command needs subscription support.
+- `OptionBinder` discovers all public writable properties on the options class and handles registration and binding automatically. The `[Option]` attribute is used to override name, description, or hidden — but properties are discovered regardless of whether `[Option]` is present.
+- **Required vs optional** is determined entirely by nullability: non-nullable types = required; `?` = optional. The `required` keyword is a C# compile-time aid to suppress uninitialized warnings but does not affect CLI validation.
 - Only define properties that correspond to actually exposed CLI options for that specific command.
 - Use consistent parameter names across services:
   - **CRITICAL**: Always use `subscription` (never `subscriptionId`) for subscription parameters - this allows the parameter to accept both subscription IDs and subscription names, which are resolved internally by `ISubscriptionResolver`
@@ -525,17 +525,17 @@ The `[Option]` attribute drives automatic option registration and binding via `O
 
 **Key Principles:**
 - Options classes are **flat POCOs** — no class inheritance. Each command has its own options class.
-- `OptionBinder` discovers all `[Option]`-attributed properties on the concrete class and handles both registration (adding to the CLI parser) and binding (populating from parse results) automatically.
-- **Required vs optional** is determined entirely by nullability: `required` keyword or non-nullable types = required; `?` = optional. No `.AsRequired()`/`.AsOptional()` calls needed.
+- `OptionBinder` discovers **all public writable properties** on the concrete class and handles both registration (adding to the CLI parser) and binding (populating from parse results) automatically. The `[Option]` attribute is only needed to override name, description, or hidden status — un-attributed properties are still discovered and bound.
+- **Required vs optional** is determined entirely by nullability: non-nullable types = required; `?` = optional. The `required` keyword suppresses C# compiler warnings about uninitialized non-nullable reference properties but does **not** drive CLI validation — only nullability matters to `OptionBinder`.
 - **No shared state**: Each command gets its own options instance per request — thread-safe by design.
-- **Implement `ISubscriptionOption`** if the command needs optional `string? Subscription`. This enables post-processing by `SubscriptionCommand` and `ISubscriptionResolver`.
+- **Implement `ISubscriptionOption`** if the command needs optional `string? Subscription`. This enables post-processing by `SubscriptionCommand` and `ISubscriptionResolver`. Note: `ISubscriptionOption` only provides `Subscription` — add a separate `Tenant` property if the command accepts `--tenant`.
 - **Implement additional option interfaces** (e.g., `IStorageAccountOption`) only when base command classes need type-safe access to specific properties for shared behavior like validation.
 - **Validation** is done via `ValidateOptions(TOptions, ValidationResult)` override in the command class — not via `Command.Validators.Add`.
 - **No manual registration or binding**: Remove all `RegisterOptions`/`BindOptions` overrides. If you find yourself writing these, you're using the old pattern.
 
 **Conventions:**
 - **Name**: Derived automatically from the property name in kebab-case (e.g., `LocalFilePath` → `--local-file-path`). Only use `[Option(Name = "...")]` when the convention doesn't produce the desired name (e.g., `RetryPolicy` → `--retry` instead of `--retry-policy`). **Do not** specify `Name =` when it matches the default.
-- **Required**: Determined by nullability. Use non-nullable types for required options. Use `?` for optional.  Use the `required` keyword to suppress compiler warnings about uninitialized non-nullable reference properties.
+- **Required**: Determined by nullability. Use non-nullable types for required options. Use `?` for optional. Use the `required` keyword to suppress compiler warnings about uninitialized non-nullable reference properties.
 - **Description**: Pass as the constructor argument `[Option("description")]` or via `[Option(Description = "...")]`.
 - **Shared descriptions**: Use constants from `OptionDescriptions` (e.g., `OptionDescriptions.Subscription`, `OptionDescriptions.Tenant`).
 - **Nested objects**: Use `[Option(Name = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `RetryPolicyOptions` with `[Option(Name = "retry")]` produces `--retry-delay`, `--retry-max-retries`, etc.
@@ -667,7 +667,7 @@ public interface IContainerOption : IStorageAccountOption
 The concrete options class implements these interfaces while remaining flat:
 
 ```csharp
-public class BlobUploadOptions : ISubscriptionOption, IBlobOption
+public class BlobUploadOptions : ISubscriptionOption, IContainerOption
 {
     [Option("The name of the Azure Storage account.")]
     public required string Account { get; set; }
@@ -728,12 +728,13 @@ Ensure all necessary using statements are included:
 
 ```csharp
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;       // REQUIRED: For SubscriptionCommand<TOptions, TResult>
+using Azure.Mcp.Core.Services.Azure.Subscription;  // REQUIRED: For ISubscriptionResolver
 using Azure.Mcp.Tools.{Toolset}.Models;
-using Azure.Mcp.Tools.{Toolset}.Options;  // REQUIRED: For options classes
+using Azure.Mcp.Tools.{Toolset}.Options;           // REQUIRED: For options classes
 using Azure.Mcp.Tools.{Toolset}.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 [CommandMetadata(
