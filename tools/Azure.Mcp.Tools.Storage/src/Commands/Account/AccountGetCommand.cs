@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Storage.Models;
-using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Account;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Account;
 
@@ -25,38 +23,16 @@ namespace Azure.Mcp.Tools.Storage.Commands.Account;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorageService storageService) : SubscriptionCommand<AccountGetOptions>()
+public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorageService storageService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<AccountGetOptions, AccountGetCommand.AccountGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<AccountGetCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AccountGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(StorageOptionDefinitions.Account.AsOptional());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-    }
-
-    protected override AccountGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Account.Name);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            // Call service operation with required parameters
             var accounts = await _storageService.GetAccountDetails(
                 options.Account,
                 options.Subscription!,
@@ -65,8 +41,7 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
                 options.RetryPolicy,
                 cancellationToken);
 
-            // Set results
-            context.Response.Results = ResponseResult.Create(new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false), StorageJsonContext.Default.AccountGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new AccountGetCommandResult(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false), StorageJsonContext.Default.AccountGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -85,6 +60,5 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
         return context.Response;
     }
 
-    // Strongly-typed result record
-    internal record AccountGetCommandResult(List<StorageAccountInfo> Accounts, bool AreResultsTruncated);
+    public record AccountGetCommandResult(List<StorageAccountInfo> Accounts, bool AreResultsTruncated);
 }

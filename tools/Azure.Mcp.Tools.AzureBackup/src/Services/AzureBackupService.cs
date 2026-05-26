@@ -497,12 +497,16 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             return null;
         }
 
+        // Note: only the default arm is explicitly cast to (BackupDataSourceType?). Without
+        // that cast the compiler infers BackupDataSourceType for the switch expression and
+        // rewrites `_ => null` as `op_Implicit((string)null)`, which throws
+        // ArgumentNullException at runtime for any unmapped (DPP-only) ARM resource type.
         return armResourceType switch
         {
             "microsoft.compute/virtualmachines" => BackupDataSourceType.Vm,
             "microsoft.storage/storageaccounts" => BackupDataSourceType.AzureFileShare,
             "microsoft.sql/servers/databases" => BackupDataSourceType.SqlDatabase,
-            _ => null // DPP-only types handled via DPP vault lookup
+            _ => (BackupDataSourceType?)null // DPP-only types handled via DPP vault lookup
         };
     }
 
@@ -761,6 +765,19 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         return VaultTypeResolver.IsRsv(resolved)
             ? await rsvOps.DisableMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken)
             : await dppOps.DisableMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+    }
+
+    public async Task<OperationResult> ConfigureEncryptionAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string keyVaultUri, string keyName, string identityType,
+        string? keyVersion, string? userAssignedIdentityId,
+        string? vaultType, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        return VaultTypeResolver.IsRsv(resolved)
+            ? await rsvOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, retryPolicy, cancellationToken)
+            : await dppOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, retryPolicy, cancellationToken);
     }
 
 

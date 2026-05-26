@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -227,6 +228,7 @@ internal class Program
             new Azure.Mcp.Tools.ServiceBus.ServiceBusSetup(),
             new Azure.Mcp.Tools.ServiceFabric.ServiceFabricSetup(),
             new Azure.Mcp.Tools.SignalR.SignalRSetup(),
+            new Azure.Mcp.Tools.SreAgent.SreAgentSetup(),
             new Azure.Mcp.Tools.Sql.SqlSetup(),
             new Azure.Mcp.Tools.Storage.StorageSetup(),
             new Azure.Mcp.Tools.StorageSync.StorageSyncSetup(),
@@ -322,6 +324,7 @@ internal class Program
         services.AddSingleton<IResourceGroupService, ResourceGroupService>();
         services.AddSingleton<ISubscriptionService, SubscriptionService>();
         services.AddSingleton<ICommandFactory, CommandFactory>();
+        services.AddSingleton<ISubscriptionResolver, SubscriptionResolver>();
 
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ITenantService and ICacheService.

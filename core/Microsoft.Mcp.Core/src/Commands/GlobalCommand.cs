@@ -84,20 +84,20 @@ public abstract class GlobalCommand<
         {
             var policy = new RetryPolicyOptions();
 
-            policy.HasMaxRetries = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.MaxRetries.Name, out int maxRetries);
-            policy.MaxRetries = maxRetries;
+            if (parseResult.TryGetValue(OptionDefinitions.RetryPolicy.MaxRetries.Name, out int maxRetries))
+                policy.MaxRetries = maxRetries;
 
-            policy.HasDelaySeconds = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.Delay.Name, out double delaySeconds);
-            policy.DelaySeconds = delaySeconds;
+            if (parseResult.TryGetValue(OptionDefinitions.RetryPolicy.Delay.Name, out double delaySeconds))
+                policy.DelaySeconds = delaySeconds;
 
-            policy.HasMaxDelaySeconds = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.MaxDelay.Name, out double maxDelaySeconds);
-            policy.MaxDelaySeconds = maxDelaySeconds;
+            if (parseResult.TryGetValue(OptionDefinitions.RetryPolicy.MaxDelay.Name, out double maxDelaySeconds))
+                policy.MaxDelaySeconds = maxDelaySeconds;
 
-            policy.HasMode = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.Mode.Name, out RetryMode mode);
-            policy.Mode = mode;
+            if (parseResult.TryGetValue(OptionDefinitions.RetryPolicy.Mode.Name, out RetryMode mode))
+                policy.Mode = mode;
 
-            policy.HasNetworkTimeoutSeconds = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.NetworkTimeout.Name, out double networkTimeoutSeconds);
-            policy.NetworkTimeoutSeconds = networkTimeoutSeconds;
+            if (parseResult.TryGetValue(OptionDefinitions.RetryPolicy.NetworkTimeout.Name, out double networkTimeoutSeconds))
+                policy.NetworkTimeoutSeconds = networkTimeoutSeconds;
 
             // Only assign if at least one flag set (defensive)
             if (policy.HasMaxRetries || policy.HasDelaySeconds || policy.HasMaxDelaySeconds || policy.HasMode || policy.HasNetworkTimeoutSeconds)

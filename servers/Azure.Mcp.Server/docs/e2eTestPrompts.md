@@ -168,6 +168,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azurebackup_protecteditem_undelete | Undelete the accidentally deleted backup for VM <datasource_id> in vault <vault_name> under resource group <resource_group> |
 | azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> |
 | azurebackup_recoverypoint_get | List available recovery points for <item_name> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_security_configure-encryption | Configure customer-managed key encryption on vault <vault_name> in resource group <resource_group> using key <key_name> from key vault <key_vault_uri> with system-assigned identity |
+| azurebackup_security_configure-encryption | Enable CMK encryption on vault <vault_name> using user-assigned identity <identity_id> and key <key_name> from <key_vault_uri> |
+| azurebackup_security_configure-encryption | Set up customer-managed encryption for backup vault <vault_name> in <resource_group> |
 | azurebackup_security_configure-mua | Enable multi-user authorization on vault <vault_name> in resource group <resource_group> with resource guard <resource_guard_id> |
 | azurebackup_security_configure-mua | Disable MUA on vault <vault_name> in resource group <resource_group> |
 | azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' |
@@ -245,7 +248,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vm_get | List all virtual machines in my subscription |
 | compute_vm_get | Show me all VMs in my subscription |
 | compute_vm_get | What virtual machines do I have? |
-| compute_vm_get | List virtual machines in resource group <resource-group-name> |
+| compute_vm_get | Get all virtual machines in resource group <resource-group-name> |
 | compute_vm_get | Show me VMs in resource group <resource-group-name> |
 | compute_vm_get | What VMs are in resource group <resource-group-name>? |
 | compute_vm_get | Get details for virtual machine <vm-name> in resource group <resource-group-name> |
@@ -264,9 +267,17 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vm_delete | Remove virtual machine <vm-name> from resource group <resource-group-name> |
 | compute_vm_delete | Destroy VM <vm-name> in resource group <resource-group-name> |
 | compute_vm_delete | Force delete VM <vm-name> in resource group <resource-group-name> using force-deletion |
+| compute_vm_power-state | Power on and start VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_power-state | Stop the running virtual machine <vm-name> and power it off in resource group <resource-group-name> |
+| compute_vm_power-state | Deallocate VM <vm-name> in resource group <resource-group-name> to release compute resources while keeping the VM |
+| compute_vm_power-state | Restart VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_power-state | Stop VM <vm-name> in resource group <resource-group-name> and skip the OS shutdown |
+| compute_vm_power-state | Start VM <vm-name> in resource group <resource-group-name> without waiting for completion |
+| compute_vm_power-state | Power off and shut down VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_power-state | Deallocate and power off VM <vm-name> to stop billing for compute resources while preserving the VM |
 | compute_vmss_create | Create a virtual machine scale set named <vmss-name> in resource group <resource-group-name> |
 | compute_vmss_create | Create a VMSS with 3 instances in <resource-group-name> |
-| compute_vmss_create | Deploy a scale set with Rolling upgrade policy and 5 instances |
+| compute_vmss_create | Deploy a virtual machine scale set with Rolling upgrade policy and 5 instances |
 | compute_vmss_create | Create Linux VMSS with SSH authentication in <resource-group-name> |
 | compute_vmss_get | List all virtual machine scale sets in my subscription |
 | compute_vmss_get | List virtual machine scale sets in resource group <resource-group-name> |
@@ -941,6 +952,66 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | sql_server_get | Show me the Azure SQL server <server_name> details |
 | sql_server_get | Get Azure SQL server <server_name> info |
 | sql_server_get | Display the properties of Azure SQL server <server_name> |
+
+## Azure SRE Agent
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| sreagent_agents_list | List all Azure SRE Agent resources in my subscription |
+| sreagent_agents_get | Show me the details of SRE Agent <agent_name> in resource group <resource_group> |
+| sreagent_agents_create | Create a sub-agent called <name> on SRE Agent <agent_name> |
+| sreagent_agents_delete | Delete the sub-agent <name> from SRE Agent <agent_name> |
+| sreagent_agents_tools_list | List the custom tools attached to SRE Agent <agent_name> |
+| sreagent_agents_tools_get | Get the definition of custom tool <tool_name> from SRE Agent <agent_name> |
+| sreagent_agents_tools_create | Create a custom tool called <tool_name> on SRE Agent <agent_name> |
+| sreagent_skills_list | List all skills available on SRE Agent <agent_name> |
+| sreagent_skills_create | Add a new skill called <skill_name> to SRE Agent <agent_name> |
+| sreagent_skills_delete | Delete the skill <skill_name> from SRE Agent <agent_name> |
+| sreagent_connectors_list | List the connectors configured on SRE Agent <agent_name> |
+| sreagent_connectors_get | Show me the details of connector <connector_name> on SRE Agent <agent_name> |
+| sreagent_connectors_create_kusto | Create a Kusto connector on SRE Agent <agent_name> |
+| sreagent_connectors_create_mcp | Create an MCP connector on SRE Agent <agent_name> |
+| sreagent_connectors_delete | Remove the connector <connector_name> from SRE Agent <agent_name> |
+| sreagent_connectors_test | Test the connector <connector_name> on SRE Agent <agent_name> and list its tools |
+| sreagent_hooks_list | List the hooks configured for SRE Agent <agent_name> |
+| sreagent_hooks_get | Show me the details of hook <hook_name> on SRE Agent <agent_name> |
+| sreagent_hooks_delete | Remove and permanently delete hook <hook_name> from SRE Agent <agent_name> |
+| sreagent_hooks_thread_list | List the hook activation states for thread <thread_id> on SRE Agent <agent_name> |
+| sreagent_hooks_thread_activate | Activate hook <hook_name> on thread <thread_id> of SRE Agent <agent_name> |
+| sreagent_hooks_thread_deactivate | Deactivate hook <hook_name> on thread <thread_id> of SRE Agent <agent_name> |
+| sreagent_threads_list | List the active threads on SRE Agent <agent_name> |
+| sreagent_threads_get | Show me thread <thread_id> on SRE Agent <agent_name> |
+| sreagent_threads_create | Start a new thread on SRE Agent <agent_name> |
+| sreagent_threads_send_message | Send a message to thread <thread_id> on SRE Agent <agent_name> |
+| sreagent_threads_investigate | Investigate the following issue with SRE Agent <agent_name>: <issue> |
+| sreagent_threads_investigate_yolo | Investigate <issue> on SRE Agent <agent_name> in yolo mode, automatically granting all pending approvals without waiting |
+| sreagent_threads_delete | Delete thread <thread_id> from SRE Agent <agent_name> |
+| sreagent_scheduledtasks_list | List the scheduled tasks on SRE Agent <agent_name> |
+| sreagent_scheduledtasks_get | Show me the scheduled task <task_id> on SRE Agent <agent_name> |
+| sreagent_scheduledtasks_create | Schedule a recurring task on SRE Agent <agent_name> that runs every Monday |
+| sreagent_scheduledtasks_pause | Pause the scheduled task <task_id> on SRE Agent <agent_name> |
+| sreagent_scheduledtasks_resume | Resume the scheduled task <task_id> on SRE Agent <agent_name> |
+| sreagent_scheduledtasks_delete | Delete the scheduled task <task_id> from SRE Agent <agent_name> |
+| sreagent_incidents_active_list | List the active incidents on SRE Agent <agent_name> |
+| sreagent_incidents_create | Create a new incident investigation for SRE Agent <agent_name> with title <title> |
+| sreagent_incidents_plans_list | List the incident response plans configured on SRE Agent <agent_name> |
+| sreagent_incidents_plans_create | Enable a new incident response plan on SRE Agent <agent_name> with alert filter <filter> and handler <handler> |
+| sreagent_incidents_setup_pagerduty | Connect SRE Agent <agent_name> to PagerDuty |
+| sreagent_incidents_setup_servicenow | Connect SRE Agent <agent_name> to ServiceNow |
+| sreagent_workflows_generate | Generate a YAML workflow for a tool named <tool_name> |
+| sreagent_workflows_validate | Validate the following SRE Agent workflow YAML |
+| sreagent_workflows_apply | Apply the workflow YAML to SRE Agent <agent_name> |
+| sreagent_docs_get | Show me the SRE Agent documentation for the topic <topic> |
+| sreagent_docs_memories_list | Get a complete list of all indexed knowledge base documents stored in SRE Agent <agent_name> memory without filtering |
+| sreagent_docs_memories_search | Search the SRE Agent knowledge base for <text> |
+| sreagent_docs_memories_add | Add a document called <name> to the SRE Agent knowledge base |
+| sreagent_docs_memories_delete | Confirm and delete knowledge base document <name> from SRE Agent <agent_name> |
+| sreagent_docs_memories_reindex | Reindex the knowledge base documents for SRE Agent <agent_name> |
+| sreagent_architecture_plan | Plan an SRE Agent architecture for the following requirements: <requirements> |
+| sreagent_commonprompts_list | List the common prompts on SRE Agent <agent_name> |
+| sreagent_commonprompts_get | Show me the common prompt <prompt_name> on SRE Agent <agent_name> |
+| sreagent_commonprompts_create | Create a common prompt called <prompt_name> on SRE Agent <agent_name> |
+| sreagent_commonprompts_delete | Permanently remove and erase common prompt <prompt_name> from SRE Agent <agent_name> |
 
 ## Azure Storage
 

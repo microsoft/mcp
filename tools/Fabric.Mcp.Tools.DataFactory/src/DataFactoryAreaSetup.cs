@@ -1,12 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Core;
 using Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
 using Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
 using global::DataFactory.MCP.Extensions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Fabric.Mcp.Tools.DataFactory;
 
@@ -17,7 +20,17 @@ public class DataFactoryAreaSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        // Register global::DataFactory.MCP.Core services (auth, HttpClients, all service implementations)
+        // Bridge host auth to DataFactory.MCP.Core: only register TokenCredential if the host
+        // provides IAzureTokenCredentialProvider. DataFactory.MCP.Core auto-detects TokenCredential
+        // in DI — if present, uses it; otherwise falls back to standalone auth.
+        // The delegating credential calls through to the provider on each token request,
+        // avoiding credential caching (which breaks OBO/multi-user).
+        if (services.Any(d => d.ServiceType == typeof(IAzureTokenCredentialProvider)))
+        {
+            services.TryAddSingleton<TokenCredential, ProviderDelegatingCredential>();
+        }
+
+        // Register DataFactory.MCP.Core services (auth, HttpClients, all service implementations)
         services.AddDataFactoryMcpServices();
 
         // Register command instances

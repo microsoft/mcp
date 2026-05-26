@@ -865,7 +865,7 @@ Azure MCP Server supports connecting to Azure sovereign clouds. By default, it a
 
 | Cloud | Aliases |
 |-------|---------|
-| Azure Public Cloud | `AzureCloud`, `AzurePublicCloud`, `Public`, `AzurePublic` | 
+| Azure Public Cloud | `AzureCloud`, `AzurePublicCloud`, `Public`, `AzurePublic` |
 | Azure China Cloud | `AzureChinaCloud`, `China`, `AzureChina` |
 | Azure US Government | `AzureUSGovernment`, `USGov`, `AzureUSGovernmentCloud`, `USGovernment` |
 
@@ -1022,6 +1022,10 @@ Example prompts that generate Azure CLI commands:
 * "Update VMSS 'my-vmss' capacity to 5 instances"
 * "Delete virtual machine 'my-vm' in resource group 'my-resource-group'"
 * "Force delete VM 'my-vm' in resource group 'my-rg' using force-deletion"
+* "Start VM 'my-vm' in resource group 'my-rg'"
+* "Stop VM 'my-vm' in resource group 'my-rg'"
+* "Deallocate VM 'my-vm' in resource group 'my-rg' to stop billing"
+* "Restart VM 'my-vm' in resource group 'my-rg'"
 * "Delete virtual machine scale set 'my-vmss' in resource group 'my-resource-group'"
 * "Force delete VMSS 'my-vmss' in resource group 'my-rg' using force-deletion"
 
@@ -1142,6 +1146,27 @@ Example prompts that generate Azure CLI commands:
 * "Show me details about my Azure SQL server 'myserver'"
 * "Delete my Azure SQL server 'myserver'"
 
+### 🤖 Azure SRE Agent
+
+* "List my Azure SRE Agent resources"
+* "Show me the SRE sub-agent named 'incident-bot' on agent 'sre-prod'"
+* "Create a new SRE sub-agent named 'incident-bot' with these instructions on agent 'sre-prod'"
+* "List the connectors registered on SRE Agent 'sre-prod'"
+* "Register a Kusto connector on SRE Agent 'sre-prod' pointing at cluster 'https://help.kusto.windows.net'"
+* "Register an MCP connector on SRE Agent 'sre-prod' for the Azure MCP server"
+* "List the safety hooks configured on SRE Agent 'sre-prod'"
+* "Activate the 'pre-prod-approval' hook for thread 'thread-123' on SRE Agent 'sre-prod'"
+* "Create a new investigation thread on SRE Agent 'sre-prod' and ask it to look into elevated 5xx in payments-api"
+* "Send a follow-up message to thread 'thread-123' on SRE Agent 'sre-prod'"
+* "Run an autonomous investigation on SRE Agent 'sre-prod' with up to 20 iterations"
+* "List scheduled tasks on SRE Agent 'sre-prod'"
+* "Create a scheduled task on SRE Agent 'sre-prod' that runs every 15 minutes"
+* "List active incidents on SRE Agent 'sre-prod'"
+* "Declare an incident on SRE Agent 'sre-prod' for elevated error rates"
+* "Generate a remediation workflow on SRE Agent 'sre-prod' from the latest investigation"
+* "Search SRE Agent 'sre-prod' memories for prior occurrences of this alert"
+* "Produce a remediation plan on SRE Agent 'sre-prod' for incident 'inc-42'"
+
 ### 💾 Azure Storage
 
 * "List my Azure storage accounts"
@@ -1229,6 +1254,7 @@ The Azure MCP Server provides tools for interacting with **43+ Azure service are
 - 🗄️ **Azure SQL Database** - Relational database management
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
+- 🤖 **Azure SRE Agent** - SRE Agent investigations, sub-agents, connectors, hooks, threads, scheduled tasks, incidents, workflows, memories, and remediation plans
 - 💾 **Azure Storage** - Blob storage
 -  **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management

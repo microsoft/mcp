@@ -13,6 +13,7 @@ using Xunit;
 
 namespace Microsoft.Mcp.Tests.Client;
 
+[Trait("TestType", "Live")]
 public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : CommandTestsBase(output, liveServerFixture), IClassFixture<TestProxyFixture>, IClassFixture<LiveServerFixture>
 {

@@ -1597,7 +1597,7 @@
     },
     {
       "name": "update_azure_compute_vm_and_vmss",
-      "description": "Update Azure Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Modify VM properties like size, tags, license type, boot diagnostics, and user data. Update VMSS capacity, upgrade policy, overprovision settings, auto OS upgrade, and scale-in policies. Uses PATCH semantics - only specified properties are updated; unspecified properties remain unchanged.",
+      "description": "Update Azure Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Modify VM properties like size, tags, license type, boot diagnostics, and user data. Update VMSS capacity, upgrade policy, overprovision settings, auto OS upgrade, and scale-in policies. Change VM power state (start, stop, deallocate, restart). For VM and VMSS update operations, PATCH semantics apply - only specified properties are updated; unspecified properties remain unchanged. Power-state actions are operation-based changes, not PATCH updates.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -1626,6 +1626,7 @@
       },
       "mappedToolList": [
         "compute_vm_update",
+        "compute_vm_power-state",
         "compute_vmss_update"
       ]
     },
@@ -3694,8 +3695,7 @@
         "monitor_instrumentation_send-brownfield-analysis",
         "monitor_instrumentation_send-enhancement-select"
       ]
-    }
-    ,
+    },
     {
       "name": "get_azure_device_registry_details",
       "description": "Get details about Azure Device Registry namespaces in a subscription or resource group. Returns namespace information including name, location, provisioning state, and UUID.",
@@ -3840,6 +3840,7 @@
         "azurebackup_governance_soft-delete",
         "azurebackup_disasterrecovery_enable-crr",
         "azurebackup_protecteditem_undelete",
+        "azurebackup_security_configure-encryption",
         "azurebackup_security_configure-mua"
       ]
     },
@@ -3915,6 +3916,349 @@
         "azureterraform_aztfexport_resourcegroup",
         "azureterraform_conftest_plan",
         "azureterraform_conftest_workspace"
+      ]
+    },
+    {
+      "name": "get_azure_sre_agent_resources",
+      "description": "Get and list Azure SRE Agent resources, sub-agents, custom tools, skills, connectors, hooks, threads, scheduled tasks, incidents, plans, docs, memories, common prompts, architecture plans, and workflow validation/generation results.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_agents_get",
+        "sreagent_agents_list",
+        "sreagent_agents_tools_get",
+        "sreagent_agents_tools_list",
+        "sreagent_architecture_plan",
+        "sreagent_commonprompts_get",
+        "sreagent_commonprompts_list",
+        "sreagent_connectors_get",
+        "sreagent_connectors_list",
+        "sreagent_docs_get",
+        "sreagent_docs_memories_list",
+        "sreagent_docs_memories_search",
+        "sreagent_hooks_get",
+        "sreagent_hooks_list",
+        "sreagent_hooks_thread_list",
+        "sreagent_incidents_active_list",
+        "sreagent_incidents_plans_list",
+        "sreagent_scheduledtasks_get",
+        "sreagent_scheduledtasks_list",
+        "sreagent_skills_list",
+        "sreagent_threads_get",
+        "sreagent_threads_list",
+        "sreagent_workflows_generate",
+        "sreagent_workflows_validate"
+      ]
+    },
+    {
+      "name": "test_azure_sre_agent_connector",
+      "description": "Test an Azure SRE Agent connector and list the tools it exposes. The tested connector may reach out to external systems.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with external systems whose behavior is not fully known to the server."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_connectors_test"
+      ]
+    },
+    {
+      "name": "manage_azure_sre_agent_resources",
+      "description": "Create, update, or delete Azure SRE Agent sub-agents, custom tools, skills, connectors (Kusto), hooks, thread hook activation, common prompts, and memory entries.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or otherwise irreversibly modify Azure SRE Agent resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify Azure SRE Agent state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_agents_create",
+        "sreagent_agents_delete",
+        "sreagent_agents_tools_create",
+        "sreagent_commonprompts_delete",
+        "sreagent_connectors_create_kusto",
+        "sreagent_connectors_delete",
+        "sreagent_docs_memories_delete",
+        "sreagent_hooks_delete",
+        "sreagent_hooks_thread_activate",
+        "sreagent_hooks_thread_deactivate",
+        "sreagent_skills_create",
+        "sreagent_skills_delete"
+      ]
+    },
+    {
+      "name": "create_azure_sre_agent_mcp_connector",
+      "description": "Create or update an MCP connector on an Azure SRE Agent resource. May store bearer tokens or other secret credentials and connects to external MCP endpoints.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or otherwise irreversibly modify Azure SRE Agent resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with external systems whose behavior is not fully known to the server."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify Azure SRE Agent state or data."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool may handle sensitive secret material such as bearer tokens or credentials."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_connectors_create_mcp"
+      ]
+    },
+    {
+      "name": "operate_azure_sre_agent_resources",
+      "description": "Perform non-destructive write operations on Azure SRE Agent resources: create or update common prompts, pause or resume scheduled tasks, and apply workflow YAML.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify Azure SRE Agent state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_commonprompts_create",
+        "sreagent_scheduledtasks_pause",
+        "sreagent_scheduledtasks_resume",
+        "sreagent_workflows_apply"
+      ]
+    },
+    {
+      "name": "setup_azure_sre_agent_incident_integrations",
+      "description": "Configure Azure SRE Agent incident response integrations with external systems (PagerDuty, ServiceNow). May store API keys or other secret credentials.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify Azure SRE Agent state or data."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool may handle sensitive secret material such as bearer tokens or credentials."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_incidents_setup_pagerduty",
+        "sreagent_incidents_setup_servicenow"
+      ]
+    },
+    {
+      "name": "ingest_azure_sre_agent_events_and_memories",
+      "description": "Append memory entries, trigger memory reindexing, and create incidents or response plans on an Azure SRE Agent resource. Each call is non-idempotent and may produce a new record.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Repeated invocations may produce different results or trigger new side effects each time."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify Azure SRE Agent state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_docs_memories_add",
+        "sreagent_docs_memories_reindex",
+        "sreagent_incidents_create",
+        "sreagent_incidents_plans_create"
+      ]
+    },
+    {
+      "name": "interact_with_azure_sre_agent_threads_and_tasks",
+      "description": "Create threads or scheduled tasks, send messages, and run investigations on an Azure SRE Agent resource. These operations invoke the agent which may call external tools and produce non-deterministic results.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Repeated invocations may produce different results or trigger new side effects each time."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with external systems whose behavior is not fully known to the server."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify Azure SRE Agent state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_scheduledtasks_create",
+        "sreagent_threads_create",
+        "sreagent_threads_investigate",
+        "sreagent_threads_investigate_yolo",
+        "sreagent_threads_send_message"
+      ]
+    },
+    {
+      "name": "delete_azure_sre_agent_threads_and_tasks",
+      "description": "Delete Azure SRE Agent threads or scheduled tasks. Each call is destructive and not idempotent.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or otherwise irreversibly modify Azure SRE Agent resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Repeated invocations may produce different results or trigger new side effects each time."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify Azure SRE Agent state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_scheduledtasks_delete",
+        "sreagent_threads_delete"
       ]
     }
   ]

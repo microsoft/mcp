@@ -1,0 +1,253 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Net;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tools.Storage.Commands;
+using Azure.Mcp.Tools.Storage.Commands.Account;
+using Azure.Mcp.Tools.Storage.Models;
+using Azure.Mcp.Tools.Storage.Services;
+using Microsoft.Mcp.Core.Options;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
+using Xunit;
+
+namespace Azure.Mcp.Tools.Storage.Tests.Account;
+
+public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGetCommand, IStorageService>
+{
+    [Fact]
+    public async Task ExecuteAsync_NoParameters_ReturnsSubscriptions()
+    {
+        // Arrange
+        var subscription = "sub123";
+        var expectedAccounts = new ResourceQueryResults<StorageAccountInfo>(
+        [
+            new("account1", "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true),
+            new("account2", "westus", "StorageV2", "Standard_GRS", "Standard", false, "Succeeded", DateTimeOffset.UtcNow, false, true)
+        ], false);
+
+        Service.GetAccountDetails(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedAccounts);
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", subscription);
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
+
+        Assert.NotNull(result.Accounts);
+        Assert.Equal(expectedAccounts.Results.Count, result.Accounts.Count);
+        Assert.Equal(expectedAccounts.Results.Select(a => a.Name), result.Accounts.Select(a => a.Name));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccounts()
+    {
+        // Arrange
+        var subscription = "sub123";
+
+        Service.GetAccountDetails(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<StorageAccountInfo>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", subscription);
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
+
+        Assert.Empty(result.Accounts);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesException()
+    {
+        // Arrange
+        var expectedError = "Test error";
+        var subscription = "sub123";
+
+        Service.GetAccountDetails(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            null,
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception(expectedError));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", subscription);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.StartsWith(expectedError, response.Message);
+    }
+
+    [Fact]
+    public void Constructor_InitializesCommandCorrectly()
+    {
+        var command = Command.GetCommand();
+        Assert.Equal("get", command.Name);
+        Assert.NotNull(command.Description);
+        Assert.NotEmpty(command.Description);
+    }
+
+    [Theory]
+    [InlineData("--account mystorageaccount --subscription sub123", true)]
+    [InlineData("--subscription sub123 --account mystorageaccount", true)]
+    [InlineData("--subscription sub123", true)] // Account is optional
+    [InlineData("--account mystorageaccount", false)] // Missing subscription
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        if (shouldSucceed)
+        {
+            var expectedAccount = new ResourceQueryResults<StorageAccountInfo>(
+                [new("mystorageaccount", "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true)],
+                false);
+
+            Service.GetAccountDetails(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+                .Returns(expectedAccount);
+        }
+
+        // Act
+        var response = await ExecuteCommandAsync(args);
+
+        // Assert
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+        if (shouldSucceed)
+        {
+            Assert.NotNull(response.Results);
+            Assert.Equal("Success", response.Message);
+        }
+        else
+        {
+            Assert.Contains("required", response.Message.ToLower());
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsAccountDetails_WhenAccountExists()
+    {
+        // Arrange
+        var account = "mystorageaccount";
+        var subscription = "sub123";
+        var expectedAccount = new ResourceQueryResults<StorageAccountInfo>(
+            [new(account, "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true)],
+            false);
+
+        Service.GetAccountDetails(
+            Arg.Is(account),
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedAccount);
+
+        // Act
+        var response = await ExecuteCommandAsync("--account", account, "--subscription", subscription);
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
+
+        Assert.Single(result.Accounts);
+        Assert.Equal(expectedAccount.Results[0].Name, result.Accounts[0].Name);
+        Assert.Equal(expectedAccount.Results[0].Location, result.Accounts[0].Location);
+        Assert.Equal(expectedAccount.Results[0].Kind, result.Accounts[0].Kind);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesServiceErrors()
+    {
+        // Arrange
+        var account = "mystorageaccount";
+        var subscription = "sub123";
+
+        Service.GetAccountDetails(
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("Test error"));
+
+        // Act
+        var response = await ExecuteCommandAsync("--account", account, "--subscription", subscription);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Contains("Test error", response.Message);
+        Assert.Contains("troubleshooting", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesNotFound()
+    {
+        // Arrange
+        var account = "nonexistentaccount";
+        var subscription = "sub123";
+
+        Service.GetAccountDetails(
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Storage account not found"));
+
+        // Act
+        var response = await ExecuteCommandAsync("--account", account, "--subscription", subscription);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("Storage account not found", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesAuthorizationFailure()
+    {
+        // Arrange
+        var account = "mystorageaccount";
+        var subscription = "sub123";
+
+        Service.GetAccountDetails(
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
+
+        // Act
+        var response = await ExecuteCommandAsync("--account", account, "--subscription", subscription);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
+        Assert.Contains("Authorization failed", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithResourceGroup_ForwardsResourceGroupToService()
+    {
+        // Arrange
+        const string resourceGroup = "test-rg";
+        const string subscription = "sub123";
+        Service.GetAccountDetails(Arg.Any<string?>(), Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<StorageAccountInfo>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", subscription, "--resource-group", resourceGroup);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).GetAccountDetails(Arg.Any<string?>(), Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
+}
