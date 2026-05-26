@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Azure.Mcp.Tools.Cosmos.Options.Item;
 using Azure.Mcp.Tools.Cosmos.Services;
-using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
@@ -87,18 +85,6 @@ public sealed class ItemListRecentCommand(ILogger<ItemListRecentCommand> logger,
 
         return context.Response;
     }
-
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        CosmosException cosmosEx => cosmosEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        CosmosException cosmosEx => cosmosEx.StatusCode,
-        _ => base.GetStatusCode(ex)
-    };
 
     internal record ItemListRecentCommandResult(List<JsonElement> Items);
 }

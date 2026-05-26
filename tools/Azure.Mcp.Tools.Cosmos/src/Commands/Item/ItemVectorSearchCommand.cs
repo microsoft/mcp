@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Tools.Cosmos.Models;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Azure.Mcp.Tools.Cosmos.Options.Item;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Azure.Mcp.Tools.Cosmos.Validation;
-using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
@@ -59,13 +57,14 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
             }
             else
             {
-                foreach (var prop in selectProperties.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                var invalidProperties = selectProperties
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Where(prop => !PropertyValidator.IsValid(prop))
+                    .ToList();
+
+                if (invalidProperties.Count > 0)
                 {
-                    if (!PropertyValidator.IsValid(prop))
-                    {
-                        result.AddError($"--select-properties contains an invalid property '{prop}'. Use letters, digits, and underscores only.");
-                        break;
-                    }
+                    result.AddError($"--select-properties contains invalid property name(s) '{string.Join("', '", invalidProperties)}'. Use letters, digits, and underscores only.");
                 }
             }
 
@@ -137,18 +136,6 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
 
         return context.Response;
     }
-
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        CosmosException cosmosEx => cosmosEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        CosmosException cosmosEx => cosmosEx.StatusCode,
-        _ => base.GetStatusCode(ex)
-    };
 
     internal record ItemVectorSearchCommandResult(List<JsonElement> Items);
 }
