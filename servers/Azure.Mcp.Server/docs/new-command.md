@@ -512,6 +512,8 @@ IMPORTANT:
 - Use consistent parameter names across services:
   - **CRITICAL**: Always use `subscription` (never `subscriptionId`) for subscription parameters - this allows the parameter to accept both subscription IDs and subscription names, which are resolved internally by `ISubscriptionResolver`
   - Use `resourceGroup` instead of `resourceGroupName`
+  - Use constants on `OptionDescriptions` for commonly defined options
+  - Create a similar constants class ,e.g. `KeyVaultOptionDescriptions` in the tools project if options appear on multiple commands
   - Use singular nouns for resource names (e.g., `server` not `serverName`)
   - **Remove unnecessary "-name" suffixes**: Use `--account` instead of `--account-name`, `--container` instead of `--container-name`, etc. Only keep "-name" when it provides necessary disambiguation (e.g., `--subscription-name` to distinguish from global `--subscription`)
   - Keep parameter names consistent with Azure SDK parameters when possible
