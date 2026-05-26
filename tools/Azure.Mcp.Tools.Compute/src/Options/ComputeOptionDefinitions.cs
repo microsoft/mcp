@@ -120,7 +120,8 @@ public static class ComputeOptionDefinitions
     public static readonly Option<string> Tags = new($"--{TagsName}")
     {
         Description = "Comma-separated tags in 'key=value' format (e.g., 'env=prod,team=compute'). Use '' to clear all existing tags.",
-        Required = false
+        Required = false,
+        Arity = ArgumentArity.ZeroOrOne
     };
 
     public static readonly Option<string> DiskEncryptionSet = new($"--{DiskEncryptionSetName}")

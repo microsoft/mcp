@@ -379,4 +379,42 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_ClearTagsWithBareOption_PassesEmptyTagsToService()
+    {
+        var expectedResult = new VmUpdateResult(
+            Name: _knownVmName,
+            Id: "/subscriptions/sub123/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm",
+            Location: "eastus",
+            VmSize: "Standard_D2s_v5",
+            ProvisioningState: "Succeeded",
+            PowerState: "VM running",
+            OsType: "linux",
+            LicenseType: null,
+            Zones: null,
+            Tags: new Dictionary<string, string>());
+
+        Service.UpdateVmAsync(
+            Arg.Is(_knownVmName),
+            Arg.Is(_knownResourceGroup),
+            Arg.Is(_knownSubscription),
+            Arg.Any<string?>(),
+            Arg.Is(string.Empty),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
+
+        var response = await ExecuteCommandAsync(
+            "--vm-name", _knownVmName,
+            "--resource-group", _knownResourceGroup,
+            "--subscription", _knownSubscription,
+            "--tags");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
 }

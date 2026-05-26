@@ -75,7 +75,9 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger, IComputeSer
         var options = base.BindOptions(parseResult);
         options.VmName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
         options.VmSize = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name);
+        var tagsProvided = parseResult.CommandResult.GetResult(ComputeOptionDefinitions.Tags) is not null;
+        var tagsValue = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name);
+        options.Tags = tagsProvided && tagsValue is null ? string.Empty : tagsValue;
         options.LicenseType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.LicenseType.Name);
         options.BootDiagnostics = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.BootDiagnostics.Name);
         options.UserData = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UserData.Name);
