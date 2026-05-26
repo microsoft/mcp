@@ -649,13 +649,18 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         var container = client.GetContainer(databaseName, containerName);
 
         var selectClause = string.Join(", ", selectProperties.Select(p => $"c.{p}"));
-        var embeddingArray = embedding is float[] arr ? arr : embedding.ToArray();
+
+        // Inline the embedding as a JSON array literal. The Cosmos AOT serializer
+        // context does not include Single[] / float[], so passing it via
+        // WithParameter throws NotSupportedException at query-plan serialization.
+        var embeddingLiteral = "[" + string.Join(
+            ",",
+            embedding.Select(f => f.ToString("R", System.Globalization.CultureInfo.InvariantCulture))) + "]";
 
         var queryDef = new QueryDefinition(
-                $"SELECT TOP @topN {selectClause}, VectorDistance(c.{vectorProperty}, @embedding) AS _score "
-                + $"FROM c ORDER BY VectorDistance(c.{vectorProperty}, @embedding)")
-            .WithParameter("@topN", count)
-            .WithParameter("@embedding", embeddingArray);
+                $"SELECT TOP @topN {selectClause}, VectorDistance(c.{vectorProperty}, {embeddingLiteral}) AS _score "
+                + $"FROM c ORDER BY VectorDistance(c.{vectorProperty}, {embeddingLiteral})")
+            .WithParameter("@topN", count);
 
         var iterator = container.GetItemQueryStreamIterator(
             queryDef,
