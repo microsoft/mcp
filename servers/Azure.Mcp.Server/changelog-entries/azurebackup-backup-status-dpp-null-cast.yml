@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed ArgumentNullException in azurebackup_backup_status for DPP-only ARM resource types (e.g. Microsoft.DocumentDB/databaseAccounts, AKS, Disk, Blob). The implicit string-to-BackupDataSourceType conversion is now bypassed via an explicit nullable cast so unmapped types correctly route through the DPP vault lookup."
