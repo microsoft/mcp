@@ -69,8 +69,10 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
 
         if (retryPolicy != null)
         {
-            clientOptions.MaxRetryAttemptsOnRateLimitedRequests = retryPolicy.MaxRetries;
-            clientOptions.MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
+            if (retryPolicy.MaxRetries is { } maxRetries)
+                clientOptions.MaxRetryAttemptsOnRateLimitedRequests = maxRetries;
+            if (retryPolicy.MaxDelaySeconds is { } maxDelaySeconds)
+                clientOptions.MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(maxDelaySeconds);
         }
 
         clientOptions.HttpClientFactory = () => _httpClientFactory.CreateClient();
@@ -316,6 +318,12 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to retrieve cached CosmosClient keys during disposal");
+            return;
+        }
+
+        // If no keys were returned, there's nothing to dispose
+        if (keys == null)
+        {
             return;
         }
 

@@ -215,7 +215,7 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> Image = new($"--{ImageName}")
     {
-        Description = "The OS image to use. Can be URN (publisher:offer:sku:version) or alias like 'Ubuntu2404', 'Win2022Datacenter'. Defaults to Ubuntu 24.04 LTS",
+        Description = "The OS image to use. Can be a URN (publisher:offer:sku:version), a shared gallery image ID (starting with '/sharedGalleries/'), or an alias such as 'Ubuntu2404' or 'Win2022Datacenter'.",
         Required = false
     };
 
@@ -332,6 +332,29 @@ public static class ComputeOptionDefinitions
     public static readonly Option<string> ScaleInPolicy = new($"--{ScaleInPolicyName}")
     {
         Description = "Scale-in policy to determine which VMs to remove: 'Default', 'NewestVM', or 'OldestVM'",
+        Required = false
+    };
+
+    // Power state options
+    public const string PowerActionName = "power-action";
+    public const string NoWaitName = "no-wait";
+    public const string SkipShutdownName = "skip-shutdown";
+
+    public static readonly Option<string> PowerAction = new($"--{PowerActionName}")
+    {
+        Description = "The power action to apply to the VM (not the current power state). Accepted values: start, stop, deallocate, restart.",
+        Required = false
+    };
+
+    public static readonly Option<bool> NoWait = new($"--{NoWaitName}")
+    {
+        Description = "Return immediately without waiting for the operation to complete.",
+        Required = false
+    };
+
+    public static readonly Option<bool> SkipShutdown = new($"--{SkipShutdownName}")
+    {
+        Description = "Skip the graceful OS shutdown and force power off. Only compatible with the 'stop' state.",
         Required = false
     };
 

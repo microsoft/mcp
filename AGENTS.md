@@ -12,7 +12,7 @@
 - Run `dotnet build` after making changes
 - Follow the `{Resource}{Operation}Command` naming pattern
 - Use extension methods `.AsRequired()` and `.AsOptional()` for option handling
-- Use name-based binding with `parseResult.GetValueOrDefault<T>()`
+- Use Option-based binding with `parseResult.GetValueOrDefault(Option<T>)`
 - Always call `HandleException(context, ex)` in catch blocks
 - Include live tests for all commands that interact with Azure resources
 - Create Bicep templates for Azure service commands (`test-resources.bicep`)
@@ -124,7 +124,8 @@ Microsoft MCP (Model Context Protocol) servers provide AI agents with structured
 ### Good examples to follow
 - Command implementation: `tools/Azure.Mcp.Tools.Storage/src/Commands/Account/StorageAccountGetCommand.cs`
 - Service pattern: `tools/Azure.Mcp.Tools.Storage/src/Services/StorageService.cs`
-- Unit tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.UnitTests/Account/StorageAccountGetCommandTests.cs`
+- Unit tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/Account/StorageAccountGetCommandTests.cs`
+- Integration tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/StorageCommandTests.cs`
 - Live test infrastructure: `tools/Azure.Mcp.Tools.Storage/tests/test-resources.bicep`
 - Option definitions: `tools/Azure.Mcp.Tools.Storage/src/Options/StorageOptionDefinitions.cs`
 
@@ -140,7 +141,7 @@ Microsoft MCP (Model Context Protocol) servers provide AI agents with structured
 ### Prerequisites
 1. **Visual Studio Code**: [VS Code Stable](https://code.visualstudio.com/download) or [Insiders](https://code.visualstudio.com/insiders)
 2. **GitHub Copilot**: Install [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
-3. **Node.js**: [Node.js 20+](https://nodejs.org/en/download) (ensure `node` and `npm` are in PATH)
+3. **Node.js**: [Latest Node.js LTS](https://nodejs.org/en/download) (ensure `node` and `npm` are in PATH)
 4. **PowerShell**: [PowerShell 7.0+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) (required for build/test scripts)
 5. **.NET SDK**: .NET 10.0.201 (configured in `global.json`)
 6. **Azure PowerShell**: For live tests - [Install Azure PowerShell](https://learn.microsoft.com/powershell/azure/install-azure-powershell)
@@ -226,10 +227,9 @@ Azure.Mcp.Tools.{Service}/
 │   ├── Models/                   # Data models and DTOs
 │   └── {Service}Setup.cs         # Service registration and configuration
 └── tests/
-    ├── Azure.Mcp.Tools.{Service}.UnitTests/     # Unit tests (no Azure resources)
-    ├── Azure.Mcp.Tools.{Service}.LiveTests/     # Integration tests (requires Azure)
-    ├── test-resources.bicep                     # Test infrastructure template
-    └── test-resources-post.ps1                  # Post-deployment setup script
+    ├── Azure.Mcp.Tools.{Service}.Tests/    # Unit tests (no Azure resources) and Integration tests (requires Azure)
+    ├── test-resources.bicep                # Test infrastructure template
+    └── test-resources-post.ps1             # Post-deployment setup script
 ```
 
 ### Command Naming Convention
@@ -270,14 +270,14 @@ dotnet build
 # Specific toolset unit tests
 ./eng/scripts/Test-Code.ps1 -Paths Storage, KeyVault
 
-# Live tests (requires Azure authentication and resources)
-./eng/scripts/Test-Code.ps1 -TestType Live -Paths Storage
-
 # Deploy test infrastructure for live tests
 ./eng/scripts/Deploy-TestResources.ps1 -Paths Storage
 
+# Live tests (requires Azure authentication and resources)
+./eng/scripts/Test-Code.ps1 -TestType Live -Paths Storage
+
 # Run tests from specific directory
-pushd 'tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.UnitTests'
+pushd 'tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests'
 dotnet test --filter "FullyQualifiedName~StorageAccountGetCommandTests"
 popd
 ```
@@ -377,12 +377,12 @@ protected override void RegisterOptions(Command command)
     command.Options.Add(StorageOptionDefinitions.Account.AsOptional());
 }
 
-// Use name-based binding with type safety
+// Use Option-based binding with type safety
 protected override StorageAccountListOptions BindOptions(ParseResult parseResult)
 {
     var options = base.BindOptions(parseResult);
-    options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-    options.Account = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Account.Name);
+    options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+    options.Account = parseResult.GetValueOrDefault(StorageOptionDefinitions.Account);
     return options;
 }
 ```
@@ -428,10 +428,12 @@ try
 }
 catch (Exception ex)
 {
-    _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
-    HandleException(context, ex);  // Always call base handler
+    _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}", Name, options.Subscription);
+    HandleException(context, ex);
 }
 ```
+
+**DO NOT** log `{@Options}` as this may log sensitive information. Only log parameters that are known to be safe.
 
 ## Service Implementation Patterns
 
@@ -512,8 +514,8 @@ tools/Azure.Mcp.Tools.{Service}/
 │   ├── Services/{Service}Service.cs                 # Service implementation
 │   └── Commands/{Service}JsonContext.cs             # JSON serialization context
 └── tests/
-    ├── Azure.Mcp.Tools.{Service}.UnitTests/{Resource}/{Resource}{Operation}CommandTests.cs
-    ├── Azure.Mcp.Tools.{Service}.LiveTests/{Service}CommandTests.cs
+    ├── Azure.Mcp.Tools.{Service}.Tests/{Resource}/{Resource}{Operation}CommandTests.cs     # Unit tests (no Azure resources)
+    ├── Azure.Mcp.Tools.{Service}.Tests/{Service}CommandTests.cs                            # Integration tests (requires Azure)
     ├── test-resources.bicep                          # Test infrastructure (Azure services only)
     └── test-resources-post.ps1                       # Post-deployment script (Azure services only)
 ```

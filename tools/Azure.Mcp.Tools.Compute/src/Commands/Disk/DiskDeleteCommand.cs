@@ -27,11 +27,13 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
     Secret = true,
     LocalRequired = false)]
 public sealed class DiskDeleteCommand(
-    ILogger<DiskDeleteCommand> logger)
+    ILogger<DiskDeleteCommand> logger,
+    IComputeService computeService)
     : BaseComputeCommand<DiskDeleteOptions>(true)
 {
 
     private readonly ILogger<DiskDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -61,8 +63,7 @@ public sealed class DiskDeleteCommand(
                 "Deleting disk {DiskName} in resource group {ResourceGroup}",
                 options.DiskName, options.ResourceGroup);
 
-            var computeService = context.GetService<IComputeService>();
-            var deleted = await computeService.DeleteDiskAsync(
+            var deleted = await _computeService.DeleteDiskAsync(
                 options.DiskName!,
                 options.ResourceGroup!,
                 options.Subscription!,

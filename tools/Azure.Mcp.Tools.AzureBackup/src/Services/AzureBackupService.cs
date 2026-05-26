@@ -133,14 +133,18 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     public async Task<ProtectResult> ProtectItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string policyName, string? vaultType,
-        string? containerName, string? datasourceType, string? tenant,
+        string? containerName, string? datasourceType,
+        string? aksIncludedNamespaces, string? aksExcludedNamespaces,
+        string? aksLabelSelectors, string? aksIncludeClusterScopeResources,
+        string? aksSnapshotResourceGroup,
+        string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
 
         return VaultTypeResolver.IsRsv(resolvedType)
             ? await rsvOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, containerName, datasourceType, tenant, retryPolicy, cancellationToken)
-            : await dppOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, datasourceType, tenant, retryPolicy, cancellationToken);
+            : await dppOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, datasourceType, aksIncludedNamespaces, aksExcludedNamespaces, aksLabelSelectors, aksIncludeClusterScopeResources, aksSnapshotResourceGroup, tenant, retryPolicy, cancellationToken);
     }
 
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(
@@ -267,15 +271,15 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     }
 
     public async Task<OperationResult> CreatePolicyAsync(
+        Policy.PolicyCreateRequest request,
         string vaultName, string resourceGroup, string subscription,
-        string policyName, string workloadType, string? vaultType,
-        string? scheduleTime, string? dailyRetentionDays,
+        string? vaultType,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)
-            ? await rsvOps.CreatePolicyAsync(vaultName, resourceGroup, subscription, policyName, workloadType, scheduleTime, dailyRetentionDays, tenant, retryPolicy, cancellationToken)
-            : await dppOps.CreatePolicyAsync(vaultName, resourceGroup, subscription, policyName, workloadType, scheduleTime, dailyRetentionDays, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.CreatePolicyAsync(request, vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken)
+            : await dppOps.CreatePolicyAsync(request, vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
     }
 
     public async Task<OperationResult> UpdatePolicyAsync(
@@ -422,14 +426,25 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     /// Backup Status API. Returns null for DPP-only resource types (disks, blobs, etc.)
     /// that are not supported by the RSV BackupStatus API.
     /// </summary>
-    private static BackupDataSourceType? MapArmResourceTypeToBackupDataSourceType(string armResourceType) =>
-        armResourceType switch
+    private static BackupDataSourceType? MapArmResourceTypeToBackupDataSourceType(string? armResourceType)
+    {
+        if (string.IsNullOrEmpty(armResourceType))
+        {
+            return null;
+        }
+
+        // Note: only the default arm is explicitly cast to (BackupDataSourceType?). Without
+        // that cast the compiler infers BackupDataSourceType for the switch expression and
+        // rewrites `_ => null` as `op_Implicit((string)null)`, which throws
+        // ArgumentNullException at runtime for any unmapped (DPP-only) ARM resource type.
+        return armResourceType switch
         {
             "microsoft.compute/virtualmachines" => BackupDataSourceType.Vm,
             "microsoft.storage/storageaccounts" => BackupDataSourceType.AzureFileShare,
             "microsoft.sql/servers/databases" => BackupDataSourceType.SqlDatabase,
-            _ => null // DPP-only types handled via DPP vault lookup
+            _ => (BackupDataSourceType?)null // DPP-only types handled via DPP vault lookup
         };
+    }
 
     public async Task<List<UnprotectedResourceInfo>> FindUnprotectedResourcesAsync(
         string subscription, string? resourceTypeFilter, string? resourceGroup,
@@ -660,6 +675,42 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         return await dppOps.ConfigureCrossRegionRestoreAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
     }
 
+    public async Task<OperationResult> ConfigureMultiUserAuthorizationAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string resourceGuardId, string? vaultType, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        return VaultTypeResolver.IsRsv(resolved)
+            ? await rsvOps.ConfigureMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, resourceGuardId, tenant, retryPolicy, cancellationToken)
+            : await dppOps.ConfigureMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, resourceGuardId, tenant, retryPolicy, cancellationToken);
+    }
+
+    public async Task<OperationResult> DisableMultiUserAuthorizationAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? vaultType, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        return VaultTypeResolver.IsRsv(resolved)
+            ? await rsvOps.DisableMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken)
+            : await dppOps.DisableMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+    }
+
+    public async Task<OperationResult> ConfigureEncryptionAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string keyVaultUri, string keyName, string identityType,
+        string? keyVersion, string? userAssignedIdentityId,
+        string? vaultType, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        return VaultTypeResolver.IsRsv(resolved)
+            ? await rsvOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, retryPolicy, cancellationToken)
+            : await dppOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, retryPolicy, cancellationToken);
+    }
+
+
     private async Task<string> ResolveVaultTypeAsync(
         string vaultName, string resourceGroup, string subscription,
         string? vaultType, string? tenant,
@@ -710,12 +761,12 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         }
         catch (RequestFailedException ex) when (ex.Status is 401 or 403)
         {
-            // RSV auth failure — try DPP before giving up
+            // RSV auth failure  -  try DPP before giving up
             rsvAuthFailed = true;
         }
         catch (RequestFailedException ex) when (ex.Status is 404)
         {
-            // RSV not found — try DPP
+            // RSV not found  -  try DPP
         }
 
         try
@@ -754,6 +805,6 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         return types;
     }
 
-    [GeneratedRegex(@"^[A-Za-z0-9]+\.[A-Za-z0-9]+/[A-Za-z0-9]+$")]
+    [GeneratedRegex(@"^[A-Za-z0-9]+\.[A-Za-z0-9]+(/[A-Za-z0-9]+)+$")]
     private static partial Regex ArmResourceTypeRegex();
 }

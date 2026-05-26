@@ -33,10 +33,11 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
     ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
-public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> logger)
+public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> logger, OrchestratorTool orchestratorTool)
     : BaseCommand<OrchestratorNextOptions>
 {
     private readonly ILogger<OrchestratorNextCommand> _logger = logger;
+    private readonly OrchestratorTool _orchestratorTool = orchestratorTool;
 
     protected override void RegisterOptions(Command command)
     {
@@ -64,8 +65,7 @@ public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> log
 
         try
         {
-            var tool = context.GetService<OrchestratorTool>();
-            var result = tool.Next(options.SessionId!, options.CompletionNote!);
+            var result = _orchestratorTool.Next(options.SessionId!, options.CompletionNote!);
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);

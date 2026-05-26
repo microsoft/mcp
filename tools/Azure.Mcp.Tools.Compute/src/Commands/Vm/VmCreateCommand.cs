@@ -19,12 +19,15 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     Name = "create",
     Title = "Create Virtual Machine",
     Description = """
-        Create, deploy, or provision a single Azure Virtual Machine (VM).
+        Create, deploy, or provision a single Azure Virtual Machine (VM) with its OS disk.
         Use this to launch a new Linux or Windows VM with SSH key or password authentication.
         Automatically creates networking resources (VNet, subnet, NSG, NIC, public IP) when not specified.
-        Equivalent to 'az vm create'. Defaults to Standard_D2s_v5 size and Ubuntu 24.04 LTS if not specified.
+        Equivalent to 'az vm create'. Defaults to Standard_D2s_v5 VM size when not specified.
+        The --image option is required and has no default; if the user does not specify an image, ask them which image to use
+        (an alias such as 'Ubuntu2404' or 'Win2022Datacenter', a marketplace URN like 'publisher:offer:sku:version',
+        or a shared gallery image ID starting with '/sharedGalleries/').
         For Linux VMs with SSH, read the user's public key file (e.g., ~/.ssh/id_rsa.pub) and pass its content.
-        Do not use this for creating Virtual Machine Scale Sets with multiple identical instances (use VMSS create instead).
+        Do not use this for Virtual Machine Scale Sets with multiple identical instances (use VMSS create instead).
         """,
     Destructive = true,
     Idempotent = false,
@@ -32,10 +35,11 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     ReadOnly = false,
     Secret = true,
     LocalRequired = false)]
-public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
+public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmCreateOptions>(true)
 {
     private readonly ILogger<VmCreateCommand> _logger = logger;
+    private readonly IComputeService _computeService = computeService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -50,9 +54,11 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
         command.Options.Add(ComputeOptionDefinitions.AdminPassword);
         command.Options.Add(ComputeOptionDefinitions.SshPublicKey);
 
+        // Image is required and has no default
+        command.Options.Add(ComputeOptionDefinitions.Image.AsRequired());
+
         // Optional configuration
         command.Options.Add(ComputeOptionDefinitions.VmSize);
-        command.Options.Add(ComputeOptionDefinitions.Image);
         command.Options.Add(ComputeOptionDefinitions.OsType);
 
         // Network options
@@ -135,13 +141,11 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var result = await computeService.CreateVmAsync(
+            var result = await _computeService.CreateVmAsync(
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,

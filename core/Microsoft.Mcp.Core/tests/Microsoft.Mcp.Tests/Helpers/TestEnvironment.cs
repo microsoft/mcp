@@ -34,4 +34,19 @@ public static class TestEnvironment
     /// </summary>
     public static void ClearAzureSubscriptionId()
         => Environment.SetEnvironmentVariable(EnvironmentHelpers.AzureSubscriptionIdEnvironmentVariable, null);
+
+    /// <summary>
+    /// Skips the test if a default subscription is configured via Azure CLI profile or AZURE_SUBSCRIPTION_ID.
+    /// This is useful for tests that validate missing required --subscription parameters,
+    /// which have fallback to default subscription sources in SubscriptionCommand.
+    /// </summary>
+    public static void SkipIfDefaultSubscriptionConfigured()
+    {
+        if (!string.IsNullOrEmpty(CommandHelper.GetDefaultSubscription()))
+        {
+            Xunit.Assert.Skip(
+                "An Azure CLI default subscription is configured; cannot validate missing --subscription. " +
+                "Run 'az logout' or 'az account clear' to clear the profile, then restart the test runner.");
+        }
+    }
 }

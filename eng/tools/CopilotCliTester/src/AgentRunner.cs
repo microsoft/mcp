@@ -352,13 +352,12 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
     /// <summary>
     /// Builds the MCP servers configuration for stdio transport using a pre-resolved server executable path.
     /// </summary>
-    private static Dictionary<string, object> BuildMcpServersConfig(string serverPath)
+    private static Dictionary<string, McpServerConfig> BuildMcpServersConfig(string serverPath)
     {
-        return new Dictionary<string, object>
+        return new Dictionary<string, McpServerConfig>
         {
-            ["azure"] = new McpLocalServerConfig
+            ["azure"] = new McpStdioServerConfig
             {
-                Type = "stdio",
                 Command = serverPath,
                 Args = ["server", "start", "--mode", "namespace", "--dangerously-disable-elicitation"],
                 Env = new Dictionary<string, string>

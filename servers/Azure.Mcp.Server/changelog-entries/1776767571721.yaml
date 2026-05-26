@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added azurebackup policy update command for modifying RSV backup policy schedule and retention settings"

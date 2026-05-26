@@ -18,9 +18,10 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     Name = "update",
     Title = "Update Virtual Machine",
     Description = """
-        Update, modify, or reconfigure an existing Azure Virtual Machine (VM).
-        Use this to resize a VM, update tags, configure boot diagnostics, or change user data.
+        Update, modify, or reconfigure an existing Azure Virtual Machine (VM) configuration.
+        Use this to add or change tags on a VM, resize a VM to a different size, enable or configure boot diagnostics, or update user data.
         Equivalent to 'az vm update'. The VM may need to be deallocated before resizing to certain sizes.
+        Do not use this to change VM power state (start, stop, deallocate, restart); use VM power-state instead.
         Do not use this to create a new VM (use VM create) or to update Virtual Machine Scale Sets (use VMSS update).
         """,
     Destructive = true,
@@ -29,10 +30,11 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
+public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmUpdateOptions>(true)
 {
-    private readonly ILogger<VmUpdateCommand> _logger = logger;
+    private readonly ILogger<VmUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override void RegisterOptions(Command command)
     {
@@ -84,13 +86,11 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var result = await computeService.UpdateVmAsync(
+            var result = await _computeService.UpdateVmAsync(
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,

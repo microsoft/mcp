@@ -18,20 +18,24 @@ jobs:
   steps:
   - checkout: self
 
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK from global.json"
-    retryCountOnTaskFailure: 3
-    inputs:
-      useGlobalJson: true
+  - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
   - task: NodeTool@0
     displayName: "Install Node.js 22"
     inputs:
       versionSpec: '22.x'
 
-  - pwsh: >
-      ./eng/scripts/Build-Local.ps1
-      -VerifyNpx
+  - pwsh: |
+      $serverName = $env:SERVERNAME
+
+      if ([string]::IsNullOrWhiteSpace($serverName)) {
+        ./eng/scripts/Build-Local.ps1 -VerifyNpx
+      }
+      else {
+        ./eng/scripts/Build-Local.ps1 -ServerName $serverName -VerifyNpx
+      }
+
+      exit $LastExitCode
     displayName: "Build local package"
     workingDirectory: $(Build.SourcesDirectory)
 
@@ -73,6 +77,10 @@ jobs:
       pwsh: true
       workingDirectory: $(Build.SourcesDirectory)
 
+  - template: /eng/common/TestResources/remove-test-resources.yml
+    parameters:
+      ServiceConnection: azure-sdk-tests-public
+
   - template: /eng/common/TestResources/deploy-test-resources.yml
     parameters:
       ServiceConnection: azure-sdk-tests-public
@@ -111,5 +119,3 @@ jobs:
   - template: /eng/common/TestResources/remove-test-resources.yml
     parameters:
       ServiceConnection: azure-sdk-tests-public
-      EnvVars:
-        Pool: $(Pool)

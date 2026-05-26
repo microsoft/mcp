@@ -20,20 +20,20 @@ using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 
-public class StorageService(
+public sealed class StorageService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
     ILogger<StorageService> logger)
     : BaseAzureResourceService(subscriptionService, tenantService), IStorageService
 {
+    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly ILogger<StorageService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private static readonly HashSet<string> s_validSkus = new(StringComparer.OrdinalIgnoreCase)
     {
         "Standard_LRS", "Standard_GRS", "Standard_RAGRS", "Standard_ZRS", "Premium_LRS", "Premium_ZRS",
-        "Standard_GZRS", "Standard_RAGZRS", "StandardV2_LRS", "StandardV2_GRS", "StandardV2_ZRS", "StandardV2_GZRS",
-        "PremiumV2_LRS", "PremiumV2_ZRS"
+        "Standard_GZRS", "Standard_RAGZRS"
     };
 
     private static readonly HashSet<string> s_validTiers = new(StringComparer.OrdinalIgnoreCase) { "hot", "cool", "premium", "cold" };
@@ -41,6 +41,7 @@ public class StorageService(
     public async Task<ResourceQueryResults<StorageAccountInfo>> GetAccountDetails(
         string? account,
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -54,7 +55,7 @@ public class StorageService(
             // List all accounts
             return await ExecuteResourceQueryAsync(
                 "Microsoft.Storage/storageAccounts",
-                null,
+                resourceGroup,
                 subscription,
                 retryPolicy,
                 ConvertToAccountInfoModel,
@@ -65,7 +66,7 @@ public class StorageService(
         {
             var storageAccount = await ExecuteSingleResourceQueryAsync(
                 "Microsoft.Storage/storageAccounts",
-                resourceGroup: null,
+                resourceGroup: resourceGroup,
                 subscription: subscription,
                 retryPolicy: retryPolicy,
                 converter: ConvertToAccountInfoModel,
@@ -98,8 +99,14 @@ public class StorageService(
         // Create ArmClient for deployments
         ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.Storage/storageAccounts", "2024-01-01", tenant, retryPolicy, cancellationToken);
 
+        // Resolve subscription display name to GUID (consistent with all other storage operations).
+        // Skip resolution when subscription is already a GUID to avoid an unnecessary round-trip.
+        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+            ? subscription
+            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+
         // Prepare data
-        ResourceIdentifier accountId = new($"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{account}");
+        ResourceIdentifier accountId = new($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{account}");
         var createContent = new StorageAccountCreateOrUpdateContent
         {
             Sku = new()
@@ -422,8 +429,8 @@ public class StorageService(
             EnableHttpsTrafficOnly: storageAccount.Properties?.EnableHttpsTrafficOnly);
     }
 
-    protected async Task<TableServiceClient> CreateTableServiceClient(
-        string? account,
+    private async Task<TableServiceClient> CreateTableServiceClient(
+        string account,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -497,9 +504,9 @@ public class StorageService(
         };
     }
 
-    private string GetTableEndpoint(string? account)
+    private string GetTableEndpoint(string account)
     {
-        account = account!.ToLowerInvariant();
+        account = account.ToLowerInvariant();
         ValidateStorageAccountName(account);
         return _tenantService.CloudConfiguration.CloudType switch
         {

@@ -4,6 +4,7 @@
 using System.Net;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
@@ -11,6 +12,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
@@ -36,7 +38,7 @@ internal class Program
 
             services.AddLogging(builder =>
             {
-                builder.AddConsole();
+                builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
                 builder.SetMinimumLevel(LogLevel.Information);
             });
 
@@ -46,7 +48,42 @@ internal class Program
             var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
-            var status = await parseResult.InvokeAsync();
+            var command = parseResult.CommandResult.Command;
+            int status = 0;
+
+            if (command is ExtendedCommand extendedCommand &&
+                (extendedCommand.BaseCommand is ServiceStartCommand || extendedCommand.BaseCommand is PluginTelemetryCommand))
+            {
+                // One of the special commands that need to be handled differently.
+                status = await parseResult.InvokeAsync();
+            }
+            else
+            {
+                // Command wasn't one of the registered ServerSetup commands, so bind up a Host of all the services
+                // to run the command.
+                var builder = Host.CreateApplicationBuilder();
+                builder.Logging.ClearProviders();
+                builder.Logging.AddEventSourceLogger();
+                ConfigureServices(builder.Services);
+                builder.Services.AddAzureMcpServer(new()
+                {
+                    Transport = TransportTypes.StdIo
+                });
+
+                using var host = builder.Build();
+
+                await InitializeServicesAsync(host.Services);
+                await host.StartAsync();
+
+                commandFactory = host.Services.GetRequiredService<ICommandFactory>();
+                rootCommand = commandFactory.RootCommand;
+                parseResult = rootCommand.Parse(args);
+
+                status = await parseResult.InvokeAsync();
+
+                await host.StopAsync();
+                await host.WaitForShutdownAsync();
+            }
 
             if (status == 0)
             {
@@ -77,6 +114,7 @@ internal class Program
             new Fabric.Mcp.Tools.Docs.FabricDocsSetup(),
             new Fabric.Mcp.Tools.OneLake.FabricOneLakeSetup(),
             new Fabric.Mcp.Tools.Core.FabricCoreSetup(),
+            new Fabric.Mcp.Tools.DataFactory.DataFactoryAreaSetup(),
         ];
     }
 

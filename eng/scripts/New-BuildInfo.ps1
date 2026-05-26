@@ -327,12 +327,15 @@ function Get-PathsToTest {
 
         Write-Progress -Activity "Checking for test resources" -Status $path
 
+        $projectName = (Get-Item $path).Name
         $testResourcesPath = "$path/tests"
         $rootedTestResourcesPath = "$($using:RepoRoot)/$testResourcesPath"
         $hasTestResources = Test-Path "$rootedTestResourcesPath/test-resources.bicep"
-        $hasLiveTests = (Get-ChildItem $rootedTestResourcesPath -Filter '*.LiveTests.csproj' -Recurse).Count -gt 0
+        $hasTestsProject = Test-Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj"
+        $testProjectDetails = $hasTestsProject ? (& "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj") : $null
+        $hasLiveTests = $hasTestsProject -and $testProjectDetails.HasLiveTests
         $hasRecordedTests = $hasLiveTests -and (Get-ChildItem $rootedTestResourcesPath -Filter 'assets.json' -Recurse).Count -gt 0
-        $hasUnitTests = (Get-ChildItem $rootedTestResourcesPath -Filter '*.UnitTests.csproj' -Recurse).Count -gt 0
+        $hasUnitTests = $hasTestsProject -and $testProjectDetails.HasUnitTests
 
         $sourcePath = Join-Path $using:RepoRoot $path "src"
 
@@ -396,6 +399,10 @@ function Get-TestMatrix {
 
             $entry.testResourcesPath = $path.TestResourcesPath
             $entry.hasTestResources = $path.HasTestResources
+
+            if ($ServerName) {
+                $entry.serverName = $ServerName
+            }
         }
 
         if ($TestType -eq 'Unit' -and !$path.HasUnitTests) {

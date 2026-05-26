@@ -20,7 +20,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- remove-section: end remove_install_links -->
 ## Table of Contents
 - [Overview](#overview)
-- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm;pypi remove_installation_sub_sections -->
+- [Local Setup](#local-setup)<!-- remove-section: start nuget;vsix;npm;pypi remove_installation_sub_sections -->
     - [IDE](#ide)
         - [VS Code (Recommended)](#vs-code-recommended)
         - [Visual Studio 2026](#visual-studio-2026)
@@ -33,8 +33,8 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [NPM](#npm)
         - [PyPI](#pypi)
         - [Docker](#docker)
-        - [MCPB](#mcpb)
-    - [Remote MCP Server (preview)](#remote-mcp-server-preview)<!-- remove-section: end remove_installation_sub_sections -->
+        - [MCPB](#mcpb)<!-- remove-section: end remove_installation_sub_sections -->
+- [Remote Setup](#remote-setup)
 - [Usage](#usage)
     - [Getting Started](#getting-started)
     - [Sovereign Cloud Support](#sovereign-cloud-support)
@@ -57,7 +57,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 
 **Azure MCP Server** supercharges your agents with Azure context across **40+ different Azure services**.
 
-# Installation
+# Local Setup
 <!-- insert-section: vsix {{- Install the [Azure MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server)}} -->
 <!-- insert-section: vsix {{- Start (or Auto-Start) the MCP Server}} -->
 <!-- insert-section: vsix {{   > **VS Code (version 1.103 or above):** You can now configure MCP servers to start automatically using the `chat.mcp.autostart` setting, instead of manually restarting them after configuration changes.}} -->
@@ -838,14 +838,13 @@ class Program
 </details>
 
 <!-- remove-section: end remove_package_manager_section -->
-
-## Remote MCP Server (preview)
-
-Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To self-host the Azure MCP Server for use with these platforms, deploy it as a remote MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
-
-Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/README.md) for deployment options.
-
 <!-- remove-section: end remove_entire_installation_sub_section -->
+
+# Remote Setup
+
+Host the Azure MCP Server as a remote endpoint when your client requires HTTP-based MCP servers (for example, Microsoft Foundry and Microsoft Copilot Studio) or when you want to share a single deployment across users and environments. The server can be self-hosted on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
+
+See the remote hosting [azd templates](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/README.md) for deployment options.
 
 # Usage
 
@@ -866,7 +865,7 @@ Azure MCP Server supports connecting to Azure sovereign clouds. By default, it a
 
 | Cloud | Aliases |
 |-------|---------|
-| Azure Public Cloud | `AzureCloud`, `AzurePublicCloud`, `Public`, `AzurePublic` | 
+| Azure Public Cloud | `AzureCloud`, `AzurePublicCloud`, `Public`, `AzurePublic` |
 | Azure China Cloud | `AzureChinaCloud`, `China`, `AzureChina` |
 | Azure US Government | `AzureUSGovernment`, `USGov`, `AzureUSGovernmentCloud`, `USGovernment` |
 
@@ -952,6 +951,12 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Delete application setting 'LogLevel' from my 'my-webapp' in 'my-resource-group'"
 * "List the deployments for web app 'my-webapp' in 'my-resource-group'"
 * "Get the deployment 'deployment-id' for web app 'my-webapp' in 'my-resource-group'"
+* "List the diagnostic detectors for web app 'my-webapp' in 'my-resource-group'"
+* "Diagnose the web app 'my-webapp' with detector 'detector-name' in 'my-resource-group'"
+* "Start the web app 'my-webapp' in 'my-resource-group'"
+* "Stop the web app 'my-webapp' in 'my-resource-group'"
+* "Restart the web app 'my-webapp' in 'my-resource-group'"
+* "Soft restart the web app 'my-webapp' in 'my-resource-group' waiting for restart to complete"
 
 ### 🛡️ Azure Backup
 
@@ -1017,6 +1022,10 @@ Example prompts that generate Azure CLI commands:
 * "Update VMSS 'my-vmss' capacity to 5 instances"
 * "Delete virtual machine 'my-vm' in resource group 'my-resource-group'"
 * "Force delete VM 'my-vm' in resource group 'my-rg' using force-deletion"
+* "Start VM 'my-vm' in resource group 'my-rg'"
+* "Stop VM 'my-vm' in resource group 'my-rg'"
+* "Deallocate VM 'my-vm' in resource group 'my-rg' to stop billing"
+* "Restart VM 'my-vm' in resource group 'my-rg'"
 * "Delete virtual machine scale set 'my-vmss' in resource group 'my-resource-group'"
 * "Force delete VMSS 'my-vmss' in resource group 'my-rg' using force-deletion"
 
@@ -1137,6 +1146,27 @@ Example prompts that generate Azure CLI commands:
 * "Show me details about my Azure SQL server 'myserver'"
 * "Delete my Azure SQL server 'myserver'"
 
+### 🤖 Azure SRE Agent
+
+* "List my Azure SRE Agent resources"
+* "Show me the SRE sub-agent named 'incident-bot' on agent 'sre-prod'"
+* "Create a new SRE sub-agent named 'incident-bot' with these instructions on agent 'sre-prod'"
+* "List the connectors registered on SRE Agent 'sre-prod'"
+* "Register a Kusto connector on SRE Agent 'sre-prod' pointing at cluster 'https://help.kusto.windows.net'"
+* "Register an MCP connector on SRE Agent 'sre-prod' for the Azure MCP server"
+* "List the safety hooks configured on SRE Agent 'sre-prod'"
+* "Activate the 'pre-prod-approval' hook for thread 'thread-123' on SRE Agent 'sre-prod'"
+* "Create a new investigation thread on SRE Agent 'sre-prod' and ask it to look into elevated 5xx in payments-api"
+* "Send a follow-up message to thread 'thread-123' on SRE Agent 'sre-prod'"
+* "Run an autonomous investigation on SRE Agent 'sre-prod' with up to 20 iterations"
+* "List scheduled tasks on SRE Agent 'sre-prod'"
+* "Create a scheduled task on SRE Agent 'sre-prod' that runs every 15 minutes"
+* "List active incidents on SRE Agent 'sre-prod'"
+* "Declare an incident on SRE Agent 'sre-prod' for elevated error rates"
+* "Generate a remediation workflow on SRE Agent 'sre-prod' from the latest investigation"
+* "Search SRE Agent 'sre-prod' memories for prior occurrences of this alert"
+* "Produce a remediation plan on SRE Agent 'sre-prod' for incident 'inc-42'"
+
 ### 💾 Azure Storage
 
 * "List my Azure storage accounts"
@@ -1150,6 +1180,11 @@ Example prompts that generate Azure CLI commands:
 * "Generate a Platform Landing Zone"
 * "Turn off DDoS protection in my Platform Landing Zone"
 * "Turn off Bastion host in my Platform Landing Zone"
+
+### Azure Resource Manager
+
+* Use Azure resource graph to query Azure resources
+* Create, view and cancel ARM template deployments
 
 ### Azure Terraform
 
@@ -1219,6 +1254,7 @@ The Azure MCP Server provides tools for interacting with **43+ Azure service are
 - 🗄️ **Azure SQL Database** - Relational database management
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
+- 🤖 **Azure SRE Agent** - SRE Agent investigations, sub-agents, connectors, hooks, threads, scheduled tasks, incidents, workflows, memories, and remediation plans
 - 💾 **Azure Storage** - Blob storage
 -  **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management

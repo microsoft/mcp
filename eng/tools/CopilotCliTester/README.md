@@ -55,8 +55,13 @@ CopilotCliTester/
     ├── AgentRunnerUtils.cs       # Tool invocation detection and matching utilities
     ├── Models/
     │   ├── TestPrompt.cs         # Test prompt record (Section, Tool, Prompt, Namespace)
-    │   ├── TestResult.cs         # Test result record + TestStatus enum (PASS/FAIL/ERROR)
-    │   ├── AgentModels.cs        # AgentRunConfig, AgentMetadata, AgentSessionEvent, SystemPromptConfig
+    │   ├── TestResult.cs         # Test result record
+    │   ├── TestStatus.cs         # TestStatus enum (PASS/FAIL/ERROR)
+    │   ├── AgentRunConfig.cs      # Agent session configuration
+    │   ├── AgentMetadata.cs      # Collected AgentSessionEvent list from a session
+    │   ├── AgentSessionEvent.cs  # Normalized event with Type and Data dictionary
+    │   ├── SystemPromptConfig.cs # System prompt with Mode and Content
+    │   ├── SystemPromptMode.cs   # Enum: Append, Replace
     │   └── JsonContext.cs        # AOT-compatible JSON serialization context
     ├── test-context.md           # Default Azure test context (subscription, resource group, etc.)
     └── reports/                  # Generated test reports (markdown + JSON)
@@ -221,7 +226,7 @@ SUMMARY
   Total:     8
   Passed:    8
   Failed:    0
-  Skipped:   0
+  Error:   0
   Pass Rate: 100.0%
   Duration:  135.0s
 ════════════════════════════════════════════════════════════════
