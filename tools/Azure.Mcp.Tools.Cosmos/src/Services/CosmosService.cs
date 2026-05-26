@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Cosmos.Models;
-using Azure.Mcp.Tools.Cosmos.Validation;
 using Azure.ResourceManager.CosmosDB;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
@@ -187,10 +186,8 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         while (iterator.HasMoreResults)
         {
             using ResponseMessage dbResponse = await iterator.ReadNextAsync(cancellationToken);
-            if (!dbResponse.IsSuccessStatusCode)
-            {
-                throw new Exception(dbResponse.ErrorMessage);
-            }
+            dbResponse.EnsureSuccessStatusCode();
+
             using JsonDocument dbsQueryResultDoc = JsonDocument.Parse(dbResponse.Content);
             if (dbsQueryResultDoc.RootElement.TryGetProperty("Databases", out JsonElement documentsElement))
             {
@@ -236,10 +233,8 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         while (iterator.HasMoreResults)
         {
             using ResponseMessage containerRResponse = await iterator.ReadNextAsync(cancellationToken);
-            if (!containerRResponse.IsSuccessStatusCode)
-            {
-                throw new Exception(containerRResponse.ErrorMessage);
-            }
+            containerRResponse.EnsureSuccessStatusCode();
+
             using JsonDocument containersQueryResultDoc = JsonDocument.Parse(containerRResponse.Content);
             if (containersQueryResultDoc.RootElement.TryGetProperty("DocumentCollections", out JsonElement containersElement))
             {
@@ -317,11 +312,6 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             (nameof(containerName), containerName),
             (nameof(subscription), subscription));
 
-        if (sampleSize < 1 || sampleSize > 20)
-        {
-            throw new ArgumentOutOfRangeException(nameof(sampleSize), sampleSize, "Sample size must be between 1 and 20.");
-        }
-
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
         var container = client.GetContainer(databaseName, containerName);
 
@@ -338,10 +328,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         while (iterator.HasMoreResults && sampled < sampleSize)
         {
             using var response = await iterator.ReadNextAsync(cancellationToken);
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception(response.ErrorMessage);
-            }
+            response.EnsureSuccessStatusCode();
 
             using var doc = await JsonDocument.ParseAsync(response.Content, cancellationToken: cancellationToken);
             if (!doc.RootElement.TryGetProperty("Documents", out var docs))
@@ -418,11 +405,6 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             (nameof(containerName), containerName),
             (nameof(subscription), subscription));
 
-        if (count < 1 || count > 20)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be between 1 and 20.");
-        }
-
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
         var container = client.GetContainer(databaseName, containerName);
 
@@ -436,10 +418,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         while (iterator.HasMoreResults && results.Count < count)
         {
             using var response = await iterator.ReadNextAsync(cancellationToken);
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception(response.ErrorMessage);
-            }
+            response.EnsureSuccessStatusCode();
 
             using var doc = await JsonDocument.ParseAsync(response.Content, cancellationToken: cancellationToken);
             if (!doc.RootElement.TryGetProperty("Documents", out var docs))
@@ -504,10 +483,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
                 return null;
             }
 
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception(response.ErrorMessage);
-            }
+            response.EnsureSuccessStatusCode();
 
             using var doc = await JsonDocument.ParseAsync(response.Content, cancellationToken: cancellationToken);
             if (doc.RootElement.TryGetProperty("Documents", out var docs) && docs.GetArrayLength() > 0)
@@ -540,18 +516,6 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             (nameof(searchPhrase), searchPhrase),
             (nameof(subscription), subscription));
 
-        if (!PropertyValidator.IsValid(property))
-        {
-            throw new ArgumentException(
-                "Invalid property name. Use dot notation with letters, digits, and underscores only (e.g., 'name' or 'profile.name').",
-                nameof(property));
-        }
-
-        if (count < 1 || count > 20)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be between 1 and 20.");
-        }
-
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
         var container = client.GetContainer(databaseName, containerName);
 
@@ -568,10 +532,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         while (iterator.HasMoreResults && results.Count < count)
         {
             using var response = await iterator.ReadNextAsync(cancellationToken);
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception(response.ErrorMessage);
-            }
+            response.EnsureSuccessStatusCode();
 
             using var doc = await JsonDocument.ParseAsync(response.Content, cancellationToken: cancellationToken);
             if (!doc.RootElement.TryGetProperty("Documents", out var docs))
@@ -613,38 +574,6 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             (nameof(vectorProperty), vectorProperty),
             (nameof(subscription), subscription));
 
-        if (!PropertyValidator.IsValid(vectorProperty))
-        {
-            throw new ArgumentException(
-                "Invalid vector property name. Use dot notation with letters, digits, and underscores only (e.g., 'embedding' or 'metadata.vector').",
-                nameof(vectorProperty));
-        }
-
-        if (selectProperties == null || selectProperties.Count == 0)
-        {
-            throw new ArgumentException("At least one property must be supplied in properties to select.", nameof(selectProperties));
-        }
-
-        foreach (var prop in selectProperties)
-        {
-            if (!PropertyValidator.IsValid(prop))
-            {
-                throw new ArgumentException(
-                    $"Invalid property name '{prop}' in properties to select. Use dot notation with letters, digits, and underscores only (e.g., 'name' or 'profile.name').",
-                    nameof(selectProperties));
-            }
-        }
-
-        if (embedding == null || embedding.Count == 0)
-        {
-            throw new ArgumentException("Embedding vector must contain at least one value.", nameof(embedding));
-        }
-
-        if (count < 1 || count > 50)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be between 1 and 50.");
-        }
-
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
         var container = client.GetContainer(databaseName, containerName);
 
@@ -670,10 +599,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         while (iterator.HasMoreResults && results.Count < count)
         {
             using var response = await iterator.ReadNextAsync(cancellationToken);
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception(response.ErrorMessage);
-            }
+            response.EnsureSuccessStatusCode();
 
             using var doc = await JsonDocument.ParseAsync(response.Content, cancellationToken: cancellationToken);
             if (!doc.RootElement.TryGetProperty("Documents", out var docs))
