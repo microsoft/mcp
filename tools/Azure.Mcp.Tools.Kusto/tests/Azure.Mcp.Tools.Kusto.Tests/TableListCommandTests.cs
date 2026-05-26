@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Mcp.Core.Models;
@@ -13,7 +14,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.Tests;
 
-public sealed class TableListCommandTests : CommandUnitTestsBase<TableListCommand, IKustoService>
+public sealed class TableListCommandTests : SubscriptionCommandUnitTestsBase<TableListCommand, IKustoService>
 {
     public static IEnumerable<object[]> TableListArgumentMatrix()
     {

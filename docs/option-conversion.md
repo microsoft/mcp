@@ -423,7 +423,7 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
 - [ ] Remove manual `Validate()` call — use `ValidateOptions()` override if needed
 - [ ] Remove `RegisterOptions` / `BindOptions` overrides
 - [ ] Convert or remove intermediate base command classes (use interface constraints if keeping)
-- [ ] Re-parent test classes to `SubscriptionCommandUnitTestsBase<TCommand, TService>`
+- [ ] **Re-parent test classes to `SubscriptionCommandUnitTestsBase<TCommand, TService>`** (add `using Azure.Mcp.Tests.Commands;`) — without this, tests fail with "Unable to resolve service for type `ISubscriptionResolver`"
 - [ ] Verify option parity via `tools list` output
 - [ ] Build and run tests
 - [ ] Run dotnet format from the repo root
