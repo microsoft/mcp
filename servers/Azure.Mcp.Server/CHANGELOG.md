@@ -2,15 +2,19 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.13 (Unreleased)
+## 3.0.0-beta.13 (2026-05-26)
 
 ### Features Added
 
-### Breaking Changes
+- Added a new namespace for Azure SRE Agent (`Microsoft.App/SREAgentPreview`) tools with 55 commands across 11 sub-groups: agents, skills, connectors, hooks, threads, scheduledtasks, incidents, workflows, docs, architecture, and commonprompts. Supports listing/creating/updating SRE Agent resources, managing sub-agents and tools, registering data connectors (Kusto/MCP), configuring safety hooks, running investigations, scheduling tasks, declaring incidents, generating workflows, querying memories, and producing remediation plans against the SRE Agent data plane. [[#2611](https://github.com/microsoft/mcp/pull/2611)]
 
 ### Bugs Fixed
 
-### Other Changes
+- Fixed three bugs in `storage account create`: [[#2674](https://github.com/microsoft/mcp/pull/2674)]
+  - Subscription display names (e.g. "My Subscription") now resolve correctly instead of failing with a FormatException — consistent with all other storage commands.
+  - The `--access-tier` option now documents all valid values (Hot, Cool, Cold, Premium); Cold and Premium were silently accepted but never listed, making them undiscoverable.
+  - The `--sku` option description now clarifies that `storage account create` creates StorageV2 accounts and defaults to Standard_LRS if no SKU is specified.
+- Fixed `ArgumentNullException` in `azurebackup_backup_status` for DPP-only ARM resource types (e.g. Microsoft.DocumentDB/databaseAccounts, AKS, Disk, Blob). The implicit string-to-BackupDataSourceType conversion is now bypassed via an explicit nullable cast so unmapped types correctly route through the DPP vault lookup. [[#2724](https://github.com/microsoft/mcp/pull/2724)]
 
 ## 3.0.0-beta.12 (2026-05-22)
 
