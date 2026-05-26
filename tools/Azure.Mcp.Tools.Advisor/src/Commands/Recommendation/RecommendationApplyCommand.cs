@@ -25,7 +25,7 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
     public override string Name => "apply";
 
     public override string Description =>
-        @"This tool applies advisor recommendations to create or modify IaaC files (like ARM, Terraform) for Azure resources. It returns the rules that can be applied to the IaaC file.";
+        @"This tool helps in applying advisor recommendations on IaaC files (like ARM, Terraform) for Azure resources. It returns the rules that can be applied to the IaaC file.";
 
     public override string Title => CommandTitle;
 
@@ -87,13 +87,6 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
 
         try
         {
-            if (string.IsNullOrEmpty(options.Resource))
-            {
-                context.Response.Status = HttpStatusCode.BadRequest;
-                context.Response.Message = "Resource parameter is required.";
-                return Task.FromResult(context.Response);
-            }
-
             var resourceFileName = $"{options.Resource}.json";
             var recommendationApplyRules = GetAdvisorRecommendationRules(resourceFileName);
 
@@ -113,19 +106,14 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
         return Task.FromResult(context.Response);
     }
 
-    private string GetAdvisorRecommendationRules(string resourceFileName)
+    private static string GetAdvisorRecommendationRules(string resourceFileName)
     {
-        if (string.IsNullOrEmpty(resourceFileName))
-        {
-            throw new ArgumentException("Resource file name cannot be null or empty.", nameof(resourceFileName));
-        }
-
         if (!s_advisorRecommendationRulesCache.TryGetValue(resourceFileName, out string? recommendationRules))
         {
             recommendationRules = LoadRecommendationRules(resourceFileName);
             s_advisorRecommendationRulesCache[resourceFileName] = recommendationRules;
         }
-        return recommendationRules;
+        return recommendationRules ?? string.Empty;
     }
 
     private static string LoadRecommendationRules(string resourceFileName)
