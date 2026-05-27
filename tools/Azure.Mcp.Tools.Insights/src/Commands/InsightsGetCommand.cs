@@ -11,6 +11,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using ModelContextProtocol;
 
 namespace Azure.Mcp.Tools.Insights.Commands;
 
@@ -148,6 +149,7 @@ public sealed class InsightsGetCommand(
             return context.Response;
         }
 
+        // Must have a valid scope (defaults to the subscription scope if not specified)
         var scope = (options.Scope ?? InsightsOptionDefinitions.ScopeSubscription).Trim().ToLowerInvariant();
         if (scope != InsightsOptionDefinitions.ScopeSubscription && scope != InsightsOptionDefinitions.ScopeTenant)
         {
@@ -158,6 +160,7 @@ public sealed class InsightsGetCommand(
             return context.Response;
         }
 
+        // Error if tenant scope is specified with an explicit subscription
         var explicitSubscription = !string.IsNullOrEmpty(options.Subscription);
         if (scope == InsightsOptionDefinitions.ScopeTenant && explicitSubscription)
         {
@@ -168,6 +171,7 @@ public sealed class InsightsGetCommand(
             return context.Response;
         }
 
+        // Use default subscription if not provided
         if (scope == InsightsOptionDefinitions.ScopeSubscription && !explicitSubscription)
         {
             options.Subscription = _subscriptionService.GetDefaultSubscriptionId();
@@ -183,9 +187,13 @@ public sealed class InsightsGetCommand(
 
         try
         {
+            IProgress<string> progress = new Progress<string>(msg => _ = NotifyProgressAsync(context, msg, cancellationToken));
+
             var aggregation = scope == InsightsOptionDefinitions.ScopeTenant
-                ? await _insightsService.AggregateTenantAsync(options.Tenant, options.RetryPolicy, cancellationToken, options.NoCache)
-                : await _insightsService.AggregateSubscriptionAsync(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken, options.NoCache);
+                ? await _insightsService.AggregateTenantAsync(options.Tenant, options.RetryPolicy, cancellationToken, progress, options.NoCache)
+                : await _insightsService.AggregateSubscriptionAsync(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken, progress, options.NoCache);
+
+            progress.Report("Summarizing infrastructure patterns...");
 
             var payloadJson = BuildPayload(aggregation, options.Query);
 
@@ -314,6 +322,26 @@ public sealed class InsightsGetCommand(
             return value.GetString();
         }
         return null;
+    }
+
+    /// <summary>
+    /// Sends a progress notification to the client.
+    /// </summary>
+    private static async Task NotifyProgressAsync(CommandContext context, string message, CancellationToken cancellationToken)
+    {
+        if (context.McpServer is null || context.ProgressToken is null)
+        {
+            return;
+        }
+
+        await context.McpServer.NotifyProgressAsync(
+            context.ProgressToken.Value,
+            new ProgressNotificationValue
+            {
+                Progress = 0f,
+                Message = message,
+            },
+            cancellationToken: cancellationToken);
     }
 
     private static string StripCodeFence(string text)

@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.Insights.Options;
 using Azure.Mcp.Tools.Insights.Services.Models;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
@@ -57,6 +58,7 @@ public sealed class InsightsService(
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken,
+        IProgress<string>? progress = null,
         bool noCache = false)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -68,6 +70,7 @@ public sealed class InsightsService(
         var cacheKey = $"sub:{subscriptionResource.Data.SubscriptionId}";
         if (noCache)
         {
+            progress?.Report($"--{InsightsOptionDefinitions.NoCacheName} set; bypassing cache for subscription {subscription}.");
             await _cacheService.DeleteAsync(CacheGroup, cacheKey, cancellationToken);
         }
         else
@@ -75,6 +78,7 @@ public sealed class InsightsService(
             var cached = await _cacheService.GetAsync<SubscriptionAggregation>(CacheGroup, cacheKey, CacheTtl, cancellationToken);
             if (cached is not null)
             {
+                progress?.Report($"Using cached aggregation for subscription {subscription} (TTL {CacheTtl.TotalMinutes:0} min).");
                 return cached;
             }
         }
@@ -86,6 +90,7 @@ public sealed class InsightsService(
             new[] { subscriptionResource.Data.SubscriptionId },
             subscriptionCount: 1,
             scopeLabel: subscription,
+            progress,
             cancellationToken);
 
         await _cacheService.SetAsync(CacheGroup, cacheKey, aggregation, CacheTtl, cancellationToken);
@@ -96,6 +101,7 @@ public sealed class InsightsService(
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken,
+        IProgress<string>? progress = null,
         bool noCache = false)
     {
         var subscriptions = await _subscriptionService.GetSubscriptions(tenant, retryPolicy, cancellationToken);
@@ -110,6 +116,7 @@ public sealed class InsightsService(
         var cacheKey = $"tenant:{tenantId}";
         if (noCache)
         {
+            progress?.Report($"--{InsightsOptionDefinitions.NoCacheName} set; bypassing cache for tenant {tenantId}.");
             await _cacheService.DeleteAsync(CacheGroup, cacheKey, cancellationToken);
         }
         else
@@ -117,6 +124,7 @@ public sealed class InsightsService(
             var cached = await _cacheService.GetAsync<SubscriptionAggregation>(CacheGroup, cacheKey, CacheTtl, cancellationToken);
             if (cached is not null)
             {
+                progress?.Report($"Using cached aggregation for tenant {tenantId} (TTL {CacheTtl.TotalMinutes:0} min).");
                 return cached;
             }
         }
@@ -133,6 +141,7 @@ public sealed class InsightsService(
             subscriptionIds,
             subscriptionCount: subscriptionIds.Length,
             scopeLabel: $"tenant:{tenantId}",
+            progress,
             cancellationToken);
 
         await _cacheService.SetAsync(CacheGroup, cacheKey, aggregation, CacheTtl, cancellationToken);
@@ -144,6 +153,7 @@ public sealed class InsightsService(
         IReadOnlyList<string> subscriptionIds,
         int subscriptionCount,
         string scopeLabel,
+        IProgress<string>? progress,
         CancellationToken cancellationToken)
     {
         var rows = new List<JsonElement>();
@@ -186,6 +196,8 @@ public sealed class InsightsService(
                     }
                 }
 
+                progress?.Report($"Fetched ARG page {pages} ({rows.Count} resources so far) for {scopeLabel}.");
+
                 skipToken = result.SkipToken;
                 if (string.IsNullOrEmpty(skipToken))
                 {
@@ -202,6 +214,7 @@ public sealed class InsightsService(
             }
 
             var aggregation = PropertyAggregator.Aggregate(rows, subscriptionCount);
+            progress?.Report($"Aggregating properties across {rows.Count} resources for {scopeLabel}.");
             return AggregationFilter.Filter(aggregation);
         }
         finally
@@ -225,4 +238,5 @@ public sealed class InsightsService(
             ?? throw new InvalidOperationException($"No accessible tenant found for tenant ID '{tenantId}'.");
         return tenantResource;
     }
+
 }
