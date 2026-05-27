@@ -18,7 +18,7 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
     private const string CommandTitle = "Apply Advisor Recommendations";
     private readonly ILogger<RecommendationApplyCommand> _logger = logger;
     private static readonly ConcurrentDictionary<string, string> s_advisorRecommendationRulesCache = new();
-    private static readonly HashSet<string> s_availableResources = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Lazy<HashSet<string>> s_availableResources = new(LoadAvailableResources);
 
     public override string Id => "174fd0df-a11a-4139-b987-efd57611f62f";
 
@@ -52,17 +52,11 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
             }
             else
             {
-                // Lazy load available resources on first validation
-                if (s_availableResources.Count == 0)
-                {
-                    LoadAvailableResources();
-                }
-
-                bool validResource = s_availableResources.Contains(resource);
+                bool validResource = s_availableResources.Value.Contains(resource);
 
                 if (!validResource)
                 {
-                    commandResult.AddError($"Invalid resource '{resource}'. Available resources: {string.Join(", ", s_availableResources.OrderBy(r => r))}");
+                    commandResult.AddError($"Invalid resource '{resource}'. Available resources: {string.Join(", ", s_availableResources.Value.OrderBy(r => r))}");
                 }
             }
         });
@@ -113,7 +107,7 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
             recommendationRules = LoadRecommendationRules(resourceFileName);
             s_advisorRecommendationRulesCache[resourceFileName] = recommendationRules;
         }
-        return recommendationRules ?? string.Empty;
+        return recommendationRules ?? $"Rules weren't found for {resourceFileName}";
     }
 
     private static string LoadRecommendationRules(string resourceFileName)
@@ -125,20 +119,22 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
         return EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
     }
 
-    private static void LoadAvailableResources()
+    private static HashSet<string> LoadAvailableResources()
     {
         Assembly assembly = typeof(RecommendationApplyCommand).Assembly;
         string resourcePrefix = "Azure.Mcp.Tools.Advisor.Resources.";
 
+        var resources = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var resourceNames = assembly.GetManifestResourceNames()
             .Where(name => name.StartsWith(resourcePrefix, StringComparison.OrdinalIgnoreCase) &&
                            name.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-            .Select(name => name.Substring(resourcePrefix.Length, name.Length - resourcePrefix.Length - 5)) // Remove prefix and .json
-            .ToList();
+            .Select(name => name.Substring(resourcePrefix.Length, name.Length - resourcePrefix.Length - 5)); // Remove prefix and .json
 
         foreach (var resourceName in resourceNames)
         {
-            s_availableResources.Add(resourceName);
+            resources.Add(resourceName);
         }
+
+        return resources;
     }
 }
