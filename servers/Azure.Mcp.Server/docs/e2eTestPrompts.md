@@ -365,8 +365,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | cosmos_database_container_item_get | Find the document <document_id> in container <container_name> from database <database_name> of the cosmosdb account <account_name> using partition key <partition_key> |
 | cosmos_database_container_item_list-recent | Show me the 15 most recent documents in container <container_name> of database <database_name> in cosmosdb account <account_name> |
 | cosmos_database_container_item_list-recent | Get the latest documents from <container_name> in <database_name> for cosmosdb account <account_name> |
-| cosmos_database_container_item_text-search | Search documents in container <container_name> from database <database_name> of the cosmosdb account <account_name> where <property> contains "<phrase>" |
-| cosmos_database_container_item_vector-search | Find documents similar to "<text_to_search>" in container <container_name> using vector property <vector_property> with Azure OpenAI endpoint <endpoint> and deployment <deployment> |
+| cosmos_database_container_item_text-search | Search documents in container <container_name> from database <database_name> of the cosmosdb account <account_name> where <search_property> contains "<search_phrase>" |
+| cosmos_database_container_item_text-search | Run a full-text search for the word "<search_phrase>" against property <search_property> in container <container_name> of database <database_name> for cosmosdb account <account_name> |
+| cosmos_database_container_item_vector-search | Find documents similar to "<text_to_search>" in container <container_name> of database <database_name> in cosmosdb account <account_name> using vector property <vector_property> with Azure OpenAI endpoint <endpoint> and deployment <deployment> |
+| cosmos_database_container_item_vector-search | Show me the top <count> documents in container <container_name> of database <database_name> for cosmosdb account <account_name> most similar to "<text_to_search>" using vector property <vector_property>, embedding deployment <deployment> at endpoint <endpoint> with <embedding_dimensions> dimensions, and project only <properties_to_select> |
 | cosmos_database_container_schema_infer | Infer the schema of container <container_name> in database <database_name> for cosmosdb account <account_name> |
 | cosmos_database_container_schema_infer | Sample <sample_size> documents from container <container_name> in database <database_name> of the cosmosdb account <account_name> and tell me the property names and types |
 
