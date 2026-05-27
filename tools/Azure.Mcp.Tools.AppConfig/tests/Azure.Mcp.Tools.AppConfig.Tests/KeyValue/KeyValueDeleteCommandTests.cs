@@ -75,7 +75,7 @@ public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCom
         Assert.Equal("my-key", result.Key);
         Assert.Equal("prod", result.Label);
         Assert.True(result.Existed);
-        Assert.Equal("Key 'my-key' deleted successfully.", result.Message);
+        Assert.Equal("Key 'my-key' with label 'prod' deleted successfully.", result.Message);
     }
 
     [Fact]

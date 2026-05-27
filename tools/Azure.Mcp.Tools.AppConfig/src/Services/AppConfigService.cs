@@ -208,7 +208,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
             additionalFilter: $"name =~ '{EscapeKqlString(accountName)}'",
             tenant: tenant,
             cancellationToken: cancellationToken)
-            ?? throw new KeyNotFoundException($"App Configuration store '{accountName}' not found for subscription '{subscription}'.");
+            ?? throw new KeyNotFoundException($"App Configuration store '{accountName}' not found in subscription '{subscription}'.");
     }
 
     /// <summary>

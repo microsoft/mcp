@@ -50,9 +50,10 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger,
                 options.Label,
                 cancellationToken);
 
+            var labelSuffix = options.Label is null ? string.Empty : $" with label '{options.Label}'";
             var message = existed
-                ? $"Key '{options.Key}' deleted successfully."
-                : $"Key '{options.Key}' did not exist in store '{options.Account}'.";
+                ? $"Key '{options.Key}'{labelSuffix} deleted successfully."
+                : $"Key '{options.Key}'{labelSuffix} did not exist in store '{options.Account}'.";
             context.Response.Results = ResponseResult.Create(new(options.Key, options.Label, existed, message), AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
         }
         catch (Exception ex)
