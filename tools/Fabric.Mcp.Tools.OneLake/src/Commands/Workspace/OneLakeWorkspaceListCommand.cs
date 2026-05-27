@@ -6,8 +6,8 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Workspace;
 
@@ -24,34 +24,13 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Workspace;
     LocalRequired = false)]
 public sealed class OneLakeWorkspaceListCommand(
     ILogger<OneLakeWorkspaceListCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<WorkspaceListOptions>()
+    IOneLakeService oneLakeService) : AuthenticatedCommand<WorkspaceListOptions, OneLakeWorkspaceListCommand.OneLakeWorkspaceListCommandResult>
 {
     private readonly ILogger<OneLakeWorkspaceListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, WorkspaceListOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.ContinuationToken.AsOptional());
-        command.Options.Add(OneLakeOptionDefinitions.Format.AsOptional());
-    }
-
-    protected override WorkspaceListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ContinuationToken = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ContinuationToken.Name);
-        options.Format = parseResult.GetValueOrDefault<string>(OneLakeOptionDefinitions.Format.Name) ?? "json";
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
         try
         {
             if (options.Format?.ToLowerInvariant() == "xml")
