@@ -13,10 +13,9 @@ using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Cosmos.UnitTests.Item;
+namespace Azure.Mcp.Tools.Cosmos.Tests.Item;
 
-public class ItemVectorSearchCommandTests
-    : CommandUnitTestsBase<Azure.Mcp.Tools.Cosmos.Commands.Item.ItemVectorSearchCommand, ICosmosService>
+public class ItemVectorSearchCommandTests : CommandUnitTestsBase<ItemVectorSearchCommand, ICosmosService>
 {
     [Fact]
     public void Name_IsCorrect() => Assert.Equal("vector-search", Command.Name);

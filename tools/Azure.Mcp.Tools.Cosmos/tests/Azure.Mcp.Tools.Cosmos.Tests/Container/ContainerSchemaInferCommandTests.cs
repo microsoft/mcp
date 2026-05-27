@@ -13,13 +13,12 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Cosmos.UnitTests.Container;
+namespace Azure.Mcp.Tools.Cosmos.Tests.Container;
 
-public class ContainerSchemaInferCommandTests
-    : CommandUnitTestsBase<Azure.Mcp.Tools.Cosmos.Commands.Container.ContainerSchemaInferCommand, ICosmosService>
+public class ContainerSchemaInferCommandTests : CommandUnitTestsBase<ContainerSchemaInferCommand, ICosmosService>
 {
     [Fact]
-    public void Name_IsCorrect() => Assert.Equal("get", Command.Name);
+    public void Name_IsCorrect() => Assert.Equal("infer", Command.Name);
 
     [Fact]
     public void Metadata_IsReadOnly()

@@ -12,10 +12,9 @@ using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Cosmos.UnitTests.Item;
+namespace Azure.Mcp.Tools.Cosmos.Tests.Item;
 
-public class ItemGetCommandTests
-    : CommandUnitTestsBase<Azure.Mcp.Tools.Cosmos.Commands.Item.ItemGetCommand, ICosmosService>
+public class ItemGetCommandTests : CommandUnitTestsBase<ItemGetCommand, ICosmosService>
 {
     [Fact]
     public void Name_IsCorrect() => Assert.Equal("get", Command.Name);

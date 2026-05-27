@@ -12,10 +12,9 @@ using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Cosmos.UnitTests.Item;
+namespace Azure.Mcp.Tools.Cosmos.Tests.Item;
 
-public class ItemListRecentCommandTests
-    : CommandUnitTestsBase<Azure.Mcp.Tools.Cosmos.Commands.Item.ItemListRecentCommand, ICosmosService>
+public class ItemListRecentCommandTests : CommandUnitTestsBase<ItemListRecentCommand, ICosmosService>
 {
     [Fact]
     public void Name_IsCorrect() => Assert.Equal("list-recent", Command.Name);
