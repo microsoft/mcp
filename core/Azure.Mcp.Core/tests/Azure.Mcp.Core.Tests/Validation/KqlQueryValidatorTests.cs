@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Kusto.Validation;
+using Azure.Mcp.Core.Validation;
 using Microsoft.Mcp.Core.Commands;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Kusto.Tests;
+namespace Azure.Mcp.Core.Tests.Validation;
 
 public class KqlQueryValidatorTests
 {
@@ -44,7 +44,7 @@ public class KqlQueryValidatorTests
     public void ValidateQuerySafety_WithManagementCommands_ShouldThrow(string query)
     {
         var ex = Assert.Throws<CommandValidationException>(() => KqlQueryValidator.ValidateQuerySafety(query));
-        Assert.Contains("not allowed", ex.Message);
+        Assert.Contains("not allowed", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -58,7 +58,7 @@ public class KqlQueryValidatorTests
     public void ValidateQuerySafety_WithManagementCommandAfterWhitespace_ShouldThrow(string query)
     {
         var ex = Assert.Throws<CommandValidationException>(() => KqlQueryValidator.ValidateQuerySafety(query));
-        Assert.Contains("not allowed", ex.Message);
+        Assert.Contains("not allowed", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -82,7 +82,7 @@ public class KqlQueryValidatorTests
     [Fact]
     public void ValidateQuerySafety_WithEmptyQuery_ShouldThrow()
     {
-        var ex = Assert.Throws<CommandValidationException>(() => KqlQueryValidator.ValidateQuerySafety(""));
+        var ex = Assert.Throws<CommandValidationException>(() => KqlQueryValidator.ValidateQuerySafety(string.Empty));
         Assert.Contains("empty", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -97,7 +97,6 @@ public class KqlQueryValidatorTests
     [Fact]
     public void ValidateQuerySafety_TautologyInsideStringLiteral_ShouldNotThrow()
     {
-        // The tautology pattern is inside a string literal, not actual KQL logic
         KqlQueryValidator.ValidateQuerySafety("testtable | where Name == 'or 1==1'");
     }
 
