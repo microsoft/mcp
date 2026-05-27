@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Validation;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Validation;
 using Xunit;
 
-namespace Azure.Mcp.Core.Tests.Validation;
+namespace Microsoft.Mcp.Core.Tests.Validation;
 
 public class KqlQueryValidatorTests
 {

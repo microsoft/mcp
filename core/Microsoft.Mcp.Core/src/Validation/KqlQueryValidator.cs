@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 
-namespace Azure.Mcp.Core.Validation;
+namespace Microsoft.Mcp.Core.Validation;
 
 /// <summary>
 /// Validates user-supplied KQL queries to prevent injection and data exfiltration.
