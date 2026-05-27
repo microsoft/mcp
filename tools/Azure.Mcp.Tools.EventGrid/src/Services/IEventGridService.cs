@@ -32,4 +32,13 @@ public interface IEventGridService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<EventGridTopicInfo?> CreateTopicAsync(
+        string topic,
+        string resourceGroup,
+        string location,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

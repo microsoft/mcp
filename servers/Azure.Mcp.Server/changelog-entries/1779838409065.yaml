@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added `eventgrid topic create` command to create Azure Event Grid topics in a specified resource group and location"

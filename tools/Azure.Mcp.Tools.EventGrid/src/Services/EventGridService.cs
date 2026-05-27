@@ -533,4 +533,31 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
+    public async Task<EventGridTopicInfo?> CreateTopicAsync(
+    string topic,
+    string resourceGroup,
+    string location,
+    string subscription,
+    string? tenant = null,
+    RetryPolicyOptions? retryPolicy = null,
+    CancellationToken cancellationToken = default)
+    {
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+        var topicData = new EventGridTopicData(new Azure.Core.AzureLocation(location))
+        {
+            InputSchema = EventGridInputSchema.EventGridSchema,
+            PublicNetworkAccess = EventGridPublicNetworkAccess.Enabled
+        };
+
+        var operation = await resourceGroupResource.Value.GetEventGridTopics().CreateOrUpdateAsync(
+            Azure.WaitUntil.Completed,
+            topic,
+            topicData,
+            cancellationToken);
+
+        return CreateTopicInfo(operation.Value.Data);
+    }
+
 }

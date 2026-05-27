@@ -2300,6 +2300,13 @@ azmcp deviceregistry namespace list --subscription <subscription> \
 ### Azure Event Grid Operations
 
 ```bash
+# Create an Azure Event Grid topic in a specified resource group and location
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventgrid topic create --subscription <subscription> \
+                             --resource-group <resource-group> \
+                             --topic <topic> \
+                             --location <location>
+
 # List all Event Grid topics in a subscription or resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventgrid topic list --subscription <subscription> \
