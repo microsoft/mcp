@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "eventgrid: corrected the topic list command description to remove unsupported claims (access keys and required topic/subscription wording), and added unit-test coverage to prevent regression."
