@@ -10,6 +10,7 @@ using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Insights.Services;
 
@@ -17,16 +18,24 @@ namespace Azure.Mcp.Tools.Insights.Services;
 public sealed class InsightsService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
+    ICacheService cacheService,
     ILogger<InsightsService> logger)
     : BaseAzureService(tenantService), IInsightsService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+
+    private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
 
     private readonly ILogger<InsightsService> _logger = logger;
 
     private const int PageSize = 1000;
 
     private const int MaxPages = 100;
+
+    private const string CacheGroup = "insights";
+
+    // Cache ARG data for 1 hour
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(1);
 
     // Filters out portal/test/managed/system resource groups
     private const string KqlQuery = """
@@ -47,26 +56,47 @@ public sealed class InsightsService(
         string subscription,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool noCache = false)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
             ?? throw new InvalidOperationException($"Subscription '{subscription}' could not be resolved.");
+
+        // Cache ARG data by subscription ID
+        var cacheKey = $"sub:{subscriptionResource.Data.SubscriptionId}";
+        if (noCache)
+        {
+            await _cacheService.DeleteAsync(CacheGroup, cacheKey, cancellationToken);
+        }
+        else
+        {
+            var cached = await _cacheService.GetAsync<SubscriptionAggregation>(CacheGroup, cacheKey, CacheTtl, cancellationToken);
+            if (cached is not null)
+            {
+                return cached;
+            }
+        }
+
         var tenantResource = await GetTenantResourceAsync(subscriptionResource.Data.TenantId, cancellationToken);
 
-        return await RunQueryAsync(
+        var aggregation = await RunQueryAsync(
             tenantResource,
             new[] { subscriptionResource.Data.SubscriptionId },
             subscriptionCount: 1,
             scopeLabel: subscription,
             cancellationToken);
+
+        await _cacheService.SetAsync(CacheGroup, cacheKey, aggregation, CacheTtl, cancellationToken);
+        return aggregation;
     }
 
     public async Task<SubscriptionAggregation> AggregateTenantAsync(
         string? tenant,
         RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool noCache = false)
     {
         var subscriptions = await _subscriptionService.GetSubscriptions(tenant, retryPolicy, cancellationToken);
         if (subscriptions.Count == 0)
@@ -76,6 +106,21 @@ public sealed class InsightsService(
 
         var tenantId = subscriptions[0].TenantId
             ?? throw new InvalidOperationException("Could not determine tenant ID from accessible subscriptions.");
+
+        var cacheKey = $"tenant:{tenantId}";
+        if (noCache)
+        {
+            await _cacheService.DeleteAsync(CacheGroup, cacheKey, cancellationToken);
+        }
+        else
+        {
+            var cached = await _cacheService.GetAsync<SubscriptionAggregation>(CacheGroup, cacheKey, CacheTtl, cancellationToken);
+            if (cached is not null)
+            {
+                return cached;
+            }
+        }
+
         var tenantResource = await GetTenantResourceAsync(tenantId, cancellationToken);
 
         var subscriptionIds = subscriptions
@@ -83,12 +128,15 @@ public sealed class InsightsService(
             .Where(id => !string.IsNullOrEmpty(id))
             .ToArray();
 
-        return await RunQueryAsync(
+        var aggregation = await RunQueryAsync(
             tenantResource,
             subscriptionIds,
             subscriptionCount: subscriptionIds.Length,
             scopeLabel: $"tenant:{tenantId}",
             cancellationToken);
+
+        await _cacheService.SetAsync(CacheGroup, cacheKey, aggregation, CacheTtl, cancellationToken);
+        return aggregation;
     }
 
     private async Task<SubscriptionAggregation> RunQueryAsync(

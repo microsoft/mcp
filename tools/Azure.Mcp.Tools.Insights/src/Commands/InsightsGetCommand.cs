@@ -108,6 +108,7 @@ public sealed class InsightsGetCommand(
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.Subscription);
         command.Options.Add(InsightsOptionDefinitions.Query.AsOptional());
+        command.Options.Add(InsightsOptionDefinitions.NoCache.AsOptional());
         command.Options.Add(InsightsOptionDefinitions.Scope.AsOptional());
     }
 
@@ -122,6 +123,7 @@ public sealed class InsightsGetCommand(
         }
 
         options.Query = parseResult.GetValueOrDefault<string>(InsightsOptionDefinitions.Query);
+        options.NoCache = parseResult.GetValueOrDefault<bool>(InsightsOptionDefinitions.NoCache);
         options.Scope = parseResult.GetValueOrDefault<string>(InsightsOptionDefinitions.Scope);
         return options;
     }
@@ -182,8 +184,8 @@ public sealed class InsightsGetCommand(
         try
         {
             var aggregation = scope == InsightsOptionDefinitions.ScopeTenant
-                ? await _insightsService.AggregateTenantAsync(options.Tenant, options.RetryPolicy, cancellationToken)
-                : await _insightsService.AggregateSubscriptionAsync(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken);
+                ? await _insightsService.AggregateTenantAsync(options.Tenant, options.RetryPolicy, cancellationToken, options.NoCache)
+                : await _insightsService.AggregateSubscriptionAsync(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken, options.NoCache);
 
             var payloadJson = BuildPayload(aggregation, options.Query);
 
