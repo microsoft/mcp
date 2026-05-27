@@ -55,7 +55,7 @@ internal static class AggregationFilter
         RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant;
 
     private const RegexOptions ValueRegexOptions =
-        RegexOptions.Compiled | RegexOptions.CultureInvariant;
+        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant;
 
     private static readonly Regex[] KeyDenyPatterns =
     [
