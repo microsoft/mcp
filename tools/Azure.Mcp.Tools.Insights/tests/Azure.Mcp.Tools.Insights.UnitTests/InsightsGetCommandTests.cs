@@ -60,7 +60,12 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).AggregateSubscriptionAsync(
-            "sub1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            "sub1",
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>(),
+            Arg.Any<IProgress<string>?>(),
+            Arg.Any<bool>());
         await _samplingService.Received(1).SampleTextAsync(
             Arg.Any<McpServer>(),
             Arg.Any<string>(),
@@ -81,7 +86,11 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).AggregateTenantAsync(
-            "tenant-1", Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            "tenant-1",
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>(),
+            Arg.Any<IProgress<string>?>(),
+            Arg.Any<bool>());
         await Service.DidNotReceiveWithAnyArgs().AggregateSubscriptionAsync(
             default!, default, default, TestContext.Current.CancellationToken);
     }
@@ -134,7 +143,98 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).AggregateSubscriptionAsync(
-            "sub1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            "sub1",
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>(),
+            Arg.Any<IProgress<string>?>(),
+            Arg.Any<bool>());
+    }
+
+    [Theory]
+    [InlineData("bogus")]
+    [InlineData("Subscriptions")]
+    [InlineData("")]
+    public async Task ExecuteAsync_InvalidScope_ReturnsBadRequest(string scope)
+    {
+        var response = await ExecuteWithSamplingAsync("--scope", scope);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("scope", response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceiveWithAnyArgs().AggregateSubscriptionAsync(
+            default!, default, default, TestContext.Current.CancellationToken);
+        await Service.DidNotReceiveWithAnyArgs().AggregateTenantAsync(
+            default, default, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_TenantScopeWithSubscription_ReturnsBadRequest()
+    {
+        var response = await ExecuteWithSamplingAsync("--scope", "tenant", "--subscription", "sub1");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("subscription", response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceiveWithAnyArgs().AggregateTenantAsync(
+            default, default, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_SubscriptionScopeWithNoDefault_ReturnsBadRequest()
+    {
+        _subscriptionService.GetDefaultSubscriptionId().Returns((string?)null);
+
+        var response = await ExecuteWithSamplingAsync();
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("default subscription", response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceiveWithAnyArgs().AggregateSubscriptionAsync(
+            default!, default, default, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UsesDefaultSubscription_WhenNotProvided()
+    {
+        _subscriptionService.GetDefaultSubscriptionId().Returns("default-sub");
+        Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
+            .ReturnsForAnyArgs(CreateEmptyAggregation());
+        _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)
+            .ReturnsForAnyArgs("[]");
+
+        var response = await ExecuteWithSamplingAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).AggregateSubscriptionAsync(
+            "default-sub",
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>(),
+            Arg.Any<IProgress<string>?>(),
+            Arg.Any<bool>());
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ExecuteAsync_NoCacheFlag_PropagatesToService(bool noCache)
+    {
+        Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
+            .ReturnsForAnyArgs(CreateEmptyAggregation());
+        _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)
+            .ReturnsForAnyArgs("[]");
+
+        var args = noCache
+            ? new[] { "--subscription", "sub1", "--nocache" }
+            : new[] { "--subscription", "sub1" };
+        var response = await ExecuteWithSamplingAsync(args);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).AggregateSubscriptionAsync(
+            "sub1",
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>(),
+            Arg.Any<IProgress<string>?>(),
+            noCache);
     }
 
     private Task<CommandResponse> ExecuteWithSamplingAsync(params string[] args)
