@@ -113,7 +113,7 @@ internal static class PropertyAggregator
             var idType = TryGetString(identity, "type");
             if (!string.IsNullOrEmpty(idType))
             {
-                yield return (new[] { "identity" }, idType);
+                yield return (new[] { "identity" }, idType.ToLowerInvariant().Replace(" ", ""));
             }
         }
 
