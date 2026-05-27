@@ -28,6 +28,11 @@ public class CommandContext
     public Activity? Activity { get; }
 
     /// <summary>
+    /// The MCP server handling the current tool call
+    /// </summary>
+    public McpServer? McpServer { get; init; }
+
+    /// <summary>
     /// Creates a new command context
     /// </summary>
     /// <param name="serviceProvider">The service provider for dependency injection</param>

@@ -177,7 +177,10 @@ public sealed class CommandFactoryToolLoader(
             }, command.Id);
         }
 
-        var commandContext = new CommandContext(_serviceProvider, activity);
+        var commandContext = new CommandContext(_serviceProvider, activity)
+        {
+            McpServer = request.Server,
+        };
 
         // Check if this tool requires elicitation for sensitive or destructive operations
         var elicitationResult = await HandleElicitationAsync(
