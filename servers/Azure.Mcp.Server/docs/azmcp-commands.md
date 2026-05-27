@@ -2111,7 +2111,7 @@ azmcp cosmos database container item list-recent --subscription <subscription> \
                                                  --container <container> \
                                                  [--count 10]
 
-# Get a single Cosmos DB document by id (point read when --partition-key is supplied).
+# Get a single Cosmos DB document by id (provide --partition-key to scope to one partition; otherwise cross-partition).
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos database container item get --subscription <subscription> \
                                          --account <account> \
@@ -2120,29 +2120,36 @@ azmcp cosmos database container item get --subscription <subscription> \
                                          --id <id> \
                                          [--partition-key <partition-key>]
 
-# Search Cosmos DB documents where a property contains a phrase (FullTextContains).
+# Search Cosmos DB documents where a given --search-property matches a --search-phrase via Cosmos `FullTextContains`.
+# Matching is word-tokenized (not substring) and uses the container's full-text analyzer, so the configured language
+# stemming and stop-word list apply (e.g., common English words like 'the' or 'hello' may be filtered out). Requires a
+# full-text index on the --search-property.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos database container item text-search --subscription <subscription> \
                                                  --account <account> \
                                                  --database <database> \
                                                  --container <container> \
-                                                 --property <property> \
+                                                 --search-property <property> \
                                                  --search-phrase <phrase> \
+                                                 [--properties-to-select <p1,p2,...>] \
                                                  [--count 10]
 
-# Vector similarity search against a Cosmos DB container. Provide --search-text plus
-# --openai-endpoint and --embedding-deployment; the tool generates the query vector
-# via Azure OpenAI and runs the search against the configured vector index.
+# Vector similarity search against a Cosmos DB container. Provide --search-text plus --openai-endpoint and
+# --embedding-deployment; the tool generates the query vector via Azure OpenAI and runs the search against the
+# configured vector index. Optionally, provide --embedding-dimensions to request a specific number for models that
+# support custom dimensions like "text-embedding-3-small" or "text-embedding-3-large". Optionally pass
+# --properties-to-select to project specific fields; when omitted the full document is returned with the vector
+# property stripped so the embedding doesn't bloat the response. Requires a vector index on the vector property.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos database container item vector-search --subscription <subscription> \
                                                    --account <account> \
                                                    --database <database> \
                                                    --container <container> \
                                                    --vector-property <vector-property> \
-                                                   --select-properties <p1,p2,...> \
                                                    --search-text "free-form text" \
                                                    --openai-endpoint <endpoint> \
                                                    --embedding-deployment <deployment> \
+                                                   [--properties-to-select <p1,p2,...>] \
                                                    [--count 10] \
                                                    [--embedding-dimensions <n>]
 ```

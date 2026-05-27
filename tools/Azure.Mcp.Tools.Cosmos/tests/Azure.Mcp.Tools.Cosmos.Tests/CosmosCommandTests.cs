@@ -242,6 +242,19 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
                 { "container", "Items" }
             });
 
+        // Document schema:
+        // {
+        //   "completed": "boolean",
+        //   "priority": "number",
+        //   "id": "string",
+        //   "title": "string",
+        //   "_rid": "string",
+        //   "_self": "string",
+        //   "_etag": "string",
+        //   "_attachments": "string",
+        //   "_ts": "string"
+        // }
+
         var sampleSize = result.AssertProperty("sampleSize");
         Assert.Equal(JsonValueKind.Number, sampleSize.ValueKind);
         Assert.True(sampleSize.GetInt32() > 0);
@@ -374,6 +387,16 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
                 { "search-phrase", "cosmos" }
             });
 
+        // Document schema:
+        // {
+        //   "id": "string",
+        //   "description": "string",
+        //   "_rid": "string",
+        //   "_self": "string",
+        //   "_attachments": "string",
+        //   "_ts": "string"
+        // }
+
         var items = result.AssertProperty("items");
         Assert.Equal(JsonValueKind.Array, items.ValueKind);
         // TextItems seeded by seed-cosmos.ps1 contains text-1 and text-3 with "cosmos".
@@ -383,10 +406,108 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             .ToHashSet();
         Assert.Contains("text-1", hitIds);
         Assert.Contains("text-3", hitIds);
+        // Results should not include other properties
+        foreach (var item in items.EnumerateArray())
+        {
+            Assert.True(item.TryGetProperty("id", out _), "id should be present");
+            Assert.True(item.TryGetProperty("description", out _), "description should be present");
+        }
+    }
+
+    [Fact]
+    public async Task Should_text_search_documents_with_select_properties()
+    {
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var result = await CallToolAsync(
+            "cosmos_database_container_item_text-search",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "account", resourceBaseName },
+                { "database", "ToDoList" },
+                { "container", "TextItems" },
+                { "property", "description" },
+                { "search-phrase", "cosmos" },
+                { "properties-to-select", "id" }
+            });
+
+        // Document schema:
+        // {
+        //   "id": "string",
+        //   "description": "string",
+        //   "_rid": "string",
+        //   "_self": "string",
+        //   "_attachments": "string",
+        //   "_ts": "string"
+        // }
+
+        var items = result.AssertProperty("items");
+        Assert.Equal(JsonValueKind.Array, items.ValueKind);
+        // TextItems seeded by seed-cosmos.ps1 contains text-1 and text-3 with "cosmos".
+        // "hello" is a stop word in Cosmos's extended English list and is not indexed.
+        var hitIds = items.EnumerateArray()
+            .Select(i => i.GetProperty("id").GetString())
+            .ToHashSet();
+        Assert.Contains("text-1", hitIds);
+        Assert.Contains("text-3", hitIds);
+        // Results should not include other properties
+        foreach (var item in items.EnumerateArray())
+        {
+            Assert.True(item.TryGetProperty("id", out _), "id should be present");
+            Assert.False(item.TryGetProperty("description", out _), "description should not be selected");
+        }
     }
 
     [Fact]
     public async Task Should_vector_search_documents()
+    {
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var openAiEndpoint = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIENDPOINT", "Sanitized");
+        var embeddingDeployment = Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "Sanitized");
+
+        Assert.SkipWhen(TestMode != TestMode.Playback && openAiEndpoint == "Sanitized", "Azure OpenAI endpoint not configured for live testing");
+        Assert.SkipWhen(TestMode != TestMode.Playback && embeddingDeployment == "Sanitized", "Azure OpenAI embedding deployment not configured for live testing");
+
+        // Omitting --properties-to-select triggers the wrapper-projection path: the service
+        // requests `c AS doc, VectorDistance(...) AS _score` and strips the vector before returning.
+        var result = await CallToolAsync(
+            "cosmos_database_container_item_vector-search",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "account", resourceBaseName },
+                { "database", "ToDoList" },
+                { "container", "VectorItems" },
+                { "vector-property", "vector" },
+                { "search-text", "hello world" },
+                { "openai-endpoint", openAiEndpoint },
+                { "embedding-deployment", embeddingDeployment }
+            });
+
+        // Document schema:
+        // {
+        //   "id": "string",
+        //   "text": "string",
+        //   "vector": "array",
+        //   "_rid": "string",
+        //   "_self": "string",
+        //   "_attachments": "string",
+        //   "_ts": "string",
+        // }
+
+        var items = result.AssertProperty("items");
+        Assert.Equal(JsonValueKind.Array, items.ValueKind);
+        Assert.NotEmpty(items.EnumerateArray());
+        var first = items.EnumerateArray().First();
+        Assert.Equal("vec-greeting", first.GetProperty("id").GetString());
+        // The score is calculated by Cosmos during the vector search
+        Assert.True(first.TryGetProperty("_score", out _), "_score should be present");
+        Assert.True(first.TryGetProperty("text", out _), "text property should be selected");
+        Assert.False(first.TryGetProperty("vector", out _), "vector property should be stripped");
+    }
+
+    [Fact]
+    public async Task Should_vector_search_documents_with_select_properties()
     {
         var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var openAiEndpoint = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIENDPOINT", "Sanitized");
@@ -405,19 +526,34 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
                 { "database", "ToDoList" },
                 { "container", "VectorItems" },
                 { "vector-property", "vector" },
-                { "select-properties", "id" },
+                { "properties-to-select", "id" },
                 { "search-text", "hello world" },
                 { "openai-endpoint", openAiEndpoint },
                 { "embedding-deployment", embeddingDeployment }
             });
+
+        // Document schema:
+        // {
+        //   "id": "string",
+        //   "text": "string",
+        //   "vector": "array",
+        //   "_rid": "string",
+        //   "_self": "string",
+        //   "_attachments": "string",
+        //   "_ts": "string",
+        // }
 
         var items = result.AssertProperty("items");
         Assert.Equal(JsonValueKind.Array, items.ValueKind);
         Assert.NotEmpty(items.EnumerateArray());
         // vec-greeting is the seeded doc with text "Hello world, a friendly greeting...";
         // it should rank first by cosine similarity against the "hello world" query embedding.
-        var topId = items.EnumerateArray().First().GetProperty("id").GetString();
-        Assert.Equal("vec-greeting", topId);
+        var first = items.EnumerateArray().First();
+        Assert.Equal("vec-greeting", first.GetProperty("id").GetString());
+        // The score is calculated by Cosmos during the vector search
+        Assert.True(first.TryGetProperty("_score", out _), "_score should be present");
+        Assert.False(first.TryGetProperty("text", out _), "text property should not be selected");
+        Assert.False(first.TryGetProperty("vector", out _), "vector property should be stripped");
     }
 
     private static string GetStringOrNameElementString(JsonElement element, string propertyName)

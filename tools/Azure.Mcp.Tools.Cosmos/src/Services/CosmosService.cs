@@ -321,8 +321,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             queryDef,
             requestOptions: new QueryRequestOptions { MaxItemCount = sampleSize });
 
-        var typeMap = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
-        var countMap = new Dictionary<string, int>(StringComparer.Ordinal);
+        var properties = new Dictionary<string, (HashSet<string> Types, int Count)>(StringComparer.Ordinal);
         var sampled = 0;
 
         while (iterator.HasMoreResults && sampled < sampleSize)
@@ -338,11 +337,6 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
 
             foreach (var item in docs.EnumerateArray())
             {
-                if (item.ValueKind != JsonValueKind.Object)
-                {
-                    continue;
-                }
-
                 sampled++;
 
                 foreach (var prop in item.EnumerateObject())
@@ -358,15 +352,12 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
                         _ => "unknown",
                     };
 
-                    if (!typeMap.TryGetValue(prop.Name, out var set))
+                    if (!properties.TryGetValue(prop.Name, out var entry))
                     {
-                        set = new HashSet<string>(StringComparer.Ordinal);
-                        typeMap[prop.Name] = set;
+                        entry = (new HashSet<string>(StringComparer.Ordinal), 0);
                     }
-                    set.Add(typeName);
-
-                    countMap.TryGetValue(prop.Name, out var current);
-                    countMap[prop.Name] = current + 1;
+                    entry.Types.Add(typeName);
+                    properties[prop.Name] = (entry.Types, entry.Count + 1);
                 }
 
                 if (sampled >= sampleSize)
@@ -376,16 +367,16 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             }
         }
 
-        var properties = typeMap
+        var schemaProperties = properties
             .OrderBy(kvp => kvp.Key, StringComparer.Ordinal)
             .Select(kvp => new SchemaProperty(
                 kvp.Key,
-                string.Join(" | ", kvp.Value.OrderBy(t => t, StringComparer.Ordinal)),
-                countMap.TryGetValue(kvp.Key, out var c) ? c : 0,
+                string.Join(" | ", kvp.Value.Types.OrderBy(t => t, StringComparer.Ordinal)),
+                kvp.Value.Count,
                 sampled))
             .ToList();
 
-        return new ContainerSchema(sampled, properties);
+        return new ContainerSchema(sampled, schemaProperties);
     }
 
     public async Task<List<JsonElement>> GetRecentItems(
@@ -501,6 +492,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         string containerName,
         string property,
         string searchPhrase,
+        IReadOnlyList<string>? propertiesToSelect,
         int count,
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
@@ -519,8 +511,12 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
         var container = client.GetContainer(databaseName, containerName);
 
+        var selectClause = propertiesToSelect is { Count: > 0 }
+            ? string.Join(", ", propertiesToSelect.Select(p => $"c.{p}"))
+            : "*";
+
         var queryDef = new QueryDefinition(
-                $"SELECT TOP @topN * FROM c WHERE FullTextContains(c.{property}, @searchPhrase)")
+                $"SELECT TOP @topN {selectClause} FROM c WHERE FullTextContains(c.{property}, @searchPhrase)")
             .WithParameter("@topN", count)
             .WithParameter("@searchPhrase", searchPhrase);
 
@@ -558,7 +554,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         string databaseName,
         string containerName,
         string vectorProperty,
-        IReadOnlyList<string> selectProperties,
+        IReadOnlyList<string>? propertiesToSelect,
         IReadOnlyList<float> embedding,
         int count,
         string subscription,
@@ -577,14 +573,21 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
         var container = client.GetContainer(databaseName, containerName);
 
-        var selectClause = string.Join(", ", selectProperties.Select(p => $"c.{p}"));
-
         // Inline the embedding as a JSON array literal. The Cosmos AOT serializer
         // context does not include Single[] / float[], so passing it via
         // WithParameter throws NotSupportedException at query-plan serialization.
         var embeddingLiteral = "[" + string.Join(
             ",",
             embedding.Select(f => f.ToString("R", System.Globalization.CultureInfo.InvariantCulture))) + "]";
+
+        // Two query shapes:
+        //  - With explicit propertiesToSelect: project those columns + the score directly. Smaller RU and bandwidth.
+        //  - Without: wrap the whole document via `c AS doc` so we can strip the vector property client-side
+        //    and still return every other field alongside the server-computed score.
+        var hasProjection = propertiesToSelect is { Count: > 0 };
+        var selectClause = hasProjection
+            ? string.Join(", ", propertiesToSelect!.Select(p => $"c.{p}"))
+            : "c AS doc";
 
         var queryDef = new QueryDefinition(
                 $"SELECT TOP @topN {selectClause}, VectorDistance(c.{vectorProperty}, {embeddingLiteral}) AS _score "
@@ -609,7 +612,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
 
             foreach (var item in docs.EnumerateArray())
             {
-                results.Add(item.Clone());
+                results.Add(hasProjection ? item.Clone() : FlattenResultAndStripVector(item, vectorProperty));
                 if (results.Count >= count)
                 {
                     break;
@@ -618,6 +621,84 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         }
 
         return results;
+    }
+
+    // Rewrites { "doc": {...}, "_score": x } into { "_score": x, ...doc fields except vectorProperty }.
+    private static JsonElement FlattenResultAndStripVector(JsonElement wrapped, string vectorProperty)
+    {
+        var pathSegments = vectorProperty.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        // Rewrite via Utf8JsonWriter — documents are arbitrary user JSON, so there is no model type
+        // we can attach a JsonSerializerContext to, and reflection-based JsonSerializer is not AOT-safe.
+        using var ms = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(ms))
+        {
+            writer.WriteStartObject();
+
+            if (wrapped.TryGetProperty("_score", out var score))
+            {
+                writer.WritePropertyName("_score");
+                score.WriteTo(writer);
+            }
+
+            if (wrapped.TryGetProperty("doc", out var docElement) && docElement.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var prop in docElement.EnumerateObject())
+                {
+                    if (prop.NameEquals(pathSegments[0]))
+                    {
+                        if (pathSegments.Length == 1)
+                        {
+                            // Leaf — drop the vector property entirely.
+                            continue;
+                        }
+
+                        writer.WritePropertyName(prop.Name);
+                        WriteWithoutPath(writer, prop.Value, pathSegments, 1);
+                        continue;
+                    }
+
+                    prop.WriteTo(writer);
+                }
+            }
+
+            writer.WriteEndObject();
+        }
+
+        ms.Position = 0;
+        using var rewritten = JsonDocument.Parse(ms);
+        return rewritten.RootElement.Clone();
+    }
+
+    private static void WriteWithoutPath(Utf8JsonWriter writer, JsonElement element, string[] segments, int depth)
+    {
+        if (depth >= segments.Length || element.ValueKind != JsonValueKind.Object)
+        {
+            element.WriteTo(writer);
+            return;
+        }
+
+        writer.WriteStartObject();
+        var target = segments[depth];
+        var isLeaf = depth == segments.Length - 1;
+
+        foreach (var prop in element.EnumerateObject())
+        {
+            if (prop.NameEquals(target))
+            {
+                if (isLeaf)
+                {
+                    continue;
+                }
+
+                writer.WritePropertyName(prop.Name);
+                WriteWithoutPath(writer, prop.Value, segments, depth + 1);
+                continue;
+            }
+
+            prop.WriteTo(writer);
+        }
+
+        writer.WriteEndObject();
     }
 
     public async Task<float[]> GenerateEmbedding(

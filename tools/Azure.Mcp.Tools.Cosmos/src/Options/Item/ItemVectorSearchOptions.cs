@@ -10,8 +10,8 @@ public class ItemVectorSearchOptions : BaseContainerOptions
     [JsonPropertyName(CosmosOptionDefinitions.VectorPropertyName)]
     public string? VectorProperty { get; set; }
 
-    [JsonPropertyName(CosmosOptionDefinitions.SelectPropertiesName)]
-    public string? SelectProperties { get; set; }
+    [JsonPropertyName(CosmosOptionDefinitions.PropertiesToSelectName)]
+    public string? PropertiesToSelect { get; set; }
 
     [JsonPropertyName(CosmosOptionDefinitions.CountName)]
     public int? Count { get; set; }

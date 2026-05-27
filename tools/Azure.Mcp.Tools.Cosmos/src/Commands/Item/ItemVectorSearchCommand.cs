@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     Id = "5e6f7a8b-9c0d-4e1f-a2b3-c4d5e6f7a8b9",
     Name = "vector-search",
     Title = "Vector Search Cosmos DB Documents",
-    Description = "Perform a vector similarity search on Cosmos DB. Supplies --search-text to an Azure OpenAI embedding deployment (--openai-endpoint and --embedding-deployment) to generate the query vector. The container must have a vector index on --vector-property.",
+    Description = "Retrieve the TOP N documents in a Cosmos DB container most similar to a given --search-text using the Cosmos VectorDistance function on the provided --vector-property. The tool first calls an Azure OpenAI embedding deployment (--openai-endpoint and --embedding-deployment) to convert --search-text into a query vector; optionally pass --embedding-dimensions to request a specific length for models that support custom dimensions (e.g., text-embedding-3-small / text-embedding-3-large). Each returned document includes a `_score` field that represents the server-side computed similarity. Requires a Cosmos DB vector index on --vector-property. Use --count to control how many documents are returned (1-20, default is 10). Optionally pass --properties-to-select to project specific fields; when omitted the full document is returned with --vector-property stripped, since a typical 1536-dim embedding adds ~30 KB / ~10K tokens per hit.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -35,8 +35,8 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
     {
         base.RegisterOptions(command);
         command.Options.Add(CosmosOptionDefinitions.VectorProperty);
-        command.Options.Add(CosmosOptionDefinitions.SelectProperties);
-        command.Options.Add(CosmosOptionDefinitions.VectorSearchCount);
+        command.Options.Add(CosmosOptionDefinitions.PropertiesToSelect);
+        command.Options.Add(CosmosOptionDefinitions.Count);
         command.Options.Add(CosmosOptionDefinitions.SearchText);
         command.Options.Add(CosmosOptionDefinitions.OpenAIEndpoint);
         command.Options.Add(CosmosOptionDefinitions.EmbeddingDeployment);
@@ -50,28 +50,31 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
                 result.AddError("--vector-property must be a dot-delimited identifier (letters, digits, and underscores only).");
             }
 
-            var selectProperties = result.GetValueOrDefault<string>(CosmosOptionDefinitions.SelectProperties.Name);
-            if (string.IsNullOrWhiteSpace(selectProperties) || selectProperties.Contains('*'))
+            var propertiesToSelect = result.GetValueOrDefault<string>(CosmosOptionDefinitions.PropertiesToSelect.Name);
+            if (!string.IsNullOrWhiteSpace(propertiesToSelect))
             {
-                result.AddError("--select-properties must be a comma-separated list of explicit property names (no '*' wildcards).");
-            }
-            else
-            {
-                var invalidProperties = selectProperties
-                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                    .Where(prop => !PropertyValidator.IsValid(prop))
-                    .ToList();
-
-                if (invalidProperties.Count > 0)
+                if (propertiesToSelect.Contains('*'))
                 {
-                    result.AddError($"--select-properties contains invalid property name(s) '{string.Join("', '", invalidProperties)}'. Use letters, digits, and underscores only.");
+                    result.AddError("--properties-to-select must be a comma-separated list of explicit property names (no '*' wildcards). Omit the option to return all properties except the vector.");
+                }
+                else
+                {
+                    var invalidProperties = propertiesToSelect
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Where(prop => !PropertyValidator.IsValid(prop))
+                        .ToList();
+
+                    if (invalidProperties.Count > 0)
+                    {
+                        result.AddError($"--properties-to-select contains invalid property name(s) '{string.Join("', '", invalidProperties)}'. Use letters, digits, and underscores only.");
+                    }
                 }
             }
 
-            var count = result.GetValueOrDefault<int>(CosmosOptionDefinitions.VectorSearchCount.Name);
-            if (count < 1 || count > 50)
+            var count = result.GetValueOrDefault<int>(CosmosOptionDefinitions.Count.Name);
+            if (count < 1 || count > 20)
             {
-                result.AddError("--count must be between 1 and 50.");
+                result.AddError("--count must be between 1 and 20.");
             }
         });
     }
@@ -80,8 +83,8 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
     {
         var options = base.BindOptions(parseResult);
         options.VectorProperty = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.VectorProperty.Name);
-        options.SelectProperties = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.SelectProperties.Name);
-        options.Count = parseResult.GetValueOrDefault<int>(CosmosOptionDefinitions.VectorSearchCount.Name);
+        options.PropertiesToSelect = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.PropertiesToSelect.Name);
+        options.Count = parseResult.GetValueOrDefault<int>(CosmosOptionDefinitions.Count.Name);
         options.SearchText = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.SearchText.Name);
         options.OpenAIEndpoint = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.OpenAIEndpoint.Name);
         options.EmbeddingDeployment = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.EmbeddingDeployment.Name);
@@ -100,8 +103,10 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
 
         try
         {
-            var selectProperties = options.SelectProperties!
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var propertiesToSelect = string.IsNullOrWhiteSpace(options.PropertiesToSelect)
+                ? null
+                : options.PropertiesToSelect
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
             var embedding = await _cosmosService.GenerateEmbedding(
                 options.SearchText!,
@@ -114,7 +119,7 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
                 options.Database!,
                 options.Container!,
                 options.VectorProperty!,
-                selectProperties,
+                propertiesToSelect,
                 embedding,
                 options.Count ?? 10,
                 options.Subscription!,

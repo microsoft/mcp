@@ -39,7 +39,7 @@ public class ItemVectorSearchCommandTests
         Service.VectorSearch(
             Arg.Is("acct"), Arg.Is("db"), Arg.Is("c"),
             Arg.Is("embedding"),
-            Arg.Is<IReadOnlyList<string>>(p => p.Count == 2 && p[0] == "id" && p[1] == "title"),
+            Arg.Is<IReadOnlyList<string>?>(p => p != null && p.Count == 2 && p[0] == "id" && p[1] == "title"),
             Arg.Is<IReadOnlyList<float>>(v => v.Count == 2 && v[0] == 0.5f),
             Arg.Is(3),
             Arg.Is("sub"), Arg.Any<AuthMethod>(), Arg.Any<string?>(),
@@ -52,7 +52,7 @@ public class ItemVectorSearchCommandTests
             "--database", "db",
             "--container", "c",
             "--vector-property", "embedding",
-            "--select-properties", "id,title",
+            "--properties-to-select", "id,title",
             "--count", "3",
             "--search-text", "hello",
             "--openai-endpoint", "https://aoai.example/",
@@ -71,7 +71,7 @@ public class ItemVectorSearchCommandTests
             "--database", "db",
             "--container", "c",
             "--vector-property", "embedding",
-            "--select-properties", "id");
+            "--properties-to-select", "id");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("search-text", response.Message, StringComparison.OrdinalIgnoreCase);
@@ -86,7 +86,7 @@ public class ItemVectorSearchCommandTests
             "--database", "db",
             "--container", "c",
             "--vector-property", "embedding",
-            "--select-properties", "*",
+            "--properties-to-select", "*",
             "--search-text", "hi",
             "--openai-endpoint", "https://aoai.example/",
             "--embedding-deployment", "my-deployment");

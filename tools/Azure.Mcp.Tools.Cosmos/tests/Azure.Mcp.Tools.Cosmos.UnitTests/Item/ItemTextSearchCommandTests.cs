@@ -30,8 +30,10 @@ public class ItemTextSearchCommandTests
 
         Service.TextSearch(
             Arg.Is("acct"), Arg.Is("db"), Arg.Is("c"),
-            Arg.Is("name"), Arg.Is("azure"), Arg.Is(5),
-            Arg.Is("sub"), Arg.Any<AuthMethod>(), Arg.Any<string?>(),
+            Arg.Is("name"), Arg.Is("azure"),
+            Arg.Any<IReadOnlyList<string>?>(),
+            Arg.Is(5), Arg.Is("sub"),
+            Arg.Any<AuthMethod>(), Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(items);
 
@@ -40,7 +42,7 @@ public class ItemTextSearchCommandTests
             "--account", "acct",
             "--database", "db",
             "--container", "c",
-            "--property", "name",
+            "--search-property", "name",
             "--search-phrase", "azure",
             "--count", "5");
 
@@ -59,7 +61,7 @@ public class ItemTextSearchCommandTests
             "--account", "acct",
             "--database", "db",
             "--container", "c",
-            "--property", property,
+            "--search-property", property,
             "--search-phrase", "azure");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

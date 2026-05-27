@@ -13,10 +13,10 @@ public static class CosmosOptionDefinitions
     public const string SampleSizeName = "sample-size";
     public const string ItemIdName = "id";
     public const string PartitionKeyName = "partition-key";
-    public const string PropertyName = "property";
+    public const string SearchPropertyName = "search-property";
     public const string SearchPhraseName = "search-phrase";
     public const string VectorPropertyName = "vector-property";
-    public const string SelectPropertiesName = "select-properties";
+    public const string PropertiesToSelectName = "properties-to-select";
     public const string SearchTextName = "search-text";
     public const string OpenAIEndpointName = "openai-endpoint";
     public const string EmbeddingDeploymentName = "embedding-deployment";
@@ -65,7 +65,6 @@ public static class CosmosOptionDefinitions
     )
     {
         Description = "SQL query to execute against the container. Uses Cosmos DB SQL syntax.",
-        Required = false,
         DefaultValueFactory = _ => "SELECT * FROM c"
     };
 
@@ -74,16 +73,6 @@ public static class CosmosOptionDefinitions
     )
     {
         Description = "Maximum number of documents to return (1-20). Defaults to 10.",
-        Required = false,
-        DefaultValueFactory = _ => 10
-    };
-
-    public static readonly Option<int> VectorSearchCount = new(
-        $"--{CountName}"
-    )
-    {
-        Description = "Maximum number of documents to return (1-50). Defaults to 10.",
-        Required = false,
         DefaultValueFactory = _ => 10
     };
 
@@ -92,7 +81,6 @@ public static class CosmosOptionDefinitions
     )
     {
         Description = "Number of documents to sample for schema inference (1-20). Defaults to 10.",
-        Required = false,
         DefaultValueFactory = _ => 10
     };
 
@@ -108,11 +96,11 @@ public static class CosmosOptionDefinitions
         $"--{PartitionKeyName}"
     )
     {
-        Description = "Optional partition key value for the document. When provided, a point read is used (cheaper than a cross-partition query)."
+        Description = "Optional partition key value for the document. When provided, the query is scoped to a single partition (cheaper than a cross-partition fan-out)."
     };
 
-    public static readonly Option<string> Property = new(
-        $"--{PropertyName}"
+    public static readonly Option<string> SearchProperty = new(
+        $"--{SearchPropertyName}"
     )
     {
         Description = "The document property to search. Supports dot notation (e.g., 'name' or 'profile.name'). Allowed characters: letters, digits, and underscores.",
@@ -135,12 +123,11 @@ public static class CosmosOptionDefinitions
         Required = true
     };
 
-    public static readonly Option<string> SelectProperties = new(
-        $"--{SelectPropertiesName}"
+    public static readonly Option<string> PropertiesToSelect = new(
+        $"--{PropertiesToSelectName}"
     )
     {
-        Description = "Comma-separated list of properties to project in the result (e.g., 'id,title,metadata.author'). Wildcards ('*') are not allowed; explicit property names are required.",
-        Required = true
+        Description = "Comma-separated list of properties to project in the result (e.g., 'id,title,metadata.author'). Wildcards ('*') are not supported in this list; omit this option to return all properties."
     };
 
     public static readonly Option<string> SearchText = new(
