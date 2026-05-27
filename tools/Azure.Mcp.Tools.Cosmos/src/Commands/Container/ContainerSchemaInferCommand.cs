@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Container;
     Id = "f1c6a0e2-3d40-4b3f-9a37-2dc1f6cf4a12",
     Name = "infer",
     Title = "Infer Cosmos DB Container Schema",
-    Description = "Infer an approximate schema for a Cosmos DB container by sampling documents and reporting the top-level properties along with their inferred types and the number of sampled documents in which each appeared.",
+    Description = "Infer an approximate schema for a Cosmos DB container by sampling documents and reporting the top-level properties along with their inferred types and the number of sampled documents in which each appeared. Nested objects and arrays are reported as `object` / `array` without recursion — to discover nested structure (e.g., the dot-path to a vector property), fetch an individual document via `cosmos database container item get` and inspect it.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

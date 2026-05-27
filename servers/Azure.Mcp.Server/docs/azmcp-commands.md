@@ -2095,7 +2095,9 @@ azmcp cosmos database container item query --subscription <subscription> \
                                            --container <container> \
                                            [--query "SELECT * FROM c"]
 
-# Infer an approximate schema for a Cosmos DB container by sampling documents.
+# Infer an approximate schema for a Cosmos DB container by sampling documents. Reports top-level properties only; nested
+# objects/arrays appear as `object` / `array`. To discover nested paths (e.g., a vector property's dot-path), fetch a
+# sample document via `cosmos database container item get`.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos database container schema infer --subscription <subscription> \
                                            --account <account> \
