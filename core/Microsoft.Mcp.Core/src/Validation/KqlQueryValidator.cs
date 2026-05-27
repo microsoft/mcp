@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 
-namespace Azure.Mcp.Tools.Kusto.Validation;
+namespace Microsoft.Mcp.Core.Validation;
 
 /// <summary>
 /// Validates user-supplied KQL queries to prevent injection and data exfiltration.
@@ -14,18 +14,18 @@ namespace Azure.Mcp.Tools.Kusto.Validation;
 /// Azure Data Explorer clusters. While Kusto is inherently read-only for queries,
 /// tautology-based attacks can bypass intended row-level filters to expose sensitive data.
 /// </summary>
-internal static class KqlQueryValidator
+public static class KqlQueryValidator
 {
     private const int MaxQueryLength = 10000;
 
     // Regex patterns for detecting boolean tautology injection.
     // These catch patterns like: or 1==1, or 1=1, or true, or '1'=='1', etc.
-    private static readonly Regex TautologyPattern = RegexHelper.CreateRegex(
+    private static readonly Regex s_tautologyPattern = RegexHelper.CreateRegex(
         @"\bor\s+(\d+\s*==?\s*\d+|true|'[^']*'\s*==?\s*'[^']*')",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     // Dangerous management commands that should never appear in user queries
-    private static readonly string[] DangerousCommands =
+    private static readonly string[] s_dangerousCommands =
     [
         ".drop",
         ".alter",
@@ -42,7 +42,7 @@ internal static class KqlQueryValidator
 
     // Matches a management command at the start of input, or after a pipe/semicolon
     // with any amount of whitespace (spaces, tabs, newlines, etc.).
-    private static readonly Regex ManagementCommandPattern = BuildManagementCommandPattern();
+    private static readonly Regex s_managementCommandPattern = BuildManagementCommandPattern();
 
     /// <summary>
     /// Validates the KQL query for safety. Throws <see cref="CommandValidationException"/>
@@ -66,7 +66,7 @@ internal static class KqlQueryValidator
         var queryWithoutStrings = Regex.Replace(query, "'([^']|'')*'", "'str'", RegexOptions.None, RegexHelper.DefaultRegexTimeout);
 
         // Detect tautology patterns (e.g., or 1==1, or true)
-        if (TautologyPattern.IsMatch(queryWithoutStrings))
+        if (s_tautologyPattern.IsMatch(queryWithoutStrings))
         {
             throw new CommandValidationException(
                 "Suspicious boolean tautology pattern detected. Conditions like 'or 1==1' or 'or true' are not allowed.",
@@ -75,7 +75,7 @@ internal static class KqlQueryValidator
 
         // Detect management/control commands using regex to handle all whitespace
         // variants (tabs, newlines, carriage returns) between separators and commands.
-        var match = ManagementCommandPattern.Match(queryWithoutStrings);
+        var match = s_managementCommandPattern.Match(queryWithoutStrings);
         if (match.Success)
         {
             throw new CommandValidationException(
@@ -88,7 +88,7 @@ internal static class KqlQueryValidator
     {
         // Escape each command for regex, then join with alternation.
         // Pattern: at start of string or after | or ; (with any whitespace), match the command.
-        var escaped = DangerousCommands.Select(Regex.Escape);
+        var escaped = s_dangerousCommands.Select(Regex.Escape);
         var alternatives = string.Join("|", escaped);
         return RegexHelper.CreateRegex(
             $@"(?:^|[|;])\s*(?:{alternatives})",
