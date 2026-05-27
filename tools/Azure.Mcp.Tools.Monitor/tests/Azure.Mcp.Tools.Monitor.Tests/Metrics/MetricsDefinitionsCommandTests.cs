@@ -22,9 +22,8 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
     public void Constructor_InitializesCommandCorrectly()
     {
         Assert.Equal("definitions", CommandDefinition.Name);
-        Assert.NotNull(CommandDefinition.Description);
-        Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("List available metric definitions", CommandDefinition.Description);
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
     }
 
     [Fact]

@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Mcp.Core.Models;
@@ -13,7 +14,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.Tests;
 
-public sealed class SampleCommandTests : CommandUnitTestsBase<SampleCommand, IKustoService>
+public sealed class SampleCommandTests : SubscriptionCommandUnitTestsBase<SampleCommand, IKustoService>
 {
     public static IEnumerable<object[]> SampleArgumentMatrix()
     {

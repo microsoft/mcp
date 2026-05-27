@@ -229,6 +229,7 @@ internal class Program
             new Azure.Mcp.Tools.ServiceBus.ServiceBusSetup(),
             new Azure.Mcp.Tools.ServiceFabric.ServiceFabricSetup(),
             new Azure.Mcp.Tools.SignalR.SignalRSetup(),
+            new Azure.Mcp.Tools.SreAgent.SreAgentSetup(),
             new Azure.Mcp.Tools.Sql.SqlSetup(),
             new Azure.Mcp.Tools.Storage.StorageSetup(),
             new Azure.Mcp.Tools.StorageSync.StorageSyncSetup(),

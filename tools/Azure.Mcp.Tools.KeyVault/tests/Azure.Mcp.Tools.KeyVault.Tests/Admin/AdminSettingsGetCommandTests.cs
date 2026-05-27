@@ -66,36 +66,43 @@ public class AdminSettingsGetCommandTests : CommandUnitTestsBase<AdminSettingsGe
     [InlineData("", false, "Missing both")] // Missing both
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, string expectedFailureReason = "")
     {
-        if (args.Contains("--vault") && !args.Contains("--subscription") && shouldSucceed)
+        try
         {
-            // Provide subscription via environment variable
-            TestEnvironment.SetAzureSubscriptionId(KnownSubscriptionId);
-        }
-        else if (!args.Contains("--subscription"))
-        {
-            // Ensure failure when subscription missing and not expected to succeed
-            Assert.Null(EnvironmentHelpers.GetAzureSubscriptionId());
-        }
+            if (args.Contains("--vault") && !args.Contains("--subscription") && shouldSucceed)
+            {
+                // Provide subscription via environment variable
+                TestEnvironment.SetAzureSubscriptionId(KnownSubscriptionId);
+            }
+            else if (!args.Contains("--subscription"))
+            {
+                // Ensure failure when subscription missing and not expected to succeed
+                Assert.Null(EnvironmentHelpers.GetAzureSubscriptionId());
+            }
 
-        if (shouldSucceed)
-        {
-            // Service returns null result -> treated as empty settings
-            Service.GetVaultSettings(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
-                .Returns((GetSettingsResult)null!);
+            if (shouldSucceed)
+            {
+                // Service returns null result -> treated as empty settings
+                Service.GetVaultSettings(
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<RetryPolicyOptions?>(),
+                    Arg.Any<CancellationToken>())
+                    .Returns((GetSettingsResult)null!);
+            }
+
+            var response = await ExecuteCommandAsync(args);
+
+            Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+            if (!shouldSucceed)
+            {
+                Assert.Contains("required", response.Message, StringComparison.OrdinalIgnoreCase);
+                Console.WriteLine($"Validation failed as expected: {expectedFailureReason}");
+            }
         }
-
-        var response = await ExecuteCommandAsync(args);
-
-        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
-        if (!shouldSucceed)
+        finally
         {
-            Assert.Contains("required", response.Message, StringComparison.OrdinalIgnoreCase);
-            Console.WriteLine($"Validation failed as expected: {expectedFailureReason}");
+            TestEnvironment.ClearAzureSubscriptionId();
         }
     }
 }

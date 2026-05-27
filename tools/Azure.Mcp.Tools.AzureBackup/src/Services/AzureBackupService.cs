@@ -433,12 +433,16 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             return null;
         }
 
+        // Note: only the default arm is explicitly cast to (BackupDataSourceType?). Without
+        // that cast the compiler infers BackupDataSourceType for the switch expression and
+        // rewrites `_ => null` as `op_Implicit((string)null)`, which throws
+        // ArgumentNullException at runtime for any unmapped (DPP-only) ARM resource type.
         return armResourceType switch
         {
             "microsoft.compute/virtualmachines" => BackupDataSourceType.Vm,
             "microsoft.storage/storageaccounts" => BackupDataSourceType.AzureFileShare,
             "microsoft.sql/servers/databases" => BackupDataSourceType.SqlDatabase,
-            _ => null // DPP-only types handled via DPP vault lookup
+            _ => (BackupDataSourceType?)null // DPP-only types handled via DPP vault lookup
         };
     }
 

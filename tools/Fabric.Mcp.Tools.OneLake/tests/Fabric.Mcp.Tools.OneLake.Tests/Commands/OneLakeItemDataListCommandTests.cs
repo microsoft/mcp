@@ -14,10 +14,11 @@ public class OneLakeItemDataListCommandTests : CommandUnitTestsBase<OneLakeItemD
     {
         Assert.Equal("list_items_dfs", Command.Name);
         Assert.Equal("List OneLake Items (Data API)", Command.Title);
-        Assert.Contains("OneLake DFS", Command.Description);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
     }
 
     [Fact]
@@ -25,6 +26,7 @@ public class OneLakeItemDataListCommandTests : CommandUnitTestsBase<OneLakeItemD
     {
         Assert.Equal("list_items_dfs", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }
 

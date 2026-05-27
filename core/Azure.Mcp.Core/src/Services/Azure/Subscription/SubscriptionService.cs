@@ -76,7 +76,7 @@ public class SubscriptionService(
         var response = await armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscriptionId)).GetAsync(cancellationToken);
         if (response?.Value == null)
         {
-            throw new Exception($"Could not retrieve subscription {subscription}");
+            throw new KeyNotFoundException($"Could not retrieve subscription {subscription}");
         }
 
         // Cache the result using subscription ID
@@ -95,7 +95,7 @@ public class SubscriptionService(
     {
         var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
         var subscription = subscriptions.FirstOrDefault(s => s.DisplayName.Equals(subscriptionName, StringComparison.OrdinalIgnoreCase)) ??
-            throw new ArgumentException($"Could not find subscription with name {subscriptionName}", nameof(subscriptionName));
+            throw new KeyNotFoundException($"Could not find subscription with name {subscriptionName}");
 
         return subscription.SubscriptionId;
     }
@@ -104,7 +104,7 @@ public class SubscriptionService(
     {
         var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
         var subscription = subscriptions.FirstOrDefault(s => s.SubscriptionId.Equals(subscriptionId, StringComparison.OrdinalIgnoreCase)) ??
-            throw new ArgumentException($"Could not find subscription with ID {subscriptionId}", nameof(subscriptionId));
+            throw new KeyNotFoundException($"Could not find subscription with ID {subscriptionId}");
 
         return subscription.DisplayName;
     }

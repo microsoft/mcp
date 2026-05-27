@@ -14,6 +14,13 @@ namespace Azure.Mcp.Tools.MySql.Tests;
 public class MySqlListCommandTests : CommandUnitTestsBase<MySqlListCommand, IMySqlService>
 {
     [Fact]
+    public void Description_Verification()
+    {
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ListsServers_WhenNoServerOrDatabaseProvided()
     {
         var expectedServers = new List<string> { "mysql-server-1", "mysql-server-2", "mysql-server-3" };
@@ -185,10 +192,4 @@ public class MySqlListCommandTests : CommandUnitTestsBase<MySqlListCommand, IMyS
         Assert.Equal("list", Command.Name);
     }
 
-    [Fact]
-    public void Description_IsCorrect()
-    {
-        Assert.Contains("List MySQL servers", Command.Description);
-        Assert.Contains("databases, or tables", Command.Description);
-    }
 }

@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Mcp.Core.Models;
@@ -14,7 +15,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.Tests;
 
-public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKustoService>
+public sealed class QueryCommandTests : SubscriptionCommandUnitTestsBase<QueryCommand, IKustoService>
 {
     public static IEnumerable<object[]> QueryArgumentMatrix()
     {
@@ -121,6 +122,6 @@ public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKust
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Either --cluster-uri must be provided", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Missing Required options:", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 }
