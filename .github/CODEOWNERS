@@ -251,6 +251,12 @@
 # ServiceLabel: %tools-Grafana
 # ServiceOwners:                       @weng5e @xiangyan99
 
+# PRLabel: %tools-Insights
+/tools/Azure.Mcp.Tools.Insights/       @micha31r @arunrab @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Insights
+# ServiceOwners:                       @micha31r @arunrab
+
 # PRLabel: %tools-ISV
 /tools/Azure.Mcp.Tools.AzureIsv/       @agrimayadav @pachaturvedi @microsoft/azure-mcp
 

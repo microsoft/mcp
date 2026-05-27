@@ -2611,6 +2611,15 @@ azmcp functions template get --language <language> \
                              [--runtime-version <runtime-version>]
 ```
 
+### Azure Insights Operations
+
+```bash
+# Get architectural insights for a subscription based on existing resources (via Azure Resource Graph + MCP sampling)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp insights get --subscription <subscription> \
+                   [--query <user-intent>]
+```
+
 ### Azure Key Vault Operations
 
 #### Administration

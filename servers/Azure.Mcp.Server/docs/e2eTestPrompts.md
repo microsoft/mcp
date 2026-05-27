@@ -552,6 +552,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | functions_template_get | Show me a Cosmos DB trigger with an output binding in Java |
 | functions_template_get | Generate a MCP Tool trigger in TypeScript for Node.js 22 |
 
+## Azure Insights
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| insights_get | Give me insights about my subscription <subscription_id> |
+| insights_get | Analyze the resources in subscription <subscription_id> and tell me what patterns you see |
+| insights_get | What can you tell me about the infrastructure in <subscription_name>? |
+| insights_get | Give me insights about my subscription tailored to building an internal web app for the finance team with a relational database backend |
+
 ## Azure Key Vault
 
 | Tool Name | Test Prompt |
