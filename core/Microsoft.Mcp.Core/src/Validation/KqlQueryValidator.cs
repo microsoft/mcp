@@ -20,7 +20,7 @@ public static class KqlQueryValidator
 
     // Regex patterns for detecting boolean tautology injection.
     // These catch patterns like: or 1==1, or 1=1, or true, or '1'=='1', etc.
-    private static readonly Regex TautologyPattern = RegexHelper.CreateRegex(
+    private static readonly Regex s_tautologyPattern = RegexHelper.CreateRegex(
         @"\bor\s+(\d+\s*==?\s*\d+|true|'[^']*'\s*==?\s*'[^']*')",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -66,7 +66,7 @@ public static class KqlQueryValidator
         var queryWithoutStrings = Regex.Replace(query, "'([^']|'')*'", "'str'", RegexOptions.None, RegexHelper.DefaultRegexTimeout);
 
         // Detect tautology patterns (e.g., or 1==1, or true)
-        if (TautologyPattern.IsMatch(queryWithoutStrings))
+        if (s_tautologyPattern.IsMatch(queryWithoutStrings))
         {
             throw new CommandValidationException(
                 "Suspicious boolean tautology pattern detected. Conditions like 'or 1==1' or 'or true' are not allowed.",
