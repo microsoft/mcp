@@ -170,6 +170,20 @@ public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IC
             "--tags");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).UpdateVmssAsync(
+            _knownVmssName,
+            _knownResourceGroup,
+            _knownSubscription,
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            string.Empty,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

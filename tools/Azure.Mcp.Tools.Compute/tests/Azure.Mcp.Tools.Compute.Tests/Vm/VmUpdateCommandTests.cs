@@ -378,6 +378,18 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).UpdateVmAsync(
+            _knownVmName,
+            _knownResourceGroup,
+            _knownSubscription,
+            Arg.Any<string?>(),
+            string.Empty,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -416,5 +428,17 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
             "--tags");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).UpdateVmAsync(
+            _knownVmName,
+            _knownResourceGroup,
+            _knownSubscription,
+            Arg.Any<string?>(),
+            string.Empty,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 }
