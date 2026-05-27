@@ -484,7 +484,7 @@ azmcp appconfig account list --subscription <subscription> \
                             [--resource-group <resource-group>]
 
 # Delete a key-value setting
-# Returns: { key, label, existed } — 'existed' is true if the key was present and deleted, false if it was already absent
+# Returns: { key, label, existed, message } — 'existed' is true if the key was present and deleted, false if it was already absent
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appconfig kv delete --subscription <subscription> \
                           --account <account> \

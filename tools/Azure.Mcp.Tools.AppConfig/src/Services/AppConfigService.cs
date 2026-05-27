@@ -165,7 +165,12 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(key), key), (nameof(subscription), subscription));
         var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy, cancellationToken);
         var response = await client.DeleteConfigurationSettingAsync(key, label, cancellationToken: cancellationToken);
-        return response.Status == 200;
+        return KeyValueExistedFromDeleteStatus(response.Status);
+    }
+
+    internal static bool KeyValueExistedFromDeleteStatus(int status)
+    {
+        return status == 200;
     }
 
     private async Task<ConfigurationClient> GetConfigurationClient(string accountName, string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
@@ -180,16 +185,30 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "appconfig", TenantService.CloudConfiguration.ArmEnvironment);
 
         var credential = await GetCredential(tenant, cancellationToken);
-        var options = new ConfigurationClientOptions();
-        options.Audience = GetAppConfigurationAudience();
-        ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
 
         var endpointUri = new Uri(endpoint);
         var httpClient = _httpClientFactory.CreateClient();
-        httpClient.BaseAddress = endpointUri;
-        options.Transport = new HttpClientTransport(httpClient);
+        var options = CreateConfigurationClientOptions(GetAppConfigurationAudience(), retryPolicy, httpClient, endpointUri);
 
         return new ConfigurationClient(endpointUri, credential, options);
+    }
+
+    internal static ConfigurationClientOptions CreateConfigurationClientOptions(
+        AppConfigurationAudience audience,
+        RetryPolicyOptions? retryPolicy,
+        HttpClient httpClient,
+        Uri endpointUri)
+    {
+        var options = new ConfigurationClientOptions
+        {
+            Audience = audience
+        };
+
+        httpClient.BaseAddress = endpointUri;
+        options.Transport = new HttpClientTransport(httpClient);
+        ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
+
+        return options;
     }
 
     private async Task<AppConfigurationAccount> FindAppConfigStore(
