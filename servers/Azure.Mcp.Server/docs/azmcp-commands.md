@@ -1451,7 +1451,7 @@ azmcp compute vm update --subscription "my-subscription" \
 | `--resource-group`, `-g` | Yes | Resource group name |
 | `--vm-name` | Yes | Name of the virtual machine |
 | `--vm-size` | No | New VM size (may require VM to be deallocated) |
-| `--tags` | No | Comma-separated tags in `key=value` format (e.g., `env=prod,team=compute`). Use `''` to clear all existing tags. |
+| `--tags` | No | Comma-separated tags in `key=value` format (e.g., `env=prod,team=compute`). Use bare `--tags` or `--tags ''` to clear all existing tags. |
 | `--license-type` | No | License type: 'Windows_Server', 'RHEL_BYOS', 'SLES_BYOS', 'None' |
 | `--boot-diagnostics` | No | Enable or disable boot diagnostics: 'true' or 'false' |
 | `--user-data` | No | Base64-encoded user data for the VM (e.g., a cloud-init or shell script). Must be Base64-encoded; the ARM API requires this format. |
@@ -1742,7 +1742,7 @@ azmcp compute vmss update --subscription "my-subscription" \
 | `--overprovision` | No | Enable or disable overprovisioning |
 | `--enable-auto-os-upgrade` | No | Enable automatic OS image upgrades |
 | `--scale-in-policy` | No | Scale-in policy: 'Default', 'OldestVM', 'NewestVM' |
-| `--tags` | No | Tags in key=value,key2=value2 format |
+| `--tags` | No | Comma-separated tags in `key=value` format (e.g., `env=prod,team=compute`). Use bare `--tags` or `--tags ''` to clear all existing tags. |
 
 ```bash
 # Delete a Virtual Machine Scale Set
