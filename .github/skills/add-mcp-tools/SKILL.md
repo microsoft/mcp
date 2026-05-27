@@ -140,6 +140,7 @@ public interface I{Toolset}Service
 {
     // Resource Graph read operation
     Task<ResourceQueryResults<MyModel>> GetResourcesAsync(
+        string? myOption,
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
@@ -167,6 +168,7 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
     : BaseAzureResourceService(subscriptionService, tenantService), I{Toolset}Service
 {
     public async Task<ResourceQueryResults<MyModel>> GetResourcesAsync(
+        string? myOption,
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
@@ -667,7 +669,7 @@ public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fi
             new()
             {
                 ["subscription"] = SubscriptionId,
-                ["resourceGroup"] = ResourceGroupName,
+                ["resource-group"] = ResourceGroupName,
             });
 
         Assert.NotNull(result);
@@ -712,7 +714,7 @@ Create `assets.json` if it doesn't exist:
 
 #### Always pass `Settings.TenantId` in live test calls
 
-If the test subscription lives in a non-default tenant, the command will fail with `InvalidAuthenticationTokenTenant`. All existing recorded tests include tenant:
+If the test subscription lives in a non-default tenant, the command will fail with `InvalidAuthenticationTokenTenant`. Include tenant when your subscription requires it:
 ```csharp
 var result = await CallToolAsync(
     "{toolset}_{resource}_{operation}",
@@ -1550,8 +1552,8 @@ Rules:
 - Parameters indented and aligned
 - Blank lines between method declarations
 - `CancellationToken` always the final parameter
-- Only use default value `= default` if other parameters also have defaults
-- Force callers to explicitly provide a CancellationToken
+- Only use default value `= default` in the signature if other parameters also have defaults
+- At call sites, always pass the `CancellationToken` explicitly — never rely on `= default` to omit it
 
 ### CancellationToken in Service Implementations
 
