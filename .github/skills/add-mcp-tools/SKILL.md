@@ -62,7 +62,7 @@ Required setup steps:
 
 1. Add package version to `Directory.Packages.props` (if Azure SDK needed)
 2. Add project to `Microsoft.Mcp.slnx` and `Azure.Mcp.Server.slnx`
-3. Register in `servers/Azure.Mcp.Server/src/Program.cs` `RegisterAreas()` (alphabetical order)
+3. Register the new toolset in `servers/Azure.Mcp.Server/src/Program.cs` `RegisterAreas()` (alphabetical order)
 4. For the primary pattern, have commands inherit directly from `SubscriptionCommand<TOptions, TResult>` and inject `ISubscriptionResolver`. Only add a shared base command if you have real cross-command logic.
 5. Register both the service **and the command** as singletons in `{Toolset}Setup.cs` `ConfigureServices`:
    ```csharp
@@ -515,7 +515,7 @@ public class {Resource}{Operation}CommandTests
     [Theory]
     [InlineData("--my-option val --subscription sub123", true)]
     [InlineData("--subscription sub123", true)]  // my-option is optional
-    [InlineData("--my-option val", false)]  // missing required subscription
+    [InlineData("", false)]  // missing args
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
@@ -706,6 +706,71 @@ Create `assets.json` if it doesn't exist:
 }
 ```
 
+### 3c-1. Recorded Test Pitfalls
+
+**These are common causes of recorded test failures. Always verify playback passes after recording.**
+
+#### Always pass `Settings.TenantId` in live test calls
+
+If the test subscription lives in a non-default tenant, the command will fail with `InvalidAuthenticationTokenTenant`. All existing recorded tests include tenant:
+```csharp
+var result = await CallToolAsync(
+    "{toolset}_{resource}_{operation}",
+    new()
+    {
+        { "subscription", Settings.SubscriptionId },
+        { "resource-group", Settings.ResourceGroupName },
+        { "tenant", Settings.TenantId }  // Always include
+    });
+```
+
+#### Use `RegisterOrRetrieveVariable` for all dynamic values
+
+Any non-deterministic value (`Guid.NewGuid()`, `DateTime.Now`) must be wrapped so the same value is used in both Record and Playback runs:
+```csharp
+// ✅ Value is recorded and replayed deterministically
+var topicName = RegisterOrRetrieveVariable("create_topic_name", $"topic-{Guid.NewGuid():N}"[..24]);
+
+// ❌ Different GUID each run — breaks playback request matching
+var topicName = $"topic-{Guid.NewGuid():N}"[..24];
+```
+
+#### Assertions must survive sanitization
+
+Recording sanitizers replace sensitive values (resource names, IDs, endpoints) with placeholders like `"Sanitized"`. Your assertion strategy depends on your test class sanitizer configuration:
+
+| Approach | When to use | Example toolsets |
+|----------|-------------|-----------------|
+| Exact name assert | Your sanitizers do NOT replace the resource name | KeyVault, FunctionApp |
+| Structural assert (`AssertProperty`) | Your sanitizers DO replace the name | EventGrid |
+| `SanitizeAndRecord` helper | You need exact asserts AND have aggressive sanitizers | ManagedLustre |
+
+**How to check:** After recording, inspect the session recording JSON (use `.proxy/Azure.Sdk.Tools.TestProxy.exe config locate -a <assets.json>`). If the `"name"` field shows `"Sanitized"`, you cannot use exact name asserts without the `SanitizeAndRecord` pattern.
+
+```csharp
+// Safe assertions that survive any sanitizer configuration:
+topic.AssertProperty("name");  // Checks existence only
+Assert.Equal("Succeeded", topic.GetProperty("provisioningState").GetString());  // Enum values aren't sanitized
+Assert.Equal(JsonValueKind.Object, topic.ValueKind);  // Type checks
+```
+
+#### Credential type in `.testsettings.json`
+
+`Deploy-TestResources.ps1` sets `AZURE_TOKEN_CREDENTIALS=AzurePowerShellCredential`. If the MCP server subprocess cannot access the PowerShell credential cache (common on some machines), switch to `AzureCliCredential`:
+```json
+"EnvironmentVariables": {
+    "AZURE_TOKEN_CREDENTIALS": "AzureCliCredential"
+}
+```
+Ensure `az login --tenant <tenant-id>` is active. If recording fails with credential errors from the subprocess, this is the likely fix.
+
+#### Redeploy if resource group is missing
+
+Test resource groups are auto-deleted after 12 hours. If tests fail with `ResourceGroupNotFound`, redeploy:
+```powershell
+./eng/scripts/Deploy-TestResources.ps1 -Paths {Toolset}
+```
+
 ### 3d. Test Project Configuration (Critical)
 
 The test `.csproj` **must** have these specific settings or tests will fail with "azmcp.exe not found":
@@ -782,45 +847,9 @@ If AOT fails (common for new Azure SDK dependencies):
 
 ---
 
-## Phase 5: Tool Description Evaluation
+## Phase 5: Documentation
 
-```powershell
-# Single prompt validation
-dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- `
-  --validate --tool-description "Your command description" --prompt "user query"
-
-# Multiple prompts (recommended — test 2-3 phrasings)
-dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- `
-  --validate `
-  --tool-description "Lists all storage accounts in a subscription" `
-  --prompt "show me my storage accounts" `
-  --prompt "list storage accounts" `
-  --prompt "what storage do I have"
-
-# Custom files for comprehensive validation
-dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- `
-  --tools-file my-tools.json --prompts-file my-prompts.md
-```
-
-Target: Top 3 ranking, confidence ≥ 0.4.
-
-If score is low, improve the `Description` in `[CommandMetadata]`:
-- Include verbs users would say ("list", "get", "show", "configure")
-- Mention specific resource types
-- Describe what the output contains
-- Consider common synonyms and alternative phrasings
-
-Custom prompts file formats:
-- **Markdown**: Same table format as `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
-- **JSON**: `{ "azmcp-your-command": ["prompt1", "prompt2"] }`
-
-**GATE:** Score meets threshold.
-
----
-
-## Phase 6: Documentation
-
-### 6a. Command Reference
+### 5a. Command Reference
 
 File: `servers/Azure.Mcp.Server/docs/azmcp-commands.md`
 
@@ -830,7 +859,7 @@ Add command in alphabetical order within service section. Then regenerate metada
 ./eng/scripts/Update-AzCommandsMetadata.ps1
 ```
 
-### 6b. Test Prompts
+### 5b. Test Prompts
 
 File: `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
 
@@ -840,15 +869,15 @@ Add 2-3 natural language prompts in alphabetical order:
 | {toolset}_{resource}_{operation} | Natural language prompt |
 ```
 
-### 6c. Changelog Entry
+### 5c. Changelog Entry
 
 Follow `docs/changelog-entries.md`. Create entry using `./eng/scripts/New-ChangelogEntry.ps1` or manually. Use `-ChangelogPath servers/Azure.Mcp.Server/CHANGELOG.md`.
 
-### 6d. README Updates
+### 5d. README Updates
 
 - **`servers/Azure.Mcp.Server/README.md`**: Update the supported services table (line ~1189) and add example prompts in the "What can you do" section (line ~898). This file is processed by `eng/scripts/Process-PackageReadMe.ps1` into package-specific outputs (NuGet, VSIX, npm, PyPI) so a single update covers all distribution channels.
 
-### 6e. CODEOWNERS
+### 5e. CODEOWNERS
 
 File: `.github/CODEOWNERS`
 
@@ -857,7 +886,7 @@ Add your new toolset path with appropriate team ownership:
 /tools/Azure.Mcp.Tools.{Toolset}/ @your-team
 ```
 
-### 6f. Consolidated Tools Registration
+### 5f. Consolidated Tools Registration
 
 File: `servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json`
 
@@ -875,6 +904,44 @@ cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
 - Include parameter descriptions and required vs optional indicators in azmcp-commands.md
 
 **GATE:** `./eng/scripts/Update-AzCommandsMetadata.ps1` succeeds.
+
+---
+
+## Phase 6: Tool Description Evaluation
+
+Now that test prompts are written (Phase 5b), validate your command description against them:
+
+```powershell
+# Single prompt validation
+dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- `
+  --validate --tool-description "Your command description" --prompt "user query"
+
+# Multiple prompts (recommended — test 2-3 phrasings)
+dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- `
+  --validate `
+  --tool-description "Lists all storage accounts in a subscription" `
+  --prompt "show me my storage accounts" `
+  --prompt "list storage accounts" `
+  --prompt "what storage do I have"
+
+# Use the e2eTestPrompts.md file for comprehensive validation
+dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- `
+  --tools-file my-tools.json --prompts-file servers/Azure.Mcp.Server/docs/e2eTestPrompts.md
+```
+
+Target: Top 3 ranking, confidence ≥ 0.4.
+
+If score is low, improve the `Description` in `[CommandMetadata]`:
+- Include verbs users would say ("list", "get", "show", "configure")
+- Mention specific resource types
+- Describe what the output contains
+- Consider common synonyms and alternative phrasings
+
+Custom prompts file formats:
+- **Markdown**: Same table format as `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
+- **JSON**: `{ "azmcp-your-command": ["prompt1", "prompt2"] }`
+
+**GATE:** Score meets threshold.
 
 ---
 
@@ -1051,7 +1118,7 @@ Guidelines:
 
 Azure SDK property names frequently differ from documentation or expected names. Always verify actual property names before implementation.
 
-### Verification Steps
+### Verification Steps: **CRITICAL: Verify SDK Property Names Before Implementation**
 
 1. **Use IntelliSense First**: Let the IDE show you what's actually available
 2. **Inspect Assemblies When Needed**: If you get compilation errors about missing properties:
