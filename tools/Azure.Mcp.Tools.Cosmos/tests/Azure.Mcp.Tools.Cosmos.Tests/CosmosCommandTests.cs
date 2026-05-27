@@ -383,7 +383,7 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
                 { "account", resourceBaseName },
                 { "database", "ToDoList" },
                 { "container", "TextItems" },
-                { "property", "description" },
+                { "search-property", "description" },
                 { "search-phrase", "cosmos" }
             });
 
@@ -426,7 +426,7 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
                 { "account", resourceBaseName },
                 { "database", "ToDoList" },
                 { "container", "TextItems" },
-                { "property", "description" },
+                { "search-property", "description" },
                 { "search-phrase", "cosmos" },
                 { "properties-to-select", "id" }
             });
@@ -462,11 +462,8 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     public async Task Should_vector_search_documents()
     {
         var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
-        var openAiEndpoint = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIENDPOINT", "Sanitized");
-        var embeddingDeployment = Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "Sanitized");
-
-        Assert.SkipWhen(TestMode != TestMode.Playback && openAiEndpoint == "Sanitized", "Azure OpenAI endpoint not configured for live testing");
-        Assert.SkipWhen(TestMode != TestMode.Playback && embeddingDeployment == "Sanitized", "Azure OpenAI embedding deployment not configured for live testing");
+        var openAiEndpoint = RegisterOrRetrieveDeploymentOutputVariable("openAiEndpoint", "OPENAIENDPOINT");
+        var embeddingDeployment = RegisterOrRetrieveDeploymentOutputVariable("embeddingDeployment", "EMBEDDINGDEPLOYMENTNAME");
 
         // Omitting --properties-to-select triggers the wrapper-projection path: the service
         // requests `c AS doc, VectorDistance(...) AS _score` and strips the vector before returning.
@@ -510,11 +507,8 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     public async Task Should_vector_search_documents_with_select_properties()
     {
         var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
-        var openAiEndpoint = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIENDPOINT", "Sanitized");
-        var embeddingDeployment = Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "Sanitized");
-
-        Assert.SkipWhen(TestMode != TestMode.Playback && openAiEndpoint == "Sanitized", "Azure OpenAI endpoint not configured for live testing");
-        Assert.SkipWhen(TestMode != TestMode.Playback && embeddingDeployment == "Sanitized", "Azure OpenAI embedding deployment not configured for live testing");
+        var openAiEndpoint = RegisterOrRetrieveDeploymentOutputVariable("openAiEndpoint", "OPENAIENDPOINT");
+        var embeddingDeployment = RegisterOrRetrieveDeploymentOutputVariable("embeddingDeployment", "EMBEDDINGDEPLOYMENTNAME");
 
         // VectorItems uses 1536-dim vectors to match `text-embedding-3-small`.
         var result = await CallToolAsync(
