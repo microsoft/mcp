@@ -126,7 +126,7 @@ function CreateTestSolution {
 
 function Create-CoverageReport {
     # Find the coverage file
-    $coverageFile = Get-ChildItem -Path $TestResultsPath -Recurse -Filter "coverage.cobertura.xml"
+    $coverageFile = Get-ChildItem -Path $TestResultsPath -Recurse -Filter "coverage.cobertura.*.xml"
     | Where-Object { $_.FullName.Replace('\','/') -notlike "*/in/*" }
     | Select-Object -First 1
 
@@ -296,30 +296,30 @@ try {
         exit $LastExitCode
     }
 
-    $coverageArg = $CollectCoverage ? "--collect:'XPlat Code Coverage'" : ""
+    $coverageArg = $CollectCoverage ? "--coverlet" : ""
     $resultsArg = "--results-directory '$TestResultsPath'"
-    $loggerArg = "--logger 'trx' --logger 'console;verbosity=detailed'"
+    $loggerArg = "--report-xunit-trx --output 'Detailed'"
     $filterArg = switch ($TestType) {
-        'Live' { "TestType=Live" }
-        'Unit' { "TestType!=Live" }
-        'Recorded' { "TestType=Live" }
+        'Live' { "--filter-trait 'TestType=Live'" }
+        'Unit' { "--filter-not-trait 'TestType=Live'" }
+        'Recorded' { "--filter-trait 'TestType=Live'" }
         default { "" }
     }
 
-    if($Members.Count -gt 0) {
-        $memberFilterString = $Members | ForEach-Object { "FullyQualifiedName~$_" } | Join-String -Separator '|'
-        if ($filterArg) {
-            $filterArg += "&($memberFilterString)"
-        } else {
-            $filterArg = "$memberFilterString"
-        }
-    }
+    # if($Members.Count -gt 0) {
+    #     $memberFilterString = $Members | ForEach-Object { "FullyQualifiedName~$_" } | Join-String -Separator '|'
+    #     if ($filterArg) {
+    #         $filterArg += "&($memberFilterString)"
+    #     } else {
+    #         $filterArg = "$memberFilterString"
+    #     }
+    # }
 
-    $command = "dotnet test $coverageArg $resultsArg $loggerArg"
+    $command = "dotnet test $coverageArg $resultsArg $loggerArg $filterArg"
 
-    if ($filterArg) {
-        $command += " --filter `"$filterArg`""
-    }
+    # if ($filterArg) {
+    #     $command += " --filter `"$filterArg`""
+    # }
 
     Invoke-LoggedMsBuildCommand -Command $command -AllowedExitCodes @(0, 1)
 }

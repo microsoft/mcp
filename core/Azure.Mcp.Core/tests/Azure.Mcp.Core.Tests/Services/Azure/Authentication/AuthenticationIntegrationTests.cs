@@ -54,7 +54,7 @@ public class AuthenticationIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task LoginWithIdentityBroker_ThenListSubscriptions_ShouldSucceed()
     {
-        Assert.SkipWhen(TestExtensions.IsRunningFromDotnetTest(), TestExtensions.RunningFromDotnetTestReason);
+        Assert.SkipWhen(TestExtensions.IsRunningInNonInteractiveEnvironment(), TestExtensions.RunningInNonInteractiveEnvironment);
         Assert.SkipWhen(RuntimeInformation.IsOSPlatform(OSPlatform.OSX), "Identity broker is not supported on MacOS");
 
         _output.WriteLine("Testing InteractiveBrowserCredential with identity broker...");

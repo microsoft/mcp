@@ -85,7 +85,7 @@
     <PackageVersion Include="Microsoft.Azure.Cosmos.Aot" Version="0.1.4-preview.2" />
     <PackageVersion Include="Microsoft.Azure.Mcp.AzTypes.Internal.Compact" Version="0.2.804" />
     <PackageVersion Include="Microsoft.DataFactory.MCP.Core" Version="0.21.0-beta" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
     <PackageVersion Include="ModelContextProtocol" Version="1.1.0" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="1.1.0" />
@@ -110,11 +110,10 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageVersion Include="NSubstitute" Version="5.3.0" />
     <PackageVersion Include="NSubstitute.Analyzers.CSharp" Version="1.0.17" />
-    <PackageVersion Include="xunit.v3" Version="2.0.2" />
-    <PackageVersion Include="xunit.v3.assert" Version="2.0.2" />
-    <PackageVersion Include="xunit.v3.extensibility.core" Version="2.0.2" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.0" />
-    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="xunit.v3.assert" Version="3.2.2" />
+    <PackageVersion Include="xunit.v3.extensibility.core" Version="3.2.2" />
+    <PackageVersion Include="xunit.v3.mtp-v2" Version="3.2.2" />
+    <PackageVersion Include="coverlet.MTP" Version="10.0.1" />
     <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.0-beta.3" />
   </ItemGroup>
 </Project>
