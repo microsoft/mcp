@@ -48,8 +48,8 @@ public class AggregationFilterTests
         {
             ["properties"] = new JsonObject
             {
-                [deniedKey] = new JsonObject { ["whatever"] = 1.0 },
-                ["minimumTlsVersion"] = new JsonObject { ["TLS1_2"] = 1.0 },
+                [deniedKey] = new JsonObject { ["whatever"] = 1 },
+                ["minimumTlsVersion"] = new JsonObject { ["TLS1_2"] = 1 },
             }
         };
         var input = Aggregation(("microsoft.storage/storageaccounts", props));
@@ -59,24 +59,6 @@ public class AggregationFilterTests
 
         Assert.False(filtered.ContainsKey(deniedKey));
         Assert.True(filtered.ContainsKey("minimumTlsVersion"));
-    }
-
-    [Fact]
-    public void Filter_DropsLeavesBelowMinCoverage()
-    {
-        var props = new JsonObject
-        {
-            ["properties"] = new JsonObject
-            {
-                ["someProp"] = new JsonObject { ["value"] = 0.05 },
-            }
-        };
-        var input = Aggregation(("microsoft.test/widgets", props));
-
-        var result = AggregationFilter.Filter(input);
-        var filtered = result.ResourceTypes["microsoft.test/widgets"].PropertyAggregations;
-
-        Assert.False(filtered.ContainsKey("properties"));
     }
 
     [Theory]
@@ -92,8 +74,8 @@ public class AggregationFilterTests
             {
                 ["someProp"] = new JsonObject
                 {
-                    [deniedValue] = 0.5,
-                    ["allowed-value"] = 0.5,
+                    [deniedValue] = 1,
+                    ["allowed-value"] = 1,
                 },
             }
         };
@@ -118,8 +100,8 @@ public class AggregationFilterTests
             {
                 ["subnetid"] = new JsonObject
                 {
-                    ["/subscriptions/abc/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/sub"] = 0.6,
-                    ["not-an-arm-id"] = 0.4,
+                    ["/subscriptions/abc/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/sub"] = 3,
+                    ["not-an-arm-id"] = 2,
                 },
             }
         };
@@ -141,8 +123,8 @@ public class AggregationFilterTests
         {
             ["location"] = new JsonObject
             {
-                ["eastus"] = 0.6,
-                ["westus"] = 0.4,
+                ["eastus"] = 3,
+                ["westus"] = 2,
             }
         };
         var input = Aggregation(("microsoft.test/widgets", props));
@@ -154,6 +136,54 @@ public class AggregationFilterTests
         Assert.Equal(2, location.Count);
         Assert.True(location.ContainsKey("eastus"));
         Assert.True(location.ContainsKey("westus"));
+    }
+
+    [Fact]
+    public void Filter_DropsLeavesBelowMinCoverage()
+    {
+        // 20 distinct values with count 1 each -> top-3 covers 3/20 = 15%. Pad with rare
+        // values until top-3 coverage falls below MinTopCoverage (10%).
+        var leaf = new JsonObject();
+        for (int i = 0; i < 40; i++)
+        {
+            leaf[$"v{i:D3}"] = 1;
+        }
+        var props = new JsonObject
+        {
+            ["properties"] = new JsonObject
+            {
+                ["someProp"] = leaf,
+            }
+        };
+        var input = Aggregation(("microsoft.test/widgets", props));
+
+        var result = AggregationFilter.Filter(input);
+        var filtered = result.ResourceTypes["microsoft.test/widgets"].PropertyAggregations;
+
+        Assert.False(filtered.ContainsKey("properties"));
+    }
+
+    [Fact]
+    public void Filter_LimitsLeafToTopValuesPerLeaf()
+    {
+        var props = new JsonObject
+        {
+            ["location"] = new JsonObject
+            {
+                ["eastus"] = 3,
+                ["westus"] = 1,
+                ["centralus"] = 1,
+                ["northeurope"] = 1,
+            }
+        };
+        var input = Aggregation(("microsoft.test/widgets", props));
+
+        var result = AggregationFilter.Filter(input);
+        var location = (JsonObject)result.ResourceTypes["microsoft.test/widgets"]
+            .PropertyAggregations["location"]!;
+
+        Assert.Equal(AggregationFilter.TopValuesPerLeaf, location.Count);
+        Assert.True(location.ContainsKey("eastus"));
     }
 
     [Fact]
@@ -171,7 +201,7 @@ public class AggregationFilterTests
     }
 
     private static JsonObject LocationLeaf(string value) =>
-        new() { ["location"] = new JsonObject { [value] = 1.0 } };
+        new() { ["location"] = new JsonObject { [value] = 1 } };
 
     private static SubscriptionAggregation Aggregation(params (string Type, JsonObject Properties)[] types)
     {

@@ -8,14 +8,13 @@ using Azure.Mcp.Tools.Insights.Services.Models;
 namespace Azure.Mcp.Tools.Insights.Services;
 
 /// <summary>
-/// Aggregates the top-N most-common observed values for each property leaf across a
-/// collection of Azure Resource Graph rows.
+/// Counts the occurrences of each property value in Azure Resource Graph rows, producing a
+/// nested tree whose leaves are (value -> count) maps. Top-N selection and coverage filtering
+/// are applied downstream by <see cref="AggregationFilter"/>.
 /// </summary>
 internal static class PropertyAggregator
 {
     internal const int MaxPropertyDepth = 5;
-
-    internal const int TopValuesPerLeaf = 3;
 
     public static SubscriptionAggregation Aggregate(IEnumerable<JsonElement> rows, int subscriptionCount = 1)
     {
@@ -263,10 +262,10 @@ internal static class PropertyAggregator
             {
                 if (IsCounter(child))
                 {
-                    var top = TopNFractions(child, TopValuesPerLeaf);
-                    if (top.Count > 0)
+                    var emitted = EmitLeaf(child);
+                    if (emitted.Count > 0)
                     {
-                        result[kvp.Key] = top;
+                        result[kvp.Key] = emitted;
                     }
                 }
                 else
@@ -282,34 +281,16 @@ internal static class PropertyAggregator
         return result;
     }
 
-    private static JsonObject TopNFractions(JsonObject counter, int n)
+    // Emits all (value -> count) entries from a leaf counter as a JSON object.
+    private static JsonObject EmitLeaf(JsonObject counter)
     {
-        long total = 0;
+        var result = new JsonObject();
         foreach (var kvp in counter)
         {
-            if (kvp.Value is JsonValue jv && jv.TryGetValue<int>(out var c))
+            if (kvp.Value is JsonValue jv && jv.TryGetValue<int>(out var count))
             {
-                total += c;
+                result[kvp.Key] = JsonValue.Create(count);
             }
-        }
-
-        var result = new JsonObject();
-        if (total <= 0)
-        {
-            return result;
-        }
-
-        var ordered = counter
-            .Where(kvp => kvp.Value is JsonValue jv && jv.TryGetValue<int>(out _))
-            .Select(kvp => (Key: kvp.Key, Count: kvp.Value!.GetValue<int>()))
-            .OrderByDescending(t => t.Count)
-            .ThenBy(t => t.Key, StringComparer.Ordinal)
-            .Take(n);
-
-        foreach (var (key, count) in ordered)
-        {
-            var fraction = Math.Round((double)count / total, 3, MidpointRounding.ToEven);
-            result[key] = JsonValue.Create(fraction);
         }
         return result;
     }

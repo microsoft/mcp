@@ -12,10 +12,12 @@ namespace Azure.Mcp.Tools.Insights.Services;
 /// <summary>
 /// Filters a <see cref="SubscriptionAggregation"/> produced by <see cref="PropertyAggregator"/>:
 /// drops noise resource types, denied property keys, low-coverage leaves, and per-instance or
-/// secret-shaped values.
+/// secret-shaped values. Also trims each leaf to the top-N most common values.
 /// </summary>
 internal static class AggregationFilter
 {
+    internal const int TopValuesPerLeaf = 3;
+
     internal const double MinTopCoverage = 0.1;
 
     private const string ArmIdPrefix = "/subscriptions/";
@@ -166,7 +168,7 @@ internal static class AggregationFilter
                 continue;
             }
 
-            JsonObject? filtered = IsLeafFractionMap(child)
+            JsonObject? filtered = IsLeafCountMap(child)
                 ? FilterLeaf(kvp.Key, child)
                 : FilterObject(child);
 
@@ -181,16 +183,35 @@ internal static class AggregationFilter
 
     private static JsonObject? FilterLeaf(string key, JsonObject leaf)
     {
-        double total = 0;
+        long total = 0;
         foreach (var kvp in leaf)
         {
-            if (kvp.Value is JsonValue jv && jv.TryGetValue<double>(out var d))
+            if (kvp.Value is JsonValue jv && jv.TryGetValue<int>(out var c))
             {
-                total += d;
+                total += c;
             }
         }
 
-        if (total < MinTopCoverage)
+        if (total <= 0)
+        {
+            return null;
+        }
+
+        var topN = leaf
+            .Where(kvp => kvp.Value is JsonValue jv && jv.TryGetValue<int>(out _))
+            .Select(kvp => (Key: kvp.Key, Count: kvp.Value!.GetValue<int>()))
+            .OrderByDescending(t => t.Count)
+            .ThenBy(t => t.Key, StringComparer.Ordinal)
+            .Take(TopValuesPerLeaf)
+            .ToList();
+
+        long topSum = 0;
+        foreach (var (_, count) in topN)
+        {
+            topSum += count;
+        }
+
+        if ((double)topSum / total < MinTopCoverage)
         {
             return null;
         }
@@ -198,9 +219,8 @@ internal static class AggregationFilter
         var isRelational = RelationalIdKeys.Contains(key);
         var result = new JsonObject();
 
-        foreach (var kvp in leaf)
+        foreach (var (sample, count) in topN)
         {
-            var sample = kvp.Key;
             if (isRelational)
             {
                 if (!sample.StartsWith(ArmIdPrefix, StringComparison.OrdinalIgnoreCase))
@@ -213,13 +233,13 @@ internal static class AggregationFilter
                 continue;
             }
 
-            result[sample] = kvp.Value?.DeepClone();
+            result[sample] = JsonValue.Create(count);
         }
 
         return result.Count > 0 ? result : null;
     }
 
-    private static bool IsLeafFractionMap(JsonObject obj)
+    private static bool IsLeafCountMap(JsonObject obj)
     {
         if (obj.Count == 0)
         {
@@ -227,7 +247,7 @@ internal static class AggregationFilter
         }
         foreach (var kvp in obj)
         {
-            if (kvp.Value is not JsonValue v || !v.TryGetValue<double>(out _))
+            if (kvp.Value is not JsonValue v || !v.TryGetValue<int>(out _))
             {
                 return false;
             }

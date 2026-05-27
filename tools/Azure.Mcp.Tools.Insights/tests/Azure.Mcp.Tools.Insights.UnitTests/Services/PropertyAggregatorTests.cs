@@ -68,7 +68,7 @@ public class PropertyAggregatorTests
 
         var tls = props["properties"]!["minimumtlsversion"] as JsonObject;
         Assert.NotNull(tls);
-        Assert.Equal(1.0, tls!["TLS1_2"]!.GetValue<double>(), precision: 6);
+        Assert.Equal(1, tls!["TLS1_2"]!.GetValue<int>());
     }
 
     [Fact]
@@ -88,28 +88,6 @@ public class PropertyAggregatorTests
         var props = result.ResourceTypes["microsoft.test/widgets"].PropertyAggregations;
 
         Assert.DoesNotContain("tooDeep", props.ToJsonString());
-    }
-
-    [Fact]
-    public void Aggregate_TopValuesPerLeaf_LimitsToThree()
-    {
-        var rows = ParseRows("""
-            [
-              { "type": "microsoft.test/widgets", "location": "eastus" },
-              { "type": "microsoft.test/widgets", "location": "eastus" },
-              { "type": "microsoft.test/widgets", "location": "eastus" },
-              { "type": "microsoft.test/widgets", "location": "westus" },
-              { "type": "microsoft.test/widgets", "location": "centralus" },
-              { "type": "microsoft.test/widgets", "location": "northeurope" }
-            ]
-            """);
-
-        var result = PropertyAggregator.Aggregate(rows);
-        var location = result.ResourceTypes["microsoft.test/widgets"].PropertyAggregations["location"] as JsonObject;
-
-        Assert.NotNull(location);
-        Assert.Equal(PropertyAggregator.TopValuesPerLeaf, location!.Count);
-        Assert.True(location.ContainsKey("eastus"));
     }
 
     [Fact]
