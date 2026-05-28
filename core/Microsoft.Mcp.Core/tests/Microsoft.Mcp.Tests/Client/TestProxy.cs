@@ -34,12 +34,12 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     private static string? _cachedRootDir;
     private static string? _cachedExecutable;
     private static string? _cachedVersion;
-    private static readonly TimeSpan[] DownloadRetryDelays = new[]
-    {
+    private static readonly TimeSpan[] s_downloadRetryDelays =
+    [
         TimeSpan.FromSeconds(1),
         TimeSpan.FromSeconds(10),
         TimeSpan.FromSeconds(60)
-    };
+    ];
 
     /// <summary>
     /// In-process synchronization lock to avoid proxy exe mismanagement.
@@ -107,7 +107,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
     }
 
-    private async Task DownloadProxyAsync(string proxyDirectory, string version)
+    private static async Task DownloadProxyAsync(string proxyDirectory, string version)
     {
         var assetName = GetAssetNameForPlatform();
         var url = $"https://github.com/Azure/azure-sdk-tools/releases/download/Azure.Sdk.Tools.TestProxy_{version}/{assetName}";
@@ -151,9 +151,9 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             {
                 return await client.GetByteArrayAsync(url).ConfigureAwait(false);
             }
-            catch when (attempt < DownloadRetryDelays.Length)
+            catch when (attempt < s_downloadRetryDelays.Length)
             {
-                var delay = DownloadRetryDelays[attempt];
+                var delay = s_downloadRetryDelays[attempt];
                 await Task.Delay(delay).ConfigureAwait(false);
                 attempt++;
             }
@@ -219,7 +219,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
     }
 
-    private bool CheckProxyVersion(string proxyDirectory, string version)
+    private static bool CheckProxyVersion(string proxyDirectory, string version)
     {
         var versionFilePath = Path.Combine(proxyDirectory, "version.txt");
         if (File.Exists(versionFilePath))
@@ -233,7 +233,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return false;
     }
 
-    private string GetAssetNameForPlatform()
+    private static string GetAssetNameForPlatform()
     {
         var arch = RuntimeInformation.ProcessArchitecture;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -247,7 +247,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return (arch == Architecture.Arm64 ? "test-proxy-standalone-linux-arm64.tar.gz" : "test-proxy-standalone-linux-x64.tar.gz");
     }
 
-    private string FindExecutableInDirectory(string dir)
+    private static string FindExecutableInDirectory(string dir)
     {
         var exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Azure.Sdk.Tools.TestProxy.exe" : "Azure.Sdk.Tools.TestProxy";
         foreach (var file in Directory.EnumerateFiles(dir, exeName, SearchOption.AllDirectories))
@@ -261,7 +261,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         throw new FileNotFoundException($"Could not find {exeName} in {dir}");
     }
 
-    private void EnsureExecutable(string path)
+    private static void EnsureExecutable(string path)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -275,7 +275,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
     }
 
-    private string GetRootDirectory()
+    private static string GetRootDirectory()
     {
         if (_cachedRootDir != null)
         {
@@ -341,18 +341,21 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         var storageLocation = Environment.GetEnvironmentVariable("TEST_PROXY_STORAGE") ?? repositoryRoot;
         var args = $"start --http-proxy --storage-location=\"{storageLocation}\"";
 
-        ProcessStartInfo psi = new(proxyExe, args);
-        psi.RedirectStandardOutput = true;
-        psi.RedirectStandardError = true;
-        psi.UseShellExecute = false;
-        psi.EnvironmentVariables["ASPNETCORE_URLS"] = "http://127.0.0.1:0"; // Let proxy choose free port
-
-        _process = Process.Start(psi);
-
-        if (_process == null)
+        ProcessStartInfo psi = new(proxyExe, args)
         {
-            throw new InvalidOperationException("Failed to start test proxy process.");
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        psi.EnvironmentVariables["ASPNETCORE_URLS"] = "http://127.0.0.1:0"; // Let proxy choose free port
+        if (_debug)
+        {
+            psi.EnvironmentVariables["LOGGING__LEVEL"] = "Debug";
+            psi.EnvironmentVariables["LOGGING__LOGLEVEL__MICROSOFT"] = "true";
+            psi.EnvironmentVariables["LOGGING__LOGLEVEL__DEFAULT"] = "true";
         }
+
+        _process = Process.Start(psi) ?? throw new InvalidOperationException("Failed to start test proxy process.");
         _cts = new CancellationTokenSource();
         _ = Task.Run(() => _pumpAsync(_process.StandardError, stderr, _cts.Token));
         _ = Task.Run(() => _pumpAsync(_process.StandardOutput, stdout, _cts.Token));
