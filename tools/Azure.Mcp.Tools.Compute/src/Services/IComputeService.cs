@@ -60,6 +60,7 @@ public interface IComputeService
         string? zone = null,
         int? osDiskSizeGb = null,
         string? osDiskType = null,
+        string? priority = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
