@@ -158,7 +158,7 @@ public sealed class BlobPutOptions
     [Option("The ID of the Fabric item.")]
     public string? ItemId { get; set; }
 
-    [Option("The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., ''ItemName.Lakehouse'', ''ItemName.Warehouse'').")]
+    [Option("The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').")]
     public string? Item { get; set; }
 
     [Option("The path to the file in OneLake.")]
@@ -173,6 +173,6 @@ public sealed class BlobPutOptions
     [Option("Whether to overwrite existing files.")]
     public bool Overwrite { get; set; }
 
-    [Option("MIME content type to set on the uploaded file (e.g., ''application/json''). Defaults to ''application/octet-stream''.")]
+    [Option("MIME content type to set on the uploaded file (e.g., 'application/json'). Defaults to 'application/octet-stream'.")]
     public string? ContentType { get; set; }
 }

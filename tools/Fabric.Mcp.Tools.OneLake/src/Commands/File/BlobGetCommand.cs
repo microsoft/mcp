@@ -158,7 +158,7 @@ public sealed class BlobGetOptions
     [Option("The ID of the Fabric item.")]
     public string? ItemId { get; set; }
 
-    [Option("The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., ''ItemName.Lakehouse'', ''ItemName.Warehouse'').")]
+    [Option("The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').")]
     public string? Item { get; set; }
 
     [Option("The path to the file in OneLake.")]

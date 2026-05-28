@@ -40,12 +40,12 @@ public sealed class ItemCreateCommand(
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ItemCreateOptions options, CancellationToken cancellationToken)
     {
+        var workspaceId = !string.IsNullOrWhiteSpace(options.WorkspaceId)
+            ? options.WorkspaceId
+            : options.Workspace!;
+
         try
         {
-            var workspaceId = !string.IsNullOrWhiteSpace(options.WorkspaceId)
-                ? options.WorkspaceId
-                : options.Workspace!;
-
             var request = new CreateItemRequest
             {
                 DisplayName = options.DisplayName,
@@ -63,8 +63,8 @@ public sealed class ItemCreateCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating item '{DisplayName}' in workspace.",
-                options.DisplayName);
+            _logger.LogError(ex, "Error creating item '{DisplayName}' in workspace {WorkspaceId}.",
+                options.DisplayName, workspaceId);
             HandleException(context, ex);
         }
 
