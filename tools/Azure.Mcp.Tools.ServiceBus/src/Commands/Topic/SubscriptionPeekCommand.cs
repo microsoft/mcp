@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Topic;
 using Azure.Mcp.Tools.ServiceBus.Services;
@@ -36,7 +35,7 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<SubscriptionPeekOptions>
+public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> logger, IServiceBusService serviceBusService) : GlobalCommand<SubscriptionPeekOptions>
 {
     private readonly ILogger<SubscriptionPeekCommand> _logger = logger;
     private readonly IServiceBusService _serviceBusService = serviceBusService;
