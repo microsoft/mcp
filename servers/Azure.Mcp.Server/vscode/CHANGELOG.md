@@ -5,7 +5,7 @@
 
 ### Added
 
-- Added a new `advisor recommendation apply` tool that helps in applying Azure Advisor recommendations to IaaC files (ARM, Terraform) by returning rules. [[#2686](https://github.com/microsoft/mcp/pull/2686)]
+- Added a new `advisor recommendation apply` tool that helps in applying Azure Advisor recommendations to IaC files (ARM, Terraform) by returning rules. [[#2686](https://github.com/microsoft/mcp/pull/2686)]
 - Added five Azure Cosmos DB MCP tools: [[#2644](https://github.com/microsoft/mcp/pull/2644)]
   - `cosmos database container schema infer`: Infer container schema by sampling documents
   - `cosmos database container item list-recent`: Return the most recently modified documents
