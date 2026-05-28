@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added a tool that helps in applying Advisor recommendations to IaaC files (ARM, Terraform) by returning rules"
