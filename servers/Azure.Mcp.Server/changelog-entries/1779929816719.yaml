@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "vscode: expanded Azure MCP enabledServices namespace options to include currently registered Azure tool namespaces and removed legacy azuremanagedlustre alias."
