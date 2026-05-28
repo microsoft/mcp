@@ -12,7 +12,7 @@
           }
         ]
       },
-      "fix": "use or integration",
+      "fix": "Azure AI Health Insights is retiring. Remove this resource from your configuration and migrate workloads to alternative Azure AI services.",
       "ARM_Fix": {
         "type": "resourceAction",
         "action": "retire",

@@ -19,7 +19,7 @@
           }
         ]
       },
-      "fix": "use Transport Layer Security (TLS) 1",
+      "fix": "Use Transport Layer Security (TLS) 1.2 or higher",
       "ARM_Fix": {
         "type": "propertyUpdate",
         "operations": [
