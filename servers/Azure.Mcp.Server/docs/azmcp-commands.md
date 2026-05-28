@@ -330,6 +330,10 @@ azmcp server info
 # List Advisor recommendations in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation list --subscription <subscription>
+
+# Apply Advisor recommendation to create or modify IaaC files (like ARM, Terraform) for Azure resources
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor recommendation apply --resource <resource>
 ```
 
 ### Azure AI Search Operations
