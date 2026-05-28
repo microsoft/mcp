@@ -209,7 +209,7 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> VmSize = new($"--{VmSizeName}", "--size")
     {
-        Description = "The VM size (e.g., Standard_D2s_v3, Standard_B2s). Defaults to Standard_D2s_v5 if not specified",
+        Description = "The VM size used for the VM or for each scale set instance (e.g., Standard_D2s_v3, Standard_B2s). Defaults to Standard_D2s_v5 if not specified",
         Required = false
     };
 
@@ -221,19 +221,19 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> AdminUsername = new($"--{AdminUsernameName}")
     {
-        Description = "The admin username for the VM. Required for VM creation",
+        Description = "The admin username for the VM or scale set instance(s). Required for VM or VMSS creation",
         Required = false
     };
 
     public static readonly Option<string> AdminPassword = new($"--{AdminPasswordName}")
     {
-        Description = "The admin password for Windows VMs or when SSH key is not provided for Linux VMs",
+        Description = "The admin password for Windows VMs or scale set instances, or when SSH key is not provided for Linux VMs or scale set instances",
         Required = false
     };
 
     public static readonly Option<string> SshPublicKey = new($"--{SshPublicKeyName}")
     {
-        Description = "SSH public key for Linux VMs. Can be the key content or path to a file",
+        Description = "SSH public key for Linux VMs or scale set instances. Can be the key content or path to a file",
         Required = false
     };
 
@@ -285,7 +285,7 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> OsDiskType = new($"--{OsDiskTypeName}")
     {
-        Description = "OS disk type: 'Premium_LRS', 'StandardSSD_LRS', 'Standard_LRS'. Defaults based on VM size",
+        Description = "OS disk type: 'Premium_LRS', 'StandardSSD_LRS', 'Standard_LRS'. Defaults based on VM or scale set instance size",
         Required = false
     };
 
@@ -387,6 +387,113 @@ public static class ComputeOptionDefinitions
     public static readonly Option<string> UserData = new($"--{UserDataName}")
     {
         Description = "Base64-encoded user data for the VM. Use to update custom data scripts",
+        Required = false
+    };
+
+    // Guided-create discovery options (vm sku list, image list, quota check, region recommend)
+    public const string MinVCpusName = "min-vcpus";
+    public const string MinMemoryGbName = "min-memory-gb";
+    public const string FamilyPrefixName = "family-prefix";
+    public const string TopName = "top";
+    public const string IncludePricingName = "include-pricing";
+    public const string AliasName = "alias";
+    public const string PublisherName = "publisher";
+    public const string OfferName = "offer";
+    public const string ImageSkuName = "image-sku";
+    public const string IncludeSharedGalleryName = "include-shared-gallery";
+    public const string RequestedVCpusName = "requested-vcpus";
+    public const string WorkloadHintName = "workload-hint";
+    public const string GeographyPreferenceName = "geography-preference";
+    public const string RequireAvailabilityZonesName = "require-availability-zones";
+    public const string SingleInstanceName = "single-instance";
+
+    public static readonly Option<int?> MinVCpus = new($"--{MinVCpusName}")
+    {
+        Description = "Minimum number of vCPUs the SKU must have. Use to filter the SKU catalog down to candidates that meet your workload's CPU floor.",
+        Required = false
+    };
+
+    public static readonly Option<double?> MinMemoryGb = new($"--{MinMemoryGbName}")
+    {
+        Description = "Minimum amount of memory (in GB) the SKU must have. Use to filter the SKU catalog down to candidates that meet your workload's memory floor.",
+        Required = false
+    };
+
+    public static readonly Option<string> FamilyPrefix = new($"--{FamilyPrefixName}")
+    {
+        Description = "Prefix to filter SKUs by family or name (case-insensitive). Examples: 'Standard_D' for general-purpose, 'Standard_N' for GPU, 'Standard_E' for memory-optimized, 'Standard_F' for compute-optimized, 'Standard_B' for burstable.",
+        Required = false
+    };
+
+    public static readonly Option<int?> Top = new($"--{TopName}")
+    {
+        Description = "Maximum number of results to return. Defaults to 20 for list-skus (SKU lists are large; raise explicitly if you need more) and 50 for list-images.",
+        Required = false
+    };
+
+    public static readonly Option<bool> IncludePricing = new($"--{IncludePricingName}")
+    {
+        Description = "If true, augment each SKU with pay-as-you-go and spot retail hourly prices from the Azure Retail Prices API. Adds network latency; the API is unauthenticated.",
+        Required = false
+    };
+
+    public static readonly Option<string> Alias = new($"--{AliasName}")
+    {
+        Description = "VM image alias to resolve (e.g., 'Ubuntu2404', 'Win2022Datacenter'). Returns the marketplace URN that alias currently maps to.",
+        Required = false
+    };
+
+    public static readonly Option<string> Publisher = new($"--{PublisherName}")
+    {
+        Description = "Marketplace image publisher (e.g., 'Canonical', 'MicrosoftWindowsServer'). Pair with --offer and optional --image-sku.",
+        Required = false
+    };
+
+    public static readonly Option<string> Offer = new($"--{OfferName}")
+    {
+        Description = "Marketplace image offer (e.g., 'ubuntu-24_04-lts', 'WindowsServer2022'). Pair with --publisher.",
+        Required = false
+    };
+
+    public static readonly Option<string> ImageSku = new($"--{ImageSkuName}")
+    {
+        Description = "Marketplace image SKU (e.g., 'server', '2022-datacenter-azure-edition'). Pair with --publisher and --offer.",
+        Required = false
+    };
+
+    public static readonly Option<bool> IncludeSharedGallery = new($"--{IncludeSharedGalleryName}")
+    {
+        Description = "If true, also enumerate image versions from Azure Compute Gallery (Shared Image Gallery) that this subscription has access to. Results carry source='sharedGallery' and a /sharedGalleries/.../images/.../versions/... resource ID in the urn field, which the create commands accept via --image. Off by default to keep the common marketplace listing fast.",
+        Required = false
+    };
+
+    public static readonly Option<int?> RequestedVCpus = new($"--{RequestedVCpusName}")
+    {
+        Description = "Number of vCPUs you intend to deploy. Used to flag insufficient quota before a create is attempted.",
+        Required = false
+    };
+
+    public static readonly Option<string> WorkloadHint = new($"--{WorkloadHintName}")
+    {
+        Description = "Free-form workload hint to rank regions (e.g., 'gpu training', 'low latency for europe users', 'general dev/test'). Used by compute_vm_recommend_region (also reachable as the top-level alias compute_recommend_region).",
+        Required = false
+    };
+
+    public static readonly Option<string> GeographyPreference = new($"--{GeographyPreferenceName}")
+    {
+        Description = "Preferred geography substring used to bias region ranking (e.g., 'us', 'europe', 'asia'). Case-insensitive.",
+        Required = false
+    };
+
+    public static readonly Option<bool> RequireAvailabilityZones = new($"--{RequireAvailabilityZonesName}")
+    {
+        Description = "If true, only recommend regions that support multiple Availability Zones.",
+        Required = false
+    };
+
+    public static readonly Option<bool> SingleInstance = new($"--{SingleInstanceName}")
+    {
+        Description = "If true, provision a single non-scalable VM instead of a VMSS Flex scale set. Use this only when the workload can never scale out, never needs zonal spread, and never needs rolling upgrades. Off by default — the unified compute_create defaults to VMSS Flex (Flex with InstanceCount=1 is supported and preferred over a standalone VM for everything else).",
         Required = false
     };
 }

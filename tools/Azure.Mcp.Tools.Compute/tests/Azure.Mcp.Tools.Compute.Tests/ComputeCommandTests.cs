@@ -1505,4 +1505,81 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     #endregion
+
+    #region Unified Create Tests
+
+    [Fact]
+    public async Task Should_create_with_unified_create_defaults_to_vmss_flex()
+    {
+        // The unified `compute create` entry point should dispatch to VMSS Flex by default
+        // (no --single-instance flag). We pass an explicit instance-count of 2 to keep the
+        // smoke test deterministic and assert the response is shaped as a VMSS Flex result.
+        var unifiedVmssName = RegisterOrRetrieveVariable(
+            "createUnifiedVmssName",
+            $"uvs{DateTime.UtcNow:HHmmss}");
+
+        var result = await CallToolAsync(
+            "compute_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", unifiedVmssName },
+                { "vm-size", "Standard_B2s" },
+                { "location", "eastus2" },
+                { "admin-username", "azureuser" },
+                { "admin-password", "TestP@ssw0rd123!" },
+                { "image", "Ubuntu2404" },
+                { "instance-count", 2 },
+                { "no-public-ip", true }
+            });
+
+        var mode = result.AssertProperty("Mode");
+        Assert.Equal(JsonValueKind.String, mode.ValueKind);
+        Assert.Equal("vmss-flex", mode.GetString());
+
+        var vmss = result.AssertProperty("Vmss");
+        Assert.Equal(JsonValueKind.Object, vmss.ValueKind);
+        var provisioningState = vmss.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+    }
+
+    [Fact]
+    public async Task Should_create_with_unified_create_single_instance_falls_back_to_vm()
+    {
+        // With --single-instance the unified entry point should fall back to a standalone VM.
+        // Keep the name <= 15 chars to honor the standalone-VM Windows ceiling, even though
+        // we're using a Linux image here — that way the test stays portable if the image is
+        // ever swapped.
+        var unifiedVmName = RegisterOrRetrieveVariable(
+            "createUnifiedVmName",
+            $"uv{DateTime.UtcNow:MMddHHmmss}");
+
+        var result = await CallToolAsync(
+            "compute_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", unifiedVmName },
+                { "vm-size", "Standard_B2s" },
+                { "location", "eastus2" },
+                { "admin-username", "azureuser" },
+                { "admin-password", "TestP@ssw0rd123!" },
+                { "image", "Ubuntu2404" },
+                { "single-instance", true },
+                { "no-public-ip", true }
+            });
+
+        var mode = result.AssertProperty("Mode");
+        Assert.Equal(JsonValueKind.String, mode.ValueKind);
+        Assert.Equal("single-vm", mode.GetString());
+
+        var vm = result.AssertProperty("Vm");
+        Assert.Equal(JsonValueKind.Object, vm.ValueKind);
+        var provisioningState = vm.GetProperty("provisioningState");
+        Assert.Equal("Succeeded", provisioningState.GetString());
+    }
+
+    #endregion
 }

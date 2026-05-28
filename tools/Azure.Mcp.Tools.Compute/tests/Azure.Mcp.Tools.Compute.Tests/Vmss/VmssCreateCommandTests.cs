@@ -73,6 +73,10 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<string?>(),
                 Arg.Any<int?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
@@ -128,6 +132,10 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
@@ -194,6 +202,10 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -248,6 +260,10 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -272,5 +288,234 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
         var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssCreateCommandResult);
         Assert.NotNull(result.Vmss);
         Assert.Equal(_knownVmssName, result.Vmss.Name);
+    }
+
+    private VmssCreateResult MakeResult() => new(
+        Name: _knownVmssName,
+        Id: "/subscriptions/sub123/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachineScaleSets/test-vmss",
+        Location: _knownLocation,
+        VmSize: "Standard_D2s_v5",
+        ProvisioningState: "Succeeded",
+        OsType: "linux",
+        Capacity: 2,
+        UpgradePolicy: "Manual",
+        Zones: null,
+        Tags: null);
+
+    private void SetupMock(VmssCreateResult result)
+    {
+        Service.CreateVmssAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(result);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PassesPublicIpAddress()
+    {
+        // Arrange
+        const string publicIp = "my-vmss-pip";
+        SetupMock(MakeResult());
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--vmss-name", _knownVmssName,
+            "--resource-group", _knownResourceGroup,
+            "--subscription", _knownSubscription,
+            "--location", _knownLocation,
+            "--admin-username", _knownAdminUsername,
+            "--image", "Ubuntu2404",
+            "--admin-password", _knownPassword,
+            "--public-ip-address", publicIp);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).CreateVmssAsync(
+            Arg.Any<string>(),                  // name
+            Arg.Any<string>(),                  // resourceGroup
+            Arg.Any<string>(),                  // subscription
+            Arg.Any<string>(),                  // location
+            Arg.Any<string>(),                  // adminUsername
+            Arg.Any<string?>(),                 // vmSize
+            Arg.Any<string?>(),                 // image
+            Arg.Any<string?>(),                 // adminPassword
+            Arg.Any<string?>(),                 // sshPublicKey
+            Arg.Any<string?>(),                 // osType
+            Arg.Any<string?>(),                 // virtualNetwork
+            Arg.Any<string?>(),                 // subnet
+            Arg.Is<string?>(publicIp),          // publicIpAddress
+            Arg.Any<string?>(),                 // networkSecurityGroup
+            Arg.Any<bool?>(),                   // noPublicIp
+            Arg.Any<string?>(),                 // sourceAddressPrefix
+            Arg.Any<int?>(),                    // instanceCount
+            Arg.Any<string?>(),                 // upgradePolicy
+            Arg.Any<string?>(),                 // zone
+            Arg.Any<int?>(),                    // osDiskSizeGb
+            Arg.Any<string?>(),                 // osDiskType
+            Arg.Any<string?>(),                 // tenant
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PassesNetworkSecurityGroup()
+    {
+        // Arrange
+        const string nsgName = "my-vmss-nsg";
+        SetupMock(MakeResult());
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--vmss-name", _knownVmssName,
+            "--resource-group", _knownResourceGroup,
+            "--subscription", _knownSubscription,
+            "--location", _knownLocation,
+            "--admin-username", _knownAdminUsername,
+            "--image", "Ubuntu2404",
+            "--admin-password", _knownPassword,
+            "--network-security-group", nsgName);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).CreateVmssAsync(
+            Arg.Any<string>(),                  // name
+            Arg.Any<string>(),                  // resourceGroup
+            Arg.Any<string>(),                  // subscription
+            Arg.Any<string>(),                  // location
+            Arg.Any<string>(),                  // adminUsername
+            Arg.Any<string?>(),                 // vmSize
+            Arg.Any<string?>(),                 // image
+            Arg.Any<string?>(),                 // adminPassword
+            Arg.Any<string?>(),                 // sshPublicKey
+            Arg.Any<string?>(),                 // osType
+            Arg.Any<string?>(),                 // virtualNetwork
+            Arg.Any<string?>(),                 // subnet
+            Arg.Any<string?>(),                 // publicIpAddress
+            Arg.Is<string?>(nsgName),           // networkSecurityGroup
+            Arg.Any<bool?>(),                   // noPublicIp
+            Arg.Any<string?>(),                 // sourceAddressPrefix
+            Arg.Any<int?>(),                    // instanceCount
+            Arg.Any<string?>(),                 // upgradePolicy
+            Arg.Any<string?>(),                 // zone
+            Arg.Any<int?>(),                    // osDiskSizeGb
+            Arg.Any<string?>(),                 // osDiskType
+            Arg.Any<string?>(),                 // tenant
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PassesNoPublicIp()
+    {
+        // Arrange
+        SetupMock(MakeResult());
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--vmss-name", _knownVmssName,
+            "--resource-group", _knownResourceGroup,
+            "--subscription", _knownSubscription,
+            "--location", _knownLocation,
+            "--admin-username", _knownAdminUsername,
+            "--image", "Ubuntu2404",
+            "--admin-password", _knownPassword,
+            "--no-public-ip");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).CreateVmssAsync(
+            Arg.Any<string>(),                  // name
+            Arg.Any<string>(),                  // resourceGroup
+            Arg.Any<string>(),                  // subscription
+            Arg.Any<string>(),                  // location
+            Arg.Any<string>(),                  // adminUsername
+            Arg.Any<string?>(),                 // vmSize
+            Arg.Any<string?>(),                 // image
+            Arg.Any<string?>(),                 // adminPassword
+            Arg.Any<string?>(),                 // sshPublicKey
+            Arg.Any<string?>(),                 // osType
+            Arg.Any<string?>(),                 // virtualNetwork
+            Arg.Any<string?>(),                 // subnet
+            Arg.Any<string?>(),                 // publicIpAddress
+            Arg.Any<string?>(),                 // networkSecurityGroup
+            Arg.Is<bool?>(true),                // noPublicIp
+            Arg.Any<string?>(),                 // sourceAddressPrefix
+            Arg.Any<int?>(),                    // instanceCount
+            Arg.Any<string?>(),                 // upgradePolicy
+            Arg.Any<string?>(),                 // zone
+            Arg.Any<int?>(),                    // osDiskSizeGb
+            Arg.Any<string?>(),                 // osDiskType
+            Arg.Any<string?>(),                 // tenant
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PassesSourceAddressPrefix()
+    {
+        // Arrange
+        const string sourcePrefix = "10.0.0.0/24";
+        SetupMock(MakeResult());
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--vmss-name", _knownVmssName,
+            "--resource-group", _knownResourceGroup,
+            "--subscription", _knownSubscription,
+            "--location", _knownLocation,
+            "--admin-username", _knownAdminUsername,
+            "--image", "Ubuntu2404",
+            "--admin-password", _knownPassword,
+            "--source-address-prefix", sourcePrefix);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).CreateVmssAsync(
+            Arg.Any<string>(),                  // name
+            Arg.Any<string>(),                  // resourceGroup
+            Arg.Any<string>(),                  // subscription
+            Arg.Any<string>(),                  // location
+            Arg.Any<string>(),                  // adminUsername
+            Arg.Any<string?>(),                 // vmSize
+            Arg.Any<string?>(),                 // image
+            Arg.Any<string?>(),                 // adminPassword
+            Arg.Any<string?>(),                 // sshPublicKey
+            Arg.Any<string?>(),                 // osType
+            Arg.Any<string?>(),                 // virtualNetwork
+            Arg.Any<string?>(),                 // subnet
+            Arg.Any<string?>(),                 // publicIpAddress
+            Arg.Any<string?>(),                 // networkSecurityGroup
+            Arg.Any<bool?>(),                   // noPublicIp
+            Arg.Is<string?>(sourcePrefix),      // sourceAddressPrefix
+            Arg.Any<int?>(),                    // instanceCount
+            Arg.Any<string?>(),                 // upgradePolicy
+            Arg.Any<string?>(),                 // zone
+            Arg.Any<int?>(),                    // osDiskSizeGb
+            Arg.Any<string?>(),                 // osDiskType
+            Arg.Any<string?>(),                 // tenant
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 }
