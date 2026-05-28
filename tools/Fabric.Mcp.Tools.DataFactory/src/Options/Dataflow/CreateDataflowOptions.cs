@@ -5,9 +5,14 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.DataFactory.Options.Dataflow;
 
-public sealed class CreateDataflowOptions : GlobalOptions
+public class CreateDataflowOptions
 {
-    public string WorkspaceId { get; set; } = string.Empty;
-    public string DisplayName { get; set; } = string.Empty;
+    [Option("The ID of the Microsoft Fabric workspace.")]
+    public required string WorkspaceId { get; set; }
+
+    [Option("The display name for the item.")]
+    public required string DisplayName { get; set; }
+
+    [Option("Optional description for the item.")]
     public string? Description { get; set; }
 }

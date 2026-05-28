@@ -1,10 +1,12 @@
-using System.Text.Json.Serialization;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Fabric.Mcp.Tools.Docs.Options.BestPractices
+using Microsoft.Mcp.Core.Options;
+
+namespace Fabric.Mcp.Tools.Docs.Options.BestPractices;
+
+public class GetBestPracticesOptions
 {
-    public class GetBestPracticesOptions : BaseFabricOptions
-    {
-        [JsonPropertyName(FabricOptionDefinitions.TopicName)]
-        public string? Topic { get; set; }
-    }
+    [Option("The best practice topic to retrieve documentation for.")]
+    public required string Topic { get; set; }
 }
