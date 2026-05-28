@@ -13,6 +13,8 @@ using Azure.ResourceManager.Compute.Models;
 using Azure.ResourceManager.Network;
 using Azure.ResourceManager.Network.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
@@ -21,10 +23,12 @@ namespace Azure.Mcp.Tools.Compute.Services;
 public class ComputeService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ILogger<ComputeService> logger)
+    ILogger<ComputeService> logger,
+    IOptions<ServiceStartOptions> serviceStartOptions)
     : BaseAzureResourceService(subscriptionService, tenantService), IComputeService
 {
     private readonly ILogger<ComputeService> _logger = logger;
+    private readonly IOptions<ServiceStartOptions> _serviceStartOptions = serviceStartOptions;
 
     // Default VM size (D-series v5, approximately 2 vCPU and 8 GB RAM)
     private const string DefaultVmSize = "Standard_D2s_v5";
@@ -183,10 +187,7 @@ public class ComputeService(
             // Only add SSH key if explicitly provided
             if (!string.IsNullOrEmpty(sshPublicKey))
             {
-                // Check if it's a file path
-                var resolvedSshKey = File.Exists(sshPublicKey)
-                    ? File.ReadAllText(sshPublicKey).Trim()
-                    : sshPublicKey;
+                var resolvedSshKey = ResolveSshPublicKey(sshPublicKey);
 
                 vmData.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new()
                 {
@@ -846,9 +847,7 @@ public class ComputeService(
 
             if (!string.IsNullOrEmpty(sshPublicKey))
             {
-                var resolvedSshKey = File.Exists(sshPublicKey)
-                    ? File.ReadAllText(sshPublicKey).Trim()
-                    : sshPublicKey;
+                var resolvedSshKey = ResolveSshPublicKey(sshPublicKey);
 
                 vmssData.VirtualMachineProfile.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new()
                 {
@@ -1887,5 +1886,58 @@ public class ComputeService(
             // Return false to indicate the disk was not found (idempotent delete)
             return false;
         }
+    }
+
+    internal static readonly string[] s_validSshKeyPrefixes =
+    [
+        "ssh-rsa ",
+        "ssh-ed25519 ",
+        "ssh-dss ",
+        "ecdsa-sha2-nistp256 ",
+        "ecdsa-sha2-nistp384 ",
+        "ecdsa-sha2-nistp521 ",
+        "sk-ssh-ed25519@openssh.com ",
+        "sk-ecdsa-sha2-nistp256@openssh.com ",
+    ];
+
+    private string ResolveSshPublicKey(string sshPublicKey)
+    {
+        if (!_serviceStartOptions.Value.IsHttpMode)
+        {
+            // In stdio mode, allow resolving file paths for convenience
+            if (File.Exists(sshPublicKey))
+            {
+                return File.ReadAllText(sshPublicKey).Trim();
+            }
+        }
+        else
+        {
+            // In HTTP mode, file path resolution is not allowed for security
+            if (!IsValidSshPublicKeyContent(sshPublicKey))
+            {
+                var message = LooksLikeFilePath(sshPublicKey)
+                    ? "The provided SSH public key appears to be a file path. " +
+                      "In remote HTTP mode, file paths cannot be resolved on the server. " +
+                      "Please provide the SSH public key content directly (e.g., 'ssh-rsa AAAA...', 'ssh-ed25519 AAAA...')."
+                    : "The provided SSH public key does not appear to be valid key content. " +
+                      "Please provide the SSH public key content directly (e.g., 'ssh-rsa AAAA...', 'ssh-ed25519 AAAA...').";
+
+                throw new ArgumentException(message);
+            }
+        }
+
+        return sshPublicKey.Trim();
+    }
+
+    internal static bool LooksLikeFilePath(string value)
+    {
+        var trimmed = value.Trim();
+        return trimmed.Contains('/') || trimmed.Contains('\\') || trimmed.EndsWith(".pub", StringComparison.OrdinalIgnoreCase);
+    }
+
+    internal static bool IsValidSshPublicKeyContent(string value)
+    {
+        var trimmed = value.Trim();
+        return Array.Exists(s_validSshKeyPrefixes, prefix => trimmed.StartsWith(prefix, StringComparison.Ordinal));
     }
 }
