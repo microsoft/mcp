@@ -1,0 +1,7 @@
+changes:
+  - section: "Bugs Fixed"
+    description: |
+      Fixed multiple bugs in the App Configuration toolset:
+      - Store lookup no longer passes subscription as both subscription-based arguments when resolving the store by name
+      - The user-supplied retry policy is now applied to all data-plane key-value operations (get, set, delete, lock); previously it was only applied to the ARM store-discovery call, causing custom retry settings to have no effect on actual configuration reads and writes
+      - The `kv delete` command response now includes an `existed` field (`true` if the key was present and deleted, `false` if it was already absent) and a human-readable `message`, allowing callers to distinguish a successful deletion from a no-op on a non-existent key

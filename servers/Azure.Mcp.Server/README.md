@@ -914,6 +914,7 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 ### 📊 Azure Advisor
 
 * "List my Advisor recommendations"
+* "Apply Advisor recommendations to IaaC files"
 
 ### 🔎 Azure AI Search
 

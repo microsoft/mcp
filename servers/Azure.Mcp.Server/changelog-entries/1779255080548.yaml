@@ -1,0 +1,7 @@
+changes:
+  - section: "Bugs Fixed"
+    description: |
+      Fixed multiple issues in Azure Service Bus commands:
+      - `--subscription` option was incorrectly required on `queue details`, `topic details`, and `topic subscription details` commands; the option has been removed since the namespace FQDN is sufficient for authentication.
+      - `topic details` returned "Subscription not found" when a topic did not exist; the error message now correctly reads "Topic not found".
+      - Malformed namespace names (containing path separators or other invalid characters) raised a `SecurityException`; they now raise an `ArgumentException` to correctly signal invalid input rather than a security violation.

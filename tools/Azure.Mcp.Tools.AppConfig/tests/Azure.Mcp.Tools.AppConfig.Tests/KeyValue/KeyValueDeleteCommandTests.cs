@@ -18,7 +18,12 @@ public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCom
     [Fact]
     public async Task ExecuteAsync_DeletesKeyValue_WhenValidParametersProvided()
     {
-        // Arrange & Act
+        // Arrange
+        Service.DeleteKeyValue(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+
+        // Act
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--account", "account1",
@@ -37,12 +42,19 @@ public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCom
         var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
 
         Assert.Equal("my-key", result.Key);
+        Assert.True(result.Existed);
+        Assert.Equal("Key 'my-key' deleted successfully.", result.Message);
     }
 
     [Fact]
     public async Task ExecuteAsync_DeletesKeyValueWithLabel_WhenLabelProvided()
     {
-        // Arrange & Act
+        // Arrange
+        Service.DeleteKeyValue(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+
+        // Act
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--account", "account1",
@@ -62,6 +74,30 @@ public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCom
 
         Assert.Equal("my-key", result.Key);
         Assert.Equal("prod", result.Label);
+        Assert.True(result.Existed);
+        Assert.Equal("Key 'my-key' with label 'prod' deleted successfully.", result.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsExistedFalse_WhenKeyWasAbsent()
+    {
+        // Arrange — service returns false indicating the key did not exist
+        Service.DeleteKeyValue(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--account", "account1",
+            "--key", "nonexistent-key");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
+
+        Assert.Equal("nonexistent-key", result.Key);
+        Assert.False(result.Existed);
+        Assert.Equal("Key 'nonexistent-key' did not exist in store 'account1'.", result.Message);
     }
 
     [Fact]

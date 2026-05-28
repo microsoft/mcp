@@ -1,0 +1,116 @@
+{
+  "rules": [
+    {
+      "ruleId": "Disable_Strict_Zone_Balance_In_VMSS",
+      "description": "Microsoft advises disabling strictly even VM instance distribution across Availability Zones in VMSS to improve scalability and flexibility, noting that uneven distribution may better serve application load demands despite the potential trade-off in resilience.",
+      "query": "where properties.orchestrationMode == 'Uniform' and properties.zoneBalance == true",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "properties.orchestrationMode",
+            "equals": "Uniform"
+          },
+          {
+            "field": "properties.zoneBalance",
+            "equals": true
+          }
+        ]
+      },
+      "fix": "Review and remediate based on recommendation",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "properties.zoneBalance",
+            "value": false
+          }
+        ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_linux_virtual_machine_scale_set",
+        "note": "Also applies to azurerm_windows_virtual_machine_scale_set. The zone_balance attribute exists only on Uniform-orchestration resources (azurerm_linux/windows_virtual_machine_scale_set), not on azurerm_orchestrated_virtual_machine_scale_set.",
+        "allOf": [
+          {
+            "attribute": "zone_balance",
+            "equals": true
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "zone_balance",
+            "value": false
+          }
+        ]
+      }
+    },
+    {
+      "ruleId": "Enable_Automatic_Instance_Repairs_In_VMSS",
+      "description": "Enabling automatic instance repairs helps achieve high availability by maintaining a set of healthy instances. If an unhealthy instance is found by the Application Health extension or load balancer health probe, automatic instance repairs attempt to recover the instance by triggering repair actions.",
+      "query": "where isnotnull(properties.virtualMachineProfile) | where isnull(properties.automaticRepairsPolicy) or properties.automaticRepairsPolicy.enabled == false",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "properties.virtualMachineProfile",
+            "exists": true
+          },
+          {
+            "anyOf": [
+              {
+                "field": "properties.automaticRepairsPolicy",
+                "exists": false
+              },
+              {
+                "field": "properties.automaticRepairsPolicy.enabled",
+                "equals": false
+              }
+            ]
+          }
+        ]
+      },
+      "fix": "Review and remediate based on recommendation",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "properties.automaticRepairsPolicy.enabled",
+            "value": true
+          },
+          {
+            "field": "properties.automaticRepairsPolicy.gracePeriod",
+            "value": "PT30M"
+          }
+        ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_linux_virtual_machine_scale_set",
+        "note": "Also applies to azurerm_windows_virtual_machine_scale_set.",
+        "anyOf": [
+          {
+            "attribute": "automatic_instance_repair.enabled",
+            "exists": false
+          },
+          {
+            "attribute": "automatic_instance_repair.enabled",
+            "equals": false
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "automatic_instance_repair.enabled",
+            "value": true
+          },
+          {
+            "attribute": "automatic_instance_repair.grace_period",
+            "value": "PT30M"
+          }
+        ]
+      }
+    }
+  ]
+}

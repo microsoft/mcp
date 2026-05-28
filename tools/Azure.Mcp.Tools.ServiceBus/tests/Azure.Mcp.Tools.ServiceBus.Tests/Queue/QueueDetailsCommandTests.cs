@@ -18,7 +18,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Tests.Queue;
 public class QueueDetailsCommandTests : CommandUnitTestsBase<QueueDetailsCommand, IServiceBusService>
 {
     // Test constants
-    private const string SubscriptionId = "sub123";
     private const string QueueName = "testQueue";
     private const string NamespaceName = "test.servicebus.windows.net";
 
@@ -49,7 +48,6 @@ public class QueueDetailsCommandTests : CommandUnitTestsBase<QueueDetailsCommand
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", SubscriptionId,
             "--namespace", NamespaceName,
             "--queue", QueueName);
 
@@ -77,7 +75,6 @@ public class QueueDetailsCommandTests : CommandUnitTestsBase<QueueDetailsCommand
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", SubscriptionId,
             "--namespace", NamespaceName,
             "--queue", QueueName);
 
@@ -103,7 +100,6 @@ public class QueueDetailsCommandTests : CommandUnitTestsBase<QueueDetailsCommand
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", SubscriptionId,
             "--namespace", NamespaceName,
             "--queue", QueueName);
 
@@ -114,10 +110,9 @@ public class QueueDetailsCommandTests : CommandUnitTestsBase<QueueDetailsCommand
     }
 
     [Theory]
-    [InlineData("--subscription sub123 --namespace test.servicebus.windows.net --queue testQueue", true)]
-    [InlineData("--namespace test.servicebus.windows.net --queue testQueue", false)]  // Missing subscription
-    [InlineData("--subscription sub123 --queue testQueue", false)]   // Missing namespace
-    [InlineData("--subscription sub123 --namespace test.servicebus.windows.net", false)] // Missing queue
+    [InlineData("--namespace test.servicebus.windows.net --queue testQueue", true)]
+    [InlineData("--queue testQueue", false)]   // Missing namespace
+    [InlineData("--namespace test.servicebus.windows.net", false)] // Missing queue
     [InlineData("", false)]  // Missing all required options
     public async Task ExecuteAsync_ValidatesRequiredParameters(string args, bool shouldSucceed)
     {

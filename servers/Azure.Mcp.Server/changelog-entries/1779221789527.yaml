@@ -1,7 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: |
-      Fixed three bugs in `storage account create`:
-      - Subscription display names (e.g. "My Subscription") now resolve correctly instead of failing with a FormatException — consistent with all other storage commands.
-      - The `--access-tier` option now documents all valid values (Hot, Cool, Cold, Premium); Cold and Premium were silently accepted but never listed, making them undiscoverable.
-      - The `--sku` option description now clarifies that `storage account create` creates StorageV2 accounts and defaults to Standard_LRS if no SKU is specified.
