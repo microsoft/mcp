@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "kusto/monitor: centralized KQL query safety validation in Azure.Mcp.Core and now enforce the shared validator for Monitor log/workspace query execution paths, preventing unsafe tautology and management-command patterns."

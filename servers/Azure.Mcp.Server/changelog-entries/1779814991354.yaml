@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "AzureBackup: emit AzSubscriptionGuid telemetry tag from each tool so per-subscription telemetry works in namespace server mode."
