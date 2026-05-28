@@ -1,8 +1,8 @@
 changes:
   - section: "Breaking Changes"
     description: |
-      `vm delete` now returns a not-found outcome (`Success: false`) when the target VM does not exist, instead of reporting a successful deletion.
-      This may affect automation that previously treated non-existent VM deletions as success.
+      `vm delete` and `vmss delete` now return a not-found outcome (`Success: false`) when the target resource does not exist, instead of reporting a successful deletion.
+      This may affect automation that previously treated non-existent VM/VMSS deletions as success.
   - section: "Bugs Fixed"
     description: |
       Fixed multiple bugs in Compute VM/VMSS commands:
