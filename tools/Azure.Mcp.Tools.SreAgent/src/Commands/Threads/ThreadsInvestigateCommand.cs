@@ -13,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
 
-[CommandMetadata(Id = "ab73d6fa-d53e-446c-9d4c-9d8cf41a3106", Name = "investigate-with-agent", Title = "Investigate With Agent", Description = "Start an investigation thread and automatically answer direction follow-ups.", Destructive = false, Idempotent = false, OpenWorld = true, ReadOnly = false, Secret = false, LocalRequired = false)]
+[CommandMetadata(Id = "ab73d6fa-d53e-446c-9d4c-9d8cf41a3106", Name = "investigate", Title = "Investigate With Agent", Description = "Start an investigation thread and automatically answer direction follow-ups.", Destructive = false, Idempotent = false, OpenWorld = true, ReadOnly = false, Secret = false, LocalRequired = false)]
 public class ThreadsInvestigateCommand(ILogger<ThreadsInvestigateCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
     : ThreadsCommandBase<ThreadsInvestigateOptions, SreAgentInvestigationResult>(subscriptionResolver)
 {

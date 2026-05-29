@@ -3813,6 +3813,7 @@ azmcp sreagent connectors get --subscription <subscription> \
                               --name <connector-name>
 
 # Create or update a Kusto data connector
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent connectors create kusto --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --agent <agent-name> \
@@ -3820,6 +3821,7 @@ azmcp sreagent connectors create kusto --subscription <subscription> \
                                        --cluster-url <kusto-cluster-url>
 
 # Create or update an MCP connector
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp sreagent connectors create mcp --subscription <subscription> \
                                      --resource-group <resource-group> \
                                      --agent <agent-name> \
@@ -3913,7 +3915,6 @@ azmcp sreagent threads create --subscription <subscription> \
                               --agent <agent-name>
 
 # Send a message to an existing thread
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent threads send-message --subscription <subscription> \
                                     --resource-group <resource-group> \
                                     --agent <agent-name> \
@@ -3929,12 +3930,14 @@ azmcp sreagent threads delete --subscription <subscription> \
                               --confirm true
 
 # Run an investigation prompt
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent threads investigate --subscription <subscription> \
                                    --resource-group <resource-group> \
                                    --agent <agent-name> \
                                    --message <investigation-prompt>
 
 # Run an investigation prompt with auto-approval (yolo mode)
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent threads investigate yolo --subscription <subscription> \
                                         --resource-group <resource-group> \
                                         --agent <agent-name> \
@@ -3996,11 +3999,13 @@ azmcp sreagent incidents create --subscription <subscription> \
                                 --steps <step-1> <step-2>
 
 # List incident response plans
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent incidents plans list --subscription <subscription> \
                                     --resource-group <resource-group> \
                                     --agent <agent-name>
 
 # Create an incident response plan
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent incidents plans create --subscription <subscription> \
                                       --resource-group <resource-group> \
                                       --agent <agent-name> \
@@ -4009,9 +4014,7 @@ azmcp sreagent incidents plans create --subscription <subscription> \
                                       --trigger-condition <condition>
 
 # Configure PagerDuty / ServiceNow connectors
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp sreagent incidents setup-pagerduty   --subscription <s> --resource-group <rg> --agent <a> --api-key-env <env>
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp sreagent incidents setup-servicenow  --subscription <s> --resource-group <rg> --agent <a> --instance-url <url> --auth-type <type>
 ```
 
@@ -4041,14 +4044,19 @@ azmcp sreagent workflows apply --subscription <s> --resource-group <rg> --agent 
 azmcp sreagent docs get --topic <topic>
 
 # List all memories in the knowledge base
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent docs memories list --subscription <s> --resource-group <rg> --agent <a>
 
 # Search and manage knowledge base memories
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent docs memories search --subscription <s> --resource-group <rg> --agent <a> --search <text>
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent docs memories add    --subscription <s> --resource-group <rg> --agent <a> --name <doc> --content <body>
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent docs memories delete --subscription <s> --resource-group <rg> --agent <a> --name <doc> --confirm true
 
 # Trigger a full reindex of the knowledge base
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent docs memories reindex --subscription <s> --resource-group <rg> --agent <a>
 
 # Generate architecture documentation

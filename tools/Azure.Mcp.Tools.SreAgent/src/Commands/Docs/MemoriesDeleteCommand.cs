@@ -13,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
 
-[CommandMetadata(Id = "6fe4a44c-b9c5-44b1-b985-12f9043b1051", Name = "memories-delete", Title = "Delete Memory", Description = "Delete a knowledge base document after explicit confirmation.", Destructive = true, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+[CommandMetadata(Id = "6fe4a44c-b9c5-44b1-b985-12f9043b1051", Name = "memories_delete", Title = "Delete Memory", Description = "Delete a knowledge base document after explicit confirmation.", Destructive = true, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
 public sealed class MemoriesDeleteCommand(ILogger<MemoriesDeleteCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<MemoriesDeleteOptions, SreAgentTextResult>(subscriptionResolver)
 {
