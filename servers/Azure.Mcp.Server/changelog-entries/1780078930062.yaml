@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed trimmed/package runtime option binding failures (e.g., Kusto query/sample) by preserving public parameterless constructors required for reflection-based option activation."
