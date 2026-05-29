@@ -22,6 +22,9 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
         item. For looking up a specific role by name, fetch the list and pick by
         name; there is no server-side search. Caller must be a workspace Admin
         or Member on the item's workspace. Requires OneLake.Read.All.
+        Note: Built-in roles (e.g. DefaultReader) may include fabricItemMembers with
+        a 'sourcePath' field formatted as '<workspaceId>/<itemId>' — this is NOT a
+        OneLake file path; it identifies the workspace/item granting inherited access.
         """,
     Destructive = false,
     Idempotent = true,
@@ -39,15 +42,33 @@ public sealed class DataAccessRoleListCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsRequired());
+        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
         command.Options.Add(FabricOptionDefinitions.ItemId.AsRequired());
         command.Options.Add(FabricOptionDefinitions.ContinuationToken.AsOptional());
+        command.Validators.Add(result =>
+        {
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
+            {
+                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
+            }
+
+            var effectiveValue = !string.IsNullOrWhiteSpace(workspaceId) ? workspaceId : workspace;
+            if (!string.IsNullOrWhiteSpace(effectiveValue) && !Guid.TryParse(effectiveValue, out _))
+            {
+                result.AddError("Workspace must be a valid GUID. Name-based resolution is not supported for this command.");
+            }
+        });
     }
 
     protected override DataAccessRoleListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+        var workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId) ? workspaceId! : workspace ?? string.Empty;
         options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
         options.ContinuationToken = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ContinuationTokenName);
         return options;

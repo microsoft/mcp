@@ -1953,6 +1953,21 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             throw new ArgumentException("Role definition must include a non-empty 'name' property.", nameof(roleDefinitionJson));
         }
 
+        // Default tenantId on Entra members when omitted — saves callers from having to
+        // look up their own tenant ID for the most common single-tenant scenario.
+        if (roleDefinition.Members?.MicrosoftEntraMembers is { Count: > 0 } entraMembers
+            && entraMembers.Any(m => string.IsNullOrWhiteSpace(m.TenantId)))
+        {
+            var tenantId = await GetTenantIdFromTokenAsync(cancellationToken);
+            if (!string.IsNullOrWhiteSpace(tenantId))
+            {
+                foreach (var member in entraMembers)
+                {
+                    member.TenantId ??= tenantId;
+                }
+            }
+        }
+
         // Use the single-role POST endpoint (preview API) with Overwrite conflict policy.
         // This creates the role if it doesn't exist, or replaces it if it does — without
         // touching other roles on the item (unlike the bulk PUT approach).
@@ -2092,6 +2107,43 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
+    }
+
+    private async Task<string?> GetTenantIdFromTokenAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.GetFabricScope() });
+            var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
+
+            // JWT is three base64url segments separated by dots; the payload is segment[1].
+            var parts = token.Token.Split('.');
+            if (parts.Length < 2)
+            {
+                return null;
+            }
+
+            var payload = parts[1];
+            // Pad base64url to standard base64
+            switch (payload.Length % 4)
+            {
+                case 2: payload += "=="; break;
+                case 3: payload += "="; break;
+            }
+
+            var bytes = Convert.FromBase64String(payload.Replace('-', '+').Replace('_', '/'));
+            using var doc = JsonDocument.Parse(bytes);
+            if (doc.RootElement.TryGetProperty("tid", out var tidElement))
+            {
+                return tidElement.GetString();
+            }
+        }
+        catch
+        {
+            // Best-effort: if token parsing fails, caller should provide tenantId explicitly.
+        }
+
+        return null;
     }
 
     private static string ExtractWarehouseQueryValue(string warehousePrefix)

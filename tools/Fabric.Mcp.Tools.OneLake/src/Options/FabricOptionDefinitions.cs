@@ -98,7 +98,7 @@ public static class FabricOptionDefinitions
     };
 
     public const string LocalFilePathName = "local-file-path";
-    public static readonly Option<string> LocalFilePath = new($"--{LocalFilePathName}")
+    public static readonly Option<string> LocalFilePath = new($"--{LocalFilePathName}", "--local-path")
     {
         Description = "The path to a local file to upload.",
         Required = false
@@ -190,7 +190,15 @@ public static class FabricOptionDefinitions
     public const string RoleDefinitionName = "role-definition";
     public static readonly Option<string> RoleDefinition = new($"--{RoleDefinitionName}")
     {
-        Description = "JSON definition of the data access role including members and decision rules.",
+        Description = """
+            JSON definition of the data access role. Must include 'name', 'members' (with microsoftEntraMembers),
+            and 'decisionRules'. To scope access to a specific folder, include a Path attribute in decisionRules.
+            Example: {"name":"ImagesReadOnly","members":{"microsoftEntraMembers":[{"objectId":"<guid>"}]},
+            "decisionRules":[{"effect":"Permit","permission":[
+            {"attributeName":"Action","attributeValueIncludedIn":["Read"]},
+            {"attributeName":"Path","attributeValueIncludedIn":["Files/images/*"]}]}]}.
+            Omitting Path grants access to the entire item.
+            """,
         Required = true
     };
 
