@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Communication.Options;
 using System.Diagnostics.CodeAnalysis;
+using Azure.Mcp.Tools.Communication.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 
