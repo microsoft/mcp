@@ -5,7 +5,6 @@ using System.Net;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Microsoft.Mcp.Core.Extensions;
-// using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
 using Azure.Mcp.Tools.NetAppFiles.Options.Backup;
@@ -17,11 +16,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Backup;
 
-public sealed class BackupCreateCommand(ILogger<BackupCreateCommand> logger) : SubscriptionCommand<BackupCreateOptions>()
+public sealed class BackupCreateCommand(ILogger<BackupCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupCreateOptions>()
 {
     private const string CommandTitle = "Create NetApp Files Backup";
 
     private readonly ILogger<BackupCreateCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "a3d7e1f9-5b2c-4a8d-9e6f-c0d4b8a2f7e3";
 
@@ -80,9 +81,7 @@ public sealed class BackupCreateCommand(ILogger<BackupCreateCommand> logger) : S
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
-            var backup = await netAppFilesService.CreateBackup(
+            var backup = await _netAppFilesService.CreateBackup(
                 options.Account!,
                 options.BackupVault!,
                 options.Backup!,

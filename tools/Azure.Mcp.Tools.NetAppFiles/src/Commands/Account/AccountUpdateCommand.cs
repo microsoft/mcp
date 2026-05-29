@@ -18,11 +18,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Account;
 
-public sealed class AccountUpdateCommand(ILogger<AccountUpdateCommand> logger) : SubscriptionCommand<AccountUpdateOptions>()
+public sealed class AccountUpdateCommand(ILogger<AccountUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<AccountUpdateOptions>()
 {
     private const string CommandTitle = "Update NetApp Files Account";
 
     private readonly ILogger<AccountUpdateCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "a3c7d1e5-8b2f-4f6a-9e0d-c5b4a7f2e8d1";
 
@@ -75,8 +77,6 @@ public sealed class AccountUpdateCommand(ILogger<AccountUpdateCommand> logger) :
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
             Dictionary<string, string>? tags = null;
             if (!string.IsNullOrEmpty(options.Tags))
             {
@@ -90,7 +90,7 @@ public sealed class AccountUpdateCommand(ILogger<AccountUpdateCommand> logger) :
                 }
             }
 
-            var account = await netAppFilesService.UpdateAccount(
+            var account = await _netAppFilesService.UpdateAccount(
                 options.Account!,
                 options.ResourceGroup!,
                 options.Location!,

@@ -17,11 +17,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Pool;
 
-public sealed class PoolCreateCommand(ILogger<PoolCreateCommand> logger) : SubscriptionCommand<PoolCreateOptions>()
+public sealed class PoolCreateCommand(ILogger<PoolCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<PoolCreateOptions>()
 {
     private const string CommandTitle = "Create NetApp Files Capacity Pool";
 
     private readonly ILogger<PoolCreateCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "c4f8a2e6-7d3b-4c9e-a1f5-e8b6d3c7a2f4";
 
@@ -84,9 +86,7 @@ public sealed class PoolCreateCommand(ILogger<PoolCreateCommand> logger) : Subsc
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
-            var pool = await netAppFilesService.CreatePool(
+            var pool = await _netAppFilesService.CreatePool(
                 options.Account!,
                 options.Pool!,
                 options.ResourceGroup!,

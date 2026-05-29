@@ -36,7 +36,7 @@ public class VolumeGetCommandTests
         var collection = new ServiceCollection().AddSingleton(_netAppFilesService);
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _netAppFilesService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

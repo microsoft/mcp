@@ -14,11 +14,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.VolumeGroup;
 
-public sealed class VolumeGroupGetCommand(ILogger<VolumeGroupGetCommand> logger) : SubscriptionCommand<VolumeGroupGetOptions>()
+public sealed class VolumeGroupGetCommand(ILogger<VolumeGroupGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<VolumeGroupGetOptions>()
 {
     private const string CommandTitle = "Get NetApp Files Volume Group Details";
 
     private readonly ILogger<VolumeGroupGetCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "a7c3e1d4-9f2b-4a8e-b5c6-d3e7f0a2b4c8";
 
@@ -67,9 +69,7 @@ public sealed class VolumeGroupGetCommand(ILogger<VolumeGroupGetCommand> logger)
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
-            var volumeGroups = await netAppFilesService.GetVolumeGroupDetails(
+            var volumeGroups = await _netAppFilesService.GetVolumeGroupDetails(
                 options.Account,
                 options.VolumeGroup,
                 options.Subscription!,

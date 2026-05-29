@@ -18,11 +18,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Pool;
 
-public sealed class PoolUpdateCommand(ILogger<PoolUpdateCommand> logger) : SubscriptionCommand<PoolUpdateOptions>()
+public sealed class PoolUpdateCommand(ILogger<PoolUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<PoolUpdateOptions>()
 {
     private const string CommandTitle = "Update NetApp Files Capacity Pool";
 
     private readonly ILogger<PoolUpdateCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "d5a9b3e7-6c4f-4d8a-b2e1-f7c8a0d3e5b9";
 
@@ -84,8 +86,6 @@ public sealed class PoolUpdateCommand(ILogger<PoolUpdateCommand> logger) : Subsc
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
             Dictionary<string, string>? tags = null;
             if (!string.IsNullOrEmpty(options.Tags))
             {
@@ -99,7 +99,7 @@ public sealed class PoolUpdateCommand(ILogger<PoolUpdateCommand> logger) : Subsc
                 }
             }
 
-            var pool = await netAppFilesService.UpdatePool(
+            var pool = await _netAppFilesService.UpdatePool(
                 options.Account!,
                 options.Pool!,
                 options.ResourceGroup!,

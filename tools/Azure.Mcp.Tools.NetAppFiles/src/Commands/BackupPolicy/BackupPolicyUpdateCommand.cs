@@ -17,11 +17,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.BackupPolicy;
 
-public sealed class BackupPolicyUpdateCommand(ILogger<BackupPolicyUpdateCommand> logger) : SubscriptionCommand<BackupPolicyUpdateOptions>()
+public sealed class BackupPolicyUpdateCommand(ILogger<BackupPolicyUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupPolicyUpdateOptions>()
 {
     private const string CommandTitle = "Update NetApp Files Backup Policy";
 
     private readonly ILogger<BackupPolicyUpdateCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "d8f4a2c6-5e3b-4d7a-b1f9-e2c6d3a8f5b7";
 
@@ -80,9 +82,7 @@ public sealed class BackupPolicyUpdateCommand(ILogger<BackupPolicyUpdateCommand>
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
-            var backupPolicy = await netAppFilesService.UpdateBackupPolicy(
+            var backupPolicy = await _netAppFilesService.UpdateBackupPolicy(
                 options.Account!,
                 options.BackupPolicy!,
                 options.ResourceGroup!,

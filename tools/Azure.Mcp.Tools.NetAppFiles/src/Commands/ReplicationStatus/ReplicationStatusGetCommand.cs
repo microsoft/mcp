@@ -14,11 +14,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.ReplicationStatus;
 
-public sealed class ReplicationStatusGetCommand(ILogger<ReplicationStatusGetCommand> logger) : SubscriptionCommand<ReplicationStatusGetOptions>()
+public sealed class ReplicationStatusGetCommand(ILogger<ReplicationStatusGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<ReplicationStatusGetOptions>()
 {
     private const string CommandTitle = "Get NetApp Files Volume Replication Status";
 
     private readonly ILogger<ReplicationStatusGetCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "c9e5f1a3-7b4d-4c8e-a2d6-f0b3e8c1d5a7";
 
@@ -69,9 +71,7 @@ public sealed class ReplicationStatusGetCommand(ILogger<ReplicationStatusGetComm
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
-            var replicationStatuses = await netAppFilesService.GetReplicationStatusDetails(
+            var replicationStatuses = await _netAppFilesService.GetReplicationStatusDetails(
                 options.Account,
                 options.Pool,
                 options.Volume,

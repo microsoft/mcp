@@ -17,11 +17,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.BackupVault;
 
-public sealed class BackupVaultCreateCommand(ILogger<BackupVaultCreateCommand> logger) : SubscriptionCommand<BackupVaultCreateOptions>()
+public sealed class BackupVaultCreateCommand(ILogger<BackupVaultCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupVaultCreateOptions>()
 {
     private const string CommandTitle = "Create NetApp Files Backup Vault";
 
     private readonly ILogger<BackupVaultCreateCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "b2d4f6a8-0c1e-4b7d-9f3a-e5c7d9b1a3f5";
 
@@ -74,9 +76,7 @@ public sealed class BackupVaultCreateCommand(ILogger<BackupVaultCreateCommand> l
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
-            var backupVault = await netAppFilesService.CreateBackupVault(
+            var backupVault = await _netAppFilesService.CreateBackupVault(
                 options.Account!,
                 options.BackupVault!,
                 options.ResourceGroup!,

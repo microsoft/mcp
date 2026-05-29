@@ -14,11 +14,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Pool;
 
-public sealed class PoolGetCommand(ILogger<PoolGetCommand> logger) : SubscriptionCommand<PoolGetOptions>()
+public sealed class PoolGetCommand(ILogger<PoolGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<PoolGetOptions>()
 {
     private const string CommandTitle = "Get NetApp Files Capacity Pool Details";
 
     private readonly ILogger<PoolGetCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "a3c7e1d9-5f2b-4a8e-b6c4-d9e2f7a1b3c5";
 
@@ -67,9 +69,7 @@ public sealed class PoolGetCommand(ILogger<PoolGetCommand> logger) : Subscriptio
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
-            var pools = await netAppFilesService.GetPoolDetails(
+            var pools = await _netAppFilesService.GetPoolDetails(
                 options.Account,
                 options.Pool,
                 options.Subscription!,

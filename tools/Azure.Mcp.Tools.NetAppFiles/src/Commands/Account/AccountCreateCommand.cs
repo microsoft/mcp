@@ -16,11 +16,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Account;
 
-public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) : SubscriptionCommand<AccountCreateOptions>()
+public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<AccountCreateOptions>()
 {
     private const string CommandTitle = "Create NetApp Files Account";
 
     private readonly ILogger<AccountCreateCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "b8d4e2a6-5c3f-4e7a-9b1d-f6a2c8e3d5b7";
 
@@ -71,9 +73,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
-            var account = await netAppFilesService.CreateAccount(
+            var account = await _netAppFilesService.CreateAccount(
                 options.Account!,
                 options.ResourceGroup!,
                 options.Location!,

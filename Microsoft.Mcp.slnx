@@ -341,6 +341,9 @@
   <Folder Name="/tools/Azure.Mcp.Tools.NetAppFiles/src/">
     <Project Path="tools/Azure.Mcp.Tools.NetAppFiles/src/Azure.Mcp.Tools.NetAppFiles.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.NetAppFiles/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.NetAppFiles/tests/Azure.Mcp.Tools.NetAppFiles.UnitTests/Azure.Mcp.Tools.NetAppFiles.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Policy/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Policy/src/">
     <Project Path="tools/Azure.Mcp.Tools.Policy/src/Azure.Mcp.Tools.Policy.csproj" />

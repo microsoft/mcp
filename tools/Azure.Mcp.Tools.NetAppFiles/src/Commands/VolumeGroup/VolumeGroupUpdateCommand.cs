@@ -18,11 +18,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.VolumeGroup;
 
-public sealed class VolumeGroupUpdateCommand(ILogger<VolumeGroupUpdateCommand> logger) : SubscriptionCommand<VolumeGroupUpdateOptions>()
+public sealed class VolumeGroupUpdateCommand(ILogger<VolumeGroupUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<VolumeGroupUpdateOptions>()
 {
     private const string CommandTitle = "Update NetApp Files Volume Group";
 
     private readonly ILogger<VolumeGroupUpdateCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "d8e5f2a1-3b7c-4d9e-a6c4-f0b3e7d1a5c2";
 
@@ -79,8 +81,6 @@ public sealed class VolumeGroupUpdateCommand(ILogger<VolumeGroupUpdateCommand> l
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
             Dictionary<string, string>? tags = null;
             if (!string.IsNullOrEmpty(options.Tags))
             {
@@ -94,7 +94,7 @@ public sealed class VolumeGroupUpdateCommand(ILogger<VolumeGroupUpdateCommand> l
                 }
             }
 
-            var volumeGroup = await netAppFilesService.UpdateVolumeGroup(
+            var volumeGroup = await _netAppFilesService.UpdateVolumeGroup(
                 options.Account!,
                 options.VolumeGroup!,
                 options.ResourceGroup!,

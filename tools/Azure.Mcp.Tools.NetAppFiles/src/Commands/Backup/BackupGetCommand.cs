@@ -14,11 +14,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Backup;
 
-public sealed class BackupGetCommand(ILogger<BackupGetCommand> logger) : SubscriptionCommand<BackupGetOptions>()
+public sealed class BackupGetCommand(ILogger<BackupGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupGetOptions>()
 {
     private const string CommandTitle = "Get NetApp Files Backup Details";
 
     private readonly ILogger<BackupGetCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "b2d4f6a8-0c1e-3b5d-7f9a-c4e6d8f0a2b4";
     public override string Name => "get";
@@ -66,9 +68,7 @@ public sealed class BackupGetCommand(ILogger<BackupGetCommand> logger) : Subscri
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
-            var backups = await netAppFilesService.GetBackupDetails(
+            var backups = await _netAppFilesService.GetBackupDetails(
                 options.Account,
                 options.BackupVault,
                 options.Backup,

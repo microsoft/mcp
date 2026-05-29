@@ -18,11 +18,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.BackupVault;
 
-public sealed class BackupVaultUpdateCommand(ILogger<BackupVaultUpdateCommand> logger) : SubscriptionCommand<BackupVaultUpdateOptions>()
+public sealed class BackupVaultUpdateCommand(ILogger<BackupVaultUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupVaultUpdateOptions>()
 {
     private const string CommandTitle = "Update NetApp Files Backup Vault";
 
     private readonly ILogger<BackupVaultUpdateCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "c4e6f8a0-2d5b-4c9e-a3f7-b8d0e2f4a6c8";
 
@@ -77,8 +79,6 @@ public sealed class BackupVaultUpdateCommand(ILogger<BackupVaultUpdateCommand> l
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
             Dictionary<string, string>? tags = null;
             if (!string.IsNullOrEmpty(options.Tags))
             {
@@ -92,7 +92,7 @@ public sealed class BackupVaultUpdateCommand(ILogger<BackupVaultUpdateCommand> l
                 }
             }
 
-            var backupVault = await netAppFilesService.UpdateBackupVault(
+            var backupVault = await _netAppFilesService.UpdateBackupVault(
                 options.Account!,
                 options.BackupVault!,
                 options.ResourceGroup!,

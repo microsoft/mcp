@@ -17,11 +17,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
 
-public sealed class VolumeCreateCommand(ILogger<VolumeCreateCommand> logger) : SubscriptionCommand<VolumeCreateOptions>()
+public sealed class VolumeCreateCommand(ILogger<VolumeCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<VolumeCreateOptions>()
 {
     private const string CommandTitle = "Create NetApp Files Volume";
 
     private readonly ILogger<VolumeCreateCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "d7e2f4a8-3b1c-4d5e-a9f6-c2e8b7d4a1f3";
 
@@ -86,9 +88,7 @@ public sealed class VolumeCreateCommand(ILogger<VolumeCreateCommand> logger) : S
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
-            var volume = await netAppFilesService.CreateVolume(
+            var volume = await _netAppFilesService.CreateVolume(
                 options.Account!,
                 options.Pool!,
                 options.Volume!,

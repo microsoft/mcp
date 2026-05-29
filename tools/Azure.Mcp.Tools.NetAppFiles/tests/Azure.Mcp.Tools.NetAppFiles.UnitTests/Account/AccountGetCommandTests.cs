@@ -36,7 +36,7 @@ public class AccountGetCommandTests
         var collection = new ServiceCollection().AddSingleton(_netAppFilesService);
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _netAppFilesService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
@@ -55,7 +55,7 @@ public class AccountGetCommandTests
         _netAppFilesService.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
-            Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedAccounts));
@@ -157,7 +157,7 @@ public class AccountGetCommandTests
                 false);
 
             _netAppFilesService.GetAccountDetails(
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(expectedAccount));
         }
 

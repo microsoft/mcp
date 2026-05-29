@@ -17,11 +17,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.SnapshotPolicy;
 
-public sealed class SnapshotPolicyUpdateCommand(ILogger<SnapshotPolicyUpdateCommand> logger) : SubscriptionCommand<SnapshotPolicyUpdateOptions>()
+public sealed class SnapshotPolicyUpdateCommand(ILogger<SnapshotPolicyUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<SnapshotPolicyUpdateOptions>()
 {
     private const string CommandTitle = "Update NetApp Files Snapshot Policy";
 
     private readonly ILogger<SnapshotPolicyUpdateCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "e5a9b3d7-7f4c-4e8a-c6b2-f3d1e4a5c7b8";
 
@@ -92,9 +94,7 @@ public sealed class SnapshotPolicyUpdateCommand(ILogger<SnapshotPolicyUpdateComm
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
-            var snapshotPolicy = await netAppFilesService.UpdateSnapshotPolicy(
+            var snapshotPolicy = await _netAppFilesService.UpdateSnapshotPolicy(
                 options.Account!,
                 options.SnapshotPolicy!,
                 options.ResourceGroup!,

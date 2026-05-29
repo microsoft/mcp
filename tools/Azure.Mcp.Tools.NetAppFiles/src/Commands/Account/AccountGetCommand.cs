@@ -14,11 +14,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Account;
 
-public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : SubscriptionCommand<AccountGetOptions>()
+public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<AccountGetOptions>()
 {
     private const string CommandTitle = "Get NetApp Files Account Details";
 
     private readonly ILogger<AccountGetCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "a7c3e1b4-9d2f-4a8e-b5c6-d3e7f0a1b2c4";
 
@@ -65,9 +67,7 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
-            var accounts = await netAppFilesService.GetAccountDetails(
+            var accounts = await _netAppFilesService.GetAccountDetails(
                 options.Account,
                 options.Subscription!,
                 options.Tenant,

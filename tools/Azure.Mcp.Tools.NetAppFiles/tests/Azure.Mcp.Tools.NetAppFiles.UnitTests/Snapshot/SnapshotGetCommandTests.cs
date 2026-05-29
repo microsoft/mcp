@@ -36,7 +36,7 @@ public class SnapshotGetCommandTests
         var collection = new ServiceCollection().AddSingleton(_netAppFilesService);
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _netAppFilesService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
@@ -58,7 +58,7 @@ public class SnapshotGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Is(subscription),
-            Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedSnapshots));
@@ -169,7 +169,7 @@ public class SnapshotGetCommandTests
                 false);
 
             _netAppFilesService.GetSnapshotDetails(
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(expectedSnapshots));
         }
 

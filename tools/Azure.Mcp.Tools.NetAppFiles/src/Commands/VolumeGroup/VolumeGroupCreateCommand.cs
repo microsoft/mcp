@@ -17,11 +17,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.VolumeGroup;
 
-public sealed class VolumeGroupCreateCommand(ILogger<VolumeGroupCreateCommand> logger) : SubscriptionCommand<VolumeGroupCreateOptions>()
+public sealed class VolumeGroupCreateCommand(ILogger<VolumeGroupCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<VolumeGroupCreateOptions>()
 {
     private const string CommandTitle = "Create NetApp Files Volume Group";
 
     private readonly ILogger<VolumeGroupCreateCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "c9f4d3a7-1e6b-4c8d-b2a5-e7f1d8c6a3b9";
 
@@ -80,9 +82,7 @@ public sealed class VolumeGroupCreateCommand(ILogger<VolumeGroupCreateCommand> l
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
-            var volumeGroup = await netAppFilesService.CreateVolumeGroup(
+            var volumeGroup = await _netAppFilesService.CreateVolumeGroup(
                 options.Account!,
                 options.VolumeGroup!,
                 options.ResourceGroup!,

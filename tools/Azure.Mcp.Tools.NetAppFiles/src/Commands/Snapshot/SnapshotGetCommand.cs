@@ -14,11 +14,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Snapshot;
 
-public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger) : SubscriptionCommand<SnapshotGetOptions>()
+public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<SnapshotGetOptions>()
 {
     private const string CommandTitle = "Get NetApp Files Snapshot Details";
 
     private readonly ILogger<SnapshotGetCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
     public override string Id => "a3c7e1d9-5f2b-4a8c-b6d0-e9f4a2c8d1b5";
 
@@ -71,9 +73,7 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger) : Sub
 
         try
         {
-            var netAppFilesService = context.GetService<INetAppFilesService>();
-
-            var snapshots = await netAppFilesService.GetSnapshotDetails(
+            var snapshots = await _netAppFilesService.GetSnapshotDetails(
                 options.Account,
                 options.Pool,
                 options.Volume,
