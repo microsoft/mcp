@@ -1,6 +1,13 @@
 # Release History
 
 
+
+## 3.0.15 (2026-05-29) (pre-release)
+
+### Fixed
+
+- Fixed trimmed/package runtime option binding failures for tools like Kusto query/sample by preserving public parameterless constructors required for reflection-based option activation. [[#2773](https://github.com/microsoft/mcp/pull/2773)]
+
 ## 3.0.14 (2026-05-28) (pre-release)
 
 ### Added
