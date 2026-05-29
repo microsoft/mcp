@@ -13,6 +13,7 @@ using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -45,6 +46,7 @@ public class PoolGetCommandTests
     public async Task ExecuteAsync_NoPoolParameter_ReturnsAllPools()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedPools = new ResourceQueryResults<CapacityPoolInfo>(
         [
@@ -83,6 +85,7 @@ public class PoolGetCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoPools()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetPoolDetails(
@@ -114,6 +117,7 @@ public class PoolGetCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
         var subscription = "sub123";
 
@@ -186,6 +190,7 @@ public class PoolGetCommandTests
     public async Task ExecuteAsync_ReturnsPoolDetails_WhenPoolExists()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var pool = "mypool";
         var subscription = "sub123";
@@ -222,6 +227,7 @@ public class PoolGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetPoolDetails(
@@ -243,6 +249,7 @@ public class PoolGetCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var pool = "nonexistentpool";
 
@@ -264,6 +271,7 @@ public class PoolGetCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetPoolDetails(
@@ -284,6 +292,7 @@ public class PoolGetCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedPools = new ResourceQueryResults<CapacityPoolInfo>(
             [new("account1/pool1", "eastus", "rg1", "Succeeded", "Premium", 4398046511104, "Auto", true, "Single")],

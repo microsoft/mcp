@@ -12,6 +12,7 @@ using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -121,6 +122,7 @@ public class SnapshotPolicyUpdateCommandTests
     public async Task ExecuteAsync_UpdatesSnapshotPolicy_Successfully()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var snapshotPolicy = "mypolicy";
         var resourceGroup = "myrg";
@@ -195,6 +197,7 @@ public class SnapshotPolicyUpdateCommandTests
     public async Task ExecuteAsync_UpdatesSnapshotPolicy_WithoutOptionalParameters()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var snapshotPolicy = "mypolicy";
         var resourceGroup = "myrg";
@@ -244,6 +247,7 @@ public class SnapshotPolicyUpdateCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
 
         _netAppFilesService.UpdateSnapshotPolicy(
@@ -277,6 +281,7 @@ public class SnapshotPolicyUpdateCommandTests
     public async Task ExecuteAsync_HandlesConflict()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.UpdateSnapshotPolicy(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -307,6 +312,7 @@ public class SnapshotPolicyUpdateCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.UpdateSnapshotPolicy(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -337,6 +343,7 @@ public class SnapshotPolicyUpdateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.UpdateSnapshotPolicy(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -367,6 +374,7 @@ public class SnapshotPolicyUpdateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.UpdateSnapshotPolicy(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -397,6 +405,7 @@ public class SnapshotPolicyUpdateCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedPolicy = new SnapshotPolicyCreateResult(
             Id: "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/snapshotPolicies/mypolicy",
             Name: "myanfaccount/mypolicy",
@@ -464,6 +473,7 @@ public class SnapshotPolicyUpdateCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var args = _commandDefinition.Parse([
             "--account", "myanfaccount", "--snapshotPolicy", "mypolicy",
             "--resource-group", "myrg", "--location", "eastus",

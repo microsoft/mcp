@@ -13,6 +13,7 @@ using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -45,6 +46,7 @@ public class ReplicationStatusGetCommandTests
     public async Task ExecuteAsync_NoVolumeParameter_ReturnsAllReplicationStatuses()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedStatuses = new ResourceQueryResults<ReplicationStatusInfo>(
         [
@@ -84,6 +86,7 @@ public class ReplicationStatusGetCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoReplicationStatuses()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetReplicationStatusDetails(
@@ -116,6 +119,7 @@ public class ReplicationStatusGetCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
         var subscription = "sub123";
 
@@ -191,6 +195,7 @@ public class ReplicationStatusGetCommandTests
     public async Task ExecuteAsync_ReturnsReplicationStatus_WhenVolumeExists()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var pool = "mypool";
         var volume = "myvol";
@@ -230,6 +235,7 @@ public class ReplicationStatusGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetReplicationStatusDetails(
@@ -251,6 +257,7 @@ public class ReplicationStatusGetCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var volume = "nonexistentvol";
 
@@ -272,6 +279,7 @@ public class ReplicationStatusGetCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetReplicationStatusDetails(
@@ -292,6 +300,7 @@ public class ReplicationStatusGetCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedStatuses = new ResourceQueryResults<ReplicationStatusInfo>(
             [new("account1/pool1/vol1", "eastus", "rg1", "Dst", "hourly", "/subscriptions/sub/resourceGroups/rg2/providers/Microsoft.NetApp/netAppAccounts/account2/capacityPools/pool2/volumes/vol2", "westus", "repl-id-1")],

@@ -13,6 +13,7 @@ using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -45,6 +46,7 @@ public class VolumeGroupGetCommandTests
     public async Task ExecuteAsync_NoVolumeGroupParameter_ReturnsAllVolumeGroups()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedVolumeGroups = new ResourceQueryResults<VolumeGroupInfo>(
         [
@@ -83,6 +85,7 @@ public class VolumeGroupGetCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoVolumeGroups()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetVolumeGroupDetails(
@@ -114,6 +117,7 @@ public class VolumeGroupGetCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
         var subscription = "sub123";
 
@@ -187,6 +191,7 @@ public class VolumeGroupGetCommandTests
     public async Task ExecuteAsync_ReturnsVolumeGroupDetails_WhenVolumeGroupExists()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var volumeGroup = "myvg";
         var subscription = "sub123";
@@ -223,6 +228,7 @@ public class VolumeGroupGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetVolumeGroupDetails(
@@ -244,6 +250,7 @@ public class VolumeGroupGetCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var volumeGroup = "nonexistentvg";
 
@@ -265,6 +272,7 @@ public class VolumeGroupGetCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetVolumeGroupDetails(
@@ -285,6 +293,7 @@ public class VolumeGroupGetCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedVolumeGroups = new ResourceQueryResults<VolumeGroupInfo>(
             [new("account1/vg1", "eastus", "rg1", "Succeeded", "SAP-HANA", "SH1", "Volume group for SAP HANA")],

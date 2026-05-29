@@ -12,6 +12,7 @@ using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -100,6 +101,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_CreatesAccount_Successfully()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var resourceGroup = "myrg";
         var location = "eastus";
@@ -146,6 +148,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
 
         _netAppFilesService.CreateAccount(
@@ -173,6 +176,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesConflict()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -197,6 +201,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -221,6 +226,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -245,6 +251,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -269,6 +276,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedAccount = new NetAppAccountCreateResult(
             Id: "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount",
             Name: "myanfaccount",
@@ -310,6 +318,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var resourceGroup = "myrg";
         var location = "eastus";

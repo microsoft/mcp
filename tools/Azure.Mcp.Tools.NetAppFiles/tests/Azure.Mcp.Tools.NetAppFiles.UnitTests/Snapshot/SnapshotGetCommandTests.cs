@@ -13,6 +13,7 @@ using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -45,6 +46,7 @@ public class SnapshotGetCommandTests
     public async Task ExecuteAsync_NoSnapshotParameter_ReturnsAllSnapshots()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedSnapshots = new ResourceQueryResults<SnapshotInfo>(
         [
@@ -85,6 +87,7 @@ public class SnapshotGetCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoSnapshots()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetSnapshotDetails(
@@ -118,6 +121,7 @@ public class SnapshotGetCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
         var subscription = "sub123";
 
@@ -195,6 +199,7 @@ public class SnapshotGetCommandTests
     public async Task ExecuteAsync_ReturnsSnapshotDetails_WhenSnapshotExists()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var pool = "mypool";
         var volume = "myvol";
@@ -236,6 +241,7 @@ public class SnapshotGetCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedSnapshots = new ResourceQueryResults<SnapshotInfo>(
         [

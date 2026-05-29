@@ -13,6 +13,7 @@ using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -45,6 +46,7 @@ public class BackupGetCommandTests
     public async Task ExecuteAsync_NoBackupParameter_ReturnsAllBackups()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedBackups = new ResourceQueryResults<BackupInfo>(
         [
@@ -84,6 +86,7 @@ public class BackupGetCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoBackups()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetBackupDetails(
@@ -116,6 +119,7 @@ public class BackupGetCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
         var subscription = "sub123";
 
@@ -190,6 +194,7 @@ public class BackupGetCommandTests
     public async Task ExecuteAsync_ReturnsBackupDetails_WhenBackupExists()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var backupVault = "myvault";
         var backup = "mybackup";
@@ -231,6 +236,7 @@ public class BackupGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetBackupDetails(
@@ -252,6 +258,7 @@ public class BackupGetCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var backup = "nonexistentbackup";
 
@@ -273,6 +280,7 @@ public class BackupGetCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetBackupDetails(
@@ -293,6 +301,7 @@ public class BackupGetCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedBackups = new ResourceQueryResults<BackupInfo>(
             [new("account1/vault1/backup1", "eastus", "rg1", "Succeeded", "Manual", 1024, "label1", "2025-01-01T00:00:00Z")],

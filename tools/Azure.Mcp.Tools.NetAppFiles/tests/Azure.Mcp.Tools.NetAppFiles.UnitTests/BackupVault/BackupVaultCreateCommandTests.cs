@@ -12,6 +12,7 @@ using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -102,6 +103,7 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_CreatesBackupVault_Successfully()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var backupVault = "myvault";
         var resourceGroup = "myrg";
@@ -150,6 +152,7 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
 
         _netAppFilesService.CreateBackupVault(
@@ -179,6 +182,7 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_HandlesConflict()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -205,6 +209,7 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -231,6 +236,7 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -257,6 +263,7 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -283,6 +290,7 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedVault = new BackupVaultCreateResult(
             Id: "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/backupVaults/myvault",
             Name: "myanfaccount/myvault",
@@ -326,6 +334,7 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var backupVault = "myvault";
         var resourceGroup = "myrg";

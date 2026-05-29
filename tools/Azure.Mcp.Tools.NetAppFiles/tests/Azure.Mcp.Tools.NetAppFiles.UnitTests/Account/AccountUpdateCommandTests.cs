@@ -12,6 +12,7 @@ using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -101,6 +102,7 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_UpdatesAccount_Successfully()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var resourceGroup = "myrg";
         var location = "eastus";
@@ -148,6 +150,7 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_UpdatesAccountWithTags_Successfully()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var resourceGroup = "myrg";
         var location = "eastus";
@@ -187,6 +190,7 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
 
         _netAppFilesService.UpdateAccount(
@@ -214,6 +218,7 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_HandlesConflict()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.UpdateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<Dictionary<string, string>>(),
@@ -238,6 +243,7 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.UpdateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<Dictionary<string, string>>(),
@@ -262,6 +268,7 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.UpdateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<Dictionary<string, string>>(),
@@ -286,6 +293,7 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.UpdateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<Dictionary<string, string>>(),
@@ -310,6 +318,7 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedAccount = new NetAppAccountCreateResult(
             Id: "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount",
             Name: "myanfaccount",
@@ -351,6 +360,7 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var resourceGroup = "myrg";
         var location = "eastus";
@@ -388,6 +398,7 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_HandlesInvalidTagsJson()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var args = _commandDefinition.Parse([
             "--account", "myanfaccount", "--resource-group", "myrg",
             "--location", "eastus", "--subscription", "sub123",

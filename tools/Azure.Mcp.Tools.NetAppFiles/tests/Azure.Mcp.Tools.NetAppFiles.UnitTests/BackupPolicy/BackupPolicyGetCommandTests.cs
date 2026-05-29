@@ -13,6 +13,7 @@ using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -45,6 +46,7 @@ public class BackupPolicyGetCommandTests
     public async Task ExecuteAsync_NoBackupPolicyParameter_ReturnsAllBackupPolicies()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedPolicies = new ResourceQueryResults<BackupPolicyInfo>(
         [
@@ -83,6 +85,7 @@ public class BackupPolicyGetCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoBackupPolicies()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetBackupPolicyDetails(
@@ -114,6 +117,7 @@ public class BackupPolicyGetCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
         var subscription = "sub123";
 
@@ -186,6 +190,7 @@ public class BackupPolicyGetCommandTests
     public async Task ExecuteAsync_ReturnsBackupPolicyDetails_WhenPolicyExists()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var backupPolicy = "mypolicy";
         var subscription = "sub123";
@@ -222,6 +227,7 @@ public class BackupPolicyGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetBackupPolicyDetails(
@@ -243,6 +249,7 @@ public class BackupPolicyGetCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var backupPolicy = "nonexistentpolicy";
 
@@ -264,6 +271,7 @@ public class BackupPolicyGetCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetBackupPolicyDetails(
@@ -284,6 +292,7 @@ public class BackupPolicyGetCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedPolicies = new ResourceQueryResults<BackupPolicyInfo>(
             [new("account1/policy1", "eastus", "rg1", "Succeeded", 5, 4, 12, 3, true)],

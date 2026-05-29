@@ -13,6 +13,7 @@ using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -45,6 +46,7 @@ public class VolumeGetCommandTests
     public async Task ExecuteAsync_NoVolumeParameter_ReturnsAllVolumes()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedVolumes = new ResourceQueryResults<NetAppVolumeInfo>(
         [
@@ -84,6 +86,7 @@ public class VolumeGetCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoVolumes()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetVolumeDetails(
@@ -116,6 +119,7 @@ public class VolumeGetCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
         var subscription = "sub123";
 
@@ -191,6 +195,7 @@ public class VolumeGetCommandTests
     public async Task ExecuteAsync_ReturnsVolumeDetails_WhenVolumeExists()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var pool = "mypool";
         var volume = "myvol";
@@ -228,6 +233,7 @@ public class VolumeGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetVolumeDetails(
@@ -249,6 +255,7 @@ public class VolumeGetCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var volume = "nonexistentvol";
 
@@ -270,6 +277,7 @@ public class VolumeGetCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetVolumeDetails(
@@ -290,6 +298,7 @@ public class VolumeGetCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedVolumes = new ResourceQueryResults<NetAppVolumeInfo>(
             [new("account1/pool1/vol1", "eastus", "rg1", "Succeeded", "Premium", 107374182400, "vol1", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet", ["NFSv3", "NFSv4.1"], "Standard")],

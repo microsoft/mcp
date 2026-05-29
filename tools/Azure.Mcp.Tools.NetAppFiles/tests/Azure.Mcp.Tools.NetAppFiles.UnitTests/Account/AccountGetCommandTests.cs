@@ -13,6 +13,7 @@ using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -45,6 +46,7 @@ public class AccountGetCommandTests
     public async Task ExecuteAsync_NoAccountParameter_ReturnsAllAccounts()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedAccounts = new ResourceQueryResults<NetAppAccountInfo>(
         [
@@ -82,6 +84,7 @@ public class AccountGetCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccounts()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
         _netAppFilesService.GetAccountDetails(
@@ -112,6 +115,7 @@ public class AccountGetCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
         var subscription = "sub123";
 
@@ -183,6 +187,7 @@ public class AccountGetCommandTests
     public async Task ExecuteAsync_ReturnsAccountDetails_WhenAccountExists()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var subscription = "sub123";
         var expectedAccount = new ResourceQueryResults<NetAppAccountInfo>(
@@ -218,6 +223,7 @@ public class AccountGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var subscription = "sub123";
 
@@ -240,6 +246,7 @@ public class AccountGetCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "nonexistentaccount";
         var subscription = "sub123";
 
@@ -261,6 +268,7 @@ public class AccountGetCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var subscription = "sub123";
 

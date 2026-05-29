@@ -12,6 +12,7 @@ using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -107,6 +108,7 @@ public class VolumeGroupUpdateCommandTests
     public async Task ExecuteAsync_UpdatesVolumeGroup_Successfully()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var volumeGroup = "myvg";
         var resourceGroup = "myrg";
@@ -164,6 +166,7 @@ public class VolumeGroupUpdateCommandTests
     public async Task ExecuteAsync_UpdatesVolumeGroupWithTags_Successfully()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var volumeGroup = "myvg";
         var resourceGroup = "myrg";
@@ -208,6 +211,7 @@ public class VolumeGroupUpdateCommandTests
     public async Task ExecuteAsync_HandlesInvalidTagsJson()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var args = _commandDefinition.Parse([
             "--account", "myanfaccount", "--volumeGroup", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
@@ -227,6 +231,7 @@ public class VolumeGroupUpdateCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
 
         _netAppFilesService.UpdateVolumeGroup(
@@ -256,6 +261,7 @@ public class VolumeGroupUpdateCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.UpdateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
@@ -282,6 +288,7 @@ public class VolumeGroupUpdateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.UpdateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
@@ -308,6 +315,7 @@ public class VolumeGroupUpdateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.UpdateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
@@ -332,6 +340,7 @@ public class VolumeGroupUpdateCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
         var args = _commandDefinition.Parse([
             "--account", "myanfaccount", "--volumeGroup", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
