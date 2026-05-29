@@ -1968,6 +1968,12 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             }
         }
 
+        // Resolve any email/UPN-based principals to Entra object IDs via Graph API.
+        if (roleDefinition.Members?.MicrosoftEntraMembers is { Count: > 0 } membersToResolve)
+        {
+            await ResolvePrincipalsAsync(membersToResolve, cancellationToken);
+        }
+
         // Use the single-role POST endpoint (preview API) with Overwrite conflict policy.
         // This creates the role if it doesn't exist, or replaces it if it does — without
         // touching other roles on the item (unlike the bulk PUT approach).
@@ -2144,6 +2150,103 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Resolves non-GUID objectId values (email/UPN) to Entra object IDs via Microsoft Graph.
+    /// Resolution order: /users/{x} → /groups?$filter=mail eq '{x}'.
+    /// </summary>
+    private async Task ResolvePrincipalsAsync(List<MicrosoftEntraMember> members, CancellationToken cancellationToken)
+    {
+        var membersToResolve = members.Where(m => !string.IsNullOrWhiteSpace(m.ObjectId) && !Guid.TryParse(m.ObjectId, out _)).ToList();
+        if (membersToResolve.Count == 0)
+        {
+            return;
+        }
+
+        const string graphScope = "https://graph.microsoft.com/.default";
+        var tokenContext = new TokenRequestContext(new[] { graphScope });
+        var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
+
+        var errors = new List<string>();
+
+        foreach (var member in membersToResolve)
+        {
+            var principal = member.ObjectId!.Trim();
+            var resolved = await TryResolveUserAsync(principal, token.Token, cancellationToken)
+                        ?? await TryResolveGroupByMailAsync(principal, token.Token, cancellationToken);
+
+            if (resolved == null)
+            {
+                errors.Add($"No Entra principal matched '{principal}'. Ensure the email/UPN is correct and you have User.Read.All and GroupMember.Read.All permissions.");
+                continue;
+            }
+
+            member.ObjectId = resolved.Value.ObjectId;
+            member.ObjectType ??= resolved.Value.ObjectType;
+        }
+
+        if (errors.Count > 0)
+        {
+            throw new ArgumentException("Failed to resolve one or more principals:\n" + string.Join("\n", errors));
+        }
+    }
+
+    private async Task<(string ObjectId, string ObjectType)?> TryResolveUserAsync(string principalValue, string accessToken, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var url = $"https://graph.microsoft.com/v1.0/users/{Uri.EscapeDataString(principalValue)}?$select=id";
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+            var id = doc.RootElement.GetProperty("id").GetString();
+            return id != null ? (id, "User") : null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    private async Task<(string ObjectId, string ObjectType)?> TryResolveGroupByMailAsync(string mail, string accessToken, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var filter = Uri.EscapeDataString($"mail eq '{mail}'");
+            var url = $"https://graph.microsoft.com/v1.0/groups?$filter={filter}&$select=id,displayName&$top=1";
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+            var values = doc.RootElement.GetProperty("value");
+            if (values.GetArrayLength() == 0)
+            {
+                return null;
+            }
+
+            var id = values[0].GetProperty("id").GetString();
+            return id != null ? (id, "Group") : null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
     }
 
     private static string ExtractWarehouseQueryValue(string warehousePrefix)

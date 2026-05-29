@@ -21,8 +21,12 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
         on other items, so it is safe to call in a loop when multiple roles or
         multiple items need changing. There is no bulk variant: the underlying
         PUT-all API was intentionally not exposed because partial reads would
-        silently delete roles. Caller must be a workspace Admin or Member on the
-        item's workspace. Requires OneLake.ReadWrite.All.
+        silently delete roles. Members can be specified by Entra object ID (GUID),
+        email address, or UPN — non-GUID values are automatically resolved via
+        Microsoft Graph (tries /users then /groups by mail). Caller must be a
+        workspace Admin or Member on the item's workspace. Requires
+        OneLake.ReadWrite.All and User.Read.All + GroupMember.Read.All for
+        principal resolution.
         """,
     Destructive = false,
     Idempotent = true,
