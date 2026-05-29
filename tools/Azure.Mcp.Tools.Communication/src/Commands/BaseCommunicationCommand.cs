@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Communication.Options;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.Communication.Commands;
 
 public abstract class BaseCommunicationCommand<
-    [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties | System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicProperties)]
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)]
 TOptions> : GlobalCommand<TOptions>
     where TOptions : BaseCommunicationOptions, new()
 {
