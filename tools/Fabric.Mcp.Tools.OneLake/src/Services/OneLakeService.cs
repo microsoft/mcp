@@ -2133,8 +2133,12 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             // Pad base64url to standard base64
             switch (payload.Length % 4)
             {
-                case 2: payload += "=="; break;
-                case 3: payload += "="; break;
+                case 2:
+                    payload += "==";
+                    break;
+                case 3:
+                    payload += "=";
+                    break;
             }
 
             var bytes = Convert.FromBase64String(payload.Replace('-', '+').Replace('_', '/'));
