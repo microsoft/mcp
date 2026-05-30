@@ -32,6 +32,9 @@ jobs:
   - template: /eng/common/pipelines/templates/steps/retain-run.yml
 
   - template: /eng/common/pipelines/templates/steps/login-to-github.yml
+    parameters:
+      TokenOwners:
+        - microsoft
 
   - pwsh: |
       $buildInfoPath = "$(Pipeline.Workspace)/build_info/build_info.json"
