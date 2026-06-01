@@ -10,11 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
-<<<<<<< HEAD:core/Azure.Mcp.Core/tests/Azure.Mcp.Core.UnitTests/Areas/Server/Commands/ToolLoading/SingleProxyToolLoaderTests.cs
-=======
 using Microsoft.Mcp.Core.Configuration;
-using Microsoft.Mcp.Core.Helpers;
->>>>>>> 977c9a94c (Remove hard-coded tool description when running servers in "single tool" mode (#2713)):core/Azure.Mcp.Core/tests/Azure.Mcp.Core.Tests/Areas/Server/Commands/ToolLoading/SingleProxyToolLoaderTests.cs
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
