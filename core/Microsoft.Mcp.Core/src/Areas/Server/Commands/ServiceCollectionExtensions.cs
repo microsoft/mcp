@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -271,12 +270,12 @@ public static partial class ServiceCollectionExtensions
             .Configure<IConfiguration, IOptions<ServiceStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
             {
                 // Manually bind configuration values to avoid reflection-based binding for AOT compatibility
-                options.RootCommandGroupName = rootConfiguration["Microsoft.Mcp.RootCommandName"]
+                options.RootCommandGroupName = rootConfiguration["Microsoft.Mcp.RootCommandGroupName"]
                     ?? throw new InvalidOperationException("Configuration value 'Microsoft.Mcp.RootCommandGroupName' is required.");
                 options.Name = rootConfiguration["Microsoft.Mcp.Name"]
-                    ?? throw new InvalidOperationException("Configuration value 'Microsoft.Mcp..Name' is required.");
+                    ?? throw new InvalidOperationException("Configuration value 'Microsoft.Mcp.Name' is required.");
                 options.DisplayName = rootConfiguration["Microsoft.Mcp.DisplayName"]
-                    ?? throw new InvalidOperationException("Configuration value 'Microsoft.Mcp..DisplayName' is required.");
+                    ?? throw new InvalidOperationException("Configuration value 'Microsoft.Mcp.DisplayName' is required.");
 
                 options.ShortName = rootConfiguration["Microsoft.Mcp.ShortName"]
                     ?? throw new InvalidOperationException("Configuration value 'Microsoft.Mcp.ShortName' is required.");
