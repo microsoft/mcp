@@ -260,8 +260,8 @@ public static partial class ServiceCollectionExtensions
     {
         var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
         var configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", optional: false)
-            .AddJsonFile($"appsettings.{environment}.json", optional: true)
+            .AddEmbeddedAppSettings(assembly, "appsettings.json", required: true)
+            .AddEmbeddedAppSettings(assembly, $"appsettings.{environment}.json", required: false)
             .AddEnvironmentVariables()
             .SetBasePath(AppContext.BaseDirectory)
             .Build();
