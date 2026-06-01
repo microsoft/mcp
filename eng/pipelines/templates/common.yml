@@ -29,7 +29,7 @@ parameters:
   default: false
 - name: TestTimeoutInMinutes
   type: number
-  default: 30
+  default: 45
 - name: IsTestPipeline
   type: boolean
   default: false
