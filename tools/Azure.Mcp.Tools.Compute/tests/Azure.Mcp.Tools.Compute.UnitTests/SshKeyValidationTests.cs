@@ -4,7 +4,7 @@
 using Azure.Mcp.Tools.Compute.Services;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Compute.Tests;
+namespace Azure.Mcp.Tools.Compute.UnitTests;
 
 public class SshKeyValidationTests
 {
