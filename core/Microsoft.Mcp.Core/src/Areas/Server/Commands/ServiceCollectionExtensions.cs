@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.Configuration;
@@ -24,8 +25,11 @@ using Options = Microsoft.Extensions.Options.Options;
 /// <summary>
 /// Extension methods for configuring Azure MCP server services.
 /// </summary>
-public static class ServiceCollectionExtensions
+public static partial class ServiceCollectionExtensions
 {
+    [GeneratedRegex("^[A-Za-z0-9_-]+$")]
+    private static partial Regex ShortNamePattern();
+
     /// <summary>
     /// Adds the Azure MCP server services to the specified <see cref="IServiceCollection"/>.
     /// </summary>
@@ -264,12 +268,30 @@ public static class ServiceCollectionExtensions
             .Configure<IConfiguration, IOptions<ServiceStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
             {
                 // Manually bind configuration values to avoid reflection-based binding for AOT compatibility
-                options.RootCommandGroupName = rootConfiguration[nameof(McpServerConfiguration.RootCommandGroupName)]
+                var mcpConfiguration = rootConfiguration.GetRequiredSection("MicrosoftMcp");
+                options.RootCommandGroupName = mcpConfiguration[nameof(McpServerConfiguration.RootCommandGroupName)]
                     ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.RootCommandGroupName)}' is required.");
-                options.Name = rootConfiguration[nameof(McpServerConfiguration.Name)]
+                options.Name = mcpConfiguration[nameof(McpServerConfiguration.Name)]
                     ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.Name)}' is required.");
-                options.DisplayName = rootConfiguration[nameof(McpServerConfiguration.DisplayName)]
+                options.DisplayName = mcpConfiguration[nameof(McpServerConfiguration.DisplayName)]
                     ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.DisplayName)}' is required.");
+
+                options.ShortName = mcpConfiguration[nameof(McpServerConfiguration.ShortName)]
+                    ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.ShortName)}' is required.");
+                options.ShortName = options.ShortName.Trim();
+                if (!ShortNamePattern().IsMatch(options.ShortName))
+                {
+                    throw new InvalidOperationException(
+                        $"Configuration value '{nameof(McpServerConfiguration.ShortName)}' must contain only letters, digits, '_', or '-'.");
+                }
+
+                options.Description = mcpConfiguration[nameof(McpServerConfiguration.Description)]
+                    ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.Description)}' is required.");
+                if (string.IsNullOrWhiteSpace(options.Description))
+                {
+                    throw new InvalidOperationException(
+                        $"Configuration value '{nameof(McpServerConfiguration.Description)}' must not be empty or whitespace.");
+                }
 
                 // Assembly.GetEntryAssembly is used to retrieve the version of the server application as that is
                 // the assembly that will run the tool calls.

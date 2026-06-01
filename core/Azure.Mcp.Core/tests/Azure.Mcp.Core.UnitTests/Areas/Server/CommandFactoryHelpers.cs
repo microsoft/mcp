@@ -111,8 +111,10 @@ internal class CommandFactoryHelpers
         var configurationOptions = Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
         {
             Name = "Test Server",
+            ShortName = "test",
             Version = "Test Version",
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         });
         var telemetryService = services.GetService<ITelemetryService>() ?? new NoOpTelemetryService();

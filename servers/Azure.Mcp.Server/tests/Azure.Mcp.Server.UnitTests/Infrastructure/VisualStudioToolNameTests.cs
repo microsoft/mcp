@@ -61,8 +61,10 @@ public sealed class VisualStudioToolNameTests
         var configurationOptions = Options.Create(new McpServerConfiguration
         {
             Name = "Test Server",
+            ShortName = "test",
             Version = "1.0",
             DisplayName = "Test",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         });
 
