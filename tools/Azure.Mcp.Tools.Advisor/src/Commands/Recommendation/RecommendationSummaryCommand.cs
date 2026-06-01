@@ -16,9 +16,9 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 [CommandMetadata(
     Id = "9f6a9d4e-6e8a-4d1c-9a7a-7e1f3b2d4a55",
     Name = "summary",
-    Title = "Summarize Advisor Recommendations",
-    Description = "Group Azure Advisor recommendations by a chosen field and return the top N buckets by count. " +
-        "Required: --group-by (one of 'recommendation', 'category', 'impact', 'resource-type', 'resource'). " +
+    Title = "Summarize Advisor Recommendations in a Subscription",
+    Description = "Group Azure Advisor recommendations in a subscription by a chosen field and return the top N buckets by count. " +
+        "Required: --group-by (one of 'recommendation-type', 'category', 'impact', 'resource-type'). " +
         "Optional: --top (default 5, clamped to 1-50), plus the same filters as 'list' (--category, --impact, --resource-type, --resource, --search). " +
         "Filters are applied first, then aggregation runs over the filtered set.",
     Destructive = false,
@@ -73,11 +73,11 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
         var options = BindOptions(parseResult);
 
         var groupBy = options.GroupBy?.Trim().ToLowerInvariant();
-        if (string.IsNullOrEmpty(groupBy) || !RecommendationAggregator.AllowedGroupBy.Contains(groupBy))
+        if (string.IsNullOrEmpty(groupBy) || !AdvisorService.AllowedGroupBy.Contains(groupBy))
         {
             context.Response.Status = HttpStatusCode.BadRequest;
             context.Response.Message =
-                $"Invalid --group-by value '{options.GroupBy}'. Allowed values: {string.Join(", ", RecommendationAggregator.AllowedGroupBy)}.";
+                $"Invalid --group-by value '{options.GroupBy}'. Allowed values: {string.Join(", ", AdvisorService.AllowedGroupBy)}.";
             return context.Response;
         }
 

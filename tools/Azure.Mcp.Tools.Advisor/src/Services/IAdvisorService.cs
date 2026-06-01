@@ -14,6 +14,7 @@ public interface IAdvisorService
         string? resourceGroup,
         RetryPolicyOptions? retryPolicy,
         RecommendationFilters? filters = null,
+        int top = 50,
         CancellationToken cancellationToken = default);
 
     Task<RecommendationSummary> SummarizeRecommendationsAsync(

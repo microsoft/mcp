@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Id = "e3f09221-523a-4107-a715-823cebd97902",
     Name = "list",
     Title = "List Advisor Recommendations",
-    Description = "List Azure advisor recommendations in a subscription. Supports optional filters: --category, --impact, --resource-type, --resource, --search.",
+    Description = "List Azure advisor recommendations in a subscription. Supports optional filters: --category, --impact, --resource-type, --resource, --search. Use --top to cap the number of returned items (default 50, max 100).",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -27,6 +27,10 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IAdvisorService advisorService)
     : BaseAdvisorCommand<RecommendationListOptions>(logger)
 {
+    private const int MinTop = 1;
+    private const int MaxTop = 100;
+    private const int DefaultTop = 50;
+
     private readonly IAdvisorService _advisorService = advisorService;
 
     protected override void RegisterOptions(Command command)
@@ -37,6 +41,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         command.Options.Add(AdvisorOptionDefinitions.ResourceType.AsOptional());
         command.Options.Add(AdvisorOptionDefinitions.Resource.AsOptional());
         command.Options.Add(AdvisorOptionDefinitions.Search.AsOptional());
+        command.Options.Add(AdvisorOptionDefinitions.Top.AsOptional());
     }
 
     protected override RecommendationListOptions BindOptions(ParseResult parseResult)
@@ -47,6 +52,9 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         options.ResourceType = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.ResourceType);
         options.Resource = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Resource);
         options.Search = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Search);
+        options.Top = parseResult.CommandResult.HasOptionResult(AdvisorOptionDefinitions.Top)
+            ? parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Top)
+            : (int?)null;
         return options;
     }
 
@@ -58,6 +66,8 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         }
 
         var options = BindOptions(parseResult);
+
+        var top = Math.Clamp(options.Top ?? DefaultTop, MinTop, MaxTop);
 
         try
         {
@@ -73,6 +83,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 options.ResourceGroup,
                 options.RetryPolicy,
                 filters,
+                top,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(recommendations?.Results ?? [], recommendations?.AreResultsTruncated ?? false),
@@ -82,13 +93,14 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         {
             _logger.LogError(ex,
                 "Error listing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, " +
-                "Category: {Category}, Impact: {Impact}, ResourceType: {ResourceType}, Resource: {Resource}, HasSearch: {HasSearch}.",
+                "Category: {Category}, Impact: {Impact}, ResourceType: {ResourceType}, Resource: {Resource}, Top: {Top}, HasSearch: {HasSearch}.",
                 options.Subscription,
                 options.ResourceGroup,
                 options.Category,
                 options.Impact,
                 options.ResourceType,
                 options.Resource,
+                top,
                 !string.IsNullOrEmpty(options.Search));
             HandleException(context, ex);
         }

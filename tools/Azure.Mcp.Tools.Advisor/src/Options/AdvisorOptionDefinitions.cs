@@ -57,7 +57,7 @@ public static class AdvisorOptionDefinitions
         $"--{GroupByText}"
     )
     {
-        Description = "Field to group the summary by. One of: 'recommendation', 'category', 'impact', 'resource-type', 'resource'.",
+        Description = "Field to group the summary by. One of: 'recommendation-type', 'category', 'impact', 'resource-type'.",
         Required = true
     };
 
@@ -65,8 +65,8 @@ public static class AdvisorOptionDefinitions
         $"--{TopText}"
     )
     {
-        Description = "Maximum number of groups to return, ordered by descending count. Defaults to 5; clamped to 1-50.",
-        Required = false,
-        DefaultValueFactory = _ => 5
+        Description = "Maximum number of items to return, ordered by descending count. " +
+            "For 'list': defaults to 50, clamped to 1-100. For 'summary': defaults to 5, clamped to 1-50.",
+        Required = false
     };
 }

@@ -10,4 +10,5 @@ public class RecommendationListOptions : BaseAdvisorOptions
     public string? ResourceType { get; set; }
     public string? Resource { get; set; }
     public string? Search { get; set; }
+    public int? Top { get; set; }
 }

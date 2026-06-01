@@ -57,7 +57,7 @@ public class AdvisorServiceFilterBuilderTests
             new RecommendationFilters(ResourceType: "Microsoft.Storage/storageAccounts"));
 
         Assert.Equal(
-            "tolower(tostring(properties.resourceMetadata.resourceId)) contains tolower('Microsoft.Storage/storageAccounts')",
+            "tostring(properties.resourceMetadata.resourceId) contains 'Microsoft.Storage/storageAccounts'",
             result);
     }
 
@@ -67,7 +67,7 @@ public class AdvisorServiceFilterBuilderTests
         var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Resource: "mystorage"));
 
         Assert.Equal(
-            "tolower(tostring(properties.resourceMetadata.resourceId)) contains tolower('mystorage')",
+            "tostring(properties.resourceMetadata.resourceId) contains 'mystorage'",
             result);
     }
 
@@ -77,7 +77,7 @@ public class AdvisorServiceFilterBuilderTests
         var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Search: "encryption"));
 
         Assert.Equal(
-            "tolower(tostring(properties.shortDescription.problem)) contains tolower('encryption')",
+            "tostring(properties.shortDescription.problem) contains 'encryption'",
             result);
     }
 
@@ -94,7 +94,7 @@ public class AdvisorServiceFilterBuilderTests
         Assert.Equal(
             "tostring(properties.category) =~ 'Security' and "
             + "tostring(properties.impact) =~ 'High' and "
-            + "tolower(tostring(properties.shortDescription.problem)) contains tolower('tls')",
+            + "tostring(properties.shortDescription.problem) contains 'tls'",
             result);
     }
 
