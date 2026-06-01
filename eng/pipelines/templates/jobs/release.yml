@@ -31,8 +31,6 @@ jobs:
 
   - template: /eng/common/pipelines/templates/steps/retain-run.yml
 
-  - template: /eng/common/pipelines/templates/steps/login-to-github.yml
-
   - pwsh: |
       $buildInfoPath = "$(Pipeline.Workspace)/build_info/build_info.json"
       $buildInfo = Get-Content -Raw -Path $buildInfoPath | ConvertFrom-Json
@@ -51,7 +49,7 @@ jobs:
       gh release upload $tag $(Pipeline.Workspace)/binaries_signed_zipped/*.zip
     displayName: Create GitHub Release and upload artifacts
     env:
-      GH_TOKEN: $(GH_TOKEN)
+      GH_TOKEN: $(azuresdk-github-pat)
 
 - template: /eng/pipelines/templates/jobs/publish-symbols.yml
 
@@ -131,4 +129,3 @@ jobs:
       PRTitle: "Increment version after release"
       RepoOwner: microsoft
       CloseAfterOpenForTesting: ${{ parameters.IsTestPipeline }}
-      AuthToken: ''

@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.15 (Unreleased)
+## 3.0.0-beta.16 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,12 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 3.0.0-beta.15 (2026-05-29)
+
+### Bugs Fixed
+
+- Fixed trimmed/package runtime option binding failures for tools like Kusto query/sample by preserving public parameterless constructors required for reflection-based option activation. [[#2773](https://github.com/microsoft/mcp/pull/2773)]
 
 ## 3.0.0-beta.14 (2026-05-28)
 
