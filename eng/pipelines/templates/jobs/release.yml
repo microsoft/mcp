@@ -35,20 +35,7 @@ jobs:
     parameters:
       TokenOwners:
         - Microsoft
-
-  - pwsh: |
-      $token = $env:GH_TOKEN
-
-      if ([string]::IsNullOrWhiteSpace($token)) {
-        Write-Error "GH_TOKEN is not available in step environment after login-to-github step."
-        exit 1
-      }
-
-      Write-Host "##vso[task.setvariable variable=GitHubToken;issecret=true;isOutput=true]$token"
-    displayName: Export GitHub token for downstream jobs
-    name: ExportGitHubToken
-    env:
-      GH_TOKEN: $(GH_TOKEN)
+      ExportAsOutputVariable: true
 
   - pwsh: |
       $buildInfoPath = "$(Pipeline.Workspace)/build_info/build_info.json"
