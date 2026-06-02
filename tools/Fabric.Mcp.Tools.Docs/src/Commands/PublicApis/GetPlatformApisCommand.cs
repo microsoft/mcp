@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Fabric.Mcp.Tools.Docs.Options;
+using Fabric.Mcp.Tools.Docs.Models;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -21,20 +21,13 @@ namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
     LocalRequired = false,
     Secret = false)]
 public sealed class GetPlatformApisCommand(IFabricPublicApiService service, ILogger<GetPlatformApisCommand> logger)
-    : GlobalCommand<BaseFabricOptions>()
+    : AuthenticatedCommand<EmptyOptions, FabricWorkloadPublicApi>
 {
     private readonly ILogger<GetPlatformApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var apis = await _service.GetWorkloadPublicApis("platform", cancellationToken);

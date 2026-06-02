@@ -5,6 +5,7 @@ using Azure.Mcp.Tools.Advisor.Services.Models;
 namespace Azure.Mcp.Tools.Advisor.Commands;
 
 [JsonSerializable(typeof(RecommendationListCommand.RecommendationListResult))]
+[JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(RecommendationData))]
 [JsonSerializable(typeof(Models.Recommendation))]
 [JsonSourceGenerationOptions(

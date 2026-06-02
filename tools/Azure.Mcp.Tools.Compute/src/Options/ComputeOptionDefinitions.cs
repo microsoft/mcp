@@ -119,8 +119,9 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> Tags = new($"--{TagsName}")
     {
-        Description = "Space-separated tags in 'key=value' format. Use '' to clear existing tags.",
-        Required = false
+        Description = "Comma-separated tags in 'key=value' format (e.g., 'env=prod,team=compute'). Use '' to clear all existing tags.",
+        Required = false,
+        Arity = ArgumentArity.ZeroOrOne
     };
 
     public static readonly Option<string> DiskEncryptionSet = new($"--{DiskEncryptionSetName}")
@@ -386,7 +387,7 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> UserData = new($"--{UserDataName}")
     {
-        Description = "Base64-encoded user data for the VM. Use to update custom data scripts",
+        Description = "Base64-encoded user data for the VM (e.g., a cloud-init or shell script). The value must be Base64-encoded before passing; the ARM API requires this format.",
         Required = false
     };
 }

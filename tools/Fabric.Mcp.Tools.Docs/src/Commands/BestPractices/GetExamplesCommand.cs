@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Fabric.Mcp.Tools.Docs.Options;
 using Fabric.Mcp.Tools.Docs.Options.PublicApis;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
 
@@ -23,36 +22,16 @@ namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
     LocalRequired = false,
     Secret = false)]
 public sealed class GetExamplesCommand(IFabricPublicApiService service, ILogger<GetExamplesCommand> logger)
-    : GlobalCommand<WorkloadCommandOptions>()
+    : AuthenticatedCommand<WorkloadCommandOptions, GetExamplesCommand.ExampleFileResult>
 {
     private readonly ILogger<GetExamplesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, WorkloadCommandOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkloadType);
-    }
-
-    protected override WorkloadCommandOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.WorkloadType = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkloadType.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var availableExamples = await _service.GetWorkloadExamplesAsync(options.WorkloadType!, cancellationToken);
+            var availableExamples = await _service.GetWorkloadExamplesAsync(options.WorkloadType, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(availableExamples), FabricJsonContext.Default.ExampleFileResult);
         }
