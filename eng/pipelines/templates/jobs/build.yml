@@ -69,6 +69,8 @@ jobs:
         -SelfContained
         -SingleFile
         -SmokeTest
+    env:
+      AZURE_MCP_COLLECT_TELEMETRY: 'false'
 
   - task: Powershell@2
     displayName: "Run unit tests"
