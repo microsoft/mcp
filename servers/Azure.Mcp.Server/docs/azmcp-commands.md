@@ -330,6 +330,10 @@ azmcp server info
 # List Advisor recommendations in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation list --subscription <subscription>
+
+# Apply Advisor recommendation to create or modify IaaC files (like ARM, Terraform) for Azure resources
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor recommendation apply --resource <resource>
 ```
 
 ### Azure AI Search Operations
@@ -1452,10 +1456,10 @@ azmcp compute vm update --subscription "my-subscription" \
 | `--resource-group`, `-g` | Yes | Resource group name |
 | `--vm-name` | Yes | Name of the virtual machine |
 | `--vm-size` | No | New VM size (may require VM to be deallocated) |
-| `--tags` | No | Tags in key=value,key2=value2 format |
+| `--tags` | No | Comma-separated tags in `key=value` format (e.g., `env=prod,team=compute`). Use bare `--tags` or `--tags ''` to clear all existing tags. |
 | `--license-type` | No | License type: 'Windows_Server', 'RHEL_BYOS', 'SLES_BYOS', 'None' |
 | `--boot-diagnostics` | No | Enable or disable boot diagnostics: 'true' or 'false' |
-| `--user-data` | No | Base64-encoded user data |
+| `--user-data` | No | Base64-encoded user data for the VM (e.g., a cloud-init or shell script). Must be Base64-encoded; the ARM API requires this format. |
 
 ```bash
 # Delete a Virtual Machine
@@ -1743,7 +1747,7 @@ azmcp compute vmss update --subscription "my-subscription" \
 | `--overprovision` | No | Enable or disable overprovisioning |
 | `--enable-auto-os-upgrade` | No | Enable automatic OS image upgrades |
 | `--scale-in-policy` | No | Scale-in policy: 'Default', 'OldestVM', 'NewestVM' |
-| `--tags` | No | Tags in key=value,key2=value2 format |
+| `--tags` | No | Comma-separated tags in `key=value` format (e.g., `env=prod,team=compute`). Use bare `--tags` or `--tags ''` to clear all existing tags. |
 
 ```bash
 # Delete a Virtual Machine Scale Set
@@ -3602,20 +3606,17 @@ azmcp resourcehealth health-events list --subscription <subscription> \
 ```bash
 # Returns runtime and details about the Service Bus queue
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp servicebus queue details --subscription <subscription> \
-                               --namespace <service-bus-namespace> \
+azmcp servicebus queue details --namespace <service-bus-namespace> \
                                --queue <queue>
 
 # Gets runtime details a Service Bus topic
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp servicebus topic details --subscription <subscription> \
-                               --namespace <service-bus-namespace> \
+azmcp servicebus topic details --namespace <service-bus-namespace> \
                                --topic <topic>
 
 # Gets runtime details and message counts for a Service Bus subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp servicebus topic subscription details --subscription <subscription> \
-                                            --namespace <service-bus-namespace> \
+azmcp servicebus topic subscription details --namespace <service-bus-namespace> \
                                             --topic <topic> \
                                             --subscription-name <subscription-name>
 ```

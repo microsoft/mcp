@@ -89,21 +89,21 @@ public class ServiceBusServiceNamespaceValidationTests
     [InlineData("test.servicebus.windows.net:443")]
     [InlineData("test.servicebus.windows.net?q=1")]
     [InlineData("https://test.servicebus.windows.net")]
-    public async Task GetQueueDetails_RejectsNonHostNamespaceValues(string namespaceName)
+    public async Task GetQueueDetails_RejectsMalformedNamespace(string namespaceName)
     {
-        var ex = await Assert.ThrowsAsync<SecurityException>(
+        var ex = await Assert.ThrowsAsync<ArgumentException>(
             () => _service.GetQueueDetails(namespaceName, "testQueue", cancellationToken: TestContext.Current.CancellationToken));
-        Assert.Contains("host name only", ex.Message);
+        Assert.Contains("Namespace name contains invalid characters", ex.Message);
     }
 
     [Theory]
     [InlineData("ns#fragment.servicebus.windows.net")]
     [InlineData("test.servicebus.windows.net/extraPath")]
     [InlineData("test.servicebus.windows.net:443")]
-    public async Task PeekQueueMessages_RejectsNonHostNamespaceValues(string namespaceName)
+    public async Task PeekQueueMessages_RejectsMalformedNamespace(string namespaceName)
     {
-        var ex = await Assert.ThrowsAsync<SecurityException>(
+        var ex = await Assert.ThrowsAsync<ArgumentException>(
             () => _service.PeekQueueMessages(namespaceName, "testQueue", 1, cancellationToken: TestContext.Current.CancellationToken));
-        Assert.Contains("host name only", ex.Message);
+        Assert.Contains("Namespace name contains invalid characters", ex.Message);
     }
 }

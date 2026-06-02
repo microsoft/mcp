@@ -1,9 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: |
-      Added five Cosmos DB MCP tools:
-      - `cosmos_database_container_schema_get`: Infer container schema by sampling documents
-      - `cosmos_database_container_item_list-recent`: Return the most recently modified documents
-      - `cosmos_database_container_item_get`: Look up a document by id, with optional partition key for point reads
-      - `cosmos_database_container_item_text-search`: FullTextContains-based property search
-      - `cosmos_database_container_item_vector-search`: VectorDistance similarity search with optional Azure OpenAI embedding generation via `--search-text`
