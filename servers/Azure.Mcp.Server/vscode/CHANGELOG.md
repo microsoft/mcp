@@ -1,6 +1,10 @@
 # Release History
 
+## 3.0.16 (2026-06-01) (pre-release)
 
+### Changed
+
+- **Breaking:** Changed server property names in `appsettings.json` to be scoped to `MicrosoftMcp` instead of the root level. [[#2779](https://github.com/microsoft/mcp/pull/2779)]
 
 ## 3.0.15 (2026-05-29) (pre-release)
 

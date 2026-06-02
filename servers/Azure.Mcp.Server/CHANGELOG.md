@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.16 (Unreleased)
+## 3.0.0-beta.17 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,12 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 3.0.0-beta.16 (2026-06-01)
+
+### Breaking Changes
+
+- Changed server property names in `appsettings.json` to be scoped to `MicrosoftMcp` instead of the root level. [[#2779](https://github.com/microsoft/mcp/pull/2779)]
 
 ## 3.0.0-beta.15 (2026-05-29)
 

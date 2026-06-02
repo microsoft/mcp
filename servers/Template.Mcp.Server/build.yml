@@ -22,6 +22,10 @@ parameters:
   displayName: Test Timeout In Minutes
   type: number
   default: 45
+- name: BuildTimeoutInMinutes
+  displayName: Build Timeout In Minutes
+  type: number
+  default: 90
 
 trigger: none
 pr: none
@@ -38,4 +42,5 @@ extends:
     PackageMCPB: ${{ parameters.PackageMCPB }}
     IncludeNative: ${{ parameters.IncludeNative }}
     TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
+    BuildTimeoutInMinutes: ${{ parameters.BuildTimeoutInMinutes }}
     IsTestPipeline: true

@@ -2,6 +2,8 @@ parameters:
 # required matrix parameters
 - name: TestTimeoutInMinutes
   type: number
+- name: BuildTimeoutInMinutes
+  type: number
 - name: ServerName
   type: string
 - name: PublishTarget
@@ -19,6 +21,7 @@ parameters:
 jobs:
 - job: Build_${{ parameters.OSName }}_${{ coalesce(parameters.HostArchitecture, 'x64') }}
   displayName: "Build"
+  timeoutInMinutes: ${{ parameters.BuildTimeoutInMinutes }}
   condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'))
   strategy:
     maxParallel: ${{ parameters.MaxParallel }}
