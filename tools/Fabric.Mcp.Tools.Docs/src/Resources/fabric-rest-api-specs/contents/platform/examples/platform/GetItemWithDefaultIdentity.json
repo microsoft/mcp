@@ -1,0 +1,26 @@
+{
+    "parameters": {
+        "workspaceId": "0c7ac00e-7b1a-4b7f-ac0f-95636b0c6081",
+        "itemId": "56f028cd-fa09-46e6-b9b6-82b14185216d",
+        "include": "DefaultIdentity"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "displayName": "Item 1",
+                "description": "Item 1 description",
+                "type": "Lakehouse",
+                "workspaceId": "0c7ac00e-7b1a-4b7f-ac0f-95636b0c6081",
+                "id": "56f028cd-fa09-46e6-b9b6-82b14185216d",
+                "defaultIdentity": {
+                    "id": "ce44af2b-7f4b-4975-979b-4d4d8c43c117",
+                    "displayName": "Caleb Foster",
+                    "type": "User",
+                    "userDetails": {
+                        "userPrincipalName": "caleb@example.com"
+                    }
+                }
+            }
+        }
+    }
+}

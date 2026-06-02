@@ -84,14 +84,14 @@
           }
         },
         "x-ms-examples": {
-          "List s in workspace example": {
+          "List Apache Airflow jobs in workspace example": {
             "$ref": "./examples/ListApacheAirflowJobsInWorkspace.json"
           }
         }
       },
       "post": {
         "summary": "Creates an Apache Airflow job in the specified workspace.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create Apache Airflow job with a public definition, refer to [](/rest/api/fabric/articles/item-management/definitions/public-facing-name) article. \n\n ## Permissions \n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes\n\n ApacheAirflowJob.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create an Apache Airflow job the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All \n\n## Limitations \n- To create an Apache Airflow job the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -177,7 +177,7 @@
     "/workspaces/{workspaceId}/apacheAirflowJobs/{apacheAirflowJobId}": {
       "get": {
         "summary": "Returns properties of the specified Apache Airflow job.",
-        "description": "## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n ApacheAirflowJob.Read.All or ApacheAirflowJob.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -238,7 +238,7 @@
       },
       "patch": {
         "summary": "Updates the properties of the specified Apache Airflow job.",
-        "description": "## Permissions\n\n The caller must have *read and write* permissions for the apache airflow job.\n\n## Required Delegated Scopes\n\n ApacheAirflowJob.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\n The caller must have *read and write* permissions for the apache airflow job.\n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -311,7 +311,7 @@
       },
       "delete": {
         "summary": "Deletes the specified Apache Airflow job.",
-        "description": "## Permissions\n\n The caller must have *write* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n ApacheAirflowJob.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\n The caller must have *write* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -381,7 +381,7 @@
     "/workspaces/{workspaceId}/apacheAirflowJobs/{apacheAirflowJobId}/getDefinition": {
       "post": {
         "summary": "Returns the specified Apache Airflow job public definition.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a 's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the apache airflow job. \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get an Apache Airflow job's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the apache airflow job. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -470,7 +470,7 @@
     "/workspaces/{workspaceId}/apacheAirflowJobs/{apacheAirflowJobId}/updateDefinition": {
       "post": {
         "summary": "Overrides the definition for the specified Apache Airflow job.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n \nUpdating the 's definition, does not affect its sensitivity label. \n\n## Permissions\n\n The caller must have *read and write* permissions for the apache airflow job. \n## Required Delegated Scopes\n\n ApacheAirflowJob.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n \nUpdating the Apache Airflow job's definition, does not affect its sensitivity label. \n\n## Permissions\n\n The caller must have *read and write* permissions for the apache airflow job. \n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -562,10 +562,184 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/apacheAirflowJobs/{apacheAirflowJobId}/environment/start?beta=true": {
+      "post": {
+        "summary": "Starts an Apache Airflow job environment.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have *execute* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Item.Execute.All\n\nSet the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Environment"
+        ],
+        "operationId": "Environment_Start_Apache_Airflow_Job_Environment_(beta)",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "apacheAirflowJobId",
+            "description": "The Apache Airflow job ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true,
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted. Starting the environment is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested Apache Airflow job was not found.\n\n* Forbidden - The caller doesn't have permissions to call the API.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Start Apache Airflow environment example": {
+            "$ref": "./examples/StartApacheAirflowEnvironment.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/apacheAirflowJobs/{apacheAirflowJobId}/environment/stop?beta=true": {
+      "post": {
+        "summary": "Stops an Apache Airflow job environment.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have *execute* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Item.Execute.All\n\nSet the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Environment"
+        ],
+        "operationId": "Environment_Stop_Apache_Airflow_Job_Environment_(beta)",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "apacheAirflowJobId",
+            "description": "The Apache Airflow job ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true,
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted. Stopping the environment is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested Apache Airflow job was not found.\n\n* Forbidden - The caller doesn't have permissions to call the API.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Stop Apache Airflow environment example": {
+            "$ref": "./examples/StopApacheAirflowEnvironment.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/apacheAirflowJobs/{apacheAirflowJobId}/environment?beta=true": {
       "get": {
         "summary": "Gets the Apache Airflow environment for the specified Apache Airflow job.",
-        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Airflow.Read.All or Item.Read.All\n\nSet the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Item.Read.All or Item.ReadWrite.All\n\nSet the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Environment"
         ],
@@ -636,7 +810,7 @@
     "/workspaces/{workspaceId}/apacheAirflowJobs/{apacheAirflowJobId}/environment/libraries?beta=true": {
       "get": {
         "summary": "Returns a list of installed libraries for the specified Apache Airflow job environment.",
-        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Airflow.Read.All or Item.Read.All\n\nSet the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Item.Read.All or Item.ReadWrite.All\n\nSet the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Requirements"
         ],
@@ -714,10 +888,119 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/apacheAirflowJobs/{apacheAirflowJobId}/environment/deployRequirements?beta=true": {
+      "post": {
+        "summary": "Deploys requirements for an Apache Airflow job environment.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have *write* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\nSet the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n**You can deploy requirements by either including the `filePath` query parameter pointing to an existing requirements file, or by providing the requirements file content directly in the request body.**\n\n**When calling this API, the Apache Airflow job must be in 'Started' state.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Requirements"
+        ],
+        "operationId": "Requirements_Deploy_Apache_Airflow_Job_Requirements_(beta)",
+        "consumes": [
+          "text/plain"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "apacheAirflowJobId",
+            "description": "The Apache Airflow job ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true,
+            "default": true
+          },
+          {
+            "in": "query",
+            "name": "filePath",
+            "description": "The path to an existing requirements file to deploy. If not provided, the request body should contain the requirements file content.",
+            "type": "string",
+            "required": false
+          },
+          {
+            "in": "body",
+            "name": "requirementsContentRequest",
+            "description": "The requirements file content (UTF-8 encoded text). Required if filePath is not provided.",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted. The environment will be updated in the background.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested Apache Airflow job was not found.\n\n* Forbidden - The caller doesn't have permissions to call the API.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Deploy Apache Airflow job requirements with file path example": {
+            "$ref": "./examples/DeployApacheAirflowJobRequirementsQueryParam.json"
+          },
+          "Deploy Apache Airflow job requirements with request body example": {
+            "$ref": "./examples/DeployApacheAirflowJobRequirementsRequestBody.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/apacheAirflowJobs/{apacheAirflowJobId}/environment/settings?beta=true": {
       "get": {
         "summary": "Returns the environment settings for the specified Apache Airflow job.",
-        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Airflow.Read.All or Item.Read.All\n\nSet the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Item.Read.All or Item.ReadWrite.All\n\nSet the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Settings"
         ],
@@ -785,10 +1068,109 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/apacheAirflowJobs/{apacheAirflowJobId}/environment/updateSettings?beta=true": {
+      "post": {
+        "summary": "Updates the settings for an Apache Airflow job environment.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have *write* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\nSet the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n**When updating list values (environmentVariables, airflowConfigurationOverrides), users must submit the complete set of desired values; existing values will be replaced.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Settings"
+        ],
+        "operationId": "Settings_Update_Apache_Airflow_Job_Settings_(beta)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "apacheAirflowJobId",
+            "description": "The Apache Airflow job ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true,
+            "default": true
+          },
+          {
+            "in": "body",
+            "name": "airflowEnvironmentSettingsRequest",
+            "description": "Update Apache Airflow environment settings request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/AirflowEnvironmentSettingsRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted. The environment will be updated in the background.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested Apache Airflow job was not found.\n\n* Forbidden - The caller doesn't have permissions to call the API.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update Apache Airflow job environment settings example": {
+            "$ref": "./examples/UpdateApacheAirflowJobSettings.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/apacheAirflowJobs/{apacheAirflowJobId}/environment/compute?beta=true": {
       "get": {
         "summary": "Returns the compute configuration for the specified Apache Airflow job environment.",
-        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Airflow.Read.All or Item.Read.All\n\nSet the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Item.Read.All or Item.ReadWrite.All\n\nSet the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Compute"
         ],
@@ -859,7 +1241,7 @@
     "/workspaces/{workspaceId}/apacheAirflowJobs/{apacheAirflowJobId}/files?beta=true": {
       "get": {
         "summary": "Returns a list of Apache Airflow job files from the specified Apache Airflow job.",
-        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes \n\n ApacheAirflowJob.Read.All or ApacheAirflowJob.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Limitations\n- Root path query parameter must start with `dags/` or `plugins/`.\n- Listing files is not recursive; only the specified folder is returned.\n- Set the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes \n\n Item.Read.All or Item.ReadWrite.All\n\n## Limitations\n- Root path query parameter must start with `dags/` or `plugins/`.\n- Listing files is not recursive; only the specified folder is returned.\n- Set the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Files"
         ],
@@ -947,7 +1329,7 @@
     "/workspaces/{workspaceId}/apacheAirflowJobs/{apacheAirflowJobId}/files/{filePath}?beta=true": {
       "get": {
         "summary": "Returns the specified Apache Airflow job file.",
-        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n ApacheAirflowJob.Read.All or ApacheAirflowJob.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Limitations\n- Files must be located within the `dags/` or `plugins/` folders.\n- The maximum supported file size is 2 MB.\n- Text files are returned using UTF-8 encoding; binary files are returned as-is.\n- Set the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *read* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Item.Read.All or Item.ReadWrite.All\n\n## Limitations\n- Files must be located within the `dags/` or `plugins/` folders.\n- The maximum supported file size is 2 MB.\n- Text files are returned using UTF-8 encoding; binary files are returned as-is.\n- Set the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Files"
         ],
@@ -1024,7 +1406,7 @@
       },
       "put": {
         "summary": "Creates or updates an Apache Airflow job file.",
-        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *write* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n ApacheAirflowJob.ReadWrite.All or Item.ReadWrite.All\n\n## Limitations\n- Files must be located within the `dags/` or `plugins/` folders.\n- The maximum supported file size is 2 MB.\n- Supported file types include binary files (sent as-is) and UTF-8 encoded text files such as Python, YAML, XML, JSON, and SQL.\n- Set the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *write* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Limitations\n- Files must be located within the `dags/` or `plugins/` folders.\n- The maximum supported file size is 2 MB.\n- Supported file types include binary files (sent as-is) and UTF-8 encoded text files such as Python, YAML, XML, JSON, and SQL.\n- Set the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Files"
         ],
@@ -1113,7 +1495,7 @@
       },
       "delete": {
         "summary": "Deletes the specified Apache Airflow job file.",
-        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *write* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n ApacheAirflowJob.Read.All or ApacheAirflowJob.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Limitations\n- Files must be located within the `dags/` or `plugins/` folders.\n- Set the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *write* permissions for the Apache Airflow job. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Limitations\n- Files must be located within the `dags/` or `plugins/` folders.\n- Set the `beta` query parameter to `true` to call this API.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Files"
         ],
