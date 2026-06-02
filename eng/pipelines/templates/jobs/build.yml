@@ -136,7 +136,6 @@ jobs:
   # Shut down proxy to prevent file locks on the log file for auto-injected credscan
   # steps on windows
   - template: /eng/common/testproxy/test-proxy-tool-shutdown.yml
-    condition: and(succeededOrFailed(), eq(variables['RunRecordedTests'], 'true'))
 
   - pwsh: |
       $files = Get-ChildItem -Path $(Build.SourcesDirectory) -Filter test-proxy.log
