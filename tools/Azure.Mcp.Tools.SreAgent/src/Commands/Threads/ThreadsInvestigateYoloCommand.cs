@@ -12,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
 
 [CommandMetadata(Id = "a75f43f7-e08b-47e3-9ef4-8a5832cc3b07", Name = "investigate_yolo", Title = "Investigate With Agent YOLO", Description = "Yolo investigation mode: runs an investigation on an SRE Agent and automatically grants all pending approval requests without waiting for human confirmation. Use this when you want the agent to proceed without any approval gates.", Destructive = false, Idempotent = false, OpenWorld = true, ReadOnly = false, Secret = false, LocalRequired = false)]
-public sealed class ThreadsInvestigateYoloCommand(ILogger<ThreadsInvestigateYoloCommand> logger, ISreAgentService sreAgentService) : ThreadsCommandBase<ThreadsInvestigateOptions>
+public sealed class ThreadsInvestigateYoloCommand(ILogger<ThreadsInvestigateYoloCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<ThreadsInvestigateOptions>
 {
     private readonly ILogger<ThreadsInvestigateYoloCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
@@ -43,7 +43,7 @@ public sealed class ThreadsInvestigateYoloCommand(ILogger<ThreadsInvestigateYolo
         var options = BindOptions(parseResult);
         try
         {
-            var result = await RunInvestigationAsync(_sreAgentService, options, autoApprove: true, cancellationToken);
+            var result = await _sreAgentService.RunInvestigationAsync(options, autoApprove: true, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, SreAgentJsonContext.Default.SreAgentInvestigationResult);
         }
         catch (Exception ex)
