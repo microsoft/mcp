@@ -37,6 +37,18 @@ jobs:
         - Microsoft
 
   - pwsh: |
+      $token = "$(GH_TOKEN)"
+
+      if ([string]::IsNullOrWhiteSpace($token) -or $token -eq '$(GH_TOKEN)') {
+        Write-Error "GH_TOKEN pipeline variable is not available after login-to-github step."
+        exit 1
+      }
+
+      Write-Host "##vso[task.setvariable variable=GitHubToken;issecret=true;isOutput=true]$token"
+    displayName: Export GitHub token for downstream jobs
+    name: ExportGitHubToken
+
+  - pwsh: |
       $buildInfoPath = "$(Pipeline.Workspace)/build_info/build_info.json"
       $buildInfo = Get-Content -Raw -Path $buildInfoPath | ConvertFrom-Json
 

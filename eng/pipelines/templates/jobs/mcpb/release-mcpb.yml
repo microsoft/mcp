@@ -20,6 +20,8 @@ jobs:
   displayName: "Publish MCPB to GitHub Release"
   dependsOn: ${{ parameters.DependsOn }}
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  variables:
+    GH_TOKEN: $[ dependencies.TagRepository.outputs['ExportGitHubToken.GitHubToken'] ]
   templateContext:
     type: releaseJob
     isProduction: true
@@ -39,12 +41,6 @@ jobs:
     runOnce:
       deploy:
         steps:
-        # Note: checkout is not allowed in release jobs, so we inline the script logic here
-        - template: /eng/common/pipelines/templates/steps/login-to-github.yml
-          parameters:
-            TokenOwners:
-              - Microsoft
-
         - pwsh: |
             $ErrorActionPreference = "Stop"
             $serverName = '${{ parameters.ServerName }}'
