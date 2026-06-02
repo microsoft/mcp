@@ -19,8 +19,9 @@ namespace Microsoft.Mcp.Tests.Client;
 public sealed class TestProxy(bool debug = false) : IDisposable
 {
     private readonly bool _debug = debug;
-    public StringBuilder stderr = new();
-    public readonly StringBuilder stdout = new();
+    private StringBuilder _stderr = new();
+    private readonly StringBuilder _stdout = new();
+    private bool _started;
     private Process? _process;
     private CancellationTokenSource? _cts;
     private int? _httpPort;
@@ -46,7 +47,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     /// </summary>
     private static readonly SemaphoreSlim s_downloadLock = new(1, 1);
 
-    private async Task<string> EnsureProxyExecutableAsync(string repositoryRoot, string assetsJsonPath)
+    private static async Task<string> EnsureProxyExecutableAsync(string repositoryRoot, string assetsJsonPath)
     {
         if (_cachedExecutable != null)
         {
@@ -89,7 +90,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return _cachedExecutable;
     }
 
-    private async Task EnsureProxyRecordings(string proxyExe, string repositoryRoot, string assetsJsonPath)
+    private static async Task EnsureProxyRecordings(string proxyExe, string repositoryRoot, string assetsJsonPath)
     {
         await s_downloadLock.WaitAsync().ConfigureAwait(false);
         FileStream? lockStream = null;
@@ -296,7 +297,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         throw new InvalidOperationException("Could not find repository root (.git)");
     }
 
-    private string GetTargetVersion()
+    private static string GetTargetVersion()
     {
         if (_cachedVersion != null)
         {
@@ -312,7 +313,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return _cachedVersion;
     }
 
-    private string GetProxyDirectory()
+    private static string GetProxyDirectory()
     {
         var root = GetRootDirectory();
         var proxyDirectory = Path.Combine(root, ".proxy");
@@ -325,63 +326,75 @@ public sealed class TestProxy(bool debug = false) : IDisposable
 
     public async Task Start(string repositoryRoot, string assetsJsonPath)
     {
-        if (_process != null)
+        if (_started)
         {
             return;
         }
 
-        var proxyExe = await EnsureProxyExecutableAsync(repositoryRoot, assetsJsonPath).ConfigureAwait(false);
-        await EnsureProxyRecordings(proxyExe, repositoryRoot, assetsJsonPath).ConfigureAwait(false);
-
-        if (string.IsNullOrWhiteSpace(proxyExe) || !File.Exists(proxyExe))
+        // If we're not running in CI, start a new Test Proxy executable.
+        if (RunningLocally())
         {
-            throw new InvalidOperationException("Unable to locate test-proxy executable.");
-        }
+            var proxyExe = await EnsureProxyExecutableAsync(repositoryRoot, assetsJsonPath).ConfigureAwait(false);
+            await EnsureProxyRecordings(proxyExe, repositoryRoot, assetsJsonPath).ConfigureAwait(false);
 
-        var storageLocation = Environment.GetEnvironmentVariable("TEST_PROXY_STORAGE") ?? repositoryRoot;
-        var args = $"start --http-proxy --storage-location=\"{storageLocation}\"";
+            if (string.IsNullOrWhiteSpace(proxyExe) || !File.Exists(proxyExe))
+            {
+                throw new InvalidOperationException("Unable to locate test-proxy executable.");
+            }
 
-        ProcessStartInfo psi = new(proxyExe, args)
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        psi.EnvironmentVariables["ASPNETCORE_URLS"] = "http://127.0.0.1:0"; // Let proxy choose free port
-        if (_debug)
-        {
-            psi.EnvironmentVariables["LOGGING__LEVEL"] = "Debug";
-            psi.EnvironmentVariables["LOGGING__LOGLEVEL__MICROSOFT"] = "true";
-            psi.EnvironmentVariables["LOGGING__LOGLEVEL__DEFAULT"] = "true";
-        }
+            var storageLocation = Environment.GetEnvironmentVariable("TEST_PROXY_STORAGE") ?? repositoryRoot;
+            var args = $"start --http-proxy --storage-location=\"{storageLocation}\"";
 
-        _process = Process.Start(psi) ?? throw new InvalidOperationException("Failed to start test proxy process.");
-        _cts = new CancellationTokenSource();
-        _ = Task.Run(() => _pumpAsync(_process.StandardError, stderr, _cts.Token));
-        _ = Task.Run(() => _pumpAsync(_process.StandardOutput, stdout, _cts.Token));
+            ProcessStartInfo psi = new(proxyExe, args)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+            psi.EnvironmentVariables["ASPNETCORE_URLS"] = "http://127.0.0.1:0"; // Let proxy choose free port
+            if (_debug)
+            {
+                psi.EnvironmentVariables["LOGGING__LEVEL"] = "Debug";
+                psi.EnvironmentVariables["LOGGING__LOGLEVEL__MICROSOFT"] = "true";
+                psi.EnvironmentVariables["LOGGING__LOGLEVEL__DEFAULT"] = "true";
+            }
 
-        if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PROXY_MANUAL_START")))
-        {
-            _httpPort = 5000;
+            _process = Process.Start(psi) ?? throw new InvalidOperationException("Failed to start test proxy process.");
+            _cts = new CancellationTokenSource();
+            _ = Task.Run(() => _pumpAsync(_process.StandardError, _stderr, _cts.Token));
+            _ = Task.Run(() => _pumpAsync(_process.StandardOutput, _stdout, _cts.Token));
+
+            if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PROXY_MANUAL_START")))
+            {
+                _httpPort = 5000;
+            }
+            else
+            {
+                var secondsToWait = 30;
+                if (RunningLocally())
+                {
+                    secondsToWait = 90;
+                }
+                _httpPort = _waitForHttpPort(TimeSpan.FromSeconds(secondsToWait));
+            }
+
+            if (_httpPort is null)
+            {
+                throw new InvalidOperationException($"Failed to detect test-proxy HTTP port. Output: {_stdout}\nErrors: {_stderr}");
+            }
         }
         else
         {
-            var secondsToWait = 30;
-            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CI")) || string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("TF_BUILD")))
-            {
-                secondsToWait = 90;
-            }
-            _httpPort = _waitForHttpPort(TimeSpan.FromSeconds(secondsToWait));
-        }
-
-        if (_httpPort is null)
-        {
-            throw new InvalidOperationException($"Failed to detect test-proxy HTTP port. Output: {stdout}\nErrors: {stderr}");
+            _httpPort = 5000;
         }
 
         Client = new TestProxyClient(new Uri(BaseUri), new TestProxyClientOptions());
         AdminClient = Client.GetTestProxyAdminClient();
     }
+
+    private static bool RunningLocally() =>
+        string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CI")) ||
+        string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("TF_BUILD"));
 
     private static async Task _pumpAsync(StreamReader reader, StringBuilder sink, CancellationToken ct)
     {
@@ -407,9 +420,9 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         while ((DateTime.UtcNow - start) < timeout)
         {
             string text;
-            lock (stdout)
+            lock (_stdout)
             {
-                text = stdout.ToString();
+                text = _stdout.ToString();
             }
             foreach (var line in text.Split('\n'))
             {
@@ -444,11 +457,11 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     /// <returns></returns>
     public string? SnapshotStdErr()
     {
-        lock (stderr)
+        lock (_stderr)
         {
-            var toOutput = stderr.Length == 0 ? null : stderr.ToString();
+            var toOutput = _stderr.Length == 0 ? null : _stderr.ToString();
 
-            stderr = new();
+            _stderr = new();
 
             return toOutput;
         }
