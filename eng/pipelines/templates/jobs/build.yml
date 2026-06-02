@@ -57,6 +57,7 @@ jobs:
   - template: /eng/common/testproxy/test-proxy-tool.yml
     parameters:
       runProxy: true
+    condition: eq(variables['RunRecordedTests'], 'true')
 
   - task: Powershell@2
     displayName: "Build code"
@@ -135,6 +136,7 @@ jobs:
   # Shut down proxy to prevent file locks on the log file for auto-injected credscan
   # steps on windows
   - template: /eng/common/testproxy/test-proxy-tool-shutdown.yml
+    condition: and(succeededOrFailed(), eq(variables['RunRecordedTests'], 'true'))
 
   - pwsh: |
       $files = Get-ChildItem -Path $(Build.SourcesDirectory) -Filter test-proxy.log
@@ -144,7 +146,7 @@ jobs:
           Write-Host "##[endgroup]"
       }
     displayName: Dump Test-Proxy Logs
-    condition: succeededOrFailed()
+    condition: and(succeededOrFailed(), eq(variables['RunRecordedTests'], 'true'))
 
   - pwsh: |
       $files = Get-ChildItem -Path $(Build.SourcesDirectory) -Filter test-proxy-error.log
@@ -154,4 +156,4 @@ jobs:
           Write-Host "##[endgroup]"
       }
     displayName: Dump Test-Proxy Error Logs
-    condition: succeededOrFailed()
+    condition: and(succeededOrFailed(), eq(variables['RunRecordedTests'], 'true'))

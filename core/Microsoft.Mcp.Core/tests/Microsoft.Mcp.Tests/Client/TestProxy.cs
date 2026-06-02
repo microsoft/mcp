@@ -390,6 +390,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
 
         Client = new TestProxyClient(new Uri(BaseUri), new TestProxyClientOptions());
         AdminClient = Client.GetTestProxyAdminClient();
+        _started = true;
     }
 
     private static bool RunningLocally() =>
