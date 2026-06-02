@@ -10,6 +10,10 @@ parameters:
   displayName: Test Timeout In Minutes
   type: number
   default: 45
+- name: BuildTimeoutInMinutes
+  displayName: Build Timeout In Minutes
+  type: number
+  default: 90
 - name: RunVSCodeIntegrationTests
   displayName: Run VS Code Integration Tests (Outerloop Playwright)
   type: boolean
@@ -31,3 +35,4 @@ extends:
     PackageMCPB: true
     IncludeNative: ${{ parameters.IncludeNative }}
     TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
+    BuildTimeoutInMinutes: ${{ parameters.BuildTimeoutInMinutes }}
