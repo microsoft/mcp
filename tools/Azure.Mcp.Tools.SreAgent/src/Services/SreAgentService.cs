@@ -1002,7 +1002,7 @@ public sealed class SreAgentService(
 
             if (autoApprove)
             {
-                await ApprovePendingApprovalsAsync(endpoint, messages, tenant, cancellationToken);
+                await ApprovePendingApprovalsAsync(this, endpoint, messages, tenant, cancellationToken);
             }
             else if (HasPendingInteractiveRequest(messages))
             {
@@ -1025,7 +1025,8 @@ public sealed class SreAgentService(
         return messages;
     }
 
-    private async Task ApprovePendingApprovalsAsync(
+    private static async Task ApprovePendingApprovalsAsync(
+        ISreAgentService service,
         string endpoint,
         List<SreAgentThreadMessage> messages,
         string? tenant,
@@ -1039,7 +1040,7 @@ public sealed class SreAgentService(
 
         foreach (var approvalId in approvals)
         {
-            await ApproveApprovalAsync(endpoint, approvalId, new(userId), tenant, cancellationToken);
+            await service.ApproveApprovalAsync(endpoint, approvalId, new(userId), tenant, cancellationToken);
         }
     }
 
@@ -1052,20 +1053,20 @@ public sealed class SreAgentService(
             (string.Equals(m.MessageType, "UserQuestion", StringComparison.OrdinalIgnoreCase) && string.Equals(m.UserQuestion?.Status, "Pending", StringComparison.OrdinalIgnoreCase)) ||
             (string.Equals(m.MessageType, "Approval", StringComparison.OrdinalIgnoreCase) && IsPendingApproval(m.Approval?.Status)));
 
-    public async Task<SreAgentInvestigationResult> RunInvestigationAsync(ThreadsInvestigateOptions options, bool autoApprove, CancellationToken cancellationToken = default)
+    public static async Task<SreAgentInvestigationResult> RunInvestigationAsync(ISreAgentService service, ThreadsInvestigateOptions options, bool autoApprove, CancellationToken cancellationToken = default)
     {
-        var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(this, options, cancellationToken);
+        var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(service, options, cancellationToken);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds)));
 
-        var thread = await CreateThreadAsync(endpoint, SreAgentCommandHelpers.CreateThreadRequest(options.Message!, options.Agent!), options.Tenant, timeout.Token);
+        var thread = await service.CreateThreadAsync(endpoint, SreAgentCommandHelpers.CreateThreadRequest(options.Message!, options.Agent!), options.Tenant, timeout.Token);
         var threadId = thread?.Id;
         if (string.IsNullOrWhiteSpace(threadId))
         {
             return new(null, "failed", 0, true, "Thread created but no ID was returned.", []);
         }
 
-        var messages = await PollThreadForCompletionAsync(endpoint, threadId, options.Tenant, TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds)), autoApprove, timeout.Token);
+        var messages = await service.PollThreadForCompletionAsync(endpoint, threadId, options.Tenant, TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds)), autoApprove, timeout.Token);
         var followUps = 0;
         while (followUps < Math.Max(0, options.MaxIterations))
         {
@@ -1082,11 +1083,11 @@ public sealed class SreAgentService(
 
             if (action == FollowUpAction.NeedsData && autoApprove)
             {
-                await ApprovePendingApprovalsAsync(endpoint, messages, options.Tenant, timeout.Token);
+                await ApprovePendingApprovalsAsync(service, endpoint, messages, options.Tenant, timeout.Token);
             }
 
-            await SendThreadMessageAsync(endpoint, threadId, SreAgentCommandHelpers.CreateMessageRequest(FollowUpPrompt), options.Tenant, timeout.Token);
-            messages = await PollThreadForCompletionAsync(endpoint, threadId, options.Tenant, TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds)), autoApprove, timeout.Token);
+            await service.SendThreadMessageAsync(endpoint, threadId, SreAgentCommandHelpers.CreateMessageRequest(FollowUpPrompt), options.Tenant, timeout.Token);
+            messages = await service.PollThreadForCompletionAsync(endpoint, threadId, options.Tenant, TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds)), autoApprove, timeout.Token);
             followUps++;
         }
 

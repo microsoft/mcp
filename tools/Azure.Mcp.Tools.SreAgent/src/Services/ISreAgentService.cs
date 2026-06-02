@@ -174,8 +174,6 @@ public interface ISreAgentService
 
     Task<List<SreAgentThreadMessage>> PollThreadForCompletionAsync(string endpoint, string threadId, string? tenant, TimeSpan timeout, bool autoApprove, CancellationToken cancellationToken = default);
 
-    Task<SreAgentInvestigationResult> RunInvestigationAsync(ThreadsInvestigateOptions options, bool autoApprove, CancellationToken cancellationToken = default);
-
     #endregion
 
 

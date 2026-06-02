@@ -43,7 +43,7 @@ public sealed class ThreadsInvestigateCommand(ILogger<ThreadsInvestigateCommand>
         var options = BindOptions(parseResult);
         try
         {
-            var result = await _sreAgentService.RunInvestigationAsync(options, autoApprove: false, cancellationToken);
+            var result = await SreAgentService.RunInvestigationAsync(_sreAgentService, options, autoApprove: false, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, SreAgentJsonContext.Default.SreAgentInvestigationResult);
         }
         catch (Exception ex)

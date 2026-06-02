@@ -43,7 +43,7 @@ public sealed class ThreadsInvestigateYoloCommand(ILogger<ThreadsInvestigateYolo
         var options = BindOptions(parseResult);
         try
         {
-            var result = await _sreAgentService.RunInvestigationAsync(options, autoApprove: true, cancellationToken);
+            var result = await SreAgentService.RunInvestigationAsync(_sreAgentService, options, autoApprove: true, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, SreAgentJsonContext.Default.SreAgentInvestigationResult);
         }
         catch (Exception ex)
