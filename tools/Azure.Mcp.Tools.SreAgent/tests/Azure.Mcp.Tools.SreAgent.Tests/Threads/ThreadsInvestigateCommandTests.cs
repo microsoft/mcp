@@ -62,19 +62,14 @@ public class ThreadsInvestigateCommandTests : CommandUnitTestsBase<ThreadsInvest
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentThread { Id = "thread1" });
 
-            Service.GetThreadAsync(
+            Service.PollThreadForCompletionAsync(
                 Arg.Any<string>(),
-                Arg.Any<string>(),
+                "thread1",
                 Arg.Any<string?>(),
+                Arg.Any<TimeSpan>(),
+                Arg.Any<bool>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new SreAgentThread { Id = "thread1", LastMessage = new SreAgentThreadLastMessage { IsComplete = true } });
-
-            Service.GetThreadMessagesAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentThreadMessage>());
+                .Returns([]);
         }
 
         var response = await ExecuteCommandAsync(args);
@@ -112,22 +107,17 @@ public class ThreadsInvestigateCommandTests : CommandUnitTestsBase<ThreadsInvest
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentThread { Id = "thread1" });
 
-        Service.GetThreadAsync(
+        Service.PollThreadForCompletionAsync(
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            "thread1",
             Arg.Any<string?>(),
+            Arg.Any<TimeSpan>(),
+            Arg.Any<bool>(),
             Arg.Any<CancellationToken>())
-            .Returns(new SreAgentThread { Id = "thread1", LastMessage = new SreAgentThreadLastMessage { IsComplete = true } });
-
-        Service.GetThreadMessagesAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentThreadMessage>
-            {
+            .Returns(
+            [
                 new() { Id = "msg1", Text = "Investigation result" }
-            });
+            ]);
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "test-agent", "--message", "investigate this", "--timeout-seconds", "1");
 
@@ -182,19 +172,14 @@ public class ThreadsInvestigateCommandTests : CommandUnitTestsBase<ThreadsInvest
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentThread { Id = "thread1" });
 
-        Service.GetThreadAsync(
+        Service.PollThreadForCompletionAsync(
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            "thread1",
             Arg.Any<string?>(),
+            Arg.Any<TimeSpan>(),
+            Arg.Any<bool>(),
             Arg.Any<CancellationToken>())
-            .Returns(new SreAgentThread { Id = "thread1", LastMessage = new SreAgentThreadLastMessage { IsComplete = true } });
-
-        Service.GetThreadMessagesAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentThreadMessage>());
+            .Returns([]);
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "test-agent", "--message", "investigate this", "--max-iterations", "5", "--timeout-seconds", "1");
 

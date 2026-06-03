@@ -13,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
 
 [CommandMetadata(Id = "35c72f68-e2b3-4e7b-bb89-4f1d4a6f2104", Name = "send_message", Title = "Send Thread Message", Description = "Send a message to an existing SRE Agent thread.", Destructive = false, Idempotent = false, OpenWorld = true, ReadOnly = false, Secret = false, LocalRequired = false)]
-public sealed class ThreadsSendMessageCommand(ILogger<ThreadsSendMessageCommand> logger, ISreAgentService sreAgentService) : ThreadsCommandBase<ThreadsSendMessageOptions>
+public sealed class ThreadsSendMessageCommand(ILogger<ThreadsSendMessageCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<ThreadsSendMessageOptions>
 {
     private readonly ILogger<ThreadsSendMessageCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
@@ -43,8 +43,8 @@ public sealed class ThreadsSendMessageCommand(ILogger<ThreadsSendMessageCommand>
         try
         {
             var endpoint = await ResolveEndpointAsync(_sreAgentService, options, cancellationToken);
-            await _sreAgentService.SendThreadMessageAsync(endpoint, options.ThreadId!, CreateMessageRequest(options.Message!), options.Tenant, cancellationToken);
-            var messages = await PollForCompletionAsync(_sreAgentService, endpoint, options.ThreadId!, options.Tenant, TimeSpan.FromMinutes(2), false, cancellationToken);
+            await _sreAgentService.SendThreadMessageAsync(endpoint, options.ThreadId!, SreAgentCommandHelpers.CreateMessageRequest(options.Message!), options.Tenant, cancellationToken);
+            var messages = await _sreAgentService.PollThreadForCompletionAsync(endpoint, options.ThreadId!, options.Tenant, TimeSpan.FromMinutes(2), false, cancellationToken);
             context.Response.Results = ResponseResult.Create(new SreAgentThreadOperationResult(options.ThreadId, "sent", messages), SreAgentJsonContext.Default.SreAgentThreadOperationResult);
         }
         catch (Exception ex)

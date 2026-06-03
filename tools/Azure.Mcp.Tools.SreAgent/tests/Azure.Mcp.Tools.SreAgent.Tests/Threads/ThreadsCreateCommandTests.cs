@@ -60,12 +60,14 @@ public class ThreadsCreateCommandTests : CommandUnitTestsBase<ThreadsCreateComma
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentThread { Id = "thread1" });
 
-            Service.GetThreadMessagesAsync(
+            Service.PollThreadForCompletionAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
+                Arg.Any<TimeSpan>(),
+                Arg.Any<bool>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentThreadMessage>());
+                .Returns([]);
         }
 
         var response = await ExecuteCommandAsync(args);
@@ -103,15 +105,17 @@ public class ThreadsCreateCommandTests : CommandUnitTestsBase<ThreadsCreateComma
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentThread { Id = "thread1" });
 
-        Service.GetThreadMessagesAsync(
+        Service.PollThreadForCompletionAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<TimeSpan>(),
+            Arg.Any<bool>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentThreadMessage>
-            {
+            .Returns(
+            [
                 new() { Id = "msg1", Text = "Agent response" }
-            });
+            ]);
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "test-agent", "--message", "test message");
 
@@ -167,12 +171,14 @@ public class ThreadsCreateCommandTests : CommandUnitTestsBase<ThreadsCreateComma
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentThread { Id = "thread1" });
 
-        Service.GetThreadMessagesAsync(
+        Service.PollThreadForCompletionAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<TimeSpan>(),
+            Arg.Any<bool>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentThreadMessage>());
+            .Returns([]);
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "test-agent", "--message", "test message");
 
