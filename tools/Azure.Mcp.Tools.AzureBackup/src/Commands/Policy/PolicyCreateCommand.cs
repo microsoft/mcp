@@ -147,6 +147,7 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context.Activity, options.VaultType, options.WorkloadType);
 
         var validation = Services.Policy.PolicyCreateValidator.Validate(options);

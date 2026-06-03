@@ -60,6 +60,7 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, "status-check");
 
         try

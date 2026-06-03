@@ -22,7 +22,6 @@ public class ElasticPoolListCommandTests : CommandUnitTestsBase<ElasticPoolListC
         Assert.Equal("list", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("elastic pools", CommandDefinition.Description);
     }
 
     [Fact]

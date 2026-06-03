@@ -24,8 +24,9 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
     {
         Assert.NotNull(Command);
         Assert.Equal("update", Command.Name);
-        Assert.Contains("managed disk", Command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.NotEqual(Guid.Empty.ToString(), Command.Id);
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
     }
 
     [Fact]

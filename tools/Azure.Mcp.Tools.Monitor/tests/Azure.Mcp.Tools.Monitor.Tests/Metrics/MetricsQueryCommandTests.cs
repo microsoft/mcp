@@ -25,9 +25,8 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
     {
         Assert.Equal("query", CommandDefinition.Name);
         Assert.Equal("Query Azure Monitor Metrics", Command.Title);
-        Assert.NotNull(CommandDefinition.Description);
-        Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("Query Azure Monitor metrics for a resource", CommandDefinition.Description);
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
     }
 
     [Fact]

@@ -3,6 +3,9 @@
 
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Options;
 using Xunit;
 
@@ -440,6 +443,39 @@ public sealed class OptionBinderTests
         Assert.NotNull(options.Required);
         Assert.Equal("primary", options.Required.Name);
         Assert.Equal(5432, options.Required.Port);
+    }
+
+    #endregion
+
+    #region Trimming Annotation Tests
+
+    [Fact]
+    public void OptionBinder_GenericMethods_PreservePublicPropertiesAndParameterlessConstructor()
+    {
+        var registerMethod = typeof(OptionBinder).GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Single(m => m.Name == nameof(OptionBinder.RegisterOptions) && m.IsGenericMethodDefinition);
+        var bindMethod = typeof(OptionBinder).GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Single(m => m.Name == nameof(OptionBinder.BindOptions) && m.IsGenericMethodDefinition);
+
+        AssertHasRequiredMemberAnnotations(registerMethod.GetGenericArguments()[0]);
+        AssertHasRequiredMemberAnnotations(bindMethod.GetGenericArguments()[0]);
+    }
+
+    [Fact]
+    public void TrimAnnotations_CommandAnnotations_IncludePublicPropertiesAndParameterlessConstructor()
+    {
+        var annotations = TrimAnnotations.CommandAnnotations;
+
+        Assert.True(annotations.HasFlag(DynamicallyAccessedMemberTypes.PublicProperties));
+        Assert.True(annotations.HasFlag(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor));
+    }
+
+    private static void AssertHasRequiredMemberAnnotations(MemberInfo member)
+    {
+        var attribute = member.GetCustomAttribute<DynamicallyAccessedMembersAttribute>();
+        Assert.NotNull(attribute);
+        Assert.True(attribute!.MemberTypes.HasFlag(DynamicallyAccessedMemberTypes.PublicProperties));
+        Assert.True(attribute.MemberTypes.HasFlag(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor));
     }
 
     #endregion
