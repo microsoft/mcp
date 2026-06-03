@@ -259,7 +259,7 @@
                     "type": "integer"
                 },
                 "numberOfMemberGateways": {
-                    "description": "The number of member gateways. A number between 1 and 7.",
+                    "description": "The number of member gateways. A number between 1 and 9.",
                     "type": "integer"
                 }
             }
@@ -322,7 +322,7 @@
                     "type": "integer"
                 },
                 "numberOfMemberGateways": {
-                    "description": "The number of member gateways. A number between 1 and 7.",
+                    "description": "The number of member gateways. A number between 1 and 9.",
                     "type": "integer"
                 }
             }
