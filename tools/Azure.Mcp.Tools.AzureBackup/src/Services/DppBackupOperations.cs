@@ -456,6 +456,15 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
 
         var policies = new List<BackupPolicyInfo>();
         var enumerator = collection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        // The Azure SDK may throw FormatException when deserializing policies with
+        // non-standard ISO 8601 retention/duration fields (XmlConvert.ToTimeSpan
+        // limitation in DataProtectionBackupAbsoluteDeleteSetting). When that happens
+        // we try to skip past the offending item and continue, so valid policies that
+        // appear after a bad one are still returned. If the SDK enumerator becomes
+        // unusable (typical for page-level deserialization failures), MoveNextAsync
+        // will keep throwing - cap consecutive failures so we cannot loop forever.
+        const int maxConsecutiveFailures = 3;
+        var consecutiveFailures = 0;
         try
         {
             while (true)
@@ -468,14 +477,14 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
                     }
 
                     policies.Add(MapToPolicyInfo(enumerator.Current.Data));
+                    consecutiveFailures = 0;
                 }
                 catch (FormatException)
                 {
-                    // The Azure SDK may throw FormatException when deserializing policies with
-                    // non-standard ISO 8601 retention/duration fields (XmlConvert.ToTimeSpan
-                    // limitation in DataProtectionBackupAbsoluteDeleteSetting). Return the
-                    // policies collected so far rather than failing the entire list.
-                    break;
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -580,6 +589,13 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
 
         var jobs = new List<BackupJobInfo>();
         var enumerator = collection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        // The Azure SDK may throw FormatException when deserializing jobs with
+        // non-standard ISO 8601 duration fields (XmlConvert.ToTimeSpan limitation).
+        // Try to skip past the offending item so valid jobs after a bad one are still
+        // returned; cap consecutive failures so a permanently-broken enumerator
+        // (typical for page-level deserialization failures) cannot loop forever.
+        const int maxConsecutiveFailures = 3;
+        var consecutiveFailures = 0;
         try
         {
             while (true)
@@ -592,13 +608,14 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
                     }
 
                     jobs.Add(MapToJobInfo(enumerator.Current.Data));
+                    consecutiveFailures = 0;
                 }
                 catch (FormatException)
                 {
-                    // The Azure SDK may throw FormatException when deserializing jobs with
-                    // non-standard ISO 8601 duration fields (XmlConvert.ToTimeSpan limitation).
-                    // Return the jobs collected so far rather than failing the entire list.
-                    break;
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
                 }
             }
         }

@@ -267,6 +267,25 @@ public class AzureBackupServiceTests
     }
 
     [Fact]
+    public async Task ListVaultsAsync_BothFailWithRequestFailedException_StatusAndErrorCodePairedFromSameSource()
+    {
+        // NEW-5: Status and ErrorCode must come from the same exception so callers
+        // never see a mismatched (Status, ErrorCode) pair. Here RSV has Status=0 with
+        // its own ErrorCode; the wrapper should take both fields from DPP (the source
+        // of the non-zero Status).
+        _rsvOps.ListVaultsAsync("22222222-2222-2222-2222-222222222222", null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(0, "RSV transport error", "RsvOnlyCode", null));
+        _dppOps.ListVaultsAsync("22222222-2222-2222-2222-222222222222", null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(503, "DPP throttled", "DppThrottled", null));
+
+        var ex = await Assert.ThrowsAsync<RequestFailedException>(() =>
+            _service.ListVaultsAsync("22222222-2222-2222-2222-222222222222", null, null, null, null, CancellationToken.None));
+
+        Assert.Equal(503, ex.Status);
+        Assert.Equal("DppThrottled", ex.ErrorCode);
+    }
+
+    [Fact]
     public async Task ListVaultsAsync_BothFailWithDifferentExceptions_ThrowsInvalidOperationWithBothMessages()
     {
         // NEW-1: when the two backend failures are not directly comparable, wrap them

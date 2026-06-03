@@ -66,10 +66,11 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             // NEW-5 fix: when both inners are RequestFailedException, return a
             // RequestFailedException so the command-layer error mapper classifies the
             // failure as an Azure service error (with the original HTTP status code)
-            // rather than as an MCP-side bug. Prefer the first non-zero status.
-            var status = rsvRfe.Status != 0 ? rsvRfe.Status : dppRfe.Status;
-            var errorCode = rsvRfe.ErrorCode ?? dppRfe.ErrorCode;
-            return new RequestFailedException(status, combinedMessage, errorCode, rsvRfe);
+            // rather than as an MCP-side bug. Pick a single source for the
+            // (Status, ErrorCode) pair so they are guaranteed to come from the same
+            // exception - prefer the side that reports a non-zero HTTP status.
+            var primary = rsvRfe.Status != 0 ? rsvRfe : dppRfe;
+            return new RequestFailedException(primary.Status, combinedMessage, primary.ErrorCode, primary);
         }
 
         return new InvalidOperationException(combinedMessage, rsvInner);
