@@ -56,13 +56,15 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger, IComput
         command.Validators.Add(commandResult =>
         {
             // Custom validation: At least one update property must be specified
+            var tagsProvided = commandResult.GetResult(ComputeOptionDefinitions.Tags) is not null;
+
             if (!commandResult.HasOptionResult(ComputeOptionDefinitions.UpgradePolicy) &&
                 !commandResult.HasOptionResult(ComputeOptionDefinitions.Capacity) &&
                 !commandResult.HasOptionResult(ComputeOptionDefinitions.VmSize) &&
                 !commandResult.HasOptionResult(ComputeOptionDefinitions.Overprovision) &&
                 !commandResult.HasOptionResult(ComputeOptionDefinitions.EnableAutoOsUpgrade) &&
                 !commandResult.HasOptionResult(ComputeOptionDefinitions.ScaleInPolicy) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.Tags))
+                !tagsProvided)
             {
                 commandResult.AddError(
                     "At least one update property must be specified: --upgrade-policy, --capacity, --vm-size, --overprovision, --enable-auto-os-upgrade, --scale-in-policy, or --tags.");
@@ -80,7 +82,9 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger, IComput
         options.Overprovision = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Overprovision);
         options.EnableAutoOsUpgrade = parseResult.GetValueOrDefault(ComputeOptionDefinitions.EnableAutoOsUpgrade);
         options.ScaleInPolicy = parseResult.GetValueOrDefault(ComputeOptionDefinitions.ScaleInPolicy);
-        options.Tags = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Tags);
+        var tagsProvided = parseResult.CommandResult.GetResult(ComputeOptionDefinitions.Tags) is not null;
+        var tagsValue = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Tags);
+        options.Tags = tagsProvided && tagsValue is null ? string.Empty : tagsValue;
         return options;
     }
 

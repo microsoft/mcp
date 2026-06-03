@@ -939,8 +939,30 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    // CosmosDB policy create test skipped  -  CosmosDB backup via Azure Backup is not yet GA.
-    // Stage 2: Add PolicyCreate_DppVault_CreatesCosmosDbPolicy_Successfully when GA.
+    // --- CosmosDB E2E Tests ---
+
+    [Fact]
+    public async Task PolicyCreate_DppVault_CreatesCosmosDbPolicy_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        var policyName = RegisterOrRetrieveVariable("createdCosmosDbPolicyName", $"test-cosmos-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "dpp" },
+                { "policy", policyName },
+                { "workload-type", "CosmosDB" },
+                { "daily-retention-days", "7" }
+            });
+
+        var cosmosOpResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", cosmosOpResult.AssertProperty("status").GetString());
+    }
 
     [Fact]
     public async Task PolicyCreate_DppVault_CreatesAdlsPolicy_Successfully()
@@ -1392,6 +1414,106 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         }
     }
 
+    /// <summary>
+    /// End-to-end CosmosDB protection through DPP vault.
+    /// Creates a CosmosDB backup policy, then protects the Cosmos DB account
+    /// provisioned by test-resources.bicep.
+    /// </summary>
+    [Fact]
+    public async Task ProtectedItemProtect_DppVault_CosmosDbProtection_Succeeds_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        // Note: the GUID suffix is non-deterministic across record/playback runs but the
+        // existing recording was captured with the original name; tests-proxy URL matching
+        // works because the policy name only appears inside ARM PUT URLs that are sanitized.
+        var policyName = RegisterOrRetrieveVariable("createdCosmosDbProtectPolicyName", $"{Settings.ResourceBaseName}-cosmos-policy-{Guid.NewGuid().ToString("N")[..8]}");
+        var cosmosDbAccountName = RegisterOrRetrieveDeploymentOutputVariable("cosmosDbAccountName", "COSMOSDBACCOUNTNAME");
+
+        if (string.IsNullOrEmpty(cosmosDbAccountName))
+        {
+            Assert.Skip("COSMOSDBACCOUNTNAME deployment output is missing; cannot exercise CosmosDB protect E2E.");
+        }
+
+        var cosmosDbAccountId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{cosmosDbAccountName}";
+
+        // 1. Create CosmosDB backup policy
+        var policyResult = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "dpp" },
+                { "policy", policyName },
+                { "workload-type", "CosmosDB" },
+                { "daily-retention-days", "7" }
+            });
+
+        var policyOp = policyResult.AssertProperty("result");
+        Assert.Equal("Succeeded", policyOp.AssertProperty("status").GetString());
+
+        // 2. Protect the CosmosDB account
+        var protectResult = await CallToolAsync(
+            "azurebackup_protecteditem_protect",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "dpp" },
+                { "datasource-id", cosmosDbAccountId },
+                { "policy", policyName },
+                { "datasource-type", "CosmosDB" }
+            });
+
+        var protectOp = protectResult.AssertProperty("result");
+        var status = protectOp.AssertProperty("status").GetString();
+        Assert.True(status is "Succeeded" or "Failed", $"Unexpected DPP CosmosDB protect status: {status}");
+
+        protectOp.AssertProperty("protectedItemName");
+        Assert.False(protectOp.TryGetProperty("jobId", out var jobId) && jobId.ValueKind != JsonValueKind.Null,
+            "DPP protect must not return a jobId (DPP is not a job).");
+
+        if (status == "Succeeded")
+        {
+            protectOp.AssertProperty("protectionStatus");
+            Output.WriteLine("CosmosDB protection configured successfully.");
+        }
+        else
+        {
+            var errorMessage = protectOp.AssertProperty("errorMessage").GetString();
+            Assert.False(string.IsNullOrWhiteSpace(errorMessage), "Failed DPP CosmosDB protect must include errorMessage.");
+            Output.WriteLine($"DPP CosmosDB protect returned Failed: {errorMessage}");
+        }
+    }
+
+    /// <summary>
+    /// Validates that the governance find-unprotected command discovers CosmosDB accounts.
+    /// </summary>
+    [Fact]
+    public async Task GovernanceFindUnprotected_CosmosDb_DiscoversAccount_Successfully()
+    {
+        var result = await CallToolAsync(
+            "azurebackup_governance_find-unprotected",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "resource-type-filter", "Microsoft.DocumentDB/databaseAccounts" }
+            });
+
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        // All returned resources should be CosmosDB accounts
+        foreach (var resource in resources.EnumerateArray())
+        {
+            Assert.Equal("Microsoft.DocumentDB/databaseAccounts",
+                resource.AssertProperty("resourceType").GetString(), ignoreCase: true);
+        }
+    }
+
     #endregion
 
     #region Protectable Item Tests
@@ -1696,15 +1818,101 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
     #region Recovery Point Tests
 
-    // recoverypoint_get requires a real protected item with recovery points.
-    // Stage 2: Add test when test-resources.bicep includes a protected VM or disk.
+    /// <summary>
+    /// Lists recovery points for the Cosmos DB account protected by the DPP vault.
+    /// Cosmos DB (preview) only supports weekly backups, so the list is typically empty
+    /// until the first weekly job runs. Asserts the call returns a well-formed array,
+    /// validating that the Cosmos datasource type routes correctly through
+    /// DppDatasourceRegistry and recoveryPoint_get accepts a DPP backup-instance name.
+    /// </summary>
+    [Fact]
+    [LiveTestOnly] // Dynamic protected item name read from sanitized response causes URI mismatch in playback.
+    public async Task RecoveryPointGet_DppVault_ListsCosmosRecoveryPoints_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+
+        // Find the Cosmos protected item created by ProtectedItemProtect_DppVault_CosmosDbProtection_Succeeds_E2E
+        var listResult = await CallToolAsync(
+            "azurebackup_protecteditem_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName }
+            });
+
+        var items = listResult.AssertProperty("protectedItems");
+        Assert.Equal(JsonValueKind.Array, items.ValueKind);
+
+        string? cosmosItemName = null;
+        foreach (var item in items.EnumerateArray())
+        {
+            if (item.TryGetProperty("datasourceType", out var dt) &&
+                string.Equals(dt.GetString(), "Microsoft.DocumentDB/databaseAccounts", StringComparison.OrdinalIgnoreCase))
+            {
+                cosmosItemName = item.AssertProperty("name").GetString();
+                break;
+            }
+        }
+
+        if (string.IsNullOrEmpty(cosmosItemName))
+        {
+            Output.WriteLine("No Cosmos DB protected item found in DPP vault; skipping recovery-point list assertion.");
+            return;
+        }
+
+        var result = await CallToolAsync(
+            "azurebackup_recoverypoint_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "protected-item", cosmosItemName! }
+            });
+
+        var recoveryPoints = result.AssertProperty("recoveryPoints");
+        Assert.Equal(JsonValueKind.Array, recoveryPoints.ValueKind);
+    }
 
     #endregion
 
     #region Backup Status Tests
 
-    // backup_status requires a real datasource ARM resource ID.
-    // Stage 2: Add test when test-resources.bicep includes a VM or database.
+    /// <summary>
+    /// Bug-fix regression test for Cosmos DB:
+    /// AzureBackupService.MapArmResourceTypeToBackupDataSourceType must return null
+    /// (not throw ArgumentNullException via implicit string-to-BackupDataSourceType cast)
+    /// for DPP-only ARM resource types like Microsoft.DocumentDB/databaseAccounts.
+    /// The Cosmos DB ARM id should route through GetDppBackupStatusAsync and return a
+    /// non-empty status -- never an ArgumentNullException.
+    /// </summary>
+    [Fact]
+    public async Task BackupStatus_CosmosDbAccount_ReturnsStatusFromDppVault_Successfully()
+    {
+        var cosmosDbAccountId = RegisterOrRetrieveDeploymentOutputVariable("cosmosDbAccountId", "COSMOSDBACCOUNTID");
+        if (string.IsNullOrEmpty(cosmosDbAccountId))
+        {
+            Assert.Skip("COSMOSDBACCOUNTID deployment output is missing; cannot exercise backup_status regression.");
+        }
+
+        // Cosmos DB is co-located with the DPP vault (see test-resources.bicep cosmosLocation parameter).
+        var location = RegisterOrRetrieveDeploymentOutputVariable("cosmosDbAccountLocation", "COSMOSDBACCOUNTLOCATION");
+
+        var result = await CallToolAsync(
+            "azurebackup_backup_status",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "datasource-id", cosmosDbAccountId },
+                { "location", location }
+            });
+
+        var statusObj = result.AssertProperty("status");
+        var protectionStatus = statusObj.AssertProperty("protectionStatus").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(protectionStatus));
+        Assert.Contains(protectionStatus, new[] { "Protected", "NotProtected", "ConfiguringProtection", "BackupsSuspended", "ProtectionConfigured" });
+    }
 
     #endregion
 

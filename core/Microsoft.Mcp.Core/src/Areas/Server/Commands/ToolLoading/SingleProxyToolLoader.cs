@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
@@ -17,13 +18,19 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 public sealed class SingleProxyToolLoader(
     IMcpDiscoveryStrategy discoveryStrategy,
     ILogger<SingleProxyToolLoader> logger,
-    IOptions<ToolLoaderOptions> options) : BaseToolLoader(logger)
+    IOptions<ToolLoaderOptions> options,
+    IOptions<McpServerConfiguration> serverConfiguration) : BaseToolLoader(logger)
 {
     private readonly IMcpDiscoveryStrategy _discoveryStrategy = discoveryStrategy ?? throw new ArgumentNullException(nameof(discoveryStrategy));
+    private readonly IOptions<ToolLoaderOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly string _toolName = serverConfiguration?.Value.ShortName ?? throw new ArgumentNullException(nameof(serverConfiguration));
+    private readonly string _toolDescription = serverConfiguration!.Value.Description;
+    private readonly string _displayName = serverConfiguration!.Value.DisplayName;
+    private readonly JsonElement _toolSchema = BuildToolSchema(serverConfiguration!.Value.ShortName);
+
     private string? _cachedRootToolsJson;
     private readonly ConcurrentDictionary<string, string> _cachedToolListsJson = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, IList<McpClientTool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
-    private readonly IOptions<ToolLoaderOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
 
     private const string ToolCallProxySchema = """
         {
@@ -42,36 +49,41 @@ public sealed class SingleProxyToolLoader(
         }
         """;
 
-    private static readonly JsonElement ToolSchema = JsonSerializer.Deserialize("""
-        {
-          "type": "object",
-          "properties": {
-            "intent": {
-              "type": "string",
-              "description": "The intent of the operation to perform."
-            },
-            "tool": {
-              "type": "string",
-              "description": "The tool to use to execute the operation."
-            },
-            "command": {
-              "type": "string",
-              "description": "The command to execute against the specified tool."
-            },
-            "parameters": {
+    private static JsonElement BuildToolSchema(string toolName)
+    {
+        var schemaJson = $$"""
+            {
               "type": "object",
-              "description": "The parameters to pass to the tool command."
-            },
-            "learn": {
-              "type": "boolean",
-              "description": "To learn about the tool and its supported child tools and parameters.",
-              "default": false
+              "properties": {
+                "intent": {
+                  "type": "string",
+                  "description": "The intent of the {{toolName}} operation to perform."
+                },
+                "tool": {
+                  "type": "string",
+                  "description": "The {{toolName}} tool to use to execute the operation."
+                },
+                "command": {
+                  "type": "string",
+                  "description": "The command to execute against the specified tool."
+                },
+                "parameters": {
+                  "type": "object",
+                  "description": "The parameters to pass to the tool command."
+                },
+                "learn": {
+                  "type": "boolean",
+                  "description": "To learn about the tool and its supported child tools and parameters.",
+                  "default": false
+                }
+              },
+              "required": ["intent"],
+              "additionalProperties": false
             }
-          },
-          "required": ["intent"],
-          "additionalProperties": false
-        }
-        """, ServerJsonContext.Default.JsonElement);
+            """;
+
+        return JsonSerializer.Deserialize(schemaJson, ServerJsonContext.Default.JsonElement);
+    }
 
     public override ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
@@ -81,19 +93,10 @@ public sealed class SingleProxyToolLoader(
             [
                 new()
                 {
-                    Name = "azure",
-                    Description = """
-                        This server/tool provides real-time, programmatic access to all Azure products, services, and resources,
-                        as well as all interactions with the Azure Developer CLI (azd).
-                        Use this tool for any Azure control plane or data plane operation, including resource management and automation.
-                        To discover available capabilities, call the tool with the "learn" parameter to get a list of top-level tools.
-                        To explore further, set "learn" and specify a tool name to retrieve supported commands and their parameters.
-                        To execute an action, set the "tool", "command", and convert the users intent into the "parameters" based on the discovered schema.
-                        Always use this tool for any Azure or "azd" related operation requiring up-to-date, dynamic, and interactive capabilities.
-                        Always include the "intent" parameter to specify the operation you want to perform.
-                        """,
+                    Name = _toolName,
+                    Description = _toolDescription,
                     Annotations = new ToolAnnotations(),
-                    InputSchema = ToolSchema,
+                    InputSchema = _toolSchema,
                 }
             ],
         };
@@ -431,7 +434,7 @@ public sealed class SingleProxyToolLoader(
 
     private async Task<string?> GetToolNameFromIntentAsync(RequestContext<CallToolRequestParams> request, string intent, string toolsJson, CancellationToken cancellationToken)
     {
-        await NotifyProgressAsync(request, "Learning about capabilities...", cancellationToken);
+        await NotifyProgressAsync(request, $"Learning about {_displayName} capabilities...", cancellationToken);
 
         var samplingRequest = new CreateMessageRequestParams
         {
@@ -442,7 +445,8 @@ public sealed class SingleProxyToolLoader(
                     Role = Role.Assistant,
                     Content = [new TextContentBlock{
                         Text = $"""
-                            The following is a list of available tools for the server.
+
+                            The following is a list of available tools for the {_displayName}.
 
                             Your task:
                             - Select a single tool that best matches the user's intent and return the name of the tool.

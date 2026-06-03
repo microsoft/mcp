@@ -1,0 +1,109 @@
+{
+  "rules": [
+    {
+      "ruleId": "Upgrade_FrontDoor_WAF_To_Latest_DRS_Ruleset",
+      "description": "WAF rule sets are constantly updated to guard against new attacks. Upgrading to the latest DRS version will provide enhanced engine performance, better protection, and a reduction in false positives. It is recommended to use the latest DRS rule set version.",
+      "query": "extend ruleset1=properties.managedRules.managedRuleSets[0], ruleset2=properties.managedRules.managedRuleSets[1], ruleSetType1=properties.managedRules.managedRuleSets[0].ruleSetType, ruleSetType2=properties.managedRules.managedRuleSets[1].ruleSetType | where (sku.name !~ \"Classic_AzureFrontDoor\") and (ruleSetType1 =~ \"Microsoft_DefaultRuleSet\" and (ruleset1[\"ruleSetVersion\"] in (\"1.0\",\"1.1\",\"2.0\"))) or (ruleSetType2 =~ \"Microsoft_DefaultRuleSet\" and (ruleset2[\"ruleSetVersion\"] in (\"1.0\",\"1.1\",\"2.0\")))",
+      "ARM_Query": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "field": "sku.name",
+                "notEquals": "Classic_AzureFrontDoor"
+              },
+              {
+                "field": "properties.managedRules.managedRuleSets[0].ruleSetType",
+                "equals": "Microsoft_DefaultRuleSet"
+              },
+              {
+                "field": "properties.managedRules.managedRuleSets[0].ruleSetVersion",
+                "in": [
+                  "1.0",
+                  "1.1",
+                  "2.0"
+                ]
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "field": "sku.name",
+                "notEquals": "Classic_AzureFrontDoor"
+              },
+              {
+                "field": "properties.managedRules.managedRuleSets[1].ruleSetType",
+                "equals": "Microsoft_DefaultRuleSet"
+              },
+              {
+                "field": "properties.managedRules.managedRuleSets[1].ruleSetVersion",
+                "in": [
+                  "1.0",
+                  "1.1",
+                  "2.0"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "fix": "use the latest DRS rule set version",
+      "ARM_Fix": {
+        "type": "resourceAction",
+        "action": "configure",
+        "details": "In properties.managedRules.managedRuleSets, update the Microsoft_DefaultRuleSet entry's ruleSetVersion from '1.0', '1.1', or '2.0' to '2.1'. Retain any bot-manager rule set entries unchanged."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_cdn_frontdoor_firewall_policy",
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "attribute": "sku_name",
+                "notEquals": "Classic_AzureFrontDoor"
+              },
+              {
+                "attribute": "managed_rule_set[0].type",
+                "equals": "Microsoft_DefaultRuleSet"
+              },
+              {
+                "attribute": "managed_rule_set[0].version",
+                "in": [
+                  "1.0",
+                  "1.1",
+                  "2.0"
+                ]
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "attribute": "sku_name",
+                "notEquals": "Classic_AzureFrontDoor"
+              },
+              {
+                "attribute": "managed_rule_set[1].type",
+                "equals": "Microsoft_DefaultRuleSet"
+              },
+              {
+                "attribute": "managed_rule_set[1].version",
+                "in": [
+                  "1.0",
+                  "1.1",
+                  "2.0"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "configure",
+        "details": "In the managed_rule_set blocks, update the Microsoft_DefaultRuleSet entry's version from '1.0', '1.1', or '2.0' to '2.1'. Retain any bot_manager_rule_set blocks unchanged."
+      }
+    }
+  ]
+}

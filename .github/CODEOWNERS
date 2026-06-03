@@ -374,6 +374,12 @@
 # ServiceLabel: %tools-SQL
 # ServiceOwners:                     @akromm @achyuth-ms @AV25242 @ericshape @jeremyfrosti @mitesh-pv @microsoft/azure-mcp
 
+# PRLabel: %tools-SreAgent
+/tools/Azure.Mcp.Tools.SreAgent/       @BandaruDheeraj @microsoft/azure-mcp
+
+# ServiceLabel: %tools-SreAgent
+# ServiceOwners:                       @BandaruDheeraj
+
 # PRLabel: %tools-Storage
 /tools/Azure.Mcp.Tools.Storage/        @alzimmermsft @jongio @xiangyan99 @microsoft/azure-mcp
 

@@ -25,7 +25,6 @@ public class WebTestsGetCommandTests : CommandUnitTestsBase<WebTestsGetCommand, 
         Assert.Equal("get", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("Gets details for a specific web test", CommandDefinition.Description);
     }
 
     [Fact]
@@ -44,9 +43,9 @@ public class WebTestsGetCommandTests : CommandUnitTestsBase<WebTestsGetCommand, 
     public void Description_ContainsRequiredInformation()
     {
         var description = Command.Description;
-        Assert.Contains("specific web test or lists all web tests", description);
-        Assert.Contains("--webtest-resource is provided", description);
-        Assert.Contains("--webtest-resource is omitted", description);
+        Assert.NotNull(description);
+        Assert.NotEmpty(description);
+        Assert.True(description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]

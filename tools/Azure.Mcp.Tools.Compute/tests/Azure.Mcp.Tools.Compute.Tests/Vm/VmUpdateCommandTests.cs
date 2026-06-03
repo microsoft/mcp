@@ -289,4 +289,156 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
         // Assert parse was successful
         Assert.Empty(parseResult.Errors);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_UpdatesVmWithUserData_PassesValueToService()
+    {
+        // The command passes the user-supplied value (expected to be Base64-encoded by the caller)
+        // directly to the service without modification (COMP-03: ARM requires Base64).
+        const string base64UserData = "IyEvYmluL2Jhc2gKZWNobyBoZWxsbw=="; // base64 of "#!/bin/bash\necho hello"
+
+        var expectedResult = new VmUpdateResult(
+            Name: _knownVmName,
+            Id: "/subscriptions/sub123/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm",
+            Location: "eastus",
+            VmSize: "Standard_D2s_v5",
+            ProvisioningState: "Succeeded",
+            PowerState: "VM running",
+            OsType: "linux",
+            LicenseType: null,
+            Zones: null,
+            Tags: null);
+
+        Service.UpdateVmAsync(
+            Arg.Is(_knownVmName),
+            Arg.Is(_knownResourceGroup),
+            Arg.Is(_knownSubscription),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Is(base64UserData),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--vm-name", _knownVmName,
+            "--resource-group", _knownResourceGroup,
+            "--subscription", _knownSubscription,
+            "--user-data", base64UserData);
+
+        // Assert - command passes the value through as-is; caller is responsible for Base64 encoding
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).UpdateVmAsync(
+            _knownVmName, _knownResourceGroup, _knownSubscription,
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), base64UserData, Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ClearTagsWithEmptyString_PassesEmptyTagsToService()
+    {
+        // COMP-04: passing --tags "" should clear existing tags via the service
+        var expectedResult = new VmUpdateResult(
+            Name: _knownVmName,
+            Id: "/subscriptions/sub123/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm",
+            Location: "eastus",
+            VmSize: "Standard_D2s_v5",
+            ProvisioningState: "Succeeded",
+            PowerState: "VM running",
+            OsType: "linux",
+            LicenseType: null,
+            Zones: null,
+            Tags: new Dictionary<string, string>());
+
+        Service.UpdateVmAsync(
+            Arg.Is(_knownVmName),
+            Arg.Is(_knownResourceGroup),
+            Arg.Is(_knownSubscription),
+            Arg.Any<string?>(),
+            Arg.Is(string.Empty),  // empty string triggers tag clearing in service
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--vm-name", _knownVmName,
+            "--resource-group", _knownResourceGroup,
+            "--subscription", _knownSubscription,
+            "--tags", "");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).UpdateVmAsync(
+            _knownVmName,
+            _knownResourceGroup,
+            _knownSubscription,
+            Arg.Any<string?>(),
+            string.Empty,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ClearTagsWithBareOption_PassesEmptyTagsToService()
+    {
+        var expectedResult = new VmUpdateResult(
+            Name: _knownVmName,
+            Id: "/subscriptions/sub123/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm",
+            Location: "eastus",
+            VmSize: "Standard_D2s_v5",
+            ProvisioningState: "Succeeded",
+            PowerState: "VM running",
+            OsType: "linux",
+            LicenseType: null,
+            Zones: null,
+            Tags: new Dictionary<string, string>());
+
+        Service.UpdateVmAsync(
+            Arg.Is(_knownVmName),
+            Arg.Is(_knownResourceGroup),
+            Arg.Is(_knownSubscription),
+            Arg.Any<string?>(),
+            Arg.Is(string.Empty),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
+
+        var response = await ExecuteCommandAsync(
+            "--vm-name", _knownVmName,
+            "--resource-group", _knownResourceGroup,
+            "--subscription", _knownSubscription,
+            "--tags");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).UpdateVmAsync(
+            _knownVmName,
+            _knownResourceGroup,
+            _knownSubscription,
+            Arg.Any<string?>(),
+            string.Empty,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
 }

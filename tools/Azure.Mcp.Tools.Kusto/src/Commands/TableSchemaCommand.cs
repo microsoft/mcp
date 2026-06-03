@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
@@ -20,30 +21,24 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger, IKustoService kustoService) : BaseTableCommand<TableSchemaOptions>
+public sealed class TableSchemaCommand(
+    ILogger<TableSchemaCommand> logger,
+    IKustoService kustoService,
+    ISubscriptionResolver subscriptionResolver)
+    : BaseTableCommand<TableSchemaOptions, TableSchemaCommand.TableSchemaCommandResult>(subscriptionResolver)
 {
-    private readonly ILogger<TableSchemaCommand> _logger = logger;
-    private readonly IKustoService _kustoService = kustoService;
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TableSchemaOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             string tableSchema;
 
             if (UseClusterUri(options))
             {
-                tableSchema = await _kustoService.GetTableSchemaAsync(
+                tableSchema = await kustoService.GetTableSchemaAsync(
                     options.ClusterUri!,
-                    options.Database!,
-                    options.Table!,
+                    options.Database,
+                    options.Table,
                     options.Tenant,
                     options.AuthMethod,
                     options.RetryPolicy,
@@ -51,26 +46,26 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger, IKust
             }
             else
             {
-                tableSchema = await _kustoService.GetTableSchemaAsync(
+                tableSchema = await kustoService.GetTableSchemaAsync(
                     options.Subscription!,
                     options.ClusterName!,
-                    options.Database!,
-                    options.Table!,
+                    options.Database,
+                    options.Table,
                     options.Tenant,
                     options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(new(tableSchema), KustoJsonContext.Default.TableSchemaCommandResult);
+            context.Response.Results = ResponseResult.Create(new TableSchemaCommandResult(tableSchema), KustoJsonContext.Default.TableSchemaCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An exception occurred getting table schema. Cluster: {Cluster}, Table: {Table}.", options.ClusterUri ?? options.ClusterName, options.Table);
+            logger.LogError(ex, "An exception occurred getting table schema. Cluster: {Cluster}, Table: {Table}.", options.ClusterUri ?? options.ClusterName, options.Table);
             HandleException(context, ex);
         }
         return context.Response;
     }
 
-    internal record TableSchemaCommandResult(string Schema);
+    public record TableSchemaCommandResult(string Schema);
 }

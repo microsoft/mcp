@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Services;
@@ -13,7 +14,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.Tests;
 
-public sealed class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IKustoService>
+public sealed class ClusterGetCommandTests : SubscriptionCommandUnitTestsBase<ClusterGetCommand, IKustoService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsCluster_WhenClusterExists()

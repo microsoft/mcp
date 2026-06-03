@@ -205,7 +205,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyF
         var errorDetails = result.Value;
         errorDetails.AssertProperty("message");
         var typeProperty = errorDetails.AssertProperty("type");
-        Assert.Equal("ArgumentException", typeProperty.GetString());
+        Assert.Equal("KeyNotFoundException", typeProperty.GetString());
     }
 
     [Fact]

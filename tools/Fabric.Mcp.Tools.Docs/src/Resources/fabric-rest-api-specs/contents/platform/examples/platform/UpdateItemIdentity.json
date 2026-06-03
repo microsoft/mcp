@@ -1,0 +1,43 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "itemId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "beta": true,
+        "updateItemIdentityRequest": {
+            "assignmentType" : "Caller"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "assignmentStatus": [
+                    {
+                        "itemId": "eab1679a-8cab-40d6-9ba6-5c2a07a7ce81",
+                        "status": "Succeeded"
+                    },
+                    {
+                        "itemId": "8eedb1b0-3af8-4b17-8e7e-663e61e12211",
+                        "parentItemId": "eab1679a-8cab-40d6-9ba6-5c2a07a7ce81",
+                        "status": "Succeeded"
+                    },
+                    {
+                        "itemId": "83b128a3-f58f-4eee-ab0b-e7e25a748f54",
+                        "parentItemId": "eab1679a-8cab-40d6-9ba6-5c2a07a7ce81",
+                        "status": "Failed",
+                        "errorInfo": {
+                            "errorCode": "AssignmentFailed",
+                            "message": "The assignment operation failed due to insufficient permissions."
+                        }
+                    }
+                ]
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/427f6c34-b64e-4ee4-8ea5-b533c0e203ef",
+                "x-ms-operation-id": "427f6c34-b64e-4ee4-8ea5-b533c0e203ef",
+                "Retry-After": 30
+            }
+        }
+    }
+}
