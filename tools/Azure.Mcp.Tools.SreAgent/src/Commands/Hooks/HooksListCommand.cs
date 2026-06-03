@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Options.Hooks;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Hooks;
 
@@ -24,33 +24,14 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Hooks;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class HooksListCommand(ILogger<HooksListCommand> logger, ISreAgentService sreAgentService)
-    : BaseSreAgentCommand<HooksListOptions>
+public sealed class HooksListCommand(ILogger<HooksListCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<HooksListOptions, HooksListCommand.HooksListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<HooksListCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, HooksListOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SreAgentOptionDefinitions.Agent.AsRequired());
-    }
-
-    protected override HooksListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
         try
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(_sreAgentService, options, cancellationToken);
@@ -66,6 +47,6 @@ public sealed class HooksListCommand(ILogger<HooksListCommand> logger, ISreAgent
         return context.Response;
     }
 
-    internal record HooksListCommandResult(List<HookEnvelope> Hooks);
+    public record HooksListCommandResult(List<HookEnvelope> Hooks);
 }
 

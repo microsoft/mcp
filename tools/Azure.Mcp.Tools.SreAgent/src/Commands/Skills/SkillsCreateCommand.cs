@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Options.Skills;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Skills;
 
@@ -24,39 +24,14 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Skills;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class SkillsCreateCommand(ILogger<SkillsCreateCommand> logger, ISreAgentService sreAgentService)
-    : BaseSreAgentCommand<SkillsCreateOptions>
+public sealed class SkillsCreateCommand(ILogger<SkillsCreateCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<SkillsCreateOptions, SkillsCreateCommand.SkillsCreateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<SkillsCreateCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SkillsCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SreAgentOptionDefinitions.Agent.AsRequired());
-        command.Options.Add(SreAgentOptionDefinitions.Name);
-        command.Options.Add(SreAgentOptionDefinitions.Content);
-        command.Options.Add(SreAgentOptionDefinitions.Description);
-    }
-
-    protected override SkillsCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
-        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
-        options.Content = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Content);
-        options.Description = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Description);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
 
         try
         {
@@ -91,5 +66,5 @@ public sealed class SkillsCreateCommand(ILogger<SkillsCreateCommand> logger, ISr
         return context.Response;
     }
 
-    internal record SkillsCreateCommandResult(SreSkill Skill);
+    public record SkillsCreateCommandResult(SreSkill Skill);
 }

@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Options.Connectors;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
 
@@ -24,51 +24,14 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
     ReadOnly = false,
     Secret = true,
     LocalRequired = false)]
-public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpCommand> logger, ISreAgentService sreAgentService)
-    : BaseSreAgentCommand<ConnectorsCreateMcpOptions>
+public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ConnectorsCreateMcpOptions, ConnectorsCreateMcpCommand.ConnectorsCreateMcpCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ConnectorsCreateMcpCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ConnectorsCreateMcpOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SreAgentOptionDefinitions.Agent.AsRequired());
-        command.Options.Add(SreAgentOptionDefinitions.Name.AsRequired());
-        command.Options.Add(SreAgentOptionDefinitions.Type.AsRequired());
-        command.Options.Add(SreAgentOptionDefinitions.Command);
-        command.Options.Add(SreAgentOptionDefinitions.Args);
-        command.Options.Add(SreAgentOptionDefinitions.EnvsJson);
-        command.Options.Add(SreAgentOptionDefinitions.Endpoint);
-        command.Options.Add(SreAgentOptionDefinitions.AuthType);
-        command.Options.Add(SreAgentOptionDefinitions.BearerTokenEnv);
-        command.Options.Add(SreAgentOptionDefinitions.HeadersJson);
-    }
-
-    protected override ConnectorsCreateMcpOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
-        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
-        options.Type = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Type);
-        options.Command = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Command);
-        options.Args = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Args);
-        options.EnvsJson = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.EnvsJson);
-        options.Endpoint = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Endpoint);
-        options.AuthType = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.AuthType);
-        options.BearerTokenEnv = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.BearerTokenEnv);
-        options.HeadersJson = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.HeadersJson);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
         try
         {
             if (!string.Equals(options.Type, "stdio", StringComparison.OrdinalIgnoreCase) &&
@@ -153,6 +116,6 @@ public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpComman
         return context.Response;
     }
 
-    internal record ConnectorsCreateMcpCommandResult(AgentConnector Connector);
+    public record ConnectorsCreateMcpCommandResult(AgentConnector Connector);
 }
 

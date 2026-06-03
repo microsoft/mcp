@@ -1,66 +1,26 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Options.Workflows;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Workflows;
 
-[CommandMetadata(Id = "6cb0ff68-d279-44bc-9935-84f0b181240b", Name = "generate", Title = "Generate Workflow YAML", Description = "Generate a YAML workflow definition for a named SRE Agent tool or agent. Creates validated YAML configuration for ExtendedAgent, KustoTool, or LinkTool resources.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
-public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> logger) : GlobalCommand<WorkflowsGenerateOptions>
+[CommandMetadata(Id = "6cb0ff68-d279-44bc-9935-84f0b181240b", Name = "generate", Title = "Generate Workflow YAML", Description = "Generate validated YAML for SRE Agent agents or tools.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> logger) : AuthenticatedCommand<WorkflowsGenerateOptions, SreAgentTextResult>
 {
     private readonly ILogger<WorkflowsGenerateCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, WorkflowsGenerateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SreAgentOptionDefinitions.Kind);
-        command.Options.Add(SreAgentOptionDefinitions.Name);
-        command.Options.Add(SreAgentOptionDefinitions.Description.AsRequired());
-        command.Options.Add(SreAgentOptionDefinitions.ModelOrType);
-        command.Options.Add(SreAgentOptionDefinitions.Tools);
-        command.Options.Add(SreAgentOptionDefinitions.Handoffs);
-        command.Options.Add(SreAgentOptionDefinitions.Connector);
-        command.Options.Add(SreAgentOptionDefinitions.Database);
-        command.Options.Add(SreAgentOptionDefinitions.Query);
-        command.Options.Add(SreAgentOptionDefinitions.UrlTemplate);
-        command.Options.Add(SreAgentOptionDefinitions.ParametersList);
-    }
-
-    protected override WorkflowsGenerateOptions BindOptions(ParseResult parseResult)
-    {
-        var o = base.BindOptions(parseResult);
-        o.Kind = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Kind);
-        o.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
-        o.Description = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Description);
-        o.ModelOrType = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.ModelOrType);
-        o.Tools = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Tools);
-        o.Handoffs = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Handoffs);
-        o.Connector = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Connector);
-        o.Database = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Database);
-        o.Query = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Query);
-        o.UrlTemplate = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.UrlTemplate);
-        o.Parameters = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.ParametersList);
-        return o;
-    }
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return Task.FromResult(context.Response);
-        }
-
-        var o = BindOptions(parseResult);
 
         try
         {
-            SreAgentPortedCommandHelpers.SetTextResult(context.Response, Generate(o));
+            SreAgentPortedCommandHelpers.SetTextResult(context.Response, Generate(options));
         }
         catch (Exception ex)
         {
@@ -71,20 +31,20 @@ public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> l
         return Task.FromResult(context.Response);
     }
 
-    private static string Generate(WorkflowsGenerateOptions o)
+    private static string Generate(WorkflowsGenerateOptions options)
     {
-        var safe = SreAgentPortedCommandHelpers.SanitizeKebabCase(o.Name);
+        var safe = SreAgentPortedCommandHelpers.SanitizeKebabCase(options.Name);
 
-        if (string.Equals(o.Kind, "agent", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(options.Kind, "agent", StringComparison.OrdinalIgnoreCase))
         {
-            return GenerateAgent(safe, o.Description!, o.Tools, o.Handoffs);
+            return GenerateAgent(safe, options.Description!, options.Tools, options.Handoffs);
         }
 
-        var toolType = (o.ModelOrType ?? string.Empty).ToLowerInvariant() switch
+        var toolType = (options.ModelOrType ?? string.Empty).ToLowerInvariant() switch
         {
             "kusto" or "kustotool" => "KustoTool",
             "link" or "linktool" => "LinkTool",
-            _ => o.ModelOrType ?? string.Empty
+            _ => options.ModelOrType ?? string.Empty
         };
 
         if (toolType is not ("KustoTool" or "LinkTool"))
@@ -92,10 +52,10 @@ public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> l
             return $"Error: Unsupported tool type '{toolType}'. Supported: KustoTool, LinkTool. Run list_stable_tool_types.";
         }
 
-        var paramsYaml = BuildParameters(o.Parameters);
+        var paramsYaml = BuildParameters(options.Parameters);
         return toolType == "KustoTool"
-            ? GenerateKusto(safe, o.Description!, o.Connector, o.Database, o.Query, paramsYaml)
-            : GenerateLink(safe, o.Description!, o.UrlTemplate, paramsYaml);
+            ? GenerateKusto(safe, options.Description!, options.Connector, options.Database, options.Query, paramsYaml)
+            : GenerateLink(safe, options.Description!, options.UrlTemplate, paramsYaml);
     }
 
     private static string BuildParameters(string[]? parameters)
@@ -115,17 +75,17 @@ public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> l
             lines.Add("      required: true");
             lines.Add("      target: dictionary:args:string");
         }
-        return string.Join('\n', lines);
+        return string.Join("\n", lines);
     }
 
     private static string GenerateAgent(string name, string description, string[]? tools, string[]? handoffs)
     {
         var toolsList = tools?.Length > 0
-            ? "\n" + string.Join('\n', tools.Distinct().Select(t => $"    - {t}"))
+            ? "\n" + string.Join("\n", tools.Distinct().Select(t => $"    - {t}"))
             : "[]";
         var warnings = new List<string>();
         var handoffsList = handoffs?.Length > 0
-            ? "\n" + string.Join('\n', handoffs.Distinct().Select(h => $"    - {SreAgentPortedCommandHelpers.SanitizeKebabCase(h)}"))
+            ? "\n" + string.Join("\n", handoffs.Distinct().Select(h => $"    - {SreAgentPortedCommandHelpers.SanitizeKebabCase(h)}"))
             : "[]";
         if (handoffs?.Length > 0)
         {
@@ -134,7 +94,7 @@ public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> l
         var yaml = $"api_version: azuresre.ai/v2\nkind: ExtendedAgent\nmetadata:\n  name: {name}\nspec:\n  instructions: |-\n    You are '{name}'. {description}\n\n    ## Responsibilities\n    - Analyze requests and context\n    - Use tools to gather information\n    - Provide clear, actionable responses\n  handoffDescription: '{description}'\n  handoffs: {handoffsList}\n  tools: {toolsList}\n  maxReflectionCount: 0\n  customReflectionNote: ''\n  commonPrompts: []\n  enableVanillaMode: false";
         var text = $"# Generated Agent YAML\n\n```yaml\n{yaml}\n```";
         return warnings.Count > 0
-            ? text + $"\n\n## Warnings\n{string.Join('\n', warnings.Select(w => $"- {w}"))}"
+            ? text + $"\n\n## Warnings\n{string.Join("\n", warnings.Select(w => $"- {w}"))}"
             : text;
     }
 
@@ -154,7 +114,7 @@ public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> l
         var queryYaml = "    // <REPLACE:your-kql-query>\n    // CRITICAL: Use ##paramName## for parameters (NOT {{paramName}})";
         if (!string.IsNullOrWhiteSpace(query))
         {
-            queryYaml = string.Join('\n', query.Split('\n').Select(l => $"    {l}"));
+            queryYaml = string.Join("\n", query.Split('\n').Select(l => $"    {l}"));
         }
         else
         {
@@ -163,7 +123,7 @@ public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> l
         var yaml = $"api_version: azuresre.ai/v2\nkind: ExtendedAgentTool\nmetadata:\n  name: {name}\nspec:\n  type: KustoTool\n  connector: {connector}\n  toolMode: Auto\n  description: |\n    {description}\n  database: {database}\n  query: |\n{queryYaml}\n{paramsYaml}".Trim();
         var text = $"# Generated KustoTool YAML\n\n```yaml\n{yaml}\n```";
         return warnings.Count > 0
-            ? text + $"\n\n## Warnings\n{string.Join('\n', warnings.Select(w => $"- {w}"))}"
+            ? text + $"\n\n## Warnings\n{string.Join("\n", warnings.Select(w => $"- {w}"))}"
             : text;
     }
 

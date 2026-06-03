@@ -2,49 +2,26 @@
 // Licensed under the MIT License.
 
 using System.Text.RegularExpressions;
+using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Options.Architecture;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Architecture;
 
-[CommandMetadata(Id = "376134c0-d8f3-4399-a131-11cdfd4e63a4", Name = "plan", Title = "Plan Agent Architecture", Description = "Plan and generate an SRE Agent architecture. Analyzes requirements and produces a structured design for agents, tools, connectors, and triggers.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
-public sealed class PlanCommand(ILogger<PlanCommand> logger) : GlobalCommand<PlanOptions>
+[CommandMetadata(Id = "376134c0-d8f3-4399-a131-11cdfd4e63a4", Name = "plan", Title = "Plan Agent Architecture", Description = "Design an SRE Agent architecture before writing YAML.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+public sealed class PlanCommand(ILogger<PlanCommand> logger) : AuthenticatedCommand<PlanOptions, SreAgentTextResult>
 {
     private readonly ILogger<PlanCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, PlanOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SreAgentOptionDefinitions.Requirements);
-        command.Options.Add(SreAgentOptionDefinitions.TriggerType);
-        command.Options.Add(SreAgentOptionDefinitions.KustoConnector);
-    }
-
-    protected override PlanOptions BindOptions(ParseResult parseResult)
-    {
-        var o = base.BindOptions(parseResult);
-        o.Requirements = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Requirements);
-        o.TriggerType = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.TriggerType);
-        o.KustoConnector = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.KustoConnector);
-        return o;
-    }
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return Task.FromResult(context.Response);
-        }
-
-        var o = BindOptions(parseResult);
 
         try
         {
-            SreAgentPortedCommandHelpers.SetTextResult(context.Response, Plan(o.Requirements!, o.TriggerType ?? "manual", o.KustoConnector));
+            SreAgentPortedCommandHelpers.SetTextResult(context.Response, Plan(options.Requirements!, options.TriggerType ?? "manual", options.KustoConnector));
         }
         catch (Exception ex)
         {
@@ -136,7 +113,7 @@ public sealed class PlanCommand(ILogger<PlanCommand> logger) : GlobalCommand<Pla
         output.AddRange([
             string.Empty,
             "---",
-            "## ⚠️ STOP: USER CONFIRMATION REQUIRED",
+            "## ΓÜá∩╕Å STOP: USER CONFIRMATION REQUIRED",
             string.Empty,
             "**Before proceeding, ask the user:**",
             "1. Does this architecture match your requirements?",
@@ -165,8 +142,8 @@ public sealed class PlanCommand(ILogger<PlanCommand> logger) : GlobalCommand<Pla
             "flowchart TD",
             string.Empty,
             triggerType.Equals("scheduled", StringComparison.OrdinalIgnoreCase)
-                ? "    Cron[\"⏰ Scheduled Task\"]"
-                : "    User[\"👤 User/API\"]",
+                ? "    Cron[\"ΓÅ░ Scheduled Task\"]"
+                : "    User[\"≡ƒæñ User/API\"]",
             string.Empty,
             triggerType.Equals("scheduled", StringComparison.OrdinalIgnoreCase)
                 ? $"    Cron --> MainAgent[\"{mainAgent}\"]"
@@ -180,7 +157,7 @@ public sealed class PlanCommand(ILogger<PlanCommand> logger) : GlobalCommand<Pla
             foreach (var tool in tools)
             {
                 var node = Regex.Replace(tool.Name, "\\s", string.Empty);
-                var icon = tool.Category.Contains("Platform", StringComparison.OrdinalIgnoreCase) ? "🔧" : "📝";
+                var icon = tool.Category.Contains("Platform", StringComparison.OrdinalIgnoreCase) ? "≡ƒöº" : "≡ƒô¥";
                 lines.Add($"        {node}[[\"{icon} {tool.Name}\"]]");
             }
             lines.Add("    end");
@@ -195,7 +172,7 @@ public sealed class PlanCommand(ILogger<PlanCommand> logger) : GlobalCommand<Pla
         lines.Add("    style MainAgent fill:#4CAF50,color:#fff");
         lines.Add("```");
         lines.Add(string.Empty);
-        lines.Add("**Legend:** 🔧 Platform tool (no YAML) | 📝 Custom tool (ExtendedAgentTool YAML)");
+        lines.Add("**Legend:** ≡ƒöº Platform tool (no YAML) | ≡ƒô¥ Custom tool (ExtendedAgentTool YAML)");
 
         return string.Join('\n', lines);
     }

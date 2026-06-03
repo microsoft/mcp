@@ -3,46 +3,30 @@
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Options.Workflows;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Workflows;
 
-[CommandMetadata(Id = "7217d724-f07f-4e56-81bc-5e6e182fe987", Name = "apply", Title = "Apply Workflow YAML", Description = "Apply and deploy a YAML workflow to an SRE Agent. Uploads and activates ExtendedAgent or ExtendedAgentTool YAML configuration on the specified SRE Agent resource.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
-public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<WorkflowsApplyOptions>
+[CommandMetadata(Id = "7217d724-f07f-4e56-81bc-5e6e182fe987", Name = "apply", Title = "Apply Workflow YAML", Description = "Apply ExtendedAgent or ExtendedAgentTool YAML to an SRE Agent.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<WorkflowsApplyOptions, SreAgentTextResult>(subscriptionResolver)
 {
     private readonly ILogger<WorkflowsApplyCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, WorkflowsApplyOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SreAgentOptionDefinitions.YamlContent);
-        command.Options.Add(SreAgentOptionDefinitions.SourceName);
-    }
-
-    protected override WorkflowsApplyOptions BindOptions(ParseResult parseResult)
-    {
-        var o = base.BindOptions(parseResult);
-        o.YamlContent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.YamlContent);
-        o.SourceName = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.SourceName);
-        return o;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            return context.Response;
-        var o = BindOptions(parseResult);
         try
         {
-            var yaml = o.YamlContent!;
+            var yaml = options.YamlContent!;
             if (string.IsNullOrWhiteSpace(yaml))
             {
                 SreAgentPortedCommandHelpers.SetTextResult(context.Response, "Error: YAML content is empty");
@@ -67,7 +51,7 @@ public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger,
                 return context.Response;
             }
 
-            var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
+            var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(_sreAgentService, options, cancellationToken);
             var props = new Dictionary<string, JsonElement>();
             foreach (var kvp in parsed.Spec)
             {
@@ -84,8 +68,8 @@ public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger,
                 Owner = parsed.Owner,
                 Properties = props
             };
-            await _sreAgentService.ApplyExtendedAgentResourceAsync(endpoint, kind, name!, payload, o.Tenant, cancellationToken);
-            SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"✅ {(kind == "ExtendedAgentTool" ? "Tool" : "Agent")} '{name}' applied successfully");
+            await _sreAgentService.ApplyExtendedAgentResourceAsync(endpoint, kind, name!, payload, options.Tenant, cancellationToken);
+            SreAgentPortedCommandHelpers.SetTextResult(context.Response, $"Γ£à {(kind == "ExtendedAgentTool" ? "Tool" : "Agent")} '{name}' applied successfully");
         }
         catch (Exception ex)
         {

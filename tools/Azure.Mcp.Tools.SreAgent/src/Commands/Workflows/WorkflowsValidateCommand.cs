@@ -2,44 +2,26 @@
 // Licensed under the MIT License.
 
 using System.Text.RegularExpressions;
+using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Options.Workflows;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Workflows;
 
 [CommandMetadata(Id = "a22bbea7-e805-4039-891c-ac570bb29c9f", Name = "validate", Title = "Validate Workflow YAML", Description = "Validate SRE Agent YAML content for common issues.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
-public sealed class WorkflowsValidateCommand(ILogger<WorkflowsValidateCommand> logger) : GlobalCommand<WorkflowsValidateOptions>
+public sealed class WorkflowsValidateCommand(ILogger<WorkflowsValidateCommand> logger) : AuthenticatedCommand<WorkflowsValidateOptions, SreAgentTextResult>
 {
     private readonly ILogger<WorkflowsValidateCommand> _logger = logger;
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(SreAgentOptionDefinitions.YamlContent);
-    }
 
-    protected override WorkflowsValidateOptions BindOptions(ParseResult parseResult)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, WorkflowsValidateOptions options, CancellationToken cancellationToken)
     {
-        var o = base.BindOptions(parseResult);
-        o.YamlContent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.YamlContent);
-        return o;
-    }
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return Task.FromResult(context.Response);
-        }
-
-        var o = BindOptions(parseResult);
 
         try
         {
-            SreAgentPortedCommandHelpers.SetTextResult(context.Response, ValidateYaml(o.YamlContent!));
+            SreAgentPortedCommandHelpers.SetTextResult(context.Response, ValidateYaml(options.YamlContent!));
         }
         catch (Exception ex)
         {
@@ -53,7 +35,7 @@ public sealed class WorkflowsValidateCommand(ILogger<WorkflowsValidateCommand> l
     {
         if (string.IsNullOrWhiteSpace(yaml))
         {
-            return "❌ Validation failed: YAML content is empty";
+            return "Γ¥î Validation failed: YAML content is empty";
         }
 
         var errors = new List<string>();
@@ -96,8 +78,8 @@ public sealed class WorkflowsValidateCommand(ILogger<WorkflowsValidateCommand> l
         }
 
         var lines = errors.Count == 0
-            ? new List<string> { "✅ YAML validation passed" }
-            : ["❌ YAML validation failed", string.Empty, "## Errors", .. errors.Select(e => $"- {e}")];
+            ? new List<string> { "Γ£à YAML validation passed" }
+            : ["Γ¥î YAML validation failed", string.Empty, "## Errors", .. errors.Select(e => $"- {e}")];
 
         if (warnings.Count > 0)
         {
