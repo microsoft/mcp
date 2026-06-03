@@ -7,3 +7,6 @@ https://dev.azure.com/azure-sdk/internal/_build?definitionId=7571
 
 # Link check times out, but link is valid
 https://aka.ms/security.md/msrc/bounty
+
+# Should be fixed by MSSQL team
+https://aka.ms/MssqlMcp
