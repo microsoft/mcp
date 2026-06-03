@@ -445,7 +445,6 @@ public sealed class SingleProxyToolLoader(
                     Role = Role.Assistant,
                     Content = [new TextContentBlock{
                         Text = $"""
-
                             The following is a list of available tools for the {_displayName}.
 
                             Your task:
