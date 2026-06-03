@@ -25,8 +25,11 @@ getAzureMcpEvents_ToolCalls(ago(7d), now())
 | extend ErrorCategory = case(
     success == true, "Success",
     ExType in ("System.FormatException", "System.ArgumentNullException", "System.ArgumentException", "System.InvalidOperationException"), "McpToolBug",
+    ExType == "ValidationError", "Customer",
+    ExType == "System.UnauthorizedAccessException", "Customer",
     StatusCode >= 400 and StatusCode < 500, "Customer",
     ExType == "System.Collections.Generic.KeyNotFoundException", "Customer",
+    ExType == "Azure.Identity.CredentialUnavailableException", "Customer",
     ExType == "Azure.RequestFailedException" and StatusCode >= 500, "AzureService",
     ExType == "System.AggregateException", "AzureService",
     "Unknown")
@@ -63,8 +66,11 @@ getAzureMcpEvents_ToolCalls(TwoWeeksAgo, now())
 | extend ErrorCategory = case(
     success == true, "Success",
     ExType in ("System.FormatException", "System.ArgumentNullException", "System.ArgumentException", "System.InvalidOperationException"), "McpToolBug",
+    ExType == "ValidationError", "Customer",
+    ExType == "System.UnauthorizedAccessException", "Customer",
     StatusCode >= 400 and StatusCode < 500, "Customer",
     ExType == "System.Collections.Generic.KeyNotFoundException", "Customer",
+    ExType == "Azure.Identity.CredentialUnavailableException", "Customer",
     ExType == "Azure.RequestFailedException" and StatusCode >= 500, "AzureService",
     ExType == "System.AggregateException", "AzureService",
     "Unknown")
@@ -112,8 +118,11 @@ getAzureMcpEvents_ToolCalls(ago(7d), now())
 | extend StatusCode = toint(extract(@"StatusCode.*?(\d+)", 1, ExMsg))
 | extend ErrorCategory = case(
     ExType in ("System.FormatException", "System.ArgumentNullException", "System.ArgumentException", "System.InvalidOperationException"), "McpToolBug",
+    ExType == "ValidationError", "Customer",
+    ExType == "System.UnauthorizedAccessException", "Customer",
     StatusCode >= 400 and StatusCode < 500, "Customer",
     ExType == "System.Collections.Generic.KeyNotFoundException", "Customer",
+    ExType == "Azure.Identity.CredentialUnavailableException", "Customer",
     ExType == "Azure.RequestFailedException" and StatusCode >= 500, "AzureService",
     ExType == "System.AggregateException", "AzureService",
     "Unknown")

@@ -117,6 +117,12 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
         KeyNotFoundException => "Protected item not found. Verify the item name and vault.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Protected item not found. Verify the item name and vault.",
+        RequestFailedException reqEx when reqEx.ErrorCode == "BMSUserErrorContainerNameIncorrectFormat" =>
+            $"Container name format is incorrect. Use the fully qualified container name from 'azurebackup protecteditem get' (e.g., 'IaasVMContainer;iaasvmcontainerv2;resourceGroup;vmName'). Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.ErrorCode == "BMSUserErrorProtectedItemNameIncorrectFormat" =>
+            $"Protected item name format is incorrect. Use the fully qualified name from 'azurebackup protecteditem get' (e.g., 'VM;iaasvmcontainerv2;resourceGroup;vmName'). Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Authorization failed. Ensure the caller has the Backup Reader or Backup Operator role on the vault. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };

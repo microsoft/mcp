@@ -164,7 +164,13 @@ Is success == true?
       Is ExceptionType FormatException / ArgumentNullException / ArgumentException / InvalidOperationException?
         └─ YES → "MCP Tool Bug"
         └─ NO →
-            Is StatusCode 400/403/404?
+            Is ExceptionType ValidationError?
+              └─ YES → "Customer (4xx)" (user omitted required options)
+            Is ExceptionType System.UnauthorizedAccessException?
+              └─ YES → "Customer (4xx)" (broken credentials / expired token)
+            Is ExceptionType Azure.Identity.CredentialUnavailableException?
+              └─ YES → "Customer (4xx)" (auth not configured)
+            Is StatusCode 400/401/403/404?
               └─ YES → "Customer (4xx)"
               └─ NO →
                   Is ExceptionType Azure.RequestFailedException with 5xx?
