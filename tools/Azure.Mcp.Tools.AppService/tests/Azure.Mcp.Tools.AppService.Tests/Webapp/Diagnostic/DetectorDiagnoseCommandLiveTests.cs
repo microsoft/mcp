@@ -27,7 +27,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "app", webappName },
-                { "detector-id", "LinuxMemoryDrillDown"}
+                { "detector-id", "AvailabilityAndPerformanceWindows"}
             });
 
         var detectorsResult = DeserializeResult(result, AppServiceJsonContext.Default.DetectorDiagnoseResult);
@@ -49,7 +49,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "app", webappName },
-                { "detector-id", "LinuxMemoryDrillDown"},
+                { "detector-id", "AvailabilityAndPerformanceWindows"},
                 { "start-time", DateTimeOffset.UtcNow.AddHours(-1).ToString("o") },
                 { "end-time", DateTimeOffset.UtcNow.ToString("o") },
                 { "time-grain", "PT10M" }
