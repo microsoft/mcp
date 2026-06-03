@@ -22,7 +22,6 @@ public interface IAdvisorService
         string? resourceGroup,
         RetryPolicyOptions? retryPolicy,
         string groupBy,
-        int top,
         RecommendationFilters? filters = null,
         CancellationToken cancellationToken = default);
 }

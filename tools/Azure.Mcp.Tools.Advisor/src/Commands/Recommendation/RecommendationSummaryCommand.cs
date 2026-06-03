@@ -17,10 +17,15 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Id = "9f6a9d4e-6e8a-4d1c-9a7a-7e1f3b2d4a55",
     Name = "summary",
     Title = "Summarize Advisor Recommendations in a Subscription",
-    Description = "Group Azure Advisor recommendations in a subscription by a chosen field and return the top N buckets by count. " +
+    Description = "Aggregate Azure Advisor recommendations server-side and return per-bucket counts plus a true total. " +
+        "This is the CORRECT tool whenever the user asks 'how many', 'top N <something>', 'which <X> has the most', " +
+        "'breakdown by <field>', 'distribution of', 'count of', or any ranking/comparison question over the recommendation set. " +
+        "Do not try to answer such questions by calling 'list' and counting client-side — 'list' is capped at 100 items and will undercount. " +
         "Required: --group-by (one of 'recommendation-type', 'category', 'impact', 'resource-type'). " +
-        "Optional: --top (default 5, clamped to 1-50), plus the same filters as 'list' (--category, --impact, --resource-type, --resource, --search). " +
-        "Filters are applied first, then aggregation runs over the filtered set.",
+        "Optional filters (same semantics as 'list'): --category, --impact, --resource-type, --resource, --search — applied BEFORE aggregation. " +
+        "Optional --top caps how many buckets are displayed (defaults to all); the 'Unknown' bucket is always preserved at the tail so users can see uncategorized items. " +
+        "'TotalRecommendations' always reflects the full filtered population regardless of --top. " +
+        "Presentation guidance: when rendering Groups as a table, include every returned bucket — in particular the 'Unknown' bucket must appear as a regular row at the bottom of the table, NOT relegated to a footnote, since it represents real recommendations that lack an extractable group key.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -30,10 +35,6 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCommand> logger, IAdvisorService advisorService)
     : BaseAdvisorCommand<RecommendationSummaryOptions>(logger)
 {
-    private const int MinTop = 1;
-    private const int MaxTop = 50;
-    private const int DefaultTop = 5;
-
     private readonly IAdvisorService _advisorService = advisorService;
 
     protected override void RegisterOptions(Command command)
@@ -81,8 +82,6 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
             return context.Response;
         }
 
-        var top = Math.Clamp(options.Top ?? DefaultTop, MinTop, MaxTop);
-
         try
         {
             var filters = new Models.RecommendationFilters(
@@ -97,9 +96,24 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
                 options.ResourceGroup,
                 options.RetryPolicy,
                 groupBy,
-                top,
                 filters,
                 cancellationToken);
+
+            // --top is a presentation cap: slice the bucket list but keep TotalRecommendations
+            // pointing at the full filtered population so callers always see true totals.
+            // The 'Unknown' bucket is always preserved at the tail (even when it would fall
+            // outside the top-N) so users can see how much of the data is uncategorized.
+            if (options.Top is int top && top > 0 && summary.Groups.Count > top)
+            {
+                var unknown = summary.Groups.FirstOrDefault(g => string.Equals(g.Key, "Unknown", StringComparison.OrdinalIgnoreCase));
+                var nonUnknown = summary.Groups.Where(g => !string.Equals(g.Key, "Unknown", StringComparison.OrdinalIgnoreCase));
+                var sliced = nonUnknown.Take(top).ToList();
+                if (unknown is not null)
+                {
+                    sliced.Add(unknown);
+                }
+                summary = summary with { Groups = sliced };
+            }
 
             context.Response.Results = ResponseResult.Create(
                 new RecommendationSummaryResult(summary),
@@ -114,7 +128,7 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
                 options.Subscription,
                 options.ResourceGroup,
                 groupBy,
-                top,
+                options.Top,
                 options.Category,
                 options.Impact,
                 options.ResourceType,

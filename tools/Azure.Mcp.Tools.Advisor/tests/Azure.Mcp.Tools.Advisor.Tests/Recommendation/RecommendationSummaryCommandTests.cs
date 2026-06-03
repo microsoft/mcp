@@ -17,8 +17,8 @@ namespace Azure.Mcp.Tools.Advisor.Tests.Recommendation;
 
 public class RecommendationSummaryCommandTests : CommandUnitTestsBase<RecommendationSummaryCommand, IAdvisorService>
 {
-    private static RecommendationSummary EmptySummary(string groupBy = "category", int top = 5) =>
-        new(GroupBy: groupBy, Top: top, TotalRecommendations: 0, AreResultsTruncated: false, Groups: []);
+    private static RecommendationSummary EmptySummary(string groupBy = "category") =>
+        new(GroupBy: groupBy, TotalRecommendations: 0, Groups: []);
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -31,7 +31,7 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
 
     [Theory]
     [InlineData("--subscription sub1 --group-by category", true)]
-    [InlineData("--subscription sub1 --group-by impact --top 10", true)]
+    [InlineData("--subscription sub1 --group-by impact", true)]
     [InlineData("--subscription sub1", false)]                            // missing --group-by
     [InlineData("", false)]                                                // missing everything
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
@@ -43,7 +43,6 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<string>(),
-                Arg.Any<int>(),
                 Arg.Any<RecommendationFilters?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(EmptySummary());
@@ -64,7 +63,7 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
         Assert.Contains("Allowed values", response.Message);
         await Service.DidNotReceive().SummarizeRecommendationsAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string>(), Arg.Any<int>(), Arg.Any<RecommendationFilters?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string>(), Arg.Any<RecommendationFilters?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -79,7 +78,6 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Do<string>(g => captured = g),
-            Arg.Any<int>(),
             Arg.Any<RecommendationFilters?>(),
             Arg.Any<CancellationToken>())
             .Returns(EmptySummary());
@@ -88,36 +86,6 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("category", captured);
-    }
-
-    [Theory]
-    [InlineData(null, 5)]    // omitted -> default 5
-    [InlineData(0, 1)]       // below min -> clamped to 1
-    [InlineData(-3, 1)]      // negative -> clamped to 1
-    [InlineData(7, 7)]       // in-range pass-through
-    [InlineData(50, 50)]     // at max
-    [InlineData(500, 50)]    // above max -> clamped to 50
-    public async Task ExecuteAsync_Top_IsClampedCorrectly(int? input, int expected)
-    {
-        int? captured = null;
-        Service.SummarizeRecommendationsAsync(
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string>(),
-            Arg.Do<int>(t => captured = t),
-            Arg.Any<RecommendationFilters?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(EmptySummary());
-
-        var args = input is null
-            ? new[] { "--subscription", "sub1", "--group-by", "category" }
-            : ["--subscription", "sub1", "--group-by", "category", "--top", input.Value.ToString()];
-
-        var response = await ExecuteCommandAsync(args);
-
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal(expected, captured);
     }
 
     [Fact]
@@ -129,7 +97,6 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
-            Arg.Any<int>(),
             Arg.Do<RecommendationFilters?>(f => captured = f),
             Arg.Any<CancellationToken>())
             .Returns(EmptySummary());
@@ -160,7 +127,6 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
-            Arg.Any<int>(),
             Arg.Do<RecommendationFilters?>(f => captured = f),
             Arg.Any<CancellationToken>())
             .Returns(EmptySummary());
@@ -180,9 +146,7 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
     {
         var summary = new RecommendationSummary(
             GroupBy: "category",
-            Top: 5,
             TotalRecommendations: 3,
-            AreResultsTruncated: false,
             Groups:
             [
                 new RecommendationGroup("Security", 2),
@@ -194,7 +158,6 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
-            Arg.Any<int>(),
             Arg.Any<RecommendationFilters?>(),
             Arg.Any<CancellationToken>())
             .Returns(summary);
@@ -204,32 +167,10 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
         var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationSummaryResult);
 
         Assert.Equal("category", result.Summary.GroupBy);
-        Assert.Equal(5, result.Summary.Top);
         Assert.Equal(3, result.Summary.TotalRecommendations);
-        Assert.False(result.Summary.AreResultsTruncated);
         Assert.Equal(2, result.Summary.Groups.Count);
         Assert.Equal("Security", result.Summary.Groups[0].Key);
         Assert.Equal(2, result.Summary.Groups[0].Count);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_PropagatesTruncationFlag()
-    {
-        Service.SummarizeRecommendationsAsync(
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string>(),
-            Arg.Any<int>(),
-            Arg.Any<RecommendationFilters?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(new RecommendationSummary("category", 5, 1000, true, []));
-
-        var response = await ExecuteCommandAsync("--subscription", "sub1", "--group-by", "category");
-        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationSummaryResult);
-
-        Assert.True(result.Summary.AreResultsTruncated);
-        Assert.Equal(1000, result.Summary.TotalRecommendations);
     }
 
     [Fact]
@@ -240,7 +181,6 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
-            Arg.Any<int>(),
             Arg.Any<RecommendationFilters?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("boom"));
@@ -249,5 +189,108 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
         Assert.Contains("boom", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Top_SlicesGroupsButPreservesTotal()
+    {
+        var summary = new RecommendationSummary(
+            GroupBy: "category",
+            TotalRecommendations: 100,
+            Groups:
+            [
+                new RecommendationGroup("Security", 50),
+                new RecommendationGroup("Cost", 30),
+                new RecommendationGroup("Performance", 15),
+                new RecommendationGroup("HighAvailability", 5),
+            ]);
+
+        Service.SummarizeRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<string>(),
+            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(summary);
+
+        var response = await ExecuteCommandAsync("--subscription", "sub1", "--group-by", "category", "--top", "2");
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationSummaryResult);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal(2, result.Summary.Groups.Count);
+        Assert.Equal("Security", result.Summary.Groups[0].Key);
+        Assert.Equal("Cost", result.Summary.Groups[1].Key);
+        // Total reflects the full filtered population, not the displayed slice.
+        Assert.Equal(100, result.Summary.TotalRecommendations);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Top_AlwaysIncludesUnknownAtTail()
+    {
+        // Service returns Unknown last (KQL ordering). When --top would clip it, the
+        // command must still surface it after the top-N real buckets.
+        var summary = new RecommendationSummary(
+            GroupBy: "resource-type",
+            TotalRecommendations: 800,
+            Groups:
+            [
+                new RecommendationGroup("microsoft.storage/storageaccounts", 291),
+                new RecommendationGroup("microsoft.web/serverfarms", 114),
+                new RecommendationGroup("microsoft.keyvault/vaults", 46),
+                new RecommendationGroup("microsoft.machinelearningservices/workspaces", 32),
+                new RecommendationGroup("microsoft.web/sites", 25),
+                new RecommendationGroup("microsoft.compute/virtualmachines", 10),
+                new RecommendationGroup("Unknown", 325),
+            ]);
+
+        Service.SummarizeRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<string>(),
+            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(summary);
+
+        var response = await ExecuteCommandAsync("--subscription", "sub1", "--group-by", "resource-type", "--top", "5");
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationSummaryResult);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        // 5 real buckets + Unknown appended at the tail = 6 entries.
+        Assert.Equal(6, result.Summary.Groups.Count);
+        Assert.Equal("Unknown", result.Summary.Groups[^1].Key);
+        Assert.Equal(325, result.Summary.Groups[^1].Count);
+        Assert.Equal("microsoft.storage/storageaccounts", result.Summary.Groups[0].Key);
+        Assert.Equal(800, result.Summary.TotalRecommendations);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Top_LargerThanGroups_ReturnsAll()
+    {
+        var summary = new RecommendationSummary(
+            GroupBy: "category",
+            TotalRecommendations: 3,
+            Groups:
+            [
+                new RecommendationGroup("Security", 2),
+                new RecommendationGroup("Cost", 1),
+            ]);
+
+        Service.SummarizeRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<string>(),
+            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(summary);
+
+        var response = await ExecuteCommandAsync("--subscription", "sub1", "--group-by", "category", "--top", "100");
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationSummaryResult);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal(2, result.Summary.Groups.Count);
+        Assert.Equal(3, result.Summary.TotalRecommendations);
     }
 }

@@ -59,7 +59,6 @@ public class AdvisorService(ISubscriptionService subscriptionService, ITenantSer
         string? resourceGroup,
         RetryPolicyOptions? retryPolicy,
         string groupBy,
-        int top,
         RecommendationFilters? filters = null,
         CancellationToken cancellationToken = default)
     {
@@ -108,14 +107,11 @@ public class AdvisorService(ISubscriptionService subscriptionService, ITenantSer
         }
 
         var totalRecommendations = allGroups.Sum(g => g.Count);
-        var topGroups = allGroups.Take(top).ToList();
 
         return new RecommendationSummary(
             GroupBy: groupBy,
-            Top: top,
             TotalRecommendations: totalRecommendations,
-            AreResultsTruncated: result?.ResultTruncated == ResultTruncated.True,
-            Groups: topGroups);
+            Groups: allGroups);
     }
 
     internal static string BuildSummarizeQuery(string groupBy, string? resourceGroup, RecommendationFilters? filters)
@@ -135,7 +131,8 @@ public class AdvisorService(ISubscriptionService subscriptionService, ITenantSer
 
         var summarizeField = MapGroupByToKqlField(groupBy);
         query += $" | summarize count() by key={summarizeField}";
-        query += " | order by count_ desc, key asc";
+        // Push 'Unknown' to the end regardless of count so real categories are surfaced first.
+        query += " | order by iff(key == 'Unknown', 1, 0) asc, count_ desc, key asc";
 
         return query;
     }

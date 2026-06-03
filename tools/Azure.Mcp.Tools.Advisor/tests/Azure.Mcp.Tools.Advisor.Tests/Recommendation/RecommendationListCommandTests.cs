@@ -221,10 +221,10 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
     }
 
     [Theory]
-    [InlineData(null, 50)]   // default when --top omitted
-    [InlineData(10, 10)]     // honored when within range
-    [InlineData(0, 1)]       // clamped to min
-    [InlineData(500, 100)]   // clamped to max
+    [InlineData(null, 50)]   
+    [InlineData(10, 10)]   
+    [InlineData(0, 1)]       
+    [InlineData(500, 100)]   
     public async Task ExecuteAsync_ForwardsTopWithClamping(int? top, int expectedTop)
     {
         // Arrange

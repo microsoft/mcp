@@ -20,7 +20,8 @@ public class AdvisorServiceSummarizeQueryTests
 
         Assert.StartsWith("advisorresources | where type =~ 'Microsoft.Advisor/recommendations'", query);
         Assert.Contains("| summarize count() by key=", query);
-        Assert.Contains("| order by count_ desc, key asc", query);
+        // 'Unknown' buckets are pushed to the end regardless of count.
+        Assert.Contains("| order by iff(key == 'Unknown', 1, 0) asc, count_ desc, key asc", query);
     }
 
     [Fact]

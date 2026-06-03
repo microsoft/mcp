@@ -49,7 +49,10 @@ public static class AdvisorOptionDefinitions
         $"--{SearchText}"
     )
     {
-        Description = "Filter recommendations whose problem text contains this string. Case-insensitive substring match.",
+        Description = "Free-text filter applied to the recommendation problem text (case-insensitive substring match). " +
+            "Use this whenever the user's request includes a topical phrase such as 'related to Microsoft Foundry', " +
+            "'about encryption', 'mentioning right-size', or 'for Key Vault'. " +
+            "Extract the salient noun(s) from the phrase (e.g., 'Foundry', 'encrypt', 'right-size', 'Key Vault') and pass them here.",
         Required = false
     };
 
@@ -65,8 +68,10 @@ public static class AdvisorOptionDefinitions
         $"--{TopText}"
     )
     {
-        Description = "Maximum number of items to return, ordered by descending count. " +
-            "For 'list': defaults to 50, clamped to 1-100. For 'summary': defaults to 5, clamped to 1-50.",
+        Description = "Maximum number of items to return. " +
+            "For 'list': defaults to 50, clamped to 1-100 (server-side limit). " +
+            "For 'summary': optional display cap on the number of buckets returned (defaults to all). " +
+            "TotalRecommendations always reflects the complete filtered population regardless of --top.",
         Required = false
     };
 }
