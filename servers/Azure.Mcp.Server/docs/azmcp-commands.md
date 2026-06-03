@@ -805,16 +805,16 @@ azmcp appservice webapp diagnostic diagnose --subscription <subscription> \
 azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
                                             --resource-group "my-resource-group" \
                                             --app "my-web-app" \
-                                            --detector-id "detector"
+                                            --detector-id "LinuxMemoryDrillDown"
 
 # Diagnose the Web App with detector between start and end time with interval
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
                                             --resource-group "my-resource-group" \
                                             --app "my-web-app" \
-                                            --detector-id "detector"
-                                            --start-time "2026-01-01T00:00:00Z" \
-                                            --end-time "2026-01-01T23:59:59Z" \
+                                            --detector-id "LinuxMemoryDrillDown"
+                                            --start-time "2026-01-01T00:00" \
+                                            --end-time "2026-01-01T23:59" \
                                             --interval "PT1H"
 ```
 

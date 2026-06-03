@@ -451,7 +451,17 @@ public class AppServiceService(
         // var diagnoses = await webAppResource.GetSiteDetectorAsync(detectorName, startTime, endTime, interval, cancellationToken);
 
         // return new DiagnosesResults(diagnoses.Value.Data.Dataset, diagnoses.Value.Data.Metadata);
-        return await CallDetectorsAsync(tenant, subscription, resourceGroup, appName, MapToDiagnosesResults, detectorName: detectorName, cancellationToken: cancellationToken);
+        return await CallDetectorsAsync(
+            tenant,
+            subscription,
+            resourceGroup,
+            appName,
+            MapToDiagnosesResults,
+            detectorName: detectorName,
+            startTime: startTime,
+            endTime: endTime,
+            interval: interval,
+            cancellationToken: cancellationToken);
     }
 
     private static DiagnosisResults MapToDiagnosesResults(JsonDocument jsonDocument)
@@ -488,9 +498,30 @@ public class AppServiceService(
         string appName,
         Func<JsonDocument, T> mapFunc,
         string? detectorName = null,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        string? interval = null,
         CancellationToken cancellationToken = default)
     {
-        var httpRequest = new HttpRequestMessage(HttpMethod.Get, GetDetectorsEndpoint(subscription, resourceGroup, appName, detectorName));
+        var uriString = GetDetectorsEndpoint(subscription, resourceGroup, appName, detectorName);
+        if (detectorName != null)
+        {
+            // Only append endTime, startTime, and interval when detectorName isn't null.
+            // This method is used by both the detector listing and detector diagnose functionality, and those parameters are only relevant for the latter.
+            if (endTime != null)
+            {
+                uriString += $"&endTime={endTime?.ToString("yyyy-MM-ddThh:mm")}";
+            }
+            if (startTime != null)
+            {
+                uriString += $"&startTime={startTime?.ToString("yyyy-MM-ddThh:mm")}";
+            }
+            if (interval != null)
+            {
+                uriString += $"&interval={interval}";
+            }
+        }
+        var httpRequest = new HttpRequestMessage(HttpMethod.Get, uriString);
         var scopes = new string[]
         {
             _tenantService.CloudConfiguration.ArmEnvironment.DefaultScope
