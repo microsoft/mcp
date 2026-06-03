@@ -421,9 +421,23 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var policyId = DataProtectionBackupPolicyResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, policyName);
         var policyResource = armClient.GetDataProtectionBackupPolicyResource(policyId);
-        var policy = await policyResource.GetAsync(cancellationToken);
 
-        return MapToPolicyInfo(policy.Value.Data);
+        try
+        {
+            var policy = await policyResource.GetAsync(cancellationToken);
+            return MapToPolicyInfo(policy.Value.Data);
+        }
+        catch (FormatException)
+        {
+            // The Azure SDK may throw FormatException when deserializing the policy's
+            // retention/duration fields (XmlConvert.ToTimeSpan limitation in
+            // DataProtectionBackupAbsoluteDeleteSetting). Fall back to listing all
+            // policies and matching by name to work around this SDK limitation.
+            var policies = await ListPoliciesAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+            return policies.FirstOrDefault(p => p.Name == policyName)
+                ?? throw new InvalidOperationException(
+                    $"Policy '{policyName}' not found or cannot be parsed by the Azure SDK due to an unsupported retention/duration field.");
+        }
     }
 
     public async Task<List<BackupPolicyInfo>> ListPoliciesAsync(
@@ -441,9 +455,33 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var collection = vaultResource.GetDataProtectionBackupPolicies();
 
         var policies = new List<BackupPolicyInfo>();
-        await foreach (var policy in collection.GetAllAsync(cancellationToken))
+        var enumerator = collection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        try
         {
-            policies.Add(MapToPolicyInfo(policy.Data));
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    policies.Add(MapToPolicyInfo(enumerator.Current.Data));
+                }
+                catch (FormatException)
+                {
+                    // The Azure SDK may throw FormatException when deserializing policies with
+                    // non-standard ISO 8601 retention/duration fields (XmlConvert.ToTimeSpan
+                    // limitation in DataProtectionBackupAbsoluteDeleteSetting). Return the
+                    // policies collected so far rather than failing the entire list.
+                    break;
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
         }
 
         return policies;
