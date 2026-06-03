@@ -14,23 +14,20 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 /// <summary>
 /// Checks if a file share name is available.
 /// </summary>
+[CommandMetadata(
+    Id = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+    Name = "check-name-availability",
+    Title = "Check File Share Name Availability",
+    Description = "Check if a file share name is available",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheckNameAvailabilityCommand> logger, IFileSharesService fileSharesService)
     : BaseFileSharesCommand<FileShareCheckNameAvailabilityOptions>(logger, fileSharesService)
 {
-    public override string Id => "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-    public override string Name => "check-name-availability";
-    public override string Description => "Check if a file share name is available";
-    public override string Title => "Check File Share Name Availability";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

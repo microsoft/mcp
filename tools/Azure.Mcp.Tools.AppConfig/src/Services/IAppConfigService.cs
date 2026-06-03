@@ -11,6 +11,7 @@ public interface IAppConfigService
 {
     Task<ResourceQueryResults<AppConfigurationAccount>> GetAppConfigAccounts(
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
@@ -44,7 +45,7 @@ public interface IAppConfigService
         string? contentType = null,
         string[]? tags = null,
         CancellationToken cancellationToken = default);
-    Task DeleteKeyValue(
+    Task<bool> DeleteKeyValue(
         string accountName,
         string key,
         string subscription,

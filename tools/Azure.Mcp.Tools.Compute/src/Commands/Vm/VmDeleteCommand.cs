@@ -12,38 +12,31 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
-public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
-    : BaseComputeCommand<VmDeleteOptions>(true)
-{
-    private const string CommandTitle = "Delete Virtual Machine";
-    private readonly ILogger<VmDeleteCommand> _logger = logger;
-
-    public override string Id => "d4e2c8a1-6f3b-4d9e-b8c7-1a2e3f4d5e6f";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
-        Delete, remove, or destroy an Azure Virtual Machine (VM).
-        Use this to permanently remove a VM that is no longer needed.
+[CommandMetadata(
+    Id = "d4e2c8a1-6f3b-4d9e-b8c7-1a2e3f4d5e6f",
+    Name = "delete",
+    Title = "Delete Virtual Machine",
+    Description = """
+        Delete, remove, or destroy an Azure Virtual Machine (VM) permanently.
+        Use this only when the VM is no longer needed and should be permanently removed.
         Equivalent to 'az vm delete'. This operation is irreversible and the VM data will be lost.
         Use --force-deletion to force delete the VM even if it is in a running or failed state
         (passes forceDeletion=true to the Azure API).
         Associated resources like disks, NICs, and public IPs are NOT automatically deleted.
+        Do not use this to stop or pause a VM; use the VM power-state command instead.
         Do not use this to delete Virtual Machine Scale Sets (use VMSS delete instead).
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = true
-    };
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = true,
+    LocalRequired = false)]
+public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger, IComputeService computeService)
+    : BaseComputeCommand<VmDeleteOptions>(true)
+{
+    private readonly ILogger<VmDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override void RegisterOptions(Command command)
     {
@@ -71,13 +64,11 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            await computeService.DeleteVmAsync(
+            var deleted = await _computeService.DeleteVmAsync(
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,
@@ -86,10 +77,12 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
+            var message = deleted
+                ? $"Virtual machine '{options.VmName}' was successfully deleted from resource group '{options.ResourceGroup}'."
+                : $"Virtual machine '{options.VmName}' was not found in resource group '{options.ResourceGroup}'. Nothing was deleted.";
+
             context.Response.Results = ResponseResult.Create(
-                new VmDeleteCommandResult(
-                    $"Virtual machine '{options.VmName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
-                    true),
+                new VmDeleteCommandResult(message, deleted),
                 ComputeJsonContext.Default.VmDeleteCommandResult);
         }
         catch (Exception ex)

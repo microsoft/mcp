@@ -13,32 +13,22 @@ namespace Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
 /// <summary>
 /// Lists Azure service health events for a subscription, providing insights into ongoing or past service issues.
 /// </summary>
-public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsListCommand> logger)
+[CommandMetadata(
+    Id = "c3211c73-af20-4d8d-bed2-4f181e0e4c92",
+    Name = "list",
+    Title = "List Service Health Events",
+    Description = "List Azure service health events to track service issues that occurred in recent timeframes (last 30 days, weeks, months). Query subscription for planned maintenance, past or ongoing service incidents, advisories, and security events. Provides detailed information about resource availability state, potential issues, and timestamps. Returns: trackingId, title, summary, eventType, status, startTime, endTime, impactedServices. Access Azure Service Health portal data programmatically.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsListCommand> logger, IResourceHealthService resourceHealthService)
     : BaseResourceHealthCommand<ServiceHealthEventsListOptions>()
 {
-    private const string CommandTitle = "List Service Health Events";
     private readonly ILogger<ServiceHealthEventsListCommand> _logger = logger;
-
-    public override string Id => "c3211c73-af20-4d8d-bed2-4f181e0e4c92";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        List Azure service health events to track service issues that occurred in recent timeframes (last 30 days, weeks, months). Query subscription for planned maintenance, past or ongoing service incidents, advisories, and security events. Provides detailed information about resource availability state, potential issues, and timestamps. Returns: trackingId, title, summary, eventType, status, startTime, endTime, impactedServices. Access Azure Service Health portal data programmatically.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IResourceHealthService _resourceHealthService = resourceHealthService;
 
     private static readonly HashSet<string> validEventTypes = new(StringComparer.OrdinalIgnoreCase) { "ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security" };
     private static readonly HashSet<string> validStatuses = new(StringComparer.OrdinalIgnoreCase) { "Active", "Resolved" };
@@ -99,10 +89,7 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
 
         try
         {
-            var resourceHealthService = context.GetService<IResourceHealthService>() ??
-                throw new InvalidOperationException("Resource Health service is not available.");
-
-            var events = await resourceHealthService.ListServiceHealthEventsAsync(
+            var events = await _resourceHealthService.ListServiceHealthEventsAsync(
                 options.Subscription!,
                 options.EventType,
                 options.Status,

@@ -7,8 +7,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
@@ -16,72 +15,43 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 /// <summary>
 /// Command to list OneLake items in a workspace using the OneLake DFS (Data Lake File System) API.
 /// </summary>
+[CommandMetadata(
+    Id = "8925d0c4-becf-4b5a-8af1-3e998c1058ec",
+    Name = "list_items_dfs",
+    Title = "List OneLake Items (Data API)",
+    Description = "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) data API.",
+    Destructive = false,
+    Idempotent = true,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false)]
 public sealed class OneLakeItemDataListCommand(
     ILogger<OneLakeItemDataListCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<OneLakeItemDataListOptions>()
+    IOneLakeService oneLakeService) : AuthenticatedCommand<OneLakeItemDataListOptions, OneLakeItemDataListCommand.OneLakeItemDataListCommandResult>
 {
     private readonly ILogger<OneLakeItemDataListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override string Id => "8925d0c4-becf-4b5a-8af1-3e998c1058ec";
-    public override string Name => "list_items_dfs";
-    public override string Title => "List OneLake Items (Data API)";
-    public override string Description => "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) data API.";
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(OneLakeItemDataListOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Recursive);
-        command.Options.Add(FabricOptionDefinitions.ContinuationToken);
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+        if (string.IsNullOrWhiteSpace(options.WorkspaceId) && string.IsNullOrWhiteSpace(options.Workspace))
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-        });
-    }
-
-    protected override OneLakeItemDataListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
-            ? workspaceId!
-            : workspaceName ?? string.Empty;
-        options.Recursive = parseResult.GetValueOrDefault<bool>(FabricOptionDefinitions.Recursive.Name);
-        options.ContinuationToken = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ContinuationToken.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("Workspace identifier is required. Provide --workspace or --workspace-id.");
         }
+    }
 
-        var options = BindOptions(parseResult);
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, OneLakeItemDataListOptions options, CancellationToken cancellationToken)
+    {
         try
         {
+            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
+                ? options.WorkspaceId
+                : options.Workspace!;
+
             var jsonResponse = await _oneLakeService.ListOneLakeItemsDfsJsonAsync(
-                options.WorkspaceId,
+                workspaceIdentifier,
                 recursive: options.Recursive,
                 continuationToken: options.ContinuationToken,
                 cancellationToken);
@@ -122,9 +92,17 @@ public sealed class OneLakeItemDataListCommand(
     }
 }
 
-public sealed class OneLakeItemDataListOptions : GlobalOptions
+public sealed class OneLakeItemDataListOptions
 {
-    public string WorkspaceId { get; set; } = string.Empty;
+    [Option("The ID of the Microsoft Fabric workspace.")]
+    public string? WorkspaceId { get; set; }
+
+    [Option("The name or ID of the Microsoft Fabric workspace.")]
+    public string? Workspace { get; set; }
+
+    [Option("Whether to perform the operation recursively.")]
     public bool Recursive { get; set; }
+
+    [Option("Token for retrieving the next page of results.")]
     public string? ContinuationToken { get; set; }
 }

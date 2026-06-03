@@ -11,33 +11,22 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
+[CommandMetadata(
+    Id = "3d3f6f27-218b-4915-9c1e-243dd53b16da",
+    Name = "ask",
+    Title = "Calculate AMLFS Subnet Size required number of IP Addresses",
+    Description = "Calculates the required subnet size for an Azure Managed Lustre file system given a SKU and size. Use to plan network deployment for AMLFS. Returns the number of required IPs.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<SubnetSizeAskCommand> logger)
     : BaseManagedLustreCommand<SubnetSizeAskOptions>(logger)
 {
-    private const string CommandTitle = "Calculate AMLFS Subnet Size required number of IP Addresses";
 
     private readonly IManagedLustreService _service = service;
-
-    public override string Id => "3d3f6f27-218b-4915-9c1e-243dd53b16da";
-
-    public override string Name => "ask";
-
-    public override string Description =>
-        """
-        Calculates the required subnet size for an Azure Managed Lustre file system given a SKU and size. Use to plan network deployment for AMLFS. Returns the number of required IPs.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     private static readonly string[] AllowedSkus = [
         "AMLFS-Durable-Premium-40",

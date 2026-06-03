@@ -9,6 +9,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | advisor_recommendation_list | List all recommendations in my subscription |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> |
+| advisor_recommendation_apply | Apply Advisor recommendations to this ARM template |
+| advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account |
 
 ## Azure AI Search
 
@@ -108,6 +110,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | appservice_webapp_diagnostic_diagnose | Diagnose web app <webapp> in <resource_group> with detector <detector_name> |
 | appservice_webapp_diagnostic_diagnose | Diagnose web app <webapp> in <resource_group> with detector <detector_name> between <start_time> and <end_time> with interval <interval> |
 | appservice_webapp_diagnostic_list | List the diagnostic detectors for web app <webapp> in <resource_group> |
+| appservice_webapp_change-state | Start the web app <app> in <resource_group> |
+| appservice_webapp_change-state | Stop the web app <app> in <resource_group> |
+| appservice_webapp_change-state | Restart the web app <app> in <resource_group> |
+| appservice_webapp_change-state | Soft restart the web app <app> in <resource_group> waiting for restart to complete |
 | appservice_webapp_get | List the web apps in my subscription |
 | appservice_webapp_get | Show me the web apps in my <resource_group> resource group |
 | appservice_webapp_get | Get the details for web app <webapp> in <resource_group> |
@@ -127,6 +133,54 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | applicationinsights_recommendation_list | Show me code optimization recommendations for all Application Insights resources in my subscription |
 | applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> |
 | applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights |
+
+## Azure Backup
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azurebackup_backup_status | Check backup status for resource <resource_id> in location <location> |
+| azurebackup_backup_status | What is the backup status of <resource_id> in location <location> in my subscription? |
+| azurebackup_disasterrecovery_enable-crr | Enable cross-region restore on vault <vault_name> in resource group <resource_group> |
+| azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> |
+| azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription |
+| azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> |
+| azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> |
+| azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> |
+| azurebackup_governance_soft-delete | Configure soft delete on vault <vault_name> in resource group <resource_group> |
+| azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn for vault <vault_name> in resource group <resource_group> |
+| azurebackup_job_get | Get backup job <job_id> from vault <vault_name> in resource group <resource_group> |
+| azurebackup_job_get | Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_policy_create | Create a backup policy named <policy_name> for AzureIaasVM in vault <vault_name> in resource group <resource_group> |
+| azurebackup_policy_create | Set up a new backup policy called <policy_name> for AzureFileShare workload in vault <vault_name> under resource group <resource_group> |
+| azurebackup_policy_create | Create an Enhanced VM backup policy <policy_name> with hourly schedule every 4 hours starting 08:00 for 12 hours in vault <vault_name> under resource group <resource_group> |
+| azurebackup_policy_create | Create a weekly VM policy <policy_name> on Mondays at 03:00 with 8 weekly, 12 monthly, 5 yearly retention and archive after 90 days in vault <vault_name> under resource group <resource_group> |
+| azurebackup_policy_create | Create a SQL backup policy <policy_name> with daily full at 02:00, differential on Wednesdays, and 60-minute log frequency in vault <vault_name> under resource group <resource_group> |
+| azurebackup_policy_create | Create an Azure Disk backup policy <policy_name> with daily, weekly, and monthly retention tiers and vault tier copy enabled in vault <vault_name> under resource group <resource_group> |
+| azurebackup_policy_update | Update backup policy <policy_name> in vault <vault_name> in resource group <resource_group> to change the schedule time to 04:00 |
+| azurebackup_policy_update | Modify the daily retention to 60 days for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> |
+| azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_protectableitem_list | List protectable items in vault <vault_name> in resource group <resource_group> |
+| azurebackup_protectableitem_list | Show me all items that can be backed up in vault <vault_name> under resource group <resource_group> |
+| azurebackup_protecteditem_get | Get protected item details for <item_name> in vault <vault_name> and resource group <resource_group> |
+| azurebackup_protecteditem_get | Show backup status of protected item <item_name> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> |
+| azurebackup_protecteditem_protect | Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_protecteditem_undelete | Restore a soft-deleted backup item for datasource <datasource_id> in vault <vault_name> and resource group <resource_group> |
+| azurebackup_protecteditem_undelete | Undelete the accidentally deleted backup for VM <datasource_id> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> |
+| azurebackup_recoverypoint_get | List available recovery points for <item_name> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_security_configure-encryption | Configure customer-managed key encryption on vault <vault_name> in resource group <resource_group> using key <key_name> from key vault <key_vault_uri> with system-assigned identity |
+| azurebackup_security_configure-encryption | Enable CMK encryption on vault <vault_name> using user-assigned identity <identity_id> and key <key_name> from <key_vault_uri> |
+| azurebackup_security_configure-encryption | Set up customer-managed encryption for backup vault <vault_name> in <resource_group> |
+| azurebackup_security_configure-mua | Enable multi-user authorization on vault <vault_name> in resource group <resource_group> with resource guard <resource_guard_id> |
+| azurebackup_security_configure-mua | Disable MUA on vault <vault_name> in resource group <resource_group> |
+| azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' |
+| azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' |
+| azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> |
+| azurebackup_vault_get | Show me information about vault <vault_name> in resource group <resource_group> |
+| azurebackup_vault_update | Update vault <vault_name> in resource group <resource_group> to enable soft delete |
+| azurebackup_vault_update | Change the identity type of vault <vault_name> in resource group <resource_group> to SystemAssigned |
 
 ## Azure CLI
 
@@ -188,7 +242,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | compute_vm_create | Create a new Linux VM named <vm-name> in resource group <resource-group-name> |
-| compute_vm_create | Create a virtual machine with Standard_DS1_v2 size in <resource-group-name> |
+| compute_vm_create | Create a virtual machine with Standard_D2s_v5 size in <resource-group-name> |
 | compute_vm_create | Create a Windows VM with password authentication in resource group <resource-group-name> |
 | compute_vm_create | Create VM <vm-name> in <location> with SSH key authentication |
 | compute_vm_create | Deploy a new VM with a 128GB Premium SSD OS disk in resource group <resource-group-name> |
@@ -196,7 +250,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vm_get | List all virtual machines in my subscription |
 | compute_vm_get | Show me all VMs in my subscription |
 | compute_vm_get | What virtual machines do I have? |
-| compute_vm_get | List virtual machines in resource group <resource-group-name> |
+| compute_vm_get | Get all virtual machines in resource group <resource-group-name> |
 | compute_vm_get | Show me VMs in resource group <resource-group-name> |
 | compute_vm_get | What VMs are in resource group <resource-group-name>? |
 | compute_vm_get | Get details for virtual machine <vm-name> in resource group <resource-group-name> |
@@ -215,9 +269,17 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vm_delete | Remove virtual machine <vm-name> from resource group <resource-group-name> |
 | compute_vm_delete | Destroy VM <vm-name> in resource group <resource-group-name> |
 | compute_vm_delete | Force delete VM <vm-name> in resource group <resource-group-name> using force-deletion |
+| compute_vm_power-state | Power on and start VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_power-state | Stop the running virtual machine <vm-name> and power it off in resource group <resource-group-name> |
+| compute_vm_power-state | Deallocate VM <vm-name> in resource group <resource-group-name> to release compute resources while keeping the VM |
+| compute_vm_power-state | Restart VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_power-state | Stop VM <vm-name> in resource group <resource-group-name> and skip the OS shutdown |
+| compute_vm_power-state | Start VM <vm-name> in resource group <resource-group-name> without waiting for completion |
+| compute_vm_power-state | Power off and shut down VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_power-state | Deallocate and power off VM <vm-name> to stop billing for compute resources while preserving the VM |
 | compute_vmss_create | Create a virtual machine scale set named <vmss-name> in resource group <resource-group-name> |
 | compute_vmss_create | Create a VMSS with 3 instances in <resource-group-name> |
-| compute_vmss_create | Deploy a scale set with Rolling upgrade policy and 5 instances |
+| compute_vmss_create | Deploy a virtual machine scale set with Rolling upgrade policy and 5 instances |
 | compute_vmss_create | Create Linux VMSS with SSH authentication in <resource-group-name> |
 | compute_vmss_get | List all virtual machine scale sets in my subscription |
 | compute_vmss_get | List virtual machine scale sets in resource group <resource-group-name> |
@@ -301,6 +363,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | cosmos_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> |
 | cosmos_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> |
 | cosmos_database_container_item_query | Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name> |
+| cosmos_database_container_item_get | Get the document with id <document_id> from container <container_name> in database <database_name> of the cosmosdb account <account_name> |
+| cosmos_database_container_item_get | Find the document <document_id> in container <container_name> from database <database_name> of the cosmosdb account <account_name> using partition key <partition_key> |
+| cosmos_database_container_item_list-recent | Show me the 15 most recent documents in container <container_name> of database <database_name> in cosmosdb account <account_name> |
+| cosmos_database_container_item_list-recent | Get the latest documents from <container_name> in <database_name> for cosmosdb account <account_name> |
+| cosmos_database_container_item_text-search | Search documents in container <container_name> from database <database_name> of the cosmosdb account <account_name> where <search_property> contains "<search_phrase>" |
+| cosmos_database_container_item_text-search | Run a full-text search for the word "<search_phrase>" against property <search_property> in container <container_name> of database <database_name> for cosmosdb account <account_name> |
+| cosmos_database_container_item_vector-search | Find documents similar to "<text_to_search>" in container <container_name> of database <database_name> in cosmosdb account <account_name> using vector property <vector_property> with Azure OpenAI endpoint <endpoint> and deployment <deployment> |
+| cosmos_database_container_item_vector-search | Show me the top <count> documents in container <container_name> of database <database_name> for cosmosdb account <account_name> most similar to "<text_to_search>" using vector property <vector_property>, embedding deployment <deployment> at endpoint <endpoint> with <embedding_dimensions> dimensions, and project only <properties_to_select> |
+| cosmos_database_container_schema_infer | Infer the schema of container <container_name> in database <database_name> for cosmosdb account <account_name> |
+| cosmos_database_container_schema_infer | Sample <sample_size> documents from container <container_name> in database <database_name> of the cosmosdb account <account_name> and tell me the property names and types |
 
 ## Azure Data Explorer
 
@@ -357,10 +429,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | deploy_app_logs_get | Show me the log of the application deployed by azd |
-| deploy_architecture_diagram_generate | Generate the azure architecture diagram for this application |
-| deploy_iac_rules_get | Show me the rules and best practices for writing Bicep and Terraform IaC for Azure |
-| deploy_pipeline_guidance_get | How do I set up a CI/CD pipeline with GitHub Actions or Azure DevOps to deploy my app to Azure? |
-| deploy_plan_get | How do I create a step-by-step deployment plan for my application to Azure using azd with Bicep or Terraform IaC? |
+| deploy_architecture_diagram_generate | Generate the Azure architecture diagram for this application |
+| deploy_iac_rules_get | Give me the IaC rules for deploying this application to Azure Container Apps using Azure CLI and Bicep |
+| deploy_pipeline_guidance_get | Generate a CI/CD pipeline using GitHub Actions workflow to deploy my application to Azure with best practices |
+| deploy_plan_get | Generate an Azure deployment plan for this project using Azure CLI and IaC templates |
 
 ## Azure Device Registry
 
@@ -425,15 +497,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | fileshares_fileshare_get | Get details of file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_get | Show me the file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_get | What file shares exist in resource group <resource_group_name>? |
-| fileshares_fileshare_limits_get | Get the file share limits for subscription <subscription> in location <location> |
-| fileshares_fileshare_limits_get | What are the file share limits in my subscription for location <location>? |
-| fileshares_fileshare_limits_get | Show me the file share service limits in location <location> |
-| fileshares_fileshare_nameavailability_check | Check if file share name <file_share_name> is available in subscription <subscription> |
-| fileshares_fileshare_nameavailability_check | Is the file share name <file_share_name> available? |
-| fileshares_fileshare_nameavailability_check | Verify availability of file share name <file_share_name> |
-| fileshares_fileshare_provisioningrecommendation_get | Get provisioning recommendations for file share <file_share_name> in resource group <resource_group_name> |
-| fileshares_fileshare_provisioningrecommendation_get | Show me provisioning recommendations for file share <file_share_name> |
-| fileshares_fileshare_provisioningrecommendation_get | What are the recommended provisioning settings for file share <file_share_name>? |
+| fileshares_limits | Get the file share limits for subscription <subscription> in location <location> |
+| fileshares_limits | What are the file share limits in my subscription for location <location>? |
+| fileshares_limits | Show me the file share service limits in location <location> |
+| fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in subscription <subscription> |
+| fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available? |
+| fileshares_fileshare_check-name-availability | Verify availability of file share name <file_share_name> |
+| fileshares_rec | Get provisioning recommendations for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_rec | Show me provisioning recommendations for file share <file_share_name> |
+| fileshares_rec | What are the recommended provisioning settings for file share <file_share_name>? |
 | fileshares_fileshare_snapshot_create | Create a snapshot of file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_snapshot_create | Create a snapshot for file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_snapshot_create | Take a snapshot of file share <file_share_name> |
@@ -455,9 +527,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | fileshares_fileshare_update | Update file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_update | Update the provisioned storage for file share <file_share_name> to 200 GB |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings |
-| fileshares_fileshare_usage_get | Get usage data for file share <file_share_name> in resource group <resource_group_name> |
-| fileshares_fileshare_usage_get | Show me the usage statistics for file share <file_share_name> |
-| fileshares_fileshare_usage_get | What is the current usage of file share <file_share_name>? |
+| fileshares_usage | Get usage data for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_usage | Show me the usage statistics for file share <file_share_name> |
+| fileshares_usage | What is the current usage of file share <file_share_name>? |
 
 ## Azure Function App
 
@@ -480,17 +552,17 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| functions_language_list | What languages does Azure Functions support? |
+| functions_language_list | Check the available languages that Azure Functions supports. |
 | functions_language_list | Compare all Azure Functions languages side by side |
 | functions_language_list | What runtime versions are available for Azure Functions? |
 | functions_project_get | Set up a new Azure Functions project in Python |
 | functions_project_get | Generate the project files for a TypeScript Azure Functions app |
 | functions_project_get | Create the boilerplate for a Java Azure Functions app using JDK 21 |
-| functions_template_get | What triggers and bindings are available for C# Azure Functions? |
+| functions_template_get | Get the available triggers and bindings for C# Azure Functions. |
 | functions_template_get | Show me all the Python Azure Function templates |
 | functions_template_get | Create a Timer trigger function in C# that runs every 5 minutes |
 | functions_template_get | Show me a Cosmos DB trigger with an output binding in Java |
-| functions_template_get | I need a MCP Tool trigger in TypeScript for Node.js 22 |
+| functions_template_get | Generate a MCP Tool trigger in TypeScript for Node.js 22 |
 
 ## Azure Key Vault
 
@@ -601,13 +673,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | managedlustre_fs_blob_autoexport_create | Create an autoexport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoexport_cancel | Cancel the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoexport_get | Get the details of autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
-| managedlustre_fs_blob_autoexport_list | List all autoexport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_autoexport_get | Show the list of autoexport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoexport_delete | Delete the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoimport_create | Create an autoimport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoimport_cancel | Cancel the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoimport_delete | Delete the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoimport_get | Get the details of autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
-| managedlustre_fs_blob_autoimport_list | List all autoimport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_autoimport_get | Get the details of all the autoimport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_import_create | Create a one-time import job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_import_get | Get the details of import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_import_get | List all one-time import jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
@@ -893,6 +965,66 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | sql_server_get | Get Azure SQL server <server_name> info |
 | sql_server_get | Display the properties of Azure SQL server <server_name> |
 
+## Azure SRE Agent
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| sreagent_agents_list | List all Azure SRE Agent resources in my subscription |
+| sreagent_agents_get | Show me the details of SRE Agent <agent_name> in resource group <resource_group> |
+| sreagent_agents_create | Create a sub-agent called <name> on SRE Agent <agent_name> |
+| sreagent_agents_delete | Delete the sub-agent <name> from SRE Agent <agent_name> |
+| sreagent_agents_tools_list | List the custom tools attached to SRE Agent <agent_name> |
+| sreagent_agents_tools_get | Get the definition of custom tool <tool_name> from SRE Agent <agent_name> |
+| sreagent_agents_tools_create | Create a custom tool called <tool_name> on SRE Agent <agent_name> |
+| sreagent_skills_list | List all skills available on SRE Agent <agent_name> |
+| sreagent_skills_create | Add a new skill called <skill_name> to SRE Agent <agent_name> |
+| sreagent_skills_delete | Delete the skill <skill_name> from SRE Agent <agent_name> |
+| sreagent_connectors_list | List the connectors configured on SRE Agent <agent_name> |
+| sreagent_connectors_get | Show me the details of connector <connector_name> on SRE Agent <agent_name> |
+| sreagent_connectors_create_kusto | Create a Kusto connector on SRE Agent <agent_name> |
+| sreagent_connectors_create_mcp | Create an MCP connector on SRE Agent <agent_name> |
+| sreagent_connectors_delete | Remove the connector <connector_name> from SRE Agent <agent_name> |
+| sreagent_connectors_test | Test the connector <connector_name> on SRE Agent <agent_name> and list its tools |
+| sreagent_hooks_list | List the hooks configured for SRE Agent <agent_name> |
+| sreagent_hooks_get | Show me the details of hook <hook_name> on SRE Agent <agent_name> |
+| sreagent_hooks_delete | Remove and permanently delete hook <hook_name> from SRE Agent <agent_name> |
+| sreagent_hooks_thread_list | List the hook activation states for thread <thread_id> on SRE Agent <agent_name> |
+| sreagent_hooks_thread_activate | Activate hook <hook_name> on thread <thread_id> of SRE Agent <agent_name> |
+| sreagent_hooks_thread_deactivate | Deactivate hook <hook_name> on thread <thread_id> of SRE Agent <agent_name> |
+| sreagent_threads_list | List the active threads on SRE Agent <agent_name> |
+| sreagent_threads_get | Show me thread <thread_id> on SRE Agent <agent_name> |
+| sreagent_threads_create | Start a new thread on SRE Agent <agent_name> |
+| sreagent_threads_send_message | Send a message to thread <thread_id> on SRE Agent <agent_name> |
+| sreagent_threads_investigate | Investigate the following issue with SRE Agent <agent_name>: <issue> |
+| sreagent_threads_investigate_yolo | Investigate <issue> on SRE Agent <agent_name> in yolo mode, automatically granting all pending approvals without waiting |
+| sreagent_threads_delete | Delete thread <thread_id> from SRE Agent <agent_name> |
+| sreagent_scheduledtasks_list | List the scheduled tasks on SRE Agent <agent_name> |
+| sreagent_scheduledtasks_get | Show me the scheduled task <task_id> on SRE Agent <agent_name> |
+| sreagent_scheduledtasks_create | Schedule a recurring task on SRE Agent <agent_name> that runs every Monday |
+| sreagent_scheduledtasks_pause | Pause the scheduled task <task_id> on SRE Agent <agent_name> |
+| sreagent_scheduledtasks_resume | Resume the scheduled task <task_id> on SRE Agent <agent_name> |
+| sreagent_scheduledtasks_delete | Delete the scheduled task <task_id> from SRE Agent <agent_name> |
+| sreagent_incidents_active_list | List the active incidents on SRE Agent <agent_name> |
+| sreagent_incidents_create | Create a new incident investigation for SRE Agent <agent_name> with title <title> |
+| sreagent_incidents_plans_list | List the incident response plans configured on SRE Agent <agent_name> |
+| sreagent_incidents_plans_create | Enable a new incident response plan on SRE Agent <agent_name> with alert filter <filter> and handler <handler> |
+| sreagent_incidents_setup_pagerduty | Connect SRE Agent <agent_name> to PagerDuty |
+| sreagent_incidents_setup_servicenow | Connect SRE Agent <agent_name> to ServiceNow |
+| sreagent_workflows_generate | Generate a YAML workflow for a tool named <tool_name> |
+| sreagent_workflows_validate | Validate the following SRE Agent workflow YAML |
+| sreagent_workflows_apply | Apply the workflow YAML to SRE Agent <agent_name> |
+| sreagent_docs_get | Show me the SRE Agent documentation for the topic <topic> |
+| sreagent_docs_memories_list | Get a complete list of all indexed knowledge base documents stored in SRE Agent <agent_name> memory without filtering |
+| sreagent_docs_memories_search | Search the SRE Agent knowledge base for <text> |
+| sreagent_docs_memories_add | Add a document called <name> to the SRE Agent knowledge base |
+| sreagent_docs_memories_delete | Confirm and delete knowledge base document <name> from SRE Agent <agent_name> |
+| sreagent_docs_memories_reindex | Reindex the knowledge base documents for SRE Agent <agent_name> |
+| sreagent_architecture_plan | Plan an SRE Agent architecture for the following requirements: <requirements> |
+| sreagent_commonprompts_list | List the common prompts on SRE Agent <agent_name> |
+| sreagent_commonprompts_get | Show me the common prompt <prompt_name> on SRE Agent <agent_name> |
+| sreagent_commonprompts_create | Create a common prompt called <prompt_name> on SRE Agent <agent_name> |
+| sreagent_commonprompts_delete | Permanently remove and erase common prompt <prompt_name> from SRE Agent <agent_name> |
+
 ## Azure Storage
 
 | Tool Name | Test Prompt |
@@ -961,6 +1093,34 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azureterraformbestpractices_get | Fetch the Azure Terraform best practices |
 | azureterraformbestpractices_get | Show me the Azure Terraform best practices and generate code sample to get a secret from Azure Key Vault |
+
+## Azure Terraform
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azureterraform_azurerm_get | Get the documentation for azurerm_virtual_network |
+| azureterraform_azurerm_get | Show me the Terraform provider arguments for azurerm_storage_account |
+| azureterraform_azurerm_get | Get the data source documentation for azurerm_subscription |
+| azureterraform_azurerm_get | Get the Terraform AzureRM provider documentation for the 'sku' argument of azurerm_storage_account |
+| azureterraform_azapi_get | Get AzAPI Terraform provider documentation for Microsoft.Storage/storageAccounts |
+| azureterraform_azapi_get | Get AzAPI docs for Microsoft.Network/virtualNetworks |
+| azureterraform_azapi_get | Get AzAPI Terraform provider documentation for Microsoft.Compute/virtualMachines with API version 2024-07-01 |
+| azureterraform_avm_list | List all available Azure Verified Modules |
+| azureterraform_avm_list | Show me the available AVM modules for Terraform |
+| azureterraform_avm_versions | Show all versions of avm-res-network-virtualnetwork |
+| azureterraform_avm_versions | What versions are available for avm-res-storage-storageaccount? |
+| azureterraform_avm_get | Get the documentation for avm-res-storage-storageaccount version 0.1.0 |
+| azureterraform_avm_get | Get the documentation for the latest version of Azure Verified Module avm-res-network-virtualnetwork |
+| azureterraform_aztfexport_resource | Export the resource /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/Microsoft.Storage/storageAccounts/<account> to Terraform |
+| azureterraform_aztfexport_resource | Generate an aztfexport command to export a single Azure resource to Terraform |
+| azureterraform_aztfexport_resourcegroup | Export all resources in resource group my-rg to Terraform |
+| azureterraform_aztfexport_resourcegroup | Export resource group my-rg to Terraform using the azapi provider |
+| azureterraform_aztfexport_query | Export all storage accounts in my subscription using a resource graph query |
+| azureterraform_aztfexport_query | Generate an aztfexport query command to export resources matching "type == 'Microsoft.Storage/storageAccounts'" |
+| azureterraform_conftest_workspace | Validate Terraform files in ./my-terraform-folder against Azure security policies |
+| azureterraform_conftest_workspace | Validate Terraform files in ./infra using the avmsec policy set |
+| azureterraform_conftest_plan | Validate my Terraform plan file against Azure-Proactive-Resiliency-Library-v2 policies |
+| azureterraform_conftest_plan | Validate a Terraform plan JSON file in ./plan-output against Azure policies with high severity filter |
 
 ## Azure Virtual Desktop
 

@@ -12,25 +12,20 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
+[CommandMetadata(
+    Id = "b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e",
+    Name = "create",
+    Title = "Create File Share",
+    Description = "Create a new Azure managed file share resource in a resource group. This creates a high-performance, fully managed file share accessible via NFS protocol.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logger, IFileSharesService service)
     : BaseFileSharesCommand<FileShareCreateOrUpdateOptions>(logger, service)
 {
-    private const string CommandTitle = "Create File Share";
-
-    public override string Id => "b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e";
-    public override string Name => "create";
-    public override string Description => "Create a new Azure managed file share resource in a resource group. This creates a high-performance, fully managed file share accessible via NFS protocol.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -47,6 +42,7 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
         command.Options.Add(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.AsOptional());
         command.Options.Add(FileSharesOptionDefinitions.PublicNetworkAccess.AsOptional());
         command.Options.Add(FileSharesOptionDefinitions.NfsRootSquash.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.NfsEncryptionInTransit.AsOptional());
         command.Options.Add(FileSharesOptionDefinitions.AllowedSubnets.AsOptional());
         command.Options.Add(FileSharesOptionDefinitions.Tags.AsOptional());
     }
@@ -61,11 +57,12 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
         options.MediaTier = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.MediaTier.Name);
         options.Redundancy = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Redundancy.Name);
         options.Protocol = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Protocol.Name);
-        options.ProvisionedStorageInGiB = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
-        options.ProvisionedIOPerSec = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedIOPerSec.Name);
-        options.ProvisionedThroughputMiBPerSec = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.Name);
+        options.ProvisionedStorageInGiB = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
+        options.ProvisionedIOPerSec = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedIOPerSec.Name);
+        options.ProvisionedThroughputMiBPerSec = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.Name);
         options.PublicNetworkAccess = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PublicNetworkAccess.Name);
         options.NfsRootSquash = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.NfsRootSquash.Name);
+        options.NfsEncryptionInTransit = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.NfsEncryptionInTransit.Name);
         options.AllowedSubnets = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.AllowedSubnets.Name);
         options.Tags = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Tags.Name);
         return options;
@@ -120,6 +117,7 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
                 options.ProvisionedThroughputMiBPerSec,
                 options.PublicNetworkAccess,
                 options.NfsRootSquash,
+                options.NfsEncryptionInTransit,
                 allowedSubnets,
                 tags,
                 options.Tenant,

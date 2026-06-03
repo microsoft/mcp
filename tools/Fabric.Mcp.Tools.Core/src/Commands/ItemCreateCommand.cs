@@ -1,115 +1,73 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Options;
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.Core.Commands;
 
+[CommandMetadata(
+    Id = "bfdfd3c0-4551-4454-a930-5bf5b1ad5690",
+    Name = "create-item",
+    Title = "Create Fabric Item",
+    Description = "Creates a new item in a Fabric workspace. Use this when the user wants to create a Lakehouse, Notebook, or other Fabric item type. Requires workspace ID, item name, and item type.",
+    Destructive = false,
+    Idempotent = false,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false)]
 public sealed class ItemCreateCommand(
     ILogger<ItemCreateCommand> logger,
-    IFabricCoreService fabricCoreService) : GlobalCommand<ItemCreateOptions>()
+    IFabricCoreService fabricCoreService) : AuthenticatedCommand<ItemCreateOptions, ItemCreateCommandResult>
 {
     private readonly ILogger<ItemCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
 
-    public override string Id => "bfdfd3c0-4551-4454-a930-5bf5b1ad5690";
-    public override string Name => "create-item";
-    public override string Title => "Create Fabric Item";
-    public override string Description => "Creates a new item in a Fabric workspace. Use this when the user wants to create a Lakehouse, Notebook, or other Fabric item type. Requires workspace ID, item name, and item type.";
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(ItemCreateOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = false,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(CoreOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(CoreOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(CoreOptionDefinitions.DisplayName.AsRequired());
-        command.Options.Add(CoreOptionDefinitions.ItemType.AsRequired());
-        command.Options.Add(CoreOptionDefinitions.Description.AsOptional());
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+        if (string.IsNullOrWhiteSpace(options.WorkspaceId) && string.IsNullOrWhiteSpace(options.Workspace))
         {
-            var workspaceId = result.GetValueOrDefault<string>(CoreOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(CoreOptionDefinitions.Workspace.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-        });
-    }
-
-    protected override ItemCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        var workspaceId = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.WorkspaceId.Name);
-        var workspaceName = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.Workspace.Name);
-        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
-            ? workspaceId!
-            : workspaceName ?? string.Empty;
-        options.ItemName = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.DisplayName.Name) ?? string.Empty;
-        options.ItemType = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.ItemType.Name) ?? string.Empty;
-        options.ItemDescription = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.Description.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("Workspace identifier is required. Provide --workspace or --workspace-id.");
         }
+    }
 
-        var options = BindOptions(parseResult);
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ItemCreateOptions options, CancellationToken cancellationToken)
+    {
+        var workspaceId = !string.IsNullOrWhiteSpace(options.WorkspaceId)
+            ? options.WorkspaceId
+            : options.Workspace!;
+
         try
         {
             var request = new CreateItemRequest
             {
-                DisplayName = options.ItemName,
+                DisplayName = options.DisplayName,
                 Type = options.ItemType,
-                Description = options.ItemDescription
+                Description = options.Description
             };
 
-            var item = await _fabricCoreService.CreateItemAsync(options.WorkspaceId, request, cancellationToken);
+            var item = await _fabricCoreService.CreateItemAsync(workspaceId, request, cancellationToken);
 
-            _logger.LogInformation("Successfully created {ItemType} '{ItemName}' in workspace {WorkspaceId}",
-                options.ItemType, options.ItemName, options.WorkspaceId);
+            _logger.LogInformation("Successfully created {ItemType} '{DisplayName}' in workspace {WorkspaceId}",
+                options.ItemType, options.DisplayName, workspaceId);
 
             var result = new ItemCreateCommandResult(item);
             context.Response.Results = ResponseResult.Create(result, CoreJsonContext.Default.ItemCreateCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating item '{ItemName}' in workspace {WorkspaceId}.",
-                options.ItemName, options.WorkspaceId);
+            _logger.LogError(ex, "Error creating item '{DisplayName}' in workspace {WorkspaceId}.",
+                options.DisplayName, workspaceId);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
-}
-
-public sealed class ItemCreateOptions : GlobalOptions
-{
-    public string WorkspaceId { get; set; } = string.Empty;
-    public string ItemName { get; set; } = string.Empty;
-    public string ItemType { get; set; } = string.Empty;
-    public string? ItemDescription { get; set; }
 }

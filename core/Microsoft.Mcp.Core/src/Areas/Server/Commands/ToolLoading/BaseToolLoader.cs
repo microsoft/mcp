@@ -4,6 +4,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
@@ -159,7 +160,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// </summary>
     /// <param name="request">The request context containing the MCP server.</param>
     /// <param name="toolName">The name of the tool being invoked.</param>
-    /// <param name="metadata">The tool metadata containing Secret and Destructive flags.</param>
+    /// <param name="command">The tool command being invoked.</param>
     /// <param name="dangerouslyDisableElicitation">Whether elicitation has been disabled via dangerous option.</param>
     /// <param name="logger">Logger instance for recording elicitation events.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
@@ -170,13 +171,13 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     protected static async Task<CallToolResult?> HandleElicitationAsync(
         RequestContext<CallToolRequestParams> request,
         string toolName,
-        ToolMetadata metadata,
+        IBaseCommand command,
         bool dangerouslyDisableElicitation,
         ILogger logger,
         CancellationToken cancellationToken)
     {
-        bool isSecret = metadata.Secret;
-        bool isDestructive = metadata.Destructive;
+        bool isSecret = command.Metadata.Secret;
+        bool isDestructive = command.Metadata.Destructive;
 
         if (!isSecret && !isDestructive)
         {
@@ -200,11 +201,11 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         if (!request.Server.SupportsElicitation())
         {
             logger.LogWarning("Tool '{Tool}' {Reason} but client does not support elicitation. Operation rejected.", toolName, reason);
-            return new CallToolResult
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
             {
                 Content = [new TextContentBlock { Text = $"This tool {reason} and requires user consent, but the client does not support elicitation. Operation rejected for security." }],
                 IsError = true
-            };
+            }, command.Id);
         }
 
         try
@@ -257,11 +258,11 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
             {
                 logger.LogInformation("User {Action} the elicitation for tool '{Tool}'. Operation not executed.",
                     protocolResponse.Action, toolName);
-                return new CallToolResult
+                return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
                     Content = [new TextContentBlock { Text = $"Operation cancelled by user ({protocolResponse.Action})." }],
                     IsError = true
-                };
+                }, command.Id);
             }
 
             logger.LogInformation("User accepted elicitation for tool '{Tool}'. Proceeding with execution.", toolName);
@@ -270,11 +271,11 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         catch (Exception ex)
         {
             logger.LogError(ex, "Error during elicitation for tool '{Tool}': {Error}", toolName, ex.Message);
-            return new CallToolResult
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
             {
                 Content = [new TextContentBlock { Text = $"Elicitation failed for tool '{toolName}': {ex.Message}. Operation not executed for security." }],
                 IsError = true
-            };
+            }, command.Id);
         }
     }
 }

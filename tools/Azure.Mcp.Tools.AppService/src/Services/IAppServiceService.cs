@@ -75,4 +75,15 @@ public interface IAppServiceService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<string> ChangeWebAppStateAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string stateChange,
+        bool softRestart,
+        bool waitForCompletion,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

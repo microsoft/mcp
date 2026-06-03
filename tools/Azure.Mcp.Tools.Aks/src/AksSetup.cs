@@ -35,11 +35,9 @@ public class AksSetup : IAreaSetup
         aks.AddSubGroup(nodepool);
 
         // Register AKS commands
-        var clusterGet = serviceProvider.GetRequiredService<ClusterGetCommand>();
-        cluster.AddCommand(clusterGet.Name, clusterGet);
+        cluster.AddCommand<ClusterGetCommand>(serviceProvider);
 
-        var nodepoolGet = serviceProvider.GetRequiredService<NodepoolGetCommand>();
-        nodepool.AddCommand(nodepoolGet.Name, nodepoolGet);
+        nodepool.AddCommand<NodepoolGetCommand>(serviceProvider);
 
         return aks;
     }

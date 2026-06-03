@@ -4,6 +4,7 @@
 using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Core.Pipeline;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -18,6 +19,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Validation;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -46,20 +48,15 @@ public class MonitorService(
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceId), resourceId), (nameof(table), table));
+
         query = BuildQuery(query, table, limit);
+        KqlQueryValidator.ValidateQuerySafety(query);
 
         var credential = await GetCredential(tenant, cancellationToken);
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
         options.Audience = GetLogsQueryAudience();
 
-        if (retryPolicy != null)
-        {
-            options.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
-            options.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
-            options.Retry.MaxRetries = retryPolicy.MaxRetries;
-            options.Retry.Mode = retryPolicy.Mode;
-            options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
-        }
+        options.ConfigureRetryOptions(retryPolicy);
         options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
         var client = new LogsQueryClient(credential, options);
         var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
@@ -112,19 +109,13 @@ public class MonitorService(
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(workspace), workspace), (nameof(query), query));
+        KqlQueryValidator.ValidateQuerySafety(query);
 
         var credential = await GetCredential(tenant, cancellationToken);
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
         options.Audience = GetLogsQueryAudience();
 
-        if (retryPolicy != null)
-        {
-            options.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
-            options.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
-            options.Retry.MaxRetries = retryPolicy.MaxRetries;
-            options.Retry.Mode = retryPolicy.Mode;
-            options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
-        }
+        options.ConfigureRetryOptions(retryPolicy);
         options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
         var client = new LogsQueryClient(credential, options);
 
@@ -198,11 +189,29 @@ public class MonitorService(
 
     public async Task<List<WorkspaceInfo>> ListWorkspaces(
         string subscription,
-        string? tenant,
-        RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken)
+        string? resourceGroup = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
+
+        if (!string.IsNullOrEmpty(resourceGroup))
+        {
+            var rgResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+                ?? throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
+
+            return await rgResource
+                .GetOperationalInsightsWorkspaces()
+                .GetAllAsync(cancellationToken)
+                .Select(workspace => new WorkspaceInfo
+                {
+                    Name = workspace.Data.Name,
+                    CustomerId = workspace.Data.CustomerId?.ToString() ?? string.Empty,
+                })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
 
         var subscriptionResource = await subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
@@ -234,6 +243,7 @@ public class MonitorService(
         var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
         query = BuildQuery(query, table, limit);
         ValidateRequiredParameters((nameof(query), query));
+        KqlQueryValidator.ValidateQuerySafety(query);
 
         try
         {
@@ -241,14 +251,7 @@ public class MonitorService(
             var options = AddDefaultPolicies(new LogsQueryClientOptions());
             options.Audience = GetLogsQueryAudience();
 
-            if (retryPolicy != null)
-            {
-                options.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
-                options.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
-                options.Retry.MaxRetries = retryPolicy.MaxRetries;
-                options.Retry.Mode = retryPolicy.Mode;
-                options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
-            }
+            options.ConfigureRetryOptions(retryPolicy);
             options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
             var client = new LogsQueryClient(credential, options);
             var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
@@ -484,7 +487,7 @@ public class MonitorService(
     {
         // If we're given an ID and need an ID, or given a name and need a name, return as is
         bool isId = IsWorkspaceId(workspace);
-        var workspaces = await ListWorkspaces(subscription, tenant, retryPolicy, cancellationToken);
+        var workspaces = await ListWorkspaces(subscription, resourceGroup: null, tenant, retryPolicy, cancellationToken);
 
         // Find the workspace
         var matchingWorkspace = workspaces.FirstOrDefault(w =>
@@ -521,4 +524,5 @@ public class MonitorService(
             _ => LogsQueryAudience.AzurePublicCloud
         };
     }
+
 }

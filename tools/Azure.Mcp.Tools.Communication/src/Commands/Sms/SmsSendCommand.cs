@@ -12,32 +12,24 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Communication.Commands.Sms;
 
-public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicationService communicationService) : BaseCommunicationCommand<SmsSendOptions>
-{
-    private const string CommandTitle = "Send SMS Message";
-    private readonly ILogger<SmsSendCommand> _logger = logger;
-    private readonly ICommunicationService _communicationService = communicationService;
-    public override string Id => "a0dc94f3-25ac-4971-a552-0d90fd57e902";
-
-    public override string Name => "send";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a0dc94f3-25ac-4971-a552-0d90fd57e902",
+    Name = "send",
+    Title = "Send SMS Message",
+    Description = """
         Sends SMS messages to one or more recipients to the given phone-number. You can enable delivery reports and receipt tracking, broadcast SMS, and tag messages for easier tracking.
         Returns message IDs and delivery status for each sent message.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        ReadOnly = true,
-        OpenWorld = true,
-        Idempotent = false,
-        Secret = false,
-        LocalRequired = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = true,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicationService communicationService) : BaseCommunicationCommand<SmsSendOptions>
+{
+    private readonly ILogger<SmsSendCommand> _logger = logger;
+    private readonly ICommunicationService _communicationService = communicationService;
 
     protected override void RegisterOptions(Command command)
     {

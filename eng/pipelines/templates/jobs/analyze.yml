@@ -7,24 +7,20 @@ jobs:
   - checkout: self
     fetchDepth: 0
 
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK from global.json"
-    retryCountOnTaskFailure: 3
-    inputs:
-      useGlobalJson: true
+  - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK 9.0.x"
-    retryCountOnTaskFailure: 3
+  - task: NodeTool@0
+    displayName: "Install Node.js 22"
     inputs:
-      packageType: sdk
-      version: 9.0.x
-
+      versionSpec: '22.x'
+  
   - task: Powershell@2
     displayName: "Run source analysis"
     inputs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Analyze-Code.ps1
+    env:
+      AZURE_MCP_COLLECT_TELEMETRY: 'false'
 
   # Run AOT analysis only on Linux x64
   - template: /eng/pipelines/templates/steps/analyze-aot-compact.yml

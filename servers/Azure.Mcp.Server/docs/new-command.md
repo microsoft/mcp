@@ -10,9 +10,7 @@ This document is the authoritative guide for adding new commands ("toolset comma
 All new Azure services and their commands should use the Toolset pattern:
 
 - **Toolset code** goes in `tools/Azure.Mcp.Tools.{Toolset}/src` (e.g., `tools/Azure.Mcp.Tools.Storage/src`)
-- **Tests** go in `tools/Azure.Mcp.Tools.{Toolset}/tests`, divided into UnitTests and LiveTests:
-  -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests` (e.g., `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.UnitTests`)
-  -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests` (e.g., `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.LiveTests`)
+- **Tests** go in `tools/Azure.Mcp.Tools.{Toolset}/tests` (e.g., `tools/Azure.Mcp.Tools.Storage/tests`)
 
 This keeps all code, options, models, JSON serialization contexts, and tests for a toolset together. See `tools/Azure.Mcp.Tools.Storage` for a reference implementation.
 
@@ -20,13 +18,15 @@ This keeps all code, options, models, JSON serialization contexts, and tests for
 
 **CRITICAL DECISION POINT**: Does your command interact with Azure resources?
 
-### **Azure Service Commands (REQUIRES Test Infrastructure)**
+### **Azure Service Commands (REQUIRE Test Infrastructure and Live Tests)**
 If your command interacts with Azure resources (storage accounts, databases, VMs, etc.):
 - ✅ **MUST create** `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
 - ✅ **MUST create** `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources-post.ps1` (required even if basic template)
 - ✅ **MUST include** RBAC role assignments for test application
 - ✅ **MUST validate** with `az bicep build --file tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
 - ✅ **MUST test deployment** with `./eng/scripts/Deploy-TestResources.ps1 -Tool 'Azure.Mcp.Tools.{Toolset}'`
+- ✅ **MUST include** live tests in `Azure.Mcp.Tools.{Toolset}/tests/`
+- ✅ **MUST record** live tests for playback using `RecordedCommandTestsBase` (see [`/docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md))
 
 ### **Non-Azure Commands (No Test Infrastructure Needed)**
 If your command is a wrapper/utility (CLI tools, best practices, documentation):
@@ -64,7 +64,7 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
      ```
 
    IMPORTANT:
-   - Commands use primary constructors with ILogger injection
+   - Commands use primary constructors with ILogger and service interface injection
    - Classes are always sealed unless explicitly intended for inheritance
    - Commands inheriting from `SubscriptionCommand` must handle subscription parameters
    - Service-specific base commands should add service-wide options
@@ -114,8 +114,8 @@ Every new command (whether purely computational or Azure-resource backed) requir
 4. Service interface: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/I{ServiceName}Service.cs`
 5. Service implementation: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/{ServiceName}Service.cs`
     - Most toolsets have one primary service; some may have multiple where domain boundaries justify separation
-6. Unit test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests/{Resource}/{Resource}{Operation}CommandTests.cs`
-7. Integration test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests/{Toolset}CommandTests.cs`
+6. Unit test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/{Resource}/{Resource}{Operation}CommandTests.cs`
+7. Live test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/{Toolset}CommandTests.cs`
 8. Command registration in RegisterCommands(): `tools/Azure.Mcp.Tools.{Toolset}/src/{Toolset}Setup.cs`
 9. Toolset registration in RegisterAreas(): `servers/Azure.Mcp.Server/src/Program.cs`
 10. **Live test infrastructure** (for Azure service commands):
@@ -392,6 +392,7 @@ public class MyService(ISubscriptionService subscriptionService, ITenantService 
     public async Task<ResourceQueryResults<MyResource>> ListResourcesAsync(
         string resourceGroup,
         string subscription,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
@@ -401,6 +402,7 @@ public class MyService(ISubscriptionService subscriptionService, ITenantService 
             subscription,
             retryPolicy,
             ConvertToModel,
+            tenant: tenant,
             cancellationToken: cancellationToken);
     }
 }
@@ -415,9 +417,7 @@ Some Azure services use data plane SDKs that require an explicit endpoint URL (e
 3. Add a private method that switches on `CloudType` and returns the cloud-correct URL.
 
 ```csharp
-public class MyService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService)
+public class MyService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IMyService
 {
     private readonly ITenantService _tenantService = tenantService
@@ -470,337 +470,321 @@ public class MyService(
 ```csharp
 // ❌ Hardcoded public-cloud endpoint
 var client = new BlobServiceClient(
-    new Uri($"https://{account}.blob.core.windows.net"), credential, options);
+    new($"https://{account}.blob.core.windows.net"), credential, options);
 
 // ❌ Hardcoded connection string
 var connectionString = $"AccountEndpoint=https://{server}.documents.azure.com:443/;...";
 
 // ✅ Cloud-aware endpoint via switch expression
 var endpoint = GetBlobEndpoint(account);  // private helper using CloudType switch
-var client = new BlobServiceClient(new Uri(endpoint), credential, options);
+var client = new BlobServiceClient(new(endpoint), credential, options);
 ```
 
 ### 3. Options Class
 
+Options classes are flat POCOs with `[Option]` attributes. Registration and binding are handled automatically by `OptionBinder` — no manual `RegisterOptions` or `BindOptions` overrides needed.
+
 ```csharp
-public class {Resource}{Operation}Options : Base{Toolset}Options
+public class {Resource}{Operation}Options : ISubscriptionOption
 {
-    // Only add properties not in base class
-    public string? NewOption { get; set; }
+    [Option("Description of the required option.")]
+    public required string RequiredOption { get; set; }
+
+    [Option("Description of the optional option.")]
+    public string? OptionalOption { get; set; }
+
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [Option(Name = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
 
 IMPORTANT:
-- Inherit from appropriate base class (Base{Toolset}Options, GlobalOptions, etc.)
-- Only define properties that aren't in the base classes
-- Make properties nullable if not required
+- Options classes are **flat** — no inheritance hierarchy. Implement `ISubscriptionOption` if the command needs subscription support.
+- `OptionBinder` discovers all public writable properties on the options class and handles registration and binding automatically. The `[Option]` attribute is used to override name, description, or hidden — but properties are discovered regardless of whether `[Option]` is present.
+- **Required vs optional** is determined entirely by nullability: non-nullable types = required; `?` = optional. The `required` keyword is a C# compile-time aid to suppress uninitialized warnings but does not affect CLI validation.
+- Only define properties that correspond to actually exposed CLI options for that specific command.
 - Use consistent parameter names across services:
-  - **CRITICAL**: Always use `subscription` (never `subscriptionId`) for subscription parameters - this allows the parameter to accept both subscription IDs and subscription names, which are resolved internally by `ISubscriptionService.GetSubscription()`
+  - **CRITICAL**: Always use `subscription` (never `subscriptionId`) for subscription parameters - this allows the parameter to accept both subscription IDs and subscription names, which are resolved internally by `ISubscriptionResolver`
   - Use `resourceGroup` instead of `resourceGroupName`
+  - Use constants on `OptionDescriptions` for commonly defined options
+  - Create a similar constants class ,e.g. `KeyVaultOptionDescriptions` in the tools project if options appear on multiple commands
   - Use singular nouns for resource names (e.g., `server` not `serverName`)
   - **Remove unnecessary "-name" suffixes**: Use `--account` instead of `--account-name`, `--container` instead of `--container-name`, etc. Only keep "-name" when it provides necessary disambiguation (e.g., `--subscription-name` to distinguish from global `--subscription`)
   - Keep parameter names consistent with Azure SDK parameters when possible
   - If services share similar operations (e.g., ListDatabases), use the same parameter order and names
 
-### Option Handling Pattern
+### Option Attribute Conventions
 
-Commands explicitly register options as required or optional using extension methods. This pattern provides explicit, per-command control over option requirements.
+The `[Option]` attribute drives automatic option registration and binding via `OptionBinder`:
 
-**Extension Methods (available on any `OptionDefinition<T>` or `Option<T>`):**
+**Key Principles:**
+- Options classes are **flat POCOs** — no class inheritance. Each command has its own options class.
+- `OptionBinder` discovers **all public writable properties** on the concrete class and handles both registration (adding to the CLI parser) and binding (populating from parse results) automatically. The `[Option]` attribute is only needed to override name, description, or hidden status — un-attributed properties are still discovered and bound.
+- **Required vs optional** is determined entirely by nullability: non-nullable types = required; `?` = optional. The `required` keyword suppresses C# compiler warnings about uninitialized non-nullable reference properties but does **not** drive CLI validation — only nullability matters to `OptionBinder`.
+- **No shared state**: Each command gets its own options instance per request — thread-safe by design.
+- **Implement `ISubscriptionOption`** if the command needs optional `string? Subscription`. This enables post-processing by `SubscriptionCommand` and `ISubscriptionResolver`. Note: `ISubscriptionOption` only provides `Subscription` — add a separate `Tenant` property if the command accepts `--tenant`.
+- **Implement additional option interfaces** (e.g., `IStorageAccountOption`) only when base command classes need type-safe access to specific properties for shared behavior like validation.
+- **Validation** is done via `ValidateOptions(TOptions, ValidationResult)` override in the command class — not via `Command.Validators.Add`.
+- **No manual registration or binding**: Remove all `RegisterOptions`/`BindOptions` overrides. If you find yourself writing these, you're using the old pattern.
+
+**Conventions:**
+- **Name**: Derived automatically from the property name in kebab-case (e.g., `LocalFilePath` → `--local-file-path`). Only use `[Option(Name = "...")]` when the convention doesn't produce the desired name (e.g., `RetryPolicy` → `--retry` instead of `--retry-policy`). **Do not** specify `Name =` when it matches the default.
+- **Required**: Determined by nullability. Use non-nullable types for required options. Use `?` for optional. Use the `required` keyword to suppress compiler warnings about uninitialized non-nullable reference properties.
+- **Description**: Pass as the constructor argument `[Option("description")]` or via `[Option(Description = "...")]`.
+- **Shared descriptions**: Use constants from `OptionDescriptions` (e.g., `OptionDescriptions.Subscription`, `OptionDescriptions.Tenant`).
+- **Nested objects**: Use `[Option(Name = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `RetryPolicyOptions` with `[Option(Name = "retry")]` produces `--retry-delay`, `--retry-max-retries`, etc.
+- **Property ordering**: List command-specific options first, then sink common/infrastructure options to the bottom in this order: `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`, `RetryPolicy`. This keeps the most relevant options visible at a glance.
+
+### Usage Patterns
+
+**Pattern 1: Standard command with required and optional options**
+
+The most common pattern — a command that needs some required parameters and some optional ones:
 
 ```csharp
-.AsRequired()    // Makes the option required for this command
-.AsOptional()    // Makes the option optional for this command
-```
-
-**Key principles:**
-- Commands explicitly register options when needed using extension methods
-- Each command controls whether each option is required or optional
-- Binding is explicit using `parseResult.GetValueOrDefault<T>()`
-- No shared state between commands - each gets its own option instance
-- Only use `.AsRequired()` and `.AsOptional()` if they will change the `Required` setting.
-- Use `Command.Validators.Add` to add unique option validation.
-
-**Usage patterns:**
-
-**For commands that require specific options:**
-```csharp
-protected override void RegisterOptions(Command command)
+public class {Resource}{Operation}Options : ISubscriptionOption
 {
-    base.RegisterOptions(command);
-    // Make commonly optional options required for this command
-    command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-    command.Options.Add(ServiceOptionDefinitions.Account.AsRequired());
-    // Use default requirement from definition
-    command.Options.Add(ServiceOptionDefinitions.Database);
-}
+    [Option("The name of the Azure Storage account.")]
+    public required string Account { get; set; }
 
-protected override MyCommandOptions BindOptions(ParseResult parseResult)
-{
-    var options = base.BindOptions(parseResult);
-    // Use ??= for options that might be set by base classes
-    options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-    // Direct assignment for command-specific options
-    options.Account = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Account.Name);
-    options.Database = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Database.Name);
-    return options;
-}
-```
+    [Option("The name of the container within the storage account.")]
+    public required string Container { get; set; }
 
-**For commands that use options optionally:**
-```csharp
-protected override void RegisterOptions(Command command)
-{
-    base.RegisterOptions(command);
-    // Make typically required options optional for this command
-    command.Options.Add(ServiceOptionDefinitions.Account.AsOptional());
-    command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-}
+    [Option("Optional filter expression.")]
+    public string? Filter { get; set; }
 
-protected override MyCommandOptions BindOptions(ParseResult parseResult)
-{
-    var options = base.BindOptions(parseResult);
-    options.Account = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Account.Name);
-    options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-    return options;
+    [Option(OptionDescriptions.ResourceGroup)]
+    public string? ResourceGroup { get; set; }
+
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [Option(Name = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
 
-**For commands with unique option requirements:**
+**Pattern 2: Command with mutually exclusive options**
+
+When options are mutually exclusive, make them both optional in the POCO and validate in the command via `ValidateOptions`:
+
 ```csharp
-protected override void RegisterOptions(Command command)
+public class MyCommandOptions : ISubscriptionOption
 {
-    base.RegisterOptions(command);
-    // Simple options.
-    command.Options.Add(ServiceOptionDefinitions.Account);
-    command.Options.Add(OptionDefinitions.Common.ResourceGroup);
-    // Exclusive or options
-    command.Options.Add(ServiceOptionDefinitions.EitherThis);
-    command.Options.Add(ServiceOptionDefinitions.OrThat);
-    // Validate that only 'EitherThis' or 'OrThat' were used individually.
-    command.Validators.Add(commandResult =>
+    [Option("First exclusive option.")]
+    public string? EitherThis { get; set; }
+
+    [Option("Second exclusive option.")]
+    public string? OrThat { get; set; }
+
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [Option(Name = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
+}
+
+// In the command class:
+public override void ValidateOptions(MyCommandOptions options, ValidationResult validationResult)
+{
+    base.ValidateOptions(options, validationResult);
+
+    var hasEitherThis = !string.IsNullOrWhiteSpace(options.EitherThis);
+    var hasOrThat = !string.IsNullOrWhiteSpace(options.OrThat);
+
+    if (!hasEitherThis && !hasOrThat)
     {
-        // Retrieve values once and infer presence from non-empty values
-        var eitherThis = commandResult.GetOrDefaultValue<string>(ServiceOptionDefinitions.EitherThis.Name);
-        var orThat = commandResult.GetOrDefaultValue<string>(ServiceOptionDefinitions.OrThat.Name);
+        validationResult.Errors.Add("Either --either-this or --or-that must be provided.");
+    }
 
-        var hasEitherThis = !string.IsNullOrWhiteSpace(eitherThis);
-        var hasOrThat = !string.IsNullOrWhiteSpace(orThat);
-
-        // Validate that either either-this or or-that is provided, but not both
-        if (!hasEitherThis && !hasOrThat)
-        {
-            commandResult.AddError("Either --either-this or --or-that must be provided.");
-        }
-
-        if (hasEitherThis && hasOrThat)
-        {
-            commandResult.AddError("Cannot specify both --either-this and --or-that. Use only one.");
-        }
-    });
-}
-
-protected override MyCommandOptions BindOptions(ParseResult parseResult)
-{
-    var options = base.BindOptions(parseResult);
-    options.Account = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Account.Name);
-    options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-    options.EitherThis = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.EitherThis.Name);
-    options.OrThat = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.OrThat.Name);
-    return options;
-}
-```
-
-**Important binding patterns:**
-- Use `??=` assignment for options that might be set by base classes (like global options)
-- Use direct assignment for command-specific options
-- Use `parseResult.GetValueOrDefault<T>(optionName)` instead of holding Option<T> references
-- The extension methods handle the required/optional logic at the parser level
-
-**Benefits of the new pattern:**
-- **Explicit**: Clear what options each command uses
-- **Flexible**: Each command controls option requirements independently
-- **No shared state**: Extension methods create new option instances
-- **Consistent**: Same pattern works for all options
-- **Maintainable**: Easy to see option dependencies in RegisterOptions method
-
-### Option Extension Methods Pattern
-
-The option pattern is built on extension methods that provide flexible, per-command control over option requirements. This eliminates shared state issues and makes option dependencies explicit.
-
-**Available Extension Methods:**
-
-```csharp
-// For OptionDefinition<T> instances
-.AsRequired()              // Creates a required option instance
-.AsOptional()              // Creates an optional option instance
-
-// For existing Option<T> instances
-.AsRequired()              // Creates a new required version
-.AsOptional()              // Creates a new optional version
-```
-
-**Usage Examples:**
-
-```csharp
-// Using OptionDefinitions with extension methods
-protected override void RegisterOptions(Command command)
-{
-    base.RegisterOptions(command);
-
-    // Global option - required for this command
-    command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-
-    // Service account - optional for this command
-    command.Options.Add(ServiceOptionDefinitions.Account.AsOptional());
-
-    // Database - required (override default from definition)
-    command.Options.Add(ServiceOptionDefinitions.Database.AsRequired());
-
-    // Filter - use default requirement from definition
-    command.Options.Add(ServiceOptionDefinitions.Filter);
-}
-
-// When you need a custom option (e.g., making a required option optional for a specific command)
-protected override void RegisterOptions(Command command)
-{
-    base.RegisterOptions(command);
-    command.Options.Remove(ComputeOptionDefinitions.ResourceGroup);
-
-    // ✅ Correct: Use string parameters for Option constructor
-    var optionalRg = new Option<string>(
-        "--resource-group",
-        "-g")
+    if (hasEitherThis && hasOrThat)
     {
-        Description = "The name of the resource group (optional)"
-    };
-    command.Options.Add(optionalRg);
-
-    // ❌ Wrong: Don't use array for aliases in constructor
-    var wrongOption = new Option<string>(
-        ComputeOptionDefinitions.ResourceGroup.Aliases.ToArray(),
-        "Description");
-    // Error CS1503: Argument 1: cannot convert from 'string[]' to 'string'
+        validationResult.Errors.Add("Cannot specify both --either-this and --or-that. Use only one.");
+    }
 }
 ```
 
-**Name-Based Binding Pattern:**
+**Pattern 3: Command with enum/constrained options**
 
-With the new pattern, option binding uses the name-based `GetValueOrDefault<T>()` method:
+For options with a fixed set of valid values:
 
 ```csharp
-protected override MyCommandOptions BindOptions(ParseResult parseResult)
+public class MyCommandOptions : ISubscriptionOption
 {
-    var options = base.BindOptions(parseResult);
+    [Option("The output format.")]
+    public required string Format { get; set; }  // Validated in ValidateOptions
 
-    // Use ??= for options that might be set by base classes
-    options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
 
-    // Use direct assignment for command-specific options
-    options.Account = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Account.Name);
-    options.Database = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Database.Name);
-    options.Filter = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Filter.Name);
+    [Option(OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
 
-    return options;
+    [Option(Name = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
+}
+
+// In the command class:
+public override void ValidateOptions(MyCommandOptions options, ValidationResult validationResult)
+{
+    base.ValidateOptions(options, validationResult);
+
+    if (!new[] { "json", "table", "csv" }.Contains(options.Format, StringComparer.OrdinalIgnoreCase))
+    {
+        validationResult.Errors.Add("--format must be one of: json, table, csv");
+    }
+}
+```
+
+**Pattern 4: Options with interface constraints for shared base command behavior**
+
+When base commands need type-safe access to specific options, define small interfaces:
+
+```csharp
+public interface IStorageAccountOption
+{
+    string Account { get; }
+}
+
+public interface IContainerOption : IStorageAccountOption
+{
+    string Container { get; }
+}
+```
+
+The concrete options class implements these interfaces while remaining flat:
+
+```csharp
+public class BlobUploadOptions : ISubscriptionOption, IContainerOption
+{
+    [Option("The name of the Azure Storage account.")]
+    public required string Account { get; set; }
+
+    [Option("The name of the container within the storage account.")]
+    public required string Container { get; set; }
+
+    [Option("The blob name/path within the container.")]
+    public required string Blob { get; set; }
+
+    [Option("The local file path to read content from.")]
+    public required string LocalFilePath { get; set; }
+
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [Option(Name = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
+}
+```
+
+**Pattern 5: Options for list/query commands with optional filtering**
+
+Commands that list resources with optional narrowing:
+
+```csharp
+public class StorageAccountListOptions : ISubscriptionOption
+{
+    [Option(OptionDescriptions.ResourceGroup)]
+    public string? ResourceGroup { get; set; }
+
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [Option(Name = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
 
 **Key Benefits:**
-- **Type Safety**: Generic `GetValueOrDefault<T>()` provides compile-time type checking
-- **No Field References**: Eliminates need for readonly option fields in commands
-- **Flexible Requirements**: Each command controls which options are required/optional
-- **Clear Dependencies**: All option usage visible in `RegisterOptions` method
-- **No Shared State**: Extension methods create new option instances per command
+- **Flat and readable**: All options visible in one file — no hunting through a class hierarchy
+- **Composable**: Options can implement multiple interfaces without rigid single-inheritance trees
+- **Automatic**: `OptionBinder` handles registration and binding — no manual `RegisterOptions`/`BindOptions`
+- **Type-safe**: `required` keyword enforces required options at compile time; `OptionBinder` validates presence at runtime
+- **Consistent**: Same pattern as `SubscriptionCommand` using `ISubscriptionOption`
+- **Per-command accuracy**: Each options class declares exactly what that command needs — nullability reflects actual usage, not shared base class compromises
 
 ### 4. Command Class
 
 **CRITICAL: Using Statements**
-Ensure all necessary using statements are included, especially for option definitions:
+Ensure all necessary using statements are included:
 
 ```csharp
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;       // REQUIRED: For SubscriptionCommand<TOptions, TResult>
+using Azure.Mcp.Core.Services.Azure.Subscription;  // REQUIRED: For ISubscriptionResolver
 using Azure.Mcp.Tools.{Toolset}.Models;
-using Azure.Mcp.Tools.{Toolset}.Options;  // REQUIRED: For {Toolset}OptionDefinitions
-using Azure.Mcp.Tools.{Toolset}.Options.{Resource};  // For resource-specific options
+using Azure.Mcp.Tools.{Toolset}.Options;           // REQUIRED: For options classes
 using Azure.Mcp.Tools.{Toolset}.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
-public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Command> logger)
-    : Base{Toolset}Command<{Resource}{Operation}Options>
-{
-    private const string CommandTitle = "Human Readable Title";
-    private readonly ILogger<{Resource}{Operation}Command> _logger = logger;
-
-    public override string Id => "<GUID>"
-
-    public override string Name => "operation";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "<GUID>",
+    Name = "operation",
+    Title = "Human Readable Title",
+    Description = """
         Detailed description of what the command does.
         Returns description of return format.
           Required options:
         - list required options
-        """;
+        """,
+    Destructive = false,    // Set to true for tools that modify resources
+    OpenWorld = true,       // Set to false for tools whose domain of interaction is closed and well-defined
+    Idempotent = true,      // Set to false for tools that are not idempotent
+    ReadOnly = true,        // Set to false for tools that modify resources
+    Secret = false,         // Set to true for tools that may return sensitive information
+    LocalRequired = false)] // Set to true for tools requiring local execution/resources
+public sealed class {Resource}{Operation}Command(
+    ILogger<{Resource}{Operation}Command> logger,
+    I{Toolset}Service service,
+    ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<{Resource}{Operation}Options, {Resource}{Operation}Command.{Resource}{Operation}CommandResult>(subscriptionResolver)
+{
+    private readonly ILogger<{Resource}{Operation}Command> _logger = logger;
+    private readonly I{Toolset}Service _service = service;
 
-    public override string Title => CommandTitle;
+    // No RegisterOptions or BindOptions overrides needed — OptionBinder handles this via [Option] attributes
 
-    public override ToolMetadata Metadata => new()
+    // Optional: Override ValidateOptions for custom validation beyond required/optional checks
+    public override void ValidateOptions({Resource}{Operation}Options options, ValidationResult validationResult)
     {
-        Destructive = false,    // Set to true for tools that modify resources
-        OpenWorld = true,       // Set to false for tools whose domain of interaction is closed and well-defined
-        Idempotent = true,      // Set to false for tools that are not idempotent
-        ReadOnly = true,        // Set to false for tools that modify resources
-        Secret = false,         // Set to true for tools that may return sensitive information
-        LocalRequired = false   // Set to true for tools requiring local execution/resources
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        // Add options as needed (use AsRequired() or AsOptional() to override defaults)
-        command.Options.Add({Toolset}OptionDefinitions.RequiredOption.AsRequired());
-        command.Options.Add({Toolset}OptionDefinitions.OptionalOption.AsOptional());
-        // Use default requirement from OptionDefinitions
-        command.Options.Add({Toolset}OptionDefinitions.StandardOption);
+        base.ValidateOptions(options, validationResult);  // checks --subscription
+        // Add custom validation if needed
     }
 
-    protected override {Resource}{Operation}Options BindOptions(ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(
+        CommandContext context, {Resource}{Operation}Options options, CancellationToken cancellationToken)
     {
-        var options = base.BindOptions(parseResult);
-        // Bind options using GetValueOrDefault<T>(optionName)
-        options.RequiredOption = parseResult.GetValueOrDefault<string>({Toolset}OptionDefinitions.RequiredOption.Name);
-        options.OptionalOption = parseResult.GetValueOrDefault<string>({Toolset}OptionDefinitions.OptionalOption.Name);
-        options.StandardOption = parseResult.GetValueOrDefault<string>({Toolset}OptionDefinitions.StandardOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        // Required validation step
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
+        // Options are already bound and validated — just use them directly
         try
         {
             context.Activity?.WithSubscriptionTag(options);
 
-            // Get the appropriate service from DI
-            var service = context.GetService<I{Toolset}Service>();
-
             // Call service operation(s) with required parameters
-            var results = await service.{Operation}(
-                options.RequiredParam!,  // Required parameters end with !
-                options.OptionalParam,   // Optional parameters are nullable
-                options.Subscription!,   // From SubscriptionCommand
-                options.RetryPolicy,     // From GlobalCommand
+            var results = await _service.{Operation}(
+                options.RequiredOption,   // Required options are non-nullable (no ! needed)
+                options.OptionalOption,   // Optional options are nullable
+                options.Subscription!,   // From ISubscriptionOption (resolved by ISubscriptionResolver)
+                options.RetryPolicy,     // From options POCO
                 cancellationToken);      // Passed in ExecuteAsync
 
             // Set results if any were returned
@@ -810,9 +794,8 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
         catch (Exception ex)
         {
             // Log error with all relevant context
-            _logger.LogError(ex,
-                "Error in {Operation}. Required: {Required}, Optional: {Optional}, Options: {@Options}",
-                Name, options.RequiredParam, options.OptionalParam, options);
+            _logger.LogError(ex, "Error in {Operation}. Required: {Required}, Optional: {Optional}",
+                Name, options.RequiredOption, options.OptionalOption);
             HandleException(context, ex);
         }
 
@@ -841,6 +824,13 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     internal record {Resource}{Operation}CommandResult(List<ResultType> Results);
 }
 ```
+
+Key differences from the old pattern:
+- **Base class**: `SubscriptionCommand<TOptions, TResult>` (two generics) instead of `Base{Toolset}Command<TOptions>`
+- **Constructor**: Inject `ISubscriptionResolver` and pass to base
+- **No `RegisterOptions`/`BindOptions`**: `OptionBinder` handles this automatically via `[Option]` attributes
+- **`ExecuteAsync` signature**: Takes `TOptions` directly instead of `ParseResult` — options are pre-bound and pre-validated
+- **No `Validate()` call**: Validation is handled before `ExecuteAsync` is called. Use `ValidateOptions` override for custom validation.
 
 ### Tool ID
 
@@ -1053,17 +1043,16 @@ await foreach (var resourceGroup in subscription.GetResourceGroups())
 Example:
 ```csharp
 // Mock setup in unit tests
-_mockervice
-    .GetResourceAsync(
-        Arg.Any<string>(),
-        Arg.Any<string>(),
-        Arg.Any<string>(),
-        Arg.Any<RetryPolicyOptions>(),
-        Arg.Any<CancellationToken>())
+Service.GetResourceAsync(
+    Arg.Any<string>(),
+    Arg.Any<string>(),
+    Arg.Any<string>(),
+    Arg.Any<RetryPolicyOptions>(),
+    Arg.Any<CancellationToken>())
     .Returns(mockResource);
 
 // Invoking product code in unit tests
-var result = await _service.GetResourceAsync(
+var result = await Service.GetResourceAsync(
     "test-resource",
     "test-subscription",
     "test-rg",
@@ -1073,7 +1062,11 @@ var result = await _service.GetResourceAsync(
 
 ### 6. Base Service Command Classes
 
-Each toolset has its own hierarchy of base command classes that inherit from `GlobalCommand` or `SubscriptionCommand`. Service classes that work with Azure resources should inject `ISubscriptionService` for subscription resolution. For example:
+Each toolset may have base command classes that provide shared behavior (validation, error handling, etc.) across related commands. In the new two-generic pattern, these use **interface constraints** on `TOptions` instead of options class inheritance.
+
+**If a base command class only existed to add `RegisterOptions`/`BindOptions`**, remove it entirely. The concrete command directly extends `SubscriptionCommand<TOptions, TResult>`.
+
+**If a base command class provides real shared behavior** (validation, error handling, etc.), keep it and use the interface constraint pattern:
 
 ```csharp
 // Copyright (c) Microsoft Corporation.
@@ -1084,56 +1077,46 @@ using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.{Toolset}.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.{Toolset}.Commands;
 
-// Base command for all service commands (if no members needed, use concise syntax)
-public abstract class Base{Toolset}Command<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions> where TOptions : Base{Toolset}Options, new();
-
-// Base command for all service commands (if members are needed, use full syntax)
-public abstract class Base{Toolset}Command<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions> where TOptions : Base{Toolset}Options, new()
+// Option interfaces for shared concerns
+public interface I{Toolset}AccountOption
 {
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        // Register common options for all toolset commands
-        command.Options.Add({Toolset}OptionDefinitions.CommonOption);
-    }
+    string Account { get; }
+}
 
-    protected override TOptions BindOptions(ParseResult parseResult)
+public interface I{Resource}Option : I{Toolset}AccountOption
+{
+    string {Resource}Name { get; }
+}
+
+// Base command with interface constraint — provides shared behavior
+public abstract class Base{Toolset}Command<
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(
+    ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<TOptions, TResult>(subscriptionResolver)
+    where TOptions : class, ISubscriptionOption, I{Toolset}AccountOption
+{
+    // Shared validation using options.Account with type safety
+    public override void ValidateOptions(TOptions options, ValidationResult validationResult)
     {
-        var options = base.BindOptions(parseResult);
-        // Bind common options using GetValueOrDefault<T>()
-        options.CommonOption = parseResult.GetValueOrDefault<string>({Toolset}OptionDefinitions.CommonOption.Name);
-        return options;
+        base.ValidateOptions(options, validationResult);
+        // Shared validation logic using options.Account
     }
 }
 
-// Example: Resource-specific base command with common options
+// Deeper layer with additional interface constraint
 public abstract class Base{Resource}Command<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : Base{Toolset}Command<TOptions> where TOptions : Base{Resource}Options, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(
+    ISubscriptionResolver subscriptionResolver)
+    : Base{Toolset}Command<TOptions, TResult>(subscriptionResolver)
+    where TOptions : class, ISubscriptionOption, I{Resource}Option
 {
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(TOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        // Add resource-specific options that all resource commands need
-        command.Options.Add({Toolset}OptionDefinitions.{Resource}Name);
-        command.Options.Add({Toolset}OptionDefinitions.{Resource}Type.AsOptional());
-    }
-
-    protected override TOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        // Bind resource-specific options
-        options.{Resource}Name = parseResult.GetValueOrDefault<string>({Toolset}OptionDefinitions.{Resource}Name.Name);
-        options.{Resource}Type = parseResult.GetValueOrDefault<string>({Toolset}OptionDefinitions.{Resource}Type.Name);
-        return options;
+        base.ValidateOptions(options, validationResult);
+        // Shared resource-level validation using options.{Resource}Name
     }
 }
 
@@ -1161,36 +1144,30 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
 }
 ```
 
+Key differences from the old pattern:
+- **Two-generic base classes**: `Base{Toolset}Command<TOptions, TResult>` instead of `Base{Toolset}Command<TOptions>`
+- **Interface constraints**: `where TOptions : class, ISubscriptionOption, I{Toolset}AccountOption` instead of `where TOptions : Base{Toolset}Options, new()`
+- **No `RegisterOptions`/`BindOptions`**: Shared behavior is expressed through `ValidateOptions` overrides
+- **Constructor injects `ISubscriptionResolver`**: Passed to the base `SubscriptionCommand`
+- **Options stay flat**: Concrete options implement interfaces but don't use class inheritance
+
 ### 7. Unit Tests
 
-Unit tests follow a standardized pattern that tests initialization, validation, and execution:
+Unit tests follow a standardized pattern that tests initialization, validation, and execution.
+
+**IMPORTANT**: Tests for commands that extend `SubscriptionCommand<TOptions, TResult>` must inherit from `SubscriptionCommandUnitTestsBase<TCommand, TService>` instead of `CommandUnitTestsBase`. This base class automatically registers a mock `ISubscriptionResolver` in DI.
+
+> **Without `SubscriptionCommandUnitTestsBase`**, DI will fail at runtime with "Unable to resolve service for type `ISubscriptionResolver`".
+
+> **Prefer string args over constructing options directly.** Using `ExecuteCommandAsync("--account", ...)` tests the full pipeline: `[Option]` attribute registration, `OptionBinder` parsing, and `SubscriptionResolver` post-processing.
 
 ```csharp
-public class {Resource}{Operation}CommandTests
+public class {Resource}{Operation}CommandTests : SubscriptionCommandUnitTestsBase<{Resource}{Operation}Command, I{Toolset}Service>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly I{Toolset}Service _service;
-    private readonly ILogger<{Resource}{Operation}Command> _logger;
-    private readonly {Resource}{Operation}Command _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public {Resource}{Operation}CommandTests()
-    {
-        _service = Substitute.For<I{Toolset}Service>();
-        _logger = Substitute.For<ILogger<{Resource}{Operation}Command>>();
-
-        var collection = new ServiceCollection().AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("operation", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -1205,20 +1182,16 @@ public class {Resource}{Operation}CommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _service
-                .{Operation}(
-                    Arg.Any<string>(),
-                    Arg.Any<string>(),
-                    Arg.Any<RetryPolicyOptions>(),
-                    Arg.Any<CancellationToken>())
+            Service.{Operation}(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
                 .Returns([]);
         }
 
-        // Build args from a single string in tests using the test-only splitter
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -1237,27 +1210,22 @@ public class {Resource}{Operation}CommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        _service
-            .{Operation}(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+        Service.{Operation}(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var parseResult = _commandDefinition.Parse({argsArray});
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await ExecuteCommandAsync({argsArray});
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(
+            response,
+            {Toolset}JsonContext.Default.{Operation}CommandResult,
+            expectedStatus: HttpStatusCode.OK); // expectedStatus defaults to OK, omit if expecting OK.
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, {Toolset}JsonContext.Default.{Operation}CommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Items);
     }
 
@@ -1265,37 +1233,20 @@ public class {Resource}{Operation}CommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service
-            .{Operation}(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<ResultType>>(new Exception("Test error")));
-
-        var parseResult = _commandDefinition.Parse(["--required", "value"]);
+        Service.{Operation}(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await ExecuteCommandAsync("--required", "value");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
-    }
-
-    [Fact]
-    public void BindOptions_BindsOptionsCorrectly()
-    {
-        // Arrange
-        var parseResult = _parser.Parse(["--subscription", "test-sub", "--required", "value"]);
-
-        // Act
-        var options = _command.BindOptions(parseResult);
-
-        // Assert
-        Assert.Equal("test-sub", options.Subscription);
-        Assert.Equal("value", options.RequiredParam);
     }
 }
 ```
@@ -1318,13 +1269,13 @@ Guidelines:
     [assembly: Xunit.CollectionBehavior(Xunit.CollectionBehavior.CollectionPerAssembly)]
     ```
 
-### 8. Integration Tests
+### 8. Live Tests
 
-Integration tests inherit from `CommandTestsBase` and use test fixtures:
+Live tests **must** inherit from `RecordedCommandTestsBase` and use test fixtures. All live tests are required to be recorded for playback. See [`/docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md) for the full recording workflow.
 
 ```csharp
-public class {Toolset}CommandTests(ITestOutputHelper output)
-    : CommandTestsBase( output)
+public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     [Theory]
     [InlineData(AuthMethod.Credential)]
@@ -1390,7 +1341,7 @@ private CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     var resource = new CommandGroup("{resource}", "{Resource} operations description");
     service.AddSubGroup(resource);
 
-    resource.AddCommand(serviceProvider.GetRequiredService<{Resource}{Operation}Command>());
+    resource.AddCommand<{Resource}{Operation}Command>(serviceProvider);
 
     return service;
 }
@@ -1431,7 +1382,10 @@ using Azure.Mcp.Tools.{Toolset}.Models;
 
 [JsonSerializable(typeof({Resource}{Operation}Command.{Resource}{Operation}CommandResult))]
 [JsonSerializable(typeof(YourModelType))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal partial class {Toolset}JsonContext : JsonSerializerContext;
 ```
 
@@ -1530,12 +1484,12 @@ Always log errors with relevant context information:
 ```csharp
 catch (Exception ex)
 {
-    _logger.LogError(ex,
-        "Error in {Operation}. Resource: {Resource}, Options: {@Options}",
-        Name, resourceId, options);
+    _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}", Name, options.Subscription);
     HandleException(context, ex);
 }
 ```
+
+**DO NOT** log `{@Options}` as this may log sensitive information. Only log parameters that are known to be safe.
 
 ### 6. Common Error Scenarios to Handle
 
@@ -1576,7 +1530,7 @@ Core test cases for every command:
 public async Task ExecuteAsync_ValidatesInput(
     string args, bool shouldSucceed, string expectedError)
 {
-    var response = await ExecuteCommand(args);
+    var response = await ExecuteCommandAsync(args);
     Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     if (!shouldSucceed)
         Assert.Contains(expectedError, response.Message);
@@ -1586,11 +1540,10 @@ public async Task ExecuteAsync_ValidatesInput(
 public async Task ExecuteAsync_HandlesServiceError()
 {
     // Arrange
-    _service.Operation()
-        .Returns(Task.FromException(new ServiceException("Test error")));
+    Service.Operation().ThrowsAsync(new ServiceException("Test error"));
 
     // Act
-    var response = await ExecuteCommand("--param value");
+    var response = await ExecuteCommandAsync("--param", "value");
 
     // Assert
     Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -1603,7 +1556,7 @@ public async Task ExecuteAsync_HandlesServiceError()
 When developing new commands, run only your specific tests to save time:
 ```bash
 # Run all tests from the test project directory:
-pushd ./tools/Azure.Mcp.Tools.YourToolset/tests/Azure.Mcp.Tools.YourToolset.UnitTests  #or .LiveTests
+pushd ./tools/Azure.Mcp.Tools.YourToolset/tests/Azure.Mcp.Tools.YourToolset.Tests
 
 # Run only tests for your specific command class
 dotnet test --filter "FullyQualifiedName~YourCommandNameTests" --verbosity normal
@@ -1615,8 +1568,11 @@ dotnet test --filter "FullyQualifiedName~EntraAdminListCommandTests" --verbosity
 dotnet test --verbosity normal
 ```
 
-### Integration Tests
+### Live Tests
+
 Azure service commands requiring test resource deployment must add a bicep template, `tests/test-resources.bicep`, to their toolset directory. Additionally, all Azure service commands must include a `test-resources-post.ps1` file in the same directory, even if it contains only the basic template without custom logic. See `/tools/Azure.Mcp.Tools.Storage/tests/test-resources.bicep` and `/tools/Azure.Mcp.Tools.Storage/tests/test-resources-post.ps1` for canonical examples.
+
+All live tests **must** be recorded for playback using `RecordedCommandTestsBase`. See [`/docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md) for the full recording workflow, sanitizer configuration, and migration guide.
 
 #### Live Test Resource Infrastructure
 
@@ -1747,12 +1703,12 @@ catch {
 }
 ```
 
-**4. Update Live Tests to Use Deployed Resources**
+**3. Update Live Tests to Use Deployed Resources**
 
 Integration tests should use the deployed infrastructure:
 
 ```csharp
-public class {Toolset}CommandTests( ITestOutputHelper output)
+public class {Toolset}CommandTests(ITestOutputHelper output)
     : CommandTestsBase(output)
 {
     [Fact]
@@ -1803,7 +1759,7 @@ public class {Toolset}CommandTests( ITestOutputHelper output)
 }
 ```
 
-**5. Deploy and Test Resources**
+**4. Deploy and Test Resources**
 
 Use the deployment script with your toolset:
 
@@ -1812,8 +1768,8 @@ Use the deployment script with your toolset:
 ./eng/scripts/Deploy-TestResources.ps1 -Tools "{Toolset}"
 
 # Run live tests
-pushd 'tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests'
-dotnet test
+pushd 'tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests'
+dotnet test --filter "Category=Live"
 ```
 
 Live test scenarios should include:
@@ -2041,26 +1997,43 @@ var subscriptionResource = await _subscriptionService.GetSubscription(subscripti
 
 ### Command Option Patterns
 
-**Issue: Using readonly option fields in commands**
-- **Problem**: Commands define readonly `Option<T>` fields and use `parseResult.GetValue()` without type parameters.
-- **Solution**: Remove readonly fields; use `OptionDefinitions` directly in `RegisterOptions` and name-based binding in `BindOptions`.
+**Issue: Using readonly option fields or manual RegisterOptions/BindOptions**
+- **Problem**: Commands define readonly `Option<T>` fields, manual `RegisterOptions`/`BindOptions` overrides, or use the old one-generic `BaseCommand<TOptions>` pattern.
+- **Solution**: Use flat options POCOs with `[Option]` attributes and the two-generic `SubscriptionCommand<TOptions, TResult>` base class. `OptionBinder` handles registration and binding automatically.
 - **Pattern**:
 ```csharp
-protected override void RegisterOptions(Command command)
+// Options are a flat POCO with [Option] attributes
+public class MyOptions : ISubscriptionOption
 {
-    base.RegisterOptions(command);
-    // Use extension methods for flexible requirements
-    command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-    command.Options.Add(ServiceOptionDefinitions.ServiceOption);
+    [Option("The resource group name.")]
+    public required string ResourceGroup { get; set; }
+
+    [Option("The service-specific option.")]
+    public string? ServiceOption { get; set; }
+
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [Option(Name = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 
-protected override MyOptions BindOptions(ParseResult parseResult)
+// Command uses two-generic base class — no RegisterOptions/BindOptions needed
+public sealed class MyCommand(ILogger<MyCommand> logger, IMyService service, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<MyOptions, MyCommand.MyResult>(subscriptionResolver)
 {
-    var options = base.BindOptions(parseResult);
-    // Use name-based binding with generic type parameters
-    options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-    options.ServiceOption = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.ServiceOption.Name);
-    return options;
+    public override async Task<CommandResponse> ExecuteAsync(
+        CommandContext context, MyOptions options, CancellationToken cancellationToken)
+    {
+        // options are pre-bound and validated — use directly
+        var result = await service.DoWork(options.ResourceGroup, options.ServiceOption, cancellationToken);
+        // ...
+    }
+
+    internal record MyResult(string Value);
 }
 ```
 
@@ -2097,7 +2070,9 @@ catch (Exception ex)
    - Make command classes sealed
    - Use primary constructors
    - Follow exact namespace hierarchy
-   - Register all options in RegisterOptions
+   - Use flat options POCOs with `[Option]` attributes — no `RegisterOptions`/`BindOptions` overrides
+   - Extend `SubscriptionCommand<TOptions, TResult>` (two-generic pattern)
+   - Inject `ISubscriptionResolver` in the constructor
    - Handle all exceptions
    - Include CancellationToken parameter as final argument in all async methods
 
@@ -2204,12 +2179,12 @@ catch (Exception ex)
 
 1. Do not:
    - **CRITICAL**: Use `subscriptionId` as parameter name - Always use `subscription` to support both IDs and names
-   - **CRITICAL**: Define readonly option fields in commands - Use `OptionDefinitions` directly in `RegisterOptions` and `BindOptions`
-   - **CRITICAL**: Use the old `UseResourceGroup()` or `RequireResourceGroup()` pattern - These methods no longer exist. Use extension methods like `.AsRequired()` or `.AsOptional()` instead
+   - **CRITICAL**: Use the old one-generic `BaseCommand<TOptions>` pattern - Use two-generic `SubscriptionCommand<TOptions, TResult>` with `[Option]` attributes
+   - **CRITICAL**: Define manual `RegisterOptions`/`BindOptions` overrides - Use `[Option]` attributes on a flat options POCO; `OptionBinder` handles this automatically
+   - **CRITICAL**: Use options class inheritance hierarchies - Options classes should be flat POCOs implementing `ISubscriptionOption`
    - **CRITICAL**: Skip live test infrastructure for Azure service commands - Create `test-resources.bicep` template early in development
-   - **CRITICAL**: Use `parseResult.GetValue()` without the generic type parameter - Use `parseResult.GetValueOrDefault<T>(optionName)` instead
-   - Redefine base class properties in Options classes
-   - Skip base.RegisterOptions() call
+   - **CRITICAL**: Use `CommandUnitTestsBase` for subscription commands - Use `SubscriptionCommandUnitTestsBase` to register `ISubscriptionResolver`
+   - Use readonly option fields in commands
    - Skip base.Dispose() call
    - Use hardcoded option strings
    - Return different response formats
@@ -2222,13 +2197,13 @@ catch (Exception ex)
    - Use dashes in command group names
 
 2. Always:
-   - Create a static `{Toolset}OptionDefinitions` class for the toolset
-   - **For option handling**: Use extension methods like `.AsRequired()` or `.AsOptional()` to control option requirements per command. Register explicitly in `RegisterOptions` and bind explicitly in `BindOptions`
-   - **For option binding**: Use `parseResult.GetValueOrDefault<T>(optionDefinition.Name)` pattern for all options
+   - **For options**: Use flat POCOs with `[Option]` attributes implementing `ISubscriptionOption`
+   - **For commands**: Extend `SubscriptionCommand<TOptions, TResult>` and inject `ISubscriptionResolver`
+   - **For `ExecuteAsync`**: Use the `(CommandContext, TOptions, CancellationToken)` signature — options are pre-bound
+   - **For validation**: Override `ValidateOptions(TOptions, ValidationResult)` for custom validation
+   - **For tests**: Inherit from `SubscriptionCommandUnitTestsBase<TCommand, TService>`
    - **For Azure service commands**: Create test infrastructure (`test-resources.bicep`) before implementing live tests
-   - Use OptionDefinitions for options
    - Follow exact file structure
-   - Implement all base members
    - Add both unit and integration tests
    - Register in toolset setup RegisterCommands method
    - Handle all error cases
@@ -2339,7 +2314,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
 ### Live Test Project Configuration Issues
 
 **Issue: Live tests fail with "MCP server process exited unexpectedly" and "azmcp.exe not found"**
-- **Cause**: Incorrect project configuration in `Azure.Mcp.Tools.{Toolset}.LiveTests.csproj`
+- **Cause**: Incorrect project configuration in `Azure.Mcp.Tools.{Toolset}.Tests.csproj`
 - **Common Problem**: Referencing the toolset project (`Azure.Mcp.Tools.{Toolset}`) instead of the CLI project
 - **Solution**: Live test projects must reference `Azure.Mcp.Server.csproj` and include specific project properties
 - **Required Configuration**:
@@ -2507,25 +2482,20 @@ Commands should be **transport-agnostic** - they work identically in stdio and H
 
 **Good:**
 ```csharp
-public sealed class StorageAccountGetCommand : SubscriptionCommand<StorageAccountGetOptions>
+public sealed class StorageAccountGetCommand(
+    IStorageService storageService,
+    ILogger<StorageAccountGetCommand> logger,
+    ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<StorageAccountGetOptions, StorageAccountGetCommand.StorageAccountGetResult>(subscriptionResolver)
 {
-    private readonly IStorageService _storageService;
-
-    public StorageAccountGetCommand(
-        IStorageService storageService,
-        ILogger<StorageAccountGetCommand> logger)
-        : base(logger)
-    {
-        _storageService = storageService;
-    }
+    private readonly IStorageService _storageService = storageService;
+    private readonly ILogger<StorageAccountGetCommand> _logger = logger;
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        StorageAccountGetOptions options,
         CancellationToken cancellationToken)
     {
-        var options = BindOptions(parseResult);
-
         // Authentication provider handles both stdio and HTTP scenarios
         var accounts = await _storageService.GetStorageAccountsAsync(
             options.Subscription!,
@@ -2540,6 +2510,8 @@ public sealed class StorageAccountGetCommand : SubscriptionCommand<StorageAccoun
 
         return context.Response;
     }
+
+    internal record StorageAccountGetResult(List<StorageAccount> Accounts);
 }
 ```
 
@@ -2568,14 +2540,12 @@ public override async Task<CommandResponse> ExecuteAsync(...)
 When implementing services that call Azure, use `IAzureTokenCredentialProvider`:
 
 ```csharp
-public class StorageService : BaseAzureService, IStorageService
+public class StorageService(
+    ITenantService tenantService,
+    ILogger<StorageService> logger)
+    : BaseAzureService(tenantService), IStorageService
 {
-    public StorageService(
-        ITenantService tenantService,
-        ILogger<StorageService> logger)
-        : base(tenantService, logger)
-    {
-    }
+    private readonly ILogger<StorageService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<StorageAccount>> GetStorageAccountsAsync(
         string subscription,
@@ -2609,26 +2579,21 @@ Remote HTTP mode supports **multiple concurrent users**:
 
 **Good:**
 ```csharp
-public sealed class SqlDatabaseListCommand : SubscriptionCommand<SqlDatabaseListOptions>
+public sealed class SqlDatabaseListCommand(
+    ISqlService sqlService,
+    ILogger<SqlDatabaseListCommand> logger,
+    ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<SqlDatabaseListOptions, SqlDatabaseListCommand.SqlDatabaseListResult>(subscriptionResolver)
 {
-    private readonly ISqlService _sqlService;  // ✅ Singleton service, thread-safe
-
-    public SqlDatabaseListCommand(
-        ISqlService sqlService,
-        ILogger<SqlDatabaseListCommand> logger)
-        : base(logger)
-    {
-        _sqlService = sqlService;
-    }
+    private readonly ISqlService _sqlService = sqlService;  // ✅ Singleton service, thread-safe
+    private readonly ILogger<SqlDatabaseListCommand> _logger = logger;
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        SqlDatabaseListOptions options,
         CancellationToken cancellationToken)
     {
-        // ✅ Options created per-request, no shared state
-        var options = BindOptions(parseResult);
-
+        // ✅ Options are pre-bound per-request, no shared state
         // ✅ Service calls are async and don't store request state
         var databases = await _sqlService.ListDatabasesAsync(
             options.Subscription!,
@@ -2638,12 +2603,15 @@ public sealed class SqlDatabaseListCommand : SubscriptionCommand<SqlDatabaseList
 
         return context.Response;
     }
+
+    internal record SqlDatabaseListResult(List<SqlDatabase> Databases);
 }
 ```
 
 **Bad:**
 ```csharp
-public sealed class BadCommand : SubscriptionCommand<BadCommandOptions>
+public sealed class BadCommand(ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<BadCommandOptions, BadCommand.BadResult>(subscriptionResolver)
 {
     // ❌ Don't store per-request state in command fields
     private CommandContext? _currentContext;
@@ -2651,16 +2619,19 @@ public sealed class BadCommand : SubscriptionCommand<BadCommandOptions>
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult)
+        BadCommandOptions options,
+        CancellationToken cancellationToken)
     {
         // ❌ Race condition with multiple concurrent requests
         _currentContext = context;
-        _currentOptions = BindOptions(parseResult);
+        _currentOptions = options;
 
         // ❌ Another request might overwrite these before we use them
         await Task.Delay(100);
         return _currentContext.Response;
     }
+
+    internal record BadResult(string Value);
 }
 ```
 

@@ -8,105 +8,60 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
+[CommandMetadata(
+    Id = "f6b3249d-6481-4e80-9d34-0d6867718dd7",
+    Name = "upload_file",
+    Title = "Upload OneLake File",
+    Description = "Uploads a file to OneLake storage from inline content or local file path. Use this when the user needs to store data in OneLake. Supports overwrite control and content type specification.",
+    Destructive = true,
+    Idempotent = false,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false)]
 public sealed class BlobPutCommand(
     ILogger<BlobPutCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<BlobPutOptions>()
+    IOneLakeService oneLakeService) : AuthenticatedCommand<BlobPutOptions, BlobPutCommand.BlobPutCommandResult>
 {
     private readonly ILogger<BlobPutCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override string Id => "f6b3249d-6481-4e80-9d34-0d6867718dd7";
-    public override string Name => "upload_file";
-    public override string Title => "Upload OneLake File";
-    public override string Description => "Uploads a file to OneLake storage from inline content or local file path. Use this when the user needs to store data in OneLake. Supports overwrite control and content type specification.";
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(BlobPutOptions options, ValidationResult validationResult)
     {
-        Destructive = true,
-        Idempotent = false,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.FilePath);
-        command.Options.Add(FabricOptionDefinitions.Content);
-        command.Options.Add(FabricOptionDefinitions.LocalFilePath);
-        command.Options.Add(FabricOptionDefinitions.Overwrite);
-        command.Options.Add(FabricOptionDefinitions.ContentType);
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+        if (string.IsNullOrWhiteSpace(options.WorkspaceId) && string.IsNullOrWhiteSpace(options.Workspace))
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-
-            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
-            {
-                result.AddError("Item identifier is required. Provide --item or --item-id.");
-            }
-        });
-    }
-
-    protected override BlobPutOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-
-        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
-            ? workspaceId!
-            : workspaceName ?? string.Empty;
-
-        var itemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        var itemName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-        options.ItemId = !string.IsNullOrWhiteSpace(itemId)
-            ? itemId!
-            : itemName ?? string.Empty;
-
-        options.FilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.FilePath.Name) ?? string.Empty;
-        options.Content = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Content.Name);
-        options.LocalFilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.LocalFilePath.Name);
-        options.Overwrite = parseResult.GetValueOrDefault<bool>(FabricOptionDefinitions.Overwrite.Name);
-        options.ContentType = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ContentType.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("Workspace identifier is required. Provide --workspace or --workspace-id.");
         }
 
-        var options = BindOptions(parseResult);
+        if (string.IsNullOrWhiteSpace(options.ItemId) && string.IsNullOrWhiteSpace(options.Item))
+        {
+            validationResult.Errors.Add("Item identifier is required. Provide --item or --item-id.");
+        }
+    }
 
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BlobPutOptions options, CancellationToken cancellationToken)
+    {
         try
         {
+            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
+                ? options.WorkspaceId
+                : options.Workspace!;
+
+            var itemIdentifier = !string.IsNullOrWhiteSpace(options.ItemId)
+                ? options.ItemId
+                : options.Item!;
+
             using var contentStream = ResolveContentStream(options, out var contentLength);
 
             var result = await _oneLakeService.PutBlobAsync(
-                options.WorkspaceId,
-                options.ItemId,
+                workspaceIdentifier,
+                itemIdentifier,
                 options.FilePath,
                 contentStream,
                 contentLength,
@@ -192,13 +147,32 @@ public sealed class BlobPutCommand(
         string Message);
 }
 
-public sealed class BlobPutOptions : GlobalOptions
+public sealed class BlobPutOptions
 {
-    public string WorkspaceId { get; set; } = string.Empty;
-    public string ItemId { get; set; } = string.Empty;
-    public string FilePath { get; set; } = string.Empty;
+    [Option("The ID of the Microsoft Fabric workspace.")]
+    public string? WorkspaceId { get; set; }
+
+    [Option("The name or ID of the Microsoft Fabric workspace.")]
+    public string? Workspace { get; set; }
+
+    [Option("The ID of the Fabric item.")]
+    public string? ItemId { get; set; }
+
+    [Option("The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').")]
+    public string? Item { get; set; }
+
+    [Option("The path to the file in OneLake.")]
+    public required string FilePath { get; set; }
+
+    [Option("The content to write to the file.")]
     public string? Content { get; set; }
+
+    [Option("The path to a local file to upload.")]
     public string? LocalFilePath { get; set; }
+
+    [Option("Whether to overwrite existing files.")]
     public bool Overwrite { get; set; }
+
+    [Option("MIME content type to set on the uploaded file (e.g., 'application/json'). Defaults to 'application/octet-stream'.")]
     public string? ContentType { get; set; }
 }

@@ -64,6 +64,11 @@ public class FileShareCreateOrUpdateOptions : BaseFileSharesOptions
     public string? NfsRootSquash { get; set; }
 
     /// <summary>
+    /// Gets or sets the NFS encryption in transit setting (e.g., "Enabled", "Disabled").
+    /// </summary>
+    public string? NfsEncryptionInTransit { get; set; }
+
+    /// <summary>
     /// Gets or sets the allowed subnets for public access (comma-separated list).
     /// </summary>
     public string? AllowedSubnets { get; set; }

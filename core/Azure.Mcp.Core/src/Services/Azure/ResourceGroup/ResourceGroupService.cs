@@ -94,7 +94,7 @@ public class ResourceGroupService(
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName));
 
         var resourceGroupResource = await GetResourceGroupResource(subscription, resourceGroupName, tenant, retryPolicy, cancellationToken)
-            ?? throw new Exception($"Resource group '{resourceGroupName}' not found");
+            ?? throw new KeyNotFoundException($"Resource group '{resourceGroupName}' not found");
 
         await foreach (var r in resourceGroupResource.GetGenericResourcesAsync(cancellationToken: cancellationToken))
         {

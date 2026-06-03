@@ -12,6 +12,7 @@ If you are contributing significant changes, or if the issue is already assigned
   - [Table of Contents](#table-of-contents)
   - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
+    - [Central NuGet Feed](#central-nuget-feed)
     - [Project Structure](#project-structure)
   - [Development Workflow](#development-workflow)
     - [Development Process](#development-process)
@@ -29,6 +30,7 @@ If you are contributing significant changes, or if the issue is already assigned
     - [Testing Local Build with Docker](#testing-local-build-with-docker)
     - [Live Tests](#live-tests)
     - [NPX Live Tests](#npx-live-tests)
+    - [Recording Live Tests](#recording-live-tests)
     - [Debugging Live Tests](#debugging-live-tests)
   - [Quality and Standards](#quality-and-standards)
     - [Code Style](#code-style)
@@ -68,6 +70,34 @@ If you are contributing significant changes, or if the issue is already assigned
 3. **Node.js**: Install [Node.js](https://nodejs.org/en/download) 20 or later (ensure `node` and `npm` are in your PATH)
 4. **PowerShell**: Install [PowerShell](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) 7.0 or later (required for build and test scripts)
 
+### Central NuGet Feed
+
+This repository uses a single Azure DevOps package feed for all NuGet packages instead of nuget.org directly. The feed is configured in `nuget.config`.
+
+The feed has an **upstream** configured to nuget.org. When an authenticated user restores a package that is not yet cached in the feed, it is automatically ingested from nuget.org. Unauthenticated users can only consume package versions that have already been ingested into the feed.
+
+You can browse the feed directly at: <https://dev.azure.com/azure-sdk/public/_artifacts/feed/azure-sdk-for-net>
+
+#### Installing the Azure Artifacts Credential Provider
+
+To authenticate with the feed you need the **Azure Artifacts Credential Provider**:
+
+1. Install it from <https://go.microsoft.com/fwlink/?linkid=2099625> (you can also find this link by clicking **Connect to Feed** from the feed page above).
+2. Once installed, the first `dotnet restore` (or any command with an implicit restore) will trigger an authentication prompt.
+3. Valid Users of the Azure DevOps project will be authenticated as a **Collaborator** on the feed, which allows you to:
+   - Pull any package already in the feed.
+   - Trigger the feed to query nuget.org and ingest new packages or versions that are not yet present.
+
+The feed is **public**, so anyone can read packages that are already cached. The credential provider is only needed to cause new packages to be ingested from the upstream.
+
+#### External Contributors
+
+External contributors will not be able to authenticate to the feed as **Collaborator**, but our Pull Request pipeline can. External contributors should temporarily add nuget.org as an additional source in `nuget.config` to build locally with new packages, then revert that `nuget.config` change before submitting their pull request. Our pipeline will authenticate to the feed, ingest the new package, and build normally.
+
+If you need local-only NuGet configuration for development, use a user-level `NuGet.Config` and a temporary `--configfile` rather than editing this repository's tracked `nuget.config`. Do not commit local feed changes to the repo.
+
+Do not assume the Pull Request pipeline will always ingest a missing package automatically. Upstream ingestion can fail or be delayed. If your PR depends on a package/version that is not yet visible in the feed, ask a maintainer or Microsoft contributor to pre-ingest it by restoring against the feed first, then retry once the package appears in <https://dev.azure.com/azure-sdk/public/_artifacts/feed/azure-sdk-for-net>.
+
 ### Project Structure
 
 - `core\`
@@ -75,21 +105,20 @@ If you are contributing significant changes, or if the issue is already assigned
   - `Fabric.Mcp.Core` - Fabric.Mcp.Core, depends on Azure.Mcp.Core (fabric uses azure)
   - `Microsoft.Mcp.Core` - Microsoft.Mcp.Core library
 - `servers\`
-  - `{server}.Mcp.Server - Individual servers (e.g. `Azure.Mcp.Server`, `Fabric.Mcp.Server`)
+  - `{Server}.Mcp.Server - Individual servers (e.g. `Azure.Mcp.Server`, `Fabric.Mcp.Server`)
     - `src` - Source for the server
     - `tests` - Any unit or live tests for the server
     - `README.md` - Specific readme for this server
     - `CHANGELOG.md` - Specific changelog for this server
 - `tools/` - Service-specific implementations
-  - `{server}.Mcp.Tools.{tool-name}/` - Individual server tools (e.g., `Azure.Mcp.Tools.KeyVault`, `Fabric.Mcp.Tools.Admin`)
+  - `{Server}.Mcp.Tools.{ToolArea}/` - Individual server tools (e.g., `Azure.Mcp.Tools.KeyVault`, `Fabric.Mcp.Tools.Admin`)
     - `src` - Service specific code
       - `Commands/` - Command implementations
       - `Models/` - Service specific models
       - `Services/` - Service implementations and interfaces
       - `Options/` - Service specific command options
     - `tests/` - Service specific tests
-      - `{server}.Mcp.Tools.{tool-name}.UnitTests/` - Unit tests require no authentication or test resources
-      - `{server}.Mcp.Tools.{tool-name}.LiveTests/` - Live tests depend on Azure resources and authentication
+      - `{Server}.Mcp.Tools.{ToolArea}.Tests/` - Unit tests (no Azure resources) and Integration tests (requires Azure)
       - `test-resources.bicep` - Infrastructure templates for testing
 - `eng/` - Shared tools, templates, CLI helpers
 - `docs/` - Central documentation and onboarding materials
@@ -183,7 +212,7 @@ If you are contributing significant changes, or if the issue is already assigned
 
 ## Testing
 
-Command authors must provide both unit tests and end-to-end test prompts.
+Command authors must provide unit tests and end-to-end test prompts. Commands that interact with Azure resources **must** also include live tests with recorded playback coverage (see [Recording Live Tests](#recording-live-tests)).
 
 ### Unit Tests
 
@@ -202,6 +231,7 @@ To scope the test run to path substring matches, use:
 Requirements:
 
 - Each command should have unit tests
+  - The command unit tests should extend `CommandUnitTestsBase<TCommand, TService>`
 - Tests should cover success and error scenarios
 - Mock external service calls
 - Test argument validation
@@ -497,6 +527,8 @@ To build a local image for testing purposes:
 ### Live Tests
 
 > [!IMPORTANT]
+> Live tests are **required** for all commands that interact with Azure resources.
+>
 > If you are a **Microsoft employee** with Azure source permissions then please review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake). As part of reviewing community contributions, Azure team members can run live tests by adding this comment to the PR `/azp run  mcp - pullrequest - live`.
 
 Before running live tests:
@@ -573,6 +605,10 @@ This will produce .tgz files in the `.dist` directory and set the `TestPackage` 
 ```json
 "TestPackage": "file://D:\\repos\\azure-mcp\\.dist\\wrapper\\azure-mcp-0.0.12-alpha.1746488279.tgz"
 ```
+
+### Recording Live Tests
+
+All new live tests **must** be recorded for playback. Live tests use the Azure SDK Test Proxy to capture and replay HTTP traffic, ensuring CI can validate tests without live Azure resources. For the full migration guide, recording workflow, sanitizer/matcher configuration, and troubleshooting tips, see [docs/recorded-tests.md](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md).
 
 ### Debugging Live Tests
 

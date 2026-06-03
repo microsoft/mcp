@@ -26,6 +26,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
     public async Task<ResourceQueryResults<AppConfigurationAccount>> GetAppConfigAccounts(
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -34,7 +35,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
         return await ExecuteResourceQueryAsync(
             "Microsoft.AppConfiguration/configurationStores",
-            resourceGroup: null, // all resource groups
+            resourceGroup: resourceGroup,
             subscription,
             retryPolicy,
             ConvertToAppConfigurationAccountModel,
@@ -145,7 +146,6 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
                 }
                 else if (parts.Length == 1 && !string.IsNullOrEmpty(parts[0]))
                 {
-                    // Handle tags that don't follow key=value format
                     setting.Tags[parts[0]] = string.Empty;
                 }
             }
@@ -153,7 +153,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
         await client.SetConfigurationSettingAsync(setting, cancellationToken: cancellationToken);
     }
-    public async Task DeleteKeyValue(
+    public async Task<bool> DeleteKeyValue(
         string accountName,
         string key,
         string subscription,
@@ -164,12 +164,18 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(key), key), (nameof(subscription), subscription));
         var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy, cancellationToken);
-        await client.DeleteConfigurationSettingAsync(key, label, cancellationToken: cancellationToken);
+        var response = await client.DeleteConfigurationSettingAsync(key, label, cancellationToken: cancellationToken);
+        return KeyValueExistedFromDeleteStatus(response.Status);
+    }
+
+    internal static bool KeyValueExistedFromDeleteStatus(int status)
+    {
+        return status == 200;
     }
 
     private async Task<ConfigurationClient> GetConfigurationClient(string accountName, string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var configStore = await FindAppConfigStore(subscription, tenant, accountName, subscription, retryPolicy, cancellationToken);
+        var configStore = await FindAppConfigStore(subscription, tenant, accountName, retryPolicy, cancellationToken);
         var endpoint = configStore.Endpoint;
         if (string.IsNullOrEmpty(endpoint))
         {
@@ -179,23 +185,36 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "appconfig", TenantService.CloudConfiguration.ArmEnvironment);
 
         var credential = await GetCredential(tenant, cancellationToken);
-        var options = new ConfigurationClientOptions();
-        options.Audience = GetAppConfigurationAudience();
-        AddDefaultPolicies(options);
 
         var endpointUri = new Uri(endpoint);
         var httpClient = _httpClientFactory.CreateClient();
-        httpClient.BaseAddress = endpointUri;
-        options.Transport = new HttpClientTransport(httpClient);
+        var options = CreateConfigurationClientOptions(GetAppConfigurationAudience(), retryPolicy, httpClient, endpointUri);
 
         return new ConfigurationClient(endpointUri, credential, options);
+    }
+
+    internal static ConfigurationClientOptions CreateConfigurationClientOptions(
+        AppConfigurationAudience audience,
+        RetryPolicyOptions? retryPolicy,
+        HttpClient httpClient,
+        Uri endpointUri)
+    {
+        var options = new ConfigurationClientOptions
+        {
+            Audience = audience
+        };
+
+        httpClient.BaseAddress = endpointUri;
+        options.Transport = new HttpClientTransport(httpClient);
+        ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
+
+        return options;
     }
 
     private async Task<AppConfigurationAccount> FindAppConfigStore(
         string subscription,
         string? tenant,
         string accountName,
-        string subscriptionIdentifier,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
@@ -208,7 +227,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
             additionalFilter: $"name =~ '{EscapeKqlString(accountName)}'",
             tenant: tenant,
             cancellationToken: cancellationToken)
-            ?? throw new KeyNotFoundException($"App Configuration store '{accountName}' not found for subscription '{subscriptionIdentifier}'.");
+            ?? throw new KeyNotFoundException($"App Configuration store '{accountName}' not found in subscription '{subscription}'.");
     }
 
     /// <summary>

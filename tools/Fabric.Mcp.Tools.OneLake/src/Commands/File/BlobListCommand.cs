@@ -6,101 +6,63 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 [HiddenCommand]
+[CommandMetadata(
+    Id = "3d7ce5ba-e365-4e5c-9542-c2550c0fd11a",
+    Name = "list",
+    Title = "List OneLake Blobs",
+    Description = "List files and directories in OneLake storage as blobs. Browse the contents of a lakehouse or specific directory path with optional recursive listing in blob format. If no path is specified, intelligently discovers content by searching both Files and Tables folders automatically, providing comprehensive visibility across all top-level OneLake folders. Use --format=raw to get the unprocessed OneLake API response for debugging.",
+    Destructive = false,
+    Idempotent = true,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false)]
 public sealed class BlobListCommand(
     ILogger<BlobListCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<BlobListOptions>()
+    IOneLakeService oneLakeService) : AuthenticatedCommand<BlobListOptions, BlobListCommand.BlobListCommandResult>
 {
     private readonly ILogger<BlobListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override string Id => "3d7ce5ba-e365-4e5c-9542-c2550c0fd11a";
-    public override string Name => "list";
-    public override string Title => "List OneLake Blobs";
-    public override string Description => "List files and directories in OneLake storage as blobs. Browse the contents of a lakehouse or specific directory path with optional recursive listing in blob format. If no path is specified, intelligently discovers content by searching both Files and Tables folders automatically, providing comprehensive visibility across all top-level OneLake folders. Use --format=raw to get the unprocessed OneLake API response for debugging.";
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(BlobListOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Path);
-        command.Options.Add(FabricOptionDefinitions.Recursive);
-        command.Options.Add(OneLakeOptionDefinitions.Format);
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+        if (string.IsNullOrWhiteSpace(options.WorkspaceId) && string.IsNullOrWhiteSpace(options.Workspace))
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-
-            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
-            {
-                result.AddError("Item identifier is required. Provide --item or --item-id.");
-            }
-        });
-    }
-
-    protected override BlobListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
-            ? workspaceId!
-            : workspaceName ?? string.Empty;
-
-        var itemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        var itemName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-        options.ItemId = !string.IsNullOrWhiteSpace(itemId)
-            ? itemId!
-            : itemName ?? string.Empty;
-
-        options.Path = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Path.Name);
-        options.Recursive = parseResult.GetValueOrDefault<bool>(FabricOptionDefinitions.Recursive.Name);
-        options.Format = parseResult.GetValueOrDefault<string>(OneLakeOptionDefinitions.Format.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("Workspace identifier is required. Provide --workspace or --workspace-id.");
         }
 
-        var options = BindOptions(parseResult);
+        if (string.IsNullOrWhiteSpace(options.ItemId) && string.IsNullOrWhiteSpace(options.Item))
+        {
+            validationResult.Errors.Add("Item identifier is required. Provide --item or --item-id.");
+        }
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BlobListOptions options, CancellationToken cancellationToken)
+    {
         try
         {
+            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
+                ? options.WorkspaceId
+                : options.Workspace!;
+
+            var itemIdentifier = !string.IsNullOrWhiteSpace(options.ItemId)
+                ? options.ItemId
+                : options.Item!;
+
             // Check if raw format is requested
             if (options.Format?.ToLowerInvariant() == "raw")
             {
                 var rawResponse = await _oneLakeService.ListBlobsRawAsync(
-                    options.WorkspaceId!,
-                    options.ItemId!,
+                    workspaceIdentifier,
+                    itemIdentifier,
                     options.Path,
                     options.Recursive,
                     cancellationToken);
@@ -116,16 +78,16 @@ public sealed class BlobListCommand(
             if (string.IsNullOrWhiteSpace(options.Path))
             {
                 files = (await _oneLakeService.ListBlobsIntelligentAsync(
-                    options.WorkspaceId!,
-                    options.ItemId!,
+                    workspaceIdentifier,
+                    itemIdentifier,
                     options.Recursive,
                     cancellationToken)).ToList();
             }
             else
             {
                 files = (await _oneLakeService.ListBlobsAsync(
-                    options.WorkspaceId!,
-                    options.ItemId!,
+                    workspaceIdentifier,
+                    itemIdentifier,
                     options.Path,
                     options.Recursive,
                     cancellationToken)).ToList();

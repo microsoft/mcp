@@ -14,35 +14,28 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 
-public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logger)
-    : SubscriptionCommand<ActivityLogListOptions>
-{
-    private const string CommandTitle = "List Activity Logs";
-    internal record ActivityLogListCommandResult(List<ActivityLogEventData> ActivityLogs);
-
-    public override string Id => "ffc0ed72-0622-4a27-bfd8-6df9b83adce8";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "ffc0ed72-0622-4a27-bfd8-6df9b83adce8",
+    Name = "list",
+    Title = "List Activity Logs",
+    Description = """
         Always use this tool if user is asking for activity logs for a resource.
         Lists activity logs for the specified Azure resource over the given prior number of hours.
         This command retrieves activity logs to help understand resource deployment history, modification activities, and access patterns.
         Returns activity log events with details including timestamp, operation name, status, and caller information. should be called to help retrieve information about why a resource failed to deploy or may not be working.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        OpenWorld = false,
-        Idempotent = true,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logger, IMonitorService monitorService)
+    : SubscriptionCommand<ActivityLogListOptions>
+{
+    private readonly ILogger<ActivityLogListCommand> _logger = logger;
+    private readonly IMonitorService _monitorService = monitorService;
+    internal record ActivityLogListCommandResult(List<ActivityLogEventData> ActivityLogs);
 
     protected override void RegisterOptions(Command command)
     {
@@ -79,11 +72,8 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
 
         try
         {
-            // Get the Monitor service from DI
-            var service = context.GetService<IMonitorService>();
-
             // Call service operation with required parameters
-            var results = await service.ListActivityLogs(
+            var results = await _monitorService.ListActivityLogs(
                 options.Subscription!,
                 options.ResourceName!,
                 options.ResourceGroup,
@@ -101,7 +91,7 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
         catch (Exception ex)
         {
             // Log error with all relevant context
-            logger.LogError(ex,
+            _logger.LogError(ex,
                 "Error listing activity logs. ResourceName: {ResourceName}, ResourceType: {ResourceType}, Hours: {Hours}.",
                 options.ResourceName, options.ResourceType, options.Hours);
             HandleException(context, ex);

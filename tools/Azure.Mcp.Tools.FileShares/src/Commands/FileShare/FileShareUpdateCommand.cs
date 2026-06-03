@@ -12,25 +12,20 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
+[CommandMetadata(
+    Id = "d7e8f9a0-b1c2-4d3e-4f5a-6b7c8d9e0f1a",
+    Name = "update",
+    Title = "Update File Share",
+    Description = "Update an existing Azure managed file share resource. Allows updating mutable properties like provisioned storage, IOPS, throughput, and network access settings.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logger, IFileSharesService service)
     : BaseFileSharesCommand<FileShareCreateOrUpdateOptions>(logger, service)
 {
-    private const string CommandTitle = "Update File Share";
-
-    public override string Id => "d7e8f9a0-b1c2-4d3e-4f5a-6b7c8d9e0f1a";
-    public override string Name => "update";
-    public override string Description => "Update an existing Azure managed file share resource. Allows updating mutable properties like provisioned storage, IOPS, throughput, and network access settings.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -42,6 +37,7 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
         command.Options.Add(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.AsOptional());
         command.Options.Add(FileSharesOptionDefinitions.PublicNetworkAccess.AsOptional());
         command.Options.Add(FileSharesOptionDefinitions.NfsRootSquash.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.NfsEncryptionInTransit.AsOptional());
         command.Options.Add(FileSharesOptionDefinitions.AllowedSubnets.AsOptional());
         command.Options.Add(FileSharesOptionDefinitions.Tags.AsOptional());
     }
@@ -51,11 +47,12 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Name.Name);
-        options.ProvisionedStorageInGiB = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
-        options.ProvisionedIOPerSec = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedIOPerSec.Name);
-        options.ProvisionedThroughputMiBPerSec = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.Name);
+        options.ProvisionedStorageInGiB = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
+        options.ProvisionedIOPerSec = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedIOPerSec.Name);
+        options.ProvisionedThroughputMiBPerSec = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.Name);
         options.PublicNetworkAccess = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PublicNetworkAccess.Name);
         options.NfsRootSquash = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.NfsRootSquash.Name);
+        options.NfsEncryptionInTransit = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.NfsEncryptionInTransit.Name);
         options.AllowedSubnets = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.AllowedSubnets.Name);
         options.Tags = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Tags.Name);
         return options;
@@ -105,6 +102,7 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
                 options.ProvisionedThroughputMiBPerSec,
                 options.PublicNetworkAccess,
                 options.NfsRootSquash,
+                options.NfsEncryptionInTransit,
                 allowedSubnets,
                 tags,
                 options.Tenant,

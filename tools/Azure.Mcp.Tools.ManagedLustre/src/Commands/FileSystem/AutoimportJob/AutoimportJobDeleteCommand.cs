@@ -12,39 +12,30 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 
-public sealed class AutoimportJobDeleteCommand(IManagedLustreService service, ILogger<AutoimportJobDeleteCommand> logger)
-    : BaseManagedLustreCommand<AutoimportJobDeleteOptions>(logger)
-{
-    private const string CommandTitle = "Delete Azure Managed Lustre Autoimport Job";
-
-    private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<AutoimportJobDeleteCommand> _logger = logger;
-
-    public override string Id => "0h4i2j3k-5e1c-6h9g-d4f7-9c0e5g7h8d9i";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "0h4i2j3k-5e1c-6h9g-d4f7-9c0e5g7h8d9i",
+    Name = "delete",
+    Title = "Delete Azure Managed Lustre Autoimport Job",
+    Description = """
         Deletes an auto import job for an Azure Managed Lustre filesystem. This permanently removes the job record from the filesystem. Use this to clean up completed, failed, or cancelled autoimport jobs.
         Required options:
         - filesystem-name: The name of the AMLFS filesystem
         - job-name: The name of the autoimport job to delete
         - resource-group: The resource group containing the filesystem
         - subscription: The subscription containing the filesystem
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AutoimportJobDeleteCommand(IManagedLustreService service, ILogger<AutoimportJobDeleteCommand> logger)
+    : BaseManagedLustreCommand<AutoimportJobDeleteOptions>(logger)
+{
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IManagedLustreService _service = service;
+    private new readonly ILogger<AutoimportJobDeleteCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {

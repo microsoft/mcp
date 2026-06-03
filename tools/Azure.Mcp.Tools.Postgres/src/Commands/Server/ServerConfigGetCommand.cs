@@ -9,28 +9,20 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 
-public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logger) : BaseServerCommand<ServerConfigGetOptions>(logger)
+[CommandMetadata(
+    Id = "049a0d10-0a6e-4278-a0a3-15ce6b2e5ee1",
+    Name = "get",
+    Title = "Get PostgreSQL Server Configuration",
+    Description = "Retrieve the configuration of a PostgreSQL server.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ServerConfigGetCommand(IPostgresService postgresService, ILogger<ServerConfigGetCommand> logger) : BaseServerCommand<ServerConfigGetOptions>(logger)
 {
-    private const string CommandTitle = "Get PostgreSQL Server Configuration";
-
-    public override string Id => "049a0d10-0a6e-4278-a0a3-15ce6b2e5ee1";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "Retrieve the configuration of a PostgreSQL server.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IPostgresService _postgresService = postgresService;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -44,8 +36,7 @@ public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logge
         try
         {
 
-            IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
-            var config = await pgService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, cancellationToken);
+            var config = await _postgresService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, cancellationToken);
             context.Response.Results = config?.Length > 0 ?
                 ResponseResult.Create(new(config), PostgresJsonContext.Default.ServerConfigGetCommandResult) :
                 null;

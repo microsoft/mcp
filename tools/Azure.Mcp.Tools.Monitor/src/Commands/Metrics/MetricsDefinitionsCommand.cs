@@ -16,32 +16,22 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
 /// <summary>
 /// Command for listing Azure Monitor metric definitions
 /// </summary>
-public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand> logger)
+[CommandMetadata(
+    Id = "d3bf37ed-5f2e-448d-a16e-73140ef908c2",
+    Name = "definitions",
+    Title = "List Azure Monitor Metric Definitions",
+    Description = "List available metric definitions for an Azure resource. Returns metadata about the metrics available for the resource.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand> logger, IMonitorMetricsService metricsService)
     : BaseMetricsCommand<MetricsDefinitionsOptions>
 {
-    private const string CommandTitle = "List Azure Monitor Metric Definitions";
     private readonly ILogger<MetricsDefinitionsCommand> _logger = logger;
-
-    public override string Id => "d3bf37ed-5f2e-448d-a16e-73140ef908c2";
-
-    public override string Name => "definitions";
-
-    public override string Description =>
-        """
-        List available metric definitions for an Azure resource. Returns metadata about the metrics available for the resource.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IMonitorMetricsService _metricsService = metricsService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -71,10 +61,8 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
 
         try
         {
-            // Get the metrics service from DI
-            var service = context.GetService<IMonitorMetricsService>();
             // Call service operation with required parameters
-            var allResults = await service.ListMetricDefinitionsAsync(
+            var allResults = await _metricsService.ListMetricDefinitionsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.ResourceType,

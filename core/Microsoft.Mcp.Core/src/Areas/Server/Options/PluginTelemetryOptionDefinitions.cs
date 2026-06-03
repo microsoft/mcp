@@ -17,88 +17,67 @@ public static class PluginTelemetryOptionDefinitions
     public const string ToolNameName = "tool-name";
     public const string FileReferenceName = "file-reference";
 
-    public static readonly Option<string> Timestamp = new(
-        $"--{TimestampName}"
-    )
+    public static readonly Option<string> Timestamp = new($"--{TimestampName}")
     {
         Description = "Timestamp of the telemetry event in ISO 8601 format.",
         Required = true
     };
 
-    public static readonly Option<string> EventType = new(
-        $"--{EventTypeName}"
-    )
+    public static readonly Option<string> EventType = new($"--{EventTypeName}")
     {
         Description = "Type of event being logged (e.g., 'skill_invocation', 'tool_invocation', 'reference_file_read').",
         Required = true
     };
 
-    public static readonly Option<string> SessionId = new(
-        $"--{SessionIdName}"
-    )
+    public static readonly Option<string> SessionId = new($"--{SessionIdName}")
     {
         Description = "Session identifier for correlating related events.",
         Required = true
     };
 
-    public static readonly Option<string> ClientType = new(
-        $"--{ClientTypeName}"
-    )
+    public static readonly Option<string?> ClientType = new($"--{ClientTypeName}")
     {
-        Description = "Type of client invoking the telemetry (e.g., 'copilot-cli', 'claude-code', 'vscode'). Deprecated: prefer --client-name."
+        Description = "Type of client invoking the telemetry (e.g., 'copilot-cli', 'claude-code', 'vscode'). Deprecated: prefer --client-name.",
+        Required = false
     };
 
-    public static readonly Option<string> ClientName = new(
-        $"--{ClientNameName}"
-    )
+    public static readonly Option<string?> ClientName = new($"--{ClientNameName}")
     {
         Description = "Name of the client invoking the telemetry (e.g., 'copilot-cli', 'claude-code', 'Visual Studio Code', 'Visual Studio Code - Insiders').",
         Required = false
     };
 
-    public static readonly Option<string> PluginName = new(
-        $"--{PluginNameName}"
-    )
+    public static readonly Option<string?> PluginName = new($"--{PluginNameName}")
     {
         Description = "Name of the plugin being invoked.",
         Required = false
     };
 
-    public static readonly Option<string> PluginVersion = new(
-        $"--{PluginVersionName}"
-    )
+    public static readonly Option<string?> PluginVersion = new($"--{PluginVersionName}")
     {
         Description = "Version of the plugin being invoked.",
         Required = false
     };
 
-    public static readonly Option<string> SkillName = new(
-        $"--{SkillNameName}"
-    )
+    public static readonly Option<string?> SkillName = new($"--{SkillNameName}")
     {
         Description = "Name of the skill being invoked.",
         Required = false
     };
 
-    public static readonly Option<string> SkillVersion = new(
-        $"--{SkillVersionName}"
-    )
+    public static readonly Option<string?> SkillVersion = new($"--{SkillVersionName}")
     {
         Description = "Version of the skill being invoked.",
         Required = false
     };
 
-    public static readonly Option<string> ToolName = new(
-        $"--{ToolNameName}"
-    )
+    public static readonly Option<string?> ToolName = new($"--{ToolNameName}")
     {
         Description = "Name of the tool being invoked.",
         Required = false
     };
 
-    public static readonly Option<string> FileReference = new(
-        $"--{FileReferenceName}"
-    )
+    public static readonly Option<string?> FileReference = new($"--{FileReferenceName}")
     {
         Description = "Plugin-relative file reference being accessed (will be validated against an allowlist).",
         Required = false

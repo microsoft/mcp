@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Security;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -13,7 +12,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ServiceBus.Services;
 
-public class ServiceBusService(ITenantService tenantService) : BaseAzureService(tenantService), IServiceBusService
+public sealed class ServiceBusService(ITenantService tenantService) : BaseAzureService(tenantService), IServiceBusService
 {
     private void ValidateNamespace(string namespaceName)
     {
@@ -21,8 +20,9 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         // A fully-qualified namespace must be a bare hostname (e.g. "mynamespace.servicebus.windows.net").
         if (namespaceName.AsSpan().IndexOfAny("/:?#@") >= 0)
         {
-            throw new SecurityException(
-                "Service Bus namespace must be a host name only, without scheme, port, path, query, or fragment components.");
+            throw new ArgumentException(
+                $"Namespace name contains invalid characters. A fully-qualified namespace must be a bare hostname (e.g. 'mynamespace.servicebus.windows.net'). Received: '{namespaceName}'.",
+                nameof(namespaceName));
         }
 
         EndpointValidator.ValidateAzureServiceEndpoint(

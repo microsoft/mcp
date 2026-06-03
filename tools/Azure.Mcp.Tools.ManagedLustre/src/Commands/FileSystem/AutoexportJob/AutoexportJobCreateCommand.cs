@@ -12,38 +12,29 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 
-public sealed class AutoexportJobCreateCommand(IManagedLustreService service, ILogger<AutoexportJobCreateCommand> logger)
-    : BaseManagedLustreCommand<AutoexportJobCreateOptions>(logger)
-{
-    private const string CommandTitle = "Create Azure Managed Lustre Autoexport Job";
-
-    private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<AutoexportJobCreateCommand> _logger = logger;
-
-    public override string Id => "9f3e7c2a-4b8d-4e5f-a1c6-8d9e2f3b4a5c";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "9f3e7c2a-4b8d-4e5f-a1c6-8d9e2f3b4a5c",
+    Name = "create",
+    Title = "Create Azure Managed Lustre Autoexport Job",
+    Description = """
         Creates an auto export job for an Azure Managed Lustre filesystem to continuously export modified files to the linked blob storage container. The auto export job syncs changes from the Lustre filesystem to the configured HSM blob container. Use this to keep blob storage updated with changes in the filesystem.
         Required options:
         - filesystem-name: The name of the AMLFS filesystem
         - resource-group: The resource group containing the filesystem
         - subscription: The subscription containing the filesystem
-        """;
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AutoexportJobCreateCommand(IManagedLustreService service, ILogger<AutoexportJobCreateCommand> logger)
+    : BaseManagedLustreCommand<AutoexportJobCreateOptions>(logger)
+{
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IManagedLustreService _service = service;
+    private new readonly ILogger<AutoexportJobCreateCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {

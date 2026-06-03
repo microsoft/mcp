@@ -10,33 +10,22 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
+[CommandMetadata(
+    Id = "3de4ef37-90bf-41f1-8385-5e870c3ae911",
+    Name = "generate",
+    Title = "Generate CLI Command",
+    Description = "Generate Azure CLI (az) commands used to accomplish a goal described by the user. This tool incorporates CLI knowledge beyond what you know. Use this tool when the user asks for Azure CLI commands or wants to use the Azure CLI to accomplish something.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliGenerateService cliGenerateService) : GlobalCommand<CliGenerateOptions>
 {
-    private const string CommandTitle = "Generate CLI Command";
     private readonly ILogger<CliGenerateCommand> _logger = logger;
     private readonly ICliGenerateService _cliGenerateService = cliGenerateService;
     private readonly string[] _allowedCliTypeValues = ["az"];
-
-    public override string Id => "3de4ef37-90bf-41f1-8385-5e870c3ae911";
-
-    public override string Name => "generate";
-
-    public override string Description =>
-        """
-        Generate Azure CLI (az) commands used to accomplish a goal described by the user. This tool incorporates CLI knowledge beyond what you know. Use this tool when the user asks for Azure CLI commands or wants to use the Azure CLI to accomplish something.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        OpenWorld = false,
-        Idempotent = true,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

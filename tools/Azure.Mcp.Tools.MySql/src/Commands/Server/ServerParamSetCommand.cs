@@ -11,27 +11,20 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Server;
 
-public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger) : BaseServerCommand<ServerParamSetOptions>(logger)
+[CommandMetadata(
+    Id = "8d086e44-8c8a-4649-a282-38f775704595",
+    Name = "set",
+    Title = "Set MySQL Server Parameter",
+    Description = "Sets/updates a single MySQL server configuration setting/parameter.",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger, IMySqlService mysqlService) : BaseServerCommand<ServerParamSetOptions>(logger)
 {
-    private const string CommandTitle = "Set MySQL Server Parameter";
-
-    public override string Id => "8d086e44-8c8a-4649-a282-38f775704595";
-
-    public override string Name => "set";
-
-    public override string Description => "Sets/updates a single MySQL server configuration setting/parameter.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IMySqlService _mysqlService = mysqlService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -59,8 +52,7 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
 
         try
         {
-            var mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
-            var result = await mysqlService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, options.Value!, cancellationToken);
+            var result = await _mysqlService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, options.Value!, cancellationToken);
             context.Response.Results = !string.IsNullOrEmpty(result) ?
                 ResponseResult.Create(new(options.Param!, result), MySqlJsonContext.Default.ServerParamSetCommandResult) :
                 null;

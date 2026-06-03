@@ -13,31 +13,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
-public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTestingService loadTestingService)
-    : BaseLoadTestingCommand<TestRunGetOptions>
-{
-    private const string _commandTitle = "Test Run Get";
-    private readonly ILogger<TestRunGetCommand> _logger = logger;
-    private readonly ILoadTestingService _loadTestingService = loadTestingService;
-    public override string Id => "713313ec-b9a5-4a71-9953-5b2d4a7b5d7b";
-    public override string Name => "get";
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "713313ec-b9a5-4a71-9953-5b2d4a7b5d7b",
+    Name = "get",
+    Title = "Test Run Get",
+    Description = """
         Get load test run details by testrun ID, or list all test runs by test ID.
         Returns execution details including status, start/end times, progress, metrics, and artifacts.
         Does not return test configuration or resource details.
-        """;
-    public override string Title => _commandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTestingService loadTestingService)
+    : BaseLoadTestingCommand<TestRunGetOptions>
+{
+    private readonly ILogger<TestRunGetCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -49,8 +44,8 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
 
         command.Validators.Add(commandResult =>
         {
-            var testRunId = commandResult.GetValueWithoutDefault<string>(LoadTestingOptionDefinitions.TestRun.Name);
-            var testId = commandResult.GetValueWithoutDefault<string>(LoadTestingOptionDefinitions.Test.Name);
+            var testRunId = commandResult.GetValueWithoutDefault(LoadTestingOptionDefinitions.TestRun);
+            var testId = commandResult.GetValueWithoutDefault(LoadTestingOptionDefinitions.Test);
 
             if (string.IsNullOrEmpty(testRunId) && string.IsNullOrEmpty(testId))
             {

@@ -12,30 +12,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Nodepool;
 
+[CommandMetadata(
+    Id = "9abb0904-2ffc-4aab-b4ea-fc454b6351b1",
+    Name = "get",
+    Title = "Get Azure Kubernetes Service (AKS) Node Pool Details",
+    Description = "List/enumerate all AKS (Azure Kubernetes Service) node pools in a cluster. Get/retrieve/show the details of a specific node pool if a name is provided.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksService aksService) : BaseAksCommand<NodepoolGetOptions>
 {
-    private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Node Pool Details";
     private readonly ILogger<NodepoolGetCommand> _logger = logger;
     private readonly IAksService _aksService = aksService;
-
-    public override string Id => "9abb0904-2ffc-4aab-b4ea-fc454b6351b1";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "List/enumerate all AKS (Azure Kubernetes Service) node pools in a cluster. Get/retrieve/show the details of a specific node pool if a name is provided.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -48,9 +39,9 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksS
     protected override NodepoolGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.ClusterName = parseResult.GetValueOrDefault<string>(AksOptionDefinitions.Cluster.Name);
-        options.NodepoolName = parseResult.GetValueOrDefault<string>(AksOptionDefinitions.Nodepool.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.ClusterName = parseResult.GetValueOrDefault(AksOptionDefinitions.Cluster);
+        options.NodepoolName = parseResult.GetValueOrDefault(AksOptionDefinitions.Nodepool);
         return options;
     }
 

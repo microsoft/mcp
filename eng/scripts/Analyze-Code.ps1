@@ -5,6 +5,22 @@
 
 Push-Location $RepoRoot
 try {
+    $hasErrors = $false
+
+    Write-Host "Checking if solution files are up to date."
+    try {
+        & "$PSScriptRoot/Update-Solution.ps1" -All -Verify
+    } catch {
+        Write-Host "❌ Solution update failed: $_"
+        $hasErrors = $true
+    }
+    if ($LASTEXITCODE -ne 0) {
+        $hasErrors = $true
+    } 
+    if (-not $hasErrors) {
+        Write-Host "✅ Solution files are up to date."
+    }
+
     Write-Host "Running dotnet format to check for formatting issues..."
     $solutionFile = "$RepoRoot/Microsoft.Mcp.slnx"
 

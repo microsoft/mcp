@@ -12,6 +12,7 @@ using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Core.Validation;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 
@@ -66,6 +67,7 @@ public sealed class KustoService(
 
     public async Task<ResourceQueryResults<string>> ListClustersAsync(
         string subscriptionId,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -74,7 +76,7 @@ public sealed class KustoService(
 
         var clusters = await ExecuteResourceQueryAsync(
             "Microsoft.Kusto/clusters",
-            resourceGroup: null, // all resource groups
+            resourceGroup: resourceGroup,
             subscriptionId,
             retryPolicy,
             item => ConvertToClusterModel(item).ClusterName,
