@@ -7,7 +7,6 @@ using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -37,8 +36,7 @@ internal class Program
 
     // Derived from the registered ServerSetup instance so the name stays in sync
     // with the actual area registration — no magic string duplication.
-    private static readonly string ServerAreaName =
-        Array.Find(Areas, static a => a is Microsoft.Mcp.Core.Areas.Server.ServerSetup)?.Name ?? "server";
+    private static readonly string s_serverAreaName = Array.Find(Areas, static a => a is ServerSetup)?.Name ?? "server";
 
     private static async Task<int> Main(string[] args)
     {
@@ -354,7 +352,7 @@ internal class Program
         // Optimization: server-mode providers (registry, instructions, plugin allowlists) are only
         // used when running as an MCP server. For CLI area invocations they are never resolved, so
         // register lightweight stubs to avoid reading embedded resources on every CLI call.
-        if (areaFilter == null || string.Equals(areaFilter, ServerAreaName, StringComparison.OrdinalIgnoreCase))
+        if (areaFilter == null || string.Equals(areaFilter, s_serverAreaName, StringComparison.OrdinalIgnoreCase))
         {
             services.AddRegistryRoot(thisAssembly, $"registry.json");
 

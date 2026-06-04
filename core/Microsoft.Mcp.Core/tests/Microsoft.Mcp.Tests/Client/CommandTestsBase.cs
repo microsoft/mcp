@@ -24,16 +24,19 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
     protected ITestOutputHelper Output { get; } = output;
     protected LiveServerFixture LiveServerFixture { get; } = liveServerFixture;
 
-    public string[]? CustomArguments;
+    public string[]? Tools;
     public TestMode TestMode = TestMode.Live;
 
     /// <summary>
-    /// Sets custom arguments for the MCP server. Call this before InitializeAsync().
+    /// Sets the tools that the MCP server will scope to. Call this before InitializeAsync().
+    /// <para>
+    /// This reduces the number of tools that the MCP server will load and initialize.
+    /// </para>
     /// </summary>
-    /// <param name="arguments">Custom arguments to pass to the server (e.g., ["server", "start", "--mode", "single"])</param>
-    public void SetArguments(params string[] arguments)
+    /// <param name="tools">Tools to pass to the server (e.g., "storage_blob_get", "appconfig_kv_get", etc.)</param>
+    public void SetTools(params string[] tools)
     {
-        CustomArguments = arguments;
+        Tools = tools;
     }
 
     public virtual async ValueTask InitializeAsync()
@@ -127,7 +130,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         List<string> defaultArgs = enableDebug
             ? ["server", "start", "--mode", "all", "--debug", "--dangerously-disable-elicitation", "--disable-caching"]
             : ["server", "start", "--mode", "all", "--dangerously-disable-elicitation", "--disable-caching"];
-        var arguments = CustomArguments?.ToList() ?? defaultArgs;
+        var arguments = Tools?.ToList() ?? defaultArgs;
 
         LiveServerFixture.EnvironmentVariables = GetEnvironmentVariables(proxy);
         LiveServerFixture.Arguments = arguments;
