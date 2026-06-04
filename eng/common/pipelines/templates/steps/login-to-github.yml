@@ -8,9 +8,6 @@ parameters:
 - name: VariableNamePrefix
   type: string 
   default: GH_TOKEN
-- name: ExportAsOutputVariable
-  type: boolean 
-  default: false
 - name: ScriptDirectory
   default: eng/common/scripts
 
@@ -25,4 +22,4 @@ steps:
     arguments: >
      -InstallationTokenOwners '${{ join(''',''', parameters.TokenOwners) }}'
      -VariableNamePrefix '${{ parameters.VariableNamePrefix }}'
-     -ExportAsOutputVariable '${{ parameters.ExportAsOutputVariable }}'
+     
