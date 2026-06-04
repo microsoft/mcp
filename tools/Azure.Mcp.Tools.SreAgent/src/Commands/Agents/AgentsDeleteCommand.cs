@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Agents;
     Id = "53dbfc5d-95f3-4b68-94d0-f7fc5bd390ba",
     Name = "delete",
     Title = "Delete SRE Sub-Agent",
-    Description = "Deletes a sub-agent from a targeted SRE Agent resource. Required: --subscription, --agent, --name, --confirm true.",
+    Description = "Deletes a sub-agent from a targeted SRE Agent resource. Requires confirm true.",
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -60,7 +60,7 @@ public sealed class AgentsDeleteCommand(ILogger<AgentsDeleteCommand> logger, ISr
         {
             if (!options.Confirm)
             {
-                throw new InvalidOperationException($"Refusing to delete sub-agent '{options.Name}': destructive operation requires --confirm true.");
+                throw new InvalidOperationException($"Refusing to delete sub-agent '{options.Name}': destructive operation requires confirm true.");
             }
 
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(

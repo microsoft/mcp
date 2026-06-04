@@ -19,9 +19,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
     Name = "get",
     Title = "Get or list web tests",
     Description = """
-        Gets details for a specific web test or lists all web tests.
-        When --webtest-resource is provided, returns detailed information about a single web test.
-        When --webtest-resource is omitted, returns a list of all web tests in the subscription (optionally filtered by resource group).
+        Gets details about web tests. When a specific web test is provided, returns detailed information about a single web test.
+        Otherwise, returns a list of all web tests in the subscription optionally filtered by resource group.
         """,
     Destructive = false,
     Idempotent = true,

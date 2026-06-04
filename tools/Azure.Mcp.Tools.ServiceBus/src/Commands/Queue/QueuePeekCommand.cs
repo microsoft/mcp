@@ -23,10 +23,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
         The peek operation returns active, locked, deferred, and scheduled messages in the queue.
 
         Returns message content, properties, and metadata.  Messages remain in the queue after peeking.
-
-        Required arguments:
-        - namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)
-        - queue: Queue name to peek messages from
         """,
     Destructive = false,
     Idempotent = true,

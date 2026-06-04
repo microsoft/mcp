@@ -37,7 +37,7 @@ public static class PostgresOptionDefinitions
     $"--{PasswordText}"
 )
     {
-        Description = $"The user password to access PostgreSQL server, Only required if '{AuthTypeText}' is set to '{AuthTypes.PostgreSQL}' authentication, not needed for '{AuthTypes.MicrosoftEntra}' authentication.",
+        Description = $"The user password to access PostgreSQL server. Required if '{AuthTypeText}' is set to '{AuthTypes.PostgreSQL}' authentication, not needed for '{AuthTypes.MicrosoftEntra}' authentication.",
         Arity = ArgumentArity.ZeroOrOne,
         Required = false
     };
@@ -69,7 +69,7 @@ public static class PostgresOptionDefinitions
         $"--{DatabaseName}"
     )
     {
-        Description = "The PostgreSQL database to list tables from (optional, requires --server)."
+        Description = "The PostgreSQL database to list tables from (optional, requires server)."
     };
 
     public static readonly Option<string> Table = new(

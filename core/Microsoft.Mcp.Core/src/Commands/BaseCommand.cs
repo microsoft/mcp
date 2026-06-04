@@ -43,11 +43,11 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
         RegisterOptions(_command);
     }
 
-    public virtual string Id { get; protected set; } = null!;
-    public virtual string Name { get; protected set; } = null!;
-    public virtual string Description { get; protected set; } = null!;
-    public virtual string Title { get; protected set; } = null!;
-    public virtual ToolMetadata Metadata { get; protected set; } = null!;
+    public string Id { get; protected set; } = null!;
+    public string Name { get; protected set; } = null!;
+    public string Description { get; protected set; } = null!;
+    public string Title { get; protected set; } = null!;
+    public ToolMetadata Metadata { get; protected set; } = null!;
 
     public Command GetCommand() => _command;
 

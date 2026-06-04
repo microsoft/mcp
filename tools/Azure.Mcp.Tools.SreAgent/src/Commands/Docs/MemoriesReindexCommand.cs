@@ -9,7 +9,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
 
-[CommandMetadata(Id = "ff881ee4-ee6e-4fae-8114-c6c6f36745bb", Name = "memories_reindex", Title = "Reindex Memories", Description = "Trigger a knowledge base reindex.", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+[CommandMetadata(
+    Id = "ff881ee4-ee6e-4fae-8114-c6c6f36745bb",
+    Name = "memories_reindex",
+    Title = "Reindex Memories",
+    Description = "Trigger a knowledge base reindex.",
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class MemoriesReindexCommand(ILogger<MemoriesReindexCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<MemoryRemoteOptions>
 {
     private readonly ILogger<MemoriesReindexCommand> _logger = logger;

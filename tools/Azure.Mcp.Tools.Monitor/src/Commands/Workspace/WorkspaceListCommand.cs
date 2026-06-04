@@ -18,8 +18,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Workspace;
     Name = "list",
     Title = "List Log Analytics Workspaces",
     Description = """
-        List Log Analytics workspaces in a subscription. This command retrieves all Log Analytics workspaces
-        available in the specified Azure subscription, displaying their names, IDs, and other key properties.
+        List all Log Analytics workspaces workspaces in an Azure subscription, displaying their names, IDs, and other key properties.
         Use this command to identify workspaces before querying their logs or tables.
         """,
     Destructive = false,

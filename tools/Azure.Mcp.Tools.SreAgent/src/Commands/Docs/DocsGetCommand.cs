@@ -10,7 +10,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
 
-[CommandMetadata(Id = "3e7977a8-786b-4db9-a3be-2194af3cdafb", Name = "get", Title = "Get SRE Agent Documentation", Description = "Return reference documentation for SRE Agent concepts.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+[CommandMetadata(
+    Id = "3e7977a8-786b-4db9-a3be-2194af3cdafb",
+    Name = "get",
+    Title = "Get SRE Agent Documentation",
+    Description = "Return reference documentation for SRE Agent concepts.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class DocsGetCommand(ILogger<DocsGetCommand> logger) : GlobalCommand<DocsGetOptions>
 {
     private readonly ILogger<DocsGetCommand> _logger = logger;

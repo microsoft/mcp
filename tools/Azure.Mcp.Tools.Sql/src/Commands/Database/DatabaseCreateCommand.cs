@@ -18,8 +18,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.Database;
     Name = "create",
     Title = "Create SQL Database",
     Description = """
-        Create a new Azure SQL Database on an existing SQL Server. This command creates a database with configurable
-        performance tiers, size limits, and other settings. Equivalent to 'az sql db create'.
+        Create a new Azure SQL Database on an existing SQL Server with configurable performance tiers, size limits, and other settings. Equivalent to 'az sql db create'.
         Returns the newly created database information including configuration details.
         """,
     Destructive = true,

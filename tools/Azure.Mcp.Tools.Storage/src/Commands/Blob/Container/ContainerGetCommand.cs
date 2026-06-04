@@ -21,9 +21,6 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
         show details for a specific Storage container. If no container specified, shows all containers in the storage
         account, optionally filtering on a prefix. The prefix is ignored if a container is specified.
 
-        Required: --account, --subscription
-        Optional: --container, --tenant, --prefix
-
         Returns: container name, lastModified, leaseStatus, publicAccess, metadata, and container properties.
         Do not use this tool to list blobs in a container.
         """,

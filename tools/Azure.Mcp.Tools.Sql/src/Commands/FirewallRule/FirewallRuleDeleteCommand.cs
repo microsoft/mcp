@@ -17,10 +17,8 @@ namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
     Name = "delete",
     Title = "Delete SQL Server Firewall Rule",
     Description = """
-        Deletes a firewall rule from a SQL server. This operation removes the specified
-        firewall rule, potentially restricting access for the IP addresses that were
-        previously allowed by this rule. The operation is idempotent - if the rule
-        doesn't exist, no error is returned.
+        Deletes a firewall rule from a SQL server, potentially restricting access for the IP addresses that were
+        previously allowed by this rule.
         """,
     Destructive = true,
     Idempotent = true,

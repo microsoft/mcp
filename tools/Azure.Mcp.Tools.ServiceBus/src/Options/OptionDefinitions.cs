@@ -15,7 +15,7 @@ public static class ServiceBusOptionDefinitions
         $"--{NamespaceName}"
     )
     {
-        Description = "The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)",
+        Description = "The fully qualified Service Bus namespace host name (usually in the form <namespace>.servicebus.windows.net).",
         Required = true
     };
 

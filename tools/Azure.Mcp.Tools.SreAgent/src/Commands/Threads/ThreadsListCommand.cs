@@ -10,7 +10,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
 
-[CommandMetadata(Id = "23b7c0d6-29c5-4d8f-82de-1e0edc1a9b01", Name = "list", Title = "List Threads", Description = "List SRE Agent chat threads.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+[CommandMetadata(
+    Id = "23b7c0d6-29c5-4d8f-82de-1e0edc1a9b01",
+    Name = "list",
+    Title = "List Threads",
+    Description = "List SRE Agent chat threads.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ThreadsListCommand(ILogger<ThreadsListCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<ThreadsListOptions>
 {
     private readonly ILogger<ThreadsListCommand> _logger = logger;

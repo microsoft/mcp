@@ -20,9 +20,6 @@ namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
         Gets the details of Azure AI Search knowledge bases. Knowledge bases encapsulate retrieval and reasoning
         capabilities over one or more knowledge sources or indexes. If a specific knowledge base name is not provided,
         the command will return details for all knowledge bases within the specified service.
-
-        Required arguments:
-        - service
         """,
     Destructive = false,
     Idempotent = true,

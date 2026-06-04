@@ -13,7 +13,17 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
-[CommandMetadata(Id = "234f234b-76fd-4874-909a-d16a30db6187", Name = "create", Title = "Create Incident", Description = "Create an incident investigation thread for an agent.", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+[CommandMetadata(
+    Id = "234f234b-76fd-4874-909a-d16a30db6187",
+    Name = "create",
+    Title = "Create Incident",
+    Description = "Create an incident investigation thread for an agent.",
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class IncidentsCreateCommand(ILogger<IncidentsCreateCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<IncidentCreateOptions>
 {
     private readonly ILogger<IncidentsCreateCommand> _logger = logger;

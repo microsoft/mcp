@@ -14,7 +14,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Workflows;
 
-[CommandMetadata(Id = "7217d724-f07f-4e56-81bc-5e6e182fe987", Name = "apply", Title = "Apply Workflow YAML", Description = "Apply and deploy a YAML workflow to an SRE Agent. Uploads and activates ExtendedAgent or ExtendedAgentTool YAML configuration on the specified SRE Agent resource.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+[CommandMetadata(
+    Id = "7217d724-f07f-4e56-81bc-5e6e182fe987",
+    Name = "apply",
+    Title = "Apply Workflow YAML",
+    Description = "Apply and deploy a YAML workflow to an SRE Agent. Uploads and activates ExtendedAgent or ExtendedAgentTool YAML configuration on the specified SRE Agent resource.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class WorkflowsApplyCommand(ILogger<WorkflowsApplyCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<WorkflowsApplyOptions>
 {
     private readonly ILogger<WorkflowsApplyCommand> _logger = logger;

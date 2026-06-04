@@ -18,9 +18,8 @@ namespace Azure.Mcp.Tools.Sql.Commands.Database;
     Name = "update",
     Title = "Update SQL Database",
     Description = """
-        Scale and configure Azure SQL Database performance settings.
-        Update an existing database's SKU, compute tier, storage capacity,
-        or redundancy options to meet changing performance requirements.
+        Scale and configure Azure SQL Database performance settings. Update an existing database's SKU, compute tier,
+        storage capacity, or redundancy options to meet changing performance requirements.
         Returns the updated database configuration including applied scaling changes.
         """,
     Destructive = true,

@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.SyncGroup;
     Id = "95ce2336-19e6-40fb-a3ea-e2a76772036b",
     Name = "get",
     Title = "Get Sync Group",
-    Description = "Get details about a specific sync group or list all sync groups. If --sync-group-name is provided, returns a specific sync group; otherwise, lists all sync groups in the Storage Sync service.",
+    Description = "Get details about a specific sync group or list all sync groups. If sync-group-name is provided, returns a specific sync group; otherwise, lists all sync groups in the Storage Sync service.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

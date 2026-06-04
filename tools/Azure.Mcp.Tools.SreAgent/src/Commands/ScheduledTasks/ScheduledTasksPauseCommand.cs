@@ -11,7 +11,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
 
-[CommandMetadata(Id = "35dd524f-6888-40a6-b07f-283e7990d601", Name = "pause", Title = "Pause Scheduled Task", Description = "Pause an SRE Agent scheduled task.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+[CommandMetadata(
+    Id = "35dd524f-6888-40a6-b07f-283e7990d601",
+    Name = "pause",
+    Title = "Pause Scheduled Task",
+    Description = "Pause an SRE Agent scheduled task.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ScheduledTasksPauseCommand(ILogger<ScheduledTasksPauseCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<ScheduledTasksPauseOptions>
 {
     private readonly ILogger<ScheduledTasksPauseCommand> _logger = logger;

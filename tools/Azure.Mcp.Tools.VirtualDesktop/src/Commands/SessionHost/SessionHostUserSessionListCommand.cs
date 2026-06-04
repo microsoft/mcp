@@ -15,9 +15,8 @@ namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
     Name = "user-list",
     Title = "List User Sessions on Session Host",
     Description = """
-        List all user sessions on a specific session host in a host pool. This command retrieves all Azure Virtual Desktop
-        user session objects available on the specified session host. Results include user session details such as
-        user principal name, session state, application type, and creation time.
+        List all Azure Virtual Desktop user session objects available on the specified session host in a host pool.
+        Results include user session details such as user principal name, session state, application type, and creation time.
         """,
     Destructive = false,
     Idempotent = true,

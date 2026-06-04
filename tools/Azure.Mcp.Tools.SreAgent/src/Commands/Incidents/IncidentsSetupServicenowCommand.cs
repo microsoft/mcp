@@ -14,7 +14,17 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
-[CommandMetadata(Id = "78c3a0cc-9185-44bf-93db-11be7f39a9b4", Name = "setup_servicenow", Title = "Setup ServiceNow Connector", Description = "Connect an SRE Agent to ServiceNow. Creates a ServiceNow MCP connector to enable incident management integration using credentials from environment variables.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = true, LocalRequired = false)]
+[CommandMetadata(
+    Id = "78c3a0cc-9185-44bf-93db-11be7f39a9b4",
+    Name = "setup_servicenow",
+    Title = "Setup ServiceNow Connector",
+    Description = "Connect an SRE Agent to ServiceNow. Creates a ServiceNow MCP connector to enable incident management integration using credentials from environment variables.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = true,
+    LocalRequired = false)]
 public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServicenowCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<IncidentConnectorServiceNowOptions>
 {
     private readonly ILogger<IncidentsSetupServicenowCommand> _logger = logger;

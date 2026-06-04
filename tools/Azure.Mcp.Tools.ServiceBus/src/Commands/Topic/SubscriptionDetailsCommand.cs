@@ -20,11 +20,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
     Title = "Get Service Bus Topic Subscription Details",
     Description = """
         Get details about a Service Bus subscription. Returns subscription runtime properties including message counts, delivery settings, and other metadata.
-
-        Required arguments:
-        - namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)
-        - topic: Topic name containing the subscription
-        - subscription-name: Name of the subscription to get details for
         """,
     Destructive = false,
     Idempotent = true,

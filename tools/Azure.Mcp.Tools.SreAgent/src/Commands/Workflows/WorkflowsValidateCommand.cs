@@ -11,7 +11,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Workflows;
 
-[CommandMetadata(Id = "a22bbea7-e805-4039-891c-ac570bb29c9f", Name = "validate", Title = "Validate Workflow YAML", Description = "Validate SRE Agent YAML content for common issues.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+[CommandMetadata(
+    Id = "a22bbea7-e805-4039-891c-ac570bb29c9f",
+    Name = "validate",
+    Title = "Validate Workflow YAML",
+    Description = "Validate SRE Agent YAML content for common issues.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class WorkflowsValidateCommand(ILogger<WorkflowsValidateCommand> logger) : GlobalCommand<WorkflowsValidateOptions>
 {
     private readonly ILogger<WorkflowsValidateCommand> _logger = logger;

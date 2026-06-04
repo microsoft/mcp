@@ -13,7 +13,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
-[CommandMetadata(Id = "49de8921-8331-4328-9de2-f8b216af7dbf", Name = "setup_pagerduty", Title = "Setup PagerDuty Connector", Description = "Connect an SRE Agent to PagerDuty. Creates a PagerDuty MCP connector to enable incident alerting and management integration using an API key from an environment variable.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = true, LocalRequired = false)]
+[CommandMetadata(
+    Id = "49de8921-8331-4328-9de2-f8b216af7dbf",
+    Name = "setup_pagerduty",
+    Title = "Setup PagerDuty Connector",
+    Description = "Connect an SRE Agent to PagerDuty. Creates a PagerDuty MCP connector to enable incident alerting and management integration using an API key from an environment variable.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = true,
+    LocalRequired = false)]
 public sealed class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetupPagerdutyCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<IncidentConnectorPagerDutyOptions>
 {
     private readonly ILogger<IncidentsSetupPagerdutyCommand> _logger = logger;

@@ -17,13 +17,9 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
     Name = "create",
     Title = "Create Storage Blob Container",
     Description = """
-        Create/provision a new Azure Storage blob container in a storage account.
-
-        Required: --account, --container, --subscription
-        Optional: --tenant
-
+        Create/provision a new Azure Storage blob container in a storage account. This is a logical container for organizing blobs within a storage account.
+        
         Returns: container name, lastModified, eTag, leaseStatus, publicAccessLevel, hasImmutabilityPolicy, hasLegalHold.
-        Creates a logical container for organizing blobs within a storage account.
         """,
     Destructive = true,
     Idempotent = false,

@@ -23,10 +23,6 @@ namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
         data sources as needed to find relevant information. Provide either a --query for single-turn retrieval or one or more
         conversational --messages in role:content form (e.g. user:What policies apply?). Specifying both --query and --messages is not
         allowed.
-
-        Required arguments:
-        - service
-        - knowledge-base
         """,
     Destructive = false,
     Idempotent = true,

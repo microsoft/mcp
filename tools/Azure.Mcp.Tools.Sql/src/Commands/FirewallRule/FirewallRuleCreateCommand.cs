@@ -19,10 +19,9 @@ namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
     Name = "create",
     Title = "Create SQL Server Firewall Rule",
     Description = """
-        Creates a firewall rule for a SQL server. Firewall rules control which IP addresses
-        are allowed to connect to the SQL server. You can specify either a single IP address
-        (by setting start and end IP to the same value) or a range of IP addresses. Returns
-        the created firewall rule with its properties.
+        Creates a firewall rule for a SQL server. Firewall rules control which IP addresses are allowed to connect to
+        the SQL server. You can specify either a single IP address (by setting start and end IP to the same value) or
+        a range of IP addresses. Returns the created firewall rule with its properties.
         """,
     Destructive = true,
     Idempotent = false,

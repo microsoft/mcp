@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
     Id = "25dd8bb3-5ba3-4c0d-993d-54917f63d52e",
     Name = "get",
     Title = "Get Cloud Endpoint",
-    Description = "List all cloud endpoints in a sync group or retrieve details about a specific cloud endpoint. Returns cloud endpoint properties including Azure File Share configuration, storage account details, and provisioning state. Use --cloud-endpoint-name for a specific endpoint.",
+    Description = "List all cloud endpoints in a sync group or retrieve details about a specific cloud endpoint. Returns cloud endpoint properties including Azure File Share configuration, storage account details, and provisioning state. Use cloud-endpoint-name for a specific endpoint.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

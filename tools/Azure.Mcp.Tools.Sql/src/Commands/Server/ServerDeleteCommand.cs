@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.Server;
     Description = """
         Remove the specified SQL server from your Azure subscription, including all associated databases.
         This operation permanently deletes all server data and cannot be reversed.
-        Use --force to bypass confirmation.
+        Use force to bypass confirmation.
         """,
     Destructive = true,
     Idempotent = true,
