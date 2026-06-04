@@ -15,6 +15,8 @@ namespace Azure.Mcp.Tools.FunctionApp.Tests;
 public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => ["functionapp_get"];
+
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
         ..base.BodyKeySanitizers,

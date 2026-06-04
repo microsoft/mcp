@@ -19,6 +19,22 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     private string VmssName => $"{Settings.ResourceBaseName}-vmss";
     private string DiskName => $"{Settings.ResourceBaseName}-disk";
 
+    public override string[] Tools => [
+        "compute_vm_get",
+        "compute_vmss_get",
+        "compute_vm_create",
+        "compute_vm_update",
+        "compute_vmss_create",
+        "compute_vmss_update",
+        "compute_vm_delete",
+        "compute_vmss_delete",
+        "compute_vm_power-state",
+        "compute_disk_get",
+        "compute_disk_create",
+        "compute_disk_update",
+        "compute_disk_delete"
+    ];
+
     // Disable default sanitizer additions to avoid conflicts (following SQL pattern)
     public override bool EnableDefaultSanitizerAdditions => false;
 

@@ -15,6 +15,18 @@ namespace Azure.Mcp.Tools.Sql.Tests;
 public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => [
+        "sql_db_get",
+        "sql_db_delete",
+        "sql_server_entra-admin_list",
+        "sql_server_firewall-rule_list",
+        "sql_elastic-pool_list",
+        "sql_server_firewall-rule_create",
+        "sql_server_firewall-rule_delete",
+        "sql_server_create",
+        "sql_server_delete"
+    ];
+
     /// <summary>
     /// AZSDK3493 = $..name
     /// </summary>

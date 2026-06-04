@@ -13,6 +13,8 @@ namespace Azure.Mcp.Tools.AppService.Tests.Database;
 public class DatabaseAddCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : BaseAppServiceCommandLiveTests(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => ["appservice_database_add"];
+
     [Fact]
     public async Task ExecuteAsync_WithValidParameters_ReturnsSuccessResult()
     {

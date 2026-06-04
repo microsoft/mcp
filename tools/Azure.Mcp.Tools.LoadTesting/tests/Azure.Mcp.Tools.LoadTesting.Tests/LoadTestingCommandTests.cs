@@ -16,6 +16,8 @@ public class LoadTestingCommandTests(ITestOutputHelper output, TestProxyFixture 
     private const string TestResourceName = "TestResourceName";
     private const string TestRunId = "TestRunId";
 
+    public override string[] Tools => ["loadtesting_testresource_list"];
+
     public override List<UriRegexSanitizer> UriRegexSanitizers => [
         .. base.UriRegexSanitizers,
          new UriRegexSanitizer(new UriRegexSanitizerBody

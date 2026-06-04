@@ -13,6 +13,8 @@ namespace Azure.Mcp.Tools.Aks.Tests;
 public sealed class NodepoolCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => ["aks_cluster_get", "aks_nodepool_get"];
+
     [Fact]
     public async Task Should_list_nodepools_for_cluster()
     {

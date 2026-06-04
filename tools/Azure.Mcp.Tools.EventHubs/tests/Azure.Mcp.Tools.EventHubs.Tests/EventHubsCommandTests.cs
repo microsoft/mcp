@@ -14,6 +14,18 @@ namespace Azure.Mcp.Tools.EventHubs.Tests;
 public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => [
+        "eventhubs_namespace_get",
+        "eventhubs_namespace_delete",
+        "eventhubs_namespace_update",
+        "eventhubs_eventhub_get",
+        "eventhubs_eventhub_delete",
+        "eventhubs_eventhub_update",
+        "eventhubs_eventhub_consumergroup_get",
+        "eventhubs_eventhub_consumergroup_delete",
+        "eventhubs_eventhub_consumergroup_update"
+    ];
+
     // Disable AZSDK2003 sanitizer to prevent it from over-sanitizing resource names in recordings.
     public override List<string> DisabledDefaultSanitizers =>
     [

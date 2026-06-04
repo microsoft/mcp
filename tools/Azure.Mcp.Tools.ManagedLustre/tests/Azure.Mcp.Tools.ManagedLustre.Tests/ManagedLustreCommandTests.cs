@@ -14,6 +14,27 @@ namespace Azure.Mcp.Tools.ManagedLustre.Tests;
 public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => [
+        "managedlustre_fs_list",
+        "managedlustre_fs_subnetsize_ask",
+        "managedlustre_fs_sku_get",
+        "managedlustre_fs_create",
+        "managedlustre_fs_blob_autoimport_create",
+        "managedlustre_fs_blob_autoimport_get",
+        "managedlustre_fs_blob_autoimport_cancel",
+        "managedlustre_fs_blob_autoimport_delete",
+        "managedlustre_fs_blob_autoexport_create",
+        "managedlustre_fs_blob_autoexport_get",
+        "managedlustre_fs_blob_autoexport_cancel",
+        "managedlustre_fs_blob_autoexport_delete",
+        "managedlustre_fs_blob_import_create",
+        "managedlustre_fs_blob_import_cancel",
+        "managedlustre_fs_blob_import_get",
+        "managedlustre_fs_blob_import_delete",
+        "managedlustre_fs_update",
+        "managedlustre_fs_subnetsize_validate"
+    ];
+
     private static readonly string[] _sanitizedHeaders =
     [
         "x-ms-correlation-request-id",

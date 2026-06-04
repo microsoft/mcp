@@ -14,6 +14,16 @@ namespace Azure.Mcp.Tools.Cosmos.Tests;
 public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => [
+        "cosmos_list",
+        "cosmos_database_container_item_query",
+        "cosmos_database_container_schema_infer",
+        "cosmos_database_container_item_list-recent",
+        "cosmos_database_container_item_get",
+        "cosmos_database_container_item_text-search",
+        "cosmos_database_container_item_vector-search"
+    ];
+
     protected override RecordingOptions? RecordingOptions => new()
     {
         HandleRedirects = false

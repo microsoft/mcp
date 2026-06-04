@@ -41,6 +41,8 @@ public class EmailSendCommandLiveTests(ITestOutputHelper output, TestProxyFixtur
         await base.InitializeAsync();
     }
 
+    public override string[] Tools => ["communication_email_send"];
+
     public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
     [
         ..base.GeneralRegexSanitizers,

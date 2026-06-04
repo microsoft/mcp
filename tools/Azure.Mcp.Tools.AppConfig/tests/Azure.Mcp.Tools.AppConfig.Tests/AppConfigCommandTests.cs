@@ -29,6 +29,13 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
     private readonly ILogger<AppConfigService> _logger;
     private readonly ServiceProvider _httpClientProvider;
 
+    public override string[] Tools => [
+        "appconfig_account_list",
+        "appconfig_kv_get",
+        "appconfig_kv_lock_set",
+        "appconfig_kv_delete"
+    ];
+
     /// <summary>
     /// AZSDK3493 = $..name
     /// AZSDK3447 = $..key

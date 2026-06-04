@@ -20,6 +20,8 @@ public sealed class PricingGetCommandLiveTests(ITestOutputHelper output, TestPro
     private const string PricesKey = "prices";
     public override bool EnableDefaultSanitizerAdditions => false;
 
+    public override string[] Tools => ["pricing_get"];
+
     [Fact]
     public async Task Should_get_prices_by_sku()
     {

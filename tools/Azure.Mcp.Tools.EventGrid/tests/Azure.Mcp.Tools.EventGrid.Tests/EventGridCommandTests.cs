@@ -13,6 +13,12 @@ namespace Azure.Mcp.Tools.EventGrid.Tests;
 public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => [
+        "eventgrid_topic_list",
+        "eventgrid_subscription_list",
+        "eventgrid_events_publish"
+    ];
+
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
     [
         .. base.UriRegexSanitizers,

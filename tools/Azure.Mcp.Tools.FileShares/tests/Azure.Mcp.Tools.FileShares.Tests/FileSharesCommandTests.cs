@@ -21,8 +21,25 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
     private const string Sanitized = "Sanitized";
     private const string Location = "eastus";
 
-    public override List<UriRegexSanitizer> UriRegexSanitizers => new[]
-    {
+    public override string[] Tools => [
+        "fileshares_fileshare_get",
+        "fileshares_fileshare_check-name-availability",
+        "fileshares_limits",
+        "fileshares_rec",
+        "fileshares_usage",
+        "fileshares_fileshare_create",
+        "fileshares_fileshare_update",
+        "fileshares_fileshare_delete",
+        "fileshares_fileshare_snapshot_create",
+        "fileshares_fileshare_snapshot_get",
+        "fileshares_fileshare_snapshot_update",
+        "fileshares_fileshare_snapshot_delete",
+        "fileshares_fileshare_peconnection_get",
+        "fileshares_fileshare_peconnection_update"
+    ];
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers =>
+    [
         new UriRegexSanitizer(new UriRegexSanitizerBody
         {
             Regex = "resource[gG]roups\\/([^?\\/]+)",
@@ -36,10 +53,10 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
             Value = Sanitized,
             GroupForReplace = "1"
         })
-    }.ToList();
+    ];
 
-    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers => new[]
-    {
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
+    [
         // Sanitize private endpoint connection names BEFORE resource base name (format: {resourceBaseName}-fs-pe.{guid})
         new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
         {
@@ -71,7 +88,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
             Regex = Settings.SubscriptionId,
             Value = "00000000-0000-0000-0000-000000000000",
         })
-    }.ToList();
+    ];
 
     public override List<BodyRegexSanitizer> BodyRegexSanitizers => [
         // Sanitizes all URLs to remove actual service names
@@ -85,8 +102,6 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
           Value = "00000000-0000-0000-0000-000000000000",
         })
     ];
-
-
 
     [Fact]
     public async Task Should_get_file_share_details_by_subscription_and_name()

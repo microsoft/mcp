@@ -24,12 +24,13 @@ using Microsoft.Mcp.Core.Services.Time;
 
 internal class Program
 {
-    private static IAreaSetup[] Areas = RegisterAreas();
+    private static readonly List<IAreaSetup> s_areas = RegisterAreas();
 
     private static async Task<int> Main(string[] args)
     {
         try
         {
+            ServiceStartCommand.Areas = s_areas;
             ServiceStartCommand.ConfigureServices = ConfigureServices;
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
@@ -104,7 +105,7 @@ internal class Program
         }
     }
 
-    private static IAreaSetup[] RegisterAreas()
+    private static List<IAreaSetup> RegisterAreas()
     {
         return [
             // Register core areas
@@ -115,9 +116,7 @@ internal class Program
     }
 
     private static void WriteResponse(CommandResponse response)
-    {
-        Console.WriteLine(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse));
-    }
+        => Console.WriteLine(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse));
 
     /// <summary>
     /// <para>
@@ -186,7 +185,7 @@ internal class Program
         // within ServiceStartCommand.ExecuteAsync().
         services.AddSingleUserCliCacheService(disabled: true);
 
-        foreach (var area in Areas)
+        foreach (var area in s_areas)
         {
             services.AddSingleton(area);
             area.ConfigureServices(services);

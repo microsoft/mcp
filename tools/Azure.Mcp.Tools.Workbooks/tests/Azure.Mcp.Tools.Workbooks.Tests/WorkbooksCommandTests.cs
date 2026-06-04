@@ -15,6 +15,15 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
+
+    public override string[] Tools => [
+        "workbooks_list",
+        "workbooks_show",
+        "workbooks_create",
+        "workbooks_update",
+        "workbooks_delete"
+    ];
+
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
     [
         new UriRegexSanitizer(new UriRegexSanitizerBody

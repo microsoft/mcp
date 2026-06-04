@@ -16,7 +16,7 @@ public sealed class LiveServerFixture() : IAsyncLifetime
     private string? _serverUrl;
     private bool _started;
 
-    public Dictionary<string, string?> EnvironmentVariables { get; set; } = new();
+    public Dictionary<string, string?> EnvironmentVariables { get; set; } = [];
     public List<string> Arguments { get; set; } = [];
     public ITestOutputHelper? Output { get; set; }
     public LiveTestSettings? Settings { get; set; }
@@ -60,11 +60,7 @@ public sealed class LiveServerFixture() : IAsyncLifetime
 
     public McpClient GetMcpClient()
     {
-        if (_mcpClient == null)
-        {
-            throw new InvalidOperationException("MCP Client has not been initialized.");
-        }
-        return _mcpClient;
+        return _mcpClient ?? throw new InvalidOperationException("MCP Client has not been initialized.");
     }
 
     public async ValueTask DisposeAsync()

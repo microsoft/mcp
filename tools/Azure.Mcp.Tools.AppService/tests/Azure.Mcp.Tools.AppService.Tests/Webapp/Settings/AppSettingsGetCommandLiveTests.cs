@@ -13,6 +13,8 @@ namespace Azure.Mcp.Tools.AppService.Tests.Webapp.Settings;
 public class AppSettingsGetCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : BaseAppServiceCommandLiveTests(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => ["appservice_webapp_settings_get-appsettings"];
+
     [Fact(Skip = "Test temporarily disabled - recording can't consent to secret elicitation")]
     public async Task ExecuteAsync_AppSettingsList_ReturnsAppSettings()
     {

@@ -14,6 +14,8 @@ namespace Azure.Mcp.Tools.AppService.Tests.Webapp.Deployment;
 public class DeploymentGetCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : BaseAppServiceCommandLiveTests(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => ["appservice_webapp_deployment_get"];
+
     public override CustomDefaultMatcher? TestMatcher
     {
         get

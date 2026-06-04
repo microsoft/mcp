@@ -15,6 +15,8 @@ namespace Azure.Mcp.Tools.Acr.Tests;
 public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => ["acr_registry_list", "acr_registry_repository_list"];
+
     public override List<string> DisabledDefaultSanitizers =>
     [
         ..base.DisabledDefaultSanitizers,

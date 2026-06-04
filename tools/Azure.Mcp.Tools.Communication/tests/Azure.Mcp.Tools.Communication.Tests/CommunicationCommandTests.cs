@@ -43,6 +43,8 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
         await base.InitializeAsync();
     }
 
+    public override string[] Tools => ["communication_sms_send"];
+
     public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
     [
         ..base.GeneralRegexSanitizers,

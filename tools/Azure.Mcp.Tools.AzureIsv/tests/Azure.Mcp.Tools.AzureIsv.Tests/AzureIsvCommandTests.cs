@@ -13,6 +13,8 @@ namespace Azure.Mcp.Tools.AzureIsv.Tests;
 public class AzureIsvCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => ["datadog_monitoredresources_list"];
+
     [Fact]
     public async Task Should_list_datadog_monitored_resources()
     {

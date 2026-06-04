@@ -15,6 +15,8 @@ public sealed class SignalRCommandTests(ITestOutputHelper output, TestProxyFixtu
 {
     private const string SanitizedValue = "Sanitized";
 
+    public override string[] Tools => ["signalr_runtime_get"];
+
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
      [
          new(new UriRegexSanitizerBody

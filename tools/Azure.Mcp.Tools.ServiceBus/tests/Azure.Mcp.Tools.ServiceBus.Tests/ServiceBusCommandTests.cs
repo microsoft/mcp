@@ -22,6 +22,14 @@ public class ServiceBusCommandTests(ITestOutputHelper output, TestProxyFixture f
     private const string TopicName = "topic1";
     private const string SubscriptionName = "subscription1";
 
+    public override string[] Tools => [
+        "servicebus_queue_peek",
+        "servicebus_topic_subscription_peek",
+        "servicebus_queue_details",
+        "servicebus_topic_details",
+        "servicebus_topic_subscription_details"
+    ];
+
     [Fact(Skip = "The command for this test has been commented out until we know how to surface binary data.")]
     public async Task Queue_peek_messages()
     {

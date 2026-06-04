@@ -29,6 +29,12 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         }
     }
 
+    public override string[] Tools => [
+        "search_service_list",
+        "search_index_get",
+        "search_index_query"
+    ];
+
     /// <summary>
     /// AZSDK3493 = $..name
     /// </summary>

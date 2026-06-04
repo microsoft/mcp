@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Net;
 using System.Reflection;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -190,9 +191,9 @@ public static class McpTestUtilities
     /// <returns>An available port number.</returns>
     private static int GetAvailablePort()
     {
-        using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        using var listener = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
         listener.Start();
-        var port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
         listener.Stop();
         return port;
     }
@@ -261,7 +262,7 @@ public static class McpTestUtilities
                     id = Guid.NewGuid().ToString()
                 };
 
-                var content = new System.Net.Http.StringContent(
+                var content = new StringContent(
                     System.Text.Json.JsonSerializer.Serialize(request),
                     System.Text.Encoding.UTF8,
                     "application/json");
@@ -269,16 +270,14 @@ public static class McpTestUtilities
                 {
                     Content = content
                 };
-                requestMessage.Headers.Accept.Add(
-                    new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-                requestMessage.Headers.Accept.Add(
-                    new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("text/event-stream"));
+                requestMessage.Headers.Accept.Add(new("application/json"));
+                requestMessage.Headers.Accept.Add(new("text/event-stream"));
                 using var resp = await httpClient.SendAsync(requestMessage);
 
                 // If authentication is enabled, 401 Unauthorized means server is ready
                 // If authentication is disabled, we need a success status code
                 if (resp.IsSuccessStatusCode || (authenticationEnabled &&
-                    (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized || resp.StatusCode == System.Net.HttpStatusCode.Forbidden)))
+                    (resp.StatusCode == HttpStatusCode.Unauthorized || resp.StatusCode == HttpStatusCode.Forbidden)))
                 {
                     return;
                 }

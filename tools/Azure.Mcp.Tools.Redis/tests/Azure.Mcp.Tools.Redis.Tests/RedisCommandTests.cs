@@ -13,6 +13,8 @@ namespace Azure.Mcp.Tools.Redis.Tests;
 public class RedisCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => ["redis_list"];
+
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
         new(new BodyKeySanitizerBody("$..displayName")

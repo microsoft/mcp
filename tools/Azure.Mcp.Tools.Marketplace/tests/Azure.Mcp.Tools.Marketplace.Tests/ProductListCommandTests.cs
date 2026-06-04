@@ -15,6 +15,8 @@ public sealed class ProductListCommandTests(ITestOutputHelper output, TestProxyF
     private const string ProductsKey = "products";
     private const string Language = "en";
 
+    public override string[] Tools => ["marketplace_product_list"];
+
     [Fact]
     public async Task Should_list_marketplace_products()
     {

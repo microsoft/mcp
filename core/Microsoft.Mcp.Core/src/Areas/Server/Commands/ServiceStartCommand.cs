@@ -50,19 +50,19 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
     ReadOnly = true)]
 public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 {
-    private static readonly string[] StdioHostBuilderArgs =
+    private static readonly string[] s_stdioHostBuilderArgs =
     [
         $"--contentRoot={AppContext.BaseDirectory}",
         "--hostBuilder:reloadConfigOnChange=false"
     ];
 
-    private static readonly WebApplicationOptions HttpWebApplicationOptions = new()
+    private static readonly WebApplicationOptions s_httpWebApplicationOptions = new()
     {
         ContentRootPath = AppContext.BaseDirectory
     };
 
+    public static List<IAreaSetup> Areas { get; set; } = [];
     public static Action<IServiceCollection> ConfigureServices { get; set; } = _ => { };
-
     public static Func<IServiceProvider, Task> InitializeServicesAsync { get; set; } = _ => Task.CompletedTask;
 
     /// <summary>
@@ -186,6 +186,23 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         try
         {
+            // After binding options, see if any tool filters were applied (--namespace or --tool).
+            // If any were specified, filter Areas based on the IAreaSetup name (case-insensitive).
+            var hasNamespace = options.Namespace is { Length: > 0 };
+            var hasTool = options.Tool is { Length: > 0 };
+            if (hasNamespace || hasTool)
+            {
+                // --namespace and --tool are mutually exclusive. Setup the filter based on which was set.
+                // When --namespace is used, use the namespace as the filter, as that should already be the IAreaSetup name.
+                // When --tool is used, use the first part of each tool name (split by '_') as the filter, as that represents the area (e.g., 'storage_account_get' -> 'storage').
+                var areaNames = hasNamespace ?
+                    new HashSet<string>(options.Namespace!, StringComparer.OrdinalIgnoreCase)! :
+                    options.Tool?.Select(t => t.Split('_').First()).ToHashSet(StringComparer.OrdinalIgnoreCase)!;
+
+                // Filter the Areas that were setup by Program.cs.
+                Areas.RemoveAll(area => !areaNames.Contains(area.Name));
+            }
+
             using var tracerProvider = AddIncomingAndOutgoingHttpSpans(options);
 
             using var host = CreateHost(options);
@@ -403,7 +420,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for STDIO transport.</returns>
     private IHost CreateStdioHost(ServiceStartOptions serverOptions)
     {
-        return Host.CreateDefaultBuilder(StdioHostBuilderArgs)
+        return Host.CreateDefaultBuilder(s_stdioHostBuilderArgs)
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
@@ -453,7 +470,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for HTTP transport.</returns>
     private IHost CreateHttpHost(ServiceStartOptions serverOptions)
     {
-        WebApplicationBuilder builder = WebApplication.CreateBuilder(HttpWebApplicationOptions);
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(s_httpWebApplicationOptions);
 
         // Read once at host setup time — this env var is process-wide and effectively static,
         // so there is no need to re-read it on every incoming request.
@@ -645,7 +662,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for HTTP transport.</returns>
     private IHost CreateIncomingAuthDisabledHttpHost(ServiceStartOptions serverOptions)
     {
-        WebApplicationBuilder builder = WebApplication.CreateBuilder(HttpWebApplicationOptions);
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(s_httpWebApplicationOptions);
 
         InitializeListingUrls(builder, serverOptions);
 

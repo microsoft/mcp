@@ -13,6 +13,8 @@ namespace Azure.Mcp.Tools.AppService.Tests.Webapp.Settings;
 public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : BaseAppServiceCommandLiveTests(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => ["appservice_webapp_settings_update-appsettings"];
+
     [Fact]
     public async Task ExecuteAsync_AddSetting_AddingNewSettingWorks()
     {

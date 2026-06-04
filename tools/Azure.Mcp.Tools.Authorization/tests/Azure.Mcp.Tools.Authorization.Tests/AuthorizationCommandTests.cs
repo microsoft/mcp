@@ -13,6 +13,8 @@ namespace Azure.Mcp.Tools.Authorization.Tests;
 public class AuthorizationCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => ["role_assignment_list"];
+
     [Fact]
     public async Task Should_list_role_assignments()
     {

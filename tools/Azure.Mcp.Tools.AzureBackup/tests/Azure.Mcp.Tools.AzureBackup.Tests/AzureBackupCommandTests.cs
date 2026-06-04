@@ -14,6 +14,28 @@ namespace Azure.Mcp.Tools.AzureBackup.Tests;
 public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => [
+        "azurebackup_vault_get",
+        "azurebackup_vault_create",
+        "azurebackup_vault_update",
+        "azurebackup_policy_get",
+        "azurebackup_policy_create",
+        "azurebackup_policy_update",
+        "azurebackup_protecteditem_get",
+        "azurebackup_protecteditem_protect",
+        "azurebackup_governance_find-unprotected",
+        "azurebackup_protectableitem_list",
+        "azurebackup_governance_soft-delete",
+        "azurebackup_governance_immutability",
+        "azurebackup_job_get",
+        "azurebackup_recoverypoint_get",
+        "azurebackup_backup_status",
+        "azurebackup_disasterrecovery_enable-crr",
+        "azurebackup_protecteditem_undelete",
+        "azurebackup_security_configure-mua",
+        "azurebackup_security_configure-encryption"
+    ];
+
     // Relax matching: ignore Authorization headers and don't compare request bodies
     // (ARM requests include timestamps, correlation IDs, etc. that vary between runs)
     public override CustomDefaultMatcher? TestMatcher => new()

@@ -14,6 +14,16 @@ namespace Azure.Mcp.Tools.Storage.Tests;
 public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => [
+        "storage_account_get",
+        "storage_blob_get",
+        "storage_blob_upload",
+        "storage_blob_container_get",
+        "storage_blob_container_create",
+        "storage_account_create",
+        "storage_table_list"
+    ];
+
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
         .. base.BodyKeySanitizers,

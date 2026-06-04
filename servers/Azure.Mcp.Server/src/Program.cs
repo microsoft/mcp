@@ -32,11 +32,11 @@ namespace Azure.Mcp.Server;
 
 internal class Program
 {
-    private static readonly IAreaSetup[] Areas = RegisterAreas();
+    private static readonly List<IAreaSetup> s_areas = RegisterAreas();
 
     // Derived from the registered ServerSetup instance so the name stays in sync
     // with the actual area registration — no magic string duplication.
-    private static readonly string s_serverAreaName = Array.Find(Areas, static a => a is ServerSetup)?.Name ?? "server";
+    private static readonly string s_serverAreaName = s_areas.First(static a => a is ServerSetup)?.Name ?? "server";
 
     private static async Task<int> Main(string[] args)
     {
@@ -51,6 +51,7 @@ internal class Program
             }
 
             // The server start and plugin-telemetry containers always need full area registration.
+            ServiceStartCommand.Areas = s_areas;
             ServiceStartCommand.ConfigureServices = services => ConfigureServices(services);
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
@@ -63,7 +64,7 @@ internal class Program
 
             ServiceCollection services = new();
 
-            ConfigureServices(services, targetAreaName);
+            ConfigureServices(services, areaSetup => string.Equals(areaSetup.Name, targetAreaName, StringComparison.OrdinalIgnoreCase));
 
             services.AddLogging(builder =>
             {
@@ -167,17 +168,17 @@ internal class Program
         }
     }
 
-    private static IAreaSetup[] RegisterAreas()
+    private static List<IAreaSetup> RegisterAreas()
     {
 
         return [
             // Register core areas
+            new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
+            new Microsoft.Mcp.Core.Areas.Tools.ToolsSetup(),
             new Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesSetup(),
             new Azure.Mcp.Tools.Extension.ExtensionSetup(),
             new Azure.Mcp.Core.Areas.Group.GroupSetup(),
-            new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
             new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
-            new Microsoft.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Azure service areas
             new Azure.Mcp.Tools.Aks.AksSetup(),
             new Azure.Mcp.Tools.AppConfig.AppConfigSetup(),
@@ -309,7 +310,7 @@ internal class Program
     /// (those with <see cref="CommandCategory"/> other than <see cref="CommandCategory.AzureServices"/>)
     /// have their services registered. Pass <see langword="null"/> for full initialization.
     /// </param>
-    internal static void ConfigureServices(IServiceCollection services, string? areaFilter = null)
+    internal static void ConfigureServices(IServiceCollection services, Predicate<IAreaSetup>? areaFilter = null)
     {
         var thisAssembly = typeof(Program).Assembly;
 
@@ -332,27 +333,27 @@ internal class Program
         services.AddAzureTenantService();
         services.AddSingleUserCliCacheService(disabled: true);
 
-        foreach (var area in Areas)
+        bool configuredServerArea = false;
+        foreach (var area in s_areas)
         {
             // When areaFilter is set (CLI path), skip Azure service areas that don't match the target.
             // Non-Azure-service areas (Category != AzureServices) provide shared infrastructure
             // (command routing, server start, subscription listing, etc.) and must always be registered.
             // Any area whose Category is AzureServices and whose name doesn't match the filter is skipped;
             // this avoids registering services (HTTP clients, SDKs, etc.) for 60+ irrelevant services.
-            if (areaFilter != null &&
-                area.Category == CommandCategory.AzureServices &&
-                !string.Equals(area.Name, areaFilter, StringComparison.OrdinalIgnoreCase))
+            if (areaFilter != null && area.Category == CommandCategory.AzureServices && !areaFilter(area))
             {
                 continue;
             }
             services.AddSingleton(area);
             area.ConfigureServices(services);
+            configuredServerArea |= string.Equals(area.Name, s_serverAreaName, StringComparison.OrdinalIgnoreCase);
         }
 
         // Optimization: server-mode providers (registry, instructions, plugin allowlists) are only
         // used when running as an MCP server. For CLI area invocations they are never resolved, so
         // register lightweight stubs to avoid reading embedded resources on every CLI call.
-        if (areaFilter == null || string.Equals(areaFilter, s_serverAreaName, StringComparison.OrdinalIgnoreCase))
+        if (areaFilter == null || configuredServerArea)
         {
             services.AddRegistryRoot(thisAssembly, $"registry.json");
 
@@ -441,7 +442,7 @@ internal class Program
         // Only apply the optimization when the first token is a known registered area.
         // If the token doesn't match any area (e.g. a typo), fall through to full initialization
         // so System.CommandLine can produce helpful "Did you mean..." suggestions.
-        if (!Array.Exists(Areas, a => string.Equals(a.Name, firstToken, StringComparison.OrdinalIgnoreCase)))
+        if (!s_areas.Any(a => string.Equals(a.Name, firstToken, StringComparison.OrdinalIgnoreCase)))
         {
             return null;
         }

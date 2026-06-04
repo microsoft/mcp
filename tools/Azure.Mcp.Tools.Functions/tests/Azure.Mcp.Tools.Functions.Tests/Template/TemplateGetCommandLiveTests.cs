@@ -26,6 +26,11 @@ public class TemplateGetCommandLiveTests(
     LiveServerFixture liveServerFixture)
     : BaseFunctionsCommandLiveTests(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => [
+        "functions_template_get",
+        "functions_language_list"
+    ];
+
     #region Helper Methods
 
     private async Task<TemplateListResult> GetTemplateListAsync(string language)
@@ -257,7 +262,7 @@ public class TemplateGetCommandLiveTests(
         // recorded, causing the test to fail. This implicitly asserts no CDN call is made.
 
         // Act - First call: language_list fetches and caches the manifest
-        var langResult = await CallToolAsync("functions_language_list", new());
+        var langResult = await CallToolAsync("functions_language_list", []);
 
         Assert.NotNull(langResult);
         var langList = JsonSerializer.Deserialize(langResult.Value, FunctionsJsonContext.Default.ListLanguageListResult);
@@ -284,7 +289,7 @@ public class TemplateGetCommandLiveTests(
     public async Task ExecuteAsync_WithRuntimeVersion_ReplacesPlaceholders()
     {
         // Get valid runtime version from language list
-        var langResult = await CallToolAsync("functions_language_list", new());
+        var langResult = await CallToolAsync("functions_language_list", []);
         Assert.NotNull(langResult);
         var langList = JsonSerializer.Deserialize(langResult.Value, FunctionsJsonContext.Default.ListLanguageListResult);
         Assert.NotNull(langList);

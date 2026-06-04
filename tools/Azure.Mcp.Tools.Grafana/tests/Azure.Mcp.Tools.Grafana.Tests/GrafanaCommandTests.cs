@@ -12,6 +12,8 @@ namespace Azure.Mcp.Tools.Grafana.Tests;
 public class GrafanaCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => ["grafana_list"];
+
     [Fact]
     public async Task Should_list_grafana_workspaces_by_subscription_id()
     {
