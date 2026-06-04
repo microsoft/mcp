@@ -2522,7 +2522,8 @@ azmcp fileshares fileshare delete --subscription <subscription> \
 # Check File Share name availability
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares fileshare check-name-availability --subscription <subscription> \
-                                                   --name <file-share-name>
+                                                   --name <file-share-name> \
+                                                   --location <location>
 ```
 
 ```bash
