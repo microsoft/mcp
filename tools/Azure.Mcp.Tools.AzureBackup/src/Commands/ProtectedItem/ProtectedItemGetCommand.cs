@@ -22,11 +22,10 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
     Name = "get",
     Title = "Get Protected Item",
     Description = """
-        Retrieves protected item information. When --protected-item is specified, returns
-        detailed information about a single backup instance including protection status,
-        datasource details, policy assignment, and last backup time. Specify --container
-        for RSV workload items. When --protected-item is omitted, lists all protected items
-        (backup instances) in the vault.
+        Gets protected item (backup instances) information. When protected-item is specified, gets the specific protected item,
+        otherwise gets all protected items in the vault.
+        Returns protection status, datasource details, policy assignment, and last backup time. 
+        Specify container for RSV workload items.
         """,
     Destructive = false,
     Idempotent = true,

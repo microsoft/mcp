@@ -18,10 +18,6 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
     Title = "Get Azure Managed Lustre Import Job",
     Description = """
         Gets import job details or lists all import jobs for an Azure Managed Lustre filesystem. If job-name is provided, returns details for that specific job. If job-name is omitted, returns a list of all import jobs for the filesystem.
-        Required options:
-        - filesystem-name: The name of the AMLFS filesystem
-        Optional options:
-        - job-name: Name of specific import job to get (omit to list all jobs)
         """,
     Destructive = false,
     Idempotent = true,

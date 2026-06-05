@@ -18,10 +18,6 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
     Title = "Create Azure Managed Lustre Autoexport Job",
     Description = """
         Creates an auto export job for an Azure Managed Lustre filesystem to continuously export modified files to the linked blob storage container. The auto export job syncs changes from the Lustre filesystem to the configured HSM blob container. Use this to keep blob storage updated with changes in the filesystem.
-        Required options:
-        - filesystem-name: The name of the AMLFS filesystem
-        - resource-group: The resource group containing the filesystem
-        - subscription: The subscription containing the filesystem
         """,
     Destructive = true,
     Idempotent = false,

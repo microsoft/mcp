@@ -17,14 +17,9 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
     Name = "get",
     Title = "Get Event Hubs Consumer Groups",
     Description = """
-        Get consumer groups from Azure Event Hub. This command can either:
-
-        1) List all consumer groups in an Event Hub
-        2) Get a single consumer group by name
-
-        The EventHub, Namespace, and ResourceGroup parameters are required (for both get and list)
-        The Consumer Group parameter is only required for getting a specific consumer-group
-        When retrieving a single consumer group and when listing all available consumer groups, return all available metadata on the consumer group.
+        Get details of a specific Consumer Group or list all consumer groups in an Azure Event Hub. If consumer-group is provided,
+        returns a specific consumer group; otherwise, lists all consumer groups for the Event Hub.
+        Returns all available metadata on the consumer group.
         """,
     Destructive = false,
     Idempotent = true,

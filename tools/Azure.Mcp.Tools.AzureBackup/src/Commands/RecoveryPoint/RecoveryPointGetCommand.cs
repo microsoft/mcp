@@ -23,9 +23,9 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
     Name = "get",
     Title = "Get Recovery Point",
     Description = """
-        Retrieves recovery point information for a protected item. When --recovery-point is
-        specified, returns detailed information about a single recovery point including time
-        and type. When omitted, lists all available recovery points for the protected item.
+        Gets recovery point information for a protected item. When recovery-point is specified, gets the specific recovery point,
+        otherwise gets all available recovery points for the protected item.
+        Returns recovery point time and type.
         """,
     Destructive = false,
     Idempotent = true,

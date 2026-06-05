@@ -19,12 +19,9 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.EventHub;
     Name = "get",
     Title = "Get Event Hubs from Namespace",
     Description = """
-        Get Event Hubs from Azure namespace. This command can either:
-        1. List all Event Hubs in a namespace
-        2. Get a single Event Hub by name
-
-        When retrieving a single Event Hub or listing multiple Event Hubs, detailed information including
-        partition count, settings, and metadata is returned for all Event Hubs.
+        Get details of a specific Event Hub or list all Event Hubs in an Azure namespace. If eventhub is specified,
+        returns a specific Event Hub; otherwise, lists all Event Hubs in the namespace.
+        Returns detailed information including partition count, settings, and metadata.
         """,
     Destructive = false,
     Idempotent = true,

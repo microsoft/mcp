@@ -23,7 +23,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
         Use this to launch a new Linux or Windows VM with SSH key or password authentication.
         Automatically creates networking resources (VNet, subnet, NSG, NIC, public IP) when not specified.
         Equivalent to 'az vm create'. Defaults to Standard_D2s_v5 VM size when not specified.
-        The --image option is required and has no default; if the user does not specify an image, ask them which image to use
+        The image option is required and has no default; if the user does not specify an image, ask them which image to use
         (an alias such as 'Ubuntu2404' or 'Win2022Datacenter', a marketplace URN like 'publisher:offer:sku:version',
         or a shared gallery image ID starting with '/sharedGalleries/').
         For Linux VMs with SSH, read the user's public key file (e.g., ~/.ssh/id_rsa.pub) and pass its content.

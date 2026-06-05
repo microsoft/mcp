@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
     Id = "c19a45a0-b963-427d-a087-35560a7f4e5b",
     Name = "get",
     Title = "Get Key Vault Key",
-    Description = """List all keys in your Key Vault or get a specific key by name. Shows all key names in the vault, or retrieves full key details including type, enabled status, and expiration dates. Use --include-managed to show managed keys.""",
+    Description = """List all keys in your Key Vault or get a specific key by name. Shows all key names in the vault, or retrieves full key details including type, enabled status, and expiration dates. Use include-managed to show managed keys.""",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

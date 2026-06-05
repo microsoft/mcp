@@ -19,13 +19,9 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.EventHub;
     Name = "update",
     Title = "Create or Update Event Hub",
     Description = """
-        Create or update an Event Hub within an Azure Event Hubs namespace. This command can either:
-        1. Create a new Event Hub if it doesn't exist
-        2. Update an existing Event Hub's configuration
-
-        You can configure:
-        - Partition count (number of partitions for parallel processing)
-        - Message retention time (how long messages are retained in hours)
+        Create or Update an Event Hub within an Azure Event Hubs namespace. This tool will either create an Event Hub
+        resource or update a pre-existing Event Hub resource within the specified namespace, depending  on whether or
+        not the specified Event Hub already exists. This tool may modify existing configurations.
 
         Note: Some properties like partition count cannot be changed after creation.
         This is a potentially long-running operation that waits for completion.

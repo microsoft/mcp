@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     Description = """
         Generates an aztfexport command to export an Azure resource group and all its resources to Terraform configuration.
         Returns the command and arguments for the agent to execute locally.
-        Specify --resource-group with the name of the resource group. Optionally configure the Terraform provider
+        Specify resource-group with the name of the resource group. Optionally configure the Terraform provider
         (azurerm or azapi), naming pattern, output folder, parallelism, and whether to include role assignments.
         If aztfexport is not installed locally, returns installation instructions instead.
         """,

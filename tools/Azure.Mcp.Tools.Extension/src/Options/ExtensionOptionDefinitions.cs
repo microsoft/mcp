@@ -12,7 +12,7 @@ public static class ExtensionOptionDefinitions
             $"--{IntentName}"
         )
         {
-            Description = "The user intent of the task to be solved by using the CLI tool. This user intent will be used to generate the appropriate CLI command to accomplish the desirable goal.",
+            Description = "The user intent of the task to be solved by using the CLI tool. Used to generate the appropriate CLI command to accomplish the desirable goal.",
             Required = true
         };
 

@@ -18,11 +18,6 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
     Title = "Cancel Azure Managed Lustre Autoexport Job",
     Description = """
         Cancels a running auto export job for an Azure Managed Lustre filesystem. This stops the ongoing sync operation from the Lustre filesystem to the linked blob storage container. Use this to terminate an autoexport job that is in progress.
-        Required options:
-        - filesystem-name: The name of the AMLFS filesystem
-        - job-name: The name of the autoexport job to cancel
-        - resource-group: The resource group containing the filesystem
-        - subscription: The subscription containing the filesystem
         """,
     Destructive = true,
     Idempotent = true,

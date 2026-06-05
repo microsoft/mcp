@@ -18,15 +18,10 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
     Name = "delete",
     Title = "Delete Event Hubs Namespace",
     Description = """
-        Delete Event Hubs namespace. This tool will delete a pre-existing Namespace from the 
-        specified resource group. This tool will remove existing configurations, and is 
-        considered to be destructive.
+        Delete an Event Hubs namespace from the  specified resource group. This tool will remove existing configurations.
 
-        WARNING: This operation is irreversible. All Event Hubs, Consumer Groups, and
-        configurations within the namespace will be permanently deleted.
-
-        The namespace must exist in the specified resource group. If the namespace is not found,
-        an error will be returned.
+        WARNING: This operation is irreversible. All Event Hubs, Consumer Groups, and configurations within the namespace
+        will be permanently deleted.
         """,
     Destructive = true,
     Idempotent = true,

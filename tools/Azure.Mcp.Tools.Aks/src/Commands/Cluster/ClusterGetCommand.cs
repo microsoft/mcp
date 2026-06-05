@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.Aks.Commands.Cluster;
     Id = "34e0d3d3-cbc5-4df8-8244-1439b97f3de5",
     Name = "get",
     Title = "Get Azure Kubernetes Service (AKS) Cluster Details",
-    Description = "List/enumerate all AKS (Azure Kubernetes Service) clusters in a subscription. Get/retrieve/show the details of a specific cluster if a name is provided.",
+    Description = "List/enumerate all AKS (Azure Kubernetes Service) clusters in a subscription. Get/retrieve/show the details of a specific cluster if a cluster name is provided.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

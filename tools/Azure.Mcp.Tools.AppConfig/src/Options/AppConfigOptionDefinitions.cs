@@ -29,25 +29,25 @@ public static class AppConfigOptionDefinitions
 
     public static readonly Option<string> Value = new($"--{ValueName}")
     {
-        Description = "The value to set for the configuration key.",
+        Description = "The value to set for the key.",
         Required = true
     };
 
     public static readonly Option<string> Label = new($"--{LabelName}")
     {
-        Description = "The label to apply to the configuration key. Labels are used to group and organize settings.",
+        Description = "The label to apply to the key. Labels are used to group and organize settings.",
         Required = false
     };
 
     public static readonly Option<string> ContentType = new($"--{ContentTypeName}")
     {
-        Description = "The content type of the configuration value. This is used to indicate how the value should be interpreted or parsed.",
+        Description = "The content type of the value. This is used to indicate how the value should be interpreted or parsed.",
         Required = false
     };
 
     public static readonly Option<string[]> Tags = new($"--{TagsName}")
     {
-        Description = "The tags to associate with the configuration key. Tags should be in the format 'key=value'. Multiple tags can be specified.",
+        Description = "The tags to associate with the key. Tags should be in the format 'key=value'. Multiple tags can be specified.",
         Required = false,
         AllowMultipleArgumentsPerToken = true
     };
@@ -60,13 +60,13 @@ public static class AppConfigOptionDefinitions
 
     public static readonly Option<string> KeyFilter = new($"--{KeyFilterName}")
     {
-        Description = "Specifies the key filter, if any, to be used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a key of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'App*'). If omitted all keys will be retrieved.",
+        Description = "Specifies the key filter used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a key of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'App*'). If omitted all keys will be retrieved.",
         Required = false
     };
 
     public static readonly Option<string> LabelFilter = new($"--{LabelFilterName}")
     {
-        Description = "Specifies the label filter, if any, to be used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a label of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'Prod*'). This filter is case-sensitive. If omitted, all labels will be retrieved.",
+        Description = "Specifies the label filter used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a label of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'Prod*'). This filter is case-sensitive. If omitted, all labels will be retrieved.",
         Required = false
     };
 }

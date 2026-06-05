@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
     Name = "list",
     Title = "List Application Insights Recommendations",
     Description = """
-        List Application Insights Code Optimization Recommendations in a subscription. Optionally filter by resource group when --resource-group is provided.
+        List Application Insights Code Optimization Recommendations in a subscription or resource group.
         Returns the code optimization recommendations based on the profiler data.
         """,
     Destructive = false,

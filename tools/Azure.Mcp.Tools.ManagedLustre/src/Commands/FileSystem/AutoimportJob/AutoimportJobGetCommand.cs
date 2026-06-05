@@ -18,12 +18,6 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
     Title = "Get Azure Managed Lustre Autoimport Job",
     Description = """
         Gets the details of auto import jobs for an Azure Managed Lustre filesystem. Use this to retrieve the status, configuration, and progress information of autoimport operations that sync data from the linked blob storage container to the Lustre filesystem. If job-name is provided, returns details of a specific job; otherwise returns all jobs for the filesystem.
-        Required options:
-        - filesystem-name: The name of the AMLFS filesystem
-        - resource-group: The resource group containing the filesystem
-        - subscription: The subscription containing the filesystem
-        Optional options:
-        - job-name: The name of a specific autoimport job (if omitted, all jobs are returned)
         """,
     Destructive = false,
     Idempotent = true,

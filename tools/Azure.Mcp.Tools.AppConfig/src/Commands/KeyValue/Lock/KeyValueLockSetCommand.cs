@@ -16,10 +16,9 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
     Name = "set",
     Title = "Sets the lock state of an App Configuration Key-Value Setting",
     Description = """
-        Sets the lock state of a key-value in an App Configuration store. This command can lock and unlock key-values.
-        Locking sets a key-value to read-only mode, preventing any modifications to its value. Unlocking removes the
-        read-only mode from a key-value setting, allowing modifications to its value. You must specify an account name
-        and key. Optionally, you can specify a label to lock or unlock a specific labeled version of the key-value.
+        Sets the lock state of a key-value in an App Configuration store. Locking a key-value sets it to read-only mode,
+        preventing any modifications to its value. Unlocking a key-value removes the read-only mode, allowing modifications
+        to its value. You can specify a label to lock or unlock a specific labeled version of the key-value.
         Default is unlocking the key-value.
         """,
     Destructive = false,

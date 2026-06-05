@@ -23,7 +23,6 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
         in your Microsoft Foundry resource and receive AI-generated conversational responses. Supports multi-turn conversations
         with message history, system instructions, and response customization. Use this when you need to create chat
         completions, have AI conversations, get conversational responses, or build interactive dialogues with Azure OpenAI.
-        Requires resource-name, deployment-name, and message-array.
         """,
     Destructive = false,
     Idempotent = false,

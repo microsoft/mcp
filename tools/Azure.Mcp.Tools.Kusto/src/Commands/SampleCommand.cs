@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     Id = "41daed5c-bf44-4cdf-9f3c-1df775465e53",
     Name = "sample",
     Title = "Sample Kusto Table Data",
-    Description = "Return a sample of rows from a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.",
+    Description = "Return a sample of rows from a specific table in an Azure Data Explorer/Kusto/KQL cluster. Use either cluster-uri or cluster and subscription to specify the target cluster.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

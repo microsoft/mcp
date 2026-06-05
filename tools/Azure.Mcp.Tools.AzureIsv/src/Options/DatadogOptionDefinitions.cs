@@ -11,7 +11,7 @@ public static class DatadogOptionDefinitions
         $"--{DatadogResourceParam}"
     )
     {
-        Description = "The name of the Datadog resource to use. This is the unique name you chose for your Datadog resource in Azure.",
+        Description = "The name of the Datadog resource.",
         Required = true
     };
 }

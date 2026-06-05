@@ -22,8 +22,8 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Security;
         Configures Customer-Managed Key (CMK) encryption on a vault using a key from Azure Key Vault.
         Supports both Recovery Services vaults (RSV) and Backup vaults (DPP). The vault's managed
         identity must have the Key Vault Crypto Service Encryption User role on the Key Vault.
-        Use --identity-type to specify SystemAssigned or UserAssigned identity, and
-        --user-assigned-identity-id when using a user-assigned identity.
+        Use identity-type to specify SystemAssigned or UserAssigned identity, and
+        user-assigned-identity-id when using a user-assigned identity.
         """,
     Destructive = true,
     Idempotent = true,

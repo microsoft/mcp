@@ -19,8 +19,8 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
     Description = """
         Retrieves detailed information about Azure App Service web apps, including app name, resource group, location,
         state, hostnames, etc. If a specific app name is not provided, the command will return details for all web apps
-        in a subscription or resource group in a subscription. You can specify the app name, resource group name, and
-        subscription to get details for a specific web app.
+        in a subscription or resource group. You can specify the app name, resource group name, and subscription to get
+        details for a specific web app.
         """,
     Destructive = false,
     Idempotent = true,

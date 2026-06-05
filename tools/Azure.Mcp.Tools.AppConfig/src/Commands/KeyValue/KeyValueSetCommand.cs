@@ -17,9 +17,7 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
     Title = "Set App Configuration Key-Value Setting",
     Description = """
         Set a key-value setting in an App Configuration store. This command creates or updates a key-value setting
-        with the specified value. You must specify an account name, key, and value. Optionally, you can specify a
-        label otherwise the default label will be used. You can also specify a content type to indicate how the value
-        should be interpreted. You can add tags in the format 'key=value' to associate metadata with the setting.
+        with the specified value. If no label is specified, the default label will be used.
         """,
     Destructive = true,
     Idempotent = true,

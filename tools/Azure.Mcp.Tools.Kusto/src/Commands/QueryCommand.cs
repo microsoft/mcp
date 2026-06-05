@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     Id = "d1e22074-53ce-4eef-8596-0ea134a9e317",
     Name = "query",
     Title = "Query Kusto Database",
-    Description = "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.",
+    Description = "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Use either cluster-uri or cluster and subscription to specify the target cluster.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

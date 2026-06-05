@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
     Id = "a11e024a-62e6-4237-8d7d-4b9b8439f50e",
     Name = "create",
     Title = "Create Key Vault Certificate",
-    Description = "Create/issue/generate a new certificate in an Azure Key Vault using the default certificate policy. Required: --vault, --certificate, --subscription. Optional: --tenant <tenant>. Returns: name, id, keyId, secretId, cer (base64), thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuerName. Creates a new certificate version if it already exists.",
+    Description = "Create/issue/generate a new certificate in an Azure Key Vault using the default certificate policy. Returns: name, id, keyId, secretId, cer (base64), thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuerName. Creates a new certificate version if it already exists.",
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

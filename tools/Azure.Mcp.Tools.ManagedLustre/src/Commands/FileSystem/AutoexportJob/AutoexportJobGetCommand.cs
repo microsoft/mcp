@@ -18,12 +18,6 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
     Title = "Get Azure Managed Lustre Autoexport Job",
     Description = """
         Gets the details of auto export jobs for an Azure Managed Lustre filesystem. Use this to retrieve the status, configuration, and progress information of autoexport operations that sync data from the Lustre filesystem to the linked blob storage container. If job-name is provided, returns details of a specific job; otherwise returns all jobs for the filesystem.
-        Required options:
-        - filesystem-name: The name of the AMLFS filesystem
-        - resource-group: The resource group containing the filesystem
-        - subscription: The subscription containing the filesystem
-        Optional options:
-        - job-name: The name of a specific autoexport job (if omitted, all jobs are returned)
         """,
     Destructive = false,
     Idempotent = true,

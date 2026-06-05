@@ -17,13 +17,9 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
     Name = "update",
     Title = "Create or Update Event Hubs Consumer Group",
     Description = """
-        Create or Update a Consumer Group. This tool will either create a Consumer Group resource 
-        or update a pre-existing Consumer Group resource within the specified Event Hub, depending 
-        on whether or not the specified Consumer Group already exists. This tool may modify existing 
-        configurations, and is considered to be destructive. 
-
-        The tool requires specifying the resource group, namespace name, event hub name, and consumer 
-        group name. Optionally, you can provide user metadata for the consumer group.
+        Create or Update a Consumer Group. This tool will either create a Consumer Group resource or update a pre-existing
+        Consumer Group resource within the specified Event Hub, depending  on whether or not the specified Consumer Group
+        already exists. This tool may modify existing configurations.
         """,
     Destructive = true,
     Idempotent = true,

@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
     Name = "get",
     Title = "Get Azure Function App Details",
     Description = """
-        Gets Azure Function App details. Lists all Function Apps in the subscription or resource group.  If function app name and resource group
+        Gets/Lists details for all Azure Function App in the subscription or resource group.  If function app name and resource group
         is specified, retrieves the details of that specific function app.  Returns the details of Azure Function Apps, including its name,
         location, status, and app service plan name.
         """,

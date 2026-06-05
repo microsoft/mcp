@@ -31,12 +31,6 @@ public static class ComputeOptionDefinitions
     public const string UploadTypeName = "upload-type";
     public const string UploadSizeBytesName = "upload-size-bytes";
     public const string SecurityTypeName = "security-type";
-
-    public static readonly Option<string> Source = new($"--{SourceName}")
-    {
-        Description = "Source to create the disk from, including a resource ID of a snapshot or disk, or a blob URI of a VHD. When a source is provided, --size-gb is optional and defaults to the source size.",
-        Required = false
-    };
     public const string VmSizeName = "vm-size";
     public const string ImageName = "image";
     public const string AdminUsernameName = "admin-username";
@@ -50,6 +44,12 @@ public static class ComputeOptionDefinitions
     public const string SourceAddressPrefixName = "source-address-prefix";
     public const string OsDiskSizeGbName = "os-disk-size-gb";
     public const string OsDiskTypeName = "os-disk-type";
+
+    public static readonly Option<string> Source = new($"--{SourceName}")
+    {
+        Description = "Source to create the disk from, including a resource ID of a snapshot or disk, or a blob URI of a VHD. When a source is provided, size-gb is optional and defaults to the source size.",
+        Required = false
+    };
 
     public static readonly Option<string> Disk = new($"--{DiskName}", "--name")
     {

@@ -19,9 +19,9 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Security;
     Title = "Configure Multi-User Authorization",
     Description = """
         Configures Multi-User Authorization (MUA) on a vault by linking or unlinking a Resource Guard.
-        Provide --resource-guard-id to enable MUA, protecting critical operations (disable soft delete,
+        Provide resource-guard-id to enable MUA, protecting critical operations (disable soft delete,
         remove immutability, stop protection) so they require approval from a security admin with
-        permissions on the Resource Guard. Omit --resource-guard-id to disable MUA (this itself is a
+        permissions on the Resource Guard. Omit resource-guard-id to disable MUA (this itself is a
         protected operation requiring Backup MUA Operator role on the Resource Guard).
         """,
     Destructive = true,

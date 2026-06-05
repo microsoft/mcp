@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
     Id = "a8e9f7d6-c5b4-4a3d-9e2f-1c0b8a7d6e5f",
     Name = "get",
     Title = "Get Private Endpoint Connection",
-    Description = "Get details of a specific private endpoint connection or list all private endpoint connections for a file share. If --connection-name is provided, returns a specific connection; otherwise, lists all connections.",
+    Description = "Get details of a specific private endpoint connection or list all private endpoint connections for a file share. If connection-name is provided, returns a specific connection; otherwise, lists all connections.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -82,7 +82,7 @@ public static class EventHubsOptionDefinitions
         $"--{Namespace}"
     )
     {
-        Description = "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+        Description = "The name of the Event Hubs namespace to retrieve. Must be used with resource-group option.",
         Required = false
     };
 

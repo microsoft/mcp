@@ -22,8 +22,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Backup;
     Description = """
         Checks the backup status of an Azure resource and returns whether it is protected,
         along with vault and policy details. Use this to verify if a VM, disk, storage account,
-        or other datasource is currently backed up. Requires the datasource ARM resource ID
-        and the Azure region (location) where the resource exists.
+        or other datasource is currently backed up.
         """,
     Destructive = false,
     Idempotent = true,

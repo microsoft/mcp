@@ -14,9 +14,8 @@ namespace Azure.Mcp.Tools.ContainerApps.Commands.ContainerApp;
     Name = "list",
     Title = "List Container Apps",
     Description = """
-        List Azure Container Apps in a subscription. Optionally filter by resource group. Each container app result
-        includes: name, location, resourceGroup, managedEnvironmentId, provisioningState. If no container apps are
-        found the tool returns an empty list of results (consistent with other list commands).
+        List Azure Container Apps in a subscription or resource group. Each container app result includes name, location,
+        resourceGroup, managedEnvironmentId, provisioningState.
         """,
     Destructive = false,
     Idempotent = true,

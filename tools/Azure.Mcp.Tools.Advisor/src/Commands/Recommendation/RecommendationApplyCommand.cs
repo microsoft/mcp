@@ -13,31 +13,24 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 
+[CommandMetadata(
+    Id = "174fd0df-a11a-4139-b987-efd57611f62f",
+    Name = "apply",
+    Title = "Apply Advisor Recommendations",
+    Description = """
+        This tool helps in applying advisor recommendations on IaaC files (like ARM, Terraform) for Azure resources. It returns the rules that can be applied to the IaaC file.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false)]
 public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyCommand> logger) : BaseCommand<RecommendationApplyOptions>
 {
-    private const string CommandTitle = "Apply Advisor Recommendations";
     private readonly ILogger<RecommendationApplyCommand> _logger = logger;
     private static readonly ConcurrentDictionary<string, string> s_advisorRecommendationRulesCache = new();
     private static readonly Lazy<HashSet<string>> s_availableResources = new(LoadAvailableResources);
-
-    public override string Id => "174fd0df-a11a-4139-b987-efd57611f62f";
-
-    public override string Name => "apply";
-
-    public override string Description =>
-        @"This tool helps in applying advisor recommendations on IaaC files (like ARM, Terraform) for Azure resources. It returns the rules that can be applied to the IaaC file.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

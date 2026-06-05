@@ -18,13 +18,6 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
     Title = "Create Azure Managed Lustre Import Job",
     Description = """
         Creates a one-time import job for an Azure Managed Lustre filesystem to import files from the linked blob storage container. The import job performs a one-time sync of data from the configured HSM blob container to the Lustre filesystem. Use this to import specific prefixes or all data from blob storage into the filesystem at a point in time.
-        Required options:
-        - filesystem-name: The name of the AMLFS filesystem
-        Optional options:
-        - job-name: Name for the import job (auto-generated if not provided)
-        - conflict-resolution-mode: How to handle conflicting files (Fail, Skip, OverwriteIfDirty, OverwriteAlways, default: Fail)
-        - import-prefixes: Blob prefixes to import (default: imports all data from root '/')
-        - maximum-errors: Maximum errors allowed before job failure (-1: infinite, 0: fail on first error, default: use service default)
         """,
     Destructive = true,
     Idempotent = false,

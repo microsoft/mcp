@@ -22,7 +22,6 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
         deployed in your Microsoft Foundry resource and receive generated text answers. Use this when you need to create
         completions, get AI-generated content, generate answers to questions, or produce text completions from Azure
         OpenAI based on any input prompt. Supports customization with temperature and max tokens.
-        Requires resource-name, deployment-name, and prompt-text.
         """,
     Destructive = false,
     Idempotent = false,

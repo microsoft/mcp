@@ -23,11 +23,10 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
     Name = "get",
     Title = "Get Backup Vault",
     Description = """
-        Retrieves backup vault information. When --vault and --resource-group are specified,
-        returns detailed information about a single vault including type, location, SKU, and
-        storage redundancy. When omitted, lists all backup vaults (RSV and Backup vaults) in
-        the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or
-        --resource-group to narrow the listing results.
+        Gets backup vault information. When vault and resource-group are specified, gets the specific vault, otherwise
+        gets all backup vaults (RSV and Backup vaults) in the subscription. Optionally filter by vault type ('rsv' or 'dpp')
+        and/or resource group to narrow the listing results.
+        Returns  type, location, SKU, and storage redundancy.
         """,
     Destructive = false,
     Idempotent = true,

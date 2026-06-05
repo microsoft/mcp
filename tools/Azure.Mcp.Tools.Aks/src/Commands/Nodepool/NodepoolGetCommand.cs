@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.Aks.Commands.Nodepool;
     Id = "9abb0904-2ffc-4aab-b4ea-fc454b6351b1",
     Name = "get",
     Title = "Get Azure Kubernetes Service (AKS) Node Pool Details",
-    Description = "List/enumerate all AKS (Azure Kubernetes Service) node pools in a cluster. Get/retrieve/show the details of a specific node pool if a name is provided.",
+    Description = "List/enumerate all AKS (Azure Kubernetes Service) node pools in a cluster. Get/retrieve/show the details of a specific node pool if a node pool name is provided.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

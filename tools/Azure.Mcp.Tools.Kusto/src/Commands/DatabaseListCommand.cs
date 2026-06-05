@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     Id = "0bd79f0b-c360-4c96-b3e0-02fce97dcc41",
     Name = "list",
     Title = "List Kusto Databases",
-    Description = "List/enumerate all databases in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri ( or --cluster and --subscription).",
+    Description = "List/enumerate all databases in an Azure Data Explorer/Kusto/KQL cluster. Use either cluster-uri or cluster and subscription to specify the target cluster.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

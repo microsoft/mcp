@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
         Generates a conftest command to validate Terraform .tf files in a workspace against Azure policies.
         Returns the command and arguments for the agent to execute locally.
         Uses the Azure policy library (policy-library-avm) for validation with configurable policy sets.
-        Specify --workspace-folder with the path to the Terraform workspace. Optionally configure the policy set
+        Specify workspace-folder with the path to the Terraform workspace. Optionally configure the policy set
         ('all', 'Azure-Proactive-Resiliency-Library-v2', or 'avmsec'), severity filter (for avmsec), and custom policy paths.
         If conftest is not installed locally, returns installation instructions instead.
         """,

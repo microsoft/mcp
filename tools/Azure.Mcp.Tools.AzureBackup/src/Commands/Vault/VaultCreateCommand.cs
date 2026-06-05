@@ -19,12 +19,11 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
     Name = "create",
     Title = "Create Backup Vault",
     Description = """
-        Creates a new backup vault. Specify --vault-type as 'rsv' for a Recovery Services vault
+        Creates a new backup vault. Specify vault-type as 'rsv' for a Recovery Services vault
         or 'dpp' for a Backup vault (Data Protection). For DPP vaults a System-Assigned
         Managed Identity is enabled by default so the vault can authenticate to protected
         datasources (storage accounts, disks, PG Flex, etc.) - change later with
-        'azurebackup vault update --identity-type ...' if needed. Returns the created
-        vault details.
+        'azurebackup vault update identity-type ...' if needed. Returns the created vault details.
         """,
     Destructive = true,
     Idempotent = false,

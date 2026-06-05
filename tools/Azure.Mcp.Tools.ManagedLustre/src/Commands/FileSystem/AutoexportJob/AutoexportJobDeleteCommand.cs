@@ -18,11 +18,6 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
     Title = "Delete Azure Managed Lustre Autoexport Job",
     Description = """
         Deletes an auto export job for an Azure Managed Lustre filesystem. This permanently removes the job record from the filesystem. Use this to clean up completed, failed, or cancelled autoexport jobs.
-        Required options:
-        - filesystem-name: The name of the AMLFS filesystem
-        - job-name: The name of the autoexport job to delete
-        - resource-group: The resource group containing the filesystem
-        - subscription: The subscription containing the filesystem
         """,
     Destructive = true,
     Idempotent = true,
