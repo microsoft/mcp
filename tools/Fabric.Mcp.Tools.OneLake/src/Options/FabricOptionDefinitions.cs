@@ -259,14 +259,27 @@ public static class FabricOptionDefinitions
     public const string DiagnosticsConfigName = "diagnostics-config";
     public static readonly Option<string> DiagnosticsConfig = new($"--{DiagnosticsConfigName}")
     {
-        Description = "JSON configuration for OneLake diagnostic logging.",
+        Description = """
+            JSON request body for modifying OneLake diagnostics. Must include 'status'
+            ("Enabled" or "Disabled"). When enabling, include 'destination' with a
+            Lakehouse reference. When disabling, destination may be omitted.
+            Example (enable): {"status":"Enabled","destination":{"type":"Lakehouse",
+            "lakehouse":{"referenceType":"ById","itemId":"<lakehouse-guid>",
+            "workspaceId":"<workspace-guid>"}}}
+            Example (disable): {"status":"Disabled"}
+            """,
         Required = true
     };
 
     public const string ImmutabilityPolicyConfigName = "immutability-policy";
     public static readonly Option<string> ImmutabilityPolicyConfig = new($"--{ImmutabilityPolicyConfigName}")
     {
-        Description = "JSON configuration for OneLake immutability policy.",
+        Description = """
+            JSON request body for modifying OneLake immutability policy. Must include
+            'scope' (currently only "DiagnosticLogs") and 'retentionDays' (minimum 1).
+            Retention days cannot be reduced below the current value.
+            Example: {"scope":"DiagnosticLogs","retentionDays":30}
+            """,
         Required = true
     };
 }

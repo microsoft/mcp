@@ -107,10 +107,11 @@ namespace Fabric.Mcp.Tools.OneLake.Models;
 // Settings types
 [JsonSerializable(typeof(OneLakeSettings))]
 [JsonSerializable(typeof(DiagnosticsSettings))]
-[JsonSerializable(typeof(DiagnosticsCategory))]
-[JsonSerializable(typeof(ImmutabilityPolicySettings))]
-[JsonSerializable(typeof(DiagnosticsModifyRequest))]
-[JsonSerializable(typeof(ImmutabilityPolicyModifyRequest))]
+[JsonSerializable(typeof(DiagnosticsDestination))]
+[JsonSerializable(typeof(ItemReferenceById))]
+[JsonSerializable(typeof(ImmutabilityPolicy))]
+[JsonSerializable(typeof(List<ImmutabilityPolicy>))]
+[JsonSerializable(typeof(LifecycleSettings))]
 // Long running operation types
 [JsonSerializable(typeof(OperationState))]
 [JsonSerializable(typeof(OperationError))]

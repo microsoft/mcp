@@ -6,70 +6,81 @@ using System.Text.Json.Serialization;
 namespace Fabric.Mcp.Tools.OneLake.Models;
 
 /// <summary>
-/// OneLake settings for a workspace.
+/// OneLake settings response for a workspace (GET /workspaces/{id}/onelake/settings).
 /// </summary>
 public class OneLakeSettings
 {
     [JsonPropertyName("diagnostics")]
     public DiagnosticsSettings? Diagnostics { get; set; }
 
-    [JsonPropertyName("immutabilityPolicy")]
-    public ImmutabilityPolicySettings? ImmutabilityPolicy { get; set; }
+    [JsonPropertyName("immutabilityPolicies")]
+    public List<ImmutabilityPolicy>? ImmutabilityPolicies { get; set; }
+
+    [JsonPropertyName("lifecycle")]
+    public LifecycleSettings? Lifecycle { get; set; }
 }
 
 /// <summary>
-/// Diagnostic logging configuration for OneLake.
+/// OneLake diagnostic settings object.
+/// Used in both the GET response (nested under "diagnostics") and the
+/// POST /modifyDiagnostics request body.
 /// </summary>
 public class DiagnosticsSettings
 {
-    [JsonPropertyName("enabled")]
-    public bool? Enabled { get; set; }
+    [JsonPropertyName("status")]
+    public string? Status { get; set; }
 
-    [JsonPropertyName("logAnalyticsWorkspaceId")]
-    public string? LogAnalyticsWorkspaceId { get; set; }
-
-    [JsonPropertyName("categories")]
-    public List<DiagnosticsCategory>? Categories { get; set; }
+    [JsonPropertyName("destination")]
+    public DiagnosticsDestination? Destination { get; set; }
 }
 
 /// <summary>
-/// A diagnostic logging category.
+/// Lakehouse destination for OneLake diagnostic logs.
 /// </summary>
-public class DiagnosticsCategory
+public class DiagnosticsDestination
 {
-    [JsonPropertyName("category")]
-    public string? Category { get; set; }
+    [JsonPropertyName("type")]
+    public string? Type { get; set; }
 
-    [JsonPropertyName("enabled")]
-    public bool? Enabled { get; set; }
+    [JsonPropertyName("lakehouse")]
+    public ItemReferenceById? Lakehouse { get; set; }
 }
 
 /// <summary>
-/// Immutability policy settings for OneLake.
+/// An item reference by ID object.
 /// </summary>
-public class ImmutabilityPolicySettings
+public class ItemReferenceById
 {
-    [JsonPropertyName("state")]
-    public string? State { get; set; }
+    [JsonPropertyName("referenceType")]
+    public string? ReferenceType { get; set; }
 
-    [JsonPropertyName("immutabilityPeriodSinceCreationInDays")]
-    public int? ImmutabilityPeriodSinceCreationInDays { get; set; }
+    [JsonPropertyName("itemId")]
+    public string? ItemId { get; set; }
+
+    [JsonPropertyName("workspaceId")]
+    public string? WorkspaceId { get; set; }
 }
 
 /// <summary>
-/// Request body for modifying diagnostics.
+/// Immutability policy object (GET response and POST /modifyImmutabilityPolicy request).
 /// </summary>
-public class DiagnosticsModifyRequest
+public class ImmutabilityPolicy
 {
-    [JsonPropertyName("diagnostics")]
-    public DiagnosticsSettings? Diagnostics { get; set; }
+    [JsonPropertyName("scope")]
+    public string? Scope { get; set; }
+
+    [JsonPropertyName("retentionDays")]
+    public int? RetentionDays { get; set; }
 }
 
 /// <summary>
-/// Request body for modifying immutability policy.
+/// Lifecycle management settings for a workspace.
 /// </summary>
-public class ImmutabilityPolicyModifyRequest
+public class LifecycleSettings
 {
-    [JsonPropertyName("immutabilityPolicy")]
-    public ImmutabilityPolicySettings? ImmutabilityPolicy { get; set; }
+    [JsonPropertyName("defaultTier")]
+    public string? DefaultTier { get; set; }
+
+    [JsonPropertyName("policy")]
+    public string? Policy { get; set; }
 }
