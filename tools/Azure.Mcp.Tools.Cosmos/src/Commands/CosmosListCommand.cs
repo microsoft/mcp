@@ -112,7 +112,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Account: {Account}, ResourceGroup: {ResourceGroup}.", Name, options.Account, options.ResourceGroup);
+            _logger.LogError(ex, "Error in {Operation}. Account: {Account}.", Name, options.Account);
             HandleException(context, ex);
         }
 

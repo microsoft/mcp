@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed misleading error log in the Cosmos DB list command that referenced an unbound ResourceGroup value."
