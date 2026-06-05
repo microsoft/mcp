@@ -18,6 +18,16 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
 {
     private readonly KeyVaultTestCertificateAssets _importCertificateAssets = KeyVaultTestCertificates.Load();
 
+    public override string[] Tools => [
+        "keyvault_key_get",
+        "keyvault_key_create",
+        "keyvault_secret_get",
+        "keyvault_certificate_get",
+        "keyvault_certificate_create",
+        "keyvault_certificate_import",
+        "keyvault_admin_settings_get"
+    ];
+
     public override CustomDefaultMatcher? TestMatcher => new()
     {
         ExcludedHeaders = "Authorization,Content-Type",

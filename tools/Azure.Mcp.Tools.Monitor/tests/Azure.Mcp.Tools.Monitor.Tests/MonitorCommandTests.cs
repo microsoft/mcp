@@ -53,6 +53,20 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         _monitorService = new MonitorService(subscriptionService, _tenantService, resourceGroupService, resourceResolverService, _httpClientFactory, _logger);
     }
 
+    public override string[] Tools => [
+        // "monitor_table_list",
+        // "monitor_workspace_list",
+        // "monitor_workspace_log_query",
+        // "monitor_table_type_list",
+        // "monitor_resource_log_query",
+        // "monitor_metrics_definitions",
+        // "monitor_metrics_query",
+        // "storage_blob_container_list",
+        // "storage_blob_list",
+        "monitor_webtests_get",
+        "monitor_webtests_createorupdate"
+    ];
+
     public override List<UriRegexSanitizer> UriRegexSanitizers { get; } =
     [
         new(new UriRegexSanitizerBody

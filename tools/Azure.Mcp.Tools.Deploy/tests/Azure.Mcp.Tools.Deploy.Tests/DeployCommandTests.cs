@@ -20,6 +20,13 @@ public class DeployCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         _subscriptionId = Settings.SubscriptionId;
     }
 
+    public override string[] Tools => [
+        "deploy_plan_get",
+        "deploy_iac_rules_get",
+        "deploy_pipeline_guidance_get",
+        "deploy_app_logs_get"
+    ];
+
     [Fact]
     public async Task Should_get_plan()
     {

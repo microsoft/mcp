@@ -12,6 +12,10 @@ namespace Azure.Mcp.Tools.DeviceRegistry.Tests;
 public class DeviceRegistryCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => [
+        "deviceregistry_namespace_list"
+    ];
+
     [Fact]
     public async Task Should_list_deviceregistry_namespaces_by_subscription()
     {

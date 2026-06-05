@@ -13,6 +13,26 @@ namespace Azure.Mcp.Tools.StorageSync.Tests;
 public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => [
+        "storagesync_service_get",
+        "storagesync_syncgroup_get",
+        "storagesync_cloudendpoint_get",
+        "storagesync_registeredserver_get",
+        "storagesync_serverendpoint_get",
+        "storagesync_service_create",
+        "storagesync_service_update",
+        "storagesync_service_delete",
+        "storagesync_syncgroup_create",
+        "storagesync_syncgroup_delete",
+        "storagesync_serverendpoint_delete",
+        "storagesync_cloudendpoint_create",
+        "storagesync_serverendpoint_create",
+        "storagesync_cloudendpoint_changedetection",
+        "storagesync_serverendpoint_update",
+        "storagesync_registeredserver_update",
+        "storagesync_registeredserver_unregister"
+    ];
+
     public override List<UriRegexSanitizer> UriRegexSanitizers => [
         .. base.UriRegexSanitizers,
         new(new()

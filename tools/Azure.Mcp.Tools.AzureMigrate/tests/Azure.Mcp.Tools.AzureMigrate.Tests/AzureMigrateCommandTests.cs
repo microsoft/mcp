@@ -6,13 +6,14 @@ using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
-using Xunit;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Tests;
 
 public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => ["azuremigrate_platformlandingzone_request"];
+
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
         .. base.BodyKeySanitizers,

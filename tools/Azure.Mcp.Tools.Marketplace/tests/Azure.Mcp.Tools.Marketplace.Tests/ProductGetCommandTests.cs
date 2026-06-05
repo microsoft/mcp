@@ -16,6 +16,8 @@ public sealed class ProductGetCommandTests(ITestOutputHelper output, TestProxyFi
     private const string ProductId = "test_test_pmc2pc1.vmsr_uat_beta";
     private const string Language = "en";
 
+    public override string[] Tools => ["marketplace_product_get"];
+
     [Fact]
     public async Task Should_get_marketplace_product()
     {

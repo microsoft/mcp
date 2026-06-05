@@ -28,11 +28,13 @@ public class LanguageListCommandLiveTests(
 {
     private static readonly string[] ExpectedLanguages = ["python", "typescript", "javascript", "csharp", "java", "powershell"];
 
+    public override string[] Tools => ["functions_language_list"];
+
     #region Helper Methods
 
     private async Task<LanguageListResult> GetLanguageListAsync()
     {
-        var result = await CallToolAsync("functions_language_list", new());
+        var result = await CallToolAsync("functions_language_list", []);
         Assert.NotNull(result);
         var languageResults = JsonSerializer.Deserialize(result.Value, FunctionsJsonContext.Default.ListLanguageListResult);
         Assert.NotNull(languageResults);

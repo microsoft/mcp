@@ -24,17 +24,16 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
     protected ITestOutputHelper Output { get; } = output;
     protected LiveServerFixture LiveServerFixture { get; } = liveServerFixture;
 
-    public string[]? CustomArguments;
     public TestMode TestMode = TestMode.Live;
 
     /// <summary>
-    /// Sets custom arguments for the MCP server. Call this before InitializeAsync().
+    /// Sets the tools that the MCP server will scope to. Call this before InitializeAsync().
+    /// <para>
+    /// This reduces the number of tools that the MCP server will load and initialize.
+    /// </para>
     /// </summary>
-    /// <param name="arguments">Custom arguments to pass to the server (e.g., ["server", "start", "--mode", "single"])</param>
-    public void SetArguments(params string[] arguments)
-    {
-        CustomArguments = arguments;
-    }
+    /// <param name="tools">Tools to pass to the server (e.g., "storage_blob_get", "appconfig_kv_get", etc.)</param>
+    public virtual string[] Tools => [];
 
     public virtual async ValueTask InitializeAsync()
     {
@@ -124,10 +123,21 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         // Use custom arguments if provided, otherwise use standard mode (debug can be enabled via environment variable)
         var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");
         var enableDebug = string.Equals(debugEnvVar, "true", StringComparison.OrdinalIgnoreCase) || Settings.DebugOutput;
-        List<string> defaultArgs = enableDebug
+
+        // Live testing uses '--mode all' as it doesn't require sampling and the way live tests are ran an agent isn't
+        // used to make the request, so sampling isn't available.
+        List<string> arguments = enableDebug
             ? ["server", "start", "--mode", "all", "--debug", "--dangerously-disable-elicitation", "--disable-caching"]
             : ["server", "start", "--mode", "all", "--dangerously-disable-elicitation", "--disable-caching"];
-        var arguments = CustomArguments?.ToList() ?? defaultArgs;
+
+        if (Tools != null && Tools.Length > 0)
+        {
+            foreach (var tool in Tools)
+            {
+                arguments.Add("--tool");
+                arguments.Add(tool);
+            }
+        }
 
         LiveServerFixture.EnvironmentVariables = GetEnvironmentVariables(proxy);
         LiveServerFixture.Arguments = arguments;

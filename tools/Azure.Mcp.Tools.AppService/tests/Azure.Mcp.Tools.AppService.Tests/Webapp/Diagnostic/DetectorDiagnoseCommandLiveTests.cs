@@ -13,6 +13,8 @@ namespace Azure.Mcp.Tools.AppService.Tests.Webapp.Diagnostic;
 public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : BaseAppServiceCommandLiveTests(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => ["appservice_webapp_diagnostic_diagnose"];
+
     [Fact]
     public async Task ExecuteAsync_DetectorsDiagnose_ReturnsDiagnostics()
     {

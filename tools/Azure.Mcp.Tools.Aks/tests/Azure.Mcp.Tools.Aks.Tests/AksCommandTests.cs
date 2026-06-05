@@ -14,6 +14,7 @@ namespace Azure.Mcp.Tools.Aks.Tests;
 public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => ["aks_cluster_get"];
 
     [Fact]
     public async Task Should_list_aks_clusters_by_subscription()

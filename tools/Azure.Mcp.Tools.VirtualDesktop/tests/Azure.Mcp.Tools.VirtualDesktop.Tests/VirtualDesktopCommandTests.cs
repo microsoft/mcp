@@ -13,6 +13,12 @@ namespace Azure.Mcp.Tools.VirtualDesktop.Tests;
 public class VirtualDesktopCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => [
+        "virtualdesktop_hostpool_list",
+        "virtualdesktop_hostpool_host_list",
+        "virtualdesktop_hostpool_host_user_list"
+    ];
+
     public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
     [
         new BodyRegexSanitizer(new BodyRegexSanitizerBody()

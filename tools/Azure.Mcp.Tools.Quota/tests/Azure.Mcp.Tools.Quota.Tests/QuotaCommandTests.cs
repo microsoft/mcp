@@ -13,6 +13,8 @@ namespace Azure.Mcp.Tools.Quota.Tests;
 public sealed class QuotaCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override string[] Tools => ["quota_usage_check", "quota_region_availability_list"];
+
     /// <summary>
     /// Disable the default sanitizer that redacts all JSON properties named "name". We need this
     /// to stick around so that we can verify that the expected resource names are present in the responses.

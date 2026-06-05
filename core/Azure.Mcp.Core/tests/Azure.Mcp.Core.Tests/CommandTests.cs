@@ -13,6 +13,11 @@ namespace Azure.Mcp.Core.Tests;
 public class CommandTests(ITestOutputHelper output, TestProxyFixture testProxyFixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, testProxyFixture, liveServerFixture)
 {
+    public override string[] Tools => [
+        "group_list",
+        "subscription_list"
+    ];
+
     [Fact]
     public async Task Should_list_groups_by_subscription()
     {
@@ -33,7 +38,7 @@ public class CommandTests(ITestOutputHelper output, TestProxyFixture testProxyFi
     {
         var result = await CallToolAsync(
             "subscription_list",
-            new Dictionary<string, object?>());
+            []);
 
         var subscriptionsArray = result.AssertProperty("subscriptions");
         Assert.Equal(JsonValueKind.Array, subscriptionsArray.ValueKind);

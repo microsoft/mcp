@@ -23,6 +23,14 @@ public class KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixtur
     private const string Sanitized = "Sanitized";
     private readonly ServiceProvider _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
 
+    public override string[] Tools => [
+        "kusto_cluster_get",
+        "kusto_database_list",
+        "kusto_table_list",
+        "kusto_table_schema",
+        "kusto_query"
+    ];
+
     public override List<BodyKeySanitizer> BodyKeySanitizers { get; } =
     [
         new(new BodyKeySanitizerBody("$..displayName")
