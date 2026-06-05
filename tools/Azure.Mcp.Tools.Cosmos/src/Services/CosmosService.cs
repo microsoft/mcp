@@ -288,6 +288,8 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         while (queryIterator.HasMoreResults)
         {
             using ResponseMessage response = await queryIterator.ReadNextAsync(cancellationToken);
+            response.EnsureSuccessStatusCode();
+
             using var document = JsonDocument.Parse(response.Content);
             items.Add(document.RootElement.Clone());
         }
