@@ -18,6 +18,7 @@ using Azure.Monitor.Query.Logs.Models;
 using Azure.ResourceManager.OperationalInsights;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Validation;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -46,7 +47,9 @@ public class MonitorService(
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceId), resourceId), (nameof(table), table));
+
         query = BuildQuery(query, table, limit);
+        KqlQueryValidator.ValidateQuerySafety(query);
 
         var credential = await GetCredential(tenant, cancellationToken);
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
@@ -112,6 +115,7 @@ public class MonitorService(
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(workspace), workspace), (nameof(query), query));
+        KqlQueryValidator.ValidateQuerySafety(query);
 
         var credential = await GetCredential(tenant, cancellationToken);
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
@@ -234,6 +238,7 @@ public class MonitorService(
         var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
         query = BuildQuery(query, table, limit);
         ValidateRequiredParameters((nameof(query), query));
+        KqlQueryValidator.ValidateQuerySafety(query);
 
         try
         {
@@ -521,4 +526,5 @@ public class MonitorService(
             _ => LogsQueryAudience.AzurePublicCloud
         };
     }
+
 }
