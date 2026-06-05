@@ -58,13 +58,15 @@ public class ImmutabilityPolicyModifyCommandTests : CommandUnitTestsBase<Immutab
     }
 
     [Theory]
-    [InlineData("--workspace-id ws1 --immutability-policy {\"scope\":\"DiagnosticLogs\",\"retentionDays\":7}", true)]
-    [InlineData("--immutability-policy {\"scope\":\"DiagnosticLogs\",\"retentionDays\":7}", false)]
+    [InlineData("--workspace-id 85173301-af01-49c9-b667-03edc44517da --scope DiagnosticLogs --retention-days 7", true)]
+    [InlineData("--scope DiagnosticLogs --retention-days 7", false)] // missing workspace
+    [InlineData("--workspace-id 85173301-af01-49c9-b667-03edc44517da --scope DiagnosticLogs --retention-days 0", false)] // retention < 1
+    [InlineData("--workspace-id 85173301-af01-49c9-b667-03edc44517da --scope Invalid --retention-days 7", false)] // bad scope
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
         {
-            Service.ModifyImmutabilityPolicyAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            Service.ModifyImmutabilityPolicyAsync(Arg.Any<string>(), Arg.Any<ImmutabilityPolicy>(), Arg.Any<CancellationToken>())
                 .Returns(Task.CompletedTask);
         }
 
@@ -80,27 +82,31 @@ public class ImmutabilityPolicyModifyCommandTests : CommandUnitTestsBase<Immutab
     [Fact]
     public async Task ExecuteAsync_SuccessfulModification_ReturnsSuccessMessage()
     {
-        Service.ModifyImmutabilityPolicyAsync("ws1", Arg.Any<string>(), Arg.Any<CancellationToken>())
+        Service.ModifyImmutabilityPolicyAsync(Arg.Any<string>(), Arg.Any<ImmutabilityPolicy>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         var response = await ExecuteCommandAsync(
-            "--workspace-id", "ws1",
-            "--immutability-policy", "{\"scope\":\"DiagnosticLogs\",\"retentionDays\":7}");
+            "--workspace-id", "85173301-af01-49c9-b667-03edc44517da",
+            "--scope", "DiagnosticLogs",
+            "--retention-days", "7");
 
         var result = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.ImmutabilityPolicyModifyCommandResult);
         Assert.Contains("successfully", result.Message, StringComparison.OrdinalIgnoreCase);
-        await Service.Received(1).ModifyImmutabilityPolicyAsync("ws1", Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ModifyImmutabilityPolicyAsync("85173301-af01-49c9-b667-03edc44517da",
+            Arg.Is<ImmutabilityPolicy>(p => p.Scope == "DiagnosticLogs" && p.RetentionDays == 7),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        Service.ModifyImmutabilityPolicyAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+        Service.ModifyImmutabilityPolicyAsync(Arg.Any<string>(), Arg.Any<ImmutabilityPolicy>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Forbidden"));
 
         var response = await ExecuteCommandAsync(
-            "--workspace-id", "ws1",
-            "--immutability-policy", "{\"scope\":\"DiagnosticLogs\",\"retentionDays\":7}");
+            "--workspace-id", "85173301-af01-49c9-b667-03edc44517da",
+            "--scope", "DiagnosticLogs",
+            "--retention-days", "7");
 
         Assert.NotNull(response);
         Assert.NotEqual(HttpStatusCode.OK, response.Status);

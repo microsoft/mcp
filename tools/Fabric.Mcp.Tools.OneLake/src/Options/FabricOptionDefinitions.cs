@@ -216,7 +216,35 @@ public static class FabricOptionDefinitions
              "decisionRules":[{"effect":"Permit","permission":[
                {"attributeName":"Action","attributeValueIncludedIn":["Read"]}]}]}
             """,
-        Required = true
+        Required = false
+    };
+
+    public const string EntraMembersName = "entra-members";
+    public static readonly Option<string> EntraMembers = new($"--{EntraMembersName}")
+    {
+        Description = "Comma-separated Entra member identifiers (object IDs, emails, or UPNs). Non-GUID values are resolved via Microsoft Graph.",
+        Required = false
+    };
+
+    public const string FabricItemMembersName = "fabric-item-members";
+    public static readonly Option<string> FabricItemMembers = new($"--{FabricItemMembersName}")
+    {
+        Description = "Comma-separated Fabric item member references in format 'itemId:permission' (e.g. 'dfbe1234-...:Read').",
+        Required = false
+    };
+
+    public const string PermittedPathsName = "permitted-paths";
+    public static readonly Option<string> PermittedPaths = new($"--{PermittedPathsName}")
+    {
+        Description = "Comma-separated paths to grant access to (e.g. 'Files/images/*,Tables/sales'). Omit to grant access to the entire item.",
+        Required = false
+    };
+
+    public const string PermittedActionsName = "permitted-actions";
+    public static readonly Option<string> PermittedActions = new($"--{PermittedActionsName}")
+    {
+        Description = "Comma-separated actions to permit. Currently only 'Read' is supported. Defaults to 'Read' if omitted.",
+        Required = false
     };
 
     // Shortcut options
@@ -256,30 +284,40 @@ public static class FabricOptionDefinitions
     };
 
     // Settings options
-    public const string DiagnosticsConfigName = "diagnostics-config";
-    public static readonly Option<string> DiagnosticsConfig = new($"--{DiagnosticsConfigName}")
+    // Diagnostics flat options
+    public const string DiagnosticsStatusName = "status";
+    public static readonly Option<string> DiagnosticsStatus = new($"--{DiagnosticsStatusName}")
     {
-        Description = """
-            JSON request body for modifying OneLake diagnostics. Must include 'status'
-            ("Enabled" or "Disabled"). When enabling, include 'destination' with a
-            Lakehouse reference. When disabling, destination may be omitted.
-            Example (enable): {"status":"Enabled","destination":{"type":"Lakehouse",
-            "lakehouse":{"referenceType":"ById","itemId":"<lakehouse-guid>",
-            "workspaceId":"<workspace-guid>"}}}
-            Example (disable): {"status":"Disabled"}
-            """,
+        Description = "The status of diagnostics: Enabled or Disabled.",
         Required = true
     };
 
-    public const string ImmutabilityPolicyConfigName = "immutability-policy";
-    public static readonly Option<string> ImmutabilityPolicyConfig = new($"--{ImmutabilityPolicyConfigName}")
+    public const string DestinationLakehouseWorkspaceIdName = "destination-lakehouse-workspace-id";
+    public static readonly Option<string> DestinationLakehouseWorkspaceId = new($"--{DestinationLakehouseWorkspaceIdName}")
     {
-        Description = """
-            JSON request body for modifying OneLake immutability policy. Must include
-            'scope' (currently only "DiagnosticLogs") and 'retentionDays' (minimum 1).
-            Retention days cannot be reduced below the current value.
-            Example: {"scope":"DiagnosticLogs","retentionDays":30}
-            """,
+        Description = "The workspace ID (GUID) of the destination lakehouse for diagnostic logs. Required when --status is Enabled.",
+        Required = false
+    };
+
+    public const string DestinationLakehouseItemIdName = "destination-lakehouse-item-id";
+    public static readonly Option<string> DestinationLakehouseItemId = new($"--{DestinationLakehouseItemIdName}")
+    {
+        Description = "The item ID (GUID) of the destination lakehouse for diagnostic logs. Required when --status is Enabled.",
+        Required = false
+    };
+
+    // Immutability policy flat options
+    public const string ImmutabilityScopeName = "scope";
+    public static readonly Option<string> ImmutabilityScope = new($"--{ImmutabilityScopeName}")
+    {
+        Description = "The scope of the immutability policy. Currently only 'DiagnosticLogs' is supported.",
+        Required = true
+    };
+
+    public const string RetentionDaysName = "retention-days";
+    public static readonly Option<int> RetentionDays = new($"--{RetentionDaysName}")
+    {
+        Description = "Number of days to retain diagnostic logs (minimum 1). Cannot be reduced below the current value.",
         Required = true
     };
 }

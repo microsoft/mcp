@@ -18,7 +18,8 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Settings;
     Description = """
         Modify the workspace-level OneLake immutability policy. Once enabled,
         immutability cannot be disabled — confirm with the user before applying.
-        Requires OneLake.ReadWrite.All.
+        Retention days cannot be reduced below the current value. Requires
+        OneLake.ReadWrite.All. Caller must be a workspace Admin.
         """,
     Destructive = false,
     Idempotent = true,
@@ -38,7 +39,8 @@ public sealed class ImmutabilityPolicyModifyCommand(
         base.RegisterOptions(command);
         command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ImmutabilityPolicyConfig.AsRequired());
+        command.Options.Add(FabricOptionDefinitions.ImmutabilityScope.AsRequired());
+        command.Options.Add(FabricOptionDefinitions.RetentionDays.AsRequired());
         command.Validators.Add(result =>
         {
             var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
@@ -53,6 +55,18 @@ public sealed class ImmutabilityPolicyModifyCommand(
             {
                 result.AddError("Workspace must be a valid GUID. Name-based resolution is not supported for this command.");
             }
+
+            var scope = result.GetValueOrDefault<string>(FabricOptionDefinitions.ImmutabilityScope.Name);
+            if (!string.Equals(scope, "DiagnosticLogs", StringComparison.OrdinalIgnoreCase))
+            {
+                result.AddError("--scope must be 'DiagnosticLogs'. No other scopes are currently supported.");
+            }
+
+            var retentionDays = result.GetValueOrDefault<int>(FabricOptionDefinitions.RetentionDays.Name);
+            if (retentionDays < 1)
+            {
+                result.AddError("--retention-days must be at least 1.");
+            }
         });
     }
 
@@ -62,7 +76,8 @@ public sealed class ImmutabilityPolicyModifyCommand(
         var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
         var workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
         options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId) ? workspaceId! : workspace ?? string.Empty;
-        options.ImmutabilityPolicyConfig = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ImmutabilityPolicyConfig.Name);
+        options.Scope = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ImmutabilityScope.Name);
+        options.RetentionDays = parseResult.GetValueOrDefault<int>(FabricOptionDefinitions.RetentionDays.Name);
         return options;
     }
 
@@ -76,8 +91,13 @@ public sealed class ImmutabilityPolicyModifyCommand(
         var options = BindOptions(parseResult);
         try
         {
+            var policy = new ImmutabilityPolicy
+            {
+                Scope = options.Scope,
+                RetentionDays = options.RetentionDays
+            };
 
-            await _oneLakeService.ModifyImmutabilityPolicyAsync(options.WorkspaceId!, options.ImmutabilityPolicyConfig!, cancellationToken);
+            await _oneLakeService.ModifyImmutabilityPolicyAsync(options.WorkspaceId!, policy, cancellationToken);
             context.Response.Results = ResponseResult.Create(new("Immutability policy modified successfully."), OneLakeJsonContext.Default.ImmutabilityPolicyModifyCommandResult);
         }
         catch (Exception ex)

@@ -5,14 +5,13 @@ using System.Text.Json.Serialization;
 
 namespace Fabric.Mcp.Tools.OneLake.Models;
 
-/// <summary>
-/// OneLake settings response for a workspace (GET /workspaces/{id}/onelake/settings).
-/// </summary>
+/// <summary>GET /workspaces/{id}/onelake/settings response (swagger: GetOneLakeSettingsResponse).</summary>
 public class OneLakeSettings
 {
     [JsonPropertyName("diagnostics")]
-    public DiagnosticsSettings? Diagnostics { get; set; }
+    public OneLakeDiagnosticSettings? Diagnostics { get; set; }
 
+    /// <summary>Swagger field is plural "immutabilityPolicies" and is an array.</summary>
     [JsonPropertyName("immutabilityPolicies")]
     public List<ImmutabilityPolicy>? ImmutabilityPolicies { get; set; }
 
@@ -21,38 +20,38 @@ public class OneLakeSettings
 }
 
 /// <summary>
-/// OneLake diagnostic settings object.
-/// Used in both the GET response (nested under "diagnostics") and the
-/// POST /modifyDiagnostics request body.
+/// Body of POST /onelake/settings/modifyDiagnostics AND the diagnostics block in GET.
+/// Swagger: OneLakeDiagnosticSettings.
 /// </summary>
-public class DiagnosticsSettings
+public class OneLakeDiagnosticSettings
 {
     [JsonPropertyName("status")]
     public string? Status { get; set; }
 
+    /// <summary>Required when Status == Enabled; omitted when Disabled.</summary>
     [JsonPropertyName("destination")]
-    public DiagnosticsDestination? Destination { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public LakehouseDiagnosticDestination? Destination { get; set; }
 }
 
 /// <summary>
-/// Lakehouse destination for OneLake diagnostic logs.
+/// Swagger: LakehouseOneLakeDiagnosticSettingsDestination (discriminator type="Lakehouse").
+/// Single-variant today — promote to polymorphic when Fabric adds another destination type.
 /// </summary>
-public class DiagnosticsDestination
+public sealed class LakehouseDiagnosticDestination
 {
     [JsonPropertyName("type")]
-    public string? Type { get; set; }
+    public string Type { get; set; } = "Lakehouse";
 
     [JsonPropertyName("lakehouse")]
     public ItemReferenceById? Lakehouse { get; set; }
 }
 
-/// <summary>
-/// An item reference by ID object.
-/// </summary>
-public class ItemReferenceById
+/// <summary>Swagger: ItemReferenceById (discriminator referenceType="ById").</summary>
+public sealed class ItemReferenceById
 {
     [JsonPropertyName("referenceType")]
-    public string? ReferenceType { get; set; }
+    public string ReferenceType { get; set; } = "ById";
 
     [JsonPropertyName("itemId")]
     public string? ItemId { get; set; }
@@ -62,7 +61,8 @@ public class ItemReferenceById
 }
 
 /// <summary>
-/// Immutability policy object (GET response and POST /modifyImmutabilityPolicy request).
+/// Body of POST /onelake/settings/modifyImmutabilityPolicy AND items in GET response.
+/// Swagger: ImmutabilityPolicyRequest / ImmutabilityPolicy.
 /// </summary>
 public class ImmutabilityPolicy
 {
@@ -73,9 +73,7 @@ public class ImmutabilityPolicy
     public int? RetentionDays { get; set; }
 }
 
-/// <summary>
-/// Lifecycle management settings for a workspace.
-/// </summary>
+/// <summary>Lifecycle management settings for a workspace.</summary>
 public class LifecycleSettings
 {
     [JsonPropertyName("defaultTier")]

@@ -62,6 +62,6 @@ public interface IOneLakeService
 
     // Settings Operations
     Task<OneLakeSettings> GetSettingsAsync(string workspaceId, CancellationToken cancellationToken = default);
-    Task ModifyDiagnosticsAsync(string workspaceId, string diagnosticsConfigJson, CancellationToken cancellationToken = default);
-    Task ModifyImmutabilityPolicyAsync(string workspaceId, string immutabilityPolicyJson, CancellationToken cancellationToken = default);
+    Task ModifyDiagnosticsAsync(string workspaceId, OneLakeDiagnosticSettings settings, CancellationToken cancellationToken = default);
+    Task ModifyImmutabilityPolicyAsync(string workspaceId, ImmutabilityPolicy policy, CancellationToken cancellationToken = default);
 }

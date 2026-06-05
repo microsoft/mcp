@@ -8,6 +8,7 @@ namespace Fabric.Mcp.Tools.OneLake.Options;
 public sealed class ImmutabilityPolicyModifyOptions : GlobalOptions
 {
     public string? WorkspaceId { get; set; }
-    public string? ImmutabilityPolicyConfig { get; set; }
+    public string? Scope { get; set; }
+    public int? RetentionDays { get; set; }
 }
 

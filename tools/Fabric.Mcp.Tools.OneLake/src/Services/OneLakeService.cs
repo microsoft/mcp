@@ -2072,34 +2072,18 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.OneLakeSettings, cancellationToken) ?? new OneLakeSettings();
     }
 
-    public async Task ModifyDiagnosticsAsync(string workspaceId, string diagnosticsConfigJson, CancellationToken cancellationToken = default)
+    public async Task ModifyDiagnosticsAsync(string workspaceId, OneLakeDiagnosticSettings settings, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            using var doc = JsonDocument.Parse(diagnosticsConfigJson);
-        }
-        catch (JsonException ex)
-        {
-            throw new ArgumentException($"Invalid diagnostics configuration JSON: {ex.Message}", nameof(diagnosticsConfigJson), ex);
-        }
-
         var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/onelake/settings/modifyDiagnostics";
-        await SendFabricApiRequestAsync(HttpMethod.Post, url, diagnosticsConfigJson, cancellationToken: cancellationToken);
+        var jsonContent = JsonSerializer.Serialize(settings, OneLakeJsonContext.Default.OneLakeDiagnosticSettings);
+        await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, cancellationToken: cancellationToken);
     }
 
-    public async Task ModifyImmutabilityPolicyAsync(string workspaceId, string immutabilityPolicyJson, CancellationToken cancellationToken = default)
+    public async Task ModifyImmutabilityPolicyAsync(string workspaceId, ImmutabilityPolicy policy, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            using var doc = JsonDocument.Parse(immutabilityPolicyJson);
-        }
-        catch (JsonException ex)
-        {
-            throw new ArgumentException($"Invalid immutability policy JSON: {ex.Message}", nameof(immutabilityPolicyJson), ex);
-        }
-
         var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy";
-        await SendFabricApiRequestAsync(HttpMethod.Post, url, immutabilityPolicyJson, cancellationToken: cancellationToken);
+        var jsonContent = JsonSerializer.Serialize(policy, OneLakeJsonContext.Default.ImmutabilityPolicy);
+        await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, cancellationToken: cancellationToken);
     }
 
     private async Task SendFabricApiDeleteRequestAsync(string url, CancellationToken cancellationToken)

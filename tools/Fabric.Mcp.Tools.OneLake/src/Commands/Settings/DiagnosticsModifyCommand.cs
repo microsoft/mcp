@@ -16,10 +16,11 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Settings;
     Name = "modify_diagnostics",
     Title = "Modify OneLake Diagnostics",
     Description = """
-        Modify the diagnostic logging configuration for OneLake at the workspace
-        scope. Replaces the existing diagnostics block; fetch with
-        onelake_get_settings first if you want to merge. Requires
-        OneLake.ReadWrite.All.
+        Enable or disable workspace-level OneLake diagnostic logging. When enabling,
+        specify the destination lakehouse where logs will be stored. When disabling,
+        destination options must be omitted. This is an LRO — the server may return
+        202 Accepted. Requires OneLake.ReadWrite.All. Caller must be a workspace Admin
+        on the source workspace and Contributor+ on the destination workspace.
         """,
     Destructive = false,
     Idempotent = true,
@@ -39,7 +40,9 @@ public sealed class DiagnosticsModifyCommand(
         base.RegisterOptions(command);
         command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.DiagnosticsConfig.AsRequired());
+        command.Options.Add(FabricOptionDefinitions.DiagnosticsStatus.AsRequired());
+        command.Options.Add(FabricOptionDefinitions.DestinationLakehouseWorkspaceId.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.DestinationLakehouseItemId.AsOptional());
         command.Validators.Add(result =>
         {
             var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
@@ -54,6 +57,34 @@ public sealed class DiagnosticsModifyCommand(
             {
                 result.AddError("Workspace must be a valid GUID. Name-based resolution is not supported for this command.");
             }
+
+            var status = result.GetValueOrDefault<string>(FabricOptionDefinitions.DiagnosticsStatus.Name);
+            if (!string.Equals(status, "Enabled", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(status, "Disabled", StringComparison.OrdinalIgnoreCase))
+            {
+                result.AddError("--status must be 'Enabled' or 'Disabled'.");
+            }
+
+            var destWorkspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.DestinationLakehouseWorkspaceId.Name);
+            var destItemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.DestinationLakehouseItemId.Name);
+
+            if (string.Equals(status, "Enabled", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(destWorkspaceId))
+                    result.AddError("--destination-lakehouse-workspace-id is required when --status is Enabled.");
+                else if (!Guid.TryParse(destWorkspaceId, out _))
+                    result.AddError("--destination-lakehouse-workspace-id must be a valid GUID.");
+
+                if (string.IsNullOrWhiteSpace(destItemId))
+                    result.AddError("--destination-lakehouse-item-id is required when --status is Enabled.");
+                else if (!Guid.TryParse(destItemId, out _))
+                    result.AddError("--destination-lakehouse-item-id must be a valid GUID.");
+            }
+            else if (string.Equals(status, "Disabled", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!string.IsNullOrWhiteSpace(destWorkspaceId) || !string.IsNullOrWhiteSpace(destItemId))
+                    result.AddError("Destination options must be omitted when --status is Disabled.");
+            }
         });
     }
 
@@ -63,7 +94,9 @@ public sealed class DiagnosticsModifyCommand(
         var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
         var workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
         options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId) ? workspaceId! : workspace ?? string.Empty;
-        options.DiagnosticsConfig = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DiagnosticsConfig.Name);
+        options.Status = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DiagnosticsStatus.Name);
+        options.DestinationLakehouseWorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DestinationLakehouseWorkspaceId.Name);
+        options.DestinationLakehouseItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DestinationLakehouseItemId.Name);
         return options;
     }
 
@@ -77,8 +110,20 @@ public sealed class DiagnosticsModifyCommand(
         var options = BindOptions(parseResult);
         try
         {
+            var settings = new OneLakeDiagnosticSettings { Status = options.Status };
+            if (string.Equals(options.Status, "Enabled", StringComparison.OrdinalIgnoreCase))
+            {
+                settings.Destination = new LakehouseDiagnosticDestination
+                {
+                    Lakehouse = new ItemReferenceById
+                    {
+                        ItemId = options.DestinationLakehouseItemId,
+                        WorkspaceId = options.DestinationLakehouseWorkspaceId
+                    }
+                };
+            }
 
-            await _oneLakeService.ModifyDiagnosticsAsync(options.WorkspaceId!, options.DiagnosticsConfig!, cancellationToken);
+            await _oneLakeService.ModifyDiagnosticsAsync(options.WorkspaceId!, settings, cancellationToken);
             context.Response.Results = ResponseResult.Create(new("Diagnostics settings modified successfully."), OneLakeJsonContext.Default.DiagnosticsModifyCommandResult);
         }
         catch (Exception ex)
