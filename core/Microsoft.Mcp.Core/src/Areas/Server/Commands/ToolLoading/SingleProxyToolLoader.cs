@@ -6,6 +6,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Helpers;
@@ -28,7 +29,9 @@ public sealed class SingleProxyToolLoader(
     private readonly string _displayName = serverConfiguration!.Value.DisplayName;
     private readonly JsonElement _toolSchema = BuildToolSchema(serverConfiguration!.Value.ShortName);
 
+    private List<Tool>? _cachedRootTools;
     private string? _cachedRootToolsJson;
+    private readonly ConcurrentDictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, string> _cachedToolListsJson = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, IList<McpClientTool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
 
@@ -176,13 +179,13 @@ public sealed class SingleProxyToolLoader(
     /// <summary>
     /// Gets all of the <see cref="IAreaSetup"/>'s available in the server.
     /// </summary>
-    /// <returns>A JSON serialized string with each area's name and a description of operations available in
-    /// that namespace.</returns>
-    private async Task<string> GetRootToolsJsonAsync(CancellationToken cancellationToken)
+    /// <returns>The list of available tools.</returns>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    private async Task<List<Tool>> GetRootToolsAsync(CancellationToken cancellationToken)
     {
-        if (_cachedRootToolsJson != null)
+        if (_cachedRootTools != null)
         {
-            return _cachedRootToolsJson;
+            return _cachedRootTools;
         }
 
         var serverList = await _discoveryStrategy.DiscoverServersAsync(cancellationToken);
@@ -196,11 +199,10 @@ public sealed class SingleProxyToolLoader(
                 Description = serverMetadata.Description,
             });
         }
-        var toolsResult = new ListToolsResult { Tools = tools };
-        var toolsJson = JsonSerializer.Serialize(toolsResult, ServerJsonContext.Default.ListToolsResult);
-        _cachedRootToolsJson = toolsJson;
 
-        return toolsJson;
+        _cachedRootTools = tools;
+        _cachedRootToolsJson = JsonSerializer.Serialize(tools, ServerJsonContext.Default.IEnumerableTool);
+        return tools;
     }
 
     /// <summary>
@@ -209,18 +211,19 @@ public sealed class SingleProxyToolLoader(
     /// <param name="request">Calling request</param>
     /// <param name="tool">Name of the <see cref="IAreaSetup"/> to get commands for.</param>
     /// <returns>JSON serialized string representing the list of commands available in the tool's area.</returns>
-    private async Task<string> GetToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
+    private async Task<List<Tool>> GetToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
-        if (_cachedToolListsJson.TryGetValue(tool, out var cachedJson))
+        if (_cachedToolLists.TryGetValue(tool, out var cached))
         {
-            return cachedJson;
+            return cached;
         }
 
-        var listTools = await GetToolListAsync(request, tool, cancellationToken);
-        var toolsJson = JsonSerializer.Serialize(listTools.Select(t => t.ProtocolTool), ServerJsonContext.Default.IEnumerableTool);
-        _cachedToolListsJson[tool] = toolsJson;
+        var listTools = await GetMcpClientToolListAsync(request, tool, cancellationToken);
+        var tools = listTools.Select(t => t.ProtocolTool).ToList();
+        _cachedToolLists[tool] = tools;
+        _cachedToolListsJson[tool] = JsonSerializer.Serialize(tools, ServerJsonContext.Default.IEnumerableTool);
 
-        return toolsJson;
+        return tools;
     }
 
     internal async Task<IList<McpClientTool>> GetAllToolsAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
@@ -239,7 +242,7 @@ public sealed class SingleProxyToolLoader(
         return all;
     }
 
-    internal async Task<IList<McpClientTool>> GetToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
+    internal async Task<IList<McpClientTool>> GetMcpClientToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
         var allTools = await GetAllToolsAsync(request, tool, cancellationToken);
         return allTools
@@ -251,7 +254,7 @@ public sealed class SingleProxyToolLoader(
     private async Task<CallToolResult> RootLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, CancellationToken cancellationToken)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
-        var toolsJson = await GetRootToolsJsonAsync(cancellationToken);
+        var tools = await GetRootToolsAsync(cancellationToken);
         var learnResponse = new CallToolResult
         {
             Content =
@@ -261,7 +264,7 @@ public sealed class SingleProxyToolLoader(
                         Here are the available list of tools.
                         Next, identify the tool you want to learn about and run again with the "learn" argument and the "tool" name to get a list of available commands and their parameters.
 
-                        {toolsJson}
+                        {_cachedRootToolsJson}
                         """
                 }
             ]
@@ -269,7 +272,7 @@ public sealed class SingleProxyToolLoader(
         var response = learnResponse;
         if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
         {
-            var toolName = await GetToolNameFromIntentAsync(request, intent, toolsJson, cancellationToken);
+            var toolName = await GetToolNameFromIntentAsync(request, intent, tools, cancellationToken);
             if (toolName != null)
             {
                 response = await ToolLearnModeAsync(request, intent, toolName, cancellationToken);
@@ -284,8 +287,8 @@ public sealed class SingleProxyToolLoader(
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
             .SetTag(TagName.ToolArea, tool);
 
-        var toolsJson = await GetToolListJsonAsync(request, tool, cancellationToken);
-        if (string.IsNullOrEmpty(toolsJson))
+        var tools = await GetToolListAsync(request, tool, cancellationToken);
+        if (tools == null || tools.Count == 0)
         {
             return await RootLearnModeAsync(request, intent, cancellationToken);
         }
@@ -300,7 +303,7 @@ public sealed class SingleProxyToolLoader(
                         If you do not find a suitable tool, run again with the "learn" argument and empty "tool" to get a list of available tools and their parameters.
                         Next, identify the command you want to execute and run again with the "tool", "command", and "parameters" arguments.
 
-                        {toolsJson}
+                        {_cachedToolListsJson[tool]}
                         """
                 }
             ]
@@ -309,7 +312,7 @@ public sealed class SingleProxyToolLoader(
         var response = learnResponse;
         if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
         {
-            var (commandName, parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, tool, toolsJson, cancellationToken);
+            var (commandName, parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, tool, tools, cancellationToken);
             if (commandName != null)
             {
                 response = await CommandModeAsync(request, intent, tool, commandName, parameters, cancellationToken);
@@ -432,9 +435,10 @@ public sealed class SingleProxyToolLoader(
             }, cancellationToken: cancellationToken);
     }
 
-    private async Task<string?> GetToolNameFromIntentAsync(RequestContext<CallToolRequestParams> request, string intent, string toolsJson, CancellationToken cancellationToken)
+    private async Task<string?> GetToolNameFromIntentAsync(RequestContext<CallToolRequestParams> request, string intent, List<Tool> tools, CancellationToken cancellationToken)
     {
         await NotifyProgressAsync(request, $"Learning about {_displayName} capabilities...", cancellationToken);
+        var toolsJson = JsonSerializer.Serialize(tools.Select(t => new ToolCommandInfo(t)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
         var samplingRequest = new CreateMessageRequestParams
         {
@@ -484,13 +488,14 @@ public sealed class SingleProxyToolLoader(
         RequestContext<CallToolRequestParams> request,
         string intent,
         string tool,
-        string toolsJson,
+        List<Tool> tools,
         CancellationToken cancellationToken)
     {
         await NotifyProgressAsync(request, $"Learning about {tool} capabilities...", cancellationToken);
 
         JsonElement toolParams = GetParametersJsonElement(request);
         var toolParamsJson = toolParams.GetRawText();
+        var toolsJson = JsonSerializer.Serialize(tools.Select(t => new ToolCommandInfo(t)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
         var samplingRequest = new CreateMessageRequestParams
         {
