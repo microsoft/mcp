@@ -174,10 +174,10 @@
 # ServiceOwners:                        @arazan @kagbakpem @KarishmaGhiya @kirill-linnik
 
 # PRLabel: %tools-Compute
-/tools/Azure.Mcp.Tools.Compute/         @audreytoney @g2vinay @haagha @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Compute/         @audreyttt @g2vinay @haagha @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Compute
-# ServiceOwners:                        @audreytoney @haagha @saakpan
+# ServiceOwners:                        @audreyttt @haagha @saakpan
 
 # PRLabel: %tools-ConfidentialLedger
 /tools/Azure.Mcp.Tools.ConfidentialLedger/      @ivarprudnikov @taicchoumsft @microsoft/azure-mcp
@@ -373,6 +373,12 @@
 
 # ServiceLabel: %tools-SQL
 # ServiceOwners:                     @akromm @achyuth-ms @AV25242 @ericshape @jeremyfrosti @mitesh-pv @microsoft/azure-mcp
+
+# PRLabel: %tools-SreAgent
+/tools/Azure.Mcp.Tools.SreAgent/       @BandaruDheeraj @microsoft/azure-mcp
+
+# ServiceLabel: %tools-SreAgent
+# ServiceOwners:                       @BandaruDheeraj
 
 # PRLabel: %tools-Storage
 /tools/Azure.Mcp.Tools.Storage/        @alzimmermsft @jongio @xiangyan99 @microsoft/azure-mcp

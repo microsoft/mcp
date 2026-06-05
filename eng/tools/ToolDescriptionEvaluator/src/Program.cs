@@ -457,7 +457,9 @@ class Program
 
         while (dir != null)
         {
-            if (Directory.Exists(Path.Combine(dir.FullName, ".git")))
+            // .git is normally a directory, but a worktree pins it as a file containing `gitdir: ...`.
+            var gitPath = Path.Combine(dir.FullName, ".git");
+            if (Directory.Exists(gitPath) || File.Exists(gitPath))
             {
                 return dir.FullName;
             }

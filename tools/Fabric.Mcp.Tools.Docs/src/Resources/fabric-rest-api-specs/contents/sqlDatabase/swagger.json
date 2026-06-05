@@ -176,6 +176,9 @@
           },
           "Create a SQLDatabase with definition example": {
             "$ref": "./examples/CreateSQLDatabaseWithDefinition.json"
+          },
+          "Create a SQLDatabase with payload of restore deleted database example": {
+            "$ref": "./examples/CreateSQLDatabaseWithRestoreDeletedDatabasePayload.json"
           }
         }
       }
@@ -412,6 +415,13 @@
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "description": "The format of the SQL database public definition. Supported format: `dacpac` and `sqlproj`. If no format is provided, `dacpac` is used.",
+            "type": "string",
+            "required": false
           }
         ],
         "responses": {
@@ -888,6 +898,76 @@
         "x-ms-examples": {
           "Update SQL audit settings example": {
             "$ref": "./examples/UpdateSqlAuditSettings.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/sqlDatabases/restorableDeletedDatabases": {
+      "get": {
+        "tags": [
+           "Items"
+        ],
+        "operationId": "Items_ListRestorableDeletedDatabases",
+        "summary": "Gets the list of restorable deleted databases in the workspace.",
+        "description": "> [!NOTE]\n> PITR from deleted databases is currently in Preview ([learn more](/fabric/fundamentals/preview)). \n\n## Permissions\n\nThe caller must have a *viewer* workspace role.\n\nThe caller must have *read and write* permissions for the SQL database. \n\n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace identifier.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "recursive",
+            "description": "Lists items in a folder and its nested folders, or just a folder only. True - All items in the folder and its nested folders are listed, False - Only items in the folder are listed. The default value is true.",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "rootFolderId",
+            "description": "This parameter allows users to filter items based on a specific root folder. If not provided, the workspace is used as the root folder.",
+            "type": "string",
+            "format": "uuid",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/RestorableDeletedSQLDatabases"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get restorable deleted databases example": {
+            "$ref": "./examples/ListRestorableDeletedDatabasesInWorkspace.json"
           }
         }
       }

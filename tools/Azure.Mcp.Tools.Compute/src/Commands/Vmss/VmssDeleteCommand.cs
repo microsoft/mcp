@@ -66,7 +66,7 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger, IComput
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            await _computeService.DeleteVmssAsync(
+            var deleted = await _computeService.DeleteVmssAsync(
                 options.VmssName!,
                 options.ResourceGroup!,
                 options.Subscription!,
@@ -75,10 +75,14 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger, IComput
                 options.RetryPolicy,
                 cancellationToken);
 
+            var message = deleted
+                ? $"Virtual machine scale set '{options.VmssName}' was successfully deleted from resource group '{options.ResourceGroup}'."
+                : $"Virtual machine scale set '{options.VmssName}' was not found in resource group '{options.ResourceGroup}'. Nothing was deleted.";
+
             context.Response.Results = ResponseResult.Create(
                 new VmssDeleteCommandResult(
-                    $"Virtual machine scale set '{options.VmssName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
-                    true),
+                    message,
+                    deleted),
                 ComputeJsonContext.Default.VmssDeleteCommandResult);
         }
         catch (Exception ex)

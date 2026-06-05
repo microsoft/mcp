@@ -59,6 +59,7 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, "scan");
 
         try

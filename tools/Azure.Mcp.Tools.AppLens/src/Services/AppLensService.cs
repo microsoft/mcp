@@ -52,7 +52,7 @@ public class AppLensService(
 
         if (findResult is DidNotFindResourceResult notFound)
         {
-            throw new InvalidOperationException(notFound.Message);
+            return new DiagnosticResult([notFound.Message], [], string.Empty, string.Empty);
         }
 
         var foundResource = (FoundResourceResult)findResult;
@@ -147,7 +147,7 @@ public class AppLensService(
 
         // Filter to supported resource types
         var supportedResults = filteredResults
-            .Where(r => IsResourceTypeSupported(r.ResourceType, r.ResourceKind))
+            .Where(r => IsResourceTypeSupported(r.ResourceType))
             .ToImmutableArray();
 
         if (supportedResults.Length == 0)
@@ -255,19 +255,11 @@ public class AppLensService(
     }
 
     /// <summary>
-    /// Checks whether a resource type (and optionally kind) is supported by AppLens diagnostics.
+    /// Checks whether a resource type is supported by AppLens diagnostics.
     /// </summary>
-    internal static bool IsResourceTypeSupported(string resourceType, string resourceKind)
+    internal static bool IsResourceTypeSupported(string resourceType)
     {
-        if (resourceType.Equals("microsoft.web/sites", StringComparison.OrdinalIgnoreCase))
-        {
-            return resourceKind.Equals("app", StringComparison.OrdinalIgnoreCase)
-                || resourceKind.Equals("linux", StringComparison.OrdinalIgnoreCase)
-                || resourceKind.Equals("functionapp", StringComparison.OrdinalIgnoreCase);
-        }
-
-        return resourceType.Equals("microsoft.containerservice/managedclusters", StringComparison.OrdinalIgnoreCase)
-            || resourceType.Equals("microsoft.apimanagement/service", StringComparison.OrdinalIgnoreCase);
+        return SupportedResourceTypes().Contains(resourceType, StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>

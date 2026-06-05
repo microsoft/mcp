@@ -68,7 +68,7 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger, IComputeSer
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            await _computeService.DeleteVmAsync(
+            var deleted = await _computeService.DeleteVmAsync(
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,
@@ -77,10 +77,12 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger, IComputeSer
                 options.RetryPolicy,
                 cancellationToken);
 
+            var message = deleted
+                ? $"Virtual machine '{options.VmName}' was successfully deleted from resource group '{options.ResourceGroup}'."
+                : $"Virtual machine '{options.VmName}' was not found in resource group '{options.ResourceGroup}'. Nothing was deleted.";
+
             context.Response.Results = ResponseResult.Create(
-                new VmDeleteCommandResult(
-                    $"Virtual machine '{options.VmName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
-                    true),
+                new VmDeleteCommandResult(message, deleted),
                 ComputeJsonContext.Default.VmDeleteCommandResult);
         }
         catch (Exception ex)

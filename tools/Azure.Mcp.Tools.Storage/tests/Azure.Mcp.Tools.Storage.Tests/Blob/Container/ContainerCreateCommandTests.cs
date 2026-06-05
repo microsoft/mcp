@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.Tests.Blob.Container;
 
-public class ContainerCreateCommandTests : CommandUnitTestsBase<ContainerCreateCommand, IStorageService>
+public class ContainerCreateCommandTests : SubscriptionCommandUnitTestsBase<ContainerCreateCommand, IStorageService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -116,6 +116,30 @@ public class ContainerCreateCommandTests : CommandUnitTestsBase<ContainerCreateC
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesStorageAccountNotFound()
+    {
+        // Arrange
+        Service.CreateContainer(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Storage account not found"));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--account", "nonexistentaccount",
+            "--subscription", "sub123",
+            "--container", "container123");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("not found", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

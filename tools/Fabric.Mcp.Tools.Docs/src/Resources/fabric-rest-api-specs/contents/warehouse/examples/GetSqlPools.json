@@ -1,0 +1,53 @@
+{
+    "parameters": {
+      "workspaceId": "a97f3e88-9f0a-4183-b1d9-31e6eb00e778",
+      "beta": true
+    },
+    "responses": {
+      "200": {
+        "body": {
+          "customSQLPoolsEnabled": true,
+          "customSQLPools": [
+            {
+              "name": "ETL",
+              "isDefault": false,
+              "maxResourcePercentage": 30,
+              "optimizeForReads": false,
+              "classifier": {
+                "type": "Application Name",
+                "value": [
+                  "ETL",
+                  "Load",
+                  "Pipeline"
+                ]
+              }
+            },
+            {
+              "name": "Reporting",
+              "isDefault": false,
+              "maxResourcePercentage": 30,
+              "optimizeForReads": true,
+              "classifier": {
+                "type": "Application Name",
+                "value": [
+                  "Reports"
+                ]
+              }
+            },
+            {
+              "name": "Default",
+              "isDefault": true,
+              "maxResourcePercentage": 40,
+              "optimizeForReads": false,
+              "classifier": {
+                "type": "Application Name",
+                "value": [
+                  "Default"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }

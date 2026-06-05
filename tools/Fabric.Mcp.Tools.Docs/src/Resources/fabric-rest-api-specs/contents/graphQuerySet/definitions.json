@@ -86,7 +86,7 @@
             "required": ["parts"],
             "properties": {
                 "format": {
-                    "description": "The format of the item definition. Currently we support json format.",
+                    "description": "The format of the graph query set definition. Currently we support json format.",
                     "type": "string",
                     "readOnly": false
                 },

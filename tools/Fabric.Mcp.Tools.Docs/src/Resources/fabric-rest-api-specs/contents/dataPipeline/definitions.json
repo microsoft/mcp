@@ -92,7 +92,7 @@
           "required": ["parts"],
           "properties": {
               "format": {
-                  "description": "The format of the item definition.",
+                  "description": "The format of the data pipeline definition.",
                   "type": "string",
                   "readOnly": false
               },
@@ -141,6 +141,24 @@
                   "readOnly": false
               }
           }
+      },
+      "DataPipelineExecuteSchedule": {
+          "description": "Data pipeline execute schedule.",
+          "type": "object",
+          "allOf": [
+              {
+                  "$ref": "../common/job_scheduling.json#/definitions/BaseItemSchedule"
+              }
+          ]
+      },
+      "CreateDataPipelineExecuteScheduleRequest": {
+          "description": "Create data pipeline execute schedule plan request payload.",
+          "type": "object",
+          "allOf": [
+              {
+                  "$ref": "../common/job_scheduling.json#/definitions/BaseCreateScheduleRequest"
+              }
+          ]
       }
   }
 }

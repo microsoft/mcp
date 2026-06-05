@@ -176,4 +176,32 @@ public class KeyGetCommandTests : CommandUnitTestsBase<KeyGetCommand, IKeyVaultS
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsKeysList_IncludesNullManagedKeys_WhenIncludeManagedIsFalse()
+    {
+        // KV-01: the filter is `includeManagedKeys || x.Managed != true`, which means keys where
+        // Managed is null (i.e., keys not backing a certificate) are included when includeManagedKeys=false.
+        // This test documents that null-managed keys are expected to appear in the default listing.
+        var expectedKeys = new List<string> { "regular-key", "null-managed-key" };
+
+        Service.ListKeys(
+            Arg.Is(_knownVaultName),
+            Arg.Is(false),
+            Arg.Is(_knownSubscriptionId),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedKeys);
+
+        var response = await ExecuteCommandAsync(
+            "--vault", _knownVaultName,
+            "--subscription", _knownSubscriptionId);
+
+        var result = ValidateAndDeserializeResponse(response, KeyVaultJsonContext.Default.KeyGetCommandResult);
+
+        Assert.NotNull(result.Keys);
+        Assert.Equal(expectedKeys.Count, result.Keys.Count);
+        Assert.Contains("null-managed-key", result.Keys);
+    }
 }

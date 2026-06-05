@@ -4,7 +4,7 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 # <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm;pypi {{ToolTitle}} -->
 <!-- remove-section: start nuget;vsix;npm;pypi remove_note_ga -->
 > [!NOTE]
-> Azure MCP Server 1.0 is now [generally available](https://aka.ms/azmcp/announcement/ga).
+> Azure MCP Server 2.0 is now [generally available](https://aka.ms/azmcp/2.0-ga).
 <!-- remove-section: end remove_note_ga -->
 
 <!-- insert-section: nuget;pypi {{MCPRepositoryMetadata}} -->
@@ -914,6 +914,7 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 ### 📊 Azure Advisor
 
 * "List my Advisor recommendations"
+* "Apply Advisor recommendations to IaaC files"
 
 ### 🔎 Azure AI Search
 
@@ -1146,6 +1147,27 @@ Example prompts that generate Azure CLI commands:
 * "Show me details about my Azure SQL server 'myserver'"
 * "Delete my Azure SQL server 'myserver'"
 
+### 🤖 Azure SRE Agent
+
+* "List my Azure SRE Agent resources"
+* "Show me the SRE sub-agent named 'incident-bot' on agent 'sre-prod'"
+* "Create a new SRE sub-agent named 'incident-bot' with these instructions on agent 'sre-prod'"
+* "List the connectors registered on SRE Agent 'sre-prod'"
+* "Register a Kusto connector on SRE Agent 'sre-prod' pointing at cluster 'https://help.kusto.windows.net'"
+* "Register an MCP connector on SRE Agent 'sre-prod' for the Azure MCP server"
+* "List the safety hooks configured on SRE Agent 'sre-prod'"
+* "Activate the 'pre-prod-approval' hook for thread 'thread-123' on SRE Agent 'sre-prod'"
+* "Create a new investigation thread on SRE Agent 'sre-prod' and ask it to look into elevated 5xx in payments-api"
+* "Send a follow-up message to thread 'thread-123' on SRE Agent 'sre-prod'"
+* "Run an autonomous investigation on SRE Agent 'sre-prod' with up to 20 iterations"
+* "List scheduled tasks on SRE Agent 'sre-prod'"
+* "Create a scheduled task on SRE Agent 'sre-prod' that runs every 15 minutes"
+* "List active incidents on SRE Agent 'sre-prod'"
+* "Declare an incident on SRE Agent 'sre-prod' for elevated error rates"
+* "Generate a remediation workflow on SRE Agent 'sre-prod' from the latest investigation"
+* "Search SRE Agent 'sre-prod' memories for prior occurrences of this alert"
+* "Produce a remediation plan on SRE Agent 'sre-prod' for incident 'inc-42'"
+
 ### 💾 Azure Storage
 
 * "List my Azure storage accounts"
@@ -1233,6 +1255,7 @@ The Azure MCP Server provides tools for interacting with **43+ Azure service are
 - 🗄️ **Azure SQL Database** - Relational database management
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
+- 🤖 **Azure SRE Agent** - SRE Agent investigations, sub-agents, connectors, hooks, threads, scheduled tasks, incidents, workflows, memories, and remediation plans
 - 💾 **Azure Storage** - Blob storage
 -  **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management
