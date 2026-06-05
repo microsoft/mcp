@@ -89,13 +89,13 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : BaseCommand<A
 
     protected override ArchitectureDesignToolOptions BindOptions(ParseResult parseResult) => new()
     {
-        Question = parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.Question.Name) ?? string.Empty;
-        QuestionNumber = parseResult.GetValueOrDefault<int>(CloudArchitectOptionDefinitions.QuestionNumber.Name);
-        TotalQuestions = parseResult.GetValueOrDefault<int>(CloudArchitectOptionDefinitions.TotalQuestions.Name);
-        Answer = parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.Answer.Name);
-        NextQuestionNeeded = parseResult.GetValueOrDefault<bool>(CloudArchitectOptionDefinitions.NextQuestionNeeded.Name);
-        ConfidenceScore = parseResult.GetValueOrDefault<double>(CloudArchitectOptionDefinitions.ConfidenceScore.Name);
-        State = DeserializeState(parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.State.Name));
+        Question = parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.Question.Name) ?? string.Empty,
+        QuestionNumber = parseResult.GetValueOrDefault<int>(CloudArchitectOptionDefinitions.QuestionNumber.Name),
+        TotalQuestions = parseResult.GetValueOrDefault<int>(CloudArchitectOptionDefinitions.TotalQuestions.Name),
+        Answer = parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.Answer.Name),
+        NextQuestionNeeded = parseResult.GetValueOrDefault<bool>(CloudArchitectOptionDefinitions.NextQuestionNeeded.Name),
+        ConfidenceScore = parseResult.GetValueOrDefault<double>(CloudArchitectOptionDefinitions.ConfidenceScore.Name),
+        State = DeserializeState(parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.State.Name))
     };
 
     private static ArchitectureDesignToolState DeserializeState(string? stateJson)
