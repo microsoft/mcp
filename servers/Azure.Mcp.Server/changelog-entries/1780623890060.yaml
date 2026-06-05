@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed Cosmos DB cache keys to include subscription, tenant, and authentication method."
