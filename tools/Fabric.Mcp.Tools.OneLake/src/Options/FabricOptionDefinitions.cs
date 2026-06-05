@@ -191,13 +191,30 @@ public static class FabricOptionDefinitions
     public static readonly Option<string> RoleDefinition = new($"--{RoleDefinitionName}")
     {
         Description = """
-            JSON definition of the data access role. Must include 'name', 'members' (with microsoftEntraMembers),
-            and 'decisionRules'. To scope access to a specific folder, include a Path attribute in decisionRules.
-            Example: {"name":"ImagesReadOnly","members":{"microsoftEntraMembers":[{"objectId":"<guid>"}]},
-            "decisionRules":[{"effect":"Permit","permission":[
-            {"attributeName":"Action","attributeValueIncludedIn":["Read"]},
-            {"attributeName":"Path","attributeValueIncludedIn":["Files/images/*"]}]}]}.
-            Omitting Path grants access to the entire item.
+            JSON definition of the data access role. Must include 'name', 'members'
+            (with microsoftEntraMembers), and 'decisionRules'.
+            members.microsoftEntraMembers[].objectId accepts EITHER an Entra object ID
+            (GUID) OR an email address / UPN — non-GUID values are automatically
+            resolved to object IDs via Microsoft Graph (tries /users first, then
+            /groups by mail, so mail-enabled groups and DLs work too). Do NOT call
+            Graph yourself to convert emails to GUIDs first; pass the email or UPN
+            directly. tenantId may be omitted — it is filled in during resolution.
+            To scope access to a specific folder, include a Path attribute in
+            decisionRules. Omitting Path grants access to the entire item.
+            Example with emails (preferred when you know the address, not the GUID):
+            {"name":"ImagesReadOnly",
+             "members":{"microsoftEntraMembers":[
+               {"objectId":"alice@contoso.com"},
+               {"objectId":"data-readers@contoso.com"}]},
+             "decisionRules":[{"effect":"Permit","permission":[
+               {"attributeName":"Action","attributeValueIncludedIn":["Read"]},
+               {"attributeName":"Path","attributeValueIncludedIn":["Files/images/*"]}]}]}
+            Example with GUIDs (use when you already have the object ID):
+            {"name":"ImagesReadOnly",
+             "members":{"microsoftEntraMembers":[
+               {"objectId":"514402e2-4238-4672-b021-ff9000307b66"}]},
+             "decisionRules":[{"effect":"Permit","permission":[
+               {"attributeName":"Action","attributeValueIncludedIn":["Read"]}]}]}
             """,
         Required = true
     };
