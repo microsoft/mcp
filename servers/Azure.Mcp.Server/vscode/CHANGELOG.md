@@ -1,5 +1,18 @@
 # Release History
 
+## 2.0.3 (2026-06-05)
+
+### Changed
+
+- **Breaking:** Changed `appsettings.json` property names to be scoped to `MicrosoftMcp` instead of direct property names. [[#2784](https://github.com/microsoft/mcp/pull/2784)]
+- Added more validations to the `compute vm create` and `compute vmss create` tools. [[#2785](https://github.com/microsoft/mcp/pull/2785)]
+- Centralized KQL query safety validation in `Microsoft.Mcp.Core`. This validation is now enforced for all Monitor log/workspace query execution paths, preventing unsafe tautology and management-tool patterns. [[#2787](https://github.com/microsoft/mcp/pull/2787)]
+- Changed the `SslMode` in PostgreSQL tools to `Require` instead of the default `Prefer` to align with other tools like those in the MySQL namespace. [[#2788](https://github.com/microsoft/mcp/pull/2788)]
+
+### Fixed
+
+- Added validation in `SearchService.GetSearchEndpoint` to prevent URL injection if called without prior `ValidateServiceName` check. [[#2789](https://github.com/microsoft/mcp/pull/2789)]
+
 ## 2.0.2 (2026-04-24)
 
 ### Changes
