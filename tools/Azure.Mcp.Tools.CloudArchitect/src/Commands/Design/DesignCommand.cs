@@ -33,7 +33,7 @@ namespace Azure.Mcp.Tools.CloudArchitect.Commands.Design;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand<ArchitectureDesignToolOptions>
+public sealed class DesignCommand(ILogger<DesignCommand> logger) : BaseCommand<ArchitectureDesignToolOptions>
 {
     private readonly ILogger<DesignCommand> _logger = logger;
 
@@ -87,18 +87,16 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
         });
     }
 
-    protected override ArchitectureDesignToolOptions BindOptions(ParseResult parseResult)
+    protected override ArchitectureDesignToolOptions BindOptions(ParseResult parseResult) => new()
     {
-        var options = base.BindOptions(parseResult);
-        options.Question = parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.Question.Name) ?? string.Empty;
-        options.QuestionNumber = parseResult.GetValueOrDefault<int>(CloudArchitectOptionDefinitions.QuestionNumber.Name);
-        options.TotalQuestions = parseResult.GetValueOrDefault<int>(CloudArchitectOptionDefinitions.TotalQuestions.Name);
-        options.Answer = parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.Answer.Name);
-        options.NextQuestionNeeded = parseResult.GetValueOrDefault<bool>(CloudArchitectOptionDefinitions.NextQuestionNeeded.Name);
-        options.ConfidenceScore = parseResult.GetValueOrDefault<double>(CloudArchitectOptionDefinitions.ConfidenceScore.Name);
-        options.State = DeserializeState(parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.State.Name));
-        return options;
-    }
+        Question = parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.Question.Name) ?? string.Empty;
+        QuestionNumber = parseResult.GetValueOrDefault<int>(CloudArchitectOptionDefinitions.QuestionNumber.Name);
+        TotalQuestions = parseResult.GetValueOrDefault<int>(CloudArchitectOptionDefinitions.TotalQuestions.Name);
+        Answer = parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.Answer.Name);
+        NextQuestionNeeded = parseResult.GetValueOrDefault<bool>(CloudArchitectOptionDefinitions.NextQuestionNeeded.Name);
+        ConfidenceScore = parseResult.GetValueOrDefault<double>(CloudArchitectOptionDefinitions.ConfidenceScore.Name);
+        State = DeserializeState(parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.State.Name));
+    };
 
     private static ArchitectureDesignToolState DeserializeState(string? stateJson)
     {
