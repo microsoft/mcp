@@ -81,7 +81,7 @@ jobs:
       KeyVaultName: 'kv-azuresdk-codesign'
       SignCertName: 'azure-sdk-esrp-release-certificate'
       Intent: 'PackageDistribution'
-      ContentType: 'MCPRegistry'
+      ContentType: 'MCPServer'
       McpRegistryType: 'Official'
       ContentSource: 'Folder'
       FolderLocation: '$(Build.ArtifactStagingDirectory)/server-json'
