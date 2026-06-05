@@ -27,7 +27,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "app", webappName },
-                { "detector-id", "LinuxMemoryDrillDown"}
+                { "detector-id", "AvailabilityAndPerformanceWindows"}
             });
 
         var detectorsResult = DeserializeResult(result, AppServiceJsonContext.Default.DetectorDiagnoseResult);
@@ -41,6 +41,8 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
         webappName = TestMode == TestMode.Playback ? "Sanitized-webapp" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var startTime = RegisterOrRetrieveVariable("startTime", DateTimeOffset.UtcNow.AddHours(-1).ToString("o"));
+        var endTime = RegisterOrRetrieveVariable("endTime", DateTimeOffset.UtcNow.ToString("o"));
 
         var result = await CallToolAsync(
             "appservice_webapp_diagnostic_diagnose",
@@ -49,9 +51,9 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "app", webappName },
-                { "detector-id", "LinuxMemoryDrillDown"},
-                { "start-time", DateTimeOffset.UtcNow.AddHours(-1).ToString("o") },
-                { "end-time", DateTimeOffset.UtcNow.ToString("o") },
+                { "detector-id", "AvailabilityAndPerformanceWindows"},
+                { "start-time", startTime },
+                { "end-time", endTime },
                 { "time-grain", "PT10M" }
             });
 

@@ -1,0 +1,413 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Common data types"
+    },
+    "paths": {},
+    "definitions": {
+        "BaseScheduleRequest": {
+            "description": "Base schedule request payload with common fields for all item types.",
+            "type": "object",
+            "required": [
+                "enabled",
+                "configuration"
+            ],
+            "properties": {
+                "enabled": {
+                    "description": "Whether this schedule is enabled. True - Enabled, False - Disabled.",
+                    "type": "boolean"
+                },
+                "configuration": {
+                    "description": "The actual data contains the time/weekdays of this schedule.",
+                    "$ref": "#/definitions/ScheduleConfig"
+                }
+            }
+        },
+        "BaseCreateScheduleRequest": {
+            "description": "Base create schedule request payload with common fields for all item types.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseScheduleRequest"
+                }
+            ]
+        },
+        "BaseUpdateScheduleRequest": {
+            "description": "Base update schedule request payload with common fields for all item types.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseScheduleRequest"
+                }
+            ]
+        },
+        "ScheduleConfig": {
+            "description": "Item schedule plan detail settings.",
+            "type": "object",
+            "discriminator": "type",
+            "required": [
+                "type",
+                "startDateTime",
+                "endDateTime",
+                "localTimeZoneId"
+            ],
+            "properties": {
+                "type": {
+                    "description": "The type of schedule configuration. Additional types may be added over time.",
+                    "type": "string",
+                    "enum": [
+                        "Cron",
+                        "Daily",
+                        "Weekly",
+                        "Monthly"
+                    ],
+                    "x-ms-enum": {
+                        "name": "ScheduleType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Cron",
+                                "description": "Triggers a job periodically."
+                            },
+                            {
+                                "value": "Daily",
+                                "description": "Triggers a job daily."
+                            },
+                            {
+                                "value": "Weekly",
+                                "description": "Triggers a job weekly."
+                            },
+                            {
+                                "value": "Monthly",
+                                "description": "Triggers a job monthly."
+                            }
+                        ]
+                    }
+                },
+                "startDateTime": {
+                    "description": "The start time for this schedule. If the start time is in the past, it will trigger a job instantly. The time is in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "endDateTime": {
+                    "description": "The end time for this schedule. The end time must be later than the start time. It has to be in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "localTimeZoneId": {
+                    "description": "The time zone identifier registry on local computer for windows, see [Default Time Zones](/windows-hardware/manufacture/desktop/default-time-zones)",
+                    "type": "string"
+                }
+            }
+        },
+        "CronScheduleConfig": {
+            "type": "object",
+            "x-ms-discriminator-value": "Cron",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ScheduleConfig"
+                }
+            ],
+            "required": [
+                "interval"
+            ],
+            "properties": {
+                "interval": {
+                    "description": "The time interval in minutes. A number between 1 and 5270400 (10 years).",
+                    "type": "integer",
+                    "format": "int32",
+                    "minimum": 1,
+                    "maximum": 5270400
+                }
+            }
+        },
+        "DailyScheduleConfig": {
+            "type": "object",
+            "x-ms-discriminator-value": "Daily",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ScheduleConfig"
+                }
+            ],
+            "required": [
+                "times"
+            ],
+            "properties": {
+                "times": {
+                    "description": "A list of time slots in the hh:mm format. The maximum time slots you can use is 100.",
+                    "type": "array",
+                    "items": {
+                        "description": "Time slots in the hh:mm format.",
+                        "type": "string"
+                    },
+                    "minItems": 1,
+                    "maxItems": 100
+                }
+            }
+        },
+        "WeeklyScheduleConfig": {
+            "type": "object",
+            "x-ms-discriminator-value": "Weekly",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ScheduleConfig"
+                }
+            ],
+            "required": [
+                "times",
+                "weekdays"
+            ],
+            "properties": {
+                "times": {
+                    "description": "A list of time slots in the hh:mm format. The maximum time slots you can use is 100.",
+                    "type": "array",
+                    "items": {
+                        "description": "Time slots in the hh:mm format.",
+                        "type": "string"
+                    },
+                    "minItems": 1,
+                    "maxItems": 100
+                },
+                "weekdays": {
+                    "description": "A list of weekdays, at most seven elements are allowed.",
+                    "type": "array",
+                    "items": {
+                        "description": "Days of the week",
+                        "type": "string",
+                        "$ref": "#/definitions/DayOfWeek"
+                    },
+                    "minItems": 1,
+                    "maxItems": 7
+                }
+            }
+        },
+        "MonthlyOccurrence": {
+            "type": "object",
+            "description": "Specifies the day for triggering jobs",
+            "discriminator": "occurrenceType",
+            "required": [
+                "occurrenceType"
+            ],
+            "properties": {
+                "occurrenceType": {
+                    "description": "An enumerator that lists the day for triggering jobs. Additional types may be added over time.",
+                    "type": "string",
+                    "enum": [
+                        "DayOfMonth",
+                        "OrdinalWeekday"
+                    ],
+                    "x-ms-enum": {
+                        "name": "OccurrenceType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "DayOfMonth",
+                                "description": "A date."
+                            },
+                            {
+                                "value": "OrdinalWeekday",
+                                "description": "A day."
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "DayOfMonth": {
+            "description": "Specifies a date to trigger the job. The value must be a valid date. Otherwise, it will be skipped.",
+            "type": "object",
+            "x-ms-discriminator-value": "DayOfMonth",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/MonthlyOccurrence"
+                }
+            ],
+            "required": [
+                "dayOfMonth"
+            ],
+            "properties": {
+                "dayOfMonth": {
+                    "description": "Specifies a date to trigger the job, using a value between 1 and 31. For example, 2 means the second day of the month. The date must be valid. If an invalid date is provided, such as February 31st, it will automatically skip to the month that includes the 31st day.",
+                    "type": "integer",
+                    "format": "int32",
+                    "minimum": 1,
+                    "maximum": 31
+                }
+            }
+        },
+        "OrdinalWeekday": {
+            "description": "Specifies the ordinal week and weekday to trigger the job. The value must be a valid date. Otherwise, it will be skipped.",
+            "type": "object",
+            "x-ms-discriminator-value": "OrdinalWeekday",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/MonthlyOccurrence"
+                }
+            ],
+            "required": [
+                "weekIndex",
+                "weekday"
+            ],
+            "properties": {
+                "weekIndex": {
+                    "description": "The week of the month.",
+                    "type": "string",
+                    "enum": [
+                        "First",
+                        "Second",
+                        "Third",
+                        "Fourth",
+                        "Fifth"
+                    ],
+                    "x-ms-enum": {
+                        "name": "WeekIndex",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "First",
+                                "description": "First."
+                            },
+                            {
+                                "value": "Second",
+                                "description": "Second."
+                            },
+                            {
+                                "value": "Third",
+                                "description": "Third."
+                            },
+                            {
+                                "value": "Fourth",
+                                "description": "Fourth."
+                            },
+                            {
+                                "value": "Fifth",
+                                "description": "Fifth."
+                            }
+                        ]
+                    }
+                },
+                "weekday": {
+                    "description": "Week day for triggering jobs.",
+                    "type": "string",
+                    "$ref": "#/definitions/DayOfWeek"
+                }
+            }
+        },
+        "DayOfWeek": {
+            "description": "Days of the week",
+            "type": "string",
+            "enum": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ],
+            "x-ms-enum": {
+                "name": "DayOfWeek",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Monday",
+                        "description": "Monday"
+                    },
+                    {
+                        "value": "Tuesday",
+                        "description": "Tuesday"
+                    },
+                    {
+                        "value": "Wednesday",
+                        "description": "Wednesday"
+                    },
+                    {
+                        "value": "Thursday",
+                        "description": "Thursday"
+                    },
+                    {
+                        "value": "Friday",
+                        "description": "Friday"
+                    },
+                    {
+                        "value": "Saturday",
+                        "description": "Saturday"
+                    },
+                    {
+                        "value": "Sunday",
+                        "description": "Sunday"
+                    }
+                ]
+            }
+        },
+        "MonthlyScheduleConfig": {
+            "type": "object",
+            "x-ms-discriminator-value": "Monthly",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ScheduleConfig"
+                }
+            ],
+            "required": [
+                "recurrence",
+                "occurrence",
+                "times"
+            ],
+            "properties": {
+                "recurrence": {
+                    "description": "Specifies the monthly job repeat interval. For example, when set to 1 the job is triggered every month.",
+                    "type": "integer",
+                    "format": "int32",
+                    "minimum": 1,
+                    "maximum": 12
+                },
+                "occurrence": {
+                    "description": "A date for triggering the job.",
+                    "type": "object",
+                    "$ref": "#/definitions/MonthlyOccurrence"
+                },
+                "times": {
+                    "description": "A list of time slots in the hh:mm format. The maximum time slots you can use is 100.",
+                    "type": "array",
+                    "items": {
+                        "description": "Time slots in the hh:mm format.",
+                        "type": "string"
+                    },
+                    "minItems": 1,
+                    "maxItems": 100
+                }
+            }
+        },
+        "BaseItemSchedule": {
+            "description": "Item schedule.",
+            "type": "object",
+            "required": [
+                "id",
+                "enabled"
+            ],
+            "properties": {
+                "id": {
+                    "description": "The schedule ID.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "enabled": {
+                    "description": "Whether this schedule is enabled. True - Enabled, False - Disabled.",
+                    "type": "boolean"
+                },
+                "createdDateTime": {
+                    "description": "The created time stamp of this schedule in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "configuration": {
+                    "description": "The actual data contains the time/weekdays of this schedule.",
+                    "$ref": "#/definitions/ScheduleConfig"
+                },
+                "owner": {
+                    "description": "The user identity that created this schedule or last modified it.",
+                    "$ref": "./definitions.json#/definitions/Principal"
+                }
+            }
+        }
+    }
+}

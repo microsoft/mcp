@@ -69,12 +69,14 @@ public class ThreadsInvestigateYoloCommandTests : CommandUnitTestsBase<ThreadsIn
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentThread { Id = "thread1", LastMessage = new SreAgentThreadLastMessage { IsComplete = true } });
 
-            Service.GetThreadMessagesAsync(
+            Service.PollThreadForCompletionAsync(
                 Arg.Any<string>(),
-                Arg.Any<string>(),
+                "thread1",
                 Arg.Any<string?>(),
+                Arg.Any<TimeSpan>(),
+                Arg.Any<bool>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentThreadMessage>());
+                .Returns([]);
         }
 
         var response = await ExecuteCommandAsync(args);
@@ -119,15 +121,17 @@ public class ThreadsInvestigateYoloCommandTests : CommandUnitTestsBase<ThreadsIn
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentThread { Id = "thread1", LastMessage = new SreAgentThreadLastMessage { IsComplete = true } });
 
-        Service.GetThreadMessagesAsync(
+        Service.PollThreadForCompletionAsync(
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            "thread1",
             Arg.Any<string?>(),
+            Arg.Any<TimeSpan>(),
+            Arg.Any<bool>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentThreadMessage>
-            {
+            .Returns(
+            [
                 new() { Id = "msg1", Text = "YOLO investigation result" }
-            });
+            ]);
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "test-agent", "--message", "investigate this yolo");
 
@@ -189,12 +193,14 @@ public class ThreadsInvestigateYoloCommandTests : CommandUnitTestsBase<ThreadsIn
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentThread { Id = "thread1", LastMessage = new SreAgentThreadLastMessage { IsComplete = true } });
 
-        Service.GetThreadMessagesAsync(
+        Service.PollThreadForCompletionAsync(
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            "thread1",
             Arg.Any<string?>(),
+            Arg.Any<TimeSpan>(),
+            Arg.Any<bool>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentThreadMessage>());
+            .Returns([]);
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "test-agent", "--message", "investigate this yolo", "--max-iterations", "3");
 

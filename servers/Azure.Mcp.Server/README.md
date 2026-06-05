@@ -4,7 +4,7 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 # <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm;pypi {{ToolTitle}} -->
 <!-- remove-section: start nuget;vsix;npm;pypi remove_note_ga -->
 > [!NOTE]
-> Azure MCP Server 1.0 is now [generally available](https://aka.ms/azmcp/announcement/ga).
+> Azure MCP Server 2.0 is now [generally available](https://aka.ms/azmcp/2.0-ga).
 <!-- remove-section: end remove_note_ga -->
 
 <!-- insert-section: nuget;pypi {{MCPRepositoryMetadata}} -->

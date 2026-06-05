@@ -12,6 +12,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Models;
+using Azure.Mcp.Tools.SreAgent.Options.Threads;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.SreAgent.Services;
@@ -39,6 +40,22 @@ public sealed class SreAgentService(
     // (src/Agent/Agent.Cli.Node/src/services/auth.ts).
     private static readonly string[] DataPlaneScopes = ["59f0a04a-b322-4310-adc9-39ac41e9631e/.default"];
     private const string ArmApiVersion = "2025-05-01-preview";
+    private const string FollowUpPrompt = "Please proceed with the investigation using all available tools and information. Use your best judgment and provide your complete findings including root cause analysis and recommended next steps.";
+
+    private static readonly string[] DirectionPatterns =
+    [
+        "do you want me to", "would you like me to", "shall i", "should i proceed", "should i continue",
+        "do you prefer", "would you prefer", "what would you like me to", "how would you like me to",
+        "do you want to proceed", "would you like to proceed"
+    ];
+
+    private static readonly string[] DataRequestPatterns =
+    [
+        "could you provide", "can you provide", "please provide", "could you share", "can you share", "please share",
+        "could you clarify", "can you clarify", "please clarify", "please specify", "i need more information",
+        "i need additional", "what is the", "what are the", "do you have", "do you know", "subscription id",
+        "resource group", "tenant id", "cluster name", "connection string", "credentials", "access key"
+    ];
 
     // ARM endpoint and scope are resolved from the cloud configuration to support sovereign clouds.
     private string ArmHost => TenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
@@ -972,6 +989,151 @@ public sealed class SreAgentService(
     public async Task ResumeScheduledTaskAsync(string endpoint, string taskId, string? tenant = null, CancellationToken cancellationToken = default)
     {
         await CallDataPlaneAsync(endpoint, $"/api/v1/scheduledtasks/{Uri.EscapeDataString(taskId)}/resume", HttpMethod.Post, "{}", tenant, cancellationToken);
+    }
+
+    public async Task<List<SreAgentThreadMessage>> PollThreadForCompletionAsync(string endpoint, string threadId, string? tenant, TimeSpan timeout, bool autoApprove, CancellationToken cancellationToken = default)
+    {
+        var endTime = DateTimeOffset.UtcNow + timeout;
+        List<SreAgentThreadMessage> messages = [];
+        while (DateTimeOffset.UtcNow < endTime)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            messages = await GetThreadMessagesAsync(endpoint, threadId, tenant, cancellationToken);
+
+            if (autoApprove)
+            {
+                await ApprovePendingApprovalsAsync(this, endpoint, messages, tenant, cancellationToken);
+            }
+            else if (HasPendingInteractiveRequest(messages))
+            {
+                return messages;
+            }
+
+            var thread = await GetThreadAsync(endpoint, threadId, tenant, cancellationToken);
+            var last = thread?.LastMessage;
+            var isAgentMessage = !string.Equals(last?.Author?.Role, "user", StringComparison.OrdinalIgnoreCase);
+            if (isAgentMessage && last?.IsComplete == true)
+            {
+                return messages.Count > 0
+                    ? messages
+                    : await GetThreadMessagesAsync(endpoint, threadId, tenant, cancellationToken);
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+        }
+
+        return messages;
+    }
+
+    private static async Task ApprovePendingApprovalsAsync(
+        ISreAgentService service,
+        string endpoint,
+        List<SreAgentThreadMessage> messages,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        var (userId, _) = SreAgentCommandHelpers.GetUser("mcp-yolo");
+        var approvals = messages
+            .Where(m => !string.IsNullOrWhiteSpace(m.Approval?.Id) && IsPendingApproval(m.Approval.Status))
+            .Select(m => m.Approval!.Id!)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var approvalId in approvals)
+        {
+            await service.ApproveApprovalAsync(endpoint, approvalId, new(userId), tenant, cancellationToken);
+        }
+    }
+
+    private static bool IsPendingApproval(string? status) =>
+        string.Equals(status, "Pending", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(status, "PendingAuthorization", StringComparison.OrdinalIgnoreCase);
+
+    private static bool HasPendingInteractiveRequest(List<SreAgentThreadMessage> messages) =>
+        messages.Any(m =>
+            (string.Equals(m.MessageType, "UserQuestion", StringComparison.OrdinalIgnoreCase) && string.Equals(m.UserQuestion?.Status, "Pending", StringComparison.OrdinalIgnoreCase)) ||
+            (string.Equals(m.MessageType, "Approval", StringComparison.OrdinalIgnoreCase) && IsPendingApproval(m.Approval?.Status)));
+
+    public static async Task<SreAgentInvestigationResult> RunInvestigationAsync(ISreAgentService service, ThreadsInvestigateOptions options, bool autoApprove, CancellationToken cancellationToken = default)
+    {
+        var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(service, options, cancellationToken);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds)));
+
+        var thread = await service.CreateThreadAsync(endpoint, SreAgentCommandHelpers.CreateThreadRequest(options.Message!, options.Agent!), options.Tenant, timeout.Token);
+        var threadId = thread?.Id;
+        if (string.IsNullOrWhiteSpace(threadId))
+        {
+            return new(null, "failed", 0, true, "Thread created but no ID was returned.", []);
+        }
+
+        var messages = await service.PollThreadForCompletionAsync(endpoint, threadId, options.Tenant, TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds)), autoApprove, timeout.Token);
+        var followUps = 0;
+        while (followUps < Math.Max(0, options.MaxIterations))
+        {
+            var action = ClassifyFollowUp(messages);
+            if (action == FollowUpAction.None)
+            {
+                break;
+            }
+
+            if (action == FollowUpAction.NeedsData && !autoApprove)
+            {
+                return new(threadId, "needs-data", followUps, true, LastAgentText(messages), messages);
+            }
+
+            if (action == FollowUpAction.NeedsData && autoApprove)
+            {
+                await ApprovePendingApprovalsAsync(service, endpoint, messages, options.Tenant, timeout.Token);
+            }
+
+            await service.SendThreadMessageAsync(endpoint, threadId, SreAgentCommandHelpers.CreateMessageRequest(FollowUpPrompt), options.Tenant, timeout.Token);
+            messages = await service.PollThreadForCompletionAsync(endpoint, threadId, options.Tenant, TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds)), autoApprove, timeout.Token);
+            followUps++;
+        }
+
+        var status = followUps >= Math.Max(0, options.MaxIterations) ? "max-iterations-reached" : "completed";
+        return new(threadId, status, followUps, false, null, messages);
+    }
+
+    private static string? LastAgentText(List<SreAgentThreadMessage> messages) => messages
+        .LastOrDefault(m => !string.Equals(m.Author?.Role, "user", StringComparison.OrdinalIgnoreCase))?.Text;
+
+    private static FollowUpAction ClassifyFollowUp(List<SreAgentThreadMessage> messages)
+    {
+        var agentMessages = messages
+            .Where(m => !string.Equals(m.Author?.Role, "user", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        if (agentMessages.Count == 0)
+        {
+            return FollowUpAction.None;
+        }
+
+        var last = agentMessages[^1];
+        if (string.Equals(last.MessageType, "UserQuestion", StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(last.UserQuestion?.Status, "Pending", StringComparison.OrdinalIgnoreCase))
+        {
+            return FollowUpAction.NeedsData;
+        }
+
+        if (string.Equals(last.MessageType, "Approval", StringComparison.OrdinalIgnoreCase) && IsPendingApproval(last.Approval?.Status))
+        {
+            return FollowUpAction.NeedsData;
+        }
+
+        var text = (last.Text ?? string.Empty).ToLowerInvariant().Trim();
+        if (DataRequestPatterns.Any(text.Contains))
+        {
+            return FollowUpAction.NeedsData;
+        }
+
+        return DirectionPatterns.Any(text.Contains) ? FollowUpAction.Auto : FollowUpAction.None;
+    }
+
+    private enum FollowUpAction
+    {
+        None,
+        Auto,
+        NeedsData
     }
 
     private static List<T> DeserializeList<T>(string body, JsonTypeInfo<SreAgentPagedResponse<T>> pagedTypeInfo, JsonTypeInfo<List<T>> listTypeInfo)

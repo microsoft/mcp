@@ -91,6 +91,11 @@
             "type": "object",
             "required": ["parts"],
             "properties": {
+                "format": {
+                    "description": "The format of the Apache Airflow job definition.",
+                    "type": "string",
+                    "readOnly": false
+                },
                 "parts": {
                     "description": "A list of definition parts.",
                     "type": "array",
@@ -507,7 +512,7 @@
                     "readOnly": true
                 },
                 "triggerers": {
-                    "description": "The triggerers status.",
+                    "description": "The triggerers status for the Airflow environment. When set to `Disabled`, triggerers do not run. When set to `Enabled`, triggerers resume running. Disabling triggerers does not delete any environment settings.",
                     "$ref": "#/definitions/TriggerersStatus",
                     "readOnly": true
                 }
@@ -544,6 +549,30 @@
                         "description": "Triggerers are disabled."
                     }
                 ]
+            }
+        },
+        "AirflowEnvironmentSettingsRequest": {
+            "description": "The request payload for updating Apache Airflow environment settings.",
+            "type": "object",
+            "properties": {
+                "environmentVariables": {
+                    "description": "Environment variables to configure for the Airflow environment. When updating, users must submit the complete set of desired values; existing values will be replaced.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/NameValuePair"
+                    }
+                },
+                "airflowConfigurationOverrides": {
+                    "description": "Airflow configuration overrides. When updating, users must submit the complete set of desired values; existing values will be replaced.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/NameValuePair"
+                    }
+                },
+                "triggerers": {
+                    "description": "The triggerers status for the Airflow environment. When set to `Disabled`, triggerers do not run. When set to `Enabled`, triggerers resume running. Disabling triggerers does not delete any environment settings.",
+                    "$ref": "#/definitions/TriggerersStatus"
+                }
             }
         },
         "AirflowComputeResponse": {

@@ -758,6 +758,110 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/grantAdminTemporaryAccess": {
+      "post": {
+        "summary": "Grants admin temporary (24h) access to a user's 'My Workspace'.",
+        "description": "## Permissions\n\nThe caller must be a Fabric administrator or authenticate using a service principal.\n\n## Required Delegated Scopes\n\nTenant.ReadWrite.All\n\n## Limitations\n\nMaximum 25 requests per minute.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workspaces"
+        ],
+        "operationId": "Workspaces_GrantAdminTemporaryAccess",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EntityNotFound - The workspace ID doesn't exist or the workspace is not a 'My Workspace'.\n\n* InsufficientScopes - The caller doesn't have permissions to call the API.\n\n* BadRequest - Access to the personal workspace has already been granted.\n\n* Unauthorized - Only tenant admins and service principals with tenant admin role are authorized to call the API.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Grant admin temporary access to workspace example": {
+            "$ref": "./examples/GrantAdminAccess.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/removeAdminTemporaryAccess": {
+      "post": {
+        "summary": "Removes admin temporary access from a user's 'My Workspace'.",
+        "description": "## Permissions\n\nThe caller must be a Fabric administrator or authenticate using a service principal.\n\n## Required Delegated Scopes\n\nTenant.ReadWrite.All\n\n## Limitations\n\nMaximum 25 requests per minute.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workspaces"
+        ],
+        "operationId": "Workspaces_RemoveAdminTemporaryAccess",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EntityNotFound - The workspace ID doesn't exist or the workspace is not a 'My Workspace'.\n\n* InsufficientScopes - The caller doesn't have permissions to call the API.\n\n* BadRequest - The caller does not currently have access to the designated personal workspace.\n\n* Unauthorized - Only tenant admins and service principals with tenant admin role are authorized to call the API.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Remove admin temporary access from workspace example": {
+            "$ref": "./examples/RemoveAdminAccess.json"
+          }
+        }
+      }
+    },
     "/items": {
       "get": {
         "summary": "Returns a list of active Fabric and PowerBI items.",
@@ -3031,6 +3135,314 @@
         "x-ms-examples": {
           "Get network communication policy settings for list of workspaces enabled with either Inbound or Outbound Access Protection for example": {
             "$ref": "./examples/ListNetworkingCommunicationPolicies.json"
+          }
+        }
+      }
+    },
+    "/workloads": {
+      "get": {
+        "summary": "Returns all workloads, optionally filtered by assignment status. If AssignmentStatus is not specified or set to AssignmentStatus.Any, the result will include assigned workloads and unassigned workloads.",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\nNote: Only published workloads are visible.\n\n## Permissions\n\nThe caller must be a Fabric administrator or authenticate using a service principal.\n\n## Required Delegated Scopes\n\nTenant.Read.All or Tenant.ReadWrite.All\n\n## Limitations\n\nMaximum 200 requests per hour.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workloads"
+        ],
+        "operationId": "Workloads_ListWorkloads",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri",
+          "itemName": "value"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "assignmentStatus",
+            "type": "string",
+            "description": "Assignment status of workloads. Additional assignment statuses may be added over time.",
+            "enum": [
+              "Any",
+              "Assigned",
+              "Unassigned"
+            ],
+            "default": "Any",
+            "x-ms-enum": {
+              "name": "WorkloadAssignmentStatus",
+              "modelAsString": true,
+              "values": [
+                {
+                  "value": "Any",
+                  "description": "Workloads that are assigned or unassigned."
+                },
+                {
+                  "value": "Assigned",
+                  "description": "Workloads that are assigned to the tenant or to at least one workspace or capacity in the tenant."
+                },
+                {
+                  "value": "Unassigned",
+                  "description": "Workloads that are not assigned to the tenant, any workspace, or any capacity in the tenant."
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "Continuation token. Used to get the next items in the list.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK. The operation was successful.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/WorkloadAssignmentInfos"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* BadRequest - Invalid query parameters.\n\n* PrivateLinksUnsupported - The API is not supported with Private Links enabled.\n\n* Unauthorized - The caller doesn't have permission to call the API.\n\n* TooManyRequests - The caller has exceeded the number of requests allowed in the current time frame and further requests will fail.\n\n* InternalServerError - Unexpected server error.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List workloads with assigned status example": {
+            "$ref": "./examples/workloads/ListWorkloadsAssigned.json"
+          },
+          "List all workloads example": {
+            "$ref": "./examples/workloads/ListWorkloadsAll.json"
+          }
+        }
+      }
+    },
+    "/workloads/assignments": {
+      "get": {
+        "summary": "List all workload assignments. The result contains a list of assignments which can be filtered by the workload ID and assignment type.",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\nNote: Only published workloads are visible.\n\n## Permissions\n\nThe caller must be a Fabric administrator or authenticate using a service principal.\n\n## Required Delegated Scopes\n\nTenant.Read.All or Tenant.ReadWrite.All\n\n## Limitations\n\nMaximum 200 requests per hour.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workloads"
+        ],
+        "operationId": "Workloads_ListWorkloadAssignments",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri",
+          "itemName": "value"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "Continuation token. Used to get the next items in the list.",
+            "type": "string",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "Type",
+            "type": "string",
+            "description": "Assignment type. Additional assignment types may be added over time.",
+            "enum": [
+              "Capacity",
+              "Workspace",
+              "Tenant"
+            ],
+            "required": false,
+            "x-ms-enum": {
+              "name": "WorkloadAssignmentType",
+              "modelAsString": true,
+              "values": [
+                {
+                  "value": "Capacity",
+                  "description": "Capacity assignment type."
+                },
+                {
+                  "value": "Workspace",
+                  "description": "Workspace assignment type."
+                },
+                {
+                  "value": "Tenant",
+                  "description": "Tenant assignment type."
+                }
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "workloadId",
+            "description": "WorkloadID filter.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK. The operation was successful.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/WorkloadAssignments"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* WorkloadNotFound - Provided workload ID can't be found.\n\n* PrivateLinksUnsupported - The API is not supported with Private Links enabled.\n\n* Unauthorized - The caller doesn't have permission to call the API.\n\n* TooManyRequests - The caller has exceeded the number of requests allowed in the current time frame and further requests will fail.\n\n* InternalServerError - Unexpected server error.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List all workload assignments example": {
+            "$ref": "./examples/workloads/ListWorkloadAssignments.json"
+          },
+          "List capacity assignments for a specific workload example": {
+            "$ref": "./examples/workloads/ListWorkloadAssignmentsFiltered.json"
+          },
+          "List tenant assignments example": {
+            "$ref": "./examples/workloads/ListWorkloadAssignmentsTenant.json"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create workload assignment.",
+        "description": "## Permissions\n\nThe caller must be a Fabric administrator or authenticate using a service principal.\n\n## Required Delegated Scopes\n\nTenant.ReadWrite.All\n\n## Limitations\n\nMaximum 200 requests per hour.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workloads"
+        ],
+        "operationId": "Workloads_CreateWorkloadAssignment",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "createWorkloadAssignmentRequest",
+            "description": "The request payload for creating workload assignment.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CreateWorkloadBaseAssignmentRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created. Workload assignment created successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/BaseWorkloadAssignment"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* WorkloadNotFound - Provided workload ID can't be found.\n\n* PrivateLinksUnsupported - The API is not supported with Private Links enabled.\n\n* Unauthorized - The caller doesn't have permission to call the API.\n\n* TooManyRequests - The caller has exceeded the number of requests allowed in the current time frame and further requests will fail.\n\n* InternalServerError - Unexpected server error.\n\n* BadRequest - Invalid request type, Missing capacity/workspace IDs in request body, Invalid capacity/workspace ID received.\n\n* CapacityNotFound - Capacity not found in the tenant.\n\n* WorkspaceNotFound - Workspace not found in the tenant.\n\n* WorkspaceHaveNoCapacity - Workspace have no capacity assigned.\n\n* WorkspaceHaveUnsupportedSKU - Workspace have unsupported capacity SKU tier.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create capacity assignment example": {
+            "$ref": "./examples/workloads/CreateWorkloadCapacityAssignment.json"
+          },
+          "Create workspace assignment example": {
+            "$ref": "./examples/workloads/CreateWorkloadWorkspaceAssignment.json"
+          },
+          "Create tenant assignment example": {
+            "$ref": "./examples/workloads/CreateWorkloadTenantAssignment.json"
+          }
+        }
+      }
+    },
+    "/workloads/assignments/{assignmentId}": {
+      "delete": {
+        "summary": "Delete workload assignment.",
+        "description": "## Permissions\n\nThe caller must be a Fabric administrator or authenticate using a service principal.\n\n## Required Delegated Scopes\n\nTenant.ReadWrite.All\n\n## Limitations\n\nMaximum 200 requests per hour.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workloads"
+        ],
+        "operationId": "Workloads_DeleteWorkloadAssignment",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignmentId",
+            "description": "Assignment ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK. Assignment deleted successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* AssignmentNotFound - Provided assignment ID can't be found.\n\n* PrivateLinksUnsupported - The API is not supported with Private Links enabled.\n\n* Unauthorized - The caller doesn't have permission to call the API.\n\n* TooManyRequests - The caller has exceeded the number of requests allowed in the current time frame and further requests will fail.\n\n* InternalServerError - Unexpected server error.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete workload assignment example": {
+            "$ref": "./examples/workloads/DeleteWorkloadAssignment.json"
           }
         }
       }
