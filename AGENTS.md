@@ -725,7 +725,7 @@ When adding new commands:
 ```
 
 ### Git Worktree Safety
-When working in a linked git worktree (multiple worktrees sharing one repository common git directory), do **not** use `git stash`. Git stores stash entries in the shared `refs/stash`, so stash operations from concurrent worktrees share the same stack and can apply or drop the wrong changes. To compare against a baseline, use `git diff <ref>` (e.g., `git diff main -- <files>`) or create a throwaway worktree of the base branch with `git worktree add`. When committing, stage intended changes explicitly (`git add -p` or specific paths) rather than `git add -A`.
+When working in a linked git worktree (multiple worktrees sharing one repository common git directory), do **not** use `git stash`. Git stores stash entries in the shared `refs/stash`, so stash operations from concurrent worktrees share the same stack and can apply or drop the wrong changes. To compare against a baseline, use `git diff <ref>` (e.g., `git diff main -- <files>`) or create a throwaway worktree of the base branch with `git worktree add <path> <base-ref>` (e.g., `git worktree add ../mcp-main main`). When committing, stage intended changes explicitly (`git add -p` or specific paths) rather than `git add -A`.
 
 ### Pull Request Guidelines
 - **Run all tests**: `./eng/scripts/Test-Code.ps1`
