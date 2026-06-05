@@ -76,16 +76,9 @@
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
-    <Content Include="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="appsettings.Development.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
   <ItemGroup>
+    <EmbeddedResource Include="Resources\*.*" />
     <EmbeddedResource Include="appsettings.json" />
+    <EmbeddedResource Condition="'$(Configuration)' == 'Debug'" Include="appsettings.Development.json" />
   </ItemGroup>
 </Project>
