@@ -278,6 +278,29 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
     }
 
     [Fact]
+    public async Task ExecuteAsync_Returns404_WhenAccountNotFound()
+    {
+        // Arrange: the service throws KeyNotFoundException when the account does not exist
+        Service.ListDatabases(
+            Arg.Is("missingaccount"),
+            Arg.Is("sub123"),
+            Arg.Any<AuthMethod>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new KeyNotFoundException("Cosmos DB account 'missingaccount' not found in subscription 'sub123'."));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--account", "missingaccount");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("not found", response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_Returns503_WhenServiceIsUnavailable()
     {
         // Arrange

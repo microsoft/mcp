@@ -47,12 +47,13 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
 
         await foreach (var account in subscriptionResource.GetCosmosDBAccountsAsync(cancellationToken))
         {
-            if (account.Data.Name == accountName)
+            // Cosmos DB account names are case-insensitive in Azure, so compare accordingly.
+            if (account.Data.Name.Equals(accountName, StringComparison.OrdinalIgnoreCase))
             {
                 return account;
             }
         }
-        throw new Exception($"Cosmos DB account '{accountName}' not found in subscription '{subscription}'");
+        throw new KeyNotFoundException($"Cosmos DB account '{accountName}' not found in subscription '{subscription}'.");
     }
 
     private async Task<CosmosClient> CreateCosmosClientWithAuth(

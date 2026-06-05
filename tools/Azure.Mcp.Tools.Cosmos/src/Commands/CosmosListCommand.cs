@@ -128,6 +128,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         CosmosException cosmosEx => cosmosEx.StatusCode,
+        KeyNotFoundException => HttpStatusCode.NotFound,
         _ => base.GetStatusCode(ex)
     };
 
