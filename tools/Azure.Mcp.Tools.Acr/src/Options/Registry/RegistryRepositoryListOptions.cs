@@ -20,6 +20,6 @@ public class RegistryRepositoryListOptions : ISubscriptionOption
     [Option(Name = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 
-    [Option("The name of the Azure Container Registy.")]
+    [Option("The name of the Azure Container Registry.")]
     public string? Registry { get; set; }
 }
