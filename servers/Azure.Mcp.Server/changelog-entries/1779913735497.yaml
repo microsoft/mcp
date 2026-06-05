@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Changed the `SslMode` in PostgreSQL tools to `Require` instead of the default `Prefer` to align with other tools like those in the MySQL namespace."

@@ -2,15 +2,27 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.3-beta.1 (Unreleased)
-
-### Features Added
+## 2.0.3 (2026-06-05)
 
 ### Breaking Changes
 
+- Changed `appsettings.json` property names to be scope to `MicrosoftMcp` instead of direct property names. [[#2784](https://github.com/microsoft/mcp/pull/2784)]
+
 ### Bugs Fixed
 
+- Added validation in `SearchService.GetSearchEndpoint` to prevent URL injection if called without prior `ValidateServiceName` check. [[#2789](https://github.com/microsoft/mcp/pull/2789)]
+
 ### Other Changes
+
+- Added more validations to the `compute vm create` and `compute vmss create` tools. [[#2785](https://github.com/microsoft/mcp/pull/2785)]
+- Centralized KQL query safety validation in `Microsoft.Mcp.Core`.This validation is now enforced for all Monitor log/workspace query execution paths, preventing unsafe tautology and management-tool patterns. [[#2787](https://github.com/microsoft/mcp/pull/2787)]
+- Changed the `SslMode` in PostgreSQL tools to `Require` instead of the default `Prefer` to align with other tools like those in the MySQL namespace. [[#2788](https://github.com/microsoft/mcp/pull/2788)]
+
+#### Dependency Updates
+
+- Updated the following `OpenTelemetry` dependencies: [[#2785](https://github.com/microsoft/mcp/pull/2785)]
+  - `OpenTelemetry.Exporter.OpenTelemetryProtocol`: `1.12.0` → `1.15.3`
+  - `Azure.Monitor.OpenTelemetry.AspNetCore`: `1.3.0` → `1.4.0`
 
 ## 2.0.2 (2026-04-24)
 
