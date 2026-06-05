@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -31,6 +32,9 @@ public static partial class ServiceCollectionExtensions
 {
     [GeneratedRegex("^[A-Za-z0-9_-]+$")]
     private static partial Regex ShortNamePattern();
+    private static readonly EmbeddedFileProvider s_embeddedFileProvider = new(
+        Assembly.GetExecutingAssembly() ?? throw new InvalidOperationException("Failed to get executing assembly we're running in."),
+        "Microsoft.Mcp.Core.Areas.Server.Commands");
 
     /// <summary>
     /// Adds the Azure MCP server services to the specified <see cref="IServiceCollection"/>.
@@ -259,8 +263,8 @@ public static partial class ServiceCollectionExtensions
     {
         var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
         var configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", optional: false)
-            .AddJsonFile($"appsettings.{environment}.json", optional: true)
+            .AddJsonFile(s_embeddedFileProvider, "appsettings.json", optional: false, reloadOnChange: false)
+            .AddJsonFile(s_embeddedFileProvider, $"appsettings.{environment}.json", optional: true, reloadOnChange: false)
             .AddEnvironmentVariables()
             .SetBasePath(AppContext.BaseDirectory)
             .Build();
