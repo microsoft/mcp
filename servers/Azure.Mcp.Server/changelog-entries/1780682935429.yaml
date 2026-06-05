@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Removed auth mode from acr_registry_list and acr_registry_repository_list tools as they don't use that parameter."
