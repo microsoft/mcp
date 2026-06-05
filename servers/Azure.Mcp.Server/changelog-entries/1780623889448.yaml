@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed Cosmos DB query validator to use a cached static Regex instead of recompiling a new Regex on every validation, improving performance and AOT compatibility."
