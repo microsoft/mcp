@@ -270,7 +270,16 @@ The Fabric MCP Server exposes tools organized into three categories:
 |-----------|-------------|
 | `onelake_list_shortcuts` | Lists shortcuts defined within an item, recursing through subfolders. |
 | `onelake_get_shortcut` | Gets the properties of a single shortcut. |
-| `onelake_create_or_update_shortcuts` | Creates or updates one or more shortcuts in a single call. |
+| `onelake_create_or_update_shortcuts` | Creates or updates one or more shortcuts in a single call (bulk JSON). |
+| `onelake_create_shortcut_onelake` | Creates a shortcut pointing to another OneLake location. |
+| `onelake_create_shortcut_adls_gen2` | Creates a shortcut pointing to Azure Data Lake Storage Gen2. |
+| `onelake_create_shortcut_amazon_s3` | Creates a shortcut pointing to Amazon S3. |
+| `onelake_create_shortcut_azure_blob` | Creates a shortcut pointing to Azure Blob Storage. |
+| `onelake_create_shortcut_gcs` | Creates a shortcut pointing to Google Cloud Storage. |
+| `onelake_create_shortcut_s3_compatible` | Creates a shortcut pointing to S3-compatible storage. |
+| `onelake_create_shortcut_dataverse` | Creates a shortcut pointing to a Dataverse environment. |
+| `onelake_create_shortcut_onedrive_sharepoint` | Creates a shortcut pointing to OneDrive/SharePoint Online. |
+| `onelake_create_shortcut_external_data_share` | Creates a shortcut pointing to an external data share. |
 | `onelake_delete_shortcut` | Deletes a single shortcut from an item (preserves destination data). |
 | `onelake_reset_shortcut_cache` | Drops cached shortcut reads, forcing re-resolution from destination. |
 
@@ -279,8 +288,8 @@ The Fabric MCP Server exposes tools organized into three categories:
 | Tool Name | Description |
 |-----------|-------------|
 | `onelake_get_settings` | Gets OneLake settings for a workspace (diagnostics + immutability policy). |
-| `onelake_modify_diagnostics` | Modifies diagnostic logging configuration at workspace scope. |
-| `onelake_modify_immutability_policy` | Modifies the workspace-level OneLake immutability policy. |
+| `onelake_modify_diagnostics` | Modifies diagnostic logging configuration (status, destination lakehouse) at workspace scope. |
+| `onelake_modify_immutability_policy` | Modifies the workspace-level OneLake immutability policy (scope, retention days). |
 
 ### Core Fabric Operations
 

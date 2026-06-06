@@ -13,10 +13,10 @@ OneLake is Microsoft Fabric's built-in data lake that provides unified storage f
 - Read and modify workspace-level OneLake settings (diagnostics, immutability)
 
 **Features:**
-- 31 comprehensive OneLake commands with full MCP integration
+- 40 comprehensive OneLake commands with full MCP integration
 - Complete coverage for OneLake table APIs: configuration, namespace discovery, and table metadata
 - Data access security management: list, get, create/update, and delete roles
-- Shortcut management: list, get, create/update, delete, and cache reset
+- Shortcut management: list, get, create/update (bulk + 9 per-target), delete, and cache reset
 - Workspace-level settings: diagnostics and immutability policy configuration
 - Friendly-name support for workspaces and items across all commands
 - Robust error handling and authentication
@@ -714,9 +714,9 @@ dotnet run -- onelake shortcut get --workspace-id "47242da5-ff3b-46fb-a94f-97790
 - `--shortcut-name`: Name of the shortcut
 - `--shortcut-path`: Path of the shortcut within the item
 
-#### Create or Update Shortcuts
+#### Create or Update Shortcuts (Bulk)
 
-Creates one or more shortcuts in a single call. Pass `--create-or-overwrite` to upsert (default fails on conflict).
+Creates one or more shortcuts in a single call using a JSON blob. Pass `--create-or-overwrite` to upsert (default fails on conflict).
 
 ```bash
 dotnet run -- onelake shortcut create-or-update --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --shortcuts '[{"name":"ExternalData","path":"Tables/ExternalData","target":{"adlsGen2":{"location":"https://storageaccount.dfs.core.windows.net","subpath":"/container/path"}}}]'
@@ -727,6 +727,69 @@ dotnet run -- onelake shortcut create-or-update --workspace-id "47242da5-ff3b-46
 - `--item-id`: Item ID (GUID)
 - `--shortcuts`: JSON array of shortcut definitions
 - `--create-or-overwrite`: (Optional) If set, overwrites existing shortcuts
+
+#### Create Shortcut (Per-Target — Recommended for AI agents)
+
+Nine per-target tools provide flat, typed options instead of requiring a JSON blob. Use the tool matching your target type:
+
+| Tool | Target Type |
+|------|-------------|
+| `create_shortcut_onelake` | Another OneLake location |
+| `create_shortcut_adls_gen2` | Azure Data Lake Storage Gen2 |
+| `create_shortcut_amazon_s3` | Amazon S3 |
+| `create_shortcut_azure_blob` | Azure Blob Storage |
+| `create_shortcut_gcs` | Google Cloud Storage |
+| `create_shortcut_s3_compatible` | S3-compatible storage |
+| `create_shortcut_dataverse` | Dataverse environment |
+| `create_shortcut_onedrive_sharepoint` | OneDrive / SharePoint Online |
+| `create_shortcut_external_data_share` | External data share |
+
+**Common parameters (all per-target tools):**
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
+- `--shortcut-path`: Path within the item where the shortcut lives
+- `--shortcut-name`: Display name for the shortcut
+- `--shortcut-conflict-policy`: (Optional) Abort, CreateOrOverwrite, OverwriteOnly, GenerateUniqueName
+
+**OneLake target additional parameters:**
+- `--target-workspace-id`: Target workspace ID
+- `--target-item-id`: Target item ID
+- `--target-path`: (Optional) Path within the target item
+- `--target-connection-id`: (Optional) Connection ID
+
+**ADLS Gen2 / Amazon S3 / Azure Blob / GCS target parameters:**
+- `--target-location`: Storage URL
+- `--target-subpath`: (Optional) Subpath within the location
+- `--target-connection-id`: Connection ID for authentication
+
+**S3-compatible target additional parameters:**
+- `--target-bucket`: Bucket name (in addition to location, subpath, connection-id)
+
+**Dataverse target parameters:**
+- `--target-environment-domain`: Dataverse environment URI
+- `--target-connection-id`: Connection ID
+- `--target-deltalake-folder`: Delta Lake folder path
+- `--target-table-name`: (Optional) Table name
+
+**OneDrive/SharePoint target parameters:**
+- `--target-location`: Storage URL
+- `--target-subpath`: (Optional) Subpath
+- `--target-connection-id`: Connection ID
+- `--target-update-fabric-item-sensitivity`: (Optional) Update sensitivity label from source
+
+**External Data Share target parameters:**
+- `--target-connection-id`: Connection ID
+
+**Example — Create an ADLS Gen2 shortcut:**
+```bash
+dotnet run -- onelake shortcut create-adls-gen2 \
+  --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" \
+  --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" \
+  --shortcut-path "Tables" --shortcut-name "ExternalData" \
+  --target-location "https://myaccount.dfs.core.windows.net/container" \
+  --target-subpath "/data/tables" \
+  --target-connection-id "a1b2c3d4-5678-9012-3456-789012345678"
+```
 
 #### Delete Shortcut
 
@@ -770,27 +833,30 @@ dotnet run -- onelake settings get --workspace-id "47242da5-ff3b-46fb-a94f-97790
 
 #### Modify Diagnostics
 
-Modifies the diagnostic logging configuration for OneLake at the workspace scope. Replaces the existing diagnostics block; fetch with `get settings` first if you want to merge.
+Modifies the diagnostic logging configuration for OneLake at the workspace scope using flat options.
 
 ```bash
-dotnet run -- onelake settings modify-diagnostics --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --diagnostics-config '{"logAnalyticsWorkspaceId":"<workspace-id>","level":"Verbose"}'
+dotnet run -- onelake settings modify-diagnostics --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --status "Enabled" --destination-lakehouse-workspace-id "ws-guid" --destination-lakehouse-item-id "item-guid"
 ```
 
 **Parameters:**
 - `--workspace-id`: Workspace ID (GUID)
-- `--diagnostics-config`: JSON configuration for diagnostic settings
+- `--status`: Diagnostic status (Enabled or Disabled)
+- `--destination-lakehouse-workspace-id`: (Optional) Workspace ID of the destination lakehouse
+- `--destination-lakehouse-item-id`: (Optional) Item ID of the destination lakehouse
 
 #### Modify Immutability Policy
 
 Modifies the workspace-level OneLake immutability policy. **Warning:** Once enabled, immutability cannot be disabled — confirm with the user before applying.
 
 ```bash
-dotnet run -- onelake settings modify-immutability --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --immutability-policy '{"state":"Enabled"}'
+dotnet run -- onelake settings modify-immutability --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --scope "Workspace" --retention-days 30
 ```
 
 **Parameters:**
 - `--workspace-id`: Workspace ID (GUID)
-- `--immutability-policy`: JSON immutability policy configuration
+- `--scope`: Immutability scope (e.g. Workspace)
+- `--retention-days`: (Optional) Retention period in days
 
 ## Quick Reference - fabmcp.exe Commands
 

@@ -144,6 +144,9 @@ public class S3CompatibleShortcutTarget
 
     [JsonPropertyName("connectionId")]
     public string? ConnectionId { get; set; }
+
+    [JsonPropertyName("bucket")]
+    public string? Bucket { get; set; }
 }
 
 /// <summary>

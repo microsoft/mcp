@@ -320,4 +320,82 @@ public static class FabricOptionDefinitions
         Description = "Number of days to retain diagnostic logs (minimum 1). Cannot be reduced below the current value.",
         Required = true
     };
+
+    // Shortcut target options
+    public const string TargetWorkspaceIdName = "target-workspace-id";
+    public static readonly Option<string> TargetWorkspaceId = new($"--{TargetWorkspaceIdName}")
+    {
+        Description = "The workspace ID (GUID) of the target OneLake item.",
+        Required = true
+    };
+
+    public const string TargetItemIdName = "target-item-id";
+    public static readonly Option<string> TargetItemId = new($"--{TargetItemIdName}")
+    {
+        Description = "The item ID (GUID) of the target OneLake item.",
+        Required = true
+    };
+
+    public const string TargetPathName = "target-path";
+    public static readonly Option<string> TargetPath = new($"--{TargetPathName}")
+    {
+        Description = "The path within the target item (e.g. 'Files/data').",
+        Required = false
+    };
+
+    public const string TargetLocationName = "target-location";
+    public static readonly Option<string> TargetLocation = new($"--{TargetLocationName}")
+    {
+        Description = "The target storage URL (e.g. 'https://myaccount.dfs.core.windows.net/container').",
+        Required = true
+    };
+
+    public const string TargetSubpathName = "target-subpath";
+    public static readonly Option<string> TargetSubpath = new($"--{TargetSubpathName}")
+    {
+        Description = "The subpath within the target storage location.",
+        Required = false
+    };
+
+    public const string TargetConnectionIdName = "target-connection-id";
+    public static readonly Option<string> TargetConnectionId = new($"--{TargetConnectionIdName}")
+    {
+        Description = "The connection ID (GUID) for authenticating to the target.",
+        Required = true
+    };
+
+    public const string TargetBucketName = "target-bucket";
+    public static readonly Option<string> TargetBucket = new($"--{TargetBucketName}")
+    {
+        Description = "The bucket name for S3-compatible targets.",
+        Required = true
+    };
+
+    public const string TargetEnvironmentDomainName = "target-environment-domain";
+    public static readonly Option<string> TargetEnvironmentDomain = new($"--{TargetEnvironmentDomainName}")
+    {
+        Description = "The Dataverse environment domain URI (e.g. 'https://orgname.crm.dynamics.com').",
+        Required = true
+    };
+
+    public const string TargetDeltaLakeFolderName = "target-deltalake-folder";
+    public static readonly Option<string> TargetDeltaLakeFolder = new($"--{TargetDeltaLakeFolderName}")
+    {
+        Description = "The Delta Lake folder path in Dataverse.",
+        Required = true
+    };
+
+    public const string TargetTableNameOptionName = "target-table-name";
+    public static readonly Option<string> TargetTableName = new($"--{TargetTableNameOptionName}")
+    {
+        Description = "The Dataverse table name.",
+        Required = false
+    };
+
+    public const string TargetUpdateFabricItemSensitivityName = "target-update-fabric-item-sensitivity";
+    public static readonly Option<bool> TargetUpdateFabricItemSensitivity = new($"--{TargetUpdateFabricItemSensitivityName}")
+    {
+        Description = "Whether to update Fabric item sensitivity from OneDrive/SharePoint. Default: false.",
+        Required = false
+    };
 }

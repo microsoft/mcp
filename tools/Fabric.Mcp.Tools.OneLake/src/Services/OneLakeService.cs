@@ -2050,6 +2050,21 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             ?? new BulkCreateShortcutResponse();
     }
 
+    public async Task<OneLakeShortcut> CreateShortcutAsync(string workspaceId, string itemId, OneLakeShortcut shortcut, string? shortcutConflictPolicy = null, CancellationToken cancellationToken = default)
+    {
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts";
+        if (!string.IsNullOrWhiteSpace(shortcutConflictPolicy))
+            url += $"?shortcutConflictPolicy={Uri.EscapeDataString(shortcutConflictPolicy)}";
+
+        var body = JsonSerializer.Serialize(shortcut, OneLakeJsonContext.Default.OneLakeShortcut);
+        var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, body, cancellationToken: cancellationToken);
+        using var reader = new StreamReader(response);
+        var responseBody = await reader.ReadToEndAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(responseBody))
+            return shortcut;
+        return JsonSerializer.Deserialize(responseBody, OneLakeJsonContext.Default.OneLakeShortcut) ?? shortcut;
+    }
+
     public async Task DeleteShortcutAsync(string workspaceId, string itemId, string shortcutPath, string shortcutName, CancellationToken cancellationToken = default)
     {
         var encodedPath = Uri.EscapeDataString(shortcutPath);

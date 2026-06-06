@@ -67,6 +67,15 @@ public class FabricOneLakeSetup : IAreaSetup
         services.AddSingleton<ShortcutCreateOrUpdateCommand>();
         services.AddSingleton<ShortcutDeleteCommand>();
         services.AddSingleton<ShortcutResetCacheCommand>();
+        services.AddSingleton<ShortcutCreateOneLakeCommand>();
+        services.AddSingleton<ShortcutCreateAdlsGen2Command>();
+        services.AddSingleton<ShortcutCreateAmazonS3Command>();
+        services.AddSingleton<ShortcutCreateAzureBlobCommand>();
+        services.AddSingleton<ShortcutCreateGcsCommand>();
+        services.AddSingleton<ShortcutCreateS3CompatibleCommand>();
+        services.AddSingleton<ShortcutCreateDataverseCommand>();
+        services.AddSingleton<ShortcutCreateOneDriveSharePointCommand>();
+        services.AddSingleton<ShortcutCreateExternalDataShareCommand>();
 
         // Register settings commands
         services.AddSingleton<SettingsGetCommand>();
@@ -116,6 +125,15 @@ public class FabricOneLakeSetup : IAreaSetup
         fabricOneLake.AddCommand<ShortcutCreateOrUpdateCommand>(serviceProvider);
         fabricOneLake.AddCommand<ShortcutDeleteCommand>(serviceProvider);
         fabricOneLake.AddCommand<ShortcutResetCacheCommand>(serviceProvider);
+        fabricOneLake.AddCommand<ShortcutCreateOneLakeCommand>(serviceProvider);
+        fabricOneLake.AddCommand<ShortcutCreateAdlsGen2Command>(serviceProvider);
+        fabricOneLake.AddCommand<ShortcutCreateAmazonS3Command>(serviceProvider);
+        fabricOneLake.AddCommand<ShortcutCreateAzureBlobCommand>(serviceProvider);
+        fabricOneLake.AddCommand<ShortcutCreateGcsCommand>(serviceProvider);
+        fabricOneLake.AddCommand<ShortcutCreateS3CompatibleCommand>(serviceProvider);
+        fabricOneLake.AddCommand<ShortcutCreateDataverseCommand>(serviceProvider);
+        fabricOneLake.AddCommand<ShortcutCreateOneDriveSharePointCommand>(serviceProvider);
+        fabricOneLake.AddCommand<ShortcutCreateExternalDataShareCommand>(serviceProvider);
 
         // Register settings commands
         fabricOneLake.AddCommand<SettingsGetCommand>(serviceProvider);
