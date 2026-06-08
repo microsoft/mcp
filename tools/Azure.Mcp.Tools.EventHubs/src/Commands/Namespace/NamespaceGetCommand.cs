@@ -17,16 +17,11 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
     Name = "get",
     Title = "Get Event Hubs Namespaces",
     Description = """
-        Get Event Hubs namespaces from Azure. This command supports three modes of operation:
-        1. List all Event Hubs namespaces in a subscription 
-        2. List all Event Hubs namespaces in a specific resource group 
-        3. Get a single namespace by name 
+        Lists Event Hubs namespaces in a subscription or resource group or get a specific namespace. If no namespace is
+        specified, all namespaces in the specified scope will be listed. Otherwise, get a specific namespace based on the
+        namespace and resource group provided. Resource group is required whrn getting a specific namespace.
 
-        When retrieving a single namespace, detailed information including SKU, settings, and metadata 
-        is returned. When listing namespaces, the same detailed information is returned for all 
-        namespaces in the specified scope.
-
-        The --resource-group parameter is optional for listing operations but required when getting a specific namespace.
+        Returns detailed information including SKU, settings, and metadata.
         """,
     Destructive = false,
     Idempotent = true,

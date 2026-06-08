@@ -20,7 +20,7 @@ namespace Azure.Mcp.Tools.Redis.Commands;
     Id = "750133dd-d57f-4ed4-9488-c1d406ad4a83",
     Name = "create",
     Title = "Create Redis Resource",
-    Description = "Create a new Azure Managed Redis resource in Azure. Use this command to provision a new Redis resource in your subscription.",
+    Description = "Create a new Azure Managed Redis resource in your Azure subscription.",
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

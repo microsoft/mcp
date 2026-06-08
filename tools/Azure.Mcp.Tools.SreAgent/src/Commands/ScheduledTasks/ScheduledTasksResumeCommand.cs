@@ -11,7 +11,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
 
-[CommandMetadata(Id = "ef6f210c-846f-4506-8543-a9969b00ed01", Name = "resume", Title = "Resume Scheduled Task", Description = "Resume an SRE Agent scheduled task.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+[CommandMetadata(
+    Id = "ef6f210c-846f-4506-8543-a9969b00ed01",
+    Name = "resume",
+    Title = "Resume Scheduled Task",
+    Description = "Resume an SRE Agent scheduled task.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ScheduledTasksResumeCommand(ILogger<ScheduledTasksResumeCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<ScheduledTasksResumeOptions>
 {
     private readonly ILogger<ScheduledTasksResumeCommand> _logger = logger;

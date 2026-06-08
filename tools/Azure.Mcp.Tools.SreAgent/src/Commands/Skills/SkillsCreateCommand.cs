@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Skills;
     Id = "21bb35ac-7301-495c-8193-57d482290d85",
     Name = "create",
     Title = "Create SRE Agent Skill",
-    Description = "Creates or updates a custom skill on a targeted SRE Agent resource. Required: --subscription, --agent, --name, --content.",
+    Description = "Creates or updates a custom skill on a targeted SRE Agent resource.",
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

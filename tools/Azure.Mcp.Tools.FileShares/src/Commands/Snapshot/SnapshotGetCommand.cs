@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
     Id = "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d",
     Name = "get",
     Title = "Get File Share Snapshot",
-    Description = "Get details of a specific file share snapshot or list all snapshots. If --snapshot-name is provided, returns a specific snapshot; otherwise, lists all snapshots for the file share.",
+    Description = "Get details of a specific file share snapshot or list all snapshots. If snapshot-name is provided, returns a specific snapshot; otherwise, lists all snapshots for the file share.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

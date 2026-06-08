@@ -16,9 +16,8 @@ namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
     Name = "list",
     Title = "List SQL Server Firewall Rules",
     Description = """
-        Gets a list of firewall rules for a SQL server. This command retrieves all
-        firewall rules configured for the specified SQL server, including their IP address ranges
-        and rule names. Returns an array of firewall rule objects with their properties.
+        Get all firewall rules configured for a SQL server, including their IP address ranges and rule names.
+        Returns an array of firewall rule objects with their properties.
         """,
     Destructive = false,
     Idempotent = true,

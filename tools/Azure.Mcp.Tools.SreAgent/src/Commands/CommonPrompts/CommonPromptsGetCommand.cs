@@ -11,7 +11,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.CommonPrompts;
 
-[CommandMetadata(Id = "8b1d2f3c-4a5b-4c6d-8e7f-9a0b1c2d3e4f", Name = "get", Title = "Get Common Prompt", Description = "Show the content of a specific named common prompt on an SRE Agent. Returns the full prompt text for a single prompt identified by name.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+[CommandMetadata(
+    Id = "8b1d2f3c-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+    Name = "get",
+    Title = "Get Common Prompt",
+    Description = "Show the content of a specific named common prompt on an SRE Agent. Returns the full prompt text for a single prompt identified by name.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CommonPromptsGetCommand(ILogger<CommonPromptsGetCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<CommonPromptsGetOptions>
 {
     private readonly ILogger<CommonPromptsGetCommand> _logger = logger;

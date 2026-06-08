@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Agents;
     Id = "3e7e3a46-5f64-4cb6-90fa-98c845bc4f92",
     Name = "create",
     Title = "Create SRE Agent Tool",
-    Description = "Creates or updates a custom tool on a targeted SRE Agent resource. Required: --subscription, --agent, --name, --tool-type.",
+    Description = "Creates or updates a custom tool on a targeted SRE Agent resource.",
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

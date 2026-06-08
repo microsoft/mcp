@@ -19,13 +19,12 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
     Name = "protect",
     Title = "Protect Resource",
     Description = """
-        Enables or configures backup protection for an Azure resource by creating a
-        protected item or backup instance. Protects VMs, disks, file shares, SQL databases,
-        SAP HANA databases, and other supported datasources.
-        For VMs: pass the VM ARM resource ID as --datasource-id.
+        Enables or configures backup protection for an Azure resource by creating a protected item or backup instance.
+        Protects VMs, disks, file shares, SQL databases, SAP HANA databases, and other supported datasources.
+        For VMs: pass the VM ARM resource ID as datasource-id.
         For workloads (SQL/HANA): pass the protectable item name from 'protectableitem list'
-        as --datasource-id (e.g., 'SAPHanaDatabase;instance;dbname'), and specify --container.
-        Requires a backup policy name via --policy. The operation is asynchronous;
+        as datasource-id (e.g., 'SAPHanaDatabase;instance;dbname'), and specify container.
+        Requires a backup policy name via policy. The operation is asynchronous;
         use 'azurebackup job get' to monitor the protection job progress.
         """,
     Destructive = true,

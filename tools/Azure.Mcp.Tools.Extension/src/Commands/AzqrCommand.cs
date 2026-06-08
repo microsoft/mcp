@@ -20,7 +20,7 @@ namespace Azure.Mcp.Tools.Extension.Commands;
     Id = "e7ef18a3-2730-4300-bad3-dc766f47dd2a",
     Name = "azqr",
     Title = "Azure Quick Review CLI Command",
-    Description = "Runs Azure Quick Review CLI (azqr) commands to generate compliance and security reports for Azure resources, identifying non-compliant configurations or areas for improvement. Requires a subscription id and optionally a resource group name. Returns the generated report file path. Note: azqr is different from Azure CLI (az).",
+    Description = "Runs Azure Quick Review CLI (azqr) commands to generate compliance and security reports for Azure resources, identifying non-compliant configurations or areas for improvement. Returns the generated report file path. Note: azqr is different from Azure CLI (az).",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

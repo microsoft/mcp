@@ -18,9 +18,8 @@ namespace Azure.Mcp.Tools.Sql.Commands.Database;
     Name = "rename",
     Title = "Rename SQL Database",
     Description = """
-        Rename an existing Azure SQL Database to a new name within the same SQL server. This command moves the
-        database resource to a new identifier while preserving configuration and data. Equivalent to
-        'az sql db rename'. Returns the updated database information using the new name.
+        Rename an existing Azure SQL Database to a new name within the same SQL server, preserving configuration and data.
+        Equivalent to 'az sql db rename'. Returns the updated database information using the new name.
         """,
     Destructive = true,
     Idempotent = false,

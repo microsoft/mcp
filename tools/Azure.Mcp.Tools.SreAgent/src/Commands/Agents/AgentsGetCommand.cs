@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Agents;
     Id = "7385f6f1-c535-4edb-908a-65d6e78ed51a",
     Name = "get",
     Title = "Get SRE Agent",
-    Description = "Show the configuration details of a named SRE Agent. Retrieves endpoint, provisioning state, location, and settings for a specific SRE Agent by name, optionally filtered by resource group. Required: --subscription, --agent.",
+    Description = "Show the configuration details of a named SRE Agent. Retrieves endpoint, provisioning state, location, and settings for a specific SRE Agent by name, optionally filtered by resource group.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

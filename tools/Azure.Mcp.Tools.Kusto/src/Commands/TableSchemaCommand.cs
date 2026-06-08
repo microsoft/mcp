@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     Id = "9a972c48-6797-49bb-9784-8063ad1f7e96",
     Name = "schema",
     Title = "Get Kusto Table Schema",
-    Description = "Get/retrieve/show the schema of a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.",
+    Description = "Get/retrieve/show the schema of a specific table in an Azure Data Explorer/Kusto/KQL cluster. Use either cluster-uri or cluster and subscription to specify the target cluster.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

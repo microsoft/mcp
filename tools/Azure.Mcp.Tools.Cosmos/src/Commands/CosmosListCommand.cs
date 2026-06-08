@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands;
     Id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     Name = "list",
     Title = "List Cosmos DB Resources",
-    Description = "List Cosmos DB accounts, databases, or containers. Returns all accounts in the subscription by default. Specify --account to list databases in that account, or --account and --database to list containers in a specific database.",
+    Description = "List Cosmos DB accounts, databases, or containers. Returns all accounts in the subscription by default. Specify account to list databases in that account, or account and database to list containers in a specific database.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -18,10 +18,7 @@ namespace Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
     Name = "list",
     Title = "List Monitored Resources in a Datadog Monitor",
     Description = """
-        List monitored resources in Datadog for a datadog resource taken as input from the user.
-        This command retrieves all monitored azure resources available.
-        Requires `datadog-resource`, `resource-group` and `subscription`.
-        Result is a list of monitored resources as a JSON array.
+        List all monitored Azure resources in a Datadog resource. Returns a list of monitored resources as a JSON array.
         """,
     Destructive = false,
     Idempotent = true,

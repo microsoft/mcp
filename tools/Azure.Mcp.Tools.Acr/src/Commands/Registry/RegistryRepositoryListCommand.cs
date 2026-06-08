@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.Acr.Commands.Registry;
     Title = "List Container Registry Repositories",
     Description = """
         List repositories in Azure Container Registries. By default, lists repositories for all registries in the subscription.
-        You can narrow the scope using --resource-group and/or --registry to list repositories for a specific registry only.
+        You can narrow the scope using resource group and/or registry to list repositories for a specific registry only.
         """,
     Destructive = false,
     Idempotent = true,

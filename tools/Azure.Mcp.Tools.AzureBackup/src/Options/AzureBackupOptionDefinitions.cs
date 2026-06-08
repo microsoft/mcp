@@ -111,7 +111,7 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> VaultType = new($"--{VaultTypeName}")
     {
-        Description = "The type of backup vault: 'rsv' (Recovery Services vault) or 'dpp' (Backup vault / Data Protection). Required for vault create; optional elsewhere (auto-detected if omitted).",
+        Description = "The type of backup vault: 'rsv' (Recovery Services vault) or 'dpp' (Backup vault / Data Protection).",
         Required = false
     };
 
@@ -261,7 +261,7 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> ScheduleTimes = new($"--{ScheduleTimesName}")
     {
-        Description = "Comma-separated list of backup times in 24h HH:mm format (e.g., '02:00' or '02:00,14:00'). Interpreted in --time-zone. Defaults to 02:00 UTC if not specified. Only the first time is used as the schedule start time.",
+        Description = "Comma-separated list of backup times in 24h HH:mm format (e.g., '02:00' or '02:00,14:00'). Interpreted in time-zone. Defaults to 02:00 UTC if not specified. Only the first time is used as the schedule start time.",
         Required = false
     };
 
@@ -273,61 +273,61 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<int> HourlyIntervalHours = new($"--{HourlyIntervalHoursName}")
     {
-        Description = "Interval in hours between hourly backups. Valid values: 4, 6, 8, 12. Used only when --schedule-frequency is 'Hourly' (RSV).",
+        Description = "Interval in hours between hourly backups. Valid values: 4, 6, 8, 12. Used only when schedule-frequency is 'Hourly' (RSV).",
         Required = false
     };
 
     public static readonly Option<string> HourlyWindowStartTime = new($"--{HourlyWindowStartTimeName}")
     {
-        Description = "Start time of the hourly backup window in 24h HH:mm format (e.g., '08:00'). Used only when --schedule-frequency is 'Hourly' (RSV).",
+        Description = "Start time of the hourly backup window in 24h HH:mm format (e.g., '08:00'). Used only when schedule-frequency is 'Hourly' (RSV).",
         Required = false
     };
 
     public static readonly Option<int> HourlyWindowDurationHours = new($"--{HourlyWindowDurationHoursName}")
     {
-        Description = "Duration of the hourly backup window in hours (e.g., 12). Used only when --schedule-frequency is 'Hourly' (RSV).",
+        Description = "Duration of the hourly backup window in hours (e.g., 12). Used only when schedule-frequency is 'Hourly' (RSV).",
         Required = false
     };
 
     public static readonly Option<int> WeeklyRetentionWeeks = new($"--{WeeklyRetentionWeeksName}")
     {
-        Description = "Number of weeks to keep weekly recovery points. Required alongside --weekly-retention-days-of-week.",
+        Description = "Number of weeks to keep weekly recovery points. Required alongside weekly-retention-days-of-week.",
         Required = false
     };
 
     public static readonly Option<string> WeeklyRetentionDaysOfWeek = new($"--{WeeklyRetentionDaysOfWeekName}")
     {
-        Description = "Comma-separated days of the week tagged for weekly retention (e.g., 'Sunday' or 'Saturday,Sunday'). Required alongside --weekly-retention-weeks.",
+        Description = "Comma-separated days of the week tagged for weekly retention (e.g., 'Sunday' or 'Saturday,Sunday'). Required alongside weekly-retention-weeks.",
         Required = false
     };
 
     public static readonly Option<int> MonthlyRetentionMonths = new($"--{MonthlyRetentionMonthsName}")
     {
-        Description = "Number of months to keep monthly recovery points. Combine with either --monthly-retention-days-of-month (absolute) OR --monthly-retention-week-of-month + --monthly-retention-days-of-week (relative).",
+        Description = "Number of months to keep monthly recovery points. Combine with either monthly-retention-days-of-month (absolute) OR monthly-retention-week-of-month + monthly-retention-days-of-week (relative).",
         Required = false
     };
 
     public static readonly Option<string> MonthlyRetentionWeekOfMonth = new($"--{MonthlyRetentionWeekOfMonthName}")
     {
-        Description = "Which week of the month to tag for monthly retention: 'First', 'Second', 'Third', 'Fourth', or 'Last'. Use with --monthly-retention-days-of-week (relative scheme).",
+        Description = "Which week of the month to tag for monthly retention: 'First', 'Second', 'Third', 'Fourth', or 'Last'. Use with monthly-retention-days-of-week (relative scheme).",
         Required = false
     };
 
     public static readonly Option<string> MonthlyRetentionDaysOfWeek = new($"--{MonthlyRetentionDaysOfWeekName}")
     {
-        Description = "Comma-separated days of the week for the monthly retention tag (e.g., 'Sunday'). Use with --monthly-retention-week-of-month (relative scheme).",
+        Description = "Comma-separated days of the week for the monthly retention tag (e.g., 'Sunday'). Use with monthly-retention-week-of-month (relative scheme).",
         Required = false
     };
 
     public static readonly Option<string> MonthlyRetentionDaysOfMonth = new($"--{MonthlyRetentionDaysOfMonthName}")
     {
-        Description = "Comma-separated days of the month for monthly retention (1-28 or 'Last'; e.g., '1,15,Last'). Absolute scheme; mutually exclusive with --monthly-retention-week-of-month.",
+        Description = "Comma-separated days of the month for monthly retention (1-28 or 'Last'; e.g., '1,15,Last'). Absolute scheme; mutually exclusive with monthly-retention-week-of-month.",
         Required = false
     };
 
     public static readonly Option<int> YearlyRetentionYears = new($"--{YearlyRetentionYearsName}")
     {
-        Description = "Number of years to keep yearly recovery points. Combine with --yearly-retention-months and either --yearly-retention-days-of-month (absolute) OR --yearly-retention-week-of-month + --yearly-retention-days-of-week (relative).",
+        Description = "Number of years to keep yearly recovery points. Combine with yearly-retention-months and either yearly-retention-days-of-month (absolute) OR yearly-retention-week-of-month + yearly-retention-days-of-week (relative).",
         Required = false
     };
 
@@ -339,31 +339,31 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> YearlyRetentionWeekOfMonth = new($"--{YearlyRetentionWeekOfMonthName}")
     {
-        Description = "Which week of the selected month(s) to tag for yearly retention: 'First', 'Second', 'Third', 'Fourth', or 'Last'. Use with --yearly-retention-days-of-week (relative scheme).",
+        Description = "Which week of the selected month(s) to tag for yearly retention: 'First', 'Second', 'Third', 'Fourth', or 'Last'. Use with yearly-retention-days-of-week (relative scheme).",
         Required = false
     };
 
     public static readonly Option<string> YearlyRetentionDaysOfWeek = new($"--{YearlyRetentionDaysOfWeekName}")
     {
-        Description = "Comma-separated days of the week for the yearly retention tag (e.g., 'Sunday'). Use with --yearly-retention-week-of-month (relative scheme).",
+        Description = "Comma-separated days of the week for the yearly retention tag (e.g., 'Sunday'). Use with yearly-retention-week-of-month (relative scheme).",
         Required = false
     };
 
     public static readonly Option<string> YearlyRetentionDaysOfMonth = new($"--{YearlyRetentionDaysOfMonthName}")
     {
-        Description = "Comma-separated days of the selected month(s) for yearly retention (1-28 or 'Last'; e.g., '1,Last'). Absolute scheme; mutually exclusive with --yearly-retention-week-of-month.",
+        Description = "Comma-separated days of the selected month(s) for yearly retention (1-28 or 'Last'; e.g., '1,Last'). Absolute scheme; mutually exclusive with yearly-retention-week-of-month.",
         Required = false
     };
 
     public static readonly Option<string> ArchiveTierAfterDays = new($"--{ArchiveTierAfterDaysName}")
     {
-        Description = "Move recovery points to the archive tier after this many days. Pair with --archive-tier-mode.",
+        Description = "Move recovery points to the archive tier after this many days. Pair with archive-tier-mode.",
         Required = false
     };
 
     public static readonly Option<string> ArchiveTierMode = new($"--{ArchiveTierModeName}")
     {
-        Description = "Archive tiering mode: 'TierAfter' (always tier after --archive-tier-after-days) or 'CopyOnExpiry' (copy to archive when the recovery point expires). Use --smart-tier for service-recommended tiering.",
+        Description = "Archive tiering mode: 'TierAfter' (always tier after --archive-tier-after-days) or 'CopyOnExpiry' (copy to archive when the recovery point expires). Use smart-tier for service-recommended tiering.",
         Required = false
     };
 
@@ -399,7 +399,7 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> FullScheduleDaysOfWeek = new($"--{FullScheduleDaysOfWeekName}")
     {
-        Description = "Comma-separated days of the week for the Full backup (e.g., 'Sunday'). Required when --full-schedule-frequency is 'Weekly'. RSV VmWorkload only.",
+        Description = "Comma-separated days of the week for the Full backup (e.g., 'Sunday'). Required when full-schedule-frequency is 'Weekly'. RSV VmWorkload only.",
         Required = false
     };
 
@@ -456,7 +456,7 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<bool> SmartTier = new($"--{SmartTierName}")
     {
-        Description = "Enable smart-tiering (ML-based archive recommendation). RSV VM only - equivalent to TieringMode=TierRecommended. Kept separate from --archive-tier-mode because it emits a structurally different tiering shape (Duration=0, DurationType=Invalid).",
+        Description = "Enable smart-tiering (ML-based archive recommendation). RSV VM only - equivalent to TieringMode=TierRecommended. Kept separate from archive-tier-mode because it emits a structurally different tiering shape (Duration=0, DurationType=Invalid).",
         Required = false
     };
 
@@ -564,7 +564,7 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> UserAssignedIdentityId = new($"--{UserAssignedIdentityIdName}")
     {
-        Description = "ARM resource ID of the user-assigned managed identity for Key Vault access. Required when --identity-type is 'UserAssigned'.",
+        Description = "ARM resource ID of the user-assigned managed identity for Key Vault access. Required when identity-type is 'UserAssigned'.",
         Required = false
     };
 }

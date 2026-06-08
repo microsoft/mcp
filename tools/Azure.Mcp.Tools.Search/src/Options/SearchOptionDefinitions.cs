@@ -63,7 +63,7 @@ public static class SearchOptionDefinitions
     public static readonly Option<string[]> Messages = new(
         $"--{MessagesName}")
     {
-        Description = "Conversation history messages passed to the knowledge base. Able to specify multiple --messages entries. Each entry formatted as role:content, where role is `user` or `assistant` (e.g., user:How many docs?).",
+        Description = "Conversation history messages passed to the knowledge base. Multiple messages can be specified.Each entry formatted as role:content, where role is `user` or `assistant` (e.g., user:How many docs?).",
         Arity = ArgumentArity.ZeroOrMore,
         AllowMultipleArgumentsPerToken = true
     };

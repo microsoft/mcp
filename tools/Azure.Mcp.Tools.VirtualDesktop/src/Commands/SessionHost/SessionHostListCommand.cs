@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 
@@ -17,9 +16,8 @@ namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
     Name = "list",
     Title = "List SessionHosts",
     Description = """
-        List all SessionHosts in a hostpool. This command retrieves all Azure Virtual Desktop SessionHost objects available
-        in the specified --subscription and hostpool. Results include SessionHost details and are
-        returned as a JSON array.
+        List all Azure Virtual Desktop SessionHost objects available in a hostpool.
+        Results include SessionHost details and are returned as a JSON array.
         """,
     Destructive = false,
     Idempotent = true,

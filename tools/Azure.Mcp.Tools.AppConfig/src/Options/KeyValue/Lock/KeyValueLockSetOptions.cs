@@ -20,7 +20,7 @@ public class KeyValueLockSetOptions : ISubscriptionOption
     [Option("The name of the key to access within the App Configuration store.")]
     public required string Key { get; set; }
 
-    [Option("The label to apply to the configuration key. Labels are used to group and organize settings.")]
+    [Option("The label to apply to the key. Labels are used to group and organize settings.")]
     public string? Label { get; set; }
 
     [Option(OptionDescriptions.Tenant)]

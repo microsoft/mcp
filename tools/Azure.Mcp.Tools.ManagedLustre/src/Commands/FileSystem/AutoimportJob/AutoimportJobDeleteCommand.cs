@@ -18,11 +18,6 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
     Title = "Delete Azure Managed Lustre Autoimport Job",
     Description = """
         Deletes an auto import job for an Azure Managed Lustre filesystem. This permanently removes the job record from the filesystem. Use this to clean up completed, failed, or cancelled autoimport jobs.
-        Required options:
-        - filesystem-name: The name of the AMLFS filesystem
-        - job-name: The name of the autoimport job to delete
-        - resource-group: The resource group containing the filesystem
-        - subscription: The subscription containing the filesystem
         """,
     Destructive = true,
     Idempotent = true,

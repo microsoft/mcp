@@ -19,9 +19,6 @@ namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
         For basic Azure resource availability status, use Resource Health tool instead `azmcp_resourcehealth_availability-status_get`.  
         For querying logs from a Log Analystics workspace, use `azmcp_monitor_workspace_log_query`.  
         For querying logs of a specific Azure resource, use `azmcp_monitor_resource_log_query`. 
-        Required arguments:
-            - --entity: The entity to get health for
-            - --health-model: The health model name
         """,
     Destructive = false,
     Idempotent = true,

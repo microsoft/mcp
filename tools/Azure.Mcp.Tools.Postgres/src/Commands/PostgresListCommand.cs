@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.Postgres.Commands;
     Id = "8a12c3f4-2e5d-4b3a-9f2c-5e6d7f8a9b0c",
     Name = "list",
     Title = "List PostgreSQL Resources",
-    Description = "List PostgreSQL servers, databases, or tables. Returns all servers in the subscription by default (optionally scoped to a --resource-group). Specify --server to list databases on that server, or --server and --database to list tables in a specific database. --user is required when --server is provided.",
+    Description = "List PostgreSQL servers, databases, or tables. Returns all servers in the subscription by default, optionally scoped to a resource group. Specify server to list databases on that server, or server and database to list tables in a specific database. user is required when server is provided.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

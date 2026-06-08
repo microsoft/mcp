@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 
@@ -15,9 +14,8 @@ namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
     Name = "list",
     Title = "List hostpools",
     Description = """
-        List all hostpools in a subscription or resource group. This command retrieves all Azure Virtual Desktop hostpool objects available
-        in the specified --subscription. If a resource group is specified, only hostpools in that resource group are returned.
-        Results include hostpool names and are returned as a JSON array.
+        List all Azure Virtual Desktop hostpool objects available in a subscription or resource group.
+        Results include hostpool names.
         """,
     Destructive = false,
     Idempotent = true,

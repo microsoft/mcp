@@ -18,10 +18,9 @@ namespace Azure.Mcp.Tools.Sql.Commands.Server;
     Name = "create",
     Title = "Create SQL Server",
     Description = """
-        Creates a new Azure SQL server in the specified resource group and location.
-        The server will be created with the specified administrator credentials and
-        optional configuration settings. Returns the created server with its properties
-        including the fully qualified domain name.
+        Creates a new Azure SQL server in the specified resource group and location. The server will be created with
+        the specified administrator credentials and optional configuration settings. Returns the created server with
+        its properties including the fully qualified domain name.
         """,
     Destructive = true,
     Idempotent = false,

@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.Redis.Commands;
     Id = "eded7479-4187-4742-957f-d7778e03a69d",
     Name = "list",
     Title = "List Redis Resources",
-    Description = "List/show all Redis resources in a subscription. Returns details of all Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources. Use this command to explore and view which Redis resources are available in your subscription.",
+    Description = "List/show details of all Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources in a subscription.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

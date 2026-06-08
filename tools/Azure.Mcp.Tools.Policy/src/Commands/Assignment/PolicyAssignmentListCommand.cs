@@ -19,11 +19,10 @@ namespace Azure.Mcp.Tools.Policy.Commands.Assignment;
     Name = "list",
     Title = "List Policy Assignments",
     Description = """
-        List policy assignments in a subscription or scope. This command retrieves all Azure Policy
-        assignments along with their complete policy definition details (rules, effects, parameters schema),
-        enforcement modes, assignment parameters, and metadata. This enables agents to understand policy
-        requirements and design compliant cloud services. You can optionally filter by scope to list
-        assignments at a specific resource group, resource, or management group level.
+        List all Azure Policy assignments in a subscription or scope with their complete policy definition details (rules, effects, parameters schema),
+        enforcement modes, assignment parameters, and metadata. This enables agents to understand policy requirements
+        and design compliant cloud services. You can optionally filter by scope to list assignments at a specific
+        resource group, resource, or management group level.
         """,
     Destructive = false,
     Idempotent = true,

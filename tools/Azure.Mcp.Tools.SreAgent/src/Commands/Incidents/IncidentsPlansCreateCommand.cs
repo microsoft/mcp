@@ -12,7 +12,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
-[CommandMetadata(Id = "84d958db-8de0-456d-a1d5-99d372f33c80", Name = "plans_create", Title = "Create Incident Response Plan", Description = "Create and enable an incident response plan with a filter and handler.", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+[CommandMetadata(
+    Id = "84d958db-8de0-456d-a1d5-99d372f33c80",
+    Name = "plans_create",
+    Title = "Create Incident Response Plan",
+    Description = "Create and enable an incident response plan with a filter and handler.",
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class IncidentsPlansCreateCommand(ILogger<IncidentsPlansCreateCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<IncidentPlanCreateOptions>
 {
     private static readonly Dictionary<string, string[]> SeverityToPriorities = new(StringComparer.OrdinalIgnoreCase)

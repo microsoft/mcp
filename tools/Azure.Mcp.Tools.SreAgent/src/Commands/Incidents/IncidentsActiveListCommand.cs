@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.SreAgent.Models;
-using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Options.Incidents;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
@@ -11,7 +9,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
-[CommandMetadata(Id = "659a3697-9c8c-46e1-b568-9b929d637cb4", Name = "list", Title = "List Active Incidents", Description = "List active incidents on an SRE Agent. Returns open incident threads with title, status, affected services, and investigation details.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+[CommandMetadata(
+    Id = "659a3697-9c8c-46e1-b568-9b929d637cb4",
+    Name = "list",
+    Title = "List Active Incidents",
+    Description = "List active incidents on an SRE Agent. Returns open incident threads with title, status, affected services, and investigation details.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class IncidentsActiveListCommand(ILogger<IncidentsActiveListCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<IncidentRemoteOptions>
 {
     private readonly ILogger<IncidentsActiveListCommand> _logger = logger;

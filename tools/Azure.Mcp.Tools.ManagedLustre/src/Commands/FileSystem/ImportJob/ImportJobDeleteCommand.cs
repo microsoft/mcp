@@ -18,9 +18,6 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
     Title = "Delete Azure Managed Lustre Import Job",
     Description = """
         Deletes an import job for an Azure Managed Lustre filesystem. This removes the job record and history. The job must be completed or cancelled before it can be deleted.
-        Required options:
-        - filesystem-name: The name of the AMLFS filesystem
-        - job-name: Name of the import job to delete
         """,
     Destructive = true,
     Idempotent = true,

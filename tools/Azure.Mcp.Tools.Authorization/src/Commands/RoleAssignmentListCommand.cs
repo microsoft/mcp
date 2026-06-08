@@ -18,8 +18,7 @@ namespace Azure.Mcp.Tools.Authorization.Commands;
     Name = "list",
     Title = "List Role Assignments",
     Description = """
-        List role assignments. This command retrieves and displays all Azure RBAC role assignments
-        in the specified scope. Results include role definition IDs and principal IDs, returned as a JSON array.
+        List all Azure RBAC role assignments in the specified scope. Results include role definition IDs and principal IDs, returned as a JSON array.
         """,
     Destructive = false,
     Idempotent = true,

@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
     Id = "50f58038-1258-48cc-a7d2-bc6c29614405",
     Name = "delete",
     Title = "Delete SRE Agent Connector",
-    Description = "Delete a connector from an Azure SRE Agent resource. Required: --subscription, --agent, --name, --confirm true.",
+    Description = "Delete a connector from an Azure SRE Agent resource. Requires confirm true.",
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -58,7 +58,7 @@ public sealed class ConnectorsDeleteCommand(ILogger<ConnectorsDeleteCommand> log
         {
             if (!options.Confirm)
             {
-                throw new InvalidOperationException($"Refusing to delete connector '{options.Name}': destructive operation requires --confirm true.");
+                throw new InvalidOperationException($"Refusing to delete connector '{options.Name}': destructive operation requires confirm true.");
             }
 
             var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(_sreAgentService, options, cancellationToken);

@@ -24,7 +24,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
         including specifying the initial instance count (e.g., 3 instances, 5 instances) and upgrade policy
         (Manual, Automatic, or Rolling) at creation time.
         Equivalent to 'az vmss create'. Defaults to 2 instances and Standard_D2s_v5 size when not specified.
-        The --image option is required and has no default; if the user does not specify an image, ask them which image to use
+        The image option is required and has no default; if the user does not specify an image, ask them which image to use
         (an alias such as 'Ubuntu2404' or 'Win2022Datacenter', a marketplace URN like 'publisher:offer:sku:version',
         or a shared gallery image ID starting with '/sharedGalleries/').
         For Linux VMSS with SSH, read the user's public key file (e.g., ~/.ssh/id_rsa.pub) and pass its content.

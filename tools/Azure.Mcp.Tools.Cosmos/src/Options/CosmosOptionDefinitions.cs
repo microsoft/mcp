@@ -34,7 +34,7 @@ public static class CosmosOptionDefinitions
         $"--{AccountName}"
     )
     {
-        Description = "The name of the Cosmos DB account (optional). When not specified, lists all accounts in the subscription. Specify this to list databases, or combine with --database to list containers."
+        Description = "The name of the Cosmos DB account. When not specified, lists all accounts in the subscription. Specify this to list databases, or combine with database to list containers."
     };
 
     public static readonly Option<string> Database = new(
@@ -49,7 +49,7 @@ public static class CosmosOptionDefinitions
         $"--{DatabaseName}"
     )
     {
-        Description = "The name of the database (optional). Requires --account to be specified. When provided, lists containers within this database."
+        Description = "The name of the database. Requires account to be specified. When provided, lists containers within this database."
     };
 
     public static readonly Option<string> Container = new(
@@ -96,7 +96,7 @@ public static class CosmosOptionDefinitions
         $"--{PartitionKeyName}"
     )
     {
-        Description = "Optional partition key value for the document. When provided, the query is scoped to a single partition (cheaper than a cross-partition fan-out)."
+        Description = "Partition key value for the document. When provided, the query is scoped to a single partition (cheaper than a cross-partition fan-out)."
     };
 
     public static readonly Option<string> SearchProperty = new(
@@ -142,7 +142,7 @@ public static class CosmosOptionDefinitions
         $"--{OpenAIEndpointName}"
     )
     {
-        Description = "Azure OpenAI endpoint (e.g., 'https://my-endpoint.openai.azure.com/') used to generate the embedding from --search-text.",
+        Description = "Azure OpenAI endpoint (e.g., 'https://my-endpoint.openai.azure.com/') used to generate the embedding from search-text.",
         Required = true
     };
 
@@ -150,7 +150,7 @@ public static class CosmosOptionDefinitions
         $"--{EmbeddingDeploymentName}"
     )
     {
-        Description = "Name of the Azure OpenAI embedding deployment (e.g., 'text-embedding-3-small') used to generate the embedding from --search-text.",
+        Description = "Name of the Azure OpenAI embedding deployment (e.g., 'text-embedding-3-small') used to generate the embedding from search-text.",
         Required = true
     };
 
@@ -158,6 +158,6 @@ public static class CosmosOptionDefinitions
         $"--{EmbeddingDimensionsName}"
     )
     {
-        Description = "Optional embedding dimensions to request from the model (only honored by models that support custom dimensions, e.g., text-embedding-3-*)."
+        Description = "Embedding dimensions to request from the model (only honored by models that support custom dimensions, e.g., text-embedding-3-*)."
     };
 }

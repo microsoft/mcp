@@ -20,7 +20,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
     Title = "Get Service Bus Topic Details",
     Description = """
         Retrieves details about a Service Bus topic. Returns runtime information and topic properties including number of subscriptions, max message size, max topic size, number of scheduled messages, etc.
-        Required arguments are namespace: The fully qualified Service Bus namespace host name (usually in the form <namespace>.servicebus.windows.net) and topic: Topic name to get information about.
         Do not use this to get details on Service Bus subscription- instead use servicebus_topic_subscription_details.
         """,
     Destructive = false,

@@ -22,8 +22,7 @@ public static class FunctionsOptionDefinitions
 
     public static readonly Option<string> Language = new($"--{LanguageName}")
     {
-        Description = $"Programming language for the Azure Functions project. " +
-            $"Valid values: {string.Join(", ", SupportedLanguages)}.",
+        Description = $"Programming language for the Azure Functions project. Valid values: {string.Join(", ", SupportedLanguages)}.",
         Required = true
     };
 

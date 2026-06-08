@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
     Id = "77734a55-8290-4c16-8b37-cf37277f018f",
     Name = "get",
     Title = "Get Storage Sync Service",
-    Description = "Retrieve Azure Storage Sync service details or list all Storage Sync services. Use --name to get a specific service, or omit it to list all services in the subscription or resource group. Shows service properties, location, provisioning state, and configuration.",
+    Description = "Retrieve Azure Storage Sync service details or list all Storage Sync services. Use name to get a specific service, or omit it to list all services in the subscription or resource group. Shows service properties, location, provisioning state, and configuration.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

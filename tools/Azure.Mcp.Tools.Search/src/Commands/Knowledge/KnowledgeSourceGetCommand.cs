@@ -22,9 +22,6 @@ namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
         indexed in Azure AI Search internally. These knowledge sources are used by knowledge bases during retrieval.
         If a specific knowledge source name is not provided, the command will return details for all knowledge sources
         within the specified service.
-
-        Required arguments:
-        - service
         """,
     Destructive = false,
     Idempotent = true,

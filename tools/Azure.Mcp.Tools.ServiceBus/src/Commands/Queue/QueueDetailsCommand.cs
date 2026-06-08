@@ -19,12 +19,8 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
     Name = "details",
     Title = "Get Service Bus Queue Details",
     Description = """
-        Get details about a Service Bus queue. Returns queue properties and runtime information. Properties returned include
+        Get details about a Service Bus queue. Returns queue properties and runtime information, such as
         lock duration, max message size, queue size, creation date, status, current message counts, etc.
-
-        Required arguments:
-        - namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)
-        - queue: Queue name to get details and runtime information for.
         """,
     Destructive = false,
     Idempotent = true,

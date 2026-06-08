@@ -23,11 +23,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
         The peek operation returns active, locked, and deferred messages in the subscription.
 
         Returns message content, properties, and metadata.  Messages remain in the subscription after peeking.
-
-        Required arguments:
-        - namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)
-        - topic: Topic name containing the subscription
-        - subscription-name: Subscription name to peek messages from
         """,
     Destructive = false,
     Idempotent = true,

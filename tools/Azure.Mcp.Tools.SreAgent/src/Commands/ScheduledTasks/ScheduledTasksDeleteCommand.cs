@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Options.ScheduledTasks;
 using Azure.Mcp.Tools.SreAgent.Services;
@@ -12,7 +11,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
 
-[CommandMetadata(Id = "64680a1f-b076-460b-87fd-20fdc971a804", Name = "delete", Title = "Delete Scheduled Task", Description = "Delete an SRE Agent scheduled task. Requires confirm=true.", Destructive = true, Idempotent = false, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+[CommandMetadata(
+    Id = "64680a1f-b076-460b-87fd-20fdc971a804",
+    Name = "delete",
+    Title = "Delete Scheduled Task",
+    Description = "Delete an SRE Agent scheduled task. Requires confirm true.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ScheduledTasksDeleteCommand(ILogger<ScheduledTasksDeleteCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<ScheduledTasksDeleteOptions>
 {
     private readonly ILogger<ScheduledTasksDeleteCommand> _logger = logger;

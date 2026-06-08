@@ -21,9 +21,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Log;
 
         When to use: User asks for workspace-wide logs, all resources, or doesn't mention a specific resource.
         When NOT to use: User mentions a specific resource name or Resource ID - use resource log query instead.
-
-        Requires workspace and resource group.
-        Optional: hours and limit.
+        
         query accepts KQL syntax.
         """,
     Destructive = false,

@@ -18,9 +18,6 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
     Title = "Cancel Azure Managed Lustre Import Job",
     Description = """
         Cancels a running import job for an Azure Managed Lustre filesystem. This stops the import operation and prevents further processing. The job cannot be resumed after cancellation.
-        Required options:
-        - filesystem-name: The name of the AMLFS filesystem
-        - job-name: Name of the import job to cancel
         """,
     Destructive = true,
     Idempotent = true,

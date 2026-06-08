@@ -23,9 +23,9 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
     Name = "get",
     Title = "Get Backup Policy",
     Description = """
-        Retrieves backup policy information. When --policy is specified, returns detailed
-        information about a single policy including datasource types and protected items count.
-        When omitted, lists all backup policies configured in the vault.
+        Gets backup policy information. When policy is specified, gets the specific policy, otherwise gets all backup
+        policies configured in the vault.
+        Returns datasource types and protected items count.
         """,
     Destructive = false,
     Idempotent = true,

@@ -15,8 +15,7 @@ namespace Azure.Mcp.Tools.Acr.Commands.Registry;
     Title = "List Container Registries",
     Description = """
         List Azure Container Registries in a subscription. Optionally filter by resource group. Each registry result
-        includes: name, location, loginServer, skuName, skuTier. If no registries are found the tool returns null results
-        (consistent with other list commands).
+        includes name, location, loginServer, skuName, skuTier.
         """,
     Destructive = false,
     Idempotent = true,

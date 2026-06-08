@@ -22,7 +22,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
         Always use this tool if user is asking for activity logs for a resource.
         Lists activity logs for the specified Azure resource over the given prior number of hours.
         This command retrieves activity logs to help understand resource deployment history, modification activities, and access patterns.
-        Returns activity log events with details including timestamp, operation name, status, and caller information. should be called to help retrieve information about why a resource failed to deploy or may not be working.
+        Returns activity log events with details including timestamp, operation name, status, and caller information. Should be called to help retrieve information about why a resource failed to deploy or may not be working.
         """,
     Destructive = false,
     Idempotent = true,

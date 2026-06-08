@@ -99,7 +99,7 @@ public static class StorageSyncOptionDefinitions
 
         public static readonly Option<string> ChangeDetectionMode = new($"--{ChangeDetectionModeName}")
         {
-            Description = "Change detection mode: 'Default' (directory only) or 'Recursive' (directory and subdirectories). Applies to the directory specified in directory-path"
+            Description = $"Change detection mode: 'Default' (directory only) or 'Recursive' (directory and subdirectories). Applies to the directory specified in {DirectoryPathName}"
         };
 
         public static readonly Option<string[]> Paths = new($"--{PathsName}")

@@ -11,7 +11,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Architecture;
 
-[CommandMetadata(Id = "376134c0-d8f3-4399-a131-11cdfd4e63a4", Name = "plan", Title = "Plan Agent Architecture", Description = "Plan and generate an SRE Agent architecture. Analyzes requirements and produces a structured design for agents, tools, connectors, and triggers.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+[CommandMetadata(
+    Id = "376134c0-d8f3-4399-a131-11cdfd4e63a4",
+    Name = "plan",
+    Title = "Plan Agent Architecture",
+    Description = "Plan and generate an SRE Agent architecture. Analyzes requirements and produces a structured design for agents, tools, connectors, and triggers.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class PlanCommand(ILogger<PlanCommand> logger) : GlobalCommand<PlanOptions>
 {
     private readonly ILogger<PlanCommand> _logger = logger;

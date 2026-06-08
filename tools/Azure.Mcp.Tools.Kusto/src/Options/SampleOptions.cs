@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Kusto.Options;
 
 public class SampleOptions : ISubscriptionOption, ITableOption
 {
-    [Option("The maximum number of results to return. Must be a positive integer between 1 and 10000. Default is 10.")]
+    [Option("The maximum number of results to return. Must be between 1 and 10000. Default is 10.")]
     public int? Limit { get; set; }
 
     [Option("Kusto Table name.")]

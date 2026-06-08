@@ -62,13 +62,13 @@ public static class StorageOptionDefinitions
 
     public static readonly Option<string> Blob = new($"--{BlobName}")
     {
-        Description = "The name of the blob to access within the container. This should be the full path within the container (e.g., 'file.txt' or 'folder/file.txt').",
+        Description = "The name of the blob to access within the container. This is the full path within the container (e.g., 'file.txt' or 'folder/file.txt').",
         Required = true
     };
 
     public static readonly Option<string> LocalFilePath = new($"--{LocalFilePathName}")
     {
-        Description = "The local file path to read content from or to write content to. This should be the full path to the file on your local system.",
+        Description = "The local file path to read content from or to write content to. This is the full path to the file on your local system.",
         Required = true
     };
 

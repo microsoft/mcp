@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     Id = "5fc5a42b-a7f6-4d4a-9517-a8e119752b7a",
     Name = "get",
     Title = "Get Kusto Cluster Details",
-    Description = "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.",
+    Description = "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -19,9 +19,9 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
         Retrieves AzAPI Terraform provider documentation and schema for a specified Azure resource type.
         Returns the resource schema in HCL format suitable for azapi_resource blocks, including property
         definitions with types and requirements, parent resource information, and Terraform usage examples.
-        Use --resource-type to specify the Azure resource type in ARM format
+        Use resource-type to specify the Azure resource type in ARM format
         (e.g., Microsoft.Compute/virtualMachines, Microsoft.Storage/storageAccounts).
-        Optionally specify --api-version to target a specific API version.
+        Optionally specify api-version to target a specific API version.
         This tool reuses Azure Bicep type definitions to generate accurate AzAPI schemas.
         """,
     Destructive = false,

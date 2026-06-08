@@ -20,7 +20,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
         Delete, remove, or destroy an Azure Virtual Machine Scale Set (VMSS) and all its VM instances.
         Use this to permanently remove a scale set that is no longer needed.
         Equivalent to 'az vmss delete'. This operation is irreversible and all VMSS instances will be lost.
-        Use --force-deletion to force delete the VMSS even if it is in a running or failed state
+        Use force-deletion to force delete the VMSS even if it is in a running or failed state
         (passes forceDeletion=true to the Azure API).
         Do not use this to delete a single VM (use VM delete instead) or to update/modify a VMSS (use VMSS update).
         """,

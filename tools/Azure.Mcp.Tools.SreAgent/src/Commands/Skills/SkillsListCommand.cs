@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Skills;
     Id = "e7b54820-425f-4133-a903-0dc16e42d182",
     Name = "list",
     Title = "List SRE Agent Skills",
-    Description = "Lists custom skills on a targeted SRE Agent resource. Required: --subscription and --agent.",
+    Description = "Lists custom skills on a targeted SRE Agent resource.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

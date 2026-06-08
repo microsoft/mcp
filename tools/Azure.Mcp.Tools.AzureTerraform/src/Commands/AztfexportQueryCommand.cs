@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     Description = """
         Generates an aztfexport command to export Azure resources matching an Azure Resource Graph query
         to Terraform configuration. Returns the command and arguments for the agent to execute locally.
-        Specify --query with a KQL WHERE clause for Azure Resource Graph (e.g., "type =~ 'Microsoft.Storage/storageAccounts'").
+        Specify query with a KQL WHERE clause for Azure Resource Graph (e.g., "type =~ 'Microsoft.Storage/storageAccounts'").
         Optionally configure the Terraform provider (azurerm or azapi), naming pattern, output folder,
         parallelism, and whether to include role assignments.
         If aztfexport is not installed locally, returns installation instructions instead.

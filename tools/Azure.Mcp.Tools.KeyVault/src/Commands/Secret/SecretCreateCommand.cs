@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
     Id = "fb1322cd-05b0-4264-9e96-6a9b3d9291a0",
     Name = "create",
     Title = "Create Key Vault Secret",
-    Description = "Create/set a secret in an Azure Key Vault with the specified name and value. Required: --vault <vault>, --secret <secret>, --subscription <subscription>. Optional: --tenant <tenant>. Creates a new secret version if it already exists.",
+    Description = "Create/set a secret in an Azure Key Vault with the specified name and value. Creates a new secret version if it already exists.",
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

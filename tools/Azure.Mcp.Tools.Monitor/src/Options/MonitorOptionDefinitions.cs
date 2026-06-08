@@ -29,7 +29,7 @@ public static class MonitorOptionDefinitions
         $"--{TableNameName}"
     )
     {
-        Description = "The name of the table to query. This is the specific table within the workspace.",
+        Description = "The name of the table to query within the workspace.",
         Required = true
     };
 

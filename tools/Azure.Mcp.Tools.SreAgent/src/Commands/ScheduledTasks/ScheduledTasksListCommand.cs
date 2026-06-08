@@ -10,7 +10,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
 
-[CommandMetadata(Id = "ec36210d-35ee-40a8-bb61-f4681f816201", Name = "list", Title = "List Scheduled Tasks", Description = "List SRE Agent scheduled tasks.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
+[CommandMetadata(
+    Id = "ec36210d-35ee-40a8-bb61-f4681f816201",
+    Name = "list",
+    Title = "List Scheduled Tasks",
+    Description = "List SRE Agent scheduled tasks.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ScheduledTasksListCommand(ILogger<ScheduledTasksListCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<ScheduledTasksListOptions>
 {
     private readonly ILogger<ScheduledTasksListCommand> _logger = logger;

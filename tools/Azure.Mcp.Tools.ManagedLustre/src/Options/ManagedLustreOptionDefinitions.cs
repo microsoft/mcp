@@ -68,7 +68,7 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = true,
-        Description = "The AMLFS resource name. Must be DNS-friendly (letters, numbers, hyphens). Example: --name amlfs-001"
+        Description = "The AMLFS resource name. Must be DNS-friendly (letters, numbers, hyphens)."
     };
 
     public static readonly Option<string> SubnetIdOption = new(
@@ -76,8 +76,7 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = true,
-        Description = "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\n" +
-                      "Example: --subnet-id /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001"
+        Description = "Full subnet resource ID in the format /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}."
     };
 
     public static readonly Option<string> ZoneOption = new(
@@ -85,8 +84,7 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = true,
-        Description = "Availability zone identifier. Use a single digit string matching the region's AZ labels (e.g. '1').\n" +
-                      "Example: --zone 1"
+        Description = "Availability zone identifier. Use a single digit string matching the region's AZ labels (e.g. '1')."
     };
 
     public static readonly Option<string> HsmContainerOption = new(
@@ -95,8 +93,7 @@ public static class ManagedLustreOptionDefinitions
     {
         Required = false,
         Description = "Full blob container resource ID for HSM integration. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account." +
-                      "Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/blobServices/default/containers/{container}.\n" +
-                      "Example: --hsm-container /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-container\n"
+                      "In format /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/blobServices/default/containers/{container}."
     };
 
     public static readonly Option<string> HsmLogContainerOption = new(
@@ -104,8 +101,7 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = false,
-        Description = "Full blob container resource ID for HSM logging. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account. Same format as --hsm-container.\n" +
-                      "Example: --hsm-log-container /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-logs\n"
+        Description = "Full blob container resource ID for HSM logging. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account. Same format as --hsm-container."
     };
 
     public static readonly Option<string> ImportPrefixOption = new(
@@ -113,7 +109,7 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = false,
-        Description = "Optional HSM import prefix (path prefix inside the container starting with /). Examples: '/ingest/', '/archive/2019/'.\n"
+        Description = "Optional HSM import prefix (path prefix inside the container starting with /)."
     };
 
     public static readonly Option<string> MaintenanceDayOption = new(
@@ -121,7 +117,7 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = true,
-        Description = "Preferred maintenance day. Allowed values: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.\n"
+        Description = "Preferred maintenance day. Allowed values: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday."
     };
 
     public static readonly Option<string> MaintenanceTimeOption = new(
@@ -129,7 +125,7 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = true,
-        Description = "Preferred maintenance time in UTC. Format: HH:MM (24-hour). Examples: 00:00, 23:00.\n"
+        Description = "Preferred maintenance time in UTC. Format: HH:MM (24-hour)."
     };
 
     public static readonly Option<string> RootSquashModeOption = new(
@@ -137,7 +133,7 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = false,
-        Description = "Root squash mode. Allowed values: All, RootOnly, None.\n"
+        Description = "Root squash mode. Allowed values: All, RootOnly, None."
     };
 
     public static readonly Option<string> NoSquashNidListsOption = new(
@@ -145,7 +141,7 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = false,
-        Description = "Comma-separated list of NIDs (network identifiers) not to squash. Example: '10.0.2.4@tcp;10.0.2.[6-8]@tcp'.\n"
+        Description = "Comma-separated list of NIDs (network identifiers) not to squash. Example: '10.0.2.4@tcp;10.0.2.[6-8]@tcp'."
     };
 
     public static readonly Option<long?> SquashUidOption = new(
@@ -153,7 +149,7 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = false,
-        Description = "Numeric UID to squash root to. Required in case root squash mode is not None. Example: --squash-uid 1000.\n"
+        Description = "Numeric UID to squash root to. Required in case root squash mode is not None."
     };
 
     public static readonly Option<long?> SquashGidOption = new(
@@ -161,7 +157,7 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = false,
-        Description = "Numeric GID to squash root to.  Required in case root squash mode is not None. Example: --squash-gid 1000.\n"
+        Description = "Numeric GID to squash root to.  Required in case root squash mode is not None."
     };
 
     public static readonly Option<bool> CustomEncryptionOption = new(
@@ -169,7 +165,7 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = false,
-        Description = "Enable customer-managed encryption using a Key Vault key. When true, --key-url and --source-vault required, with a user-assigned identity already configured for Key Vault key access."
+        Description = "Enable customer-managed encryption using a Key Vault key. When true, key-url and source-vault required, with a user-assigned identity already configured for Key Vault key access."
     };
 
     public static readonly Option<string> KeyUrlOption = new(
@@ -177,8 +173,7 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = false,
-        Description = "Full Key Vault key URL. Format: https://{vaultName}.vault.azure.net/keys/{keyName}/{keyVersion}.\n" +
-                      "Example: --key-url https://kv-amlfs-001.vault.azure.net/keys/key-amlfs-001/a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p\n"
+        Description = "Full Key Vault key URL in format: https://{vaultName}.vault.azure.net/keys/{keyName}/{keyVersion}."
     };
 
     public static readonly Option<string> SourceVaultOption = new(
@@ -186,8 +181,7 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = false,
-        Description = "Full Key Vault resource ID. Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}.\n" +
-                      "Example: --source-vault /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv-amlfs-001\n"
+        Description = "Full Key Vault resource ID in format /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}."
     };
 
     public static readonly Option<string> UserAssignedIdentityIdOption = new(
@@ -195,9 +189,8 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = false,
-        Description = "User-assigned managed identity resource ID (full resource ID) to use for Key Vault access when custom encryption is enabled. The identity must have RBAC role to access the encryption key\n" +
-                      "Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{name}.\n" +
-                      "Example: --user-assigned-identity-id /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1\n"
+        Description = "User-assigned managed identity resource ID (full resource ID) to use for Key Vault access when custom encryption is enabled. The identity must have RBAC role to access the encryption key in " +
+                      "format /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{name}."
     };
 
     public static readonly Option<string> FileSystemNameOption = new(

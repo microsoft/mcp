@@ -11,7 +11,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.CommonPrompts;
 
-[CommandMetadata(Id = "5d6e7f80-1a2b-4c3d-9e8f-7a6b5c4d3e2f", Name = "create", Title = "Create or Update Common Prompt", Description = "Create or update a named common prompt on the SRE Agent.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+[CommandMetadata(
+    Id = "5d6e7f80-1a2b-4c3d-9e8f-7a6b5c4d3e2f",
+    Name = "create",
+    Title = "Create or Update Common Prompt",
+    Description = "Create or update a named common prompt on the SRE Agent.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CommonPromptsCreateCommand(ILogger<CommonPromptsCreateCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<CommonPromptsCreateOptions>
 {
     private readonly ILogger<CommonPromptsCreateCommand> _logger = logger;

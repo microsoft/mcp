@@ -17,10 +17,9 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
     Name = "update",
     Title = "Create or Update Event Hubs Namespace",
     Description = """
-        Create or Update a Namespace. This tool will either create a Namespace resource or 
-        update a pre-existing Namespace resource within the specified resource group, depending on 
-        whether or not the specified Namespace already exists. This tool may modify existing 
-        configurations, and is considered to be destructive. This is a potentially long-running operation.
+        Create or Update a Namespace. This tool will either create a Namespace resource or update a pre-existing
+        Namespace resource within the specified resource group, depending on whether or not the specified Namespace
+        already exists. This tool may modify existing  configurations and is potentially a long-running operation.
 
         When updating an existing namespace, you only need to provide the properties you want to change.
         Unspecified properties will retain their existing values. At least one update property must be provided.

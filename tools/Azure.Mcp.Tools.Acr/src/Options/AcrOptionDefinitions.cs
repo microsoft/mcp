@@ -11,6 +11,6 @@ public static class AcrOptionDefinitions
         $"--{RegistryName}"
     )
     {
-        Description = "The name of the Azure Container Registry. This is the unique name you chose for your container registry."
+        Description = "The name of the Azure Container Registry."
     };
 }

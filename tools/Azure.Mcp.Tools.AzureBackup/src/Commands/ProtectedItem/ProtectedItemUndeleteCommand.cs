@@ -20,10 +20,10 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
     Title = "Undelete Protected Item",
     Description = """
         Undeletes or restores a soft-deleted backup item to an active protection state.
-        Use this when a backup or protected item was accidentally deleted and needs to be recovered.
-        For RSV vaults: pass the datasource ARM resource ID as --datasource-id.
-        For DPP vaults: pass the datasource ARM resource ID as --datasource-id.
-        Optionally specify --container for RSV workload items (SQL/HANA).
+        Use this when a backup or protected item was needs to be recovered.
+        For RSV vaults: pass the datasource ARM resource ID as datasource-id.
+        For DPP vaults: pass the datasource ARM resource ID as datasource-id.
+        Optionally specify container for RSV workload items (SQL/HANA).
         The operation is asynchronous; use 'azurebackup job get' to monitor progress.
         """,
     Destructive = true,

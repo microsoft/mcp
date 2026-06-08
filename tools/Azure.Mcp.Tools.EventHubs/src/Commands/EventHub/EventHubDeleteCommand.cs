@@ -19,13 +19,10 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.EventHub;
     Name = "delete",
     Title = "Delete Event Hub",
     Description = """
-        Delete an Event Hub from an Azure Event Hubs namespace. This operation permanently removes
-        the specified Event Hub and all its data. This is a destructive operation.
-
-        The operation is idempotent - if the Event Hub doesn't exist, the command reports success
-        with Deleted = false. If the Event Hub is successfully deleted, Deleted = true is returned.
-        Warning: This operation cannot be undone. All messages and consumer groups in the Event Hub
-        will be permanently deleted.
+        Delete an Event Hub from an Azure Event Hubs namespace. This operation permanently removes the specified Event Hub
+        and all its data. If the Event Hub doesn't exist, the command reports success with Deleted = false. If the Event Hub
+        is successfully deleted, Deleted = true is returned.
+        Warning: This operation cannot be undone. All messages and consumer groups in the Event Hub will be permanently deleted.
         """,
     Destructive = true,
     Idempotent = true,

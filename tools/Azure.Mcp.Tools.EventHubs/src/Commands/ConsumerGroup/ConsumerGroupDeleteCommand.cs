@@ -17,11 +17,7 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
     Name = "delete",
     Title = "Delete Event Hubs Consumer Group",
     Description = """
-        Delete a Consumer Group. This tool will delete a pre-existing Consumer Group from the specified 
-        Event Hub. This tool will remove existing configurations, and is considered to be destructive.
-
-        The tool requires specifying the resource group, Namespace name, Event Hub name, and Consumer
-        Group name to identify the Consumer Group to delete.
+        Delete a Consumer Group from the specified Event Hub. This tool will remove existing configurations.
         """,
     Destructive = true,
     Idempotent = true,

@@ -23,9 +23,8 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Job;
     Name = "get",
     Title = "Get Backup Job",
     Description = """
-        Retrieves backup job information. When --job is specified, returns detailed information
-        about a single job including operation type, status, start/end times, error codes, and
-        datasource details. When omitted, lists all backup jobs in the vault.
+        Gets backup job information. When job is specified, gets the specific job, otherwise gets all backup jobs in the vault.
+        Returns operation type, status, start/end times, error codes, and datasource details.
         """,
     Destructive = false,
     Idempotent = true,

@@ -18,9 +18,9 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     Description = """
         Retrieves comprehensive AzureRM Terraform provider documentation for a specified resource type.
         Returns the resource summary, arguments with descriptions and requirements, attributes,
-        usage examples, and important notes. Use --resource-type to specify the resource
-        (e.g., azurerm_resource_group). Optionally filter by --doc-type (resource or data-source),
-        --argument, or --attribute.
+        usage examples, and important notes. Use resource-type to specify the resource
+        (e.g., azurerm_resource_group). Optionally filter by doc-type (resource or data-source),
+        argument, or attribute.
         """,
     Destructive = false,
     Idempotent = true,

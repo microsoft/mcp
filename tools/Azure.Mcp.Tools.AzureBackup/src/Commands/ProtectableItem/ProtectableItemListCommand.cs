@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectableItem;
         such as SQL databases and SAP HANA databases discovered on registered VMs.
         Use this to find databases and workloads available for backup protection.
         Only supported for RSV vaults; DPP datasources are protected by ARM resource ID directly.
-        Filter results by --workload-type (e.g., SQL, SAPHana) or --container.
+        Filter results by workload-type (e.g., SQL, SAPHana) or container.
         """,
     Destructive = false,
     Idempotent = true,
