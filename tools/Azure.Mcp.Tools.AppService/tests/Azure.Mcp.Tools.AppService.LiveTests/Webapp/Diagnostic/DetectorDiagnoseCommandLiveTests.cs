@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
 using Azure.Mcp.Tools.AppService.Commands;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -31,8 +30,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
                 { "detector-id", "LinuxMemoryDrillDown"}
             });
 
-        var detectorsResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DetectorDiagnoseResult);
-        Assert.NotNull(detectorsResult);
+        var detectorsResult = DeserializeResult(result, AppServiceJsonContext.Default.DetectorDiagnoseResult);
         Assert.NotNull(detectorsResult.Diagnoses);
         Assert.NotEmpty(detectorsResult.Diagnoses.Datasets);
     }
@@ -57,8 +55,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
                 { "time-grain", "PT10M" }
             });
 
-        var detectorsResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DetectorDiagnoseResult);
-        Assert.NotNull(detectorsResult);
+        var detectorsResult = DeserializeResult(result, AppServiceJsonContext.Default.DetectorDiagnoseResult);
         Assert.NotNull(detectorsResult.Diagnoses);
         Assert.NotEmpty(detectorsResult.Diagnoses.Datasets);
     }

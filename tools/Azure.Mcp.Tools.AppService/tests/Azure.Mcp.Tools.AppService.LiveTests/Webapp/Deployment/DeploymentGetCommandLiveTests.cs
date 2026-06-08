@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
 using Azure.Mcp.Tools.AppService.Commands;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -43,8 +42,7 @@ public class DeploymentGetCommandLiveTests(ITestOutputHelper output, TestProxyFi
                 { "app", webappName }
             });
 
-        var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DeploymentGetResult);
-        Assert.NotNull(getResult);
+        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.DeploymentGetResult);
         Assert.NotEmpty(getResult.Deployments);
         Assert.Contains(getResult.Deployments, d => d.Id == deploymentId);
     }
@@ -67,8 +65,7 @@ public class DeploymentGetCommandLiveTests(ITestOutputHelper output, TestProxyFi
                 { "deployment-id", deploymentId }
             });
 
-        var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DeploymentGetResult);
-        Assert.NotNull(getResult);
+        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.DeploymentGetResult);
         Assert.Single(getResult.Deployments);
         Assert.Equal(deploymentId, getResult.Deployments[0].Id);
     }

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
 using Azure.Mcp.Tools.AppService.Commands;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -27,8 +26,7 @@ public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtur
                 { "subscription", Settings.SubscriptionId }
             });
 
-        var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.WebappGetResult);
-        Assert.NotNull(getResult);
+        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.WebappGetResult);
         Assert.NotEmpty(getResult.Webapps);
         Assert.True(getResult.Webapps.Any(detail => detail.Name == expectedWebappName), $"Expected to find web app with name '{expectedWebappName}' in the results.");
     }
@@ -48,8 +46,7 @@ public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtur
                 { "resource-group", resourceGroupName }
             });
 
-        var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.WebappGetResult);
-        Assert.NotNull(getResult);
+        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.WebappGetResult);
         Assert.NotEmpty(getResult.Webapps);
         Assert.True(getResult.Webapps.Any(detail => detail.Name == expectedWebappName), $"Expected to find web app with name '{expectedWebappName}' in the results.");
     }
@@ -71,8 +68,7 @@ public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtur
                 { "app", webappName }
             });
 
-        var getResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.WebappGetResult);
-        Assert.NotNull(getResult);
+        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.WebappGetResult);
         Assert.Single(getResult.Webapps);
         Assert.True(getResult.Webapps.All(detail => detail.Name == expectedWebappName), $"Expected to find a single web app with name '{expectedWebappName}' in the results.");
     }
