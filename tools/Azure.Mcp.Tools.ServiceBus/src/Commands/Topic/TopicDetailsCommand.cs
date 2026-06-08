@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Topic;
@@ -30,7 +29,7 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<BaseTopicOptions>
+public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, IServiceBusService serviceBusService) : GlobalCommand<BaseTopicOptions>
 {
     private readonly ILogger<TopicDetailsCommand> _logger = logger;
     private readonly IServiceBusService _serviceBusService = serviceBusService;
@@ -82,7 +81,7 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, ISe
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         ServiceBusException exception when exception.Reason == ServiceBusFailureReason.MessagingEntityNotFound =>
-            $"Subscription not found. Please check the topic and subscription name and try again.",
+            $"Topic not found. Please check the topic name and try again.",
         _ => base.GetErrorMessage(ex)
     };
 

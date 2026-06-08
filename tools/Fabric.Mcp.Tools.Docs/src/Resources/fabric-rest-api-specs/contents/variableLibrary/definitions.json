@@ -111,7 +111,7 @@
             "required": ["parts"],
             "properties": {
                 "format": {
-                    "description": "The format of the item definition. Supported format: `VariableLibraryV1`.",
+                    "description": "The format of the variable library definition. Supported format: `VariableLibraryV1`.",
                     "type": "string",
                     "readOnly": false
                 },

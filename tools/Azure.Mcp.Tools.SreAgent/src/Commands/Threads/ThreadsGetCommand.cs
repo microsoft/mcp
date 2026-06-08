@@ -13,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
 
 [CommandMetadata(Id = "efab1704-5543-496a-830d-19ddb816a102", Name = "get", Title = "Get Thread", Description = "Get messages for an SRE Agent thread.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
-public sealed class ThreadsGetCommand(ILogger<ThreadsGetCommand> logger, ISreAgentService sreAgentService) : ThreadsCommandBase<ThreadsGetOptions>
+public sealed class ThreadsGetCommand(ILogger<ThreadsGetCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<ThreadsGetOptions>
 {
     private readonly ILogger<ThreadsGetCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;

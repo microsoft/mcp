@@ -92,7 +92,7 @@
       "required": [ "parts" ],
       "properties": {
         "format": {
-          "description": "The format of the item definition.",
+          "description": "The format of the copy job definition.",
           "type": "string",
           "readOnly": false
         },

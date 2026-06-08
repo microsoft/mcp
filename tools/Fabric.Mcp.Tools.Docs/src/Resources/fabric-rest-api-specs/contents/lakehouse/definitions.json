@@ -157,7 +157,6 @@
     "CreateLakehouseRefreshMaterializedLakeViewsScheduleRequest": {
       "description": "Create lakehouse refresh materialized lake views schedule request payload.",
       "type": "object",
-      "required": ["enabled", "configuration"],
       "allOf": [
         {
           "$ref": "../platform/definitions/platform.json#/definitions/CreateScheduleRequest"
@@ -167,7 +166,6 @@
     "UpdateLakehouseRefreshMaterializedLakeViewsScheduleRequest": {
       "description": "Update lakehouse refresh materialized lake views schedule request payload.",
       "type": "object",
-      "required": ["enabled", "configuration"],
       "allOf": [
         {
           "$ref": "../platform/definitions/platform.json#/definitions/UpdateScheduleRequest"
@@ -199,7 +197,7 @@
       "required": ["parts"],
       "properties": {
         "format": {
-          "description": "The format of the item definition.",
+          "description": "The format of the lakehouse definition.",
           "type": "string",
           "readOnly": false
         },
@@ -477,6 +475,10 @@
         "vacuumSettings": {
           "$ref": "#/definitions/VacuumSettings",
           "description": "Configures the [vacuum](https://docs.delta.io/latest/delta-utility.html#-delta-vacuum) settings of the maintenance job. To skip table vacuum, leave this parameter empty."
+        },
+        "purgeDeletionVectors": {
+          "type": "boolean",
+          "description": "When true, executes REORG TABLE APPLY (PURGE) to rewrite files with [deletion vectors](https://docs.delta.io/latest/delta-deletion-vectors.html), physically removing deleted rows."
         }
       }
     },

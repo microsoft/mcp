@@ -9,6 +9,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | advisor_recommendation_list | List all recommendations in my subscription |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> |
+| advisor_recommendation_apply | Apply Advisor recommendations to this ARM template |
+| advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account |
 
 ## Azure AI Search
 
@@ -498,9 +500,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | fileshares_limits | Get the file share limits for subscription <subscription> in location <location> |
 | fileshares_limits | What are the file share limits in my subscription for location <location>? |
 | fileshares_limits | Show me the file share service limits in location <location> |
-| fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in subscription <subscription> |
-| fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available? |
-| fileshares_fileshare_check-name-availability | Verify availability of file share name <file_share_name> |
+| fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in <location> in subscription <subscription> |
+| fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available in <location>? |
+| fileshares_fileshare_check-name-availability | Verify availability of file share name <file_share_name> in <location> |
 | fileshares_rec | Get provisioning recommendations for file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_rec | Show me provisioning recommendations for file share <file_share_name> |
 | fileshares_rec | What are the recommended provisioning settings for file share <file_share_name>? |

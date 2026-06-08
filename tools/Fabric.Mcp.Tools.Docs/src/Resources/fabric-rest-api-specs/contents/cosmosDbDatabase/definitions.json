@@ -95,6 +95,11 @@
             "type": "object",
             "required": ["parts"],
             "properties": {
+                "format": {
+                    "description": "The format of the Cosmos DB database definition.",
+                    "type": "string",
+                    "readOnly": false
+                },
                 "parts": {
                     "description": "A list of definition parts.",
                     "type": "array",
