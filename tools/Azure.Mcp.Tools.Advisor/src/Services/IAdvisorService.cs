@@ -14,4 +14,10 @@ public interface IAdvisorService
         string? resourceGroup,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
+
+    Task<List<RecommendationType>> ListRecommendationTypesAsync(
+        string? tenant,
+        string? filter,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default);
 }

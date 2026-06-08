@@ -11,6 +11,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> |
 | advisor_recommendation_apply | Apply Advisor recommendations to this ARM template |
 | advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account |
+| advisor_recommendation-type_list | List all Azure Advisor recommendation types available in my tenant |
+| advisor_recommendation-type_list | Show me the available Advisor recommendation categories in subscription <subscription> |
+| advisor_recommendation-type_list | What Advisor impact levels exist? Use --filter impact in subscription <subscription> |
+| advisor_recommendation-type_list | List Advisor recommendation types for my new empty subscription <subscription> that has no recommendations yet |
 
 ## Azure AI Search
 
