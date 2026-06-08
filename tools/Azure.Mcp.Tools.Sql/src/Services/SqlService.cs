@@ -21,6 +21,17 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     private readonly ILogger<SqlService> _logger = logger;
 
     /// <summary>
+    /// Builds a KQL filter that scopes an Azure Resource Graph query to resources belonging to a
+    /// specific SQL server. SQL child resources (databases, elastic pools) embed the parent server
+    /// name in their resource id as "/servers/{serverName}/", so filtering on the id restricts the
+    /// results to the requested server instead of every server in the resource group.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server to scope results to.</param>
+    /// <returns>A KQL filter expression suitable for the <c>additionalFilter</c> parameter.</returns>
+    internal static string BuildServerResourceFilter(string serverName) =>
+        $"id contains '/servers/{EscapeKqlString(serverName)}/'";
+
+    /// <summary>
     /// Helper method to navigate the Azure resource hierarchy and retrieve a SQL Server resource.
     /// </summary>
     /// <param name="serverName">The name of the SQL server</param>
@@ -368,6 +379,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             subscription,
             retryPolicy,
             ConvertToSqlDatabaseModel,
+            additionalFilter: BuildServerResourceFilter(serverName),
             cancellationToken: cancellationToken);
     }
 
@@ -442,6 +454,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             subscription,
             retryPolicy,
             ConvertToSqlElasticPoolModel,
+            additionalFilter: BuildServerResourceFilter(serverName),
             cancellationToken: cancellationToken);
     }
 

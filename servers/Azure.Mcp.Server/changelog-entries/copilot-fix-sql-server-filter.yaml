@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed the SQL `db get` (list databases) and `elastic-pool list` tools returning resources from every server in the resource group instead of only the requested server. The Azure Resource Graph query is now scoped to the specified server."
