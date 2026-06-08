@@ -742,7 +742,7 @@ The Azure MCP Server supports connecting to external MCP servers through an embe
 
 #### Registry Configuration
 
-External MCP servers are defined in the embedded resource file `core/Azure.Mcp.Core/src/Areas/Server/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following a format similar to the standard MCP configuration format.
+External MCP servers are defined in the embedded resource file `servers/Azure.Mcp.Server/src/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following a format similar to the standard MCP configuration format.
 
 The registry structure follows this format:
 
@@ -780,18 +780,18 @@ The registry structure follows this format:
 - Use the `url` property to specify the endpoint
 - Supports HTTP-based communication with automatic transport mode detection
 - Best for web-based MCP servers and remote endpoints
-- Use `title` as the namespace name to encapsulate tools of the MCP server
+- Use `title` as the dislay name for the namespace tool (optional)
 - Use `description` as the description of the namespace tool for the MCP server
 - Use `toolPrefix` to assign unique prefix to tools of the MCP server
 - If the MCP server requires authentication, use `oauthScopes` to specify the Entra client registration representing the MCP server
 
 When running in namespace mode, the registered MCP server will appear as a namespace tool like all the built-in namespaces, exposing the underlying tools via dynamic discovery. When running in all mode, the registered MCP server's tools will be listed along with all the built-in tools.
 
-Azure MCP only supports registering external http servers that don't require authentication or that support Entra ID authentication. The registered MCP server needs to have an Entra client registration that accepts authorization and token requests from common clients, such as Azure CLI, VS Code, etc. Depending on how Azure MCP runs, there are several different authentication scenarios involving the external MCP server.
+For HTTP-transport external servers, Azure MCP supports unauthenticated endpoints and Entra ID-protected endpoints (via `oauthScopes`). The registered MCP server needs to have an Entra app registration that accepts authorization and token requests from common clients (e.g. Azure CLI and VS Code). Depending on how Azure MCP runs, there are several different authentication scenarios involving the external MCP server.
 
-- Azure MCP runs in stdio mode and uses a user principal. For example, a user starts Azure MCP in stdio mode and let it use AzureCliCredential. The registered MCP server will receive user principal access tokens from Azure MCP.
-- Azure MCP runs in stdio mode and uses a service principal. For example, a user runs Azure MCP in stdio mode and let it use EnvironmentCredential (e.g. Managed Identity). The registered MCP server will receive service principal access tokens from Azure MCP.
-- Azure MCP runs in remote mode and uses On-Behalf-Of (OBO). For example, a user runs Azure MCP in http mode and hosts it as a service. The user then uses some client to access this Azure MCP service. This Azure MCP service receives a user/service principal access token for itself, exchanges it for a new token for the registered MCP server and accesses the registered MCP server using the new token. The registered MCP server will receive an OBO token from Azure MCP service's configured entra client registration.
+- Azure MCP runs in stdio mode and uses a user principal. For example, a user starts Azure MCP in stdio mode and lets it use AzureCliCredential. The registered MCP server will receive user principal access tokens from Azure MCP.
+- Azure MCP runs in stdio mode and uses a service principal. For example, a user runs Azure MCP in stdio mode and lets it use EnvironmentCredential (for example, Managed Identity). The registered MCP server will receive service principal access tokens from Azure MCP.
+- Azure MCP runs in remote mode and uses On-Behalf-Of (OBO). For example, a user runs Azure MCP in HTTP mode and hosts it as a service. The user then uses some client to access this Azure MCP service. This Azure MCP service receives a user/service principal access token for itself, exchanges it for a new token for the registered MCP server, and accesses the registered MCP server using the new token. The registered MCP server will receive an OBO token from the Azure MCP service's configured Entra app registration.
 
 There are two kinds of user principals in Entra ID, personal users and organizational users. Each user can be a direct member of a tenant or a guest of a tenant. The configuration of the registered MCP server's Entra client registration may accidentally block access from some users. When adding a registered MCP server that requires authentication, make sure to test the Entra client registration to make sure the expected clients and users can successfully authorize and acquire access tokens for it. Also test the registered MCP server's implementation to make sure it can accept valid access tokens from all kinds of supported scenarios. If a commonly acceptable scenario is by design not supported, document these scenarios in the registered MCP server's entry in [README.md](./README.md).
 
