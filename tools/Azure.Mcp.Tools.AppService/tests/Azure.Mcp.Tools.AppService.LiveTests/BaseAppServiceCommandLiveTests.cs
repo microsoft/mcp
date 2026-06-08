@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
@@ -38,4 +40,12 @@ public abstract class BaseAppServiceCommandLiveTests(ITestOutputHelper output, T
             Value = "Sanitized"
         }),
     ];
+
+    protected static T DeserializeResult<T>(JsonElement? element, JsonTypeInfo<T> jsonTypeInfo)
+    {
+        Assert.NotNull(element);
+        var deserialized = JsonSerializer.Deserialize(element.Value, jsonTypeInfo);
+        Assert.NotNull(deserialized);
+        return deserialized;
+    }
 }
