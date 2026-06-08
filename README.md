@@ -181,11 +181,11 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **INSTALL**: [![Install Microsoft Sentinel Data Exploration MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode:mcp/install?%7B%22name%22%3A%22microsoft-sentinel-data-exploration%22%2C%22url%22%3A%22https%3A%2F%2Fsentinel.microsoft.com%2Fmcp%2Fdata-exploration%22%7D) [![Install Microsoft Sentinel Data Exploration MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode-insiders:mcp/install?%7B%22name%22%3A%22microsoft-sentinel-data-exploration%22%2C%22url%22%3A%22https%3A%2F%2Fsentinel.microsoft.com%2Fmcp%2Fdata-exploration%22%7D)
 
 ### 🛢️ Microsoft SQL
-- **REPOSITORY**: [MSSQL MCP Server](https://aka.ms/MssqlMcp)
+- **REPOSITORY**: [MSSQL MCP Server](https://aka.ms/sql/mcp)
 - **DESCRIPTION**: Chat with your business data the new agentic way using natural language and AI. Connect to any SQL database—from ground (on-premises) to Azure cloud to Microsoft Fabric via a simple connection string. Discover and define table schemas, manage tables, and perform CRUD operations through conversational prompts.
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
-- **INSTALL**: [MSSQL MCP Server](https://aka.ms/MssqlMcp)
+- **INSTALL**: [MSSQL MCP Server](https://aka.ms/sql/mcp)
 
 ### 💬 Microsoft Teams
 - **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_TeamsServer)
