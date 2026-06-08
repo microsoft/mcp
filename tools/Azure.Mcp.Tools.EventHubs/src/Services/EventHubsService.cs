@@ -247,7 +247,7 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
         {
-            _logger.LogWarning(
+            _logger.LogInformation(
                 "Event Hubs namespace '{NamespaceName}' not found in resource group '{ResourceGroup}'. Nothing was deleted.",
                 namespaceName, resourceGroup);
             return false;
