@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
@@ -394,6 +395,8 @@ public class NamespaceDeleteCommandTests : CommandUnitTestsBase<NamespaceDeleteC
     [Fact]
     public async Task ExecuteAsync_WhenNamespaceNotFound_ReturnsNotFoundMessage()
     {
+        const string nonExistentNamespace = "nonexistent-namespace";
+
         // Arrange — service returns false (namespace did not exist)
         Service.DeleteNamespaceAsync(
             Arg.Any<string>(),
@@ -408,10 +411,17 @@ public class NamespaceDeleteCommandTests : CommandUnitTestsBase<NamespaceDeleteC
         var response = await ExecuteCommandAsync(
             "--subscription", "test-sub",
             "--resource-group", "test-rg",
-            "--namespace", "nonexistent-namespace");
+            "--namespace", nonExistentNamespace);
 
         // Assert — still HTTP 200 (idempotent), but result indicates not-found
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
+
+        var result = JsonDocument.Parse(JsonSerializer.Serialize(response.Results)).RootElement;
+        var success = result.GetProperty("success").GetBoolean();
+        var message = result.GetProperty("message").GetString();
+
+        Assert.False(success);
+        Assert.Equal($"Namespace '{nonExistentNamespace}' was not found. Nothing was deleted.", message);
     }
 }
