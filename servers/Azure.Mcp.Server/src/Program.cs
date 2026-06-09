@@ -219,7 +219,7 @@ internal class Program
     {
         var thisAssembly = typeof(Program).Assembly;
 
-        services.InitializeConfigurationAndOptions();
+        services.InitializeConfigurationAndOptions(thisAssembly);
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();

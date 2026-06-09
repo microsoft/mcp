@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -17,7 +18,10 @@ using Options = Microsoft.Extensions.Options.Options;
 
 public class ServiceCollectionExtensionsSerializedTests
 {
-    private IServiceCollection SetupBaseServices()
+    private static readonly Assembly s_testAssembly = typeof(ServiceCollectionExtensionsTests).Assembly;
+    private static readonly Assembly s_serverAssembly = Assembly.Load("azmcp");
+
+    private static IServiceCollection SetupBaseServices()
     {
         var services = CommandFactoryHelpers.SetupCommonServices();
         services.AddSingleton(sp => CommandFactoryHelpers.CreateCommandFactory(sp));
@@ -29,11 +33,11 @@ public class ServiceCollectionExtensionsSerializedTests
     public void InitializeConfigurationAndOptions_Defaults()
     {
         // Assert
-        var expectedVersion = AssemblyHelper.GetAssemblyVersion(typeof(ServiceCollectionExtensionsTests).Assembly);
+        var expectedVersion = AssemblyHelper.GetAssemblyVersion(s_testAssembly);
         var services = SetupBaseServices();
 
         // Act
-        ServiceCollectionExtensions.InitializeConfigurationAndOptions(services);
+        services.InitializeConfigurationAndOptions(s_serverAssembly);
 
         // Assert
         var provider = services.BuildServiceProvider();
@@ -64,7 +68,7 @@ public class ServiceCollectionExtensionsSerializedTests
         var services = SetupBaseServices().AddSingleton(Options.Create(serviceStartOptions));
 
         // Act
-        ServiceCollectionExtensions.InitializeConfigurationAndOptions(services);
+        services.InitializeConfigurationAndOptions(s_serverAssembly);
         var provider = services.BuildServiceProvider();
 
         // Assert
@@ -83,12 +87,12 @@ public class ServiceCollectionExtensionsSerializedTests
     public void InitializeConfigurationAndOptions_Stdio()
     {
         // Assert
-        var expectedVersion = AssemblyHelper.GetAssemblyVersion(typeof(ServiceCollectionExtensionsTests).Assembly);
+        var expectedVersion = AssemblyHelper.GetAssemblyVersion(s_testAssembly);
         var services = SetupBaseServices();
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", "false");
-        ServiceCollectionExtensions.InitializeConfigurationAndOptions(services);
+        services.InitializeConfigurationAndOptions(s_serverAssembly);
         var provider = services.BuildServiceProvider();
 
         // Assert
@@ -121,7 +125,7 @@ public class ServiceCollectionExtensionsSerializedTests
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", null);
-        ServiceCollectionExtensions.InitializeConfigurationAndOptions(services);
+        services.InitializeConfigurationAndOptions(s_serverAssembly);
         var provider = services.BuildServiceProvider();
 
         // Assert
@@ -145,7 +149,7 @@ public class ServiceCollectionExtensionsSerializedTests
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", "true");
-        ServiceCollectionExtensions.InitializeConfigurationAndOptions(services);
+        services.InitializeConfigurationAndOptions(s_serverAssembly);
         var provider = services.BuildServiceProvider();
 
         // Assert
@@ -171,7 +175,7 @@ public class ServiceCollectionExtensionsSerializedTests
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", null);
-        ServiceCollectionExtensions.InitializeConfigurationAndOptions(services);
+        services.InitializeConfigurationAndOptions(s_serverAssembly);
         var provider = services.BuildServiceProvider();
 
         // Assert
