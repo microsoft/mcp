@@ -255,12 +255,13 @@ public static partial class ServiceCollectionExtensions
     /// Using <see cref="IConfiguration"/> configures <see cref="McpServerConfiguration"/>.
     /// </summary>
     /// <param name="services">Service Collection to add configuration logic to.</param>
-    public static void InitializeConfigurationAndOptions(this IServiceCollection services)
+    /// <param name="assembly">The assembly to use for configuration.</param>
+    public static void InitializeConfigurationAndOptions(this IServiceCollection services, Assembly assembly)
     {
         var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
         var configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", optional: false)
-            .AddJsonFile($"appsettings.{environment}.json", optional: true)
+            .AddEmbeddedAppSettings(assembly, "appsettings.json", required: true)
+            .AddEmbeddedAppSettings(assembly, $"appsettings.{environment}.json", required: false)
             .AddEnvironmentVariables()
             .SetBasePath(AppContext.BaseDirectory)
             .Build();
