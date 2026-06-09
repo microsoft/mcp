@@ -89,24 +89,22 @@ public sealed class AksService(
                 return cachedCluster;
             }
 
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var cluster = await ExecuteSingleResourceQueryAsync(
+                "Microsoft.ContainerService/managedClusters",
+                resourceGroup: resourceGroup,
+                subscription: subscription,
+                retryPolicy: retryPolicy,
+                converter: ConvertToClusterFromJson,
+                additionalFilter: $"name =~ '{EscapeKqlString(clusterName!)}'" ,
+                tenant: tenant,
+                cancellationToken: cancellationToken);
 
-            if (resourceGroupResource?.Value == null)
+            if (cluster == null)
             {
                 return [];
             }
 
-            var clusterResource = await resourceGroupResource.Value
-                .GetContainerServiceManagedClusters()
-                .GetAsync(clusterName, cancellationToken);
-
-            if (clusterResource?.Value?.Data == null)
-            {
-                return [];
-            }
-
-            var clusters = new List<Cluster>() { ConvertToClusterModel(clusterResource.Value) };
+            var clusters = new List<Cluster>() { cluster };
 
             // Cache the result
             await _cacheService.SetAsync(CacheGroup, cacheKey, clusters, s_cacheDuration, cancellationToken);
@@ -614,176 +612,6 @@ public sealed class AksService(
             PodSubnetId = poolEl.TryGetProperty("podSubnetID", out var psidEl) ? psidEl.GetString() : null,
             VnetSubnetId = poolEl.TryGetProperty("vnetSubnetID", out var vsidEl) ? vsidEl.GetString() : null,
         };
-    }
-
-    private static Cluster ConvertToClusterModel(ContainerServiceManagedClusterResource clusterResource)
-    {
-        var data = clusterResource.Data;
-        var agentPool = data.AgentPoolProfiles?.FirstOrDefault();
-
-        var cluster = new Cluster
-        {
-            Id = clusterResource.Id.ToString(),
-            Name = data.Name,
-            SubscriptionId = clusterResource.Id.SubscriptionId,
-            ResourceGroupName = clusterResource.Id.ResourceGroupName,
-            Location = data.Location.ToString(),
-            KubernetesVersion = data.KubernetesVersion,
-            ProvisioningState = data.ProvisioningState?.ToString(),
-            PowerState = data.PowerStateCode?.ToString(),
-            DnsPrefix = data.DnsPrefix,
-            Fqdn = data.Fqdn,
-            NodeCount = agentPool?.Count,
-            NodeVmSize = agentPool?.VmSize,
-            IdentityType = data.Identity?.ManagedServiceIdentityType.ToString(),
-            Identity = new()
-            {
-                Type = data.Identity?.ManagedServiceIdentityType.ToString(),
-                PrincipalId = data.Identity?.PrincipalId?.ToString(),
-                TenantId = data.Identity?.TenantId?.ToString()
-            },
-            EnableRbac = data.EnableRbac,
-            NetworkPlugin = data.NetworkProfile?.NetworkPlugin?.ToString(),
-            NetworkPolicy = data.NetworkProfile?.NetworkPolicy?.ToString(),
-            ServiceCidr = data.NetworkProfile?.ServiceCidr,
-            DnsServiceIP = data.NetworkProfile?.DnsServiceIP?.ToString(),
-            SkuTier = data.Sku?.Tier?.ToString(),
-            SkuName = data.Sku?.Name?.ToString(),
-            NodeResourceGroup = data.NodeResourceGroup,
-            MaxAgentPools = data.MaxAgentPools,
-            SupportPlan = data.SupportPlan?.ToString(),
-            NetworkProfile = new()
-            {
-                NetworkPlugin = data.NetworkProfile?.NetworkPlugin?.ToString(),
-                NetworkPluginMode = data.NetworkProfile?.NetworkPluginMode?.ToString(),
-                NetworkPolicy = data.NetworkProfile?.NetworkPolicy?.ToString(),
-                NetworkDataplane = data.NetworkProfile?.NetworkDataplane?.ToString(),
-                LoadBalancerSku = data.NetworkProfile?.LoadBalancerSku?.ToString(),
-                LoadBalancerProfile = data.NetworkProfile?.LoadBalancerProfile is null ? null : new()
-                {
-                    ManagedOutboundIPCount = data.NetworkProfile?.LoadBalancerProfile?.ManagedOutboundIPs?.Count,
-                    EffectiveOutboundIPs = data.NetworkProfile?.LoadBalancerProfile?.EffectiveOutboundIPs?.Select(e => new EffectiveOutboundIPReference() { Id = e.Id?.ToString() }).ToList(),
-                    BackendPoolType = data.NetworkProfile?.LoadBalancerProfile?.BackendPoolType?.ToString()
-                },
-                PodCidr = data.NetworkProfile?.PodCidr,
-                ServiceCidr = data.NetworkProfile?.ServiceCidr,
-                DnsServiceIP = data.NetworkProfile?.DnsServiceIP?.ToString(),
-                OutboundType = data.NetworkProfile?.OutboundType?.ToString(),
-                PodCidrs = data.NetworkProfile?.PodCidrs?.ToList(),
-                ServiceCidrs = data.NetworkProfile?.ServiceCidrs?.ToList(),
-                IpFamilies = data.NetworkProfile?.IPFamilies?.Select(f => f.ToString()).ToList()
-            },
-            WindowsProfile = data.WindowsProfile is null ? null : new() { AdminUsername = data.WindowsProfile.AdminUsername },
-            ServicePrincipalProfile = data.ServicePrincipalProfile is null ? null : new() { ClientId = data.ServicePrincipalProfile.ClientId },
-            AutoUpgradeProfile = data.AutoUpgradeProfile is null ? null : new()
-            {
-                UpgradeChannel = data.AutoUpgradeProfile.UpgradeChannel?.ToString(),
-                NodeOSUpgradeChannel = data.AutoUpgradeProfile.NodeOSUpgradeChannel?.ToString()
-            },
-            // OIDC Issuer Profile
-            OidcIssuerProfile = data.OidcIssuerProfile is null ? null : new()
-            {
-                Enabled = data.OidcIssuerProfile.IsEnabled,
-                IssuerUrl = data.OidcIssuerProfile.IssuerUriInfo
-            },
-            AddonProfiles = data.AddonProfiles?.ToDictionary(
-                kvp => kvp.Key,
-                static kvp =>
-                {
-                    IDictionary<string, string> map = new Dictionary<string, string>();
-                    if (kvp.Value != null)
-                    {
-                        if (kvp.Value.Config != null)
-                        {
-                            foreach (var c in kvp.Value.Config)
-                            {
-                                map[$"config.{c.Key}"] = c.Value;
-                            }
-                        }
-                        if (kvp.Value.Identity != null)
-                        {
-                            if (kvp.Value.Identity.ClientId != null)
-                                map.Add("identity.clientId", kvp.Value.Identity.ClientId.ToString()!);
-                            if (kvp.Value.Identity.ObjectId != null)
-                                map.Add("identity.objectId", kvp.Value.Identity.ObjectId.ToString()!);
-                        }
-                    }
-                    return map;
-                }),
-            IdentityProfile = data.IdentityProfile?.ToDictionary(
-                kvp => kvp.Key,
-                kvp => new ManagedIdentityReference
-                {
-                    ResourceId = kvp.Value?.ResourceId?.ToString(),
-                    ClientId = kvp.Value?.ClientId?.ToString(),
-                    ObjectId = kvp.Value?.ObjectId?.ToString()
-                }),
-            DisableLocalAccounts = data.DisableLocalAccounts,
-            // Security Profile
-            SecurityProfile = data.SecurityProfile is null ? null : new()
-            {
-                AzureKeyVaultKms = data.SecurityProfile.AzureKeyVaultKms is null ? null : new()
-                {
-                    Enabled = data.SecurityProfile.AzureKeyVaultKms.IsEnabled,
-                    KeyId = data.SecurityProfile.AzureKeyVaultKms.KeyId?.ToString()
-                },
-                Defender = data.SecurityProfile.Defender is null ? null : new()
-                {
-                    LogAnalyticsWorkspaceResourceId = data.SecurityProfile.Defender.LogAnalyticsWorkspaceResourceId?.ToString(),
-                    SecurityMonitoring = new() { Enabled = data.SecurityProfile.Defender.IsSecurityMonitoringEnabled }
-                },
-                ImageCleaner = data.SecurityProfile.ImageCleaner is null ? null : new()
-                {
-                    Enabled = data.SecurityProfile.ImageCleaner.IsEnabled,
-                    IntervalHours = data.SecurityProfile.ImageCleaner.IntervalHours
-                },
-                WorkloadIdentity = data.SecurityProfile.IsWorkloadIdentityEnabled is null
-                    ? null
-                    : new() { Enabled = data.SecurityProfile.IsWorkloadIdentityEnabled }
-            },
-            // Storage Profile
-            StorageProfile = data.StorageProfile is null ? null : new()
-            {
-                BlobCSIDriver = data.StorageProfile.IsBlobCsiDriverEnabled is null ? null : new() { Enabled = data.StorageProfile.IsBlobCsiDriverEnabled },
-                DiskCSIDriver = data.StorageProfile.IsDiskCsiDriverEnabled is null ? null : new() { Enabled = data.StorageProfile.IsDiskCsiDriverEnabled },
-                FileCSIDriver = data.StorageProfile.IsFileCsiDriverEnabled is null ? null : new() { Enabled = data.StorageProfile.IsFileCsiDriverEnabled },
-                SnapshotController = data.StorageProfile.IsSnapshotControllerEnabled is null ? null : new() { Enabled = data.StorageProfile.IsSnapshotControllerEnabled }
-            },
-            // Metrics profile (no 1.2.5 SDK match for our CostAnalysis model)
-            MetricsProfile = null,
-            // Node provisioning and bootstrap profiles are not exposed in SDK 1.2.5
-            NodeProvisioningProfile = null,
-            BootstrapProfile = null,
-            // Workload Auto-scaler profile
-            WorkloadAutoScalerProfile = data.WorkloadAutoScalerProfile is null ? null : new()
-            {
-                Keda = data.WorkloadAutoScalerProfile.IsKedaEnabled is null ? null : new() { Enabled = data.WorkloadAutoScalerProfile.IsKedaEnabled },
-                VerticalPodAutoscaler = data.WorkloadAutoScalerProfile.IsVpaEnabled is null ? null : new() { Enabled = data.WorkloadAutoScalerProfile.IsVpaEnabled }
-            },
-            // AI toolchain operator profile not exposed in SDK 1.2.5
-            AiToolchainOperatorProfile = null,
-            // Unique resource UID
-            ResourceUid = data.ResourceId,
-            Tags = data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
-        };
-
-        // Map agent pool profiles from the cluster resource data when available
-        if (data.AgentPoolProfiles is not null)
-        {
-            try
-            {
-                cluster.AgentPoolProfiles = data.AgentPoolProfiles.Select(ConvertToNodePoolModel).ToList();
-            }
-            catch
-            {
-                // If SDK shape differs, fall back to minimal projection
-                cluster.AgentPoolProfiles = data.AgentPoolProfiles
-                    .Select(p => new NodePool { Name = p.Name, Count = p.Count, VmSize = p.VmSize?.ToString(), Mode = p.Mode?.ToString() })
-                    .ToList();
-            }
-        }
-
-        return cluster;
     }
 
     private static NodePool ConvertToNodePoolModel(ContainerServiceAgentPoolResource agentPoolResource)
