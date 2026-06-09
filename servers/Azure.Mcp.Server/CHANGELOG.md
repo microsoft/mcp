@@ -4,13 +4,16 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ## 3.0.0-beta.17 (Unreleased)
 
-### Features Added
-
 ### Breaking Changes
+
+- Removed resource group, tenant, auth method, and retry options from cloudarchitect_design tool as they aren't used. [[#2822](https://github.com/microsoft/mcp/pull/2822)]
 
 ### Bugs Fixed
 
-### Other Changes
+- Fixed Cosmos DB query validator to use a cached static Regex instead of recompiling a new Regex on every validation, improving performance and AOT compatibility. [[#2834](https://github.com/microsoft/mcp/pull/2834)]
+- Fixed Cosmos DB cache keys to include subscription, tenant, and authentication method. [[#2838](https://github.com/microsoft/mcp/pull/2838)]
+- Replaced misleading error logging in CosmosListCommand, removing the always-null ResourceGroup field and adding non-sensitive diagnostic context (Subscription, Account, Database) consistent with MySqlListCommand and PostgresListCommand. [[#2837](https://github.com/microsoft/mcp/pull/2837)]
+- Fixed AVM module-not-found errors returning HTTP 422 instead of 400 by using ArgumentException for invalid module names. [[#2676](https://github.com/microsoft/mcp/pull/2676)]
 
 ## 3.0.0-beta.16 (2026-06-01)
 
