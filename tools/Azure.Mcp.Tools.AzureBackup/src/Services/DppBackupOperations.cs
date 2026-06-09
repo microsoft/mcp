@@ -520,9 +520,13 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             // The Azure SDK may throw FormatException when parsing the job's duration field
             // (e.g., non-standard ISO 8601 durations from the service). Fall back to listing
             // all jobs and matching by ID to work around this SDK limitation.
+            // Note: ListJobsAsync may return a partial list if it also hits FormatException
+            // during enumeration — so a null result does NOT mean the job is missing; it may
+            // exist beyond the point where the enumerator broke. Re-throw FormatException
+            // (not KeyNotFoundException) to preserve SDK-parse-failure semantics.
             var jobs = await ListJobsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
             return jobs.FirstOrDefault(j => j.Name == jobId)
-                ?? throw new KeyNotFoundException($"Job '{jobId}' not found. The SDK cannot parse this job's duration field.");
+                ?? throw new FormatException($"Job '{jobId}' exists but the Azure SDK cannot parse its duration field (XmlConvert.ToTimeSpan limitation). This is tracked in azure-sdk-for-net#59306.");
         }
     }
 
