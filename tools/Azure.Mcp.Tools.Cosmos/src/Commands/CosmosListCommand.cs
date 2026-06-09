@@ -11,6 +11,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
 
@@ -35,6 +36,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
         base.RegisterOptions(command);
         command.Options.Add(CosmosOptionDefinitions.AccountOptional);
         command.Options.Add(CosmosOptionDefinitions.DatabaseOptional);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Validators.Add(result =>
         {
             // Validate that --account is provided when --database is specified
@@ -51,6 +53,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
         var options = base.BindOptions(parseResult);
         options.Account = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.AccountOptional.Name);
         options.Database = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.DatabaseOptional.Name);
+        options.ResourceGroup = parseResult.GetValueOrDefault<string?>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
 
@@ -73,6 +76,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
                     options.Database!,
                     options.Subscription!,
                     options.AuthMethod ?? AuthMethod.Credential,
+                    options.ResourceGroup,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -88,6 +92,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
                     options.Account!,
                     options.Subscription!,
                     options.AuthMethod ?? AuthMethod.Credential,
+                    options.ResourceGroup,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);

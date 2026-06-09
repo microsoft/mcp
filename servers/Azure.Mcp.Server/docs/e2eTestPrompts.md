@@ -359,6 +359,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | cosmos_list | Show me my cosmosdb accounts |
 | cosmos_list | Show me the cosmosdb accounts in my subscription |
 | cosmos_list | List all the databases in the cosmosdb account <account_name> |
+| cosmos_list | List all the databases in the cosmosdb account <account_name> in resource group <resource_group> |
 | cosmos_list | Show me the databases in the cosmosdb account <account_name> |
 | cosmos_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> |
 | cosmos_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> |

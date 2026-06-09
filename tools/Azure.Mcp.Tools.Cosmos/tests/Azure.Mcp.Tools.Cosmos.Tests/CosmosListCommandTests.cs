@@ -68,6 +68,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedDatabases);
@@ -93,6 +94,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             Arg.Is("database123"),
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -143,6 +145,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
@@ -167,6 +170,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             Arg.Is("database123"),
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -238,6 +242,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
@@ -261,6 +266,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             Arg.Is("database123"),
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -286,6 +292,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new KeyNotFoundException("Cosmos DB account 'missingaccount' not found in subscription 'sub123'."));
@@ -298,6 +305,41 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsResourceGroup_WhenListingDatabases()
+    {
+        // Arrange
+        var expectedDatabases = new List<string> { "database1" };
+        Service.ListDatabases(
+            Arg.Is("account123"),
+            Arg.Is("sub123"),
+            Arg.Any<AuthMethod>(),
+            Arg.Is("rg1"),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedDatabases);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--account", "account123",
+            "--resource-group", "rg1");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
+        Assert.NotNull(result.Databases);
+        Assert.Equal(expectedDatabases, result.Databases);
+        await Service.Received(1).ListDatabases(
+            "account123",
+            "sub123",
+            Arg.Any<AuthMethod>(),
+            "rg1",
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
