@@ -103,9 +103,10 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
             }
             else
             {
-                // List all accounts in the subscription
+                // List accounts in the subscription, optionally scoped to a resource group
                 var accounts = await _cosmosService.GetCosmosAccounts(
                     options.Subscription!,
+                    options.ResourceGroup,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);

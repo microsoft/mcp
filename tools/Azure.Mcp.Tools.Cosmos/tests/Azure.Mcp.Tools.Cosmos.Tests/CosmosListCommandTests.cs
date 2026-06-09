@@ -43,6 +43,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
         Service.GetCosmosAccounts(
             Arg.Is("sub123"),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
@@ -120,6 +121,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
         // Arrange
         Service.GetCosmosAccounts(
             Arg.Is("sub123"),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -220,6 +222,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
         // Arrange
         Service.GetCosmosAccounts(
             Arg.Is("sub123"),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -343,11 +346,42 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
     }
 
     [Fact]
+    public async Task ExecuteAsync_ForwardsResourceGroup_WhenListingAccounts()
+    {
+        // Arrange
+        var expectedAccounts = new List<string> { "account1" };
+        Service.GetCosmosAccounts(
+            Arg.Is("sub123"),
+            Arg.Is("rg1"),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedAccounts);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
+        Assert.NotNull(result.Accounts);
+        Assert.Equal(expectedAccounts, result.Accounts);
+        await Service.Received(1).GetCosmosAccounts(
+            "sub123",
+            "rg1",
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ExecuteAsync_Returns503_WhenServiceIsUnavailable()
     {
         // Arrange
         Service.GetCosmosAccounts(
             Arg.Is("sub123"),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())

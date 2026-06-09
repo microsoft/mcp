@@ -11,6 +11,7 @@ public interface ICosmosService : IAsyncDisposable
 {
     Task<List<string>> GetCosmosAccounts(
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

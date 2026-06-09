@@ -177,17 +177,44 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         return cosmosClient;
     }
 
-    public async Task<List<string>> GetCosmosAccounts(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    public async Task<List<string>> GetCosmosAccounts(string subscription, string? resourceGroup = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var accounts = new List<string>();
-        await foreach (var account in subscriptionResource.GetCosmosDBAccountsAsync(cancellationToken))
+
+        if (!string.IsNullOrEmpty(resourceGroup))
         {
-            if (account?.Data?.Name != null)
+            // Scope the listing to a single resource group so the service only returns
+            // the accounts within it instead of enumerating the whole subscription.
+            ResourceGroupResource resourceGroupResource;
+            try
             {
-                accounts.Add(account.Data.Name);
+                var resourceGroupResponse = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+                resourceGroupResource = resourceGroupResponse.Value;
+            }
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
+            }
+
+            await foreach (var account in resourceGroupResource.GetCosmosDBAccounts().GetAllAsync(cancellationToken))
+            {
+                if (account?.Data?.Name != null)
+                {
+                    accounts.Add(account.Data.Name);
+                }
+            }
+        }
+        else
+        {
+            await foreach (var account in subscriptionResource.GetCosmosDBAccountsAsync(cancellationToken))
+            {
+                if (account?.Data?.Name != null)
+                {
+                    accounts.Add(account.Data.Name);
+                }
             }
         }
 
