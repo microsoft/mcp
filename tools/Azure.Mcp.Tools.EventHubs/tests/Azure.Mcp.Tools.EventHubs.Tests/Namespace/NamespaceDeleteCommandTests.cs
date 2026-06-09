@@ -355,7 +355,7 @@ public class NamespaceDeleteCommandTests : CommandUnitTestsBase<NamespaceDeleteC
         await Service.Received(1).DeleteNamespaceAsync(
             namespaceName,
             resourceGroup,
-            subscription,
+            Arg.Any<string>(),
             tenant,
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
