@@ -351,6 +351,31 @@ public class CosmosServiceTests : IAsyncDisposable
             Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task QueryItems_NonSuccessResponse_Throws()
+    {
+        // Arrange: route the CosmosClient's transport through the mocked IHttpClientFactory so it always returns 403.
+        var handler = new MockHttpHandler(HttpStatusCode.Forbidden);
+        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
+        var clientOptions = new CosmosClientOptions { HttpClientFactory = () => _httpClientFactory.CreateClient() };
+
+        var credential = Substitute.For<TokenCredential>();
+        var token = new AccessToken("fake-token", DateTimeOffset.UtcNow.AddHours(1));
+        credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<AccessToken>(token));
+        credential.GetToken(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(token);
+
+        using var cosmosClient = new CosmosClient("https://myaccount.documents.azure.com", credential, clientOptions);
+
+        _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(cosmosClient);
+
+        // Act & Assert: a non-success response must throw rather than being returned as a data item
+        await Assert.ThrowsAnyAsync<CosmosException>(() =>
+            _service.QueryItems("myaccount", "mydb", "mycontainer", "SELECT * FROM c", "sub123", AuthMethod.Key, cancellationToken: TestContext.Current.CancellationToken));
+    }
+
     private sealed class MockHttpHandler(HttpStatusCode statusCode) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
