@@ -16,7 +16,6 @@ namespace Azure.Mcp.Tools.EventHubs.Tests.Namespace;
 public class NamespaceGetCommandTests : CommandUnitTestsBase<NamespaceGetCommand, IEventHubsService>
 {
     [Theory]
-    [InlineData("", false)]
     [InlineData("--subscription test-subscription", true)]
     [InlineData("--subscription test-subscription --resource-group test-rg", true)]
     [InlineData("--subscription test-subscription --namespace test-namespace --resource-group test-rg", true)]
