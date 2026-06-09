@@ -21,19 +21,7 @@ public sealed class AzApiDocsService : IAzApiDocsService
     public AzApiDocsResult GetDocumentation(string resourceTypeName, string? apiVersion = null)
     {
         var serviceProvider = s_schemaServiceProvider.Value;
-        TypesDefinitionResult typesResult;
-        try
-        {
-            typesResult = SchemaGenerator.GetResourceTypeDefinitions(serviceProvider, resourceTypeName, apiVersion);
-        }
-        catch (InvalidDataException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidDataException(ex.Message, ex);
-        }
+        TypesDefinitionResult typesResult = SchemaGenerator.GetResourceTypeDefinitions(serviceProvider, resourceTypeName, apiVersion);
         List<ComplexType> complexTypes = SchemaGenerator.GetResponse(typesResult);
 
         string resolvedApiVersion = typesResult.ApiVersion;
