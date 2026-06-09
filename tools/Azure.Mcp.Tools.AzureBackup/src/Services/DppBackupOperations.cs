@@ -522,7 +522,7 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             // all jobs and matching by ID to work around this SDK limitation.
             var jobs = await ListJobsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
             return jobs.FirstOrDefault(j => j.Name == jobId)
-                ?? throw new InvalidOperationException($"Job '{jobId}' not found. The SDK cannot parse this job's duration field.");
+                ?? throw new KeyNotFoundException($"Job '{jobId}' not found. The SDK cannot parse this job's duration field.");
         }
     }
 

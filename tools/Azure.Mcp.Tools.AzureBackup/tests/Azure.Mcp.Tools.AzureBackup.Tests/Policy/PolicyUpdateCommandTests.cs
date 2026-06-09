@@ -209,7 +209,7 @@ public class PolicyUpdateCommandTests : CommandUnitTestsBase<PolicyUpdateCommand
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new InvalidOperationException("Update is only supported for RSV (Recovery Services vault) policies. DPP policies do not support update."));
+            .ThrowsAsync(new ArgumentException("Update is only supported for RSV (Recovery Services vault) policies. DPP policies do not support update."));
 
         // Act
         var response = await ExecuteCommandAsync(
@@ -224,14 +224,14 @@ public class PolicyUpdateCommandTests : CommandUnitTestsBase<PolicyUpdateCommand
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesNonDppInvalidOperationException()
+    public async Task ExecuteAsync_HandlesUnsupportedPolicyTypeError()
     {
-        // Arrange — a non-DPP InvalidOperationException should surface its own message
+        // Arrange — an unsupported policy type is an input error, returns ArgumentException
         Service.UpdatePolicyAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new InvalidOperationException("Unsupported policy type 'SomePolicy'."));
+            .ThrowsAsync(new ArgumentException("Unsupported policy type 'SomePolicy'."));
 
         // Act
         var response = await ExecuteCommandAsync(

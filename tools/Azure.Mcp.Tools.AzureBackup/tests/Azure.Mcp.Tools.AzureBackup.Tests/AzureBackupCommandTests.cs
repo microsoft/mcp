@@ -735,7 +735,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     {
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
 
-        // DPP vaults do not support policy update — should return an error response with type InvalidOperationException
+        // DPP vaults do not support policy update — should return an error response with type ArgumentException
         var result = await CallToolAsync(
             "azurebackup_policy_update",
             new()
@@ -749,7 +749,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
         Assert.NotNull(result);
         var errorType = result.Value.AssertProperty("type");
-        Assert.Equal("InvalidOperationException", errorType.GetString());
+        Assert.Equal("ArgumentException", errorType.GetString());
     }
 
     #endregion
