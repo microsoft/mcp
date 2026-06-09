@@ -59,7 +59,7 @@
             "properties": {
                 "digitalTwinBuilderItemReference": {
                     "description": "The Digital Twin Builder Item Reference.",
-                    "$ref": "../common/definitions.json#/definitions/ItemReference"
+                    "$ref": "../common/definitions.json#/definitions/ItemReferenceById"
                 }
             }
         },
@@ -118,6 +118,11 @@
             "type": "object",
             "required": ["parts"],
             "properties": {
+                "format": {
+                    "description": "The format of the digital twin builder flow definition.",
+                    "type": "string",
+                    "readOnly": false
+                },
                 "parts": {
                     "description": "A list of definition parts.",
                     "type": "array",

@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.Mcp.Core.Options;
-
 namespace Azure.Mcp.Tools.CloudArchitect.Options;
 
 /// <summary>
 /// The set of parameters that the architecture design tool takes as input.
 /// </summary>
-public class ArchitectureDesignToolOptions : GlobalOptions
+public class ArchitectureDesignToolOptions
 {
     public string Question { get; set; } = string.Empty;
 

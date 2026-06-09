@@ -1,7 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "azurebackup: reject unknown `--workload-type` values for `azmcp_azurebackup_protectableitem_list` at the command boundary with a 400 ValidationError instead of leaking a 500 `ArgumentException` from the service layer."
-  - section: "Bugs Fixed"
-    description: "azurebackup: when both RSV and DPP vault listings fail (in `azmcp_azurebackup_vault_get` without `--vault-type` and in `azmcp_azurebackup_governance_find-unprotected`), surface a single meaningful exception (the inner `RequestFailedException` when both backends fail with the same HTTP status, otherwise an `InvalidOperationException` that includes both inner messages) instead of leaking a raw `AggregateException`."
-  - section: "Bugs Fixed"
-    description: "azurebackup: resolve subscription name to subscription ID via `ISubscriptionService` before constructing ARM `ResourceIdentifier`s, so every `azmcp_azurebackup_*` command now accepts a subscription display name in `--subscription` instead of failing with `FormatException`."

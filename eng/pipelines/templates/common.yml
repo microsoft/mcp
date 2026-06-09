@@ -29,7 +29,10 @@ parameters:
   default: false
 - name: TestTimeoutInMinutes
   type: number
-  default: 30
+  default: 45
+- name: BuildTimeoutInMinutes
+  type: number
+  default: 90
 - name: GovTest
   displayName: Run Gov Test
   type: boolean
@@ -99,6 +102,7 @@ extends:
         - template: /eng/pipelines/templates/jobs/build.yml
           parameters:
             TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
+            BuildTimeoutInMinutes: ${{ parameters.BuildTimeoutInMinutes }}
             ServerName: ${{ parameters.ServerName }}
             PublishTarget: ${{ parameters.PublishTarget }}
             OSName: ${{ os }}
@@ -108,6 +112,7 @@ extends:
       - template: /eng/pipelines/templates/jobs/build.yml
         parameters:
           TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
+          BuildTimeoutInMinutes: ${{ parameters.BuildTimeoutInMinutes }}
           ServerName: ${{ parameters.ServerName }}
           PublishTarget: ${{ parameters.PublishTarget }}
           OSName: linux

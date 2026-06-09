@@ -1,0 +1,80 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "connectionId": "4eb6b767-e786-45ed-b7cf-d25023e52222",
+    "recursive": true,
+    "beta": true
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "name": "(root)",
+            "fullyQualifiedScope": [],
+            "isSelectable": "NotSelectable",
+            "children": [
+              {
+                "name": "Sales",
+                "fullyQualifiedScope": [
+                  "Sales"
+                ],
+                "isSelectable": "NotSelectable",
+                "children": null
+              },
+              {
+                "name": "Finance",
+                "fullyQualifiedScope": [
+                  "Finance"
+                ],
+                "isSelectable": "NotSelectable",
+                "children": null
+              },
+              {
+                "name": "Accounting",
+                "fullyQualifiedScope": [
+                  "Accounting"
+                ],
+                "isSelectable": "NotSelectable",
+                "children": [
+                  {
+                    "name": "US",
+                    "fullyQualifiedScope": [
+                      "Accounting",
+                      "US"
+                    ],
+                    "isSelectable": "Selectable",
+                    "children": [
+                      {
+                        "name": "Taxes",
+                        "fullyQualifiedScope": [
+                          "Accounting",
+                          "US",
+                          "Taxes"
+                        ],
+                        "isSelectable": "NotSelectable",
+                        "children": null
+                      },
+                      {
+                        "name": "Receivable",
+                        "fullyQualifiedScope": [
+                          "Accounting",
+                          "US",
+                          "Receivable"
+                        ],
+                        "isSelectable": "NotSelectable",
+                        "children": null
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "continuationToken": null,
+        "continuationUri": null
+      }
+    }
+  }
+}

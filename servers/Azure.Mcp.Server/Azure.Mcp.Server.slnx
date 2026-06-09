@@ -380,8 +380,7 @@
     <Project Path="../../tools/Azure.Mcp.Tools.SreAgent/src/Azure.Mcp.Tools.SreAgent.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.SreAgent/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.SreAgent/tests/Azure.Mcp.Tools.SreAgent.LiveTests/Azure.Mcp.Tools.SreAgent.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.SreAgent/tests/Azure.Mcp.Tools.SreAgent.UnitTests/Azure.Mcp.Tools.SreAgent.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.SreAgent/tests/Azure.Mcp.Tools.SreAgent.Tests/Azure.Mcp.Tools.SreAgent.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Storage/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Storage/src/">

@@ -28,12 +28,18 @@
                         "$ref": "#/definitions/ErrorResponseDetails"
                     },
                     "readOnly": true
+                },
+                "isRetriable": {
+                    "type": "boolean",
+                    "description": "When true, the request can be retried. Use the `Retry-After` response header to determine the delay, if available.",
+                    "readOnly": true
                 }
             },
             "readOnly": true
         },
         "ErrorResponseDetails": {
             "description": "The error response details.",
+            "type": "object",
             "required": ["message", "errorCode"],
             "properties": {
                 "errorCode": {
@@ -55,6 +61,7 @@
         },
         "ErrorRelatedResource": {
             "description": "The error related resource details object.",
+            "type": "object",
             "required": ["resourceId", "resourceType"],
             "properties": {
                 "resourceId": {
@@ -256,7 +263,7 @@
       "ItemType": {
         "description": "The type of the item. Additional item types may be added over time.",
         "type": "string",
-        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog", "Map", "AnomalyDetector", "UserDataFunction", "GraphModel", "GraphQuerySet", "SnowflakeDatabase", "OperationsAgent", "CosmosDBDatabase", "Ontology", "EventSchemaSet", "DataAgent"],
+        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog", "Map", "AnomalyDetector", "UserDataFunction", "GraphModel", "GraphQuerySet", "SnowflakeDatabase", "OperationsAgent", "CosmosDBDatabase", "Ontology", "EventSchemaSet", "DataAgent", "MirroredCatalog" ],
         "x-ms-enum": {
           "name": "ItemType",
           "modelAsString": true,
@@ -371,7 +378,7 @@
             },
 			{
                 "value": "VariableLibrary",
-                "description": "A VariableLibrary."                          
+                "description": "A VariableLibrary."
             },
             {
               "value": "MirroredAzureDatabricksCatalog",
@@ -436,6 +443,10 @@
             {
                 "value": "DataAgent",
                 "description": "A DataAgent."
+            },
+            {
+                "value": "MirroredCatalog",
+                "description": "A MirroredCatalog."
             }
           ]
         },
@@ -598,6 +609,11 @@
                     },
                     "readOnly": true
                 },
+                "defaultIdentity": {
+                    "description": "The item's default identity.",
+                    "$ref": "#/definitions/Principal",
+                    "readOnly": true
+                },
                 "sensitivityLabel": {
                     "description": "The item sensitivity label.",
                     "$ref": "#/definitions/SensitivityLabel",
@@ -715,7 +731,7 @@
                 "customDomainName": {
                     "type": "string",
                     "maxLength": 100,
-                    "description": "> [!NOTE]\n> Support for GitHub Enterprise with Data residency (ghe.com) is currently in Preview.([learn more](/fabric/fundamentals/preview)).\n\nThe name of the enterprise github domain if it's not github.com. Only GitHub Enterprise with data residency domains (ghe.com) are supported. Maximum length is 100 characters."
+                    "description": "The name of the enterprise GitHub domain if it is not github.com. Only GitHub Enterprise with data residency domains (ghe.com) are supported. Maximum length is 100 characters."
                 }
             },
             "allOf": [
@@ -813,6 +829,16 @@
                 "id",
                 "displayName"
             ],
+            "allOf": [
+                {
+                    "$ref": "#/definitions/AppliedTag"
+                }
+            ]
+        },
+        "AppliedTag": {
+            "type": "object",
+            "description": "Represents an applied tag.",
+            "required": ["id", "displayName"],
             "properties": {
                 "id": {
                     "type": "string",
@@ -824,6 +850,16 @@
                     "description": "The name of the tag."
                 }
             }
+        },
+        "WorkspaceAppliedTag": {
+            "type": "object",
+            "description": "Represents an applied tag.",
+            "required": ["id", "displayName"],
+            "allOf": [
+                {
+                    "$ref": "#/definitions/AppliedTag"
+                }
+            ]
         },
         "TagScope": {
             "type": "object",
@@ -885,7 +921,7 @@
             ],
             "x-ms-discriminator-value": "Domain"
         },
-        
+
         "ItemReference": {
            "description": "An item reference object.",
            "type": "object",
@@ -913,8 +949,8 @@
                    {
                        "value": "ByVariable",
                        "description": "The item is referenced by a variable."
-                   }                   
-                   
+                   }
+
                ]
            }
        },
@@ -989,8 +1025,8 @@
                    {
                        "value": "ByVariable",
                        "description": "The connection is referenced by a variable."
-                   }                   
-                   
+                   }
+
                ]
            }
        },
@@ -1031,7 +1067,7 @@
                }
            ],
            "x-ms-discriminator-value": "ByVariable"
-       },       
+       },
        "Duration": {
             "description": "A duration.",
             "type": "object",

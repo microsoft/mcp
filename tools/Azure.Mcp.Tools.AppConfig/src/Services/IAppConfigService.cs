@@ -45,7 +45,7 @@ public interface IAppConfigService
         string? contentType = null,
         string[]? tags = null,
         CancellationToken cancellationToken = default);
-    Task DeleteKeyValue(
+    Task<bool> DeleteKeyValue(
         string accountName,
         string key,
         string subscription,

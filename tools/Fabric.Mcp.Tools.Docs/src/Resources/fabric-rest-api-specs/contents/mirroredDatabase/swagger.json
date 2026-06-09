@@ -388,6 +388,13 @@
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "description": "The format of the Mirrored Database public definition.",
+            "type": "string",
+            "required": false
           }
         ],
         "responses": {
