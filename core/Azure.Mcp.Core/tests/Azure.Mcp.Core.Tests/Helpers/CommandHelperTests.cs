@@ -59,7 +59,7 @@ public class CommandHelperTests
     }
 
     [Fact]
-    public void GetSubscription_ParameterValueContainingSubscription_ReturnsEnvironmentValue()
+    public void GetSubscription_ParameterValueContainingSubscription_ReturnsParameterValue()
     {
         // Arrange
         TestEnvironment.SetAzureSubscriptionId("env-subs");
@@ -70,16 +70,16 @@ public class CommandHelperTests
         var actual = CommandHelper.GetSubscription(parseResult);
 
         // Assert
-        Assert.Equal(subscription, actual);
+        Assert.Equal("Azure subscription 1", actual);
     }
 
     [Fact]
-    public void GetSubscription_ParameterValueContainingDefault_ReturnsEnvironmentValue()
+    public void GetSubscription_ParameterValueMatchingKnownPlaceholder_ReturnsEnvironmentValue()
     {
         // Arrange
         TestEnvironment.SetAzureSubscriptionId("env-subs");
         var subscription = CommandHelper.GetDefaultSubscription();
-        var parseResult = GetParseResult(["--subscription", "Some default name"]);
+        var parseResult = GetParseResult(["--subscription", "<subscription_id>"]);
 
         // Act
         var actual = CommandHelper.GetSubscription(parseResult);
@@ -89,12 +89,12 @@ public class CommandHelperTests
     }
 
     [Fact]
-    public void GetSubscription_NoEnvironmentVariableParameterValueContainingDefault_ReturnsParameterValue()
+    public void GetSubscription_NoEnvironmentVariableParameterValueMatchingKnownPlaceholder_ReturnsParameterValue()
     {
         // Arrange
         TestEnvironment.ClearAzureSubscriptionId();
         var subscription = CommandHelper.GetProfileSubscription();
-        var parseResult = GetParseResult(["--subscription", "Some default name"]);
+        var parseResult = GetParseResult(["--subscription", "<subscription_id>"]);
 
         // Act
         var actual = CommandHelper.GetSubscription(parseResult);
@@ -108,31 +108,7 @@ public class CommandHelperTests
         }
         else
         {
-            Assert.Equal("Some default name", actual);
-        }
-    }
-
-    [Fact]
-    public void GetSubscription_NoEnvironmentVariableParameterValueContainingSubscription_ReturnsParameterValue()
-    {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var subscription = CommandHelper.GetProfileSubscription();
-        var parseResult = GetParseResult(["--subscription", "Azure subscription 1"]);
-
-        // Act
-        var actual = CommandHelper.GetSubscription(parseResult);
-
-        // Assert
-        // If-else this test as being logged in with Azure CLI cannot be mocked out at this time.
-        // So, if the running environment is logged in the subscription will be defaulted to the Azure CLI subscription.
-        if (subscription != null)
-        {
-            Assert.Equal(subscription, actual);
-        }
-        else
-        {
-            Assert.Equal("Azure subscription 1", actual);
+            Assert.Equal("<subscription_id>", actual);
         }
     }
 

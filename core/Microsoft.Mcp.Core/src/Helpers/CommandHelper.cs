@@ -36,7 +36,15 @@ public static class CommandHelper
         "{subscription-name}",
         "{subscription-name-or-id}",
         "YOUR SUBSCRIPTION",
-        "YOUR SUBSCRIPTION ID"
+        "YOUR SUBSCRIPTION ID",
+        "default",
+        "<default>",
+        "{default}",
+        "default-sub",
+        "<default-sub>",
+        "{default-sub}",
+        "default_sub",
+        "default_subscription",
     };
 
     /// <summary>
