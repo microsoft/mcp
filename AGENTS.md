@@ -51,6 +51,7 @@
 - Access HttpContext directly from commands
 - Make transport-specific decisions in command logic
 - Assume single-user scenarios when implementing services
+- Use `git stash` in linked worktrees; the stash stack is shared across worktrees and can collide during concurrent work
 
 ## Commands
 
@@ -722,6 +723,9 @@ When adding new commands:
 # Remove git hooks
 ./eng/scripts/Remove-GitHooks.ps1
 ```
+
+### Git Worktree Safety
+When working in a linked git worktree (multiple worktrees sharing one repository common git directory), do **not** use `git stash`. Git stores stash entries in the shared `refs/stash`, so stash operations from concurrent worktrees share the same stack and can apply or drop the wrong changes. To compare against a baseline, use `git diff <ref>` (e.g., `git diff main -- <files>`) or create a throwaway worktree of the base branch with `git worktree add <path> <base-ref>` (e.g., `git worktree add ../mcp-main main`). When committing, stage intended changes explicitly (`git add -p` or specific paths) rather than `git add -A`.
 
 ### Pull Request Guidelines
 - **Run all tests**: `./eng/scripts/Test-Code.ps1`

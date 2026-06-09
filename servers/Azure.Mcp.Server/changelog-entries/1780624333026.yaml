@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Replaced misleading error logging in CosmosListCommand, removing the always-null ResourceGroup field and adding non-sensitive diagnostic context (Subscription, Account, Database) consistent with MySqlListCommand and PostgresListCommand."

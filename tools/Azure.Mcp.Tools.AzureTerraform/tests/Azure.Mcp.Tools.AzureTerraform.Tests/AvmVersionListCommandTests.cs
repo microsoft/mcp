@@ -55,7 +55,7 @@ public class AvmVersionListCommandTests : CommandUnitTestsBase<AvmVersionListCom
     public async Task ExecuteAsync_ServiceThrows_HandlesException()
     {
         Service.GetVersionsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new InvalidOperationException("Module not found"));
+            .ThrowsAsync(new ArgumentException("Module not found", "moduleName"));
 
         var response = await ExecuteCommandAsync("--module-name", "nonexistent-module");
 
