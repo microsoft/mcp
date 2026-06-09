@@ -7,4 +7,8 @@ namespace Azure.Mcp.Tools.AzureTerraform.Services;
 
 [JsonSerializable(typeof(RemarksJson))]
 [JsonSerializable(typeof(List<TerraformSampleEntry>))]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal sealed partial class AzApiExamplesJsonContext : JsonSerializerContext;

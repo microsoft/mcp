@@ -17,7 +17,8 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(JsonNode))]
 [JsonSerializable(typeof(KustoClusterData))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal sealed partial class KustoJsonContext : JsonSerializerContext
-{
-}
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal sealed partial class KustoJsonContext : JsonSerializerContext;

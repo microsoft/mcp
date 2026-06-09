@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Disk;
@@ -146,5 +147,5 @@ public sealed class DiskGetCommand(
     /// <summary>
     /// Result record for the disk get command.
     /// </summary>
-    public record DiskGetCommandResult(List<Models.DiskInfo> Disks);
+    public record DiskGetCommandResult([property: JsonPropertyName("Disks")] List<Models.DiskInfo> Disks);
 }

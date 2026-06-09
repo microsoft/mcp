@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
@@ -137,5 +138,5 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger, IComputeSer
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmUpdateCommandResult(VmUpdateResult Vm);
+    internal record VmUpdateCommandResult([property: JsonPropertyName("Vm")] VmUpdateResult Vm);
 }

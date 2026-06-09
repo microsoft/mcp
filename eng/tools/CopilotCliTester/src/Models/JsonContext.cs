@@ -15,5 +15,7 @@ namespace CopilotCliTester.Models;
 [JsonSerializable(typeof(object))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    WriteIndented = true)]
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    WriteIndented = true
+)]
 internal partial class JsonContext : JsonSerializerContext;

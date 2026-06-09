@@ -11,5 +11,6 @@ namespace Azure.Mcp.Tools.Pricing.Commands;
 [JsonSerializable(typeof(SavingsPlanPrice))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 public partial class PricingJsonContext : JsonSerializerContext;

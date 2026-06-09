@@ -12,5 +12,8 @@ namespace Fabric.Mcp.Tools.OneLake.Models;
 [JsonSerializable(typeof(FileSystemItem))]
 [JsonSerializable(typeof(List<OneLakeFileInfo>))]
 [JsonSerializable(typeof(List<FileSystemItem>))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal partial class MinimalJsonContext : JsonSerializerContext;

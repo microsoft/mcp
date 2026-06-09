@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Disk;
 using Azure.Mcp.Tools.Compute.Services;
@@ -110,5 +111,7 @@ public sealed class DiskDeleteCommand(
     /// <summary>
     /// Result record for the disk delete command.
     /// </summary>
-    public record DiskDeleteCommandResult(bool Deleted, string DiskName);
+    public record DiskDeleteCommandResult(
+        [property: JsonPropertyName("Deleted")] bool Deleted,
+        [property: JsonPropertyName("DiskName")] string DiskName);
 }

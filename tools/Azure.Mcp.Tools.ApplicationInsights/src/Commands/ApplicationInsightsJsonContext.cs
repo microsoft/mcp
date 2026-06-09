@@ -11,7 +11,8 @@ namespace Azure.Mcp.Tools.ApplicationInsights.Commands;
 [JsonSerializable(typeof(RecommendationListCommand.RecommendationListCommandResult))]
 [JsonSerializable(typeof(IEnumerable<JsonNode>))]
 [JsonSerializable(typeof(BulkAppsPostBody))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal sealed partial class ApplicationInsightsJsonContext : JsonSerializerContext
-{
-}
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal sealed partial class ApplicationInsightsJsonContext : JsonSerializerContext;

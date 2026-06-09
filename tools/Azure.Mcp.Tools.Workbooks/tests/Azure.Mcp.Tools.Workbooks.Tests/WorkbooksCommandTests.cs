@@ -17,13 +17,13 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
     [
-        new UriRegexSanitizer(new UriRegexSanitizerBody
+        new(new()
         {
             Regex = "workbooks\\/([^?\\/]+)",
             Value = EmptyGuid,
             GroupForReplace = "1"
         }),
-        new UriRegexSanitizer(new UriRegexSanitizerBody
+        new(new()
         {
             Regex = "resource[gG]roups\\/([^?\\/]+)",
             Value = "Sanitized",
@@ -33,7 +33,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
 
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.query")
+        new(new("$.query")
         {
             Regex = "\\r\\n",
             Value = "\\n"
@@ -113,9 +113,11 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
         var workbooks = result.AssertProperty("Workbooks");
         Assert.Equal(JsonValueKind.Array, workbooks.ValueKind);
 
-        // Total count should be present
-        var totalCount = result.AssertProperty("TotalCount");
-        Assert.True(totalCount.ValueKind == JsonValueKind.Number || totalCount.ValueKind == JsonValueKind.Null);
+        // Total count is either present as a number or is omitted due to being null.
+        if (result!.Value.TryGetProperty("TotalCount", out var totalCount))
+        {
+            Assert.Equal(JsonValueKind.Number, totalCount.ValueKind);
+        }
 
         // Returned count should be present
         var returned = result.AssertProperty("Returned");
@@ -434,7 +436,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
             var errorMessage = errorItem.GetProperty("Message").GetString();
             Assert.Contains("not found", errorMessage, StringComparison.OrdinalIgnoreCase);
         }
-        else if (showResult.Value.TryGetProperty("message", out var errorMsg))
+        else if (showResult.Value.TryGetProperty("Message", out var errorMsg))
         {
             // Response has error message at top level
             Assert.Contains("not found", errorMsg.GetString()!, StringComparison.OrdinalIgnoreCase);

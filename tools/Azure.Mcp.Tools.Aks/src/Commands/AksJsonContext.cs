@@ -46,5 +46,8 @@ namespace Azure.Mcp.Tools.Aks.Commands;
 [JsonSerializable(typeof(Models.WorkloadAutoScalerProfile))]
 [JsonSerializable(typeof(Models.WorkloadAutoScalerKeda))]
 [JsonSerializable(typeof(Models.WorkloadAutoScalerVerticalPodAutoscaler))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal sealed partial class AksJsonContext : JsonSerializerContext;

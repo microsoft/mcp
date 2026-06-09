@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
@@ -142,6 +143,8 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmGetSingleResult(VmInfo Vm, VmInstanceView? InstanceView);
-    internal record VmGetListResult(List<VmInfo> Vms);
+    internal record VmGetSingleResult(
+        [property: JsonPropertyName("Vm")] VmInfo Vm,
+        [property: JsonPropertyName("InstanceView")] VmInstanceView? InstanceView);
+    internal record VmGetListResult([property: JsonPropertyName("Vms")] List<VmInfo> Vms);
 }

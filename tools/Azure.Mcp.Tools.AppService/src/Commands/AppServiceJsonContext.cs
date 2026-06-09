@@ -27,4 +27,8 @@ namespace Azure.Mcp.Tools.AppService.Commands;
 [JsonSerializable(typeof(WebappDetails))]
 [JsonSerializable(typeof(WebappGetCommand.WebappGetResult))]
 [JsonSerializable(typeof(WebappChangeStateCommand.WebappChangeStateResult))]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 public partial class AppServiceJsonContext : JsonSerializerContext;

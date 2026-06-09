@@ -18,7 +18,7 @@ public class LoadTestingCommandTests(ITestOutputHelper output, TestProxyFixture 
 
     public override List<UriRegexSanitizer> UriRegexSanitizers => [
         .. base.UriRegexSanitizers,
-         new UriRegexSanitizer(new UriRegexSanitizerBody
+         new(new()
          {
              Regex = "resource[Gg]roups/([^?\\/]+)",
              Value = "Sanitized",
@@ -29,10 +29,10 @@ public class LoadTestingCommandTests(ITestOutputHelper output, TestProxyFixture 
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
         ..base.BodyKeySanitizers,
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName") {
+        new(new("$..displayName") {
              Value = "Sanitized"
         }),
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$..value[*].properties.dataPlaneURI") {
+        new(new("$..value[*].properties.dataPlaneURI") {
              Value = "sanitized.eastus.cnt-prod.loadtesting.azure.com"
         })
     ];

@@ -20,4 +20,8 @@ namespace Azure.Mcp.Tools.LoadTesting.Commands;
 [JsonSerializable(typeof(TestRunRequest))]
 [JsonSerializable(typeof(TestRequestPayload))]
 [JsonSerializable(typeof(Test))]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal sealed partial class LoadTestJsonContext : JsonSerializerContext;

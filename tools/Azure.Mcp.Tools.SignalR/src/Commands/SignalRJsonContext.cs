@@ -16,5 +16,8 @@ namespace Azure.Mcp.Tools.SignalR.Commands;
 [JsonSerializable(typeof(Models.Sku))]
 [JsonSerializable(typeof(Models.UpstreamTemplate))]
 [JsonSerializable(typeof(RuntimeGetCommand.RuntimeGetCommandResult))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal sealed partial class SignalRJsonContext : JsonSerializerContext;

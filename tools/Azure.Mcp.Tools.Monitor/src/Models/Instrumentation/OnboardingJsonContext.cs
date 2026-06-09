@@ -4,14 +4,15 @@ using Azure.Mcp.Tools.Monitor.Tools;
 
 namespace Azure.Mcp.Tools.Monitor.Models;
 
-[JsonSourceGenerationOptions(
-    WriteIndented = true,
-    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    PropertyNameCaseInsensitive = true)]
 [JsonSerializable(typeof(GeneratorConfig))]
 [JsonSerializable(typeof(InstrumentationData))]
 [JsonSerializable(typeof(OrchestratorResponse))]
 [JsonSerializable(typeof(BrownfieldFindings))]
 [JsonSerializable(typeof(AnalysisTemplate))]
+[JsonSourceGenerationOptions(
+    WriteIndented = true,
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    PropertyNameCaseInsensitive = true
+)]
 internal partial class OnboardingJsonContext : JsonSerializerContext;

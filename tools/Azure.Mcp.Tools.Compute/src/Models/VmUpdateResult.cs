@@ -1,18 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-
 namespace Azure.Mcp.Tools.Compute.Models;
 
 public sealed record VmUpdateResult(
-    [property: JsonPropertyName("name")] string Name,
-    [property: JsonPropertyName("id")] string? Id,
-    [property: JsonPropertyName("location")] string? Location,
-    [property: JsonPropertyName("vmSize")] string? VmSize,
-    [property: JsonPropertyName("provisioningState")] string? ProvisioningState,
-    [property: JsonPropertyName("powerState")] string? PowerState,
-    [property: JsonPropertyName("osType")] string? OsType,
-    [property: JsonPropertyName("licenseType")] string? LicenseType,
-    [property: JsonPropertyName("zones")] IReadOnlyList<string>? Zones,
-    [property: JsonPropertyName("tags")] IReadOnlyDictionary<string, string>? Tags);
+    string Name,
+    string? Id,
+    string? Location,
+    string? VmSize,
+    string? ProvisioningState,
+    string? PowerState,
+    string? OsType,
+    string? LicenseType,
+    IReadOnlyList<string>? Zones,
+    IReadOnlyDictionary<string, string>? Tags);

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestResource;
@@ -70,5 +71,5 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
         }
         return context.Response;
     }
-    internal record TestResourceListCommandResult(List<TestResource> LoadTest);
+    internal record TestResourceListCommandResult([property: JsonPropertyName("LoadTest")] List<TestResource> LoadTest);
 }

@@ -9,5 +9,8 @@ namespace Azure.Mcp.Tools.Redis.Commands;
 [JsonSerializable(typeof(ResourceListCommand.ResourceListCommandResult))]
 [JsonSerializable(typeof(ResourceCreateCommand.ResourceCreateCommandResult))]
 [JsonSerializable(typeof(RedisCreateParameters))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal sealed partial class RedisJsonContext : JsonSerializerContext;

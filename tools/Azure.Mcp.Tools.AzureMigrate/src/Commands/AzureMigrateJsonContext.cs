@@ -13,5 +13,6 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands;
 [JsonSerializable(typeof(PlatformLandingZoneGenerationPayload))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal partial class AzureMigrateJsonContext : JsonSerializerContext;

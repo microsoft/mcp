@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
@@ -106,5 +107,7 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger, IComput
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmssDeleteCommandResult(string Message, bool Success);
+    internal record VmssDeleteCommandResult(
+        [property: JsonPropertyName("Message")] string Message,
+        [property: JsonPropertyName("Success")] bool Success);
 }

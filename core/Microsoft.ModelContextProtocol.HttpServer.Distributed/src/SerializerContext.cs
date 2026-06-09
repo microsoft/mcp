@@ -14,4 +14,4 @@ namespace Microsoft.ModelContextProtocol.HttpServer.Distributed;
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
 )]
 [JsonSerializable(typeof(SessionOwnerInfo))]
-internal sealed partial class SerializerContext : JsonSerializerContext { }
+internal sealed partial class SerializerContext : JsonSerializerContext;

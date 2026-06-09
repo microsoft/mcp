@@ -37,8 +37,8 @@ namespace Azure.Mcp.Tools.FileShares;
 [JsonSerializable(typeof(FileShareProvisioningRecommendationResult))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
 [JsonSerializable(typeof(JsonElement))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class FileSharesJsonContext : JsonSerializerContext
-{
-}
-
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal partial class FileSharesJsonContext : JsonSerializerContext;

@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Security;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Disk;
@@ -220,5 +221,5 @@ public sealed class DiskCreateCommand(
     /// <summary>
     /// Result record for the disk create command.
     /// </summary>
-    public record DiskCreateCommandResult(DiskInfo Disk);
+    public record DiskCreateCommandResult([property: JsonPropertyName("Disk")] DiskInfo Disk);
 }

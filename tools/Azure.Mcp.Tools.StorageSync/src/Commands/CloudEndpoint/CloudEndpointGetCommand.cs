@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.StorageSync.Models;
 using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
@@ -112,6 +111,5 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
         return context.Response;
     }
 
-    [JsonSerializable(typeof(CloudEndpointGetCommandResult))]
     internal record CloudEndpointGetCommandResult(List<CloudEndpointDataSchema> Results);
 }

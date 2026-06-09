@@ -11,11 +11,9 @@ namespace Azure.Mcp.Tools.ServiceFabric.Models;
 public class ManagedClusterNode
 {
     /// <summary> The Azure resource ID of the node. </summary>
-    [JsonPropertyName("id")]
     public string? Id { get; set; }
 
     /// <summary> The node properties. </summary>
-    [JsonPropertyName("properties")]
     public ManagedClusterNodeProperties? Properties { get; set; }
 }
 
@@ -166,9 +164,7 @@ public class PendingSafetyCheck
 /// </summary>
 internal class ListNodesResponse
 {
-    [JsonPropertyName("value")]
     public List<ManagedClusterNode>? Value { get; set; }
 
-    [JsonPropertyName("nextLink")]
     public string? NextLink { get; set; }
 }
