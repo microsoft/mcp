@@ -198,7 +198,7 @@ public class CosmosServiceTests : IAsyncDisposable
     [Fact]
     public async Task QueryItems_NonSuccessResponse_Throws()
     {
-        // Arrange: route the CosmosClient's transport through the mocked IHttpClientFactory it always returns 403.
+        // Arrange: route the CosmosClient's transport through the mocked IHttpClientFactory so it always returns 403.
         var handler = new MockHttpHandler(HttpStatusCode.Forbidden);
         _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
         var clientOptions = new CosmosClientOptions { HttpClientFactory = () => _httpClientFactory.CreateClient() };
