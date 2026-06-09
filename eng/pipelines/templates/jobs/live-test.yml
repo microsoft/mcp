@@ -86,7 +86,8 @@ jobs:
 
   - template: /eng/common/TestResources/remove-test-resources.yml
     parameters:
-      ServiceConnection: azure-sdk-tests-public
+      ServiceConnection: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}
+      SubscriptionConfiguration: $(SubscriptionConfiguration)
 
   - template: /eng/common/TestResources/deploy-test-resources.yml
     parameters:
