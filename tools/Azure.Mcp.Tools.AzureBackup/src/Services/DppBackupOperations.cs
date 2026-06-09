@@ -524,9 +524,10 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             // during enumeration — so a null result does NOT mean the job is missing; it may
             // exist beyond the point where the enumerator broke. Re-throw FormatException
             // (not KeyNotFoundException) to preserve SDK-parse-failure semantics.
+            // Tracked in azure-sdk-for-net#59306.
             var jobs = await ListJobsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
             return jobs.FirstOrDefault(j => j.Name == jobId)
-                ?? throw new FormatException($"Job '{jobId}' exists but the Azure SDK cannot parse its duration field (XmlConvert.ToTimeSpan limitation). This is tracked in azure-sdk-for-net#59306.");
+                ?? throw new FormatException($"Job '{jobId}' exists but the Azure SDK cannot parse its duration field (XmlConvert.ToTimeSpan limitation).");
         }
     }
 
