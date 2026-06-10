@@ -242,10 +242,6 @@ function Get-PathsToTest {
         | ForEach-Object { $Matches[0] }
         | Sort-Object -Unique
 
-    # Get the list of .csproj files under each path to determine which projects we need to inspect for test resources and test types.
-    # This is also used in pull request builds to determine which paths have changes that impact .csproj files and therefore require testing.
-    $crprojPaths = $normalizedPaths | ForEach-Object { (Get-ChildItem $_ -Recurse -File -Filter '*.csproj').FullName }
-
     if($isPullRequestBuild) {
         # Set of files that don't require build or test when changed
         $skipFiles = @(
@@ -262,57 +258,62 @@ function Get-PathsToTest {
 
         # If we're in a pull request, use the set of changed files to narrow down the set of paths to test.
         $changedFiles = Get-ChangedFiles
-        # Track whether the Core libraries changed.
-        $azureCoreChanged = ($changedFiles | Where-Object { $_ -match '^core/Azure.Mcp.Core/src/' }).Count -gt 0
-        $fabricCoreChanged = ($changedFiles | Where-Object { $_ -match '^core/Fabric.Mcp.Core/src/' }).Count -gt 0
-        $microsoftCoreChanged = ($changedFiles | Where-Object { $_ -match '^core/Microsoft.Mcp.Core/src/' }).Count -gt 0
-        # Assuming $changedFiles = [
-        #   tools/Azure.Mcp.Tools.Storage/src/someFile.cs    <- "Azure.Mcp.Tools.Storage"
-        #   tools/Azure.Mcp.Tools.Monitoring/README.md       <- "Azure.Mcp.Tools.Monitoring"
-        #   core/src/commonClass.cs                          <- "Core"
-        #   eng/scripts/SomeScript.ps1                       <- "Core"
-        # ]
-        Write-Host ''
-
-        # Currently, we don't exclude non-code files from the changed files list.
-        # For example, updating a markdown file in a service path will still trigger tests for that path.
-        # Updating a file outside of the defined paths will be seen as a change to the core path.
-        $changedPaths = @($changedFiles
-        | Where-Object { $skipFiles -notcontains (Split-Path $_ -Leaf) }
-        | ForEach-Object { $_ -match $projectDirectoryPattern -and $normalizedPaths -contains $Matches[0] ? $Matches[0] : 'core/Microsoft.Mcp.Core' }
-        | Sort-Object -Unique)
-
-        <# This makes $changedPaths = @(
-            'tools/Azure.Mcp.Tools.Storage',
-            'tools/Azure.Mcp.Tools.Monitoring',
-            'core/Microsoft.Mcp.Core'
-        ) #>
-
-        if($changedPaths.Count -eq 0) {
-            Write-Host "No changed, testable paths detected. Defaulting to core." -ForegroundColor Yellow
-            $changedPaths = @('core/Microsoft.Mcp.Core')
+        # Track whether engineering, the Core libraries, or shared build changed. If so, build everything.
+        $coreChanged = ($changedFiles | Where-Object { $_ -match '^core/(Azure|Fabric|Microsoft).Mcp.Core/src/' }).Count -gt 0
+        $engChanged = ($changedFiles | Where-Object { $_ -match '^eng/' }).Count -gt 0
+        $sharedBuildChanged = ($changedFiles | Where-Object { $_ -match '^Directory.(Build|Packages).props' }).Count -gt 0
+        if ($coreChanged -or $engChanged -or $sharedBuildChanged) {
+            Write-Host "Core, engineering, or shared build changes detected. Building everything." -ForegroundColor Yellow
+            $pathsToTest = @()
         } else {
-            Write-Host "Changed paths detected: $($changedPaths -join ', ')"
+            # Assuming $changedFiles = [
+            #   tools/Azure.Mcp.Tools.Storage/src/someFile.cs    <- "Azure.Mcp.Tools.Storage"
+            #   tools/Azure.Mcp.Tools.Monitoring/README.md       <- "Azure.Mcp.Tools.Monitoring"
+            #   core/src/commonClass.cs                          <- "Core"
+            #   eng/scripts/SomeScript.ps1                       <- "Core"
+            # ]
+            Write-Host ''
+
+            # Currently, we don't exclude non-code files from the changed files list.
+            # For example, updating a markdown file in a service path will still trigger tests for that path.
+            # Updating a file outside of the defined paths will be seen as a change to the core path.
+            $changedPaths = @($changedFiles
+            | Where-Object { $skipFiles -notcontains (Split-Path $_ -Leaf) }
+            | ForEach-Object { $_ -match $projectDirectoryPattern -and $normalizedPaths -contains $Matches[0] ? $Matches[0] : 'core/Microsoft.Mcp.Core' }
+            | Sort-Object -Unique)
+
+            <# This makes $changedPaths = @(
+                'tools/Azure.Mcp.Tools.Storage',
+                'tools/Azure.Mcp.Tools.Monitoring',
+                'core/Microsoft.Mcp.Core'
+            ) #>
+
+            if($changedPaths.Count -eq 0) {
+                Write-Host "No changed, testable paths detected. Defaulting to core." -ForegroundColor Yellow
+                $changedPaths = @('core/Microsoft.Mcp.Core')
+            } else {
+                Write-Host "Changed paths detected: $($changedPaths -join ', ')"
+            }
+
+            if ($pathsToTest -notcontains 'core/Microsoft.Mcp.Core') {
+                $pathsToTest = $changedPaths
+            }
+
+            # Always include Azure.Mcp.Server to run ConsolidatedModeTests.cs in all PRs
+            if ($pathsToTest -notcontains 'servers/Azure.Mcp.Server') {
+                Write-Host "Adding servers/Azure.Mcp.Server to test paths for PR validation" -ForegroundColor Cyan
+                $pathsToTest += 'servers/Azure.Mcp.Server'
+            }
+
+            $normalizedPaths = @($pathsToTest | Sort-Object -Unique)
+
+            <# Making $paths = @(
+                'tools/Azure.Mcp.Tools.Storage',
+                'tools/Azure.Mcp.Tools.Monitoring',
+                'core/Microsoft.Mcp.Core',
+                'tools/Azure.Mcp.Tools.KeyVault'  <-- from Microsoft.Mcp.Core's server canary list
+            ) #>
         }
-
-        if ($pathsToTest -notcontains 'core/Microsoft.Mcp.Core') {
-            $pathsToTest = $changedPaths
-        }
-
-        # Always include Azure.Mcp.Server to run ConsolidatedModeTests.cs in all PRs
-        if ($pathsToTest -notcontains 'servers/Azure.Mcp.Server') {
-            Write-Host "Adding servers/Azure.Mcp.Server to test paths for PR validation" -ForegroundColor Cyan
-            $pathsToTest += 'servers/Azure.Mcp.Server'
-        }
-
-        $normalizedPaths = @($pathsToTest | Sort-Object -Unique)
-
-        <# Making $paths = @(
-            'tools/Azure.Mcp.Tools.Storage',
-            'tools/Azure.Mcp.Tools.Monitoring',
-            'core/Microsoft.Mcp.Core',
-            'tools/Azure.Mcp.Tools.KeyVault'  <-- from Microsoft.Mcp.Core's server canary list
-        ) #>
     }
 
     $pathsToTest = $normalizedPaths | ForEach-Object -ThrottleLimit 5 -Parallel {
