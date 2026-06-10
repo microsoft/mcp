@@ -218,7 +218,7 @@ public class FunctionsCommandTests(ITestOutputHelper output, TestProxyFixture fi
 
     #endregion
 
-        #region Helper Methods
+    #region Helper Methods
 
     private async Task<TemplateListResult> GetTemplateListAsync(string language)
     {
