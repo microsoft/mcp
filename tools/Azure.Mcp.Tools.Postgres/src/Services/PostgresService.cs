@@ -346,7 +346,8 @@ public class PostgresService(
             Host = host,
             Database = database,
             Username = user,
-            Password = password
+            Password = password,
+            SslMode = SslMode.Require
         };
         return builder.ConnectionString;
     }

@@ -568,6 +568,117 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/schemas/{schemaName}/tables/{tableName}/load?beta=true": {
+      "post": {
+        "summary": "Starts a load table operation for a table within a schema enabled lakehouse and returns the operation status URL in the response location header.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\nWrite permission to the lakehouse item. \n\n## Required Delegated Scopes \n\nLakehouse.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Tables"
+        ],
+        "operationId": "Tables_Load_Schema_Table_(beta)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "lakehouseId",
+            "in": "path",
+            "description": "The lakehouse item ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "schemaName",
+            "in": "path",
+            "description": "The schema name.",
+            "required": true,
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_]{1,128}$"
+          },
+          {
+            "name": "tableName",
+            "in": "path",
+            "description": "The table name.",
+            "required": true,
+            "type": "string",
+            "pattern": "^(?=[0-9]*[a-zA-Z_])[a-zA-Z0-9_]{1,256}$"
+          },
+          {
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "name": "loadTableRequest",
+            "in": "body",
+            "description": "The load table request payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/LoadTableRequest"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Request accepted, load table operation is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "description": "The number of seconds to wait before retrying the request.",
+                "type": "integer"
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Load table in schema operation Example": {
+            "$ref": "./examples/LoadTableWithSchemaOperation.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/jobs/tableMaintenance/instances": {
       "post": {
         "summary": "Run on-demand [table maintenance](/fabric/data-engineering/lakehouse-table-maintenance) job instance.",
@@ -608,17 +719,7 @@
         ],
         "responses": {
           "202": {
-            "description": "Request accepted, job execution is in progress.",
-            "headers": {
-              "Location": {
-                "type": "string",
-                "description": "The URL to the job instance resource."
-              },
-              "Retry-After": {
-                "type": "integer",
-                "description": "The number of seconds to wait before retrying the request."
-              }
-            }
+            "description": "Request accepted, job execution is in progress.\n\n---\n**Headers:**\n\n**Location** `string` - The URL to the job instance resource.\n\n**Retry-After** `integer` - The number of seconds the client should wait before polling the job status for the first time. Clients must use this value to determine when to check the job status and should wait at least this many seconds before the first status poll."
           },
           "429": {
             "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
@@ -649,6 +750,9 @@
           },
           "Run table maintenance with optimize Z-Order and vacuum enabled for schema enabled lakehouse.": {
             "$ref": "./examples/RunOnDemandTableMaintenanceForSchemaEnabledLakehouse.json"
+          },
+          "Run table maintenance with deletion vector purge enabled.": {
+            "$ref": "./examples/RunOnDemandTableMaintenance3.json"
           }
         }
       }
@@ -1016,17 +1120,7 @@
         ],
         "responses": {
           "202": {
-            "description": "Request accepted, job execution is in progress.",
-            "headers": {
-              "Location": {
-                "type": "string",
-                "description": "The URL to the job instance resource."
-              },
-              "Retry-After": {
-                "type": "integer",
-                "description": "The number of seconds to wait before retrying the request."
-              }
-            }
+            "description": "Request accepted, job execution is in progress.\n\n---\n**Headers:**\n\n**Location** `string` - The URL to the job instance resource.\n\n**Retry-After** `integer` - The number of seconds the client should wait before polling the job status for the first time. Clients must use this value to determine when to check the job status and should wait at least this many seconds before the first status poll."
           },
           "429": {
             "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",

@@ -36,13 +36,14 @@ public static class StorageOptionDefinitions
 
     public static readonly Option<string> Sku = new($"--{SkuName}")
     {
-        Description = "The storage account SKU. Valid values: Standard_LRS, Standard_GRS, Standard_RAGRS, Standard_ZRS, Premium_LRS, Premium_ZRS, Standard_GZRS, Standard_RAGZRS.",
+        Description = "The storage account SKU for StorageV2 accounts. Valid values: Standard_LRS, Standard_GRS, Standard_RAGRS, Standard_ZRS, " +
+            "Premium_LRS, Premium_ZRS, Standard_GZRS, Standard_RAGZRS. Defaults to Standard_LRS.",
         Required = false
     };
 
     public static readonly Option<string> AccessTier = new($"--{AccessTierName}")
     {
-        Description = "The default access tier for blob storage. Valid values: Hot, Cool.",
+        Description = "The default access tier for blob storage. Valid values: Hot, Cool, Cold, Premium.",
         Required = false
     };
 

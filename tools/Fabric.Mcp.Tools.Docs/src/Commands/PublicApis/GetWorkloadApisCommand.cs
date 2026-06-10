@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Fabric.Mcp.Tools.Docs.Options;
+using Fabric.Mcp.Tools.Docs.Models;
 using Fabric.Mcp.Tools.Docs.Options.PublicApis;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
 
@@ -24,36 +24,16 @@ namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
     LocalRequired = false,
     Secret = false)]
 public sealed class GetWorkloadApisCommand(IFabricPublicApiService service, ILogger<GetWorkloadApisCommand> logger)
-    : GlobalCommand<WorkloadCommandOptions>()
+    : AuthenticatedCommand<WorkloadCommandOptions, FabricWorkloadPublicApi>
 {
     private readonly ILogger<GetWorkloadApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, WorkloadCommandOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkloadType);
-    }
-
-    protected override WorkloadCommandOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.WorkloadType = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkloadType.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            if (options.WorkloadType!.Equals("common", StringComparison.OrdinalIgnoreCase))
+            if (options.WorkloadType.Equals("common", StringComparison.OrdinalIgnoreCase))
             {
                 context.Response.Status = HttpStatusCode.NotFound;
                 context.Response.Message = "No workload of type 'common' exists. Did you mean 'platform'?. A full list of supported workloads can be found using the list_workloads command";

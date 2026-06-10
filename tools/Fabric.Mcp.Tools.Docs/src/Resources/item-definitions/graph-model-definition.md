@@ -56,14 +56,14 @@ Describes the structure of node data mapping definition.
 
 Describes the structure of edge data mapping definition.
 
-| Name                 | Type                                  | Description                                      |
-| -------------------- | ------------------------------------- | ------------------------------------------------ |
-| id                   | String                                | ID of the edge data mapping definition           |
-| edgeTypeAlias        | String                                | Alias of the edge as defined in graph            |
-| dataSourceName       | String                                | The name of the data source                      |
-| sourceNodeKeyColumns | String[]                              | The array of columns that map to the source node |
-| targetNodeKeyColumns | String[]                              | The array of columns that map to the target node |
-| propertyMappings     | [PropertyMapping](#propertymapping)[] | The array of property data mapping definitions   |
+| Name                      | Type                                  | Description                                      |
+| ------------------------- | ------------------------------------- | ------------------------------------------------ |
+| id                        | String                                | ID of the edge data mapping definition           |
+| edgeTypeAlias             | String                                | Alias of the edge as defined in graph            |
+| dataSourceName            | String                                | The name of the data source                      |
+| sourceNodeKeyColumns      | String[]                              | The array of columns that map to the source node |
+| destinationNodeKeyColumns | String[]                              | The array of columns that map to the destination node |
+| propertyMappings          | [PropertyMapping](#propertymapping)[] | The array of property data mapping definitions   |
 
 ### PropertyMapping
 

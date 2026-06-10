@@ -1,18 +1,19 @@
 ---
 name: azurebackup-telemetry-report
-description: 'Generate weekly telemetry reports for Azure Backup MCP tools. Runs KQL queries against the Kusto telemetry cluster, analyzes error patterns with 3-way classification (Customer/Azure Service/MCP Tool Bug), compares week-over-week metrics, correlates with merged PRs and releases, and produces an Outlook-compatible HTML report. USE WHEN: weekly telemetry report, Azure Backup MCP telemetry, error analysis, telemetry bugs, weekly report, MCP tool success rate, backup telemetry, error classification.'
+description: 'Generate weekly telemetry reports and customer adoption reports for Azure Backup MCP tools. Runs KQL queries against the Kusto telemetry cluster, analyzes error patterns with 3-way classification (Customer/Azure Service/MCP Tool Bug), identifies customers via P360/C360 cross-cluster joins, compares week-over-week metrics, correlates with merged PRs and releases, and produces an Outlook-compatible HTML report. USE WHEN: weekly telemetry report, Azure Backup MCP telemetry, error analysis, telemetry bugs, weekly report, MCP tool success rate, backup telemetry, error classification, customer usage report, who is using Azure Backup MCP, backup adoption, customer report.'
 argument-hint: 'Generate the Azure Backup MCP weekly telemetry report'
 ---
 
-# Azure Backup MCP — Weekly Telemetry Report Generator
+# Azure Backup MCP — Weekly Telemetry & Customer Report Generator
 
 ## Purpose
 
-Generate a comprehensive weekly telemetry report for the Azure Backup MCP toolset by:
+Generate comprehensive telemetry reports for the Azure Backup MCP toolset by:
 1. Querying live production telemetry from Kusto
 2. Classifying errors into Customer / Azure Service / MCP Tool Bug
-3. Correlating with merged PRs and releases
-4. Producing an Outlook-compatible HTML report
+3. Identifying customers via P360/C360 cross-cluster joins (using `P360_CustomerName`)
+4. Correlating with merged PRs and releases
+5. Producing an Outlook-compatible HTML report
 
 ## When to Use
 
@@ -20,6 +21,8 @@ Generate a comprehensive weekly telemetry report for the Azure Backup MCP toolse
 - After a release to assess error rate impact
 - When triaging production bugs from telemetry data
 - When preparing stakeholder updates on Azure Backup MCP health
+- **Customer adoption reports** for any time range (e.g., last 15 days, 30 days)
+- When asked "who is using Azure Backup MCP?" or "generate customer report"
 
 ## Prerequisites
 
@@ -152,20 +155,40 @@ For the Outlook version, apply these rules:
 
 ## Error Classification Decision Tree
 
+> **Customer Report Queries:** For customer identification, tool adoption, client distribution,
+> and version analysis, refer to [`kql-customer-queries.md`](https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-customer-queries.md)
+> (queries 14–24). These queries use cross-cluster joins to `mabprod1` (P360) and `icmdataro` (C360)
+> for customer name resolution and external/internal classification.
+>
+> **Key rule:** Always use `P360_CustomerName` (not `CustomerName`) from the P360 table.
+> The `CustomerName` field contains generic tenant names (e.g., "Denis" for Prometeia SpA).
+
+> **Important:** MCP bug exception types must be checked **before** StatusCode.
+> The `HandleException` base class maps `ArgumentNullException` (inherits `ArgumentException`)
+> to HTTP 400, which would incorrectly classify MCP bugs as "Customer" errors if StatusCode
+> is checked first.
+
 ```
 Is success == true?
   └─ YES → "Success"
   └─ NO →
-      Is StatusCode 400/403/404?
-        └─ YES → "Customer (4xx)"
+      Is ExceptionType FormatException / ArgumentNullException / ArgumentException / InvalidOperationException?
+        └─ YES → "MCP Tool Bug"
         └─ NO →
-            Is ExceptionType Azure.RequestFailedException with 5xx?
-              └─ YES → "Azure Service"
-            Is ExceptionType System.AggregateException?
-              └─ YES → "Azure Service"
-            Is ExceptionType FormatException / ArgumentNullException / ArgumentException / InvalidOperationException?
-              └─ YES → "MCP Tool Bug"
-            Otherwise → "Unknown" (investigate)
+            Is ExceptionType ValidationError?
+              └─ YES → "Customer (4xx)" (user omitted required options)
+            Is ExceptionType System.UnauthorizedAccessException?
+              └─ YES → "Customer (4xx)" (broken credentials / expired token)
+            Is ExceptionType Azure.Identity.CredentialUnavailableException?
+              └─ YES → "Customer (4xx)" (auth not configured)
+            Is StatusCode 400/401/403/404?
+              └─ YES → "Customer (4xx)"
+              └─ NO →
+                  Is ExceptionType Azure.RequestFailedException with 5xx?
+                    └─ YES → "Azure Service"
+                  Is ExceptionType System.AggregateException?
+                    └─ YES → "Azure Service"
+                  Otherwise → "Unknown" (investigate)
 ```
 
 ## Known Bug IDs
@@ -174,18 +197,21 @@ These are the bugs triaged from the original telemetry analysis (April 2026):
 
 | Bug | Tool | Description | Fix PR | Release |
 |-----|------|-------------|--------|---------|
-| BUG-1 | backup_status | ArgumentNullException on null ResourceType | #2518 (code included, not in PR title) | beta.7 |
+| BUG-1 | backup_status, protecteditem_get | ArgumentNullException on null ResourceType in MapArmResourceTypeToBackupDataSourceType | #2518 (partial), #2621 (defense-in-depth) | beta.7 (partial), pending |
 | BUG-2 | protecteditem_protect | VM pre-discovery loop timeout | #2470 | beta.6 |
-| BUG-3 | protectableitem_list | Workload normalization ArgumentException | #2518 | beta.7 |
+| BUG-3 | protectableitem_list, find-unprotected | Workload normalization ArgumentException in ValidateAndParseResourceTypeFilter | #2518 (partial), #2621 (relaxed regex) | beta.7 (partial), pending |
 | BUG-4 | soft-delete | Deprecated BackupResourceVaultConfig API | #2518 | beta.7 |
 | BUG-5 | enable-crr | Deprecated BackupResourceConfig API | #2518 | beta.7 |
 | BUG-6 | vault_get | FormatException on subscription name (non-GUID) | #2518 | beta.7 |
 | BUG-7 | protecteditem_protect | DPP vault missing managed identity | #2470 | beta.6 |
 | BUG-8 | recoverypoint_get | Null container in resolution | #2518 | beta.7 |
 | NEW-1 | vault_get | AggregateException — pre-existing auth race (Azure Service, not MCP bug) | Not filed | — |
+| NEW-2 | job_get | FormatException in DPP SDK — XmlConvert.ToTimeSpan fails during DataProtectionBackupJobProperties.Deserialize (Azure SDK bug, not MCP code) | #2621 (workaround catch), [azure-sdk#59306](https://github.com/Azure/azure-sdk-for-net/issues/59306) (upstream) | pending |
 
 > **Note:** PR #2518 title says "Fix 5 telemetry-triaged bugs (BUG-3,4,5,6,8)" but the
-> actual merged code also includes the BUG-1 fix. Always verify the diff, not just the title.
+> actual merged code also includes the BUG-1 fix. However, the #2518 fixes for BUG-1 and
+> BUG-3 were **incomplete** — confirmed by telemetry on beta.8/beta.9. PR #2621 adds
+> defense-in-depth fixes for both. Always verify the diff, not just the title.
 
 When new errors appear, assign the next sequential ID (NEW-2, NEW-3, etc.) and add to this table.
 

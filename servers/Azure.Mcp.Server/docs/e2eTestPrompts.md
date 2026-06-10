@@ -9,6 +9,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | advisor_recommendation_list | List all recommendations in my subscription |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> |
+| advisor_recommendation_apply | Apply Advisor recommendations to this ARM template |
+| advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account |
 
 ## Azure AI Search
 
@@ -361,6 +363,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | cosmos_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> |
 | cosmos_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> |
 | cosmos_database_container_item_query | Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name> |
+| cosmos_database_container_item_get | Get the document with id <document_id> from container <container_name> in database <database_name> of the cosmosdb account <account_name> |
+| cosmos_database_container_item_get | Find the document <document_id> in container <container_name> from database <database_name> of the cosmosdb account <account_name> using partition key <partition_key> |
+| cosmos_database_container_item_list-recent | Show me the 15 most recent documents in container <container_name> of database <database_name> in cosmosdb account <account_name> |
+| cosmos_database_container_item_list-recent | Get the latest documents from <container_name> in <database_name> for cosmosdb account <account_name> |
+| cosmos_database_container_item_text-search | Search documents in container <container_name> from database <database_name> of the cosmosdb account <account_name> where <search_property> contains "<search_phrase>" |
+| cosmos_database_container_item_text-search | Run a full-text search for the word "<search_phrase>" against property <search_property> in container <container_name> of database <database_name> for cosmosdb account <account_name> |
+| cosmos_database_container_item_vector-search | Find documents similar to "<text_to_search>" in container <container_name> of database <database_name> in cosmosdb account <account_name> using vector property <vector_property> with Azure OpenAI endpoint <endpoint> and deployment <deployment> |
+| cosmos_database_container_item_vector-search | Show me the top <count> documents in container <container_name> of database <database_name> for cosmosdb account <account_name> most similar to "<text_to_search>" using vector property <vector_property>, embedding deployment <deployment> at endpoint <endpoint> with <embedding_dimensions> dimensions, and project only <properties_to_select> |
+| cosmos_database_container_schema_infer | Infer the schema of container <container_name> in database <database_name> for cosmosdb account <account_name> |
+| cosmos_database_container_schema_infer | Sample <sample_size> documents from container <container_name> in database <database_name> of the cosmosdb account <account_name> and tell me the property names and types |
 
 ## Azure Data Explorer
 
@@ -488,9 +500,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | fileshares_limits | Get the file share limits for subscription <subscription> in location <location> |
 | fileshares_limits | What are the file share limits in my subscription for location <location>? |
 | fileshares_limits | Show me the file share service limits in location <location> |
-| fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in subscription <subscription> |
-| fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available? |
-| fileshares_fileshare_check-name-availability | Verify availability of file share name <file_share_name> |
+| fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in <location> in subscription <subscription> |
+| fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available in <location>? |
+| fileshares_fileshare_check-name-availability | Verify availability of file share name <file_share_name> in <location> |
 | fileshares_rec | Get provisioning recommendations for file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_rec | Show me provisioning recommendations for file share <file_share_name> |
 | fileshares_rec | What are the recommended provisioning settings for file share <file_share_name>? |

@@ -135,7 +135,7 @@ public class PostgresServiceConnectionStringInjectionTests
     }
 
     [Fact]
-    public async Task ExecuteQueryAsync_WithSslDowngradeInDatabase_DoesNotDisableSsl()
+    public async Task ExecuteQueryAsync_WithSslDowngradeInDatabase_EnforcesSslRequire()
     {
         // Arrange — attacker tries to inject SSL Mode=Disable via the database parameter
         const string maliciousDatabase = "postgres;SSL Mode=Disable";
@@ -150,7 +150,24 @@ public class PostgresServiceConnectionStringInjectionTests
         Assert.NotNull(_capturedConnectionString);
         var parsed = new NpgsqlConnectionStringBuilder(_capturedConnectionString!);
 
-        // SSL Mode should not be Disable — the builder escapes the value in the Database field
-        Assert.NotEqual(SslMode.Disable, parsed.SslMode);
+        // SSL Mode must be Require — the builder escapes the injected value in the Database field
+        // and BuildConnectionString explicitly sets SslMode.Require to prevent silent downgrade.
+        Assert.Equal(SslMode.Require, parsed.SslMode);
+    }
+
+    [Fact]
+    public async Task ExecuteQueryAsync_NormalInputs_EnforcesSslRequire()
+    {
+        // Act — exercise the normal (non-injection) code path
+        await _postgresService.ExecuteQueryAsync(
+            "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
+            "safe-server", "mydb", "SELECT 1",
+            TestContext.Current.CancellationToken);
+
+        // Assert — BuildConnectionString must enforce SslMode.Require so connections
+        // cannot silently downgrade to unencrypted (the Npgsql default is Prefer).
+        Assert.NotNull(_capturedConnectionString);
+        var parsed = new NpgsqlConnectionStringBuilder(_capturedConnectionString!);
+        Assert.Equal(SslMode.Require, parsed.SslMode);
     }
 }

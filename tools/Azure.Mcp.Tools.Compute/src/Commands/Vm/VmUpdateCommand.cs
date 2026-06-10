@@ -53,9 +53,14 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger, IComputeSer
         // Resource group is required for update
         command.Validators.Add(commandResult =>
         {
-            // Custom validation: At least one update property must be specified
+            // Custom validation: At least one update property must be specified.
+            // Note: Tags may be an empty string ("") to clear all tags — use GetResult to detect
+            // whether the option was explicitly passed even with an empty value, since HasOptionResult
+            // returns false for empty-string tokens.
+            var tagsProvided = commandResult.GetResult(ComputeOptionDefinitions.Tags) is not null;
+
             if (string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name)) &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name)) &&
+                !tagsProvided &&
                 string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.LicenseType.Name)) &&
                 string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.BootDiagnostics.Name)) &&
                 string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UserData.Name)))
@@ -70,7 +75,9 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger, IComputeSer
         var options = base.BindOptions(parseResult);
         options.VmName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
         options.VmSize = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name);
+        var tagsProvided = parseResult.CommandResult.GetResult(ComputeOptionDefinitions.Tags) is not null;
+        var tagsValue = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name);
+        options.Tags = tagsProvided && tagsValue is null ? string.Empty : tagsValue;
         options.LicenseType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.LicenseType.Name);
         options.BootDiagnostics = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.BootDiagnostics.Name);
         options.UserData = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UserData.Name);

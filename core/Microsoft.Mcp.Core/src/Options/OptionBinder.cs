@@ -17,6 +17,10 @@ namespace Microsoft.Mcp.Core.Options;
 /// </summary>
 public static class OptionBinder
 {
+    private const DynamicallyAccessedMemberTypes OptionBindingMembers =
+        DynamicallyAccessedMemberTypes.PublicProperties |
+        DynamicallyAccessedMemberTypes.PublicParameterlessConstructor;
+
     /// <summary>
     /// To prevent native AOT builds from trimming away the filled generic Options<T> methods, we have to maintain a
     /// centralized factory pattern. Each entry provides both the option factory (for registration) and value binder
@@ -118,7 +122,7 @@ public static class OptionBinder
     /// <summary>
     /// Registers System.CommandLine options on a command based on the public properties of <typeparamref name="TOptions"/>.
     /// </summary>
-    public static void RegisterOptions<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TOptions>(Command command)
+    public static void RegisterOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(Command command)
         where TOptions : class
     {
         var descriptors = OptionDescriptor.FromType<TOptions>();
@@ -133,7 +137,7 @@ public static class OptionBinder
     /// Creates a new <typeparamref name="TOptions"/> instance and populates its properties
     /// from the parsed command-line values.
     /// </summary>
-    public static TOptions BindOptions<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TOptions>(ParseResult parseResult)
+    public static TOptions BindOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(ParseResult parseResult)
         where TOptions : class
     {
         var instance = (TOptions)CreateInstance(typeof(TOptions));

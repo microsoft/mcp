@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Mcp.Core.Options;
@@ -108,5 +109,23 @@ internal static class SreAgentCommandHelpers
         var value = JsonSerializer.Deserialize(json, SreAgentJsonContext.Default.DictionaryStringString)
             ?? throw new ArgumentException($"The --{optionName} value must be a JSON object with string values.");
         return value;
+    }
+
+    internal static SreAgentThreadCreateRequest CreateThreadRequest(string message, string agentName)
+    {
+        var (userId, displayName) = GetUser();
+        return new(new(message, userId, displayName, agentName));
+    }
+
+    internal static SreAgentThreadMessageRequest CreateMessageRequest(string message, string? agentName = null)
+    {
+        var (userId, displayName) = GetUser();
+        return new(message, userId, displayName, agentName);
+    }
+
+    internal static (string UserId, string DisplayName) GetUser(string fallback = "mcp-user")
+    {
+        var user = Environment.GetEnvironmentVariable("USER") ?? Environment.GetEnvironmentVariable("USERNAME") ?? fallback;
+        return (user, user == fallback ? "MCP User" : user);
     }
 }

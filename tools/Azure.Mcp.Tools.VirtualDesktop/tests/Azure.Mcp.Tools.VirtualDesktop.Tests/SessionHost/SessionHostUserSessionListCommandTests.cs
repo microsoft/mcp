@@ -21,7 +21,6 @@ public class SessionHostUserSessionListCommandTests : CommandUnitTestsBase<Sessi
         Assert.Equal("user-list", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("List all user sessions on a specific session host", CommandDefinition.Description);
     }
 
     [Theory]

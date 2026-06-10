@@ -32,7 +32,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
     {
         var modules = await GetModuleCollectionAsync(cancellationToken).ConfigureAwait(false);
         var module = modules.Find(m => string.Equals(m.ModuleName, moduleName, StringComparison.OrdinalIgnoreCase))
-            ?? throw new InvalidOperationException($"Module '{moduleName}' not found in available modules.");
+            ?? throw new ArgumentException($"Module '{moduleName}' not found in available modules.", nameof(moduleName));
 
         var apiUrl = module.RepoUrl
             .Replace("github.com", "api.github.com/repos", StringComparison.OrdinalIgnoreCase) + "/releases";
@@ -67,7 +67,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
     {
         var modules = await GetModuleCollectionAsync(cancellationToken).ConfigureAwait(false);
         var module = modules.Find(m => string.Equals(m.ModuleName, moduleName, StringComparison.OrdinalIgnoreCase))
-            ?? throw new InvalidOperationException($"Module '{moduleName}' not found in available modules.");
+            ?? throw new ArgumentException($"Module '{moduleName}' not found in available modules.", nameof(moduleName));
 
         var cleanVersion = moduleVersion.TrimStart('v');
 

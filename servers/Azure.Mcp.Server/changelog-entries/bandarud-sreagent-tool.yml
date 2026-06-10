@@ -1,4 +1,0 @@
-pr: 2611
-changes:
-  - section: "Features Added"
-    description: "Added Azure SRE Agent (`Microsoft.App/SREAgentPreview`) tool group with 55 commands across 11 sub-groups: agents, skills, connectors, hooks, threads, scheduledtasks, incidents, workflows, docs, architecture, and commonprompts. Supports listing/creating/updating SRE Agent resources, managing sub-agents and tools, registering data connectors (Kusto/MCP), configuring safety hooks, running investigations, scheduling tasks, declaring incidents, generating workflows, querying memories, and producing remediation plans against the SRE Agent data plane."

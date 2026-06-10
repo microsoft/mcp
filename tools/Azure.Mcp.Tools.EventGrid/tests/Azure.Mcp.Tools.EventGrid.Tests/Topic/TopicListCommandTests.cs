@@ -15,6 +15,13 @@ namespace Azure.Mcp.Tools.EventGrid.Tests.Topic;
 
 public class TopicListCommandTests : CommandUnitTestsBase<TopicListCommand, IEventGridService>
 {
+
+    [Fact]
+    public void Constructor_Description_DoesNotMentionAccessKeys()
+    {
+        Assert.DoesNotContain("access key", CommandDefinition.Description, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public async Task ExecuteAsync_NoParameters_ReturnsTopics()
     {

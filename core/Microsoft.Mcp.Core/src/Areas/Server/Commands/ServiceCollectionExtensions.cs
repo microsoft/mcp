@@ -255,12 +255,13 @@ public static partial class ServiceCollectionExtensions
     /// Using <see cref="IConfiguration"/> configures <see cref="McpServerConfiguration"/>.
     /// </summary>
     /// <param name="services">Service Collection to add configuration logic to.</param>
-    public static void InitializeConfigurationAndOptions(this IServiceCollection services)
+    /// <param name="assembly">The assembly to use for configuration.</param>
+    public static void InitializeConfigurationAndOptions(this IServiceCollection services, Assembly assembly)
     {
         var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
         var configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", optional: false)
-            .AddJsonFile($"appsettings.{environment}.json", optional: true)
+            .AddEmbeddedAppSettings(assembly, "appsettings.json", required: true)
+            .AddEmbeddedAppSettings(assembly, $"appsettings.{environment}.json", required: false)
             .AddEnvironmentVariables()
             .SetBasePath(AppContext.BaseDirectory)
             .Build();
@@ -270,14 +271,15 @@ public static partial class ServiceCollectionExtensions
             .Configure<IConfiguration, IOptions<ServiceStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
             {
                 // Manually bind configuration values to avoid reflection-based binding for AOT compatibility
-                options.RootCommandGroupName = rootConfiguration[nameof(McpServerConfiguration.RootCommandGroupName)]
+                var mcpConfiguration = rootConfiguration.GetRequiredSection("MicrosoftMcp");
+                options.RootCommandGroupName = mcpConfiguration[nameof(McpServerConfiguration.RootCommandGroupName)]
                     ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.RootCommandGroupName)}' is required.");
-                options.Name = rootConfiguration[nameof(McpServerConfiguration.Name)]
+                options.Name = mcpConfiguration[nameof(McpServerConfiguration.Name)]
                     ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.Name)}' is required.");
-                options.DisplayName = rootConfiguration[nameof(McpServerConfiguration.DisplayName)]
+                options.DisplayName = mcpConfiguration[nameof(McpServerConfiguration.DisplayName)]
                     ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.DisplayName)}' is required.");
 
-                options.ShortName = rootConfiguration[nameof(McpServerConfiguration.ShortName)]
+                options.ShortName = mcpConfiguration[nameof(McpServerConfiguration.ShortName)]
                     ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.ShortName)}' is required.");
                 options.ShortName = options.ShortName.Trim();
                 if (!ShortNamePattern().IsMatch(options.ShortName))
@@ -286,7 +288,7 @@ public static partial class ServiceCollectionExtensions
                         $"Configuration value '{nameof(McpServerConfiguration.ShortName)}' must contain only letters, digits, '_', or '-'.");
                 }
 
-                options.Description = rootConfiguration[nameof(McpServerConfiguration.Description)]
+                options.Description = mcpConfiguration[nameof(McpServerConfiguration.Description)]
                     ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.Description)}' is required.");
                 if (string.IsNullOrWhiteSpace(options.Description))
                 {

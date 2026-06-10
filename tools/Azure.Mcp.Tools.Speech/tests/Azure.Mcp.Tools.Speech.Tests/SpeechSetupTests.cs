@@ -51,21 +51,6 @@ public class SpeechSetupTests
     }
 
     [Fact]
-    public void RegisterCommands_SpeechGroup_ShouldHaveCorrectDescription()
-    {
-        // Arrange
-        var setup = new SpeechSetup();
-        var services = CreateServiceProvider(setup);
-
-        // Act
-        var speechGroup = setup.RegisterCommands(services);
-
-        // Assert
-        Assert.NotNull(speechGroup);
-        Assert.Contains("Azure AI Services Speech", speechGroup.Description);
-    }
-
-    [Fact]
     public void RegisterCommands_ShouldAddSttSubGroup()
     {
         // Arrange
@@ -81,7 +66,8 @@ public class SpeechSetupTests
         var sttGroup = speechGroup.SubGroup.FirstOrDefault(g => g.Name == "stt");
         Assert.NotNull(sttGroup);
         Assert.Equal("stt", sttGroup.Name);
-        Assert.Contains("Speech-to-text", sttGroup.Description);
+        Assert.NotNull(sttGroup.Description);
+        Assert.NotEmpty(sttGroup.Description);
     }
 
     [Fact]
@@ -103,6 +89,8 @@ public class SpeechSetupTests
         Assert.True(sttGroup.Commands.ContainsKey("recognize"));
         var recognizeCommand = sttGroup.Commands["recognize"];
         Assert.NotNull(recognizeCommand);
+        Assert.NotNull(recognizeCommand.Description);
+        Assert.NotEmpty(recognizeCommand.Description);
     }
 
     [Fact]

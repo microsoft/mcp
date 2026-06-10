@@ -1,0 +1,28 @@
+{
+  "parameters": {
+    "workspaceId": "47482db6-4583-4672-86dd-999d0f8f4d7a"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "rules": [
+          {
+            "displayName": "SingleIPAddressRule",
+            "value": "12.34.56.78"
+          },
+          {
+            "displayName": "IPAddressRangeRule",
+            "value": "12.34.56.78-12.34.56.89"
+          },
+          {
+            "displayName": "CidrIPAddressRule",
+            "value": "12.34.56.0/24"
+          }
+        ]
+      },
+      "headers": {
+        "ETag": "0f8fad5b-d9cb-469f-a165-70867728950e"
+      }
+    }
+  }
+}

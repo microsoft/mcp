@@ -1,0 +1,40 @@
+{
+    "parameters": {
+        "workspaceId": "d9438604-fdf3-472d-93d8-fcb832a1d2b6",
+        "notebookId": "5171b288-8487-4d1e-82b3-693edfa14aee",
+        "beta": "false",
+        "runNotebookRequest": {
+            "executionData": {
+                "compute": "Jupyter",
+                "computeConfiguration": {
+                    "name": "mySessionName",
+                    "numCores": 4,
+                    "mountPoints": [
+                        {
+                            "source": "abfss://myfilesystem@myaccount.dfs.core.windows.net/mypath",
+                            "mountPointPath": "/myMountPoint"
+                        }
+                    ],
+                    "defaultLakehouse": {
+                        "referenceType": "ById",
+                        "itemId": "2434b3e1-d753-4438-8e72-00cb6703e83a",
+                        "workspaceId": "d9438604-fdf3-472d-93d8-fcb832a1d2b6"
+                    },
+                    "attachedEnvironment": {
+                        "referenceType": "ById",
+                        "itemId": "39f73c18-9970-43a4-9c6e-72d22160493d",
+                        "workspaceId": "d9438604-fdf3-472d-93d8-fcb832a1d2b6"
+                    }
+                }
+            }
+        }
+    },
+    "responses": {
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/workspaces/d9438604-fdf3-472d-93d8-fcb832a1d2b6/items/5171b288-8487-4d1e-82b3-693edfa14aee/jobs/instances/2d6aa964-5f3a-4c95-a878-cc761ae71391",
+                "Retry-After": 60
+            }
+        }
+    }
+  }

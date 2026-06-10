@@ -73,6 +73,18 @@
                         "status": "Running"
                     },
                     {
+                        "id": "9fff8320-3e09-41b1-b417-d0d3879dd6f6",
+                        "name": "AzureServiceBusSource",
+                        "type": "AzureServiceBus",
+                        "properties": {
+                            "dataConnectionId": "765fd5a4-602c-4477-b0d5-918b416f94b4",
+                            "serviceBusType": "Topic",
+                            "topicOrQueueName": "topicName",
+                            "subscriptionName": "subscriptionExample"
+                        },
+                        "status": "Running"
+                    },
+                    {
                         "id": "0d9bf4db-bc7f-4854-8579-6fdf244ed503",
                         "name": "CustomEndpointSource",
                         "type": "CustomEndpoint",
@@ -216,7 +228,9 @@
                         "type": "AmazonKinesis",
                         "properties": {
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
-                            "region": "us-east-1"
+                            "region": "us-east-1",
+                            "startPosition": "AtTimestamp",
+                            "startTimestamp": "2024-01-15T10:30:00Z"
                         },
                         "status": "Running"
                     },
@@ -278,7 +292,8 @@
                         "type": "AzureSQLDBCDC",
                         "properties": {
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
-                            "tableName": "tableName"
+                            "tableName": "tableName",
+                            "decimalHandlingMode": "Precise"
                         },
                         "status": "Running"
                     },
@@ -288,7 +303,8 @@
                         "type": "AzureSQLMIDBCDC",
                         "properties": {
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
-                            "tableName": "tableName"
+                            "tableName": "tableName",
+                            "decimalHandlingMode": "Double"
                         },
                         "status": "Running"
                     },
@@ -298,7 +314,8 @@
                         "type": "SQLServerOnVMDBCDC",
                         "properties": {
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
-                            "tableName": "tableName"
+                            "tableName": "tableName",
+                            "decimalHandlingMode": "String"
                         },
                         "status": "Running"
                     },
@@ -310,7 +327,8 @@
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
                             "tableName": "tableName",
                             "serverId": 9,
-                            "port": 3306
+                            "port": 3306,
+                            "snapshotLockingMode": "Minimal"
                         },
                         "status": "Running"
                     },
@@ -322,7 +340,21 @@
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
                             "tableName": "tableName",
                             "slotName": "slotName",
-                            "port": 5432
+                            "port": 5432,
+                            "publicationName": "my_publication",
+                            "publicationAutoCreateMode": "Filtered"
+                        },
+                        "status": "Running"
+                    },
+                    {
+                        "id": "a3c1d2e4-5f67-4890-abcd-ef1234567890",
+                        "name": "MongoDBCDCSource",
+                        "type": "MongoDBCDC",
+                        "properties": {
+                            "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
+                            "includedDatabases": "db1,db2",
+                            "includedCollections": "collection1,collection2",
+                            "snapshotMode": "Initial"
                         },
                         "status": "Running"
                     },
@@ -857,7 +889,12 @@
                             }
                         ],
                         "properties": {
-                            "query": "SELECT * INTO [MyStream] FROM [MyNode]"
+                            "query": "SELECT * INTO [MyStream] FROM [MyNode]",
+                            "advancedSettings": {
+                                "eventsOutOfOrderPolicy": "Adjust",
+                                "eventsOutOfOrderMaxDelayInSeconds": 5,
+                                "eventsLateArrivalMaxDelayInSeconds": 300
+                            }
                         }
                     }
                 ]

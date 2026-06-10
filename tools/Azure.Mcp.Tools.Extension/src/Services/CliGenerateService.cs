@@ -42,6 +42,7 @@ internal class CliGenerateService(IHttpClientFactory httpClientFactory, IAzureTo
             Content = content
         };
         requestMessage.Headers.Authorization = new("Bearer", accessToken.Token);
+        requestMessage.Headers.Add("clientType", "azuremcp");
         HttpResponseMessage responseMessage = await _httpClientFactory.CreateClient().SendAsync(requestMessage, cancellationToken);
         return responseMessage;
     }

@@ -39,7 +39,7 @@ public static class StorageSyncOptionDefinitions
 
         public static readonly Option<string> Tags = new($"--{TagsName}")
         {
-            Description = "Tags to assign to the service (space-separated key=value pairs)"
+            Description = "Tags to assign to the service, in the format 'tag1=value1 tag2=value2'."
         };
 
         public static readonly Option<string> IdentityType = new($"--{IdentityTypeName}")

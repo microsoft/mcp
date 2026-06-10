@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.EventGrid.Commands.Topic;
     Id = "42390294-2856-4980-a057-095c91355650",
     Name = "list",
     Title = "List Event Grid Topics",
-    Description = "List or show all Event Grid topics in a subscription, optionally filtered by resource group, returning endpoints, access keys, provisioning state, and subscription details for event publishing and management. A subscription or topic name is required.",
+    Description = "List Event Grid topics in an Azure subscription or resource group. Returns topic names, endpoints, locations, and provisioning status.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
