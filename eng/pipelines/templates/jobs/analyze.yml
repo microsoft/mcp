@@ -13,6 +13,11 @@ jobs:
     displayName: "Install Node.js 22"
     inputs:
       versionSpec: '22.x'
+
+  - ${{ if endsWith(variables['Build.Repository.Name'], '-pr') }}:
+    - template: /eng/common/pipelines/templates/steps/login-to-github.yml
+      parameters:
+        TokenOwners: ['Microsoft']
   
   - task: Powershell@2
     displayName: "Run source analysis"
