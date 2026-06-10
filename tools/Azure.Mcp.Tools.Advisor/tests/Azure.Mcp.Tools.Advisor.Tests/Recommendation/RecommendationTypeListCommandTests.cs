@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -27,20 +26,16 @@ public class RecommendationTypeListCommandTests : CommandUnitTestsBase<Recommend
     }
 
     [Theory]
-    [InlineData("--subscription sub1", true)]
-    [InlineData("--subscription sub1 --filter recommendationType", true)]
-    [InlineData("", false)]
+    [InlineData("", true)]
+    [InlineData("--filter recommendationType", true)]
+    [InlineData("--filter category", true)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        if (shouldSucceed)
-        {
-            Service.ListRecommendationTypesAsync(
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
-                .Returns([]);
-        }
+        Service.ListRecommendationTypesAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns([]);
 
         var response = await ExecuteCommandAsync(args);
 
@@ -49,10 +44,6 @@ public class RecommendationTypeListCommandTests : CommandUnitTestsBase<Recommend
         {
             Assert.NotNull(response.Results);
             Assert.Equal("Success", response.Message);
-        }
-        else
-        {
-            Assert.Contains("required", response.Message.ToLower());
         }
     }
 
@@ -68,11 +59,10 @@ public class RecommendationTypeListCommandTests : CommandUnitTestsBase<Recommend
         Service.ListRecommendationTypesAsync(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var response = await ExecuteCommandAsync("--subscription", "sub123");
+        var response = await ExecuteCommandAsync();
 
         var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationTypeListResult);
 
@@ -83,7 +73,6 @@ public class RecommendationTypeListCommandTests : CommandUnitTestsBase<Recommend
         await Service.Received(1).ListRecommendationTypesAsync(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -93,48 +82,14 @@ public class RecommendationTypeListCommandTests : CommandUnitTestsBase<Recommend
         Service.ListRecommendationTypesAsync(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var response = await ExecuteCommandAsync("--subscription", "sub123");
+        var response = await ExecuteCommandAsync();
 
         var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationTypeListResult);
 
         Assert.Empty(result.RecommendationTypes);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_PreservesRichRecommendationTypeFields()
-    {
-        var expected = new List<RecommendationType>
-        {
-            new(
-                Id: "e10b1381-5f0a-47ff-8c7b-37bd13d7c974",
-                DisplayName: "Right-size or shutdown underutilized virtual machines",
-                Category: "Cost",
-                Impact: "High",
-                SubCategory: "UsageOptimization",
-                ResourceType: "microsoft.compute/virtualmachines"),
-        };
-        Service.ListRecommendationTypesAsync(
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(expected);
-
-        var response = await ExecuteCommandAsync("--subscription", "sub123", "--filter", "recommendationType");
-
-        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationTypeListResult);
-
-        var item = Assert.Single(result.RecommendationTypes);
-        Assert.Equal("e10b1381-5f0a-47ff-8c7b-37bd13d7c974", item.Id);
-        Assert.Equal("Right-size or shutdown underutilized virtual machines", item.DisplayName);
-        Assert.Equal("Cost", item.Category);
-        Assert.Equal("High", item.Impact);
-        Assert.Equal("UsageOptimization", item.SubCategory);
-        Assert.Equal("microsoft.compute/virtualmachines", item.ResourceType);
     }
 
     [Fact]
@@ -143,16 +98,14 @@ public class RecommendationTypeListCommandTests : CommandUnitTestsBase<Recommend
         Service.ListRecommendationTypesAsync(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        await ExecuteCommandAsync("--subscription", "sub123", "--filter", "category");
+        await ExecuteCommandAsync("--filter", "category");
 
         await Service.Received(1).ListRecommendationTypesAsync(
             Arg.Any<string?>(),
             "category",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -162,11 +115,10 @@ public class RecommendationTypeListCommandTests : CommandUnitTestsBase<Recommend
         Service.ListRecommendationTypesAsync(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var response = await ExecuteCommandAsync("--subscription", "sub123");
+        var response = await ExecuteCommandAsync();
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
@@ -180,11 +132,10 @@ public class RecommendationTypeListCommandTests : CommandUnitTestsBase<Recommend
         Service.ListRecommendationTypesAsync(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(forbidden);
 
-        var response = await ExecuteCommandAsync("--subscription", "sub123");
+        var response = await ExecuteCommandAsync();
 
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
@@ -197,11 +148,10 @@ public class RecommendationTypeListCommandTests : CommandUnitTestsBase<Recommend
         Service.ListRecommendationTypesAsync(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFound);
 
-        var response = await ExecuteCommandAsync("--subscription", "sub123");
+        var response = await ExecuteCommandAsync();
 
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("metadata endpoint", response.Message);

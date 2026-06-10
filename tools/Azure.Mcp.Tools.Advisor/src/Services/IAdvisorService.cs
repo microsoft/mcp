@@ -18,6 +18,5 @@ public interface IAdvisorService
     Task<List<RecommendationType>> ListRecommendationTypesAsync(
         string? tenant,
         string? filter,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
 }

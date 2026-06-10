@@ -21,11 +21,11 @@ public class AdvisorService(
     ILogger<AdvisorService> logger)
     : BaseAzureResourceService(subscriptionService, tenantService), IAdvisorService
 {
-    private const string AdvisorMetadataApiVersion = "2020-01-01";
+    private const string AdvisorMetadataApiVersion = "2025-01-01";
 
     // Map friendly user-facing filter values to the actual entity names returned by the
     // ARM Advisor metadata API (case-insensitive). Friendly values used in CLI/MCP options;
-    // ARM entity names verified at /providers/Microsoft.Advisor/metadata?api-version=2020-01-01.
+    // ARM entity names verified at /providers/Microsoft.Advisor/metadata?api-version=2025-01-01.
     private static readonly Dictionary<string, string> FilterToEntityName = new(StringComparer.OrdinalIgnoreCase)
     {
         ["recommendationType"] = "recommendationType",
@@ -57,7 +57,6 @@ public class AdvisorService(
     public async Task<List<RecommendationType>> ListRecommendationTypesAsync(
         string? tenant,
         string? filter,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
         var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint
@@ -73,12 +72,19 @@ public class AdvisorService(
         using var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
+            // Read the response body for diagnostic logging only; do NOT include it in the thrown
+            // exception message because that message is surfaced to the caller and the body may
+            // contain verbose ARM error details we don't want to leak to the user.
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            const int maxLoggedBodyLength = 2048;
+            var truncatedBody = body.Length > maxLoggedBodyLength
+                ? body[..maxLoggedBodyLength] + "... [truncated]"
+                : body;
             _logger.LogError(
-                "Advisor metadata API returned non-success. Status: {Status}, Reason: {Reason}.",
-                (int)response.StatusCode, response.ReasonPhrase);
+                "Advisor metadata API returned non-success. Status: {Status}, Reason: {Reason}, Body: {Body}",
+                (int)response.StatusCode, response.ReasonPhrase, truncatedBody);
             throw new HttpRequestException(
-                $"Advisor metadata API returned {(int)response.StatusCode} {response.ReasonPhrase}: {body}",
+                $"Advisor metadata API returned {(int)response.StatusCode} {response.ReasonPhrase}.",
                 inner: null,
                 response.StatusCode);
         }
@@ -120,11 +126,7 @@ public class AdvisorService(
 
                 results.Add(new RecommendationType(
                     Id: value.Id,
-                    DisplayName: value.DisplayName ?? value.Id,
-                    Category: value.RecommendationCategory,
-                    Impact: value.RecommendationImpact,
-                    SubCategory: value.RecommendationSubCategory,
-                    ResourceType: value.SupportedResourceType));
+                    DisplayName: value.DisplayName ?? value.Id));
             }
         }
 

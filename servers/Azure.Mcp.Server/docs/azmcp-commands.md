@@ -338,8 +338,7 @@ azmcp advisor recommendation apply --resource <resource>
 # List the catalog of Advisor recommendation types, categories, and impact levels available in the tenant.
 # Use for new or empty environments without generated recommendations, or to discover canonical IDs.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation-type list --subscription <subscription> \
-                                       [--filter <recommendationType|category|impact|resourceType>]
+azmcp advisor recommendation-type list [--filter <recommendationType|category|impact|resourceType>]
 ```
 
 ### Azure AI Search Operations

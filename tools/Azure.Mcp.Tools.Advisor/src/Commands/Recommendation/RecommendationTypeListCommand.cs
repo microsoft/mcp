@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Net.Http;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.Logging;
@@ -30,7 +29,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 public sealed class RecommendationTypeListCommand(
     ILogger<RecommendationTypeListCommand> logger,
     IAdvisorService advisorService)
-    : SubscriptionCommand<RecommendationTypeListOptions>
+    : GlobalCommand<RecommendationTypeListOptions>
 {
     private readonly ILogger<RecommendationTypeListCommand> _logger = logger;
     private readonly IAdvisorService _advisorService = advisorService;
@@ -62,7 +61,6 @@ public sealed class RecommendationTypeListCommand(
             var recommendationTypes = await _advisorService.ListRecommendationTypesAsync(
                 options.Tenant,
                 options.Filter,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
