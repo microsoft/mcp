@@ -2193,7 +2193,11 @@ azmcp kusto table schema [--cluster-uri <cluster-uri> | --subscription <subscrip
                          --database <database> \
                          --table <table>
 
-# Query Azure Data Explorer database
+# Query Azure Data Explorer database.
+# KQL queries are validated for safety: max 10,000 characters; tautology patterns
+# (e.g., 'or 1==1', 'or true') and management commands (.drop, .alter, .create,
+# .delete, .set, .append, .set-or-append, .set-or-replace, .ingest, .purge, .execute)
+# are rejected.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> --cluster <cluster>] \
                   --database <database> \
@@ -2986,7 +2990,11 @@ azmcp monitor table list --subscription <subscription> \
 azmcp monitor workspace list --subscription <subscription> \
                             [--resource-group <resource-group>]
 
-# Query logs from Azure Monitor using KQL
+# Query logs from Azure Monitor using KQL.
+# KQL queries are validated for safety: max 10,000 characters; tautology patterns
+# (e.g., 'or 1==1', 'or true') and management commands (.drop, .alter, .create,
+# .delete, .set, .append, .set-or-append, .set-or-replace, .ingest, .purge, .execute)
+# are rejected.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor resource log query --subscription <subscription> \
                                  --resource-id <resource-id> \
@@ -2995,6 +3003,11 @@ azmcp monitor resource log query --subscription <subscription> \
                                  [--hours <hours>] \
                                  [--limit <limit>]
 
+# Query logs from a Log Analytics workspace using KQL.
+# KQL queries are validated for safety: max 10,000 characters; tautology patterns
+# (e.g., 'or 1==1', 'or true') and management commands (.drop, .alter, .create,
+# .delete, .set, .append, .set-or-append, .set-or-replace, .ingest, .purge, .execute)
+# are rejected.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor workspace log query --subscription <subscription> \
                                   --workspace <workspace> \
