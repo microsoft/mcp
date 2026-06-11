@@ -21,7 +21,7 @@ jobs:
   dependsOn: ${{ parameters.DependsOn }}
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   variables:
-    GH_TOKEN: $[ dependencies.TagRepository.outputs['ExportGitHubToken.GitHubToken'] ]
+    GH_TOKEN: $[ dependencies.TagRepository.outputs['GenerateGitHubToken.GH_TOKEN'] ]
   templateContext:
     type: releaseJob
     isProduction: true

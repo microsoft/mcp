@@ -16,6 +16,7 @@ parameters:
 
 steps:
 - task: AzureCLI@2
+  name: GenerateGitHubToken
   displayName: "Login to GitHub"
   inputs:
     azureSubscription: 'AzureSDKEngKeyVault Secrets'
