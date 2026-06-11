@@ -111,7 +111,7 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
     public string GetAssetsJson(Type testType)
     {
         var projectDir = testType.Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().Single(a => a.Key == "SourcePath").Value!;
-        
+
         var current = new DirectoryInfo(projectDir);
 
         var assetsFile = Path.Combine(current.FullName, "assets.json");
