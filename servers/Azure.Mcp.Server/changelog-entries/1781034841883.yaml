@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed an issue where a valid subscription name or ID containing the words `subscription` or `default` could be incorrectly treated as a placeholder value and replaced with the default subscription."
