@@ -438,7 +438,7 @@ public sealed class SingleProxyToolLoader(
     private async Task<string?> GetToolNameFromIntentAsync(RequestContext<CallToolRequestParams> request, string intent, List<Tool> tools, CancellationToken cancellationToken)
     {
         await NotifyProgressAsync(request, $"Learning about {_displayName} capabilities...", cancellationToken);
-        var toolsJson = JsonSerializer.Serialize(tools.Select(t => new ToolCommandInfo(t)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
+        var toolsJson = JsonSerializer.Serialize(tools.Select(t => new ToolCommandInfo(t, false)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
         var samplingRequest = new CreateMessageRequestParams
         {

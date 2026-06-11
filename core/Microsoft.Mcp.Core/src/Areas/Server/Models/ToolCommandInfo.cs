@@ -12,17 +12,20 @@ public sealed class ToolCommandInfo
     public JsonElement? Properties { get; init; }
     public JsonElement? Required { get; init; }
 
-    public ToolCommandInfo(Tool tool)
+    public ToolCommandInfo(Tool tool, bool includeSchema = true)
     {
         Name = tool.Name;
         Description = tool.Description;
-        if (tool.InputSchema.TryGetProperty("properties", out var properties))
+        if (includeSchema)
         {
-            Properties = properties;
-        }
-        if (tool.InputSchema.TryGetProperty("required", out var required))
-        {
-            Required = required;
+            if (tool.InputSchema.TryGetProperty("properties", out var properties))
+            {
+                Properties = properties;
+            }
+            if (tool.InputSchema.TryGetProperty("required", out var required))
+            {
+                Required = required;
+            }
         }
     }
 }

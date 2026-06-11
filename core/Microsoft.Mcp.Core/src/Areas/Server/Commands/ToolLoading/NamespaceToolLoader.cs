@@ -522,7 +522,7 @@ public sealed class NamespaceToolLoader(
             [
                 new TextContentBlock {
                     Text = $"""
-                        Here are the available command and their parameters for '{namespaceName}' tool.
+                        Here are the available commands and their parameters for '{namespaceName}' tool.
                         If you do not find a suitable command, run again with the "learn=true" to get a list of available commands and their parameters.
                         Next, identify the command you want to execute and run again with the "command" and "parameters" arguments, respecting "required" parameters if present.
 
