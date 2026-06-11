@@ -9,6 +9,8 @@ jobs:
 
   - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
+  - template: /eng/common/pipelines/templates/steps/eng-common-workflow-enforcer.yml
+
   - task: UseNode@1
     displayName: 'Install Node.js 24'
     inputs:
