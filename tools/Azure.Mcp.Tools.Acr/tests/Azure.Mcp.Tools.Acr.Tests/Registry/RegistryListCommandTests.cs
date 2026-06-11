@@ -3,12 +3,12 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Acr.Commands;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
 using Azure.Mcp.Tools.Acr.Models;
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -16,7 +16,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Acr.Tests.Registry;
 
-public class RegistryListCommandTests : CommandUnitTestsBase<RegistryListCommand, IAcrService>
+public class RegistryListCommandTests : SubscriptionCommandUnitTestsBase<RegistryListCommand, IAcrService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
