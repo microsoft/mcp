@@ -11,6 +11,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.Tests;
 
+[Trait("Command", "EmailSendCommand")]
 [Trait("Command", "SmsSendCommand")]
 public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)

@@ -14,8 +14,6 @@ namespace Azure.Mcp.Tools.Aks.Tests;
 public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
-
-    #region 
     [Fact]
     public async Task Should_list_aks_clusters_by_subscription()
     {
@@ -591,6 +589,4 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
             }
         }
     }
-
-    #endregion
 }

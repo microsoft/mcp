@@ -12,7 +12,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.Tests;
 
-public abstract class AppServiceCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
