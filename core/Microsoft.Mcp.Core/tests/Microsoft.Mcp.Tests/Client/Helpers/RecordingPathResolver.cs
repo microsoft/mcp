@@ -63,7 +63,7 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
     public string GetSessionDirectory(Type testType, string? variantSuffix = null)
     {
         // Locate the test project directory by ascending from the assembly location until a matching *.csproj exists.
-        var projectDir = GetProjectDirectory(testType);
+        var projectDir = testType.Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().Single(a => a.Key == "SourcePath").Value!;
 
         // Compute relative path from repo root.
         var relativeProjectPath = Path.GetRelativePath(_repoRoot, projectDir)
@@ -75,35 +75,6 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
 
         // TODO: Consider caching projectDir per assembly for performance if needed.
         return sessionDir;
-    }
-
-    private static string GetProjectDirectory(Type testType)
-    {
-        // Locate the test project directory by ascending from the assembly location until a matching *.csproj exists.
-        var assemblyDir = Path.GetDirectoryName(testType.Assembly.Location)!;
-        var projectDir = FindProjectDirectory(assemblyDir, testType);
-
-        return projectDir;
-    }
-
-    private static string FindProjectDirectory(string startDirectory, Type testType)
-    {
-        var current = new DirectoryInfo(startDirectory);
-        var expectedProjectName = testType.Assembly.GetName().Name; // Typically matches .csproj file name.
-
-        while (current != null)
-        {
-            // Look for any .csproj; prefer one matching assembly name.
-            var csprojFiles = current.GetFiles("*.csproj", SearchOption.TopDirectoryOnly);
-            if (csprojFiles.Length > 0)
-            {
-                var matching = csprojFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f.Name) == expectedProjectName);
-                return (matching ?? csprojFiles.First()).Directory!.FullName;
-            }
-            current = current.Parent;
-        }
-
-        throw new InvalidOperationException($"Unable to locate project directory for test type {testType.FullName} starting from {startDirectory}.");
     }
 
     /// <summary>
@@ -139,8 +110,8 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
     /// </summary>
     public string GetAssetsJson(Type testType)
     {
-        var projectDir = GetProjectDirectory(testType);
-
+        var projectDir = testType.Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().Single(a => a.Key == "SourcePath").Value!;
+        
         var current = new DirectoryInfo(projectDir);
 
         var assetsFile = Path.Combine(current.FullName, "assets.json");
