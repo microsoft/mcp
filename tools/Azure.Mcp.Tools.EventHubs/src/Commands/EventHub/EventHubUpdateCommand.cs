@@ -83,6 +83,7 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
                 options.Subscription!,
                 options.PartitionCount,
                 options.MessageRetentionInHours,
+                options.Status,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

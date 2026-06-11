@@ -319,8 +319,8 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             Arg.Is("account123"),
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
-            Arg.Is("rg1"),
             Arg.Any<string?>(),
+            Arg.Is("rg1"),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedDatabases);
@@ -339,8 +339,8 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             "account123",
             "sub123",
             Arg.Any<AuthMethod>(),
-            "rg1",
             Arg.Any<string?>(),
+            "rg1",
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }

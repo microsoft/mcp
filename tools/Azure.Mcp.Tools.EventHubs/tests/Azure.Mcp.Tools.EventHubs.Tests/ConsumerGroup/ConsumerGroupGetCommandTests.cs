@@ -103,7 +103,7 @@ public class ConsumerGroupGetCommandTests : CommandUnitTestsBase<ConsumerGroupGe
             "test-eventhub",
             "test-namespace",
             "test-rg",
-            "test-subscription",
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
@@ -152,7 +152,7 @@ public class ConsumerGroupGetCommandTests : CommandUnitTestsBase<ConsumerGroupGe
             "test-eventhub",
             "test-namespace",
             "test-rg",
-            "test-subscription",
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());

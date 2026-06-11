@@ -20,8 +20,8 @@ public interface ICosmosService : IAsyncDisposable
         string accountName,
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
-        string? resourceGroup = null,
         string? tenant = null,
+        string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -30,8 +30,8 @@ public interface ICosmosService : IAsyncDisposable
         string databaseName,
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
-        string? resourceGroup = null,
         string? tenant = null,
+        string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 

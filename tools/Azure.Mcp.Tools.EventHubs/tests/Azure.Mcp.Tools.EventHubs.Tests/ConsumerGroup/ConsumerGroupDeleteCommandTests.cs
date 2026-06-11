@@ -85,7 +85,7 @@ public class ConsumerGroupDeleteCommandTests : CommandUnitTestsBase<ConsumerGrou
             "test-eventhub",
             "test-namespace",
             "test-rg",
-            "test-subscription",
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());

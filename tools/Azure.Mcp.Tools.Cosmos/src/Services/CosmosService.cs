@@ -38,8 +38,8 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     private async Task<CosmosDBAccountResource> GetCosmosAccountAsync(
         string subscription,
         string accountName,
-        string? resourceGroup = null,
         string? tenant = null,
+        string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
@@ -89,8 +89,8 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         string accountName,
         string subscription,
         AuthMethod authMethod,
-        string? resourceGroup = null,
         string? tenant = null,
+        string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
@@ -114,7 +114,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         switch (authMethod)
         {
             case AuthMethod.Key:
-                var cosmosAccount = await GetCosmosAccountAsync(subscription, accountName, resourceGroup, tenant, retryPolicy, cancellationToken);
+                var cosmosAccount = await GetCosmosAccountAsync(subscription, accountName, tenant, resourceGroup, retryPolicy, cancellationToken);
                 var keys = await cosmosAccount.GetKeysAsync(cancellationToken);
                 cosmosClient = new(GetCosmosBaseUri(accountName), keys.Value.PrimaryMasterKey, clientOptions);
                 break;
@@ -152,14 +152,14 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         string accountName,
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
-        string? resourceGroup = null,
         string? tenant = null,
+        string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(subscription), subscription));
 
-        var key = CacheKeyBuilder.Build(CosmosClientsCacheKeyPrefix, accountName, authMethod.ToString());
+        var key = CacheKeyBuilder.Build(CosmosClientsCacheKeyPrefix, accountName, subscription, tenant ?? string.Empty, authMethod.ToString());
         var cosmosClient = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, s_cacheDurationClients, cancellationToken);
         if (cosmosClient != null)
             return cosmosClient;
@@ -168,8 +168,8 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             accountName,
             subscription,
             authMethod,
-            resourceGroup,
             tenant,
+            resourceGroup,
             retryPolicy,
             cancellationToken);
 
@@ -225,14 +225,14 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         string accountName,
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
-        string? resourceGroup = null,
         string? tenant = null,
+        string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(subscription), subscription));
 
-        var cacheKey = CacheKeyBuilder.Build(CosmosDatabasesCacheKeyPrefix, accountName);
+        var cacheKey = CacheKeyBuilder.Build(CosmosDatabasesCacheKeyPrefix, accountName, subscription, tenant ?? string.Empty, authMethod.ToString());
 
         var cachedDatabases = await _cacheService.GetAsync<List<string>>(CacheGroup, cacheKey, s_cacheDurationResources, cancellationToken);
         if (cachedDatabases != null)
@@ -240,7 +240,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             return cachedDatabases;
         }
 
-        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, resourceGroup, tenant, retryPolicy, cancellationToken);
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, resourceGroup, retryPolicy, cancellationToken);
         var databases = new List<string>();
 
         var iterator = client.GetDatabaseQueryStreamIterator();
@@ -272,14 +272,14 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         string databaseName,
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
-        string? resourceGroup = null,
         string? tenant = null,
+        string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(databaseName), databaseName), (nameof(subscription), subscription));
 
-        var cacheKey = CacheKeyBuilder.Build(CosmosContainersCacheKeyPrefix, accountName, databaseName);
+        var cacheKey = CacheKeyBuilder.Build(CosmosContainersCacheKeyPrefix, accountName, databaseName, subscription, tenant ?? string.Empty, authMethod.ToString());
 
         var cachedContainers = await _cacheService.GetAsync<List<string>>(CacheGroup, cacheKey, s_cacheDurationResources, cancellationToken);
         if (cachedContainers != null)
@@ -287,7 +287,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             return cachedContainers;
         }
 
-        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, resourceGroup, tenant, retryPolicy, cancellationToken);
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, resourceGroup, retryPolicy, cancellationToken);
         var containers = new List<string>();
 
         var database = client.GetDatabase(databaseName);
@@ -328,7 +328,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(databaseName), databaseName), (nameof(containerName), containerName), (nameof(subscription), subscription));
 
-        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, resourceGroup: null, tenant, retryPolicy, cancellationToken);
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, null, retryPolicy, cancellationToken);
 
         var container = client.GetContainer(databaseName, containerName);
         var baseQuery = string.IsNullOrEmpty(query) ? "SELECT * FROM c" : query;
@@ -350,6 +350,8 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         while (queryIterator.HasMoreResults)
         {
             using ResponseMessage response = await queryIterator.ReadNextAsync(cancellationToken);
+            response.EnsureSuccessStatusCode();
+
             using var document = JsonDocument.Parse(response.Content);
             items.Add(document.RootElement.Clone());
         }
@@ -374,7 +376,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             (nameof(containerName), containerName),
             (nameof(subscription), subscription));
 
-        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, resourceGroup: null, tenant, retryPolicy, cancellationToken);
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, null, retryPolicy, cancellationToken);
         var container = client.GetContainer(databaseName, containerName);
 
         var queryDef = new QueryDefinition("SELECT TOP @sampleSize * FROM c")
@@ -458,7 +460,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             (nameof(containerName), containerName),
             (nameof(subscription), subscription));
 
-        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, resourceGroup: null, tenant, retryPolicy, cancellationToken);
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, null, retryPolicy, cancellationToken);
         var container = client.GetContainer(databaseName, containerName);
 
         var queryDef = new QueryDefinition("SELECT TOP @topN * FROM c ORDER BY c._ts DESC")
@@ -511,7 +513,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             (nameof(id), id),
             (nameof(subscription), subscription));
 
-        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, resourceGroup: null, tenant, retryPolicy, cancellationToken);
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, null, retryPolicy, cancellationToken);
         var container = client.GetContainer(databaseName, containerName);
 
         // TODO: When Microsoft.Azure.Cosmos.Aot covers ReadItemStreamAsync + CosmosException, restore the
@@ -570,7 +572,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             (nameof(searchPhrase), searchPhrase),
             (nameof(subscription), subscription));
 
-        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, resourceGroup: null, tenant, retryPolicy, cancellationToken);
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, null, retryPolicy, cancellationToken);
         var container = client.GetContainer(databaseName, containerName);
 
         var selectClause = propertiesToSelect is { Count: > 0 }
@@ -632,7 +634,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             (nameof(vectorProperty), vectorProperty),
             (nameof(subscription), subscription));
 
-        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, resourceGroup: null, tenant, retryPolicy, cancellationToken);
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, null, retryPolicy, cancellationToken);
         var container = client.GetContainer(databaseName, containerName);
 
         // Inline the embedding as a JSON array literal. The Cosmos AOT serializer

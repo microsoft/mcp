@@ -76,8 +76,8 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
                     options.Database!,
                     options.Subscription!,
                     options.AuthMethod ?? AuthMethod.Credential,
-                    options.ResourceGroup,
                     options.Tenant,
+                    options.ResourceGroup,
                     options.RetryPolicy,
                     cancellationToken);
 
@@ -92,8 +92,8 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
                     options.Account!,
                     options.Subscription!,
                     options.AuthMethod ?? AuthMethod.Credential,
-                    options.ResourceGroup,
                     options.Tenant,
+                    options.ResourceGroup,
                     options.RetryPolicy,
                     cancellationToken);
 

@@ -72,6 +72,7 @@ public interface IEventHubsService
         string subscription,
         int? partitionCount = null,
         long? messageRetentionInHours = null,
+        string? status = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

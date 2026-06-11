@@ -228,24 +228,61 @@ public class AzureBackupServiceTests
     }
 
     [Fact]
-    public async Task ListVaultsAsync_BothFailWithSameStatus_ThrowsInvalidOperationWithBothMessages()
+    public async Task ListVaultsAsync_BothFailWithRequestFailedException_ThrowsRequestFailedException()
     {
-        // NEW-1: when both backends fail with the same HTTP status, the two services can
-        // carry meaningfully different ErrorCodes / messages, so neither side is dropped -
-        // both inner messages are folded into the resulting InvalidOperationException's
-        // message and the RSV exception is preserved as InnerException for diagnostics.
+        // NEW-1: both inner messages are preserved in the combined message.
+        // NEW-5: when both inners are RequestFailedException, the wrapper itself is a
+        // RequestFailedException so the command-layer error mapper classifies the failure
+        // as an Azure service error (with the original HTTP status code) rather than as
+        // an MCP-side bug.
         _rsvOps.ListVaultsAsync("22222222-2222-2222-2222-222222222222", null, null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "RSV error"));
         _dppOps.ListVaultsAsync("22222222-2222-2222-2222-222222222222", null, null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "DPP error"));
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<RequestFailedException>(() =>
             _service.ListVaultsAsync("22222222-2222-2222-2222-222222222222", null, null, null, null, CancellationToken.None));
 
+        Assert.Equal(403, ex.Status);
         Assert.Contains("RSV error", ex.Message);
         Assert.Contains("DPP error", ex.Message);
         Assert.IsType<RequestFailedException>(ex.InnerException);
-        Assert.Equal(403, ((RequestFailedException)ex.InnerException!).Status);
+    }
+
+    [Fact]
+    public async Task ListVaultsAsync_BothFailWithRequestFailedException_PrefersNonZeroStatus()
+    {
+        // NEW-5: when the RSV RequestFailedException carries a 0 status (e.g. transport-level
+        // failure with no HTTP status), prefer the DPP status so the user still sees a
+        // useful HTTP code.
+        _rsvOps.ListVaultsAsync("22222222-2222-2222-2222-222222222222", null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(0, "RSV transport error"));
+        _dppOps.ListVaultsAsync("22222222-2222-2222-2222-222222222222", null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(503, "DPP throttled"));
+
+        var ex = await Assert.ThrowsAsync<RequestFailedException>(() =>
+            _service.ListVaultsAsync("22222222-2222-2222-2222-222222222222", null, null, null, null, CancellationToken.None));
+
+        Assert.Equal(503, ex.Status);
+    }
+
+    [Fact]
+    public async Task ListVaultsAsync_BothFailWithRequestFailedException_StatusAndErrorCodePairedFromSameSource()
+    {
+        // NEW-5: Status and ErrorCode must come from the same exception so callers
+        // never see a mismatched (Status, ErrorCode) pair. Here RSV has Status=0 with
+        // its own ErrorCode; the wrapper should take both fields from DPP (the source
+        // of the non-zero Status).
+        _rsvOps.ListVaultsAsync("22222222-2222-2222-2222-222222222222", null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(0, "RSV transport error", "RsvOnlyCode", null));
+        _dppOps.ListVaultsAsync("22222222-2222-2222-2222-222222222222", null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(503, "DPP throttled", "DppThrottled", null));
+
+        var ex = await Assert.ThrowsAsync<RequestFailedException>(() =>
+            _service.ListVaultsAsync("22222222-2222-2222-2222-222222222222", null, null, null, null, CancellationToken.None));
+
+        Assert.Equal(503, ex.Status);
+        Assert.Equal("DppThrottled", ex.ErrorCode);
     }
 
     [Fact]
