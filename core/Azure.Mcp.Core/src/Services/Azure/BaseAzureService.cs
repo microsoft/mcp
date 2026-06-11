@@ -47,7 +47,7 @@ public abstract class BaseAzureService
 #if DEBUG
         if (EnvironmentHelpers.IsPlaybackTesting())
         {
-            s_defaultPollInterval = TimeSpan.FromMilliseconds(1);
+            s_defaultPollInterval = TimeSpan.Zero;
         }
 #endif
     }
