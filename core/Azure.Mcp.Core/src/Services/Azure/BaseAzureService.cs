@@ -310,7 +310,7 @@ public abstract class BaseAzureService
 
         if (s_defaultPollInterval.HasValue)
         {
-            await operation.WaitForCompletionAsync(s_defaultPollInterval.Value, cancellationToken);
+            await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
         }
         else
         {
@@ -330,11 +330,25 @@ public abstract class BaseAzureService
 
         if (s_defaultPollInterval.HasValue)
         {
-            await operation.WaitForCompletionResponseAsync(s_defaultPollInterval.Value, cancellationToken);
+            await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
         }
         else
         {
             await operation.WaitForCompletionResponseAsync(cancellationToken);
+        }
+    }
+
+    private static async Task<Response> WaitForLroCompletionInternalAsync(Operation operation, CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            Response response = await operation.UpdateStatusAsync(cancellationToken);
+            if (operation.HasCompleted)
+            {
+                return operation.GetRawResponse();
+            }
+
+            await Task.Delay(s_defaultPollInterval!.Value, cancellationToken).ConfigureAwait(false);
         }
     }
 }
