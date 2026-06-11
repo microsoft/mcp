@@ -302,7 +302,7 @@ public class SingleProxyToolLoaderTests
         var request = CreateCallToolRequest("storage");
 
         // Act
-        var tools = await toolLoader.GetToolListAsync(request, "storage", TestContext.Current.CancellationToken);
+        var tools = await toolLoader.GetMcpClientToolListAsync(request, "storage", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(tools);
@@ -356,7 +356,7 @@ public class SingleProxyToolLoaderTests
         var request = CreateCallToolRequest("storage");
 
         // Act
-        var tools = await toolLoader.GetToolListAsync(request, "storage", TestContext.Current.CancellationToken);
+        var tools = await toolLoader.GetMcpClientToolListAsync(request, "storage", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(tools);

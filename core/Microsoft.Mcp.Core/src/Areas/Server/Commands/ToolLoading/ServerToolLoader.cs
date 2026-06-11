@@ -6,6 +6,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol;
@@ -42,7 +43,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             "properties": {
             "intent": {
                 "type": "string",
-                "description": "The intent of the azure operation to perform."
+                "description": "The intent of the operation to perform."
             },
             "command": {
                 "type": "string",
@@ -317,7 +318,8 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
                 if (textContent.Text.Contains("Missing required options", StringComparison.OrdinalIgnoreCase))
                 {
-                    var childToolSpecJson = await GetChildToolJsonAsync(request, tool, command, cancellationToken);
+                    var childToolSpec = await GetChildToolAsync(request, tool, command, cancellationToken);
+                    var childToolSpecJson = JsonSerializer.Serialize(new ToolCommandInfo(childToolSpec), ServerJsonContext.Default.ToolCommandInfo);
 
                     _logger.LogWarning("Tool {Tool} command {Command} requires additional parameters.", tool, command);
                     var finalResponse = new CallToolResult
@@ -378,7 +380,8 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string tool, CancellationToken cancellationToken)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
-        var toolsJson = await GetChildToolListJsonAsync(request, tool, cancellationToken);
+        var tools = await GetChildToolListAsync(request, tool, cancellationToken);
+        var toolsJson = JsonSerializer.Serialize(tools.Select(t => new ToolCommandInfo(t)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
         var learnResponse = new CallToolResult
         {
@@ -386,9 +389,9 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             [
                 new TextContentBlock {
                     Text = $"""
-                        Here are the available command and their parameters for '{tool}' tool.
+                        Here are the available commands and their parameters for '{tool}' tool.
                         If you do not find a suitable command, run again with the "learn=true" to get a list of available commands and their parameters.
-                        Next, identify the command you want to execute and run again with the "command" and "parameters" arguments.
+                        Next, identify the command you want to execute and run again with the "command" and "parameters" arguments, respecting "required" parameters if present.
 
                         {toolsJson}
                         """
@@ -396,7 +399,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             ]
         };
         var response = learnResponse;
-        if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
+        if (request.Server.ClientCapabilities?.Sampling != null && !string.IsNullOrWhiteSpace(intent))
         {
             var availableTools = await GetChildToolListAsync(request, tool, cancellationToken);
             (string? commandName, Dictionary<string, object?> parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, tool, availableTools, cancellationToken);
@@ -452,27 +455,10 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             .ToList();
     }
 
-    private async Task<string> GetChildToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
-    {
-        var listTools = await GetChildToolListAsync(request, tool, cancellationToken);
-        return JsonSerializer.Serialize(listTools, ServerJsonContext.Default.IEnumerableTool);
-    }
-
     private async Task<Tool> GetChildToolAsync(RequestContext<CallToolRequestParams> request, string toolName, string commandName, CancellationToken cancellationToken)
     {
         var tools = await GetChildToolListAsync(request, toolName, cancellationToken);
         return tools.First(t => string.Equals(t.Name, commandName, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private async Task<string> GetChildToolJsonAsync(RequestContext<CallToolRequestParams> request, string toolName, string commandName, CancellationToken cancellationToken)
-    {
-        var tool = await GetChildToolAsync(request, toolName, commandName, cancellationToken);
-        return JsonSerializer.Serialize(tool, ServerJsonContext.Default.Tool);
-    }
-
-    private static bool SupportsSampling(McpServer server)
-    {
-        return server?.ClientCapabilities?.Sampling != null;
     }
 
     private static async Task NotifyProgressAsync(RequestContext<CallToolRequestParams> request, string message, CancellationToken cancellationToken)
@@ -501,7 +487,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
         JsonElement toolParams = GetParametersJsonElement(request);
         var toolParamsJson = toolParams.GetRawText();
-        var availableToolsJson = JsonSerializer.Serialize(availableTools, ServerJsonContext.Default.IEnumerableTool);
+        var availableToolsJson = JsonSerializer.Serialize(availableTools.Select(t => new ToolCommandInfo(t)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
         var samplingRequest = new CreateMessageRequestParams
         {
