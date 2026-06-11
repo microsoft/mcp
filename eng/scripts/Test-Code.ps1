@@ -7,6 +7,8 @@ param(
     [string[]] $Members,
     [ValidateSet('Live', 'Unit', 'All', 'Recorded')]
     [string] $TestType = 'Unit',
+    [ValidateSet('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud')]
+    [string] $Environment = 'AzureCloud',
     [string] $TestResultsPath,
     [switch] $CollectCoverage,
     [switch] $OpenReport,
@@ -296,6 +298,7 @@ try {
         exit $LastExitCode
     }
 
+    $environmentArg = "--environment AZURE_CLOUD=$Environment"
     $coverageArg = $CollectCoverage ? "--collect:'XPlat Code Coverage'" : ""
     $resultsArg = "--results-directory '$TestResultsPath'"
     $loggerArg = "--logger 'trx' --logger 'console;verbosity=detailed'"

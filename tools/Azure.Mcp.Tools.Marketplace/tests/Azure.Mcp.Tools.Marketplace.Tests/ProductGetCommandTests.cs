@@ -19,6 +19,7 @@ public sealed class ProductGetCommandTests(ITestOutputHelper output, TestProxyFi
     [Fact]
     public async Task Should_get_marketplace_product()
     {
+        Assert.SkipWhen(Settings.IsAzureUSGovernment, "Marketplace product catalog test product is not published in Azure US Government");
         var result = await CallToolAsync(
             "marketplace_product_get",
             new()
@@ -38,6 +39,7 @@ public sealed class ProductGetCommandTests(ITestOutputHelper output, TestProxyFi
     [Fact]
     public async Task Should_get_marketplace_product_with_language_option()
     {
+        Assert.SkipWhen(Settings.IsAzureUSGovernment, "Marketplace product catalog test product is not published in Azure US Government");
         var result = await CallToolAsync(
             "marketplace_product_get",
             new()
@@ -58,6 +60,7 @@ public sealed class ProductGetCommandTests(ITestOutputHelper output, TestProxyFi
     [Fact]
     public async Task Should_get_marketplace_product_with_multiple_options()
     {
+        Assert.SkipWhen(Settings.IsAzureUSGovernment, "Marketplace product catalog test product is not published in Azure US Government");
         var result = await CallToolAsync(
             "marketplace_product_get",
             new()
