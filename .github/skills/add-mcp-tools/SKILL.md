@@ -1075,6 +1075,39 @@ Verify all files exist for your command:
   - `true`: Azure CLI wrappers, local file operations, tools requiring local installation
   - `false`: Pure cloud API commands (most Azure resource commands)
 
+### ⚠️ Metadata Validation Checklist
+
+After setting `[CommandMetadata]` properties, cross-check each value against these heuristics. **Do not proceed if any check fails — correct the metadata first.**
+
+**Destructive:**
+- If the command name contains `delete`, `remove`, `purge`, `reset`, `revoke`, or `update` → must be `true`
+- If the command name contains `list`, `get`, `show`, `query`, or `describe` → must be `false`
+- If the command creates resources that replace existing ones → should be `true`
+
+**Idempotent:**
+- If calling the command twice with the same inputs produces different results → must be `false`
+- If the command generates new keys, rotates secrets, or creates auto-named resources → must be `false`
+- If the command returns the same data or sets the same state regardless of repetition → must be `true`
+
+**OpenWorld:**
+- If the command only calls Azure Resource Manager, Microsoft Graph, or other well-defined Microsoft APIs → must be `false`
+- Only set `true` if the command interacts with user-controlled external systems, arbitrary URLs, or unpredictable third-party services
+
+**ReadOnly:**
+- If the command can modify state (create, update, delete, write, upload) → must be `false`
+- If the command only retrieves information → must be `true`
+- Must be the logical inverse of `Destructive` for most commands (both can be `false` for create operations)
+
+**Secret:**
+- If the command name or resource contains `credential`, `secret`, `key`, `password`, `certificate`, `token`, or `connectionstring` → default to `true` unless the command provably cannot expose any sensitive information
+- If the command returns access keys, connection strings, secret values, or credential metadata (IDs, expiry, types) → must be `true`
+- If the command only lists resource names or non-sensitive configuration → `false`
+- **When in doubt, set `true`** — it is safer to over-classify than to expose credentials without the Secret flag
+
+**LocalRequired:**
+- If the command makes only remote API calls → must be `false`
+- Only set `true` if the command requires local file system access, local CLI tools, or locally installed software
+
 Guidelines:
 - Fully declare all `ToolMetadata` properties even if using defaults
 - Only override `GetErrorMessage` and `GetStatusCode` if logic differs from base class
