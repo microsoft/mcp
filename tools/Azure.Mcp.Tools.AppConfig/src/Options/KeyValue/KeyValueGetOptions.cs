@@ -1,21 +1,34 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AppConfig.Options.KeyValue;
 
-public class KeyValueGetOptions : BaseAppConfigOptions
+public class KeyValueGetOptions : ISubscriptionOption
 {
-    [JsonPropertyName(AppConfigOptionDefinitions.KeyName)]
+    [Option(OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Name = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
+
+    [Option(AppConfigOptionDescriptions.Account)]
+    public required string Account { get; set; }
+
+    [Option(AppConfigOptionDescriptions.Key)]
     public string? Key { get; set; }
 
-    [JsonPropertyName(AppConfigOptionDefinitions.LabelName)]
+    [Option(AppConfigOptionDescriptions.Label)]
     public string? Label { get; set; }
 
-    [JsonPropertyName(AppConfigOptionDefinitions.KeyFilterName)]
+    [Option("Specifies the key filter, if any, to be used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a key of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'App*'). If omitted all keys will be retrieved.")]
     public string? KeyFilter { get; set; }
 
-    [JsonPropertyName(AppConfigOptionDefinitions.LabelFilterName)]
+    [Option("Specifies the label filter, if any, to be used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a label of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'Prod*'). This filter is case-sensitive. If omitted, all labels will be retrieved.")]
     public string? LabelFilter { get; set; }
 }
