@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Aks.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Aks.Options.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Cluster;
 
@@ -23,49 +22,27 @@ namespace Azure.Mcp.Tools.Aks.Commands.Cluster;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksService aksService) : BaseAksCommand<ClusterGetOptions>
+public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksService aksService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ClusterGetOptions, ClusterGetCommand.ClusterGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ClusterGetCommand> _logger = logger;
     private readonly IAksService _aksService = aksService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(ClusterGetOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
-        command.Options.Add(AksOptionDefinitions.Cluster);
-        command.Validators.Add(commandResults =>
+        if (!string.IsNullOrEmpty(options.Cluster) && string.IsNullOrEmpty(options.ResourceGroup))
         {
-            var clusterName = commandResults.GetValueOrDefault(AksOptionDefinitions.Cluster);
-            var resourceGroup = commandResults.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-            if (!string.IsNullOrEmpty(clusterName) && string.IsNullOrEmpty(resourceGroup))
-            {
-                commandResults.AddError("When specifying a cluster name, the --resource-group option is required.");
-            }
-        });
-    }
-
-    protected override ClusterGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ClusterName = parseResult.GetValueOrDefault(AksOptionDefinitions.Cluster);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("When specifying a cluster name, the --resource-group option is required.");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ClusterGetOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             var clusters = await _aksService.GetClusters(
                 options.Subscription!,
-                options.ClusterName,
+                options.Cluster,
                 options.ResourceGroup,
                 options.Tenant,
                 options.RetryPolicy,
@@ -77,12 +54,12 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksSer
         {
             _logger.LogError(ex,
                 "Error getting AKS cluster. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ClusterName: {ClusterName}.",
-                options.Subscription, options.ResourceGroup, options.ClusterName);
+                options.Subscription, options.ResourceGroup, options.Cluster);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record ClusterGetCommandResult(List<Models.Cluster> Clusters);
+    public sealed record ClusterGetCommandResult(List<Models.Cluster> Clusters);
 }
