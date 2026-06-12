@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Models.Command;
 using Xunit;
 
 namespace Microsoft.Mcp.Core.Tests.Commands;
