@@ -48,11 +48,11 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         OptionBinder.RegisterOptions<TOptions>(_command);
     }
 
-    public string Id { get; init; }
-    public string Name { get; init; }
-    public string Description { get; init; }
-    public string Title { get; init; }
-    public ToolMetadata Metadata { get; init; }
+    public string Id { get; }
+    public string Name { get; }
+    public string Description { get; }
+    public string Title { get; }
+    public ToolMetadata Metadata { get; }
 
     public Command GetCommand() => _command;
 
