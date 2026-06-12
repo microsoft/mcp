@@ -85,6 +85,7 @@ public class ComputeService(
         string? zone = null,
         int? osDiskSizeGb = null,
         string? osDiskType = null,
+        string? priority = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -164,6 +165,11 @@ public class ComputeService(
         if (effectiveOsDiskType != null)
         {
             vmData.StorageProfile.OSDisk.ManagedDisk.StorageAccountType = new(effectiveOsDiskType);
+        }
+
+        if (!string.IsNullOrEmpty(priority))
+        {
+            vmData.Priority = new(priority);
         }
 
         // Configure authentication based on OS type

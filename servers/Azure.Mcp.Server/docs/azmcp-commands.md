@@ -2018,6 +2018,38 @@ azmcp compute disk update --subscription <subscription> \
 | `--disk-access` | No | Resource ID of the disk access resource for private endpoint connections |
 | `--tier` | No | Performance tier for the disk (e.g., P30, P40, P50) |
 
+#### Spot Placement Scores
+
+```bash
+# Get Spot Placement Scores metadata (supported resource types) for a location
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute placementscore spot get --subscription <subscription> \
+                                      --location <location>
+
+# Generate Spot VM placement scores across regions and availability zones
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute placementscore spot generate --subscription <subscription> \
+                                           --location <location> \
+                                           --desired-locations <region1> [<region2> ...] \
+                                           --desired-sizes <sku1> [<sku2> ...] \
+                                           [--desired-count <count>] \
+                                           [--availability-zones <true|false>]
+```
+
+**Returns:**
+- `spot get`: Metadata for the Spot Placement Scores resource in the specified location, including the list of supported resource types.
+- `spot generate`: A list of placement scores (High / Medium / Low) per SKU / region / availability zone, plus quota availability, indicating the likelihood that a Spot VM of the requested size can be allocated. Rate limited to 4 calls per 60 minutes per subscription.
+
+**Parameters:**
+| Parameter | Description |
+|-----------|-------------|
+| `--subscription` | Azure subscription ID or name (requires at least Reader role). |
+| `--location` | ARM region used as the API endpoint for the Spot Placement Scores diagnostic resource (e.g., `eastus`, `westus2`). This routes the request to the closest Microsoft.Compute control-plane endpoint — it does **not** restrict which regions are scored. Use `--desired-locations` to specify the regions to evaluate. |
+| `--desired-locations` | (`spot generate` only) One or more ARM regions to score (1–3 recommended). |
+| `--desired-sizes` | (`spot generate` only) One or more VM SKU names (e.g., `Standard_D2_v2`, `Standard_D4s_v3`). |
+| `--desired-count` | (`spot generate` only) Number of VMs to evaluate (1–1000). Defaults to `1`. |
+| `--availability-zones` | (`spot generate` only) Whether to include zone-level scores. Defaults to `true`. |
+
 ### Azure Confidential Ledger Operations
 
 ```bash

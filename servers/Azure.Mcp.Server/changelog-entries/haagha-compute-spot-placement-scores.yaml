@@ -1,0 +1,6 @@
+changes:
+  - section: "Features Added"
+    description: |
+      Added Azure Compute Spot Placement Score tools to evaluate Spot VM allocation likelihood across regions and availability zones:
+      - `compute_placementscore_spot_get`: Get Spot Placement Scores metadata (supported resource types) for a location.
+      - `compute_placementscore_spot_generate`: Generate placement scores (High/Medium/Low) and quota availability for Spot VM SKUs across desired regions and zones.

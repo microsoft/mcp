@@ -73,6 +73,7 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger, IComputeSer
         command.Options.Add(ComputeOptionDefinitions.Zone);
         command.Options.Add(ComputeOptionDefinitions.OsDiskSizeGb);
         command.Options.Add(ComputeOptionDefinitions.OsDiskType);
+        command.Options.Add(ComputeOptionDefinitions.Priority);
 
         // Resource group is required for create
         command.Validators.Add(commandResult =>
@@ -129,6 +130,7 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger, IComputeSer
         options.Zone = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Zone.Name);
         options.OsDiskSizeGb = parseResult.GetValueOrDefault<int?>(ComputeOptionDefinitions.OsDiskSizeGb.Name);
         options.OsDiskType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsDiskType.Name);
+        options.Priority = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Priority.Name);
         return options;
     }
 
@@ -165,6 +167,7 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger, IComputeSer
                 options.Zone,
                 options.OsDiskSizeGb,
                 options.OsDiskType,
+                options.Priority,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
