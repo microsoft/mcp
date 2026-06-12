@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added `azmcp advisor recommendation-type list` to list the catalog of Advisor recommendation types, categories, and impact levels via the ARM Advisor metadata API. Useful for new or empty environments without generated recommendations."

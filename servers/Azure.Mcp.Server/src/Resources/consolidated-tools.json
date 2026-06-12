@@ -742,6 +742,39 @@
       ]
     },
     {
+      "name": "list_azure_advisor_recommendation_types",
+      "description": "List the catalog of Azure Advisor recommendation types, categories, and impact levels available in the tenant. Use this for new or empty environments that do not yet have Advisor recommendations generated, or when you need the canonical identifiers and display names of Advisor metadata dimensions. Optionally pass --filter to narrow to a single dimension ('recommendationType', 'category', 'impact', or 'resourceType').",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "advisor_recommendation-type_list"
+      ]
+    },
+    {
         "name": "apply_azure_advisor_recommendations",
         "description": "Get rules that can help apply Advisor recommendation to create or modify IaaC files (like ARM, Bicep) for Azure resources.",
         "toolMetadata": {

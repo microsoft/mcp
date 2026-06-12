@@ -334,6 +334,11 @@ azmcp advisor recommendation list --subscription <subscription>
 # Apply Advisor recommendation to create or modify IaaC files (like ARM, Terraform) for Azure resources
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation apply --resource <resource>
+
+# List the catalog of Advisor recommendation types, categories, and impact levels available in the tenant.
+# Use for new or empty environments without generated recommendations, or to discover canonical IDs.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor recommendation-type list [--filter <recommendationType|category|impact|resourceType>]
 ```
 
 ### Azure AI Search Operations
