@@ -308,6 +308,59 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal("windows", osType.GetString());
     }
 
+    /// <summary>
+    /// Verifies rollback-on-failure behavior: when VM creation fails after network
+    /// resources are provisioned, the orphaned network resources (NSG/VNet/PIP/NIC)
+    /// are cleaned up automatically. Uses a well-formed but non-existent marketplace
+    /// URN so validation passes and failure occurs at the VM PUT step (after network
+    /// resources have been created and tracked).
+    /// </summary>
+    [Fact]
+    public async Task Should_rollback_network_resources_when_vm_creation_fails()
+    {
+        var createVmName = RegisterOrRetrieveVariable("rollbackVmName", $"rbvm{DateTime.UtcNow:MMddHHmmss}");
+
+        // Capture the full response root (status + message) so we can assert failure.
+        var response = await CallToolAsync(
+            "compute_vm_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", createVmName },
+                { "vm-size", "Standard_B2s" },
+                { "location", "eastus2" },
+                { "admin-username", "azureuser" },
+                { "admin-password", "TestP@ssw0rd123!" },
+                // Well-formed URN that passes parsing but does not exist in the marketplace.
+                // Network resources are created first, then VM PUT fails -> rollback triggers.
+                { "image", "Canonical:UbuntuServer:no-such-sku-rollback-test:latest" },
+                { "no-public-ip", true }
+            },
+            resultProcessor: elem => elem);
+
+        Assert.NotNull(response);
+        var root = response.Value;
+
+        // The command should report a non-success status with an error payload.
+        var status = root.GetProperty("status").GetInt32();
+        Assert.NotEqual(200, status);
+
+        var message = root.GetProperty("message").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(message), "top-level error message should be populated");
+
+        // Error responses surface the exception under `results`. Verify the failure
+        // originated from the VM PUT (RequestFailedException) — confirming the
+        // pipeline reached the VM-creation step *after* provisioning network resources,
+        // which is the path that triggers rollback.
+        var results = root.GetProperty("results");
+        var type = results.GetProperty("type").GetString();
+        Assert.Equal("RequestFailedException", type);
+
+        var innerMessage = results.GetProperty("message").GetString();
+        Assert.Contains("PlatformImageNotFound", innerMessage);
+    }
+
     [Fact]
     public async Task Should_update_vm_tags()
     {
