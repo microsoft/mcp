@@ -2,20 +2,54 @@
 #Requires -Version 7
 
 param(
-    [string] $Command = 'azmcp tools list'
+    [parameter(Mandatory)]
+    [string] $ServerName
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
 
 $combinations = @()
+
+$combinations += @{
+    Name = "dependent/no-r2r/no-single"
+}
+
+$combinations += @{
+    Name = "dependent/no-r2r/single"
+    SingleFile = $true
+}
+
+$combinations += @{
+    Name = "dependent/r2r/no-single"
+    ReadyToRun = $true
+}
+
+$combinations += @{
+    Name = "dependent/r2r/single"
+    ReadyToRun = $true
+    SingleFile = $true
+}
+
+$combinations += @{
+    Name = "native/no-r2r"
+    Native = $true
+}
+
+$combinations += @{
+    Name = "native/r2r"
+    Native = $true
+    ReadyToRun = $true
+}
+
 @($false, $true) | ForEach-Object {
-    $SingleFile = $_
+    $Trimmed = $_
     @($false, $true) | ForEach-Object {
-        $Trimmed = $_
+        $ReadyToRun = $_
         @($false, $true) | ForEach-Object {
-            $ReadyToRun = $_
+            $SingleFile = $_
             $combinations += @{
-                Name = "$($Trimmed ? 'aot' : 'no-aot')/$($ReadyToRun ? 'r2r' : 'no-r2r')"
+                Name = "$($Trimmed ? 'trim' : 'no-trim')/$($ReadyToRun ? 'r2r' : 'no-r2r')/$($SingleFile ? 'single' : 'no-single')"
+                SelfContained = $true
                 Trimmed = $Trimmed
                 ReadyToRun = $ReadyToRun
                 SingleFile = $SingleFile
@@ -25,82 +59,170 @@ $combinations = @()
 }
 
 function SaveResults() {
-    $csv = @("Trimmed,ReadyToRun,Compilation,Installation,First Run,Average Run,Tgz Size,Package Size")
+    $csv = @("Name,Self Contained,Trimmed,Single File,Ready To Run,Native,Compilation,Cold Run,Warm Run,Package Size")
 
     foreach($combination in $combinations) {
-        $result = $results[$combination.Name]
+        $name = $combination.Name
+        $singleFile = !!$combination.SingleFile
+        $trimmed = !!$combination.Trimmed
+        $selfContained = !!$combination.SelfContained
+        $readyToRun = !!$combination.ReadyToRun
+        $native = !!$combination.Native
 
-        $compilation = ($result | Measure-Object -Property Compilation -Average).Average
-        $installation = ($result | Measure-Object -Property Installation -Average).Average
-        $firstRun = ($result | Measure-Object -Property FirstRun -Average).Average
-        $averageRun = ($result | Measure-Object -Property AverageRun -Average).Average
-        $tgzSize = ($result | Measure-Object -Property TgzSize -Average).Average
-        $packageSize = ($result | Measure-Object -Property PackageSize -Average).Average
+        $result = $results[$name]
 
-        $csv += "$($combination.Trimmed),$($combination.ReadyToRun),$compilation,$installation,$firstRun,$averageRun,$tgzSize,$packageSize"
+        $compilation = $result.Compilation
+        $coldRun = $result.ColdRun
+        $warmRun = $result.WarmRun
+        $packageSize = $result.PackageSize
+
+        $csv += "$name,$selfContained,$trimmed,$singleFile,$readyToRun,$native,$compilation,$coldRun,$warmRun,$packageSize"
     }
 
+    New-Item -ItemType Directory -Path .work -Force | Out-Null
     $csv | Out-File -FilePath .work/results.csv -Encoding utf8 -Force
 }
 
 $results = @{};
 
+$ballastSize = 1gb
+$ballastFile = ".work/ballast.txt"
+function Write-ballastFile {
+    New-Item -ItemType Directory -Path .work -Force | Out-Null
+    Remove-Item -Path $ballastFile -Force -ErrorAction SilentlyContinue
+    # Create a large ballast file to clear the io cache
+    $ballastRemaining = $ballastSize
+    $gitPackFiles = Get-ChildItem .git/objects/pack -File
+    while ($ballastRemaining -gt 0) {
+        foreach ($file in $gitPackFiles) {
+            $chunk = [IO.File]::ReadAllBytes($file.FullName)
+            # trim the chunk if necessary
+            if ($ballastRemaining -lt $chunk.Length) {
+                [Array]::Resize([ref]$chunk, [int]$ballastRemaining)
+            }
+            [IO.File]::AppendAllBytes($ballastFile, $chunk)
+            $ballastRemaining -= $chunk.Length
+            if ($ballastRemaining -le 0) {
+                break
+            }
+        }
+    }
+}
+
 Push-Location $RepoRoot
 try {
-    $version = & "./eng/scripts/Get-Version.ps1"
     $rid = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier
-    $nodeRid = $rid.Replace('win', 'win32').Replace('osx', 'darwin')
+    $platformName = $rid.Replace('win', 'windows').Replace('osx', 'macos')
+
+    Write-ballastFile
 
     foreach($combination in $combinations) {
         $results[$combination.Name] = @()
+        $outputPath = ".work/build/$ServerName/$platformName"
+        Write-Host "Building '$($combination.Name)' to '$outputPath' ..."
+        Write-Host "-----------------------------------------------------------------------------------"
 
-        Write-Host "Building '$($combination.Name)'"
-        Write-Host "-------------------------------"
+        Remove-Item -Path $outputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 
-        Remove-Item -Path .work -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
-        Remove-Item -Path .dist -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
-        Remove-Item -Path ./src/bin -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
-        Remove-Item -Path ./src/obj -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+        # Remove bin and obj directories anywhere in the repo
+        Get-ChildItem . -Directory -Recurse
+        | Where-Object Name -Match '^(bin|obj)$'
+        | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 
         $start = Get-Date
-        ./eng/scripts/Build-Local.ps1 -SelfContained:$true -Trimmed:$combination.Trimmed -ReadyToRun:$combination.ReadyToRun -UsePaths:$true -AllPlatforms:$false
+
+        Write-Host @"
+./eng/scripts/Build-Code.ps1 ``
+    -ReleaseBuild ``
+    -ServerName '$ServerName' ``
+    -SelfContained:`$$(!!$combination.SelfContained) ``
+    -Trimmed:`$$(!!$combination.Trimmed) ``
+    -ReadyToRun:`$$(!!$combination.ReadyToRun) ``
+    -SingleFile:`$$(!!$combination.SingleFile) ``
+    -Native:`$$(!!$combination.Native)
+"@
+
+        ./eng/scripts/Build-Code.ps1 `
+            -ReleaseBuild `
+            -ServerName $ServerName `
+            -SelfContained:(!!$combination.SelfContained) `
+            -Trimmed:(!!$combination.Trimmed) `
+            -ReadyToRun:(!!$combination.ReadyToRun) `
+            -SingleFile:(!!$combination.SingleFile) `
+            -Native:(!!$combination.Native)
+
         $compilation = ((Get-Date) - $start).TotalMilliseconds
 
-        for($i = 1; $i -le 3; $i++) {
-            Write-Host "Running '$($combination.Name)' - Round $i"
-            Write-Host "----------------------------------------"
-            npm uninstall -g azmcp | Out-Null
+        # Remove pdb files
+        Get-ChildItem -Path $outputPath -Filter "*.pdb"
+        | Remove-Item -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 
+        $executable = Get-ChildItem -Path $outputPath -Filter "*.exe" | Select-Object -First 1
+
+        if(-not $executable) {
+            Write-Warning "No executable found for '$($combination.Name)' in '$outputPath'"
+            continue
+        }
+
+        $command = "$($executable.FullName) tools list"
+
+        Write-Host "Running '$($combination.Name)'"
+        Write-Host "----------------------------------------"
+
+        $start = Get-Date
+
+        function measureRun {
             $start = Get-Date
-            Write-Host "> npm install -g .dist/wrapper/azure-mcp-$version.tgz"
-            npm install -g ".dist/wrapper/azure-mcp-$version.tgz" | Out-Null
-            $installation = ((Get-Date) - $start).TotalMilliseconds
-
-            $runs = @()
-            Write-Host "Running ..."
-            foreach($x in 1..6) {
-                $start = Get-Date
-                Invoke-Expression $Command | Out-Null
-                if ($LASTEXITCODE -ne 0) {
-                    Write-Warning "$($combination.Name) failed with exit code $LASTEXITCODE"
-                }
-                $runs += ((Get-Date) - $start).TotalMilliseconds
+            & $executable 'tools' 'list' | Out-Null
+            if ($LASTEXITCODE -ne 0) {
+                Write-Warning "$($combination.Name) failed with exit code $LASTEXITCODE"
+                return $null
             }
+            return ((Get-Date) - $start).TotalMilliseconds
+        }
 
-            $tgzSize = (Get-Item -Path ".dist/platform/azure-mcp-$nodeRid-$version.tgz").Length / 1MB
-            $packageSize = (Get-ChildItem -Path ".work/platform/$rid" -File -Recurse | Measure-Object -Property Length -Sum).Sum / 1MB
+        $coldRuns = @()
+        $warmRuns = @()
+        foreach($i in 1..3) {
+            # Read the ballast file to clear the io cache
+            Write-Host "Reading ballast file..."
+            [IO.File]::ReadAllBytes($ballastFile) | Out-Null
+            Write-Host "Cold run $i.0`: $command"
+            $coldRun = measureRun
+            if (!$coldRun) {
+                Write-Warning "Failed to measure first run for $($combination.Name)"
+                break
+            }
+            $coldRuns += $coldRun
 
-            $results[$combination.Name] += @{
-                Compilation = $compilation
-                Installation = $installation
-                FirstRun = $runs[0]
-                AverageRun = ($runs | Select-Object -Skip 3 | Measure-Object -Average).Average
-                TgzSize = $tgzSize
-                PackageSize = $packageSize
+            foreach($x in 1..5) {
+                Write-Host "Warm run $i.$x`: $command"
+                $warmRun = measureRun
+                if (!$warmRun) {
+                    Write-Warning "Failed to measure warm run for $($combination.Name)"
+                    break
+                }
+                $warmRuns += $warmRun
             }
         }
 
+        $packageSize = (Get-ChildItem -Path $executable.DirectoryName -File -Recurse | Measure-Object -Property Length -Sum).Sum / 1MB
+
+        $results[$combination.Name] = @{
+            Compilation = $compilation
+            ColdRun = ($coldRuns | Measure-Object -Average).Average
+            WarmRun = ($warmRuns | Measure-Object -Average).Average
+            PackageSize = $packageSize
+        }
+
         SaveResults
+
+        # rename the output path to preserve it
+        $newOutputPath = ".work/build-old/$($combination.Name -replace '\W', '_')"
+        Remove-Item $newOutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+        New-Item -ItemType Directory -Path $newOutputPath -Force | Out-Null
+        Move-Item -Path $outputPath/* -Destination $newOutputPath
+        Remove-Item $outputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
     }
 }
 finally {
