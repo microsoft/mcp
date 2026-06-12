@@ -16,7 +16,7 @@ public sealed class ResourceDiagnoseOptions
 
     [Option("Azure resource group name. Provide this when disambiguating between multiple resources of the same name.")]
     public string? ResourceGroup { get; set; }
-    
+
     /// <summary>
     /// The user's question for diagnosis.
     /// </summary>
