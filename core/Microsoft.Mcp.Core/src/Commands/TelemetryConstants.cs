@@ -10,6 +10,7 @@ public class TagName
 {
     public const string McpServerVersion = "Version";
     public const string McpServerName = "McpServerName";
+    public const string McpServerNameV2 = "McpServerNameV2";
     public const string ClientName = "ClientName";
     public const string ClientVersion = "ClientVersion";
     public const string DevDeviceId = "DevDeviceId";
