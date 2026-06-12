@@ -6,8 +6,6 @@ namespace Azure.Mcp.Tools.Postgres.Services;
 public interface IPostgresService
 {
     Task<List<string>> ListDatabasesAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,
@@ -15,8 +13,6 @@ public interface IPostgresService
         CancellationToken cancellationToken);
 
     Task<List<string>> ExecuteQueryAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,
@@ -26,18 +22,15 @@ public interface IPostgresService
         CancellationToken cancellationToken);
 
     Task<List<string>> ListTablesAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,
         string server,
         string database,
+        string schema,
         CancellationToken cancellationToken);
 
     Task<List<string>> GetTableSchemaAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,

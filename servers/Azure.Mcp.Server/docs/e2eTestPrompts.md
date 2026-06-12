@@ -418,6 +418,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | postgres_list | Show me the PostgreSQL databases in server \<server> |
 | postgres_list | List all tables in the PostgreSQL database \<database> in server \<server> |
 | postgres_list | Show me the tables in the PostgreSQL database \<database> in server \<server> |
+| postgres_list | List all tables in the \<schema> schema of the PostgreSQL database \<database> in server \<server> |
 | postgres_database_query | Show me all items that contain the word \<search_term> in the PostgreSQL database \<database> in server \<server> |
 | postgres_server_config_get | Show me the configuration of PostgreSQL server \<server> |
 | postgres_server_param_get | Show me if the parameter my PostgreSQL server \<server> has replication enabled |
