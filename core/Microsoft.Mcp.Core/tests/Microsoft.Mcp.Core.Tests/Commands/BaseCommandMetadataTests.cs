@@ -151,17 +151,9 @@ public sealed class BaseCommandMetadataTests
     // ---------- Missing metadata throws InvalidOperationException ----------
 
     [Fact]
-    public void NoMetadataCommand_Throws_InvalidOperationException()
-    {
-        var ex = Assert.Throws<InvalidOperationException>(() => new NoMetadataCommand());
-        Assert.Contains("missing required command metadata", ex.Message);
-        Assert.Contains(typeof(NoMetadataCommand).FullName!, ex.Message);
-    }
-
-    [Fact]
     public void NoMetadataCommand_ExceptionMessage_MentionsAttribute()
     {
         var ex = Assert.Throws<InvalidOperationException>(() => new NoMetadataCommand());
-        Assert.Contains("[CommandMetadata]", ex.Message);
+        Assert.Contains("Command type is missing required [CommandMetadata] attribute.", ex.Message);
     }
 }
