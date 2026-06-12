@@ -84,7 +84,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                 // List tables in specified database
                 TableListResult tableResult = await _mysqlService.GetTablesAsync(
                     options.Subscription!,
-                    options.ResourceGroup!,
+                    options.ResourceGroup ?? string.Empty,
                     options.User!,
                     options.Server!,
                     options.Database!,
