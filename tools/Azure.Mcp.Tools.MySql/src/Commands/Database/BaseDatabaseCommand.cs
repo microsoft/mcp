@@ -11,7 +11,7 @@ using Microsoft.Mcp.Core.Extensions;
 namespace Azure.Mcp.Tools.MySql.Commands.Database;
 
 public abstract class BaseDatabaseCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>(ILogger<BaseMySqlCommand<TOptions>> logger)
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>(ILogger<BaseServerCommand<TOptions>> logger)
     : BaseServerCommand<TOptions>(logger) where TOptions : MySqlDatabaseOptions, new()
 {
     protected override void RegisterOptions(Command command)

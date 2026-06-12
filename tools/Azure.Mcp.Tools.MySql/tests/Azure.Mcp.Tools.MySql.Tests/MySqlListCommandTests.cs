@@ -65,7 +65,8 @@ public class MySqlListCommandTests : CommandUnitTestsBase<MySqlListCommand, IMyS
     public async Task ExecuteAsync_ListsTables_WhenServerAndDatabaseProvided()
     {
         var expectedTables = new List<string> { "users", "products", "orders" };
-        Service.GetTablesAsync("sub123", Arg.Any<string>(), "user1", "server1", "db1", Arg.Any<CancellationToken>()).Returns(expectedTables);
+        Service.GetTablesAsync("sub123", Arg.Any<string>(), "user1", "server1", "db1", Arg.Any<CancellationToken>())
+            .Returns(new TableListResult(expectedTables, false));
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -77,6 +78,7 @@ public class MySqlListCommandTests : CommandUnitTestsBase<MySqlListCommand, IMyS
         Assert.Null(result.Servers);
         Assert.Null(result.Databases);
         Assert.Equal(expectedTables, result.Tables);
+        Assert.Null(result.TablesTruncated);
     }
 
     [Fact]
@@ -130,7 +132,8 @@ public class MySqlListCommandTests : CommandUnitTestsBase<MySqlListCommand, IMyS
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoTablesExist()
     {
-        Service.GetTablesAsync("sub123", Arg.Any<string>(), "user1", "server1", "db1", Arg.Any<CancellationToken>()).Returns([]);
+        Service.GetTablesAsync("sub123", Arg.Any<string>(), "user1", "server1", "db1", Arg.Any<CancellationToken>())
+            .Returns(new TableListResult([], false));
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -143,6 +146,25 @@ public class MySqlListCommandTests : CommandUnitTestsBase<MySqlListCommand, IMyS
         Assert.Null(result.Databases);
         Assert.NotNull(result.Tables);
         Assert.Empty(result.Tables);
+        Assert.Null(result.TablesTruncated);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_SetsTablesTruncated_WhenTableResultsAreTruncated()
+    {
+        Service.GetTablesAsync("sub123", Arg.Any<string>(), "user1", "server1", "db1", Arg.Any<CancellationToken>())
+            .Returns(new TableListResult(["users"], true));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--user", "user1",
+            "--server", "server1",
+            "--database", "db1");
+
+        var result = ValidateAndDeserializeResponse(response, MySqlJsonContext.Default.MySqlListCommandResult);
+        Assert.NotNull(result.Tables);
+        Assert.Equal(["users"], result.Tables);
+        Assert.True(result.TablesTruncated);
     }
 
     [Fact]

@@ -23,8 +23,9 @@ namespace Azure.Mcp.Tools.MySql.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlService mysqlService) : BaseMySqlCommand<MySqlDatabaseOptions>(logger)
+public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlService mysqlService) : SubscriptionCommand<MySqlDatabaseOptions>
 {
+    private readonly ILogger<MySqlListCommand> _logger = logger;
     private readonly IMySqlService _mysqlService = mysqlService;
 
     protected override void RegisterOptions(Command command)
@@ -81,7 +82,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
             if (!string.IsNullOrEmpty(options.Database))
             {
                 // List tables in specified database
-                List<string> tables = await _mysqlService.GetTablesAsync(
+                TableListResult tableResult = await _mysqlService.GetTablesAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.User!,
@@ -90,7 +91,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new(null, null, tables ?? []),
+                    new(null, null, tableResult.Tables ?? [], tableResult.IsTruncated ? true : null),
                     MySqlJsonContext.Default.MySqlListCommandResult);
             }
             else if (!string.IsNullOrEmpty(options.Server))
@@ -140,5 +141,5 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
         return context.Response;
     }
 
-    internal record MySqlListCommandResult(List<string>? Servers, List<string>? Databases, List<string>? Tables);
+    internal record MySqlListCommandResult(List<string>? Servers, List<string>? Databases, List<string>? Tables, bool? TablesTruncated = null);
 }

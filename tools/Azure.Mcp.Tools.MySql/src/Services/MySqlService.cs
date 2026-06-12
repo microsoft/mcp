@@ -350,7 +350,7 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
         return serverList;
     }
 
-    public async Task<List<string>> GetTablesAsync(string subscriptionId, string resourceGroup, string user, string server, string database, CancellationToken cancellationToken)
+    public async Task<TableListResult> GetTablesAsync(string subscriptionId, string resourceGroup, string user, string server, string database, CancellationToken cancellationToken)
     {
         var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
 
@@ -366,12 +366,9 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
             tableCount++;
         }
 
-        if (tableCount >= MaxRowCount)
-        {
-            tables.Add($"... (output limited to {MaxRowCount:N0} tables for security and performance reasons)");
-        }
+        var isTruncated = tableCount >= MaxRowCount && await reader.ReadAsync(cancellationToken);
 
-        return tables;
+        return new TableListResult(tables, isTruncated);
     }
 
     public async Task<string> GetServerConfigAsync(string subscriptionId, string resourceGroup, string server, CancellationToken cancellationToken)
