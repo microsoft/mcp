@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Fixed an issue where the Cosmos DB QueryItems operation silently parsed non-success (e.g. throttled or auth-failure) responses as data. The response is now validated before parsing so failures surface as errors."
