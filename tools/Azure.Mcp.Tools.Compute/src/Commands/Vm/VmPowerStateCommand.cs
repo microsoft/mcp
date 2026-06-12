@@ -39,7 +39,6 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmPowerStateOptions>(true)
 {
-    private const string CommandTitle = "Change Virtual Machine Power State";
     private static readonly HashSet<string> s_validActions = new(StringComparer.OrdinalIgnoreCase)
     {
         "start", "stop", "deallocate", "restart"
