@@ -19,7 +19,7 @@ using Options = Microsoft.Extensions.Options.Options;
 public class ServiceCollectionExtensionsSerializedTests
 {
     private static readonly Assembly s_testAssembly = typeof(ServiceCollectionExtensionsTests).Assembly;
-    private static readonly Assembly s_serverAssembly = Assembly.Load("azmcp");
+    private static readonly Assembly s_serverAssembly = typeof(Azure.Mcp.Server.Program).Assembly;
 
     private static IServiceCollection SetupBaseServices()
     {

@@ -40,6 +40,10 @@ public static class ConfigurationBuilderExtensions
             throw new ArgumentException($"Multiple embedded appsettings files found for '{appsettingsFileName}'.");
         }
 
-        return configurationBuilder.AddJsonStream(assembly.GetManifestResourceStream(matches[0])!);
+        using var stream = assembly.GetManifestResourceStream(matches[0])!;
+        var memoryStream = new MemoryStream();
+        stream.CopyTo(memoryStream);
+        memoryStream.Position = 0;
+        return configurationBuilder.AddJsonStream(memoryStream);
     }
 }
