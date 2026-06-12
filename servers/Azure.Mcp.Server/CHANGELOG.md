@@ -15,7 +15,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
-- Fixed multiple issues in the EventHubs toolset:.
+- Fixed multiple issues in the EventHubs toolset:
 
   - Namespace delete now reports "not found" instead of "deleted successfully" when the namespace does not exist.
   - Event Hub status values are now matched case-insensitively, and `--status` is correctly applied when updating. Previously it was accepted but silently discarded. [[#2678](https://github.com/microsoft/mcp/pull/2678)]
