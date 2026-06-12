@@ -2,7 +2,40 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.17 (Unreleased)
+## 3.0.0-beta.19 (Unreleased)
+
+### Features Added
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
+## 3.0.0-beta.18 (2026-06-12)
+
+### Features Added
+
+- Added an optional `--resource-group` parameter to `azmcp cosmos list` so account listing is scoped to the resource group and Cosmos DB account key lookups resolve the account directly instead of enumerating every account in the subscription. [[#2839](https://github.com/microsoft/mcp/pull/2839)]
+
+### Breaking Changes
+
+- Event Hubs namespace create/update now rejects invalid `--sku-tier` values with a validation error instead of silently defaulting to Standard. [[#2678](https://github.com/microsoft/mcp/pull/2678)]
+- Removed auth mode from `acr_registry_list` and `acr_registry_repository_list` tools as they don't use that parameter. [[#2825](https://github.com/microsoft/mcp/pull/2825)]
+
+### Bugs Fixed
+
+- Fixed multiple issues in the EventHubs toolset:
+  - Namespace delete now reports "not found" instead of "deleted successfully" when the namespace does not exist.
+  - Event Hub status values are now matched case-insensitively, and `--status` is correctly applied when updating. Previously it was accepted but silently discarded. [[#2678](https://github.com/microsoft/mcp/pull/2678)]
+- Fixed an issue where the Cosmos DB QueryItems operation silently parsed non-success (e.g. throttled or auth-failure) responses as data. The response is now validated before parsing so failures surface as errors. [[#2836](https://github.com/microsoft/mcp/pull/2836)]
+- Fixed Cosmos DB account lookup to use case-insensitive name matching and return a 404 (KeyNotFoundException) instead of a generic error when an account is not found. [[#2839](https://github.com/microsoft/mcp/pull/2839)]
+- Fixed an issue where a valid subscription name or ID containing the words `subscription` or `default` could be incorrectly treated as a placeholder value and replaced with the default subscription. [[#2849](https://github.com/microsoft/mcp/pull/2849)]
+- Azure Backup: Replace InvalidOperationException with ArgumentException/KeyNotFoundException for user-input validation errors so the telemetry classifier correctly categorizes them as Customer errors instead of MCP Tool Bugs. [[#2841](https://github.com/microsoft/mcp/pull/2841)]
+- Fixed `azurebackup_vault_list` and `azurebackup_governance_find-unprotected` so that when both the RSV and DPP backends fail with `RequestFailedException`, a single `RequestFailedException` is surfaced (preserving the HTTP status and combining both error messages) instead of an `InvalidOperationException`. This ensures the failure is correctly classified as an Azure service error rather than an MCP-side bug. [[#2805](https://github.com/microsoft/mcp/pull/2805)]
+- Fixed `azurebackup_policy_get` and `azurebackup_policy_list` (DPP vaults) failing with `FormatException` from `XmlConvert.ToTimeSpan` when policies contain ISO 8601 duration values that the Azure SDK cannot parse (e.g. fractional seconds, week designators in retention rules). `policy_list` now skips policies that the SDK cannot parse and returns the rest; `policy_get` falls back to listing the vault's policies and matching by name. Tracks the Azure SDK gap in `Azure.ResourceManager.DataProtectionBackup`. [[#2805](https://github.com/microsoft/mcp/pull/2805)]
+
+## 3.0.0-beta.17 (2026-06-09)
 
 ### Breaking Changes
 
