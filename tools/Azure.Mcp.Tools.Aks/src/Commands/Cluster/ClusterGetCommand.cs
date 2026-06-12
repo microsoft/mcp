@@ -30,6 +30,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksSer
 
     public override void ValidateOptions(ClusterGetOptions options, ValidationResult validationResult)
     {
+        base.ValidateOptions(options, validationResult);
         if (!string.IsNullOrEmpty(options.Cluster) && string.IsNullOrEmpty(options.ResourceGroup))
         {
             validationResult.Errors.Add("When specifying a cluster name, the --resource-group option is required.");
