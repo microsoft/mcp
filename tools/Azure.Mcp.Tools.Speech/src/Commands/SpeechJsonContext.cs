@@ -8,6 +8,8 @@ using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Models.FastTranscription;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
 
+namespace Azure.Mcp.Tools.Speech.Commands;
+
 [JsonSerializable(typeof(RealtimeRecognitionContinuousResult))]
 [JsonSerializable(typeof(RealtimeRecognitionDetailedResult))]
 [JsonSerializable(typeof(RealtimeRecognitionNBestResult))]

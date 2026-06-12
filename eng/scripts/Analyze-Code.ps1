@@ -84,6 +84,17 @@ try {
         Write-Host "✅ Tool id validation passed."
     }
 
+    # Run namespace validation
+    $namespaceResult = & "$PSScriptRoot/Test-Namespace.ps1"
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "❌ Namespace validation failed"
+        Write-Host "$($namespaceResult.ViolationCount) file(s) missing namespace declarations. Review the above output for details."
+        $hasErrors = $true
+    } else {
+        Write-Host "✅ Namespace validation passed."
+    }
+
     if($hasErrors) {
         exit 1
     }
