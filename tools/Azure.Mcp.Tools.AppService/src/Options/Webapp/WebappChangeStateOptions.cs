@@ -27,8 +27,8 @@ public sealed class WebappChangeStateOptions : ISubscriptionOption
     public required string StateChange { get; set; }
 
     [Option("When state-change is restart, indicates whether to perform a soft restart.")]
-    public bool? SoftRestart { get; set; }
+    public bool SoftRestart { get; set; } = false;
 
     [Option("When state-change is restart, indicates whether to synchronously wait for the state change operation to complete before returning.")]
-    public bool? WaitForCompletion { get; set; }
+    public bool WaitForCompletion { get; set; } = false;
 }

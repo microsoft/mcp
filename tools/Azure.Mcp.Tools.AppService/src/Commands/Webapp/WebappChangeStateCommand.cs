@@ -58,11 +58,11 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
         {
             if (!"restart".Equals(options.StateChange, StringComparison.OrdinalIgnoreCase))
             {
-                if (options.SoftRestart == true)
+                if (options.SoftRestart)
                 {
                     validationResult.Errors.Add("soft-restart only applies for change-state 'restart'.");
                 }
-                if (options.WaitForCompletion == true)
+                if (options.WaitForCompletion)
                 {
                     validationResult.Errors.Add("wait-for-completion only applies for change-state 'restart'.");
                 }

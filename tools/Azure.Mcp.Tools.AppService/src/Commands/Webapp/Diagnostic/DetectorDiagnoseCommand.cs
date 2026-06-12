@@ -38,6 +38,9 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
     {
         base.ValidateOptions(options, validationResult);
 
+        options.StartTime = options.StartTime?.ToUniversalTime();
+        options.EndTime = options.EndTime?.ToUniversalTime();
+
         if (options.StartTime != null && options.EndTime != null && options.StartTime > options.EndTime)
         {
             validationResult.Errors.Add($"Start time '{options.StartTime}' must be earlier than end time '{options.EndTime}'.");

@@ -555,8 +555,8 @@ public class AppServiceService(
         string resourceGroup,
         string appName,
         string stateChange,
-        bool? softRestart = null,
-        bool? waitForCompletion = null,
+        bool softRestart,
+        bool waitForCompletion,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -587,7 +587,7 @@ public class AppServiceService(
         else if (stateChange.Equals("restart", StringComparison.OrdinalIgnoreCase))
         {
             await webAppResource.RestartAsync(softRestart: softRestart, synchronous: waitForCompletion, cancellationToken: cancellationToken);
-            return waitForCompletion == true
+            return waitForCompletion
                 ? $"Web app '{appName}' restart completed successfully (Soft restart: {softRestart})."
                 : $"Web app '{appName}' restart initiated successfully (Soft restart: {softRestart}).";
         }

@@ -147,11 +147,11 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
         var response = await ExecuteCommandAsync(unparsedArgs.ToArray());
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
-
         await Service.Received(1).ChangeWebAppStateAsync("sub123", "rg1", "test-app", stateChange,
             softRestart, waitForCompletion, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
     }
 }
