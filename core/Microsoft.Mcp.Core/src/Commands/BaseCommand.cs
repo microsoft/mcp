@@ -27,7 +27,8 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
         Justification = "CommandMetadataAttribute is only applied to concrete command types that are rooted by DI service registration.")]
     protected BaseCommand()
     {
-        var attr = GetType().GetCustomAttribute<CommandMetadataAttribute>();
+        var attr = GetType().GetCustomAttribute<CommandMetadataAttribute>() ??
+            throw new InvalidOperationException("Command type is missing required [CommandMetadata] attribute.");
         if (attr is not null)
         {
             Id = attr.Id;
@@ -37,17 +38,27 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
             Metadata = attr.ToToolMetadata();
         }
 
-        ValidateMetadataConfiguration();
+        if (string.IsNullOrWhiteSpace(Id) ||
+            string.IsNullOrWhiteSpace(Name) ||
+            string.IsNullOrWhiteSpace(Description) ||
+            string.IsNullOrWhiteSpace(Title) ||
+            Metadata is null)
+        {
+            throw new InvalidOperationException(
+                $"Command type '{GetType().FullName}' is missing required command metadata. " +
+                "Apply [CommandMetadata] to the command class or override Id, Name, Description, Title, and Metadata " +
+                "with non-null values that are available during BaseCommand construction.");
+        }
 
         _command = new ExtendedCommand(this, Name, Description);
         RegisterOptions(_command);
     }
 
-    public virtual string Id { get; protected set; } = null!;
-    public virtual string Name { get; protected set; } = null!;
-    public virtual string Description { get; protected set; } = null!;
-    public virtual string Title { get; protected set; } = null!;
-    public virtual ToolMetadata Metadata { get; protected set; } = null!;
+    public string Id { get; init; }
+    public string Name { get; init; }
+    public string Description { get; init; }
+    public string Title { get; init; }
+    public ToolMetadata Metadata { get; init; }
 
     public Command GetCommand() => _command;
 
@@ -191,23 +202,6 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
             response.Status = statusCode;
             response.Message = errorMessage;
         }
-    }
-
-    private void ValidateMetadataConfiguration()
-    {
-        if (!string.IsNullOrWhiteSpace(Id) &&
-            !string.IsNullOrWhiteSpace(Name) &&
-            !string.IsNullOrWhiteSpace(Description) &&
-            !string.IsNullOrWhiteSpace(Title) &&
-            Metadata is not null)
-        {
-            return;
-        }
-
-        throw new InvalidOperationException(
-            $"Command type '{GetType().FullName}' is missing required command metadata. " +
-            "Apply [CommandMetadata] to the command class or override Id, Name, Description, Title, and Metadata " +
-            "with non-null values that are available during BaseCommand construction.");
     }
 }
 
