@@ -78,8 +78,6 @@ public class PostgresService(
     }
 
     public async Task<List<string>> ListDatabasesAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,
@@ -103,8 +101,6 @@ public class PostgresService(
     }
 
     public async Task<List<string>> ExecuteQueryAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,
@@ -161,22 +157,22 @@ public class PostgresService(
     }
 
     public async Task<List<string>> ListTablesAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,
         string server,
         string database,
+        string schema,
         CancellationToken cancellationToken)
     {
         string? passwordToUse = await GetPassword(authType, password, cancellationToken);
         var host = NormalizeServerName(server);
         var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
-        var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';";
+        var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = @schema ORDER BY table_name;";
         await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType, cancellationToken);
         await using NpgsqlCommand command = _dbProvider.GetCommand(query, resource);
+        command.Parameters.AddWithValue("schema", schema);
         await using DbDataReader reader = await _dbProvider.ExecuteReaderAsync(command, cancellationToken);
         var tables = new List<string>();
         while (await reader.ReadAsync(cancellationToken))
@@ -187,8 +183,6 @@ public class PostgresService(
     }
 
     public async Task<List<string>> GetTableSchemaAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,

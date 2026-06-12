@@ -22,4 +22,7 @@ public class BasePostgresOptions : SubscriptionOptions
 
     [JsonPropertyName(PostgresOptionDefinitions.DatabaseName)]
     public string? Database { get; set; }
+
+    [JsonPropertyName(PostgresOptionDefinitions.SchemaName)]
+    public string? Schema { get; set; }
 }

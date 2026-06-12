@@ -19,7 +19,7 @@ public class TableSchemaGetCommandTests : CommandUnitTestsBase<TableSchemaGetCom
     public async Task ExecuteAsync_ReturnsSchema_WhenSchemaExists()
     {
         var expectedSchema = new List<string>(["CREATE TABLE test (id INT);"]);
-        Service.GetTableSchemaAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "table123", Arg.Any<CancellationToken>()).Returns(expectedSchema);
+        Service.GetTableSchemaAsync(AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "table123", Arg.Any<CancellationToken>()).Returns(expectedSchema);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -37,7 +37,7 @@ public class TableSchemaGetCommandTests : CommandUnitTestsBase<TableSchemaGetCom
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenSchemaDoesNotExist()
     {
-        Service.GetTableSchemaAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "table123", Arg.Any<CancellationToken>()).Returns([]);
+        Service.GetTableSchemaAsync(AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "table123", Arg.Any<CancellationToken>()).Returns([]);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",

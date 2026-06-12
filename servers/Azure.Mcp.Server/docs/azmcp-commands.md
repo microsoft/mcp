@@ -2265,13 +2265,14 @@ azmcp mysql server param set --subscription <subscription> \
 # Hierarchical list command for PostgreSQL resources
 # Without parameters: lists all PostgreSQL servers in the resource group
 # With --server: lists all databases on that server
-# With --server and --database: lists all tables in that database
+# With --server and --database: lists all tables in that database (optionally scoped to a --schema, defaults to 'public')
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres list --subscription <subscription> \
                     --resource-group <resource-group> \
                     --user <user> \
                     [--server <server>] \
-                    [--database <database>]
+                    [--database <database>] \
+                    [--schema <schema>]
 
 # Execute a query on a PostgreSQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

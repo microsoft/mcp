@@ -52,8 +52,6 @@ public sealed class TableSchemaGetCommand(IPostgresService postgresService, ILog
         {
 
             List<string> schema = await _postgresService.GetTableSchemaAsync(
-                options.Subscription!,
-                options.ResourceGroup!,
                 options.AuthType!,
                 options.User!,
                 options.Password,
