@@ -191,6 +191,12 @@
 # ServiceLabel: %tools-Core
 # ServiceOwners:                       @alzimmermsft @anannya03 @g2vinay @xiangyan99 @microsoft/azure-mcp
 
+# PRLabel: %tools-CostManagement
+/tools/Azure.Mcp.Tools.CostManagement/ @francesco1501 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-CostManagement
+# ServiceOwners:                       @francesco1501
+
 # PRLabel: %tools-CosmosDB
 /tools/Azure.Mcp.Tools.Cosmos/         @sajeetharan @xiangyan99 @microsoft/azure-mcp
 

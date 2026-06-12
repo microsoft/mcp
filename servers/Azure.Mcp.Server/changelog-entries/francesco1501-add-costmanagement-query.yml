@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added `azmcp costmanagement query run` tool to retrieve actual Azure costs and usage from the Azure Cost Management Query/Usage API for a subscription or resource group, with support for predefined timeframes (MonthToDate, BillingMonthToDate, TheLastBillingMonth, WeekToDate) and a custom range, optional Daily granularity, and grouping by a single dimension (ServiceName, ResourceGroupName, ResourceLocation, ResourceId, MeterCategory, MeterSubCategory, ChargeType, BillingPeriod). Closes the gap tracked in #1420 and supersedes #447."

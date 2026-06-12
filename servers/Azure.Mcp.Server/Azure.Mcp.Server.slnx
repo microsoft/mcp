@@ -165,6 +165,14 @@
   <Folder Name="/tools/Azure.Mcp.Tools.ContainerApps/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.ContainerApps/tests/Azure.Mcp.Tools.ContainerApps.Tests/Azure.Mcp.Tools.ContainerApps.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.CostManagement/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.CostManagement/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.CostManagement/src/Azure.Mcp.Tools.CostManagement.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.CostManagement/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.CostManagement/tests/Azure.Mcp.Tools.CostManagement.LiveTests/Azure.Mcp.Tools.CostManagement.LiveTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.CostManagement/tests/Azure.Mcp.Tools.CostManagement.UnitTests/Azure.Mcp.Tools.CostManagement.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Cosmos/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Cosmos/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Cosmos/src/Azure.Mcp.Tools.Cosmos.csproj" />
