@@ -426,6 +426,37 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task ExecuteAsync_ReturnsNotFound_WhenResourceGroupNotFound()
+    {
+        // Arrange
+        Service.CreateResourceAsync(
+            "sub123",
+            "test-rg",
+            "test-redis",
+            "eastus",
+            "Balanced_B0",
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string[]?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+        .ThrowsAsync(new InvalidOperationException("Resource group 'test-rg' not found in subscription 'sub123'"));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "test-rg",
+            "--resource", "test-redis",
+            "--location", "eastus",
+            "--sku", "Balanced_B0");
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+    }
+
     private static void AssertSuccessResponse(CommandResponse response)
     {
         Assert.NotNull(response);
