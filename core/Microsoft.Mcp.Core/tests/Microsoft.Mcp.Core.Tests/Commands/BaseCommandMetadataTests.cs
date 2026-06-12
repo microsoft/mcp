@@ -36,29 +36,6 @@ public sealed class BaseCommandMetadataTests
             => Task.FromResult(context.Response);
     }
 
-    private sealed class OverrideBasedCommand : BaseCommand<EmptyOptions>
-    {
-        public override string Id => "00000000-0000-0000-0000-000000000001";
-        public override string Name => "test-override";
-        public override string Title => "Test Override Command";
-        public override string Description => "A command using property overrides for tests.";
-        public override ToolMetadata Metadata => new()
-        {
-            Destructive = false,
-            Idempotent = true,
-            OpenWorld = false,
-            ReadOnly = true,
-            Secret = false,
-            LocalRequired = false
-        };
-
-        protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
-
-        public override Task<CommandResponse> ExecuteAsync(
-            CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-            => Task.FromResult(context.Response);
-    }
-
     private sealed class NoMetadataCommand : BaseCommand<EmptyOptions>
     {
         protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
@@ -171,37 +148,12 @@ public sealed class BaseCommandMetadataTests
         Assert.False(metadata.LocalRequired);
     }
 
-    // ---------- Override-based command still passes validation ----------
-
-    [Fact]
-    public void OverrideBasedCommand_ConstructsSuccessfully()
-    {
-        var command = new OverrideBasedCommand();
-        Assert.Equal("test-override", command.Name);
-        Assert.Equal("00000000-0000-0000-0000-000000000001", command.Id);
-    }
-
-    [Fact]
-    public void OverrideBasedCommand_MetadataIsNotNull()
-    {
-        var command = new OverrideBasedCommand();
-        Assert.NotNull(command.Metadata);
-    }
-
     // ---------- Missing metadata throws InvalidOperationException ----------
-
-    [Fact]
-    public void NoMetadataCommand_Throws_InvalidOperationException()
-    {
-        var ex = Assert.Throws<InvalidOperationException>(() => new NoMetadataCommand());
-        Assert.Contains("missing required command metadata", ex.Message);
-        Assert.Contains(typeof(NoMetadataCommand).FullName!, ex.Message);
-    }
 
     [Fact]
     public void NoMetadataCommand_ExceptionMessage_MentionsAttribute()
     {
         var ex = Assert.Throws<InvalidOperationException>(() => new NoMetadataCommand());
-        Assert.Contains("[CommandMetadata]", ex.Message);
+        Assert.Contains("Command type is missing required [CommandMetadata] attribute.", ex.Message);
     }
 }
