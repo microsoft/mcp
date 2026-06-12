@@ -16,7 +16,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 - Fixed multiple issues in the EventHubs toolset:
-
   - Namespace delete now reports "not found" instead of "deleted successfully" when the namespace does not exist.
   - Event Hub status values are now matched case-insensitively, and `--status` is correctly applied when updating. Previously it was accepted but silently discarded. [[#2678](https://github.com/microsoft/mcp/pull/2678)]
 - Fixed an issue where the Cosmos DB QueryItems operation silently parsed non-success (e.g. throttled or auth-failure) responses as data. The response is now validated before parsing so failures surface as errors. [[#2836](https://github.com/microsoft/mcp/pull/2836)]
