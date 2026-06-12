@@ -28,7 +28,7 @@ The Azure MCP Server requires configuration based on the client type. Below are 
 ```json
 {
   "servers": {
-    "Azure MCP Server": {
+    "azure-mcp-server": {
       "command": "npx",
       "args": [
         "-y",
@@ -50,7 +50,7 @@ The Azure MCP Server requires configuration based on the client type. Below are 
 ```json
 {
   "mcpServers": {
-    "Azure MCP Server": {
+    "azure-mcp-server": {
       "command": "npx",
       "args": [
         "-y",
