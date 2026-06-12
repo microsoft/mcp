@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added an optional `--resource-group` parameter to `azmcp cosmos list` so account listing is scoped to the resource group and Cosmos DB account key lookups resolve the account directly instead of enumerating every account in the subscription."
