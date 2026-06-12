@@ -119,14 +119,14 @@ public class CosmosServiceTests : IAsyncDisposable
         // Assert: cache was queried with the credential-specific key
         await _cacheService.Received().GetAsync<CosmosClient>(
             "cosmos",
-            CacheKeyBuilder.Build("clients", "myaccount", "Credential"),
+            CacheKeyBuilder.Build("clients", "myaccount", "sub123", string.Empty, "Credential"),
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
 
         // Assert: the key-auth cache key was NOT queried (no cross-contamination)
         await _cacheService.DidNotReceive().GetAsync<CosmosClient>(
             "cosmos",
-            CacheKeyBuilder.Build("clients", "myaccount", "Key"),
+            CacheKeyBuilder.Build("clients", "myaccount", "sub123", string.Empty, "Key"),
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
     }
@@ -147,14 +147,14 @@ public class CosmosServiceTests : IAsyncDisposable
         // Assert: cache was queried with the key-auth-specific key
         await _cacheService.Received().GetAsync<CosmosClient>(
             "cosmos",
-            CacheKeyBuilder.Build("clients", "myaccount", "Key"),
+            CacheKeyBuilder.Build("clients", "myaccount", "sub123", string.Empty, "Key"),
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
 
         // Assert: the credential cache key was NOT queried (no cross-contamination)
         await _cacheService.DidNotReceive().GetAsync<CosmosClient>(
             "cosmos",
-            CacheKeyBuilder.Build("clients", "myaccount", "Credential"),
+            CacheKeyBuilder.Build("clients", "myaccount", "sub123", string.Empty, "Credential"),
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
     }
@@ -180,19 +180,200 @@ public class CosmosServiceTests : IAsyncDisposable
         await Assert.ThrowsAnyAsync<Exception>(() =>
             _service.ListDatabases("myaccount", "sub123", AuthMethod.Key, cancellationToken: TestContext.Current.CancellationToken));
 
-        // Assert: the Key request queries "clients_myaccount_Key", NOT "clients_myaccount_Credential"
+        // Assert: the Key request queries the key-auth client key, NOT the credential client key
         // This proves a Key-cached client can never be served to a Credential request and vice versa.
         await _cacheService.Received().GetAsync<CosmosClient>(
             "cosmos",
-            CacheKeyBuilder.Build("clients", "myaccount", "Key"),
+            CacheKeyBuilder.Build("clients", "myaccount", "sub123", string.Empty, "Key"),
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
 
         await _cacheService.DidNotReceive().GetAsync<CosmosClient>(
             "cosmos",
-            CacheKeyBuilder.Build("clients", "myaccount", "Credential"),
+            CacheKeyBuilder.Build("clients", "myaccount", "sub123", string.Empty, "Credential"),
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetCosmosClientAsync_SameAccountAndAuth_DifferentSubscriptions_UseSeparateCacheKeys()
+    {
+        // Arrange
+        var handler = new MockHttpHandler(HttpStatusCode.Unauthorized);
+        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
+
+        _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(default(CosmosClient));
+        _cacheService.GetAsync<List<string>>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(default(List<string>));
+
+        // Act: same account and auth method, but two different subscriptions
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            _service.ListDatabases("myaccount", "sub-A", AuthMethod.Credential, cancellationToken: TestContext.Current.CancellationToken));
+
+        _cacheService.ClearReceivedCalls();
+
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            _service.ListDatabases("myaccount", "sub-B", AuthMethod.Credential, cancellationToken: TestContext.Current.CancellationToken));
+
+        // Assert: the second subscription queries its own client key, never sub-A's cached client
+        await _cacheService.Received().GetAsync<CosmosClient>(
+            "cosmos",
+            CacheKeyBuilder.Build("clients", "myaccount", "sub-B", string.Empty, "Credential"),
+            Arg.Any<TimeSpan?>(),
+            Arg.Any<CancellationToken>());
+
+        await _cacheService.DidNotReceive().GetAsync<CosmosClient>(
+            "cosmos",
+            CacheKeyBuilder.Build("clients", "myaccount", "sub-A", string.Empty, "Credential"),
+            Arg.Any<TimeSpan?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetCosmosClientAsync_SameAccountAndAuth_DifferentTenants_UseSeparateCacheKeys()
+    {
+        // Arrange
+        var handler = new MockHttpHandler(HttpStatusCode.Unauthorized);
+        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
+
+        _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(default(CosmosClient));
+        _cacheService.GetAsync<List<string>>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(default(List<string>));
+
+        // Act: same account, subscription, and auth method, but two different tenants
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            _service.ListDatabases("myaccount", "sub123", AuthMethod.Credential, "tenant-A", cancellationToken: TestContext.Current.CancellationToken));
+
+        _cacheService.ClearReceivedCalls();
+
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            _service.ListDatabases("myaccount", "sub123", AuthMethod.Credential, "tenant-B", cancellationToken: TestContext.Current.CancellationToken));
+
+        // Assert: tenant-B queries its own client key, never tenant-A's cached client
+        await _cacheService.Received().GetAsync<CosmosClient>(
+            "cosmos",
+            CacheKeyBuilder.Build("clients", "myaccount", "sub123", "tenant-B", "Credential"),
+            Arg.Any<TimeSpan?>(),
+            Arg.Any<CancellationToken>());
+
+        await _cacheService.DidNotReceive().GetAsync<CosmosClient>(
+            "cosmos",
+            CacheKeyBuilder.Build("clients", "myaccount", "sub123", "tenant-A", "Credential"),
+            Arg.Any<TimeSpan?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ListDatabases_DifferentSubscriptionTenantOrAuth_UseSeparateCacheKeys()
+    {
+        // Arrange
+        var handler = new MockHttpHandler(HttpStatusCode.Unauthorized);
+        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
+
+        _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(default(CosmosClient));
+        _cacheService.GetAsync<List<string>>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(default(List<string>));
+
+        // Act: first caller for account "myaccount" on sub-A / tenant-A via Credential
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            _service.ListDatabases("myaccount", "sub-A", AuthMethod.Credential, "tenant-A", cancellationToken: TestContext.Current.CancellationToken));
+
+        // Assert: the database-list cache key is scoped to subscription, tenant, and auth method
+        await _cacheService.Received().GetAsync<List<string>>(
+            "cosmos",
+            CacheKeyBuilder.Build("databases", "myaccount", "sub-A", "tenant-A", "Credential"),
+            Arg.Any<TimeSpan?>(),
+            Arg.Any<CancellationToken>());
+
+        _cacheService.ClearReceivedCalls();
+
+        // Act: a different caller for the SAME account but different sub/tenant/auth
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            _service.ListDatabases("myaccount", "sub-B", AuthMethod.Key, "tenant-B", cancellationToken: TestContext.Current.CancellationToken));
+
+        // Assert: it queries its own scoped key and never the first caller's cached database list
+        await _cacheService.Received().GetAsync<List<string>>(
+            "cosmos",
+            CacheKeyBuilder.Build("databases", "myaccount", "sub-B", "tenant-B", "Key"),
+            Arg.Any<TimeSpan?>(),
+            Arg.Any<CancellationToken>());
+
+        await _cacheService.DidNotReceive().GetAsync<List<string>>(
+            "cosmos",
+            CacheKeyBuilder.Build("databases", "myaccount", "sub-A", "tenant-A", "Credential"),
+            Arg.Any<TimeSpan?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ListContainers_DifferentSubscriptionTenantOrAuth_UseSeparateCacheKeys()
+    {
+        // Arrange
+        var handler = new MockHttpHandler(HttpStatusCode.Unauthorized);
+        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
+
+        _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(default(CosmosClient));
+        _cacheService.GetAsync<List<string>>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(default(List<string>));
+
+        // Act: first caller for account/database on sub-A / tenant-A via Credential
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            _service.ListContainers("myaccount", "mydb", "sub-A", AuthMethod.Credential, "tenant-A", cancellationToken: TestContext.Current.CancellationToken));
+
+        // Assert: the container-list cache key is scoped to subscription, tenant, and auth method
+        await _cacheService.Received().GetAsync<List<string>>(
+            "cosmos",
+            CacheKeyBuilder.Build("containers", "myaccount", "mydb", "sub-A", "tenant-A", "Credential"),
+            Arg.Any<TimeSpan?>(),
+            Arg.Any<CancellationToken>());
+
+        _cacheService.ClearReceivedCalls();
+
+        // Act: a different caller for the SAME account/database but different sub/tenant/auth
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            _service.ListContainers("myaccount", "mydb", "sub-B", AuthMethod.Key, "tenant-B", cancellationToken: TestContext.Current.CancellationToken));
+
+        // Assert: it queries its own scoped key and never the first caller's cached container list
+        await _cacheService.Received().GetAsync<List<string>>(
+            "cosmos",
+            CacheKeyBuilder.Build("containers", "myaccount", "mydb", "sub-B", "tenant-B", "Key"),
+            Arg.Any<TimeSpan?>(),
+            Arg.Any<CancellationToken>());
+
+        await _cacheService.DidNotReceive().GetAsync<List<string>>(
+            "cosmos",
+            CacheKeyBuilder.Build("containers", "myaccount", "mydb", "sub-A", "tenant-A", "Credential"),
+            Arg.Any<TimeSpan?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task QueryItems_NonSuccessResponse_Throws()
+    {
+        // Arrange: route the CosmosClient's transport through the mocked IHttpClientFactory so it always returns 403.
+        var handler = new MockHttpHandler(HttpStatusCode.Forbidden);
+        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
+        var clientOptions = new CosmosClientOptions { HttpClientFactory = () => _httpClientFactory.CreateClient() };
+
+        var credential = Substitute.For<TokenCredential>();
+        var token = new AccessToken("fake-token", DateTimeOffset.UtcNow.AddHours(1));
+        credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<AccessToken>(token));
+        credential.GetToken(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(token);
+
+        using var cosmosClient = new CosmosClient("https://myaccount.documents.azure.com", credential, clientOptions);
+
+        _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(cosmosClient);
+
+        // Act & Assert: a non-success response must throw rather than being returned as a data item
+        await Assert.ThrowsAnyAsync<CosmosException>(() =>
+            _service.QueryItems("myaccount", "mydb", "mycontainer", "SELECT * FROM c", "sub123", AuthMethod.Key, cancellationToken: TestContext.Current.CancellationToken));
     }
 
     private sealed class MockHttpHandler(HttpStatusCode statusCode) : HttpMessageHandler

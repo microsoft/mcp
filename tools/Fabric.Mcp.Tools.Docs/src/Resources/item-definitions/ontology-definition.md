@@ -20,6 +20,7 @@ Several parts include an entity type ID value. The entity type ID is a positive 
 | `EntityTypes/{ID}/DataBindings` | Directory | false | Contains a list of data binding files that are part of the entity type. Each data binding operation file (JSON) describes details of the data binding. |
 | `EntityTypes/{ID}/Documents` | Directory | false | Contains a list of document files that are part of the entity type. Each document operation file (JSON) describes details of the document. |
 | `EntityTypes/{ID}/Overviews` | Directory | false | Contains the definition.json file for the overviews of the entity type. |
+| `EntityTypes/{ID}/ResourceLinks` | Directory | false | Contains the definition.json file for the resource links of the entity type. |
 | `RelationshipTypes/{ID}` | Directory | false | Contains the definition.json file for the relationship type which describes details of the relationship type. |
 | `RelationshipTypes/{ID}/Contextualizations` | Directory | false | Contains a list of contextualization files that are part of the relationship type. Each contextualization file (JSON) describes details of the contextualization. |
 
@@ -59,7 +60,7 @@ Several parts include an entity type ID value. The entity type ID is a positive 
     }, 
     {
       "path": "EntityTypes/8813598896083/definition.json",
-      "payload": " ew0KICAiaWQiOiAiODgxMzU5ODg5NjA4MyIsDQogICJuYW1lc3BhY2UiOiAidXNlcnR5cGVzIiwNCiAgImJhc2VFbnRpdHlUeXBlSWQiOiBudWxsLA0KICAibmFtZSI6ICJFcXVpcG1lbnQxIiwNCiAgImVudGl0eUlkUGFydHMiOiBbDQogICAgIjMxMTcwNjgwMzYzNzQ1OTQwMTMiDQogIF0sDQogICJkaXNwbGF5TmFtZVByb3BlcnR5SWQiOiAiMzExNzA2ODAzNjM3NDU5NDAxMyIsDQogICJuYW1lc3BhY2VUeXBlIjogIkN1c3RvbSIsDQogICJ2aXNpYmlsaXR5IjogIlZpc2libGUiLA0KICAicHJvcGVydGllcyI6IFsNCiAgICB7DQogICAgICAiaWQiOiAiMzExNzA2ODAzNjM3NDU5NDAxMyIsDQogICAgICAibmFtZSI6ICJEaXNwbGF5TmFtZSIsDQogICAgICAicmVkZWZpbmVzIjogbnVsbCwNCiAgICAgICJiYXNlVHlwZU5hbWVzcGFjZVR5cGUiOiBudWxsLA0KICAgICAgInZhbHVlVHlwZSI6ICJTdHJpbmciDQogICAgfSwNCiAgICB7DQogICAgICAiaWQiOiAiMzExNzA2ODAzMTk1MDAwMDMzMSIsDQogICAgICAibmFtZSI6ICJNYW51ZmFjdHVyZXIiLA0KICAgICAgInJlZGVmaW5lcyI6IG51bGwsDQogICAgICAiYmFzZVR5cGVOYW1lc3BhY2VUeXBlIjogbnVsbCwNCiAgICAgICJ2YWx1ZVR5cGUiOiAiU3RyaW5nIg0KICAgIH0NCiAgXSwNCiAgInRpbWVzZXJpZXNQcm9wZXJ0aWVzIjogWw0KICAgIHsNCiAgICAgICJpZCI6ICIzMTE0NTg0OTgxMzY4Nzk2OTUzIiwNCiAgICAgICJuYW1lIjogIlByZWNpc2VUaW1lc3RhbXAiLA0KICAgICAgInJlZGVmaW5lcyI6IG51bGwsDQogICAgICAiYmFzZVR5cGVOYW1lc3BhY2VUeXBlIjogbnVsbCwNCiAgICAgICJ2YWx1ZVR5cGUiOiAiRGF0ZVRpbWUiDQogICAgfSwNCiAgICB7DQogICAgICAiaWQiOiAiMzExNDU4NDk3OTc0MzMyMDkzNCIsDQogICAgICAibmFtZSI6ICJOYW1lIiwNCiAgICAgICJyZWRlZmluZXMiOiBudWxsLA0KICAgICAgImJhc2VUeXBlTmFtZXNwYWNlVHlwZSI6IG51bGwsDQogICAgICAidmFsdWVUeXBlIjogIlN0cmluZyINCiAgICB9LA0KICAgIHsNCiAgICAgICJpZCI6ICIzMTE0NTg0OTc3NTYyNjc5NjcyIiwNCiAgICAgICJuYW1lIjogIlRlbXBlcmF0dXJlIiwNCiAgICAgICJyZWRlZmluZXMiOiBudWxsLA0KICAgICAgImJhc2VUeXBlTmFtZXNwYWNlVHlwZSI6IG51bGwsDQogICAgICAidmFsdWVUeXBlIjogIkRvdWJsZSINCiAgICB9DQogIF0NCn0= ",
+      "payload": "ew0KICAiaWQiOiAiODgxMzU5ODg5NjA4MyIsDQogICJuYW1lc3BhY2UiOiAidXNlcnR5cGVzIiwNCiAgImJhc2VFbnRpdHlUeXBlSWQiOiBudWxsLA0KICAibmFtZSI6ICJFcXVpcG1lbnQxIiwNCiAgImVudGl0eUlkUGFydHMiOiBbDQogICAgIjMxMTcwNjgwMzYzNzQ1OTQwMTMiDQogIF0sDQogICJkaXNwbGF5TmFtZVByb3BlcnR5SWQiOiAiMzExNzA2ODAzNjM3NDU5NDAxMyIsDQogICJuYW1lc3BhY2VUeXBlIjogIkN1c3RvbSIsDQogICJ2aXNpYmlsaXR5IjogIlZpc2libGUiLA0KICAicHJvcGVydGllcyI6IFsNCiAgICB7DQogICAgICAiaWQiOiAiMzExNzA2ODAzNjM3NDU5NDAxMyIsDQogICAgICAibmFtZSI6ICJEaXNwbGF5TmFtZSIsDQogICAgICAicmVkZWZpbmVzIjogbnVsbCwNCiAgICAgICJiYXNlVHlwZU5hbWVzcGFjZVR5cGUiOiBudWxsLA0KICAgICAgInZhbHVlVHlwZSI6ICJTdHJpbmciDQogICAgfSwNCiAgICB7DQogICAgICAiaWQiOiAiMzExNzA2ODAzMTk1MDAwMDMzMSIsDQogICAgICAibmFtZSI6ICJNYW51ZmFjdHVyZXIiLA0KICAgICAgInJlZGVmaW5lcyI6IG51bGwsDQogICAgICAiYmFzZVR5cGVOYW1lc3BhY2VUeXBlIjogbnVsbCwNCiAgICAgICJ2YWx1ZVR5cGUiOiAiU3RyaW5nIg0KICAgIH0NCiAgXSwNCiAgInRpbWVzZXJpZXNQcm9wZXJ0aWVzIjogWw0KICAgIHsNCiAgICAgICJpZCI6ICIzMTE0NTg0OTgxMzY4Nzk2OTUzIiwNCiAgICAgICJuYW1lIjogIlByZWNpc2VUaW1lc3RhbXAiLA0KICAgICAgInJlZGVmaW5lcyI6IG51bGwsDQogICAgICAiYmFzZVR5cGVOYW1lc3BhY2VUeXBlIjogbnVsbCwNCiAgICAgICJ2YWx1ZVR5cGUiOiAiRGF0ZVRpbWUiDQogICAgfSwNCiAgICB7DQogICAgICAiaWQiOiAiMzExNDU4NDk3OTc0MzMyMDkzNCIsDQogICAgICAibmFtZSI6ICJOYW1lIiwNCiAgICAgICJyZWRlZmluZXMiOiBudWxsLA0KICAgICAgImJhc2VUeXBlTmFtZXNwYWNlVHlwZSI6IG51bGwsDQogICAgICAidmFsdWVUeXBlIjogIlN0cmluZyINCiAgICB9LA0KICAgIHsNCiAgICAgICJpZCI6ICIzMTE0NTg0OTc3NTYyNjc5NjcyIiwNCiAgICAgICJuYW1lIjogIlRlbXBlcmF0dXJlIiwNCiAgICAgICJyZWRlZmluZXMiOiBudWxsLA0KICAgICAgImJhc2VUeXBlTmFtZXNwYWNlVHlwZSI6IG51bGwsDQogICAgICAidmFsdWVUeXBlIjogIkRvdWJsZSINCiAgICB9DQogIF0NCn0=",
       "payloadType": "InlineBase64"
     },
     {
@@ -94,9 +95,14 @@ Several parts include an entity type ID value. The entity type ID is a positive 
     },
     {
       "path": "EntityTypes/159990879905613/DataBindings/0542df13-5b4b-4590-8dcf-ea2435d90a73.json",
-      "payload": "ew0KICAiaWQiOiAiMDU0MmRmMTMtNWI0Yi00NTkwLThkY2YtZWEyNDM1ZDkwYTczIiwNCiAgImRhdGFCaW5kaW5nQ29uZmlndXJhdGlvbiI6IHsNCiAgICAiZGF0YUJpbmRpbmdUeXBlIjogIlRpbWVTZXJpZXMiLA0KICAgICJ0aW1lc3RhbXBDb2x1bW5OYW1lIjogIlByZWNpc2VUaW1lc3RhbXAiLA0KICAgICJwcm9wZXJ0eUJpbmRpbmdzIjogWw0KICAgICAgew0KICAgICAgICAic291cmNlQ29sdW1uTmFtZSI6ICJOYW1lIiwNCiAgICAgICAgInRhcmdldFByb3BlcnR5SWQiOiAiMzExMzQ5MzI1NjY3NDEyOTE1MSINCiAgICAgIH0sDQogICAgICB7DQogICAgICAgICJzb3VyY2VDb2x1bW5OYW1lIjogIk5hbWUiLA0KICAgICAgICAidGFyZ2V0UHJvcGVydHlJZCI6ICIzMTExODc4NTQ2MTUwMzUzMzEyIg0KICAgICAgfSwNCiAgICAgIHsNCiAgICAgICAgInNvdXJjZUNvbHVtbk5hbWUiOiAiUHJlY2lzZVRpbWVzdGFtcCIsDQogICAgICAgICJ0YXJnZXRQcm9wZXJ0eUlkIjogIjMxMTE4Nzg1NDU4NTQ3MDE1MjUiDQogICAgICB9LA0KICAgICAgew0KICAgICAgICAic291cmNlQ29sdW1uTmFtZSI6ICJUZW1wZXJhdHVyZSIsDQogICAgICAgICJ0YXJnZXRQcm9wZXJ0eUlkIjogIjMxMTE4Nzg1NDQwMTM1MzYzNTIiDQogICAgICB9DQogICAgXSwNCiAgICAic291cmNlVGFibGVQcm9wZXJ0aWVzIjogew0KICAgICAgInNvdXJjZVR5cGUiOiAiTGFrZWhvdXNlVGFibGUiLA0KICAgICAgIndvcmtzcGFjZUlkIjogIjU4MGY0MTBlLTczM2QtNDNiZC04YTg3LWJlMTJiNTM2ZjdmZiIsDQogICAgICAiaXRlbUlkIjogImQwZDg2M2JjLTQ4ZTEtNDViMi04ZjRiLTU0Nzk1Yzk3YmE3MSIsDQogICAgICAic291cmNlVGFibGVOYW1lIjogImVxdWlwbWVudDJ0aW1lc2VyaWVzIiwNCiAgICAgICJzb3VyY2VTY2hlbWEiOiAiZGJvIg0KICAgIH0NCiAgfQ0KfQ== ",
+      "payload": "ew0KICAiaWQiOiAiMDU0MmRmMTMtNWI0Yi00NTkwLThkY2YtZWEyNDM1ZDkwYTczIiwNCiAgImRhdGFCaW5kaW5nQ29uZmlndXJhdGlvbiI6IHsNCiAgICAiZGF0YUJpbmRpbmdUeXBlIjogIlRpbWVTZXJpZXMiLA0KICAgICJ0aW1lc3RhbXBDb2x1bW5OYW1lIjogIlByZWNpc2VUaW1lc3RhbXAiLA0KICAgICJwcm9wZXJ0eUJpbmRpbmdzIjogWw0KICAgICAgew0KICAgICAgICAic291cmNlQ29sdW1uTmFtZSI6ICJOYW1lIiwNCiAgICAgICAgInRhcmdldFByb3BlcnR5SWQiOiAiMzExMzQ5MzI1NjY3NDEyOTE1MSINCiAgICAgIH0sDQogICAgICB7DQogICAgICAgICJzb3VyY2VDb2x1bW5OYW1lIjogIk5hbWUiLA0KICAgICAgICAidGFyZ2V0UHJvcGVydHlJZCI6ICIzMTExODc4NTQ2MTUwMzUzMzEyIg0KICAgICAgfSwNCiAgICAgIHsNCiAgICAgICAgInNvdXJjZUNvbHVtbk5hbWUiOiAiUHJlY2lzZVRpbWVzdGFtcCIsDQogICAgICAgICJ0YXJnZXRQcm9wZXJ0eUlkIjogIjMxMTE4Nzg1NDU4NTQ3MDE1MjUiDQogICAgICB9LA0KICAgICAgew0KICAgICAgICAic291cmNlQ29sdW1uTmFtZSI6ICJUZW1wZXJhdHVyZSIsDQogICAgICAgICJ0YXJnZXRQcm9wZXJ0eUlkIjogIjMxMTE4Nzg1NDQwMTM1MzYzNTIiDQogICAgICB9DQogICAgXSwNCiAgICAic291cmNlVGFibGVQcm9wZXJ0aWVzIjogew0KICAgICAgInNvdXJjZVR5cGUiOiAiTGFrZWhvdXNlVGFibGUiLA0KICAgICAgIndvcmtzcGFjZUlkIjogIjU4MGY0MTBlLTczM2QtNDNiZC04YTg3LWJlMTJiNTM2ZjdmZiIsDQogICAgICAiaXRlbUlkIjogImQwZDg2M2JjLTQ4ZTEtNDViMi04ZjRiLTU0Nzk1Yzk3YmE3MSIsDQogICAgICAic291cmNlVGFibGVOYW1lIjogImVxdWlwbWVudDJ0aW1lc2VyaWVzIiwNCiAgICAgICJzb3VyY2VTY2hlbWEiOiAiZGJvIg0KICAgIH0NCiAgfQ0KfQ==",
       "payloadType": "InlineBase64"
     },
+    { 
+      "path": "EntityTypes/159990879905613/ResourceLinks/definition.json",
+      "payload": "ewogICJyZXNvdXJjZUxpbmtzIjogWwogICAgewogICAgICAidHlwZSI6ICJQb3dlckJJUmVwb3J0IiwKICAgICAgIndvcmtzcGFjZUlkIjogImE3NmFkMjdlLTg5NmUtNGQ0Mi04YjcyLTAzN2ZkYmI0YmZmMSIsCiAgICAgICJpdGVtSWQiOiAiMGM4MGYwNDItZDllZC00YzcxLWFiOGMtNTEyOWFkN2FiYTg4IgogICAgfQogIF0KfQ==",
+      "payloadType": "InlineBase64"
+    }, 
     {
       "path": "RelationshipTypes/3110733855942077719/definition.json",
       "payload": "ew0KICAibmFtZXNwYWNlIjogInVzZXJ0eXBlcyIsDQogICJpZCI6ICIzMTEwNzMzODU1OTQyMDc3NzE5IiwNCiAgIm5hbWUiOiAiY29udGFpbnMiLA0KICAibmFtZXNwYWNlVHlwZSI6ICJDdXN0b20iLA0KICAic291cmNlIjogew0KICAgICJlbnRpdHlUeXBlSWQiOiAiODgxMzU5ODg5NjA4MyINCiAgfSwNCiAgInRhcmdldCI6IHsNCiAgICAiZW50aXR5VHlwZUlkIjogIjE1OTk5MDg3OTkwNTYxMyINCiAgfQ0KfQ==",
@@ -130,23 +136,34 @@ The EntityType file name is the *definition.json*.
 | `id` | BigInt | true | Unique ID of the entity type. The entity type ID is a positive 64-bit integer that's unique across the ontology instance. |
 | `namespace` | string | true | Allowed value: *usertypes*. |
 | `baseEntityTypeId` | BigInt | false | Unique ID of the base entity type. |
-| `name` | string | true | Name of the entity type. Must follow this Regex pattern: `^[a-zA-Z][a-zA-Z0-9\_-]{0,127}\$`. |
+| `name` | string | true | Name of the entity type. Must follow this Regex pattern: `^[a-zA-Z][a-zA-Z0-9_-]{0,127}$`. |
 | `entityIdParts` | BigInt[] | false | The properties (by ID) that together uniquely identify an entity. |
 | `displayNamePropertyId` | BigInt | false | The ID of the property that's used as the display name for the entity. |
 | `namespaceType` | string | true | Allowed value: *Custom.* |
 | `visibility` | string | false | Allowed value: *Visible.* |
 | `properties` | EntityTypeProperty[] | false | List of entity type properties. |
 | `timeseriesProperties` | EntityTypeProperty[] | false | List of entity type properties. |
+| `untypedProperties` | UntypedEntityTypeProperty[] | false | List of untyped entity type properties. |
 
 ### EntityTypeProperty
 
 | Property | Type | Required | Description |
 |----|----|----|----|
 | `id` | BigInt | true | Unique ID of the entity type property. |
-| `name` | string | true | Name of the entity type property. Must follow this Regex pattern: `^[a-zA-Z][a-zA-Z0-9\_-]{0,127}\$`. |
+| `name` | string | true | Name of the entity type property. Must follow this Regex pattern: `^[a-zA-Z][a-zA-Z0-9_-]{0,127}$`. |
 | `redefines` | string | false | Pointer to property inherited from base type that this property redefines. |
 | `baseTypeNamespaceType` | string | false | The namespace of the base entity type. |
 | `valueType` | string | true | Describes the value type of the entity type property. Allowed values: *String*, *Boolean*, *DateTime*, *Object*, *BigInt*, *Double*. |
+
+### UntypedEntityTypeProperty
+
+| Property | Type | Required | Description |
+|----|----|----|----|
+| `id` | BigInt | true | Unique ID of the entity type property. |
+| `name` | string | true | Name of the entity type property. Must follow this Regex pattern: `^[a-zA-Z][a-zA-Z0-9_-]{0,127}$`. |
+| `redefines` | string | false | Pointer to property inherited from base type that this property redefines. |
+| `baseTypeNamespaceType` | string | false | The namespace of the base entity type. |
+| `valueType` | string | true | Allowed value: *Any*. |
 
 ### EntityType file example
 
@@ -365,6 +382,38 @@ The Overviews file name is *definition.json*.
 }
 ```
 
+## EntityTypes/{ID}/ResourceLinks directory: ResourceLinks file
+
+The ResourceLinks file name is *definition.json*.
+
+### ResourceLinks
+
+| Property | Type | Required | Description |
+|----|----|----|----|
+| `resourceLinks` | ResourceLink[] | true | The list of resource links for the entity type. |
+
+### ResourceLink
+
+| Property | Type | Required | Description |
+|----|----|----|----|
+| `type` | string | true | The type of resource link. Allowed values: *PowerBIReport*. |
+| `workspaceId` | Guid | true | The ID of the workspace where the customer's resource link is located. |
+| `itemId` | Guid | true | The `ArtifactId` of the customer's resource link. |
+
+### ResourceLinks file example
+
+```json
+{
+  "resourceLinks": [
+    {
+      "type": "PowerBIReport",
+      "workspaceId": "318666aa-3d5a-4701-a3a7-1d37f3de57d2",
+      "itemId": "d29df38d-6974-4b0c-ae78-7126257a222f"
+    }
+  ]
+}
+```
+
 ## RelationshipTypes/{ID} directory: RelationshipType file
 
 The RelationshipType file name is *definition.json*.
@@ -373,7 +422,7 @@ The RelationshipType file name is *definition.json*.
 |----|----|----|----|
 | `id` | BigInt | true | Unique ID of the relationship type. |
 | `namespace` | string | true | Allowed value: *usertypes*. |
-| `name` | string | true | Name of the relationship type. Must follow this Regex pattern: `^[a-zA-Z][a-zA-Z0-9\_-]{0,127}\$`. |
+| `name` | string | true | Name of the relationship type. Must follow this Regex pattern: `^[a-zA-Z][a-zA-Z0-9_-]{0,127}$`. |
 | `namespaceType` | BigInt | true | Allowed value: *Custom*. |
 | `source` | RelationshipEnd | true | The relationship end that denotes the source. |
 | `target` | RelationshipEnd | true | The relationship end that denotes the target. |

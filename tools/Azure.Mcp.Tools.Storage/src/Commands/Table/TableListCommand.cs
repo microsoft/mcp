@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Storage.Commands;
-using Azure.Mcp.Tools.Storage.Options;
+using Azure.Mcp.Tools.Storage.Options.Table;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -21,30 +23,24 @@ namespace Azure.Mcp.Tools.Storage.Table.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageService storageService) : BaseStorageCommand<BaseStorageOptions>()
+public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageService storageService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<TableListOptions, TableListCommand.TableListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<TableListCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TableListOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var tables = await _storageService.ListTables(
-                options.Account!,
+                options.Account,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(tables ?? []), StorageJsonContext.Default.TableListCommandResult);
+            context.Response.Results = ResponseResult.Create(new TableListCommandResult(tables ?? []), StorageJsonContext.Default.TableListCommandResult);
         }
         catch (Exception ex)
         {
@@ -55,5 +51,5 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageS
         return context.Response;
     }
 
-    internal record TableListCommandResult(List<string> Tables);
+    public record TableListCommandResult(List<string> Tables);
 }

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
@@ -20,27 +21,21 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger, IKustoService kustoService) : BaseClusterCommand<DatabaseListOptions>()
+public sealed class DatabaseListCommand(
+    ILogger<DatabaseListCommand> logger,
+    IKustoService kustoService,
+    ISubscriptionResolver subscriptionResolver)
+    : BaseClusterCommand<DatabaseListOptions, DatabaseListCommand.DatabaseListCommandResult>(subscriptionResolver)
 {
-    private readonly ILogger<DatabaseListCommand> _logger = logger;
-    private readonly IKustoService _kustoService = kustoService;
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DatabaseListOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            List<string> databasesNames = [];
+            List<string> databasesNames;
 
             if (UseClusterUri(options))
             {
-                databasesNames = await _kustoService.ListDatabasesAsync(
+                databasesNames = await kustoService.ListDatabasesAsync(
                     options.ClusterUri!,
                     options.Tenant,
                     options.AuthMethod,
@@ -49,7 +44,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger, IKu
             }
             else
             {
-                databasesNames = await _kustoService.ListDatabasesAsync(
+                databasesNames = await kustoService.ListDatabasesAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Tenant,
@@ -58,11 +53,11 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger, IKu
                     cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(new(databasesNames ?? []), KustoJsonContext.Default.DatabaseListCommandResult);
+            context.Response.Results = ResponseResult.Create(new DatabaseListCommandResult(databasesNames ?? []), KustoJsonContext.Default.DatabaseListCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An exception occurred listing databases. Cluster: {Cluster}.", options.ClusterUri ?? options.ClusterName);
+            logger.LogError(ex, "An exception occurred listing databases. Cluster: {Cluster}.", options.ClusterUri ?? options.ClusterName);
             HandleException(context, ex);
         }
         return context.Response;

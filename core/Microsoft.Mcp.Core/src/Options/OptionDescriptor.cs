@@ -131,8 +131,7 @@ public class OptionDescriptor
                underlying == typeof(DateTime) ||
                underlying == typeof(DateTimeOffset) ||
                underlying == typeof(TimeSpan) ||
-               underlying == typeof(Guid) ||
-               underlying == typeof(Uri);
+               underlying == typeof(Guid);
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2070:UnrecognizedReflectionPattern",

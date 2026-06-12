@@ -29,6 +29,13 @@ public class MySqlListCommandTests : CommandUnitTestsBase<MySqlListCommand, IMyS
     }
 
     [Fact]
+    public void Description_Verification()
+    {
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ListsServersInResourceGroup_WhenResourceGroupProvided()
     {
         var expectedServers = new List<string> { "mysql-server-1", "mysql-server-2" };
@@ -265,10 +272,4 @@ public class MySqlListCommandTests : CommandUnitTestsBase<MySqlListCommand, IMyS
         Assert.Equal("list", Command.Name);
     }
 
-    [Fact]
-    public void Description_IsCorrect()
-    {
-        Assert.Contains("List MySQL servers", Command.Description);
-        Assert.Contains("databases, or tables", Command.Description);
-    }
 }

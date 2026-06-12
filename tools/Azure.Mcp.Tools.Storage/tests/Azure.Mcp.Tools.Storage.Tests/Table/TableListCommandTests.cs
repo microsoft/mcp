@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Services;
 using Azure.Mcp.Tools.Storage.Table.Commands;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.Tests.Table;
 
-public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, IStorageService>
+public class TableListCommandTests : SubscriptionCommandUnitTestsBase<TableListCommand, IStorageService>
 {
     private readonly string _knownStorageAccount = "storage123";
     private readonly string _knownSubscription = "sub123";

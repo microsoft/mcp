@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
     Id = "ef27bda9-8a1f-4288-b68b-12308ab8e607",
     Name = "create",
     Title = "Create Key Vault Key",
-    Description = "Create a new key in an Azure Key Vault. This command creates a key with the specified name and type in the given vault. Supports types: RSA, RSA-HSM, EC, EC-HSM, oct, oct-HSM. Required: --vault <vault>, --key <key> --key-type <key-type> --subscription <subscription>. Optional: --tenant <tenant>. Returns: Returns: name, id, keyId, keyType, enabled, notBefore, expiresOn, createdOn, updatedOn. Creates a new key version if it already exists.",
+    Description = "Create a new key in an Azure Key Vault. This command creates a key with the specified name and type in the given vault. Supports types: RSA, RSA-HSM, EC, EC-HSM (RSA-HSM and EC-HSM require a premium SKU vault). Required: --vault <vault>, --key <key> --key-type <key-type> --subscription <subscription>. Optional: --tenant <tenant>. Returns: name, id, keyId, keyType, enabled, notBefore, expiresOn, createdOn, updatedOn. Creates a new key version if it already exists.",
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

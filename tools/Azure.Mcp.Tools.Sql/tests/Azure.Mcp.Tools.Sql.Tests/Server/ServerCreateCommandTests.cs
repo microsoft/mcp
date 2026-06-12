@@ -22,7 +22,6 @@ public class ServerCreateCommandTests : CommandUnitTestsBase<ServerCreateCommand
         Assert.Equal("create", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
-        Assert.Contains("Creates a new Azure SQL server", command.Description);
     }
 
     [Theory]

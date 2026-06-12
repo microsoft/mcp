@@ -1,0 +1,12 @@
+changes:
+  - section: "Breaking Changes"
+    description: |
+      Event Hubs namespace create/update now rejects invalid `--sku-tier` values with a validation error instead of silently defaulting to Standard.
+
+  - section: "Bugs Fixed"
+    description: |
+      Fixed multiple issues in the EventHubs toolset:
+
+      - Namespace delete now reports "not found" instead of "deleted successfully" when the namespace does not exist.
+      - Event Hub status values are now matched case-insensitively, and `--status` is correctly applied when updating. Previously it was accepted but silently discarded.
+

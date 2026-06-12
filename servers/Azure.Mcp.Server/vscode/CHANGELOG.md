@@ -1,5 +1,138 @@
 # Release History
 
+
+## 3.0.0-beta.17 (2026-06-09) (pre-release)
+
+### Changed
+
+- **Breaking:** Removed resource group, tenant, auth method, and retry options from `cloudarchitect_design` tool as they aren't used. [[#2822](https://github.com/microsoft/mcp/pull/2822)]
+
+### Fixed
+
+- Fixed Cosmos DB query validator to use a cached static Regex instead of recompiling a new Regex on every validation, improving performance and AOT compatibility. [[#2834](https://github.com/microsoft/mcp/pull/2834)]
+- Fixed Cosmos DB cache keys to include subscription, tenant, and authentication method. [[#2838](https://github.com/microsoft/mcp/pull/2838)]
+- Replaced misleading error logging in `CosmosListCommand`, removing the always-null `ResourceGroup` field and adding non-sensitive diagnostic context (Subscription, Account, Database) consistent with `MySqlListCommand` and `PostgresListCommand`. [[#2837](https://github.com/microsoft/mcp/pull/2837)]
+- Fixed AVM `module-not-found` errors returning HTTP 422 instead of 400 by using `ArgumentException` for invalid module names. [[#2676](https://github.com/microsoft/mcp/pull/2676)]
+
+## 3.0.16 (2026-06-01) (pre-release)
+
+### Changed
+
+- **Breaking:** Changed server property names in `appsettings.json` to be scoped to `MicrosoftMcp` instead of the root level. [[#2779](https://github.com/microsoft/mcp/pull/2779)]
+
+## 3.0.15 (2026-05-29) (pre-release)
+
+### Fixed
+
+- Fixed trimmed/package runtime option binding failures for tools like Kusto query/sample by preserving public parameterless constructors required for reflection-based option activation. [[#2773](https://github.com/microsoft/mcp/pull/2773)]
+
+## 3.0.14 (2026-05-28) (pre-release)
+
+### Added
+
+- Added a new `advisor recommendation apply` tool that helps in applying Azure Advisor recommendations to IaC files (ARM, Terraform) by returning rules. [[#2686](https://github.com/microsoft/mcp/pull/2686)]
+- Added five Azure Cosmos DB MCP tools: [[#2644](https://github.com/microsoft/mcp/pull/2644)]
+  - `cosmos database container schema infer`: Infer container schema by sampling documents
+  - `cosmos database container item list-recent`: Return the most recently modified documents
+  - `cosmos database container item get`: Look up a document by id, with optional partition key for point reads
+  - `cosmos database container item text-search`: `FullTextContains`-based property search
+  - `cosmos database container item vector-search`: `VectorDistance` similarity search using Azure OpenAI-generated embeddings
+
+### Changed
+
+- **Breaking:** The `compute vm delete` and `compute vmss delete` tools now return a not-found outcome (`Success: false`) when the target resource does not exist, instead of reporting a successful deletion. This may affect automation that previously treated non-existent VM/VMSS deletions as success. [[#2687](https://github.com/microsoft/mcp/pull/2687)]
+- We now emit the `AzSubscriptionGuid` telemetry tag from each Azure Backup tool so per-subscription telemetry works in namespace server mode. [[#2734](https://github.com/microsoft/mcp/pull/2734)]
+- Centralized KQL query safety validation in `Azure.Mcp.Core`. This validation is now enforced for all Monitor log/workspace query execution paths, preventing unsafe tautology and management-tool patterns. [[#2747](https://github.com/microsoft/mcp/pull/2747)]
+- Changed the `SslMode` in PostgreSQL tools to `Require` instead of the default `Prefer` to align with other tools like those in the MySQL namespace. [[#2749](https://github.com/microsoft/mcp/pull/2749)]
+- Expanded the Azure MCP `enabledServices` namespace options to include currently registered Azure tool namespaces and removed legacy `azuremanagedlustre` alias. [[#2758](https://github.com/microsoft/mcp/pull/2758)]
+- Added more validations to the `compute vm create` and `compute vmss create` tools. [[#2764](https://github.com/microsoft/mcp/pull/2764)]
+- The `appconfig kv delete` tool response now includes an `existed` field (`true` if the key was present and deleted, `false` if it was already absent) and a human-readable `message`, allowing callers to distinguish a successful deletion from a no-op on a non-existent key. [[#2683](https://github.com/microsoft/mcp/pull/2683)]
+
+### Fixed
+
+- Fixed issues for the following tools:
+  - Azure App Configuration: [[#2683](https://github.com/microsoft/mcp/pull/2683)]
+    - The user-supplied `--retry-policy` is now applied to all data-plane key-value operations for **App Configuration** (`kv get`, `kv set`, `kv delete`, `kv lock`); previously it was only applied to the ARM store-discovery call, causing custom retry settings to have no effect on actual configuration reads and writes.
+  - Azure Backup: [[#2726](https://github.com/microsoft/mcp/pull/2726)]
+    - Reject unknown `--workload-type` values for `protectableitem list` at the tool boundary with a `400` `ValidationError` instead of leaking a `500` `ArgumentException` from the service layer.
+    - When both RSV and DPP vault listings fail (in `vault get` without `--vault-type` and in `governance find-unprotected`), the server now surfaces a single meaningful exception instead of leaking a raw `AggregateException`.
+    - Resolve subscription name to subscription ID via `ISubscriptionService` before constructing ARM `ResourceIdentifier`s, so every tool now accepts a subscription display name in `--subscription` instead of failing with `FormatException`.
+  - Azure Compute: [[#2687](https://github.com/microsoft/mcp/pull/2687)]
+    - `vm update` and `vmss update` now correctly clear all tags when `--tags ''` is passed.
+    - `DetermineOsType` now uses word-boundary token matching: it no longer misidentifies images with 'win' mid-word (e.g., 'twin-ubuntu') as Windows, and now correctly identifies Visual Studio on Windows images (e.g., 'vs-2022-comm-latest-win11-n-gen2') as Windows.
+  - Azure Event Grid: [[#2753](https://github.com/microsoft/mcp/pull/2753)]
+    - Corrected the `topic list` tool description to remove unsupported claims related to access keys and requiring a topic/subscription.
+  - Azure Service Bus: [[#2680](https://github.com/microsoft/mcp/pull/2680)]
+    - The `--subscription` option was incorrectly required on `queue details`, `topic details`, and `topic subscription details` and has been removed since the namespace FQDN is sufficient for authentication.
+    - `topic details` incorrectly returned "Subscription not found" when a topic did not exist; the error message now correctly reads "Topic not found".
+    - Malformed namespace names (containing path separators or other invalid characters) raised a `SecurityException`; they now raise an `ArgumentException` to correctly signal invalid input rather than a security violation.
+
+## 3.0.13 (2026-05-26) (pre-release)
+
+### Added
+
+- Added a new namespace for Azure SRE Agent (`Microsoft.App/SREAgentPreview`) tools with 55 commands across 11 sub-groups: agents, skills, connectors, hooks, threads, scheduledtasks, incidents, workflows, docs, architecture, and commonprompts. Supports listing/creating/updating SRE Agent resources, managing sub-agents and tools, registering data connectors (Kusto/MCP), configuring safety hooks, running investigations, scheduling tasks, declaring incidents, generating workflows, querying memories, and producing remediation plans against the SRE Agent data plane. [[#2611](https://github.com/microsoft/mcp/pull/2611)]
+
+### Fixed
+
+- Fixed three bugs in `storage account create`: [[#2674](https://github.com/microsoft/mcp/pull/2674)]
+  - Subscription display names (e.g. "My Subscription") now resolve correctly instead of failing with a FormatException — consistent with all other storage commands.
+  - The `--access-tier` option now documents all valid values (Hot, Cool, Cold, Premium); Cold and Premium were silently accepted but never listed, making them undiscoverable.
+  - The `--sku` option description now clarifies that `storage account create` creates StorageV2 accounts and defaults to Standard_LRS if no SKU is specified.
+- Fixed `ArgumentNullException` in `azurebackup_backup_status` for DPP-only ARM resource types (e.g. Microsoft.DocumentDB/databaseAccounts, AKS, Disk, Blob). The implicit string-to-BackupDataSourceType conversion is now bypassed via an explicit nullable cast so unmapped types correctly route through the DPP vault lookup. [[#2724](https://github.com/microsoft/mcp/pull/2724)]
+
+## 3.0.12 (2026-05-22) (pre-release)
+
+### Added
+
+- Added a new `--nfs-encryption-in-transit` option to File Shares `create`/`update` tools. [[#2648](https://github.com/microsoft/mcp/pull/2648)]
+
+### Fixed
+
+- Updated Container App tools to accept a `--tenant` parameter. [[#2702](https://github.com/microsoft/mcp/pull/2702)]
+- Fixed not-found conditions in `SubscriptionService`, `TenantService`, and `ResourceGroupService` returning HTTP `500`/`400` instead of HTTP `404`. [[#2703](https://github.com/microsoft/mcp/pull/2703)]
+- Updated App Lens tools to return a response with a "resource not found" message instead of throwing an exception when no resource matches the given name, so telemetry no longer reports these expected cases as tool failures. [[#2700](https://github.com/microsoft/mcp/pull/2700)]
+- Fixed issues in Key Vault tools: [[#2671](https://github.com/microsoft/mcp/pull/2671)]
+  - `keyvault admin settings get` now correctly applies the default retry policy
+  - `keyvault certificate import` now returns HTTP status code `400` for invalid certificate data instead of `500`
+  - `keyvault key create` now accepts the correct valid types (RSA, RSA-HSM, EC, EC-HSM) for the `--key-type` parameter
+  - `keyvault key list` now includes all keys (managed and non-managed) when `--include-managed` is `true` instead of returning only managed keys
+
+## 3.0.11 (2026-05-20) (pre-release)
+
+### Added
+
+- Added a tool for managing VM power state (start/stop/restart/deallocate) called `compute_vm_power-state`. [[#2498](https://github.com/microsoft/mcp/pull/2498)]
+- Overhauled the `azurebackup_policy_create` tool with comprehensive schedule, retention, archive tiering, and advanced backup capabilities across RSV and DPP vaults, including 38+ new flags, a pre-flight `PolicyCreateValidator`, and expanded workload-type alias support. [[#2504](https://github.com/microsoft/mcp/pull/2504)]
+- Added a new tool called `azurebackup_security_configure_encryption` to enable Customer-Managed Key (CMK) encryption on Recovery Services vaults and Backup vaults using Azure Key Vault keys. [[#2609](https://github.com/microsoft/mcp/pull/2609)]
+- Added ARM MCP registry integration and exposed ARM MCP tools in Azure MCP so users can discover and invoke ARM-focused capabilities. [[#2571](https://github.com/microsoft/mcp/pull/2571)]
+
+### Fixed
+
+- Fixed `azurebackup_policy_create` body shapes for DPP vault-tier copy, vaulted Blob/ADLS, SAP HANA snapshot, and RSV smart-tier to match Az CLI and service schemas. Removed unused DPP-only flags. [[#2504](https://github.com/microsoft/mcp/pull/2504)]
+- Improved Azure Resource Health error handling to preserve non-success ARM response details and return clearer guidance for conflict responses such as missing or in-progress `Microsoft.ResourceHealth` provider registration. [[#2577](https://github.com/microsoft/mcp/pull/2577)]
+- Fixed the following Azure Backup issues: [[#2621](https://github.com/microsoft/mcp/pull/2621)]
+  - Fixed a null-reference crash in `azurebackup_backup_status` by adding a null guard in `MapArmResourceTypeToBackupDataSourceType`
+  - Fixed `azurebackup_governance_find-unprotected` to support nested ARM resource types (e.g., `Microsoft.Sql/servers/databases`) by relaxing the resource type regex from single-segment to multi-segment
+  - Fixed the following RSV-backed Azure Backup tools to accept subscription names (in addition to IDs) by removing the GUID-only `ValidateSubscriptionFormat` check that violated MCP conventions:
+    - `azurebackup_vault_create`
+    - `azurebackup_vault_get`
+    - `azurebackup_vault_update`
+    - `azurebackup_policy_create`
+    - `azurebackup_policy_get`
+    - `azurebackup_protecteditem_protect`
+    - `azurebackup_protecteditem_get`
+    - `azurebackup_protecteditem_undelete`
+    - `azurebackup_protectableitem_list`
+    - `azurebackup_job_get`
+    - `azurebackup_recoverypoint_get`
+    - `azurebackup_governance_immutability`
+    - `azurebackup_governance_soft-delete`
+    - `azurebackup_disasterrecovery_enable-crr`
+  - Fixed serialization issue in `azurebackup_job_get` by handling `FormatException`s thrown from the Azure SDK's `XmlConvert.ToTimeSpan` in `DppBackupOperations.ListJobsAsync`
+  - Fixed telemetry tags not being emitted by returning `"auto"`/`"unspecified"` instead of `null` for unset values, since `Activity.AddTag(key, null)` is a no-op in .NET\
+- Removed restrictions on what kinds of web sites the AppLens tool can diagnose. [[#2596](https://github.com/microsoft/mcp/pull/2596)]
+
 ## 3.0.10 (2026-05-07) (pre-release)
 
 ### Changed

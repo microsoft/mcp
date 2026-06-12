@@ -9,6 +9,7 @@
                 "Files/Sales/Contoso_Sales_2024/SubFolder2/SubFolder3"
             ],
             "recipient": {
+                "type": "User",
                 "userPrincipalName": "lisa@fabrikam.com"
             }
         }
@@ -30,6 +31,7 @@
                     "type": "User"
                 },
                 "recipient": {
+                    "type": "User",
                     "userPrincipalName": "lisa@fabrikam.com"
                 },
                 "status": "Pending",

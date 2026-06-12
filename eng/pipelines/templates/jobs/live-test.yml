@@ -20,10 +20,10 @@ jobs:
 
   - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
-  - task: NodeTool@0
-    displayName: "Install Node.js 22"
+  - task: UseNode@1
+    displayName: 'Install Node.js 24'
     inputs:
-      versionSpec: '22.x'
+      version: '24.x'
 
   - pwsh: |
       $serverName = $env:SERVERNAME
