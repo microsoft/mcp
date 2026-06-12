@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http.Headers;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
@@ -556,8 +555,8 @@ public class AppServiceService(
         string resourceGroup,
         string appName,
         string stateChange,
-        bool softRestart,
-        bool waitForCompletion,
+        bool? softRestart = null,
+        bool? waitForCompletion = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -588,7 +587,7 @@ public class AppServiceService(
         else if (stateChange.Equals("restart", StringComparison.OrdinalIgnoreCase))
         {
             await webAppResource.RestartAsync(softRestart: softRestart, synchronous: waitForCompletion, cancellationToken: cancellationToken);
-            return waitForCompletion
+            return waitForCompletion == true
                 ? $"Web app '{appName}' restart completed successfully (Soft restart: {softRestart})."
                 : $"Web app '{appName}' restart initiated successfully (Soft restart: {softRestart}).";
         }

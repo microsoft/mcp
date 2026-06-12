@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.AppService.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppService.Options.Webapp;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
@@ -34,51 +34,45 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
     Secret = false,
     LocalRequired = false
 )]
-public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> logger, IAppServiceService appServiceService)
-    : BaseAppServiceCommand<WebappChangeStateOptions>(resourceGroupRequired: true, appRequired: true)
+public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> logger, IAppServiceService appServiceService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<WebappChangeStateOptions, WebappChangeStateCommand.WebappChangeStateResult>(subscriptionResolver)
 {
     private readonly ILogger<WebappChangeStateCommand> _logger = logger;
 
-    private static readonly HashSet<string> ValidStateChanges = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> s_validStateChanges = new(StringComparer.OrdinalIgnoreCase)
     {
         "start",
         "stop",
         "restart"
     };
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(WebappChangeStateOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AppServiceOptionDefinitions.StateChange);
-        command.Options.Add(AppServiceOptionDefinitions.SoftRestart);
-        command.Options.Add(AppServiceOptionDefinitions.WaitForCompletion);
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+
+        if (!ValidateStateChange(options.StateChange, out var errorMessage))
         {
-            var stateChange = result.GetValueOrDefault<string>(AppServiceOptionDefinitions.StateChange.Name);
-            if (!ValidateStateChange(stateChange, out var errorMessage))
+            validationResult.Errors.Add(errorMessage);
+        }
+        else
+        {
+            if (!"restart".Equals(options.StateChange, StringComparison.OrdinalIgnoreCase))
             {
-                result.AddError(errorMessage);
-            }
-            else
-            {
-                if (!"restart".Equals(stateChange, StringComparison.OrdinalIgnoreCase))
+                if (options.SoftRestart == true)
                 {
-                    if (result.HasOptionResult(AppServiceOptionDefinitions.SoftRestart))
-                    {
-                        result.AddError("soft-restart only applies for change-state 'restart'.");
-                    }
-                    if (result.HasOptionResult(AppServiceOptionDefinitions.WaitForCompletion))
-                    {
-                        result.AddError("wait-for-completion only applies for change-state 'restart'.");
-                    }
+                    validationResult.Errors.Add("soft-restart only applies for change-state 'restart'.");
+                }
+                if (options.WaitForCompletion == true)
+                {
+                    validationResult.Errors.Add("wait-for-completion only applies for change-state 'restart'.");
                 }
             }
-        });
+        }
     }
 
     internal static bool ValidateStateChange(string? stateChange, out string errorMessage)
     {
-        if (string.IsNullOrEmpty(stateChange) || !ValidStateChanges.Contains(stateChange))
+        if (string.IsNullOrEmpty(stateChange) || !s_validStateChanges.Contains(stateChange))
         {
             errorMessage = $"Invalid value '{stateChange}' for state change. Valid values are: start, stop, restart.";
             return false;
@@ -88,34 +82,17 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
         return true;
     }
 
-    protected override WebappChangeStateOptions BindOptions(ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, WebappChangeStateOptions options, CancellationToken cancellationToken)
     {
-        var options = base.BindOptions(parseResult);
-        options.StateChange = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.StateChange.Name);
-        options.SoftRestart = parseResult.GetValueOrDefault<bool>(AppServiceOptionDefinitions.SoftRestart.Name);
-        options.WaitForCompletion = parseResult.GetValueOrDefault<bool>(AppServiceOptionDefinitions.WaitForCompletion.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        // Validate first, then bind
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
             var stateChange = await appServiceService.ChangeWebAppStateAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.AppName!,
-                options.StateChange!,
+                options.ResourceGroup,
+                options.App,
+                options.StateChange,
                 options.SoftRestart,
                 options.WaitForCompletion,
                 options.Tenant,
@@ -128,13 +105,13 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
         {
             if ("restart".Equals(options.StateChange, StringComparison.OrdinalIgnoreCase))
             {
-                _logger.LogError(ex, "Failed to restart the Web App '{AppName}' in subscription {Subscription} and resource group {ResourceGroup} (Soft Restart: {SoftRestart}, Wait For Completion: {WaitForCompletion})",
-                    options.AppName, options.Subscription, options.ResourceGroup, options.SoftRestart, options.WaitForCompletion);
+                _logger.LogError(ex, "Failed to restart the Web App '{App}' in subscription {Subscription} and resource group {ResourceGroup} (Soft Restart: {SoftRestart}, Wait For Completion: {WaitForCompletion})",
+                    options.App, options.Subscription, options.ResourceGroup, options.SoftRestart, options.WaitForCompletion);
             }
             else
             {
-                _logger.LogError(ex, "Failed to {StateChange} the Web App '{AppName}' in subscription {Subscription} and resource group {ResourceGroup}",
-                    options.StateChange, options.AppName, options.Subscription, options.ResourceGroup);
+                _logger.LogError(ex, "Failed to {StateChange} the Web App '{App}' in subscription {Subscription} and resource group {ResourceGroup}",
+                    options.StateChange, options.App, options.Subscription, options.ResourceGroup);
             }
             HandleException(context, ex);
         }
@@ -142,5 +119,5 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
         return context.Response;
     }
 
-    public record WebappChangeStateResult(string StateChangeStatus);
+    public sealed record WebappChangeStateResult(string StateChangeStatus);
 }

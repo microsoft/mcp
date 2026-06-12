@@ -81,8 +81,8 @@ public interface IAppServiceService
         string resourceGroup,
         string appName,
         string stateChange,
-        bool softRestart,
-        bool waitForCompletion,
+        bool? softRestart = null,
+        bool? waitForCompletion = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
