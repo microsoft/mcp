@@ -23,6 +23,7 @@ public class EventGridSetup : IAreaSetup
         services.AddSingleton<TopicListCommand>();
         services.AddSingleton<SubscriptionListCommand>();
         services.AddSingleton<EventGridPublishCommand>();
+        services.AddSingleton<TopicCreateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -47,6 +48,7 @@ public class EventGridSetup : IAreaSetup
 
         // Register Topic commands
         topics.AddCommand<TopicListCommand>(serviceProvider);
+        topics.AddCommand<TopicCreateCommand>(serviceProvider);
 
         // Register Subscription commands
         subscriptions.AddCommand<SubscriptionListCommand>(serviceProvider);

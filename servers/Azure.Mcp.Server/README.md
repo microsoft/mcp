@@ -1058,6 +1058,7 @@ Example prompts that generate Azure CLI commands:
 
 ### 📣 Azure Event Grid
 
+* "Create an Event Grid topic named 'my-topic' in resource group 'my-resourcegroup' in eastus"
 * "List all Event Grid topics in subscription 'my-subscription'"
 * "Show me the Event Grid topics in my subscription"
 * "List all Event Grid topics in resource group 'my-resourcegroup' in my subscription"

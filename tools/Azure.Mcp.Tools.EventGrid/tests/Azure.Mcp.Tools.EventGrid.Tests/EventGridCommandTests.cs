@@ -441,4 +441,27 @@ public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fi
         Assert.Equal("Success", status);
         Assert.Equal(1, publishedEventCount);
     }
+
+    [Fact]
+    public async Task Should_create_eventgrid_topic()
+    {
+        var topicName = RegisterOrRetrieveVariable("create_topic_name", $"topic-{Guid.NewGuid():N}"[..24]);
+
+        var result = await CallToolAsync(
+            "eventgrid_topic_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "location", "eastus" },
+                { "topic", topicName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var topic = result.AssertProperty("topic");
+        Assert.Equal(JsonValueKind.Object, topic.ValueKind);
+        topic.AssertProperty("name");
+        topic.AssertProperty("endpoint");
+        Assert.Equal("Succeeded", topic.GetProperty("provisioningState").GetString());
+    }
 }
