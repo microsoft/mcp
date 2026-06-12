@@ -28,7 +28,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
     protected BaseCommand()
     {
         var attr = GetType().GetCustomAttribute<CommandMetadataAttribute>() ??
-            throw new InvalidOperationException("Command type is missing required [CommandMetadata] attribute.");
+            throw new InvalidOperationException($"Command type '{GetType().FullName}' is missing required [CommandMetadata] attribute.");
 
         if (!attr.IsValid())
         {

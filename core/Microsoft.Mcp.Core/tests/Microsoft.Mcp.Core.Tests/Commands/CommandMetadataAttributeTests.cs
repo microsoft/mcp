@@ -14,6 +14,10 @@ public sealed class CommandMetadataAttributeTests
     [InlineData("id1", "", "desc1", "title1", false)]
     [InlineData("id1", "name1", "", "title1", false)]
     [InlineData("id1", "name1", "desc1", "", false)]
+    [InlineData("   ", "name1", "desc1", "title1", false)]
+    [InlineData("id1", "   ", "desc1", "title1", false)]
+    [InlineData("id1", "name1", "   ", "title1", false)]
+    [InlineData("id1", "name1", "desc1", "   ", false)]
     public void CommandMetadataAttribute_IsValid(string id, string name, string description, string title, bool expected)
     {
         var attr = new CommandMetadataAttribute()
