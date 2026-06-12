@@ -3554,7 +3554,7 @@ azmcp role assignment list --subscription <subscription> \
 ### Azure Redis Operations
 
 ```bash
-# Creates a new Azure Managed Redis resource
+# Creates a new Azure Managed Redis resource (asynchronous; poll provisioningState until 'Succeeded')
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp redis create --subscription <subscription> \
                    --resource-group <resource-group> \
