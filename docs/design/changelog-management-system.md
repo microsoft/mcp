@@ -409,7 +409,7 @@ Add validation to your CI pipeline:
 - [x] Create compiler script: `eng/scripts/Compile-Changelog.ps1`
 - [x] Create documentation: `docs/changelog-entries`
 - [x] Update `CONTRIBUTING.md` with new changelog workflow
-- [x] Update `docs/new-command.md` to mention changelog entries for AI coding agents
+- [x] Update `.github/skills/add-mcp-tools/SKILL.md` to mention changelog entries for AI coding agents
 - [x] Update `AGENTS.md` to include changelog workflow for AI agents
 - [ ] Add CI validation for YAML files (optional but recommended)
 - [x] Create sample YAML files for testing
@@ -495,7 +495,7 @@ When using AI coding agents like GitHub Copilot to work on features, ensure they
 
 ### Key Documents for AI Agents
 
-1. **`docs/new-command.md`** - Should include step about creating changelog entry
+1. **`.github/skills/add-mcp-tools/SKILL.md`** - Should include step about creating changelog entry
 2. **`AGENTS.md`** - Should reference this changelog system
 3. **`CONTRIBUTING.md`** - Should explain when and how to create entries
 
