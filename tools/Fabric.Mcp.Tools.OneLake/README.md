@@ -7,17 +7,23 @@ Microsoft Fabric OneLake MCP (Model Context Protocol) Tools - Manage and interac
 OneLake is Microsoft Fabric's built-in data lake that provides unified storage for all analytics workloads. This MCP tool provides operations for working with OneLake resources within your Fabric tenant, enabling AI agents to:
 
 - Manage OneLake folders and files
-- Configure data access and permissions
-- Monitor OneLake storage usage and performance
-- Integrate with other Fabric workloads through OneLake
+- Browse items, tables and namespaces
+- Configure OneLake data access security (role-based)
+- Create, list and manage shortcuts (including bulk + cache reset)
+- Read and modify workspace-level OneLake settings (diagnostics, immutability)
 
 **Features:**
-- 19 comprehensive OneLake commands with full MCP integration
+- 40 comprehensive OneLake commands with full MCP integration
 - Complete coverage for OneLake table APIs: configuration, namespace discovery, and table metadata
-- Friendly-name support for workspaces and items across data-plane commands ( `item-create` currently requires GUID IDs )
+- Data access security management: list, get, create/update, and delete roles
+- Shortcut management: list, get, create/update (bulk + 9 per-target), delete, and cache reset
+- Workspace-level settings: diagnostics and immutability policy configuration
+- Friendly-name support for workspaces and items across all commands
 - Robust error handling and authentication
-- Production-ready with 100% test coverage (132 tests)
+- Production-ready with 100% test coverage (309 tests)
 - Clean, focused API design optimized for AI agent interactions
+
+> **Note:** Item creation has moved to the [Fabric.Mcp.Tools.Core](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Core) toolset as `core_create_item`. See [Core tools](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Core) for item creation operations.
 
 ## Prerequisites
 
@@ -41,11 +47,13 @@ The OneLake MCP tools are configured to use the Microsoft Fabric production envi
 
 ```
 OneLake Data Plane: https://api.onelake.fabric.microsoft.com
-OneLake DFS API: https://onelake.dfs.fabric.microsoft.com
-OneLake Blob API: https://onelake.blob.fabric.microsoft.com
-OneLake Table API: https://onelake.table.fabric.microsoft.com
-Fabric API: https://api.fabric.microsoft.com/v1
+OneLake DFS API:    https://onelake.dfs.fabric.microsoft.com
+OneLake Blob API:   https://onelake.blob.fabric.microsoft.com
+OneLake Table API:  https://onelake.table.fabric.microsoft.com
+Fabric Core API:    https://api.fabric.microsoft.com/v1
 ```
+
+> **Endpoint routing:** Security, shortcut and settings tools call the **Fabric Core API** (`api.fabric.microsoft.com`). All other tools target the OneLake data plane / DFS / Blob / Table endpoints.
 
 ### Getting Started
 
@@ -90,10 +98,10 @@ You can verify which environment you're targeting by checking the endpoints in t
 
 ### Workspace and Item Identifiers
 
-All commands except `item create` accept either GUID identifiers or friendly names via the `--workspace` and `--item` options. The existing `--workspace-id` and `--item-id` switches remain available for scripts that already depend on them. Friendly-name inputs are sent directly to the OneLake APIs without local GUID resolution; when using names, specify the item as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). `item create` currently requires the GUID-based `--workspace-id` option. Table-based commands additionally accept schema identifiers through `--namespace` or its alias `--schema`.
+The Fabric Core REST APIs used by the Security, Shortcuts, and Settings commands require GUID identifiers. Use `--workspace-id` for workspace scope and `--item-id` for item scope. Table-based commands additionally accept schema identifiers through `--namespace` or its alias `--schema`.
 
 ```bash
-dotnet run -- onelake file list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --path "Files"
+dotnet run -- onelake shortcut list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
 ```
 
 ## Available Commands
@@ -172,18 +180,7 @@ dotnet run -- onelake item list-data --workspace-id "47242da5-ff3b-46fb-a94f-977
 
 #### Create Item
 
-Creates a new item (Lakehouse, Notebook, etc.) in a Microsoft Fabric workspace using the Fabric API.
-
-```bash
-dotnet run -- onelake item create --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --display-name "NewLakehouse" --type "Lakehouse"
-```
-
-> **Note:** `item create` currently requires the GUID-based `--workspace-id` switch; friendly workspace names are not supported for this command yet.
-
-**Parameters:**
-- `--workspace-id`: The ID of the Microsoft Fabric workspace
-- `--display-name`: Display name for the new item
-- `--type`: Type of item to create (e.g., Lakehouse, Notebook)
+> **Moved:** The `item create` command has been moved to [Fabric.Mcp.Tools.Core](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Core) as `core_create_item`. Use the Core toolset for creating new items (Lakehouse, Notebook, etc.) in a Microsoft Fabric workspace.
 
 ### File Operations
 
@@ -629,6 +626,238 @@ dotnet run -- onelake table get --workspace-id "47242da5-ff3b-46fb-a94f-977909b7
 - `--namespace`/`--schema`: Namespace (schema) name
 - `--table`: Table name to retrieve
 
+### Security — Data Access Roles
+
+These tools manage role-based data access policies on OneLake items (Lakehouse / Warehouse). All security tools call the **Fabric Core API** and require the caller to be a workspace Admin or Member.
+
+#### List Data Access Roles
+
+Lists all data access roles defined on a single item. Supports pagination via `--continuation-token`.
+
+```bash
+dotnet run -- onelake security list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+```
+
+**Parameters:**
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
+- `--continuation-token`: (Optional) Token for retrieving the next page of results
+
+#### Get Data Access Role
+
+Gets the full definition of a single data access role — members, permissions, decision rules.
+
+```bash
+dotnet run -- onelake security get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --role-name "DataAnalysts"
+```
+
+**Parameters:**
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
+- `--role-name`: Name of the data access role to retrieve
+
+#### Create or Update Data Access Role
+
+Upserts a single data access role on a single item. Scoped to one role per call — does not affect other roles. The role name is derived from the `name` field in the JSON definition.
+
+```bash
+dotnet run -- onelake security create-or-update --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --role-definition '{"name":"DataAnalysts","members":{"fabricItemMembers":[{"itemAccessType":"ReadAll"}]},"decisionRules":[{"effect":"Permit","permission":[{"attributeName":"Path","attributeValueIncludedIn":["Tables/*"]}]}]}'
+```
+
+**Parameters:**
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
+- `--role-definition`: JSON definition of the role (must include `name`, `members`, and `decisionRules`)
+
+#### Delete Data Access Role
+
+Deletes a single data access role from a single item. Destructive — principals that gained access only via this role lose it.
+
+```bash
+dotnet run -- onelake security delete --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --role-name "TempRole"
+```
+
+**Parameters:**
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
+- `--role-name`: Name of the data access role to delete
+
+### Shortcut Operations
+
+Shortcuts are references to data stored in external or internal locations (ADLS Gen2, S3, GCS, OneLake, Dataverse, etc.). These tools call the **Fabric Core API**.
+
+#### List Shortcuts
+
+Lists shortcuts defined within an item, recursing through subfolders. Supports pagination via `--continuation-token`.
+
+```bash
+dotnet run -- onelake shortcut list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+```
+
+**Parameters:**
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
+- `--parent-path`: (Optional) Parent path to scope the listing
+- `--continuation-token`: (Optional) Token for retrieving the next page of results
+
+#### Get Shortcut
+
+Gets the properties of a single shortcut (name, path, target, configuration).
+
+```bash
+dotnet run -- onelake shortcut get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --shortcut-name "ExternalData" --shortcut-path "Tables/ExternalData"
+```
+
+**Parameters:**
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
+- `--shortcut-name`: Name of the shortcut
+- `--shortcut-path`: Path of the shortcut within the item
+
+#### Create or Update Shortcuts (Bulk)
+
+Creates one or more shortcuts in a single call using a JSON blob. Pass `--create-or-overwrite` to upsert (default fails on conflict).
+
+```bash
+dotnet run -- onelake shortcut create-or-update --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --shortcuts '[{"name":"ExternalData","path":"Tables/ExternalData","target":{"adlsGen2":{"location":"https://storageaccount.dfs.core.windows.net","subpath":"/container/path"}}}]'
+```
+
+**Parameters:**
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
+- `--shortcuts`: JSON array of shortcut definitions
+- `--create-or-overwrite`: (Optional) If set, overwrites existing shortcuts
+
+#### Create Shortcut (Per-Target — Recommended for AI agents)
+
+Nine per-target tools provide flat, typed options instead of requiring a JSON blob. Use the tool matching your target type:
+
+| Tool | Target Type |
+|------|-------------|
+| `create_shortcut_onelake` | Another OneLake location |
+| `create_shortcut_adls_gen2` | Azure Data Lake Storage Gen2 |
+| `create_shortcut_amazon_s3` | Amazon S3 |
+| `create_shortcut_azure_blob` | Azure Blob Storage |
+| `create_shortcut_gcs` | Google Cloud Storage |
+| `create_shortcut_s3_compatible` | S3-compatible storage |
+| `create_shortcut_dataverse` | Dataverse environment |
+| `create_shortcut_onedrive_sharepoint` | OneDrive / SharePoint Online |
+| `create_shortcut_external_data_share` | External data share |
+
+**Common parameters (all per-target tools):**
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
+- `--shortcut-path`: Path within the item where the shortcut lives
+- `--shortcut-name`: Display name for the shortcut
+- `--shortcut-conflict-policy`: (Optional) Abort, CreateOrOverwrite, OverwriteOnly, GenerateUniqueName
+
+**OneLake target additional parameters:**
+- `--target-workspace-id`: Target workspace ID
+- `--target-item-id`: Target item ID
+- `--target-path`: (Optional) Path within the target item
+- `--target-connection-id`: (Optional) Connection ID
+
+**ADLS Gen2 / Amazon S3 / Azure Blob / GCS target parameters:**
+- `--target-location`: Storage URL
+- `--target-subpath`: (Optional) Subpath within the location
+- `--target-connection-id`: Connection ID for authentication
+
+**S3-compatible target additional parameters:**
+- `--target-bucket`: Bucket name (in addition to location, subpath, connection-id)
+
+**Dataverse target parameters:**
+- `--target-environment-domain`: Dataverse environment URI
+- `--target-connection-id`: Connection ID
+- `--target-deltalake-folder`: Delta Lake folder path
+- `--target-table-name`: (Optional) Table name
+
+**OneDrive/SharePoint target parameters:**
+- `--target-location`: Storage URL
+- `--target-subpath`: (Optional) Subpath
+- `--target-connection-id`: Connection ID
+- `--target-update-fabric-item-sensitivity`: (Optional) Update sensitivity label from source
+
+**External Data Share target parameters:**
+- `--target-connection-id`: Connection ID
+
+**Example — Create an ADLS Gen2 shortcut:**
+```bash
+dotnet run -- onelake shortcut create-adls-gen2 \
+  --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" \
+  --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" \
+  --shortcut-path "Tables" --shortcut-name "ExternalData" \
+  --target-location "https://myaccount.dfs.core.windows.net/container" \
+  --target-subpath "/data/tables" \
+  --target-connection-id "a1b2c3d4-5678-9012-3456-789012345678"
+```
+
+#### Delete Shortcut
+
+Deletes a single shortcut from an item. The destination data is preserved — only the shortcut reference is removed.
+
+```bash
+dotnet run -- onelake shortcut delete --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --shortcut-name "ExternalData" --shortcut-path "Tables/ExternalData"
+```
+
+**Parameters:**
+- `--workspace-id`: Workspace ID (GUID)
+- `--item-id`: Item ID (GUID)
+- `--shortcut-name`: Name of the shortcut to delete
+- `--shortcut-path`: Path of the shortcut
+
+#### Reset Shortcut Cache
+
+Drops cached shortcut reads for a workspace, forcing the next read to re-resolve from the destination. Use sparingly — primarily for debugging stale-cache issues.
+
+```bash
+dotnet run -- onelake shortcut reset-cache --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5"
+```
+
+**Parameters:**
+- `--workspace-id`: Workspace ID (GUID)
+
+### Settings Operations
+
+Workspace-level OneLake settings for diagnostics and immutability policies. These tools call the **Fabric Core API**.
+
+#### Get Settings
+
+Gets the OneLake settings for a workspace — diagnostics configuration and immutability policy.
+
+```bash
+dotnet run -- onelake settings get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5"
+```
+
+**Parameters:**
+- `--workspace-id`: Workspace ID (GUID)
+
+#### Modify Diagnostics
+
+Modifies the diagnostic logging configuration for OneLake at the workspace scope using flat options.
+
+```bash
+dotnet run -- onelake settings modify-diagnostics --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --status "Enabled" --destination-lakehouse-workspace-id "ws-guid" --destination-lakehouse-item-id "item-guid"
+```
+
+**Parameters:**
+- `--workspace-id`: Workspace ID (GUID)
+- `--status`: Diagnostic status (Enabled or Disabled)
+- `--destination-lakehouse-workspace-id`: (Optional) Workspace ID of the destination lakehouse
+- `--destination-lakehouse-item-id`: (Optional) Item ID of the destination lakehouse
+
+#### Modify Immutability Policy
+
+Modifies the workspace-level OneLake immutability policy. **Warning:** Once enabled, immutability cannot be disabled — confirm with the user before applying.
+
+```bash
+dotnet run -- onelake settings modify-immutability --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --scope "Workspace" --retention-days 30
+```
+
+**Parameters:**
+- `--workspace-id`: Workspace ID (GUID)
+- `--scope`: Immutability scope (e.g. Workspace)
+- `--retention-days`: (Optional) Retention period in days
+
 ## Quick Reference - fabmcp.exe Commands
 
 For users with the compiled `fabmcp.exe` executable, here are ready-to-use commands:
@@ -699,7 +928,46 @@ fabmcp.exe onelake table list --workspace "Analytics Workspace" --item "SalesLak
 fabmcp.exe onelake table get --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --schema "sales" --table "transactions"
 ```
 
-**Note:** Replace the workspace identifier (`47242da5-ff3b-46fb-a94f-977909b773d5`) and item identifier (`0e67ed13-2bb6-49be-9c87-a1105a4ea342`) with your actual Fabric workspace and item values (names or IDs).
+### Security Operations
+```cmd
+# List data access roles on an item
+fabmcp.exe onelake security list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+
+# Get a specific role definition
+fabmcp.exe onelake security get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --role-name "DataAnalysts"
+
+# Delete a data access role
+fabmcp.exe onelake security delete --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --role-name "TempRole"
+```
+
+### Shortcut Operations
+```cmd
+# List shortcuts on an item
+fabmcp.exe onelake shortcut list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+
+# Get a specific shortcut
+fabmcp.exe onelake shortcut get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --shortcut-name "ExternalData" --shortcut-path "Tables/ExternalData"
+
+# Delete a shortcut
+fabmcp.exe onelake shortcut delete --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --shortcut-name "ExternalData" --shortcut-path "Tables/ExternalData"
+
+# Reset shortcut cache
+fabmcp.exe onelake shortcut reset-cache --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5"
+```
+
+### Settings Operations
+```cmd
+# Get workspace OneLake settings
+fabmcp.exe onelake settings get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5"
+
+# Modify diagnostics configuration
+fabmcp.exe onelake settings modify-diagnostics --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --diagnostics-config '{"logAnalyticsWorkspaceId":"<id>","level":"Verbose"}'
+
+# Modify immutability policy
+fabmcp.exe onelake settings modify-immutability --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --immutability-policy '{"state":"Enabled"}'
+```
+
+**Note:** Replace the workspace ID (`47242da5-ff3b-46fb-a94f-977909b773d5`) and item ID (`0e67ed13-2bb6-49be-9c87-a1105a4ea342`) with your actual Fabric GUIDs.
 
 ## Common Usage Patterns
 
@@ -831,9 +1099,9 @@ This tool is part of the Microsoft MCP (Model Context Protocol) project. Please 
 The OneLake MCP Tools include a comprehensive test suite with 100% command coverage:
 
 #### Test Structure
-- **Total Tests**: 76 tests (all passing)
-- **Command Tests**: 70 tests covering all 11 OneLake MCP commands
-- **Service Architecture Tests**: 6 tests demonstrating testable patterns with dependency injection
+- **Total Tests**: 309 tests (all passing)
+- **Command Tests**: Covering all OneLake MCP commands including security, shortcuts, and settings
+- **Service Architecture Tests**: Demonstrating testable patterns with dependency injection
 
 #### Running Tests
 ```bash
