@@ -48,6 +48,7 @@ internal class TelemetryService : ITelemetryService
         [
             new(TagName.McpServerVersion, options.Value.Version),
             new(TagName.McpServerName, options.Value.Name),
+            new(TagName.McpServerNameV2, options.Value.Name),
             new(TagName.ServerMode, serverOptions.Value.Mode),
             new(TagName.Transport, serverOptions.Value.Transport),
             new(TagName.Host, RuntimeInformation.OSDescription),

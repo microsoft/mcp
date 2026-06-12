@@ -77,14 +77,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
-    <Content Include="appsettings.Development.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <EmbeddedResource Include="Resources\*.*" />
+    <EmbeddedResource Include="appsettings.json" />
+    <EmbeddedResource Condition="'$(Configuration)' == 'Debug'" Include="appsettings.Development.json" />
   </ItemGroup>
 </Project>
