@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added Azure Well-Architected Framework usage guide command for AI agents to systematically apply the framework when architecting Azure workloads"
