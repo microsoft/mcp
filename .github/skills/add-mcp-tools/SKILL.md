@@ -911,39 +911,78 @@ cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
 
 ## Phase 6: Tool Description Evaluation
 
-Now that test prompts are written (Phase 5b), validate your command description against them:
+Now that test prompts are written (Phase 5b), validate your command description against them using the **ToolDescriptionEvaluator**.
+
+> **Full documentation:** See `eng/tools/ToolDescriptionEvaluator/Quickstart.md` for setup details.
+
+### Prerequisites
+
+Set your Azure OpenAI endpoint and API key as environment variables:
 
 ```powershell
-# Single prompt validation
-dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- `
-  --validate --tool-description "Your command description" --prompt "user query"
-
-# Multiple prompts (recommended — test 2-3 phrasings)
-dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- `
-  --validate `
-  --tool-description "Lists all storage accounts in a subscription" `
-  --prompt "show me my storage accounts" `
-  --prompt "list storage accounts" `
-  --prompt "what storage do I have"
-
-# Use the e2eTestPrompts.md file for comprehensive validation
-dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- `
-  --tools-file my-tools.json --prompts-file servers/Azure.Mcp.Server/docs/e2eTestPrompts.md
+$env:AOAI_ENDPOINT = "https://<your-resource>.openai.azure.com/openai/deployments/<embeddings-deployment-name>/embeddings?api-version=<api-version>"
+$env:TEXT_EMBEDDING_API_KEY = "your_api_key_here"
 ```
 
-Target: Top 3 ranking, confidence ≥ 0.4.
+> For internal contributors, refer to the **Before creating a pull request** section of [this document](https://eng.ms/docs/products/azure-developer-experience/mcp/mcp-getting-started) to use our team's deployment and credentials.
+
+### Option A: Test a single tool description (fastest for development)
+
+Use `--test-single-tool` mode to validate your description without building the full server:
+
+```powershell
+# Test a single tool description against one prompt
+dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- --test-single-tool `
+  --tool-description "Your command description" `
+  --prompt "user query"
+
+# Test against multiple prompts (recommended — test 2-3 phrasings)
+dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- --test-single-tool `
+  --tool-description "Lists all user-assigned managed identities in a subscription" `
+  --prompt "show me my managed identities" `
+  --prompt "list managed identities in my subscription" `
+  --prompt "what identities do I have"
+```
+
+### Option B: Run the full evaluator against your service area
+
+This builds the server and tests all tools in your area against the e2eTestPrompts.md file:
+
+```powershell
+# Run evaluator for your specific service area
+pushd eng/tools/ToolDescriptionEvaluator
+./scripts/Run-ToolDescriptionEvaluator.ps1 -Area "{Toolset}"
+
+# Build the Azure.Mcp.Server as part of the run
+./scripts/Run-ToolDescriptionEvaluator.ps1 -Area "{Toolset}" -BuildAzureMcp
+
+# Run for all Azure MCP Server tools (slower)
+./scripts/Run-ToolDescriptionEvaluator.ps1
+popd
+```
+
+### Interpreting Results
+
+Target: **Top 3 ranking** and confidence score **≥ 0.4**.
+
+- Score `>= 0.6`: Excellent — tool will be reliably selected
+- Score `0.4 - 0.6`: Acceptable — tool should be selected in most cases
+- Score `< 0.4`: Poor — description needs improvement
+
+### Improving Low Scores
 
 If score is low, improve the `Description` in `[CommandMetadata]`:
 - Include verbs users would say ("list", "get", "show", "configure")
-- Mention specific resource types
+- Mention specific resource types and Azure service names
 - Describe what the output contains
 - Consider common synonyms and alternative phrasings
+- Avoid overly generic descriptions that could match many tools
 
 Custom prompts file formats:
 - **Markdown**: Same table format as `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
 - **JSON**: `{ "azmcp-your-command": ["prompt1", "prompt2"] }`
 
-**GATE:** Score meets threshold.
+**GATE:** Score meets threshold (≥ 0.4, top 3 ranking). If the evaluator is not available (no Azure OpenAI credentials), manually verify the description is specific and action-oriented.
 
 ---
 
