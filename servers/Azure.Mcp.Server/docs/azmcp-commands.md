@@ -326,6 +326,34 @@ azmcp server info
 
 ### Azure Advisor Operations
 
+<!-- cspell:ignore domainservices virtualmachinescalesets containerregistry containerservice managedclusters -->
+<!-- cspell:ignore flexibleservers databaseaccounts connectedclusters kubernetesconfiguration -->
+<!-- cspell:ignore applicationgatewaywebapplicationfirewallpolicies expressrouteports frontdoorwebapplicationfirewallpolicies -->
+<!-- cspell:ignore managedinstances staticsites -->
+
+The `--resource` parameter for `azmcp advisor recommendation apply` accepts the following values:
+
+- `aad_domainservices`
+- `apimanagement_service`
+- `cognitiveservices_accounts`
+- `compute_virtualmachines`
+- `compute_virtualmachinescalesets`
+- `containerregistry_registries`
+- `containerservice_managedclusters`
+- `dbforpostgresql_flexibleservers`
+- `documentdb_databaseaccounts`
+- `keyvault_vaults`
+- `kubernetes_connectedclusters`
+- `kubernetesconfiguration_extensions`
+- `netapp_volumes`
+- `network_applicationgatewaywebapplicationfirewallpolicies`
+- `network_expressrouteports`
+- `network_frontdoorwebapplicationfirewallpolicies`
+- `sql_managedinstances`
+- `storage_storageaccounts`
+- `web_serverfarms`
+- `web_staticsites`
+
 ```bash
 # List Advisor recommendations in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
