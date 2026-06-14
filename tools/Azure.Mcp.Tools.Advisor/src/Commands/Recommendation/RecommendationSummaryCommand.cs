@@ -47,6 +47,23 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
         command.Options.Add(AdvisorOptionDefinitions.ResourceType.AsOptional());
         command.Options.Add(AdvisorOptionDefinitions.Resource.AsOptional());
         command.Options.Add(AdvisorOptionDefinitions.Search.AsOptional());
+
+        command.Validators.Add(commandResult =>
+        {
+            if (!commandResult.TryGetValue(AdvisorOptionDefinitions.GroupBy, out string? value))
+            {
+                // Missing --group-by is handled by the required-option check in BaseCommand.Validate.
+                return;
+            }
+
+            var normalized = value?.Trim();
+            if (string.IsNullOrEmpty(normalized) ||
+                !AdvisorService.AllowedGroupBy.Contains(normalized, StringComparer.OrdinalIgnoreCase))
+            {
+                commandResult.AddError(
+                    $"Invalid --group-by value '{value}'. Allowed values: {string.Join(", ", AdvisorService.AllowedGroupBy)}.");
+            }
+        });
     }
 
     protected override RecommendationSummaryOptions BindOptions(ParseResult parseResult)
@@ -73,14 +90,9 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
 
         var options = BindOptions(parseResult);
 
-        var groupBy = options.GroupBy?.Trim().ToLowerInvariant();
-        if (string.IsNullOrEmpty(groupBy) || !AdvisorService.AllowedGroupBy.Contains(groupBy))
-        {
-            context.Response.Status = HttpStatusCode.BadRequest;
-            context.Response.Message =
-                $"Invalid --group-by value '{options.GroupBy}'. Allowed values: {string.Join(", ", AdvisorService.AllowedGroupBy)}.";
-            return context.Response;
-        }
+        // Validator in RegisterOptions guarantees GroupBy is set and is one of AllowedGroupBy (case-insensitive).
+        // Normalize to lowercase here so the service receives the canonical bucket name.
+        var groupBy = options.GroupBy!.Trim().ToLowerInvariant();
 
         try
         {
