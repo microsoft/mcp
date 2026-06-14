@@ -43,7 +43,7 @@ public sealed class ShortcutCreateOneLakeCommand(
         command.Options.Add(FabricOptionDefinitions.ShortcutConflictPolicy.AsOptional());
         command.Options.Add(FabricOptionDefinitions.TargetWorkspaceId.AsRequired());
         command.Options.Add(FabricOptionDefinitions.TargetItemId.AsRequired());
-        command.Options.Add(FabricOptionDefinitions.TargetPath.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.TargetPath.AsRequired());
         command.Options.Add(FabricOptionDefinitions.TargetConnectionId.AsOptional());
     }
 
@@ -76,12 +76,12 @@ public sealed class ShortcutCreateOneLakeCommand(
                 Name = options.Name,
                 Target = new ShortcutTarget
                 {
-                    Type = "OneLake",
                     OneLake = new OneLakeShortcutTarget
                     {
                         WorkspaceId = options.TargetWorkspaceId,
                         ItemId = options.TargetItemId,
-                        Path = options.TargetPath
+                        Path = options.TargetPath,
+                        ConnectionId = options.TargetConnectionId
                     }
                 }
             };

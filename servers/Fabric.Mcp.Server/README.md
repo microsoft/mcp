@@ -268,9 +268,8 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 | Tool Name | Description |
 |-----------|-------------|
-| `onelake_list_shortcuts` | Lists shortcuts defined within an item, recursing through subfolders. |
+| `onelake_list_shortcuts` | Lists shortcuts defined within an item. Hides DW-managed shortcuts by default (`--include-managed` to show). |
 | `onelake_get_shortcut` | Gets the properties of a single shortcut. |
-| `onelake_create_or_update_shortcuts` | Creates or updates one or more shortcuts in a single call (bulk JSON). |
 | `onelake_create_shortcut_onelake` | Creates a shortcut pointing to another OneLake location. |
 | `onelake_create_shortcut_adls_gen2` | Creates a shortcut pointing to Azure Data Lake Storage Gen2. |
 | `onelake_create_shortcut_amazon_s3` | Creates a shortcut pointing to Amazon S3. |
@@ -279,7 +278,6 @@ The Fabric MCP Server exposes tools organized into three categories:
 | `onelake_create_shortcut_s3_compatible` | Creates a shortcut pointing to S3-compatible storage. |
 | `onelake_create_shortcut_dataverse` | Creates a shortcut pointing to a Dataverse environment. |
 | `onelake_create_shortcut_onedrive_sharepoint` | Creates a shortcut pointing to OneDrive/SharePoint Online. |
-| `onelake_create_shortcut_external_data_share` | Creates a shortcut pointing to an external data share. |
 | `onelake_delete_shortcut` | Deletes a single shortcut from an item (preserves destination data). |
 | `onelake_reset_shortcut_cache` | Drops cached shortcut reads, forcing re-resolution from destination. |
 

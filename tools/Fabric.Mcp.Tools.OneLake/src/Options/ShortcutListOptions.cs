@@ -11,5 +11,6 @@ public sealed class ShortcutListOptions : GlobalOptions
     public string? ItemId { get; set; }
     public string? ParentPath { get; set; }
     public string? ContinuationToken { get; set; }
+    public bool IncludeManaged { get; set; }
 }
 

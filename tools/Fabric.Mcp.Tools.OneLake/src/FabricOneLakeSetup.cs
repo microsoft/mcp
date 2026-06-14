@@ -64,7 +64,6 @@ public class FabricOneLakeSetup : IAreaSetup
         // Register shortcut commands
         services.AddSingleton<ShortcutListCommand>();
         services.AddSingleton<ShortcutGetCommand>();
-        services.AddSingleton<ShortcutCreateOrUpdateCommand>();
         services.AddSingleton<ShortcutDeleteCommand>();
         services.AddSingleton<ShortcutResetCacheCommand>();
         services.AddSingleton<ShortcutCreateOneLakeCommand>();
@@ -75,7 +74,6 @@ public class FabricOneLakeSetup : IAreaSetup
         services.AddSingleton<ShortcutCreateS3CompatibleCommand>();
         services.AddSingleton<ShortcutCreateDataverseCommand>();
         services.AddSingleton<ShortcutCreateOneDriveSharePointCommand>();
-        services.AddSingleton<ShortcutCreateExternalDataShareCommand>();
 
         // Register settings commands
         services.AddSingleton<SettingsGetCommand>();
@@ -122,7 +120,6 @@ public class FabricOneLakeSetup : IAreaSetup
         // Register shortcut commands
         fabricOneLake.AddCommand<ShortcutListCommand>(serviceProvider);
         fabricOneLake.AddCommand<ShortcutGetCommand>(serviceProvider);
-        fabricOneLake.AddCommand<ShortcutCreateOrUpdateCommand>(serviceProvider);
         fabricOneLake.AddCommand<ShortcutDeleteCommand>(serviceProvider);
         fabricOneLake.AddCommand<ShortcutResetCacheCommand>(serviceProvider);
         fabricOneLake.AddCommand<ShortcutCreateOneLakeCommand>(serviceProvider);
@@ -133,7 +130,6 @@ public class FabricOneLakeSetup : IAreaSetup
         fabricOneLake.AddCommand<ShortcutCreateS3CompatibleCommand>(serviceProvider);
         fabricOneLake.AddCommand<ShortcutCreateDataverseCommand>(serviceProvider);
         fabricOneLake.AddCommand<ShortcutCreateOneDriveSharePointCommand>(serviceProvider);
-        fabricOneLake.AddCommand<ShortcutCreateExternalDataShareCommand>(serviceProvider);
 
         // Register settings commands
         fabricOneLake.AddCommand<SettingsGetCommand>(serviceProvider);

@@ -76,7 +76,6 @@ public sealed class ShortcutCreateDataverseCommand(
                 Name = options.Name,
                 Target = new ShortcutTarget
                 {
-                    Type = "Dataverse",
                     Dataverse = new DataverseShortcutTarget
                     {
                         EnvironmentDomain = options.TargetEnvironmentDomain,

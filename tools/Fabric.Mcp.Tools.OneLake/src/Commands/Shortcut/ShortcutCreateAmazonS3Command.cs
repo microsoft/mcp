@@ -73,7 +73,6 @@ public sealed class ShortcutCreateAmazonS3Command(
                 Name = options.Name,
                 Target = new ShortcutTarget
                 {
-                    Type = "AmazonS3",
                     AmazonS3 = new AmazonS3ShortcutTarget
                     {
                         Location = options.TargetLocation,

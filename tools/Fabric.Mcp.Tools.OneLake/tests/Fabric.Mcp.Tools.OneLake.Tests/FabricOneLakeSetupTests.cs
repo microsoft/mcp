@@ -65,7 +65,6 @@ public class FabricOneLakeSetupTests
         // Shortcut commands
         Assert.True(rootGroup.Commands.ContainsKey("list_shortcuts"), "Should have list_shortcuts command");
         Assert.True(rootGroup.Commands.ContainsKey("get_shortcut"), "Should have get_shortcut command");
-        Assert.True(rootGroup.Commands.ContainsKey("create_or_update_shortcuts"), "Should have create_or_update_shortcuts command");
         Assert.True(rootGroup.Commands.ContainsKey("delete_shortcut"), "Should have delete_shortcut command");
         Assert.True(rootGroup.Commands.ContainsKey("reset_shortcut_cache"), "Should have reset_shortcut_cache command");
         Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_onelake"), "Should have create_shortcut_onelake command");
@@ -76,6 +75,5 @@ public class FabricOneLakeSetupTests
         Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_s3_compatible"), "Should have create_shortcut_s3_compatible command");
         Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_dataverse"), "Should have create_shortcut_dataverse command");
         Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_onedrive_sharepoint"), "Should have create_shortcut_onedrive_sharepoint command");
-        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_external_data_share"), "Should have create_shortcut_external_data_share command");
     }
 }

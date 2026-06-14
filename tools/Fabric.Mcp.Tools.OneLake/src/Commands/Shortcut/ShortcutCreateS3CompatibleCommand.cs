@@ -75,7 +75,6 @@ public sealed class ShortcutCreateS3CompatibleCommand(
                 Name = options.Name,
                 Target = new ShortcutTarget
                 {
-                    Type = "S3Compatible",
                     S3Compatible = new S3CompatibleShortcutTarget
                     {
                         Location = options.TargetLocation,

@@ -74,7 +74,6 @@ public sealed class ShortcutCreateAzureBlobCommand(
                 Name = options.Name,
                 Target = new ShortcutTarget
                 {
-                    Type = "AzureBlobStorage",
                     AzureBlobStorage = new AzureBlobStorageShortcutTarget
                     {
                         Location = options.TargetLocation,

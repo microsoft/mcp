@@ -76,7 +76,6 @@ public sealed class ShortcutCreateOneDriveSharePointCommand(
                 Name = options.Name,
                 Target = new ShortcutTarget
                 {
-                    Type = "OneDriveSharePoint",
                     OneDriveSharePoint = new OneDriveSharePointShortcutTarget
                     {
                         Location = options.TargetLocation,

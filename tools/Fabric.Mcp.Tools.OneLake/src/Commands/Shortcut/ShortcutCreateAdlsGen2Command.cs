@@ -42,7 +42,7 @@ public sealed class ShortcutCreateAdlsGen2Command(
         command.Options.Add(FabricOptionDefinitions.ShortcutName.AsRequired());
         command.Options.Add(FabricOptionDefinitions.ShortcutConflictPolicy.AsOptional());
         command.Options.Add(FabricOptionDefinitions.TargetLocation.AsRequired());
-        command.Options.Add(FabricOptionDefinitions.TargetSubpath.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.TargetSubpath.AsRequired());
         command.Options.Add(FabricOptionDefinitions.TargetConnectionId.AsRequired());
     }
 
@@ -74,7 +74,6 @@ public sealed class ShortcutCreateAdlsGen2Command(
                 Name = options.Name,
                 Target = new ShortcutTarget
                 {
-                    Type = "AdlsGen2",
                     AdlsGen2 = new AdlsGen2ShortcutTarget
                     {
                         Location = options.TargetLocation,

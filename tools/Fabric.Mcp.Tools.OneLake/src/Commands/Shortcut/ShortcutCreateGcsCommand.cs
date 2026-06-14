@@ -74,7 +74,6 @@ public sealed class ShortcutCreateGcsCommand(
                 Name = options.Name,
                 Target = new ShortcutTarget
                 {
-                    Type = "GoogleCloudStorage",
                     GoogleCloudStorage = new GoogleCloudStorageShortcutTarget
                     {
                         Location = options.TargetLocation,

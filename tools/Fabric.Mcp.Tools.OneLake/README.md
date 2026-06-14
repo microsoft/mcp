@@ -9,14 +9,14 @@ OneLake is Microsoft Fabric's built-in data lake that provides unified storage f
 - Manage OneLake folders and files
 - Browse items, tables and namespaces
 - Configure OneLake data access security (role-based)
-- Create, list and manage shortcuts (including bulk + cache reset)
+- Create, list and manage shortcuts (per-target typed tools + cache reset)
 - Read and modify workspace-level OneLake settings (diagnostics, immutability)
 
 **Features:**
 - 40 comprehensive OneLake commands with full MCP integration
 - Complete coverage for OneLake table APIs: configuration, namespace discovery, and table metadata
 - Data access security management: list, get, create/update, and delete roles
-- Shortcut management: list, get, create/update (bulk + 9 per-target), delete, and cache reset
+- Shortcut management: list, get, create (8 per-target typed tools), delete, and cache reset
 - Workspace-level settings: diagnostics and immutability policy configuration
 - Friendly-name support for workspaces and items across all commands
 - Robust error handling and authentication
@@ -688,7 +688,7 @@ Shortcuts are references to data stored in external or internal locations (ADLS 
 
 #### List Shortcuts
 
-Lists shortcuts defined within an item, recursing through subfolders. Supports pagination via `--continuation-token`.
+Lists shortcuts defined within an item, recursing through subfolders. Supports pagination via `--continuation-token`. By default, DW-managed shortcuts (which can number in the hundreds of thousands per Warehouse) are hidden — use `--include-managed` to show them.
 
 ```bash
 dotnet run -- onelake shortcut list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
@@ -699,6 +699,7 @@ dotnet run -- onelake shortcut list --workspace-id "47242da5-ff3b-46fb-a94f-9779
 - `--item-id`: Item ID (GUID)
 - `--parent-path`: (Optional) Parent path to scope the listing
 - `--continuation-token`: (Optional) Token for retrieving the next page of results
+- `--include-managed`: (Optional) Include DW-managed shortcuts in results (default: false)
 
 #### Get Shortcut
 
@@ -714,23 +715,9 @@ dotnet run -- onelake shortcut get --workspace-id "47242da5-ff3b-46fb-a94f-97790
 - `--shortcut-name`: Name of the shortcut
 - `--shortcut-path`: Path of the shortcut within the item
 
-#### Create or Update Shortcuts (Bulk)
-
-Creates one or more shortcuts in a single call using a JSON blob. Pass `--create-or-overwrite` to upsert (default fails on conflict).
-
-```bash
-dotnet run -- onelake shortcut create-or-update --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --shortcuts '[{"name":"ExternalData","path":"Tables/ExternalData","target":{"adlsGen2":{"location":"https://storageaccount.dfs.core.windows.net","subpath":"/container/path"}}}]'
-```
-
-**Parameters:**
-- `--workspace-id`: Workspace ID (GUID)
-- `--item-id`: Item ID (GUID)
-- `--shortcuts`: JSON array of shortcut definitions
-- `--create-or-overwrite`: (Optional) If set, overwrites existing shortcuts
-
 #### Create Shortcut (Per-Target — Recommended for AI agents)
 
-Nine per-target tools provide flat, typed options instead of requiring a JSON blob. Use the tool matching your target type:
+Eight per-target tools provide flat, typed options instead of requiring a JSON blob. Use the tool matching your target type:
 
 | Tool | Target Type |
 |------|-------------|
@@ -742,7 +729,6 @@ Nine per-target tools provide flat, typed options instead of requiring a JSON bl
 | `create_shortcut_s3_compatible` | S3-compatible storage |
 | `create_shortcut_dataverse` | Dataverse environment |
 | `create_shortcut_onedrive_sharepoint` | OneDrive / SharePoint Online |
-| `create_shortcut_external_data_share` | External data share |
 
 **Common parameters (all per-target tools):**
 - `--workspace-id`: Workspace ID (GUID)
@@ -754,12 +740,12 @@ Nine per-target tools provide flat, typed options instead of requiring a JSON bl
 **OneLake target additional parameters:**
 - `--target-workspace-id`: Target workspace ID
 - `--target-item-id`: Target item ID
-- `--target-path`: (Optional) Path within the target item
+- `--target-path`: Path within the target item (required)
 - `--target-connection-id`: (Optional) Connection ID
 
 **ADLS Gen2 / Amazon S3 / Azure Blob / GCS target parameters:**
 - `--target-location`: Storage URL
-- `--target-subpath`: (Optional) Subpath within the location
+- `--target-subpath`: Subpath within the location (required for ADLS Gen2)
 - `--target-connection-id`: Connection ID for authentication
 
 **S3-compatible target additional parameters:**
@@ -776,9 +762,6 @@ Nine per-target tools provide flat, typed options instead of requiring a JSON bl
 - `--target-subpath`: (Optional) Subpath
 - `--target-connection-id`: Connection ID
 - `--target-update-fabric-item-sensitivity`: (Optional) Update sensitivity label from source
-
-**External Data Share target parameters:**
-- `--target-connection-id`: Connection ID
 
 **Example — Create an ADLS Gen2 shortcut:**
 ```bash

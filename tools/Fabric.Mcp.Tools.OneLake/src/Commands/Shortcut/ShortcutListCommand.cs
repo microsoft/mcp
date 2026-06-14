@@ -39,6 +39,7 @@ public sealed class ShortcutListCommand(
         command.Options.Add(FabricOptionDefinitions.ItemId.AsRequired());
         command.Options.Add(FabricOptionDefinitions.ParentPath.AsOptional());
         command.Options.Add(FabricOptionDefinitions.ContinuationToken.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.IncludeManaged.AsOptional());
     }
 
     protected override ShortcutListOptions BindOptions(ParseResult parseResult)
@@ -48,6 +49,7 @@ public sealed class ShortcutListCommand(
         options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
         options.ParentPath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ParentPath.Name);
         options.ContinuationToken = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ContinuationTokenName);
+        options.IncludeManaged = parseResult.GetValueOrDefault<bool>(FabricOptionDefinitions.IncludeManagedName);
         return options;
     }
 
@@ -63,6 +65,14 @@ public sealed class ShortcutListCommand(
         {
 
             var result = await _oneLakeService.ListShortcutsAsync(options.WorkspaceId!, options.ItemId!, options.ParentPath, options.ContinuationToken, cancellationToken);
+
+            if (!options.IncludeManaged && result.Value is not null)
+            {
+                result.Value = result.Value
+                    .Where(s => !IsManagedShortcut(s))
+                    .ToList();
+            }
+
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.ShortcutListResponse);
         }
         catch (Exception ex)
@@ -73,6 +83,21 @@ public sealed class ShortcutListCommand(
         }
 
         return context.Response;
+    }
+
+    /// <summary>
+    /// DW-managed shortcuts are created internally by Warehouse/SQL endpoints and can number
+    /// in the hundreds of thousands, drowning user-visible shortcuts. They typically reside
+    /// under well-known managed paths (e.g. "Tables/dbo.*" with OneLake-internal targets).
+    /// </summary>
+    private static bool IsManagedShortcut(OneLakeShortcut shortcut)
+    {
+        // Managed shortcuts are internal OneLake-to-OneLake references under DW table paths.
+        // Heuristic: shortcuts whose path starts with "Tables/" and target is OneLake are DW-managed.
+        if (shortcut.Path is null || shortcut.Target?.OneLake is null)
+            return false;
+
+        return shortcut.Path.StartsWith("Tables/", StringComparison.OrdinalIgnoreCase);
     }
 }
 

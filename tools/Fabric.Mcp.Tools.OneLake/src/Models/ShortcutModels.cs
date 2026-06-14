@@ -25,7 +25,11 @@ public class OneLakeShortcut
 /// </summary>
 public class ShortcutTarget
 {
+    /// <summary>
+    /// Discriminator returned by GET responses. Must NOT be sent on create/update requests.
+    /// </summary>
     [JsonPropertyName("type")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Type { get; set; }
 
     [JsonPropertyName("oneLake")]
@@ -69,6 +73,10 @@ public class OneLakeShortcutTarget
 
     [JsonPropertyName("path")]
     public string? Path { get; set; }
+
+    [JsonPropertyName("connectionId")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ConnectionId { get; set; }
 }
 
 /// <summary>

@@ -270,18 +270,18 @@ public static class FabricOptionDefinitions
     };
 
     public const string ShortcutConflictPolicyName = "shortcut-conflict-policy";
-    public static readonly Option<string> ShortcutConflictPolicy = new($"--{ShortcutConflictPolicyName}")
-    {
-        Description = "Action when a shortcut with the same name and path already exists. One of: Abort (default), CreateOrOverwrite, OverwriteOnly, GenerateUniqueName.",
-        Required = false
-    };
+    public static readonly Option<string> ShortcutConflictPolicy = CreateShortcutConflictPolicyOption();
 
-    public const string ShortcutsDefinitionName = "shortcuts";
-    public static readonly Option<string> ShortcutsDefinition = new($"--{ShortcutsDefinitionName}")
+    private static Option<string> CreateShortcutConflictPolicyOption()
     {
-        Description = "JSON array of shortcut definitions to create or update.",
-        Required = true
-    };
+        var option = new Option<string>($"--{ShortcutConflictPolicyName}")
+        {
+            Description = "Action when a shortcut with the same name and path already exists. Default: Abort.",
+            Required = false
+        };
+        option.AcceptOnlyFromAmong("Abort", "CreateOrOverwrite", "OverwriteOnly", "GenerateUniqueName");
+        return option;
+    }
 
     // Settings options
     // Diagnostics flat options
@@ -396,6 +396,13 @@ public static class FabricOptionDefinitions
     public static readonly Option<bool> TargetUpdateFabricItemSensitivity = new($"--{TargetUpdateFabricItemSensitivityName}")
     {
         Description = "Whether to update Fabric item sensitivity from OneDrive/SharePoint. Default: false.",
+        Required = false
+    };
+
+    public const string IncludeManagedName = "include-managed";
+    public static readonly Option<bool> IncludeManaged = new($"--{IncludeManagedName}")
+    {
+        Description = "Include DW-managed shortcuts in the results. Default: false (managed shortcuts are hidden to avoid overwhelming output).",
         Required = false
     };
 }
