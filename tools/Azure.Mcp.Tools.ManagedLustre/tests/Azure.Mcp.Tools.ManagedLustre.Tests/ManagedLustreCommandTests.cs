@@ -628,11 +628,18 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             var checkJobText = checkJob.GetRawText();
             Output.WriteLine($"Expansion job status: {checkJobText}");
 
-            if (checkJobText.Contains("Succeeded", StringComparison.OrdinalIgnoreCase) ||
-                checkJobText.Contains("Completed", StringComparison.OrdinalIgnoreCase))
+            // Check the status.state field specifically, not provisioningState
+            if (checkJob.TryGetProperty("properties", out var props) &&
+                props.TryGetProperty("status", out var status) &&
+                status.TryGetProperty("state", out var state))
             {
-                completed = true;
-                break;
+                var stateStr = state.GetString();
+                if (string.Equals(stateStr, "Succeeded", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(stateStr, "Completed", StringComparison.OrdinalIgnoreCase))
+                {
+                    completed = true;
+                    break;
+                }
             }
 
             await Task.Delay(PollInterval(30_000), TestContext.Current.CancellationToken);
