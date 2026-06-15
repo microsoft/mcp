@@ -29,7 +29,19 @@ $autoVersion = $false
 if (!$Version) {
     # get the number of commits since the last tag
     $nextVersion = [AzureEngSemanticVersion]::new($currentVersion)
-    $nextVersion.IncrementAndSetToPrerelease('patch')
+    if ($ServerName -eq 'Fabric.Mcp.Server') {
+        # Fabric MCP Server follows a GA-only, minor-increment versioning strategy.
+        # Reuse the shared increment logic to bump the minor segment (and reset patch),
+        # then strip the prerelease label so the result is a stable GA release (e.g. 1.1.0 -> 1.2.0).
+        $nextVersion.IncrementAndSetToPrerelease('Minor')
+        $nextVersion.PrereleaseLabel = ""
+        $nextVersion.PrereleaseNumber = 0
+        $nextVersion.IsPrerelease = $false
+        $nextVersion.VersionType = "GA"
+    }
+    else {
+        $nextVersion.IncrementAndSetToPrerelease('patch')
+    }
     $Version = $nextVersion.ToString()
     $autoVersion = $true
 }
