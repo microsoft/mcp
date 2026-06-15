@@ -51,6 +51,24 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
         command.Options.Add(AzureBackupOptionDefinitions.AksExcludedNamespaces);
         command.Options.Add(AzureBackupOptionDefinitions.AksLabelSelectors);
         command.Options.Add(AzureBackupOptionDefinitions.AksIncludeClusterScopeResources);
+        command.Validators.Add(commandResult =>
+        {
+            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.DatasourceType.Name))
+            {
+                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.DatasourceType.Name);
+                if (!string.IsNullOrEmpty(value) &&
+                    Services.RsvDatasourceRegistry.Resolve(value) is null &&
+                    !Services.DppDatasourceRegistry.AllProfiles.Any(p =>
+                        p.FriendlyName.Equals(value, StringComparison.OrdinalIgnoreCase) ||
+                        p.Aliases.Any(a => a.Equals(value, StringComparison.OrdinalIgnoreCase))))
+                {
+                    commandResult.AddError(
+                        $"Unknown datasource type '{value}'. " +
+                        $"RSV types: {string.Join(", ", Services.RsvDatasourceRegistry.KnownTypeNames)}. " +
+                        $"DPP types: {string.Join(", ", Services.DppDatasourceRegistry.KnownTypeNames)}.");
+                }
+            }
+        });
     }
 
     protected override ProtectedItemProtectOptions BindOptions(ParseResult parseResult)
