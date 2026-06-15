@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Security;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Security;
 
@@ -31,87 +29,59 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Security;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class SecurityConfigureEncryptionCommand(ILogger<SecurityConfigureEncryptionCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<SecurityConfigureEncryptionOptions>()
+public sealed class SecurityConfigureEncryptionCommand(ILogger<SecurityConfigureEncryptionCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<SecurityConfigureEncryptionOptions, SecurityConfigureEncryptionCommand.SecurityConfigureEncryptionCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<SecurityConfigureEncryptionCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
     private string? _lastVaultType;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(SecurityConfigureEncryptionOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.KeyVaultUri);
-        command.Options.Add(AzureBackupOptionDefinitions.KeyNameOption);
-        command.Options.Add(AzureBackupOptionDefinitions.KeyVersion);
-        command.Options.Add(AzureBackupOptionDefinitions.IdentityType.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.UserAssignedIdentityId);
+        base.ValidateOptions(options, validationResult);
 
-        command.Validators.Add(commandResult =>
+        if (!string.IsNullOrEmpty(options.IdentityType) &&
+            !options.IdentityType.Equals("SystemAssigned", StringComparison.OrdinalIgnoreCase) &&
+            !options.IdentityType.Equals("UserAssigned", StringComparison.OrdinalIgnoreCase))
         {
-            var identityType = commandResult.GetValue<string>(AzureBackupOptionDefinitions.IdentityType.Name);
-            if (!string.IsNullOrEmpty(identityType) &&
-                !identityType.Equals("SystemAssigned", StringComparison.OrdinalIgnoreCase) &&
-                !identityType.Equals("UserAssigned", StringComparison.OrdinalIgnoreCase))
-            {
-                commandResult.AddError("--identity-type must be 'SystemAssigned' or 'UserAssigned' for CMK encryption.");
-            }
-
-            if (string.Equals(identityType, "UserAssigned", StringComparison.OrdinalIgnoreCase))
-            {
-                var uaId = commandResult.GetValue<string>(AzureBackupOptionDefinitions.UserAssignedIdentityId.Name);
-                if (string.IsNullOrEmpty(uaId))
-                {
-                    commandResult.AddError("--user-assigned-identity-id is required when --identity-type is 'UserAssigned'.");
-                }
-                else if (!uaId.StartsWith("/subscriptions/", StringComparison.OrdinalIgnoreCase))
-                {
-                    commandResult.AddError("--user-assigned-identity-id must be a valid ARM resource ID starting with '/subscriptions/'.");
-                }
-            }
-
-            var keyVaultUri = commandResult.GetValue<string>(AzureBackupOptionDefinitions.KeyVaultUri.Name);
-            if (!string.IsNullOrEmpty(keyVaultUri))
-            {
-                if (!Uri.TryCreate(keyVaultUri, UriKind.Absolute, out var uri))
-                {
-                    commandResult.AddError("--key-vault-uri must be a valid URI (e.g., 'https://kv-name.vault.azure.net/').");
-                }
-                else
-                {
-                    if (!string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
-                    {
-                        commandResult.AddError("--key-vault-uri must use HTTPS (e.g., 'https://kv-name.vault.azure.net/').");
-                    }
-
-                    if (uri.AbsolutePath != "/" && !string.IsNullOrEmpty(uri.AbsolutePath.TrimEnd('/')))
-                    {
-                        commandResult.AddError("--key-vault-uri must be the Key Vault base URI without path segments (e.g., 'https://kv-name.vault.azure.net/'). Do not include '/keys/...' in the URI.");
-                    }
-                }
-            }
-        });
-    }
-
-    protected override SecurityConfigureEncryptionOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.KeyVaultUri = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.KeyVaultUri.Name);
-        options.KeyName = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.KeyNameOption.Name);
-        options.KeyVersion = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.KeyVersion.Name);
-        options.IdentityType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.IdentityType.Name);
-        options.UserAssignedIdentityId = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.UserAssignedIdentityId.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("--identity-type must be 'SystemAssigned' or 'UserAssigned' for CMK encryption.");
         }
 
-        var options = BindOptions(parseResult);
+        if (string.Equals(options.IdentityType, "UserAssigned", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrEmpty(options.UserAssignedIdentityId))
+            {
+                validationResult.Errors.Add("--user-assigned-identity-id is required when --identity-type is 'UserAssigned'.");
+            }
+            else if (!options.UserAssignedIdentityId.StartsWith("/subscriptions/", StringComparison.OrdinalIgnoreCase))
+            {
+                validationResult.Errors.Add("--user-assigned-identity-id must be a valid ARM resource ID starting with '/subscriptions/'.");
+            }
+        }
 
+        if (!string.IsNullOrEmpty(options.KeyVaultUri))
+        {
+            if (!Uri.TryCreate(options.KeyVaultUri, UriKind.Absolute, out var uri))
+            {
+                validationResult.Errors.Add("--key-vault-uri must be a valid URI (e.g., 'https://kv-name.vault.azure.net/').");
+            }
+            else
+            {
+                if (!string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
+                {
+                    validationResult.Errors.Add("--key-vault-uri must use HTTPS (e.g., 'https://kv-name.vault.azure.net/').");
+                }
+
+                if (uri.AbsolutePath != "/" && !string.IsNullOrEmpty(uri.AbsolutePath.TrimEnd('/')))
+                {
+                    validationResult.Errors.Add("--key-vault-uri must be the Key Vault base URI without path segments (e.g., 'https://kv-name.vault.azure.net/'). Do not include '/keys/...' in the URI.");
+                }
+            }
+        }
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SecurityConfigureEncryptionOptions options, CancellationToken cancellationToken)
+    {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
         _lastVaultType = options.VaultType;
@@ -119,12 +89,12 @@ public sealed class SecurityConfigureEncryptionCommand(ILogger<SecurityConfigure
         try
         {
             var result = await _azureBackupService.ConfigureEncryptionAsync(
-                options.Vault!,
-                options.ResourceGroup!,
+                options.Vault,
+                options.ResourceGroup,
                 options.Subscription!,
-                options.KeyVaultUri!,
-                options.KeyName!,
-                options.IdentityType!,
+                options.KeyVaultUri,
+                options.KeyName,
+                options.IdentityType,
                 options.KeyVersion,
                 options.UserAssignedIdentityId,
                 options.VaultType,
@@ -171,5 +141,5 @@ public sealed class SecurityConfigureEncryptionCommand(ILogger<SecurityConfigure
         _ => base.GetStatusCode(ex)
     };
 
-    internal record SecurityConfigureEncryptionCommandResult(OperationResult Result);
+    public sealed record SecurityConfigureEncryptionCommandResult(OperationResult Result);
 }

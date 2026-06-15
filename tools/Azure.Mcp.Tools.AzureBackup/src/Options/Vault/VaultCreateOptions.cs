@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Vault;
 
 public class VaultCreateOptions : BaseAzureBackupOptions
 {
-    [JsonPropertyName(AzureBackupOptionDefinitions.LocationName)]
-    public string? Location { get; set; }
+    [Option(AzureBackupOptionDefinitions.Location)]
+    public required string Location { get; set; }
 
-    [JsonPropertyName(AzureBackupOptionDefinitions.SkuName)]
+    [Option("The vault SKU.")]
     public string? Sku { get; set; }
 
-    [JsonPropertyName(AzureBackupOptionDefinitions.StorageTypeName)]
+    [Option("Storage redundancy: 'GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant'.")]
     public string? StorageType { get; set; }
 }

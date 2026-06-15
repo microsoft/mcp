@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options;
 
 public class BaseProtectedItemOptions : BaseAzureBackupOptions
 {
-    [JsonPropertyName(AzureBackupOptionDefinitions.ProtectedItemName)]
+    [Option(AzureBackupOptionDefinitions.ProtectedItem)]
     public string? ProtectedItem { get; set; }
 
-    [JsonPropertyName(AzureBackupOptionDefinitions.ContainerName)]
+    [Option(AzureBackupOptionDefinitions.Container)]
     public string? Container { get; set; }
 }

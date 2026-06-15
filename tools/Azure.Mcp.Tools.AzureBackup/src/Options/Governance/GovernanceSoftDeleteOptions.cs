@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Governance;
 
 public class GovernanceSoftDeleteOptions : BaseAzureBackupOptions
 {
-    [JsonPropertyName(AzureBackupOptionDefinitions.SoftDeleteName)]
-    public string? SoftDeleteState { get; set; }
+    [Option(AzureBackupOptionDefinitions.SoftDelete)]
+    public required string SoftDelete { get; set; }
 
-    [JsonPropertyName(AzureBackupOptionDefinitions.SoftDeleteRetentionDaysName)]
+    [Option(AzureBackupOptionDefinitions.SoftDeleteRetentionDays)]
     public string? SoftDeleteRetentionDays { get; set; }
 }

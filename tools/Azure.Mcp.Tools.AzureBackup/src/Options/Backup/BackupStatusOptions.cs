@@ -1,16 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Backup;
 
-public class BackupStatusOptions : SubscriptionOptions
+public sealed class BackupStatusOptions : ISubscriptionOption
 {
-    [JsonPropertyName(AzureBackupOptionDefinitions.DatasourceIdName)]
-    public string? DatasourceId { get; set; }
+    [Option(OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
 
-    [JsonPropertyName(AzureBackupOptionDefinitions.LocationName)]
-    public string? Location { get; set; }
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Name = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
+
+    [Option(AzureBackupOptionDefinitions.DatasourceId)]
+    public required string DatasourceId { get; set; }
+
+    [Option(AzureBackupOptionDefinitions.LocationName)]
+    public required string Location { get; set; }
 }

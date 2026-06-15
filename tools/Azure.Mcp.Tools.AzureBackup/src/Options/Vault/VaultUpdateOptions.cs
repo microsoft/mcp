@@ -1,27 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Vault;
 
 public class VaultUpdateOptions : BaseAzureBackupOptions
 {
-    [JsonPropertyName(AzureBackupOptionDefinitions.RedundancyName)]
+    [Option("Storage redundancy: 'GeoRedundant', 'LocallyRedundant', 'ZoneRedundant', or 'ReadAccessGeoZoneRedundant'.")]
     public string? Redundancy { get; set; }
 
-    [JsonPropertyName(AzureBackupOptionDefinitions.SoftDeleteName)]
-    public string? SoftDeleteState { get; set; }
+    [Option(AzureBackupOptionDefinitions.SoftDelete)]
+    public string? SoftDelete { get; set; }
 
-    [JsonPropertyName(AzureBackupOptionDefinitions.SoftDeleteRetentionDaysName)]
+    [Option(AzureBackupOptionDefinitions.SoftDeleteRetentionDays)]
     public string? SoftDeleteRetentionDays { get; set; }
 
-    [JsonPropertyName(AzureBackupOptionDefinitions.ImmutabilityStateName)]
+    [Option(AzureBackupOptionDefinitions.ImmutabilityState)]
     public string? ImmutabilityState { get; set; }
 
-    [JsonPropertyName(AzureBackupOptionDefinitions.IdentityTypeName)]
+    [Option("Managed identity type: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', or 'None'.")]
     public string? IdentityType { get; set; }
 
-    [JsonPropertyName(AzureBackupOptionDefinitions.TagsName)]
+    [Option("Resource tags as JSON key-value object.")]
     public string? Tags { get; set; }
 }

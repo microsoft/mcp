@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Security;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Security;
@@ -30,45 +29,25 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Security;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<SecurityConfigureMuaOptions>()
+public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<SecurityConfigureMuaOptions, SecurityConfigureMuaCommand.SecurityConfigureMuaCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<SecurityConfigureMuaCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(SecurityConfigureMuaOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.ResourceGuardId);
-        command.Validators.Add(commandResult =>
-        {
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.ResourceGuardId.Name))
-            {
-                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.ResourceGuardId.Name);
-                if (!string.IsNullOrEmpty(value) &&
-                    !value.StartsWith("/subscriptions/", StringComparison.OrdinalIgnoreCase))
-                {
-                    commandResult.AddError("--resource-guard-id must be a valid ARM resource ID starting with '/subscriptions/'.");
-                }
-            }
-        });
-    }
+        base.ValidateOptions(options, validationResult);
 
-    protected override SecurityConfigureMuaOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGuardId = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ResourceGuardId.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        if (!string.IsNullOrEmpty(options.ResourceGuardId) &&
+            !options.ResourceGuardId.StartsWith("/subscriptions/", StringComparison.OrdinalIgnoreCase))
         {
-            return context.Response;
+            validationResult.Errors.Add("--resource-guard-id must be a valid ARM resource ID starting with '/subscriptions/'.");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SecurityConfigureMuaOptions options, CancellationToken cancellationToken)
+    {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
@@ -79,8 +58,8 @@ public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaComm
             if (!string.IsNullOrEmpty(options.ResourceGuardId))
             {
                 result = await _azureBackupService.ConfigureMultiUserAuthorizationAsync(
-                    options.Vault!,
-                    options.ResourceGroup!,
+                    options.Vault,
+                    options.ResourceGroup,
                     options.Subscription!,
                     options.ResourceGuardId,
                     options.VaultType,
@@ -91,8 +70,8 @@ public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaComm
             else
             {
                 result = await _azureBackupService.DisableMultiUserAuthorizationAsync(
-                    options.Vault!,
-                    options.ResourceGroup!,
+                    options.Vault,
+                    options.ResourceGroup,
                     options.Subscription!,
                     options.VaultType,
                     options.Tenant,
@@ -138,5 +117,5 @@ public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaComm
         _ => base.GetStatusCode(ex)
     };
 
-    internal record SecurityConfigureMuaCommandResult(OperationResult Result);
+    public sealed record SecurityConfigureMuaCommandResult(OperationResult Result);
 }

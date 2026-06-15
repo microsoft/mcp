@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Policy;
 
 public class PolicyUpdateOptions : BaseAzureBackupOptions
 {
-    [JsonPropertyName(AzureBackupOptionDefinitions.PolicyName)]
-    public string? Policy { get; set; }
+    [Option(AzureBackupOptionDefinitions.Policy)]
+    public required string Policy { get; set; }
 
-    [JsonPropertyName(AzureBackupOptionDefinitions.ScheduleTimeName)]
+    [Option("Backup schedule time in 24h HH:mm format (e.g., '02:00'). Used for policy update.")]
     public string? ScheduleTime { get; set; }
 
-    [JsonPropertyName(AzureBackupOptionDefinitions.DailyRetentionDaysName)]
+    [Option(AzureBackupOptionDefinitions.DailyRetentionDays)]
     public string? DailyRetentionDays { get; set; }
 }
