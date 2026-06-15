@@ -19,10 +19,10 @@ public class SqlServiceTests
 {
     private const string SubscriptionName = "my-subscription-name";
 
-    // Sentinel thrown by the mocked subscription service so tests can prove the
-    // service resolves the subscription via ISubscriptionService (the #449/#453 fix)
+    // Distinctive message thrown by the mocked subscription service so tests can prove
+    // the service resolves the subscription via ISubscriptionService (the #449/#453 fix)
     // instead of building a SubscriptionResource directly from the raw value.
-    private sealed class SubscriptionResolvedException : Exception;
+    private const string SubscriptionResolvedMessage = "SqlServiceTests: subscription resolved via ISubscriptionService";
 
     private readonly ISubscriptionService _subscriptionService;
     private readonly ITenantService _tenantService;
@@ -50,7 +50,7 @@ public class SqlServiceTests
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-            .ThrowsAsync<SubscriptionResolvedException>();
+            .ThrowsAsync(new InvalidOperationException(SubscriptionResolvedMessage));
 
         _service = new SqlService(_subscriptionService, _tenantService, _logger);
     }
@@ -58,25 +58,27 @@ public class SqlServiceTests
     [Fact]
     public async Task GetServerAsync_ResolvesSubscriptionThroughSubscriptionService()
     {
-        await Assert.ThrowsAsync<SubscriptionResolvedException>(() =>
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _service.GetServerAsync("server1", "rg", SubscriptionName, null, TestContext.Current.CancellationToken));
 
+        Assert.Equal(SubscriptionResolvedMessage, ex.Message);
         await AssertSubscriptionResolvedAsync();
     }
 
     [Fact]
     public async Task ListServersAsync_ResolvesSubscriptionThroughSubscriptionService()
     {
-        await Assert.ThrowsAsync<SubscriptionResolvedException>(() =>
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _service.ListServersAsync("rg", SubscriptionName, null, TestContext.Current.CancellationToken));
 
+        Assert.Equal(SubscriptionResolvedMessage, ex.Message);
         await AssertSubscriptionResolvedAsync();
     }
 
     [Fact]
     public async Task CreateServerAsync_ResolvesSubscriptionThroughSubscriptionService()
     {
-        await Assert.ThrowsAsync<SubscriptionResolvedException>(() =>
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _service.CreateServerAsync(
                 "server1",
                 "rg",
@@ -89,13 +91,14 @@ public class SqlServiceTests
                 null,
                 TestContext.Current.CancellationToken));
 
+        Assert.Equal(SubscriptionResolvedMessage, ex.Message);
         await AssertSubscriptionResolvedAsync();
     }
 
     [Fact]
     public async Task RenameDatabaseAsync_ResolvesSubscriptionThroughSubscriptionService()
     {
-        await Assert.ThrowsAsync<SubscriptionResolvedException>(() =>
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _service.RenameDatabaseAsync(
                 "server1",
                 "olddb",
@@ -105,6 +108,7 @@ public class SqlServiceTests
                 null,
                 TestContext.Current.CancellationToken));
 
+        Assert.Equal(SubscriptionResolvedMessage, ex.Message);
         await AssertSubscriptionResolvedAsync();
     }
 
