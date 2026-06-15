@@ -60,6 +60,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
         name: 'amlfs'
         properties: {
           addressPrefix: amlfsSubnetPrefix
+          defaultOutboundAccess: false
           natGateway: {
             id: natGateway.id
           }
@@ -71,6 +72,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
         name: 'amlfs-small'
         properties: {
           addressPrefix: amlfsSubnetSmallPrefix
+          defaultOutboundAccess: false
           natGateway: {
             id: natGateway.id
           }
@@ -221,6 +223,7 @@ resource keyVaultKey 'Microsoft.KeyVault/vaults/keys@2024-11-01' = {
 resource amlfs 'Microsoft.StorageCache/amlFilesystems@2024-07-01' = {
   name: baseName
   location: location
+  zones: ['1']
   sku: {
     name: amlfsSku
   }
