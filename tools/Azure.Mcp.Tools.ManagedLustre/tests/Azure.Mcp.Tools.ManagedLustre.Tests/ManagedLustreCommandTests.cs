@@ -597,7 +597,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "filesystem-name", sanitizedAmlfsName },
-                { "new-size", 8 },
+                { "new-size", 12 },
                 { "expansion-job-name", expansionJobNameStr },
                 { "tenant", Settings.TenantId }
             });
