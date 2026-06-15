@@ -1,0 +1,13 @@
+paths:
+  evals: ["./tools/Azure.Mcp.Tools.*/"]
+  results: "results/"
+  evalFilenames: ["eval.yaml", "eval.yml", "*.eval.yaml"]
+
+environments:
+  development:
+    mcpServers:
+      azmcp:
+        type: stdio
+        command: "./.work/build/Azure.Mcp.Server/macos-arm64/azmcp"
+        args: ["server", "start"]
+        timeout: "2m"
