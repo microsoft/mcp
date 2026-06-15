@@ -22,8 +22,6 @@ public class TableSchemaGetCommandTests : CommandUnitTestsBase<TableSchemaGetCom
         Service.GetTableSchemaAsync(AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "table123", Arg.Any<CancellationToken>()).Returns(expectedSchema);
 
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub123",
-            "--resource-group", "rg1",
             $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
             "--user", "user1",
             "--server", "server1",
@@ -40,8 +38,6 @@ public class TableSchemaGetCommandTests : CommandUnitTestsBase<TableSchemaGetCom
         Service.GetTableSchemaAsync(AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "table123", Arg.Any<CancellationToken>()).Returns([]);
 
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub123",
-            "--resource-group", "rg1",
             $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
             "--user", "user1",
             "--server", "server1",
@@ -53,8 +49,6 @@ public class TableSchemaGetCommandTests : CommandUnitTestsBase<TableSchemaGetCom
     }
 
     [Theory]
-    [InlineData("--subscription")]
-    [InlineData("--resource-group")]
     [InlineData("--user")]
     [InlineData("--server")]
     [InlineData("--database")]
@@ -62,8 +56,6 @@ public class TableSchemaGetCommandTests : CommandUnitTestsBase<TableSchemaGetCom
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
         var response = await ExecuteCommandAsync(ArgBuilder.BuildArgs(missingParameter,
-            ("--subscription", "sub123"),
-            ("--resource-group", "rg1"),
             ($"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra),
             ("--user", "user1"),
             ("--server", "server123"),
@@ -74,5 +66,17 @@ public class TableSchemaGetCommandTests : CommandUnitTestsBase<TableSchemaGetCom
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
+    }
+
+    [Fact]
+    public void Command_DoesNotExposeArmScopingOptions()
+    {
+        var optionNames = CommandDefinition.Options.Select(o => o.Name.TrimStart('-')).ToList();
+
+        Assert.DoesNotContain("subscription", optionNames);
+        Assert.DoesNotContain("resource-group", optionNames);
+        Assert.Contains(PostgresOptionDefinitions.UserName, optionNames);
+        Assert.Contains(PostgresOptionDefinitions.ServerName, optionNames);
+        Assert.Contains(PostgresOptionDefinitions.DatabaseName, optionNames);
     }
 }

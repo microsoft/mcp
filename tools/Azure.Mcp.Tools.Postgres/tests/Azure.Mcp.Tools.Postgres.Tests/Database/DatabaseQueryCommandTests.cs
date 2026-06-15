@@ -26,8 +26,6 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
             .Returns(expectedResults);
 
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub123",
-            "--resource-group", "rg1",
             $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
             "--user", "user1",
             "--server", "server1",
@@ -45,8 +43,6 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
             .Returns([]);
 
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub123",
-            "--resource-group", "rg1",
             $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
             "--user", "user1",
             "--server", "server1",
@@ -58,8 +54,6 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
     }
 
     [Theory]
-    [InlineData("--subscription")]
-    [InlineData("--resource-group")]
     [InlineData("--user")]
     [InlineData("--server")]
     [InlineData("--database")]
@@ -67,8 +61,6 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
         var response = await ExecuteCommandAsync(ArgBuilder.BuildArgs(missingParameter,
-            ("--subscription", "sub123"),
-            ("--resource-group", "rg1"),
             ($"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra),
             ("--user", "user1"),
             ("--server", "server123"),
@@ -79,6 +71,18 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
+    }
+
+    [Fact]
+    public void Command_DoesNotExposeArmScopingOptions()
+    {
+        var optionNames = CommandDefinition.Options.Select(o => o.Name.TrimStart('-')).ToList();
+
+        Assert.DoesNotContain("subscription", optionNames);
+        Assert.DoesNotContain("resource-group", optionNames);
+        Assert.Contains(PostgresOptionDefinitions.UserName, optionNames);
+        Assert.Contains(PostgresOptionDefinitions.ServerName, optionNames);
+        Assert.Contains(PostgresOptionDefinitions.DatabaseName, optionNames);
     }
 
     [Theory]
@@ -126,8 +130,6 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
     public async Task ExecuteAsync_InvalidQuery_ValidationError(string badQuery)
     {
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub123",
-            "--resource-group", "rg1",
             $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
             "--user", "user1",
             "--server", "server1",
@@ -145,8 +147,6 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
     {
         var longSelect = "SELECT " + new string('a', 6000) + " FROM test"; // exceeds max length
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub123",
-            "--resource-group", "rg1",
             $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
             "--user", "user1",
             "--server", "server1",

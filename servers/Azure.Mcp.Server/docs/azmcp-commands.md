@@ -2275,18 +2275,14 @@ azmcp postgres list --subscription <subscription> \
 
 # Execute a query on a PostgreSQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp postgres database query --subscription <subscription> \
-                              --resource-group <resource-group> \
-                              --user <user> \
+azmcp postgres database query --user <user> \
                               --server <server> \
                               --database <database> \
                               --query <query>
 
 # Get the schema of a specific table in a PostgreSQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp postgres table schema get --subscription <subscription> \
-                                --resource-group <resource-group> \
-                                --user <user> \
+azmcp postgres table schema get --user <user> \
                                 --server <server> \
                                 --database <database> \
                                 --table <table>
