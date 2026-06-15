@@ -16,10 +16,16 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Id = "0d3bd2d4-9b6e-4d7f-9f3a-2a1c8e1d4a02",
     Name = "list",
     Title = "List Advisor Recommendation Types",
-    Description = "List the catalog of Azure Advisor recommendation types, categories, and impact levels available in the tenant. " +
-                  "Use this for new or empty environments that do not yet have actual recommendations generated, or when you need the " +
-                  "canonical identifiers and display names of Advisor metadata dimensions. Optionally pass --filter to narrow to a single " +
-                  "dimension ('recommendationType', 'category', 'impact', or 'resourceType').",
+    Description = "List the catalog of Azure Advisor recommendation types — every recommendation Advisor can possibly generate, " +
+                  "with its category, impact, the resource type it targets, and sub-category. Results are sorted by impact " +
+                  "(High → Medium → Low) so the most important recommendations surface first. " +
+                  "Use this in two scenarios: " +
+                  "(1) greenfield/empty environments where no actual recommendations have been generated yet — the catalog still " +
+                  "shows what Advisor would recommend once resources exist; " +
+                  "(2) brownfield environments where a new resource type is being onboarded into an existing subscription — pass " +
+                  "--resource-type to see exactly which recommendations will apply to it. " +
+                  "Optionally narrow results with --resource-type (e.g. 'microsoft.compute/virtualmachines'), " +
+                  "--impact (High|Medium|Low), and/or --category (Cost|HighAvailability|Security|Performance|OperationalExcellence).",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -31,19 +37,45 @@ public sealed class RecommendationTypeListCommand(
     IAdvisorService advisorService)
     : GlobalCommand<RecommendationTypeListOptions>
 {
+    private static readonly string[] AllowedImpacts = ["High", "Medium", "Low"];
+
     private readonly ILogger<RecommendationTypeListCommand> _logger = logger;
     private readonly IAdvisorService _advisorService = advisorService;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(RecommendationTypeListOptionDefinitions.Filter);
+        command.Options.Add(RecommendationTypeListOptionDefinitions.ResourceType);
+        command.Options.Add(RecommendationTypeListOptionDefinitions.Impact);
+        command.Options.Add(RecommendationTypeListOptionDefinitions.Category);
+
+        command.Validators.Add(commandResult =>
+        {
+            if (!commandResult.TryGetValue(RecommendationTypeListOptionDefinitions.Impact, out string? value))
+            {
+                return;
+            }
+
+            var normalized = value?.Trim();
+            if (string.IsNullOrEmpty(normalized))
+            {
+                return;
+            }
+
+            if (!AllowedImpacts.Contains(normalized, StringComparer.OrdinalIgnoreCase))
+            {
+                commandResult.AddError(
+                    $"Invalid --impact value '{value}'. Allowed values: {string.Join(", ", AllowedImpacts)}.");
+            }
+        });
     }
 
     protected override RecommendationTypeListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Filter = parseResult.GetValueOrDefault<string>(RecommendationTypeListOptionDefinitions.Filter.Name);
+        options.ResourceType = parseResult.GetValueOrDefault<string>(RecommendationTypeListOptionDefinitions.ResourceType.Name);
+        options.Impact = parseResult.GetValueOrDefault<string>(RecommendationTypeListOptionDefinitions.Impact.Name);
+        options.Category = parseResult.GetValueOrDefault<string>(RecommendationTypeListOptionDefinitions.Category.Name);
         return options;
     }
 
@@ -60,7 +92,9 @@ public sealed class RecommendationTypeListCommand(
         {
             var recommendationTypes = await _advisorService.ListRecommendationTypesAsync(
                 options.Tenant,
-                options.Filter,
+                options.ResourceType,
+                options.Impact,
+                options.Category,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
@@ -70,8 +104,8 @@ public sealed class RecommendationTypeListCommand(
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing Advisor recommendation types. Tenant: {Tenant}, Filter: {Filter}.",
-                options.Tenant, options.Filter);
+                "Error listing Advisor recommendation types. Tenant: {Tenant}, ResourceType: {ResourceType}, Impact: {Impact}, Category: {Category}.",
+                options.Tenant, options.ResourceType, options.Impact, options.Category);
             HandleException(context, ex);
         }
 

@@ -7,5 +7,7 @@ namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
 public class RecommendationTypeListOptions : GlobalOptions
 {
-    public string? Filter { get; set; }
+    public string? ResourceType { get; set; }
+    public string? Impact { get; set; }
+    public string? Category { get; set; }
 }

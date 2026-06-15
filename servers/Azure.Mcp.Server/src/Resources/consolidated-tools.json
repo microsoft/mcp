@@ -743,7 +743,7 @@
     },
     {
       "name": "list_azure_advisor_recommendation_types",
-      "description": "List the catalog of Azure Advisor recommendation types, categories, and impact levels available in the tenant. Use this for new or empty environments that do not yet have Advisor recommendations generated, or when you need the canonical identifiers and display names of Advisor metadata dimensions. Optionally pass --filter to narrow to a single dimension ('recommendationType', 'category', 'impact', or 'resourceType').",
+      "description": "List the catalog of Azure Advisor recommendation types — every recommendation Advisor can possibly generate, with its category, impact, target resource type, and sub-category. Results are sorted by impact (High → Medium → Low) so the most important recommendations surface first. Use this in two scenarios: (1) greenfield/empty environments where no actual recommendations have been generated yet — the catalog still shows what Advisor would recommend once resources exist; (2) brownfield environments where a new resource type is being onboarded into an existing subscription — pass --resource-type to see exactly which recommendations will apply to it. Optionally narrow results with --resource-type (e.g. 'microsoft.compute/virtualmachines'), --impact (High|Medium|Low), and/or --category (Cost|HighAvailability|Security|Performance|OperationalExcellence).",
       "toolMetadata": {
         "destructive": {
           "value": false,

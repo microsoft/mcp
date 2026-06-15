@@ -15,14 +15,21 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Advisor.Tests.Services;
 
-// Focused unit tests for the new filter-mapping + projection logic added in
-// AdvisorService.ListRecommendationTypesAsync. The Advisor metadata endpoint is hit via
-// IHttpClientFactory so we stub the handler with a canned ARM payload; the ARM token
-// path is short-circuited by stubbing ITenantService.GetTokenCredentialAsync.
+// Focused unit tests for AdvisorService.ListRecommendationTypesAsync. The Advisor
+// metadata endpoint is hit via IHttpClientFactory so we stub the handler with a canned
+// ARM payload; the ARM token path is short-circuited by stubbing
+// ITenantService.GetTokenCredentialAsync.
+//
+// The service only consumes the `recommendationType` entity (the one whose supportedValues
+// carry per-type linkage to category/impact/resourceType/subCategory). Other metadata
+// entities in the payload are intentionally ignored — they belong in a future
+// `metadata list` command.
 public class AdvisorServiceTests
 {
-    // Canned ARM metadata response containing one entity per dimension. Mirrors the shape
-    // documented at https://learn.microsoft.com/rest/api/advisor/recommendation-metadata/list?view=rest-advisor-2025-01-01
+    // Canned ARM metadata response mirroring the live shape documented at
+    // https://learn.microsoft.com/rest/api/advisor/recommendation-metadata/list?view=rest-advisor-2025-01-01
+    // The recommendationType entry includes the rich linkage fields we now project.
+    // Other entities are present to confirm we ignore them.
     private const string SampleMetadataPayload = """
         {
           "value": [
@@ -33,8 +40,38 @@ public class AdvisorServiceTests
               "properties": {
                 "displayName": "Recommendation Type",
                 "supportedValues": [
-                  { "id": "rt-1", "displayName": "Right-size VMs" },
-                  { "id": "rt-2", "displayName": "Use reserved instances" }
+                  {
+                    "id": "vm-rightsize",
+                    "displayName": "Right-size or shutdown underutilized virtual machines",
+                    "recommendationCategory": "Cost",
+                    "recommendationImpact": "High",
+                    "supportedResourceType": "microsoft.compute/virtualmachines",
+                    "recommendationSubCategory": "UsageOptimization"
+                  },
+                  {
+                    "id": "vm-backup",
+                    "displayName": "Enable backups on virtual machines",
+                    "recommendationCategory": "HighAvailability",
+                    "recommendationImpact": "Medium",
+                    "supportedResourceType": "microsoft.compute/virtualmachines",
+                    "recommendationSubCategory": null
+                  },
+                  {
+                    "id": "sql-tde",
+                    "displayName": "Enable transparent data encryption",
+                    "recommendationCategory": "Security",
+                    "recommendationImpact": "High",
+                    "supportedResourceType": "microsoft.sql/servers/databases",
+                    "recommendationSubCategory": null
+                  },
+                  {
+                    "id": "storage-soft-delete",
+                    "displayName": "Enable soft delete on storage accounts",
+                    "recommendationCategory": "OperationalExcellence",
+                    "recommendationImpact": "Low",
+                    "supportedResourceType": "microsoft.storage/storageaccounts",
+                    "recommendationSubCategory": null
+                  }
                 ]
               }
             },
@@ -57,20 +94,7 @@ public class AdvisorServiceTests
               "properties": {
                 "displayName": "Impact",
                 "supportedValues": [
-                  { "id": "High", "displayName": "High" },
-                  { "id": "Medium", "displayName": "Medium" },
-                  { "id": "Low", "displayName": "Low" }
-                ]
-              }
-            },
-            {
-              "id": "providers/Microsoft.Advisor/metadata/supportedResourceType",
-              "name": "supportedResourceType",
-              "type": "Microsoft.Advisor/metadata",
-              "properties": {
-                "displayName": "Resource Type",
-                "supportedValues": [
-                  { "id": "microsoft.compute/virtualmachines", "displayName": "Virtual machines" }
+                  { "id": "High", "displayName": "High" }
                 ]
               }
             }
@@ -79,64 +103,134 @@ public class AdvisorServiceTests
         """;
 
     [Fact]
-    public async Task ListRecommendationTypesAsync_NoFilter_ReturnsAllSupportedValuesAcrossDimensions()
+    public async Task ListRecommendationTypesAsync_NoFilters_ReturnsOnlyRecommendationTypeEntries()
     {
         var service = CreateService(SampleMetadataPayload);
 
-        var result = await service.ListRecommendationTypesAsync(tenant: null, filter: null, TestContext.Current.CancellationToken);
+        var result = await service.ListRecommendationTypesAsync(
+            tenant: null, resourceType: null, impact: null, category: null,
+            TestContext.Current.CancellationToken);
 
-        // 2 (type) + 2 (category) + 3 (impact) + 1 (resourceType) = 8 entries
-        Assert.Equal(8, result.Count);
-    }
-
-    [Theory]
-    [InlineData("category", "Cost", "Performance")]
-    [InlineData("impact", "High", "Medium", "Low")]
-    [InlineData("recommendationType", "rt-1", "rt-2")]
-    [InlineData("resourceType", "microsoft.compute/virtualmachines")]
-    public async Task ListRecommendationTypesAsync_FriendlyFilter_TranslatesToArmEntityName(string filter, params string[] expectedIds)
-    {
-        var service = CreateService(SampleMetadataPayload);
-
-        var result = await service.ListRecommendationTypesAsync(tenant: null, filter, TestContext.Current.CancellationToken);
-
-        Assert.Equal(expectedIds.Length, result.Count);
-        Assert.Equal(expectedIds.OrderBy(x => x), result.Select(r => r.Id).OrderBy(x => x));
-    }
-
-    [Theory]
-    [InlineData("CATEGORY")]
-    [InlineData("Category")]
-    [InlineData("cAtEgOrY")]
-    public async Task ListRecommendationTypesAsync_FriendlyFilter_IsCaseInsensitive(string filter)
-    {
-        var service = CreateService(SampleMetadataPayload);
-
-        var result = await service.ListRecommendationTypesAsync(tenant: null, filter, TestContext.Current.CancellationToken);
-
-        Assert.Equal(2, result.Count);
-    }
-
-    [Theory]
-    [InlineData("recommendationCategory")]
-    [InlineData("RECOMMENDATIONCATEGORY")]
-    public async Task ListRecommendationTypesAsync_RawArmEntityName_AlsoMatches(string filter)
-    {
-        var service = CreateService(SampleMetadataPayload);
-
-        var result = await service.ListRecommendationTypesAsync(tenant: null, filter, TestContext.Current.CancellationToken);
-
-        Assert.Equal(2, result.Count);
+        // Only the 4 recommendationType supportedValues should be returned; entries from the
+        // recommendationCategory and recommendationImpact entities are intentionally ignored.
+        Assert.Equal(4, result.Count);
+        Assert.All(result, r => Assert.NotNull(r.Category));
+        Assert.All(result, r => Assert.NotNull(r.Impact));
+        Assert.All(result, r => Assert.NotNull(r.ResourceType));
     }
 
     [Fact]
-    public async Task ListRecommendationTypesAsync_UnknownFilter_ReturnsEmpty()
+    public async Task ListRecommendationTypesAsync_NoFilters_SortsHighMediumLow()
     {
         var service = CreateService(SampleMetadataPayload);
 
-        var result = await service.ListRecommendationTypesAsync(tenant: null, filter: "bogus", TestContext.Current.CancellationToken);
+        var result = await service.ListRecommendationTypesAsync(
+            tenant: null, resourceType: null, impact: null, category: null,
+            TestContext.Current.CancellationToken);
 
-        Assert.Empty(result);
+        // High impacts come first, then Medium, then Low. Two Highs tie so secondary
+        // sort by displayName (ascending) determines their order.
+        Assert.Equal(["High", "High", "Medium", "Low"], result.Select(r => r.Impact));
+        Assert.Equal("Enable transparent data encryption", result[0].DisplayName);
+        Assert.Equal("Right-size or shutdown underutilized virtual machines", result[1].DisplayName);
+    }
+
+    [Fact]
+    public async Task ListRecommendationTypesAsync_ResourceTypeFilter_MatchesCaseInsensitively()
+    {
+        var service = CreateService(SampleMetadataPayload);
+
+        var result = await service.ListRecommendationTypesAsync(
+            tenant: null,
+            resourceType: "MICROSOFT.COMPUTE/VIRTUALMACHINES",
+            impact: null,
+            category: null,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, result.Count);
+        Assert.All(result, r => Assert.Equal("microsoft.compute/virtualmachines", r.ResourceType));
+    }
+
+    [Theory]
+    [InlineData("High", 2)]
+    [InlineData("high", 2)]
+    [InlineData("Medium", 1)]
+    [InlineData("Low", 1)]
+    public async Task ListRecommendationTypesAsync_ImpactFilter_MatchesCaseInsensitively(string impact, int expectedCount)
+    {
+        var service = CreateService(SampleMetadataPayload);
+
+        var result = await service.ListRecommendationTypesAsync(
+            tenant: null, resourceType: null, impact, category: null,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(expectedCount, result.Count);
+    }
+
+    [Theory]
+    [InlineData("Cost", 1)]
+    [InlineData("security", 1)]
+    [InlineData("HighAvailability", 1)]
+    [InlineData("nonexistent", 0)]
+    public async Task ListRecommendationTypesAsync_CategoryFilter_MatchesCaseInsensitively(string category, int expectedCount)
+    {
+        var service = CreateService(SampleMetadataPayload);
+
+        var result = await service.ListRecommendationTypesAsync(
+            tenant: null, resourceType: null, impact: null, category,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(expectedCount, result.Count);
+    }
+
+    [Fact]
+    public async Task ListRecommendationTypesAsync_CombinedFilters_AreAndedTogether()
+    {
+        var service = CreateService(SampleMetadataPayload);
+
+        var result = await service.ListRecommendationTypesAsync(
+            tenant: null,
+            resourceType: "microsoft.compute/virtualmachines",
+            impact: "High",
+            category: "Cost",
+            TestContext.Current.CancellationToken);
+
+        Assert.Single(result);
+        Assert.Equal("vm-rightsize", result[0].Id);
+    }
+
+    [Fact]
+    public async Task ListRecommendationTypesAsync_BrownfieldOnboarding_ReturnsTypesForResourceTypeSortedByImpact()
+    {
+        // The meeting outcome: when a customer onboards a new resource type, calling with
+        // --resource-type returns all matching recommendations sorted by impact.
+        var service = CreateService(SampleMetadataPayload);
+
+        var result = await service.ListRecommendationTypesAsync(
+            tenant: null,
+            resourceType: "microsoft.compute/virtualmachines",
+            impact: null,
+            category: null,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, result.Count);
+        Assert.Equal("High", result[0].Impact);
+        Assert.Equal("Medium", result[1].Impact);
+    }
+
+    [Fact]
+    public async Task ListRecommendationTypesAsync_WhitespaceFilters_AreTreatedAsNoFilter()
+    {
+        var service = CreateService(SampleMetadataPayload);
+
+        var result = await service.ListRecommendationTypesAsync(
+            tenant: null,
+            resourceType: "   ",
+            impact: "",
+            category: null,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(4, result.Count);
     }
 
     [Fact]
@@ -146,7 +240,9 @@ public class AdvisorServiceTests
         var service = CreateService(sensitiveBody, HttpStatusCode.Unauthorized, "Unauthorized");
 
         var ex = await Assert.ThrowsAsync<HttpRequestException>(() =>
-            service.ListRecommendationTypesAsync(tenant: null, filter: null, TestContext.Current.CancellationToken));
+            service.ListRecommendationTypesAsync(
+                tenant: null, resourceType: null, impact: null, category: null,
+                TestContext.Current.CancellationToken));
 
         Assert.Equal(HttpStatusCode.Unauthorized, ex.StatusCode);
         Assert.DoesNotContain("do not leak me", ex.Message);

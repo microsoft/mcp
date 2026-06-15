@@ -335,10 +335,13 @@ azmcp advisor recommendation list --subscription <subscription>
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation apply --resource <resource>
 
-# List the catalog of Advisor recommendation types, categories, and impact levels available in the tenant.
-# Use for new or empty environments without generated recommendations, or to discover canonical IDs.
+# List the catalog of Advisor recommendation types — every recommendation Advisor can generate, with its category,
+# impact, target resource type, and sub-category. Results sorted by impact (High → Medium → Low). Use for greenfield
+# (empty environments) or brownfield (onboarding a new resource type into an existing subscription) scenarios.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation-type list [--filter <recommendationType|category|impact|resourceType>]
+azmcp advisor recommendation-type list [--resource-type <resource-type>] \
+                                       [--impact <High|Medium|Low>] \
+                                       [--category <category>]
 ```
 
 ### Azure AI Search Operations

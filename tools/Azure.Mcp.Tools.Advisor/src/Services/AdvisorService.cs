@@ -23,15 +23,20 @@ public class AdvisorService(
 {
     private const string AdvisorMetadataApiVersion = "2025-01-01";
 
-    // Map friendly user-facing filter values to the actual entity names returned by the
-    // ARM Advisor metadata API (case-insensitive). Friendly values used in CLI/MCP options;
-    // ARM entity names verified at /providers/Microsoft.Advisor/metadata?api-version=2025-01-01.
-    private static readonly Dictionary<string, string> FilterToEntityName = new(StringComparer.OrdinalIgnoreCase)
+    // ARM metadata entity name whose supportedValues[] carry the per-recommendation-type
+    // linkage we surface to callers (id, displayName, category, impact, resourceType, subCategory).
+    // The other entities (recommendationCategory, recommendationImpact, supportedResourceType)
+    // only enumerate dimension labels and are intentionally not surfaced here — that's a
+    // separate concern best handled by a future `metadata list` command.
+    private const string RecommendationTypeEntityName = "recommendationType";
+
+    // Impact ordering for client-side sorting. High → Medium → Low → (anything unknown).
+    // Lookup is case-insensitive so we don't depend on ARM always returning "High" vs "high".
+    private static readonly Dictionary<string, int> ImpactRank = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["recommendationType"] = "recommendationType",
-        ["category"] = "recommendationCategory",
-        ["impact"] = "recommendationImpact",
-        ["resourceType"] = "supportedResourceType",
+        ["High"] = 0,
+        ["Medium"] = 1,
+        ["Low"] = 2,
     };
 
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
@@ -56,7 +61,9 @@ public class AdvisorService(
 
     public async Task<List<RecommendationType>> ListRecommendationTypesAsync(
         string? tenant,
-        string? filter,
+        string? resourceType,
+        string? impact,
+        string? category,
         CancellationToken cancellationToken = default)
     {
         var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint
@@ -98,39 +105,66 @@ public class AdvisorService(
             return [];
         }
 
-        IEnumerable<RecommendationMetadataEntity> entities = apiResponse.Value;
-        if (!string.IsNullOrWhiteSpace(filter))
+        // We only consume the `recommendationType` entity — its supportedValues[] entries are the
+        // only ones that carry per-type linkage (category/impact/resourceType/subCategory).
+        var typeEntity = apiResponse.Value.FirstOrDefault(e =>
+            string.Equals(e.Name, RecommendationTypeEntityName, StringComparison.OrdinalIgnoreCase));
+
+        var supportedValues = typeEntity?.Properties?.SupportedValues;
+        if (supportedValues == null || supportedValues.Count == 0)
         {
-            // Translate friendly value (e.g. 'category') to actual ARM entity name (e.g. 'recommendationCategory').
-            // If the caller passed the raw ARM name, it still matches via the case-insensitive Equals fallback below.
-            var entityName = FilterToEntityName.TryGetValue(filter, out var mapped) ? mapped : filter;
-            entities = entities.Where(e =>
-                string.Equals(e.Name, entityName, StringComparison.OrdinalIgnoreCase));
+            return [];
         }
 
-        var results = new List<RecommendationType>();
-        foreach (var entity in entities)
+        // Normalize filter inputs once. Empty/whitespace means "no filter on this dimension".
+        var trimmedResourceType = string.IsNullOrWhiteSpace(resourceType) ? null : resourceType.Trim();
+        var trimmedImpact = string.IsNullOrWhiteSpace(impact) ? null : impact.Trim();
+        var trimmedCategory = string.IsNullOrWhiteSpace(category) ? null : category.Trim();
+
+        var results = new List<RecommendationType>(supportedValues.Count);
+        foreach (var value in supportedValues)
         {
-            var supportedValues = entity.Properties?.SupportedValues;
-            if (supportedValues == null)
+            if (string.IsNullOrEmpty(value.Id))
             {
                 continue;
             }
 
-            foreach (var value in supportedValues)
+            // Apply client-side filters case-insensitively. Data volume here is small
+            // (a few hundred recommendation types) so this is acceptable; server-side
+            // filtering on the ARM metadata endpoint is not currently supported.
+            if (trimmedResourceType != null &&
+                !string.Equals(value.SupportedResourceType, trimmedResourceType, StringComparison.OrdinalIgnoreCase))
             {
-                if (string.IsNullOrEmpty(value.Id))
-                {
-                    continue;
-                }
-
-                results.Add(new RecommendationType(
-                    Id: value.Id,
-                    DisplayName: value.DisplayName ?? value.Id));
+                continue;
             }
+
+            if (trimmedImpact != null &&
+                !string.Equals(value.RecommendationImpact, trimmedImpact, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (trimmedCategory != null &&
+                !string.Equals(value.RecommendationCategory, trimmedCategory, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            results.Add(new RecommendationType(
+                Id: value.Id,
+                DisplayName: value.DisplayName ?? value.Id,
+                Category: value.RecommendationCategory,
+                Impact: value.RecommendationImpact,
+                ResourceType: value.SupportedResourceType,
+                SubCategory: value.RecommendationSubCategory));
         }
 
-        return results;
+        // Sort by impact (High → Medium → Low → Unknown), then by displayName for stable ordering.
+        // This surfaces the most important recommendations first, which matches the meeting outcome
+        // (Sachin: "return all recommendations for that resource type, sorted by impact level").
+        return [.. results
+            .OrderBy(r => ImpactRank.TryGetValue(r.Impact ?? string.Empty, out var rank) ? rank : int.MaxValue)
+            .ThenBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase)];
     }
 
     private static Recommendation ConvertToAdvisorRecommendationModel(JsonElement item)

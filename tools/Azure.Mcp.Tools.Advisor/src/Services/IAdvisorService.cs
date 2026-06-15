@@ -17,6 +17,8 @@ public interface IAdvisorService
 
     Task<List<RecommendationType>> ListRecommendationTypesAsync(
         string? tenant,
-        string? filter,
+        string? resourceType,
+        string? impact,
+        string? category,
         CancellationToken cancellationToken = default);
 }

@@ -28,7 +28,16 @@ internal record RecommendationMetadataProperties(
     List<RecommendationMetadataSupportedValue>? SupportedValues
 );
 
+// The `recommendationType` metadata entity's supportedValues entries carry richer
+// per-type linkage fields beyond just id/displayName. These mirror the additional
+// properties in the ARM payload (verified against the live response). Other entities
+// (recommendationCategory, recommendationImpact, supportedResourceType) only populate
+// Id/DisplayName; the additional fields remain null for those.
 internal record RecommendationMetadataSupportedValue(
     string? Id,
-    string? DisplayName
+    string? DisplayName,
+    string? RecommendationCategory,
+    string? RecommendationImpact,
+    string? SupportedResourceType,
+    string? RecommendationSubCategory
 );
