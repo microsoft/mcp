@@ -23,7 +23,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver) 
+public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
     : BaseAzureBackupCommand<PolicyUpdateOptions, PolicyUpdateCommand.PolicyUpdateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<PolicyUpdateCommand> _logger = logger;
