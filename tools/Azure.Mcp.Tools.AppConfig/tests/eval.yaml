@@ -1,0 +1,20 @@
+name: App Configuration tools evaluator
+description: Evaluate App Configuration tools
+
+defaults:
+  runs: 1
+  timeout: 2m
+  model: gpt-5.5
+  judge_model: gpt-5.5
+  executor: copilot-sdk
+
+stimuli:
+  - name: gets-account-list
+    prompt: "List all App Configuration stores in my subscription"
+    environment: development
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: appconfig
+              command: "appconfig_account_list"
