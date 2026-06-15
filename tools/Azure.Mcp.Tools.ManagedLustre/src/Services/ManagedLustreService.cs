@@ -1245,5 +1245,176 @@ public sealed class ManagedLustreService(
             throw;
         }
     }
+
+    private static Models.ExpansionJob MapExpansionJob(ExpansionJobResource job)
+    {
+        var data = job.Data;
+        return new()
+        {
+            Name = data.Name,
+            Id = data.Id?.ToString(),
+            Type = data.ResourceType.ToString(),
+            Location = data.Location.ToString(),
+            Properties = new()
+            {
+                ProvisioningState = data.ProvisioningState?.ToString(),
+                NewStorageCapacityTiB = data.NewStorageCapacityTiB,
+                Status = new()
+                {
+                    State = data.State?.ToString(),
+                    StatusCode = data.StatusCode,
+                    StatusMessage = data.StatusMessage,
+                    PercentComplete = data.PercentComplete,
+                    StartTimeUTC = data.StartTimeUTC?.DateTime,
+                    CompletionTimeUTC = data.CompletionTimeUTC?.DateTime
+                }
+            }
+        };
+    }
+
+    public async Task<string> CreateExpansionJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        float newSizeTiB,
+        string? jobName = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+        if (fs?.Value == null)
+        {
+            throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+        }
+
+        jobName ??= $"expansion-{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+        var expansionJobData = new ExpansionJobData(fs.Value.Data.Location)
+        {
+            NewStorageCapacityTiB = newSizeTiB
+        };
+
+        var createOperation = await fs.Value.GetExpansionJobs().CreateOrUpdateAsync(
+            WaitUntil.Started,
+            jobName,
+            expansionJobData,
+            cancellationToken);
+        await WaitForLroCompletionAsync(createOperation, cancellationToken);
+
+        return createOperation.Value.Data.Name;
+    }
+
+    public async Task<Models.ExpansionJob> GetExpansionJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName),
+            (nameof(jobName), jobName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+        if (fs?.Value == null)
+        {
+            throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+        }
+
+        try
+        {
+            var job = await fs.Value.GetExpansionJobs().GetAsync(jobName, cancellationToken: cancellationToken);
+            return MapExpansionJob(job.Value);
+        }
+        catch (RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            _logger.LogWarning(rfe, "Expansion job '{JobName}' not found for filesystem '{FileSystemName}' in resource group '{ResourceGroup}'.", jobName, filesystemName, resourceGroup);
+            throw;
+        }
+    }
+
+    public async Task<List<Models.ExpansionJob>> ListExpansionJobsAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+        if (fs?.Value == null)
+        {
+            throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+        }
+
+        var results = new List<Models.ExpansionJob>();
+        await foreach (var job in fs.Value.GetExpansionJobs().GetAllAsync(cancellationToken: cancellationToken))
+        {
+            results.Add(MapExpansionJob(job));
+        }
+
+        return results;
+    }
+
+    public async Task DeleteExpansionJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName),
+            (nameof(jobName), jobName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+        if (fs?.Value == null)
+        {
+            throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+        }
+
+        try
+        {
+            var job = await fs.Value.GetExpansionJobs().GetAsync(jobName, cancellationToken: cancellationToken);
+            var deleteOperation = await job.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
+        }
+        catch (RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            _logger.LogWarning(rfe, "Expansion job '{JobName}' not found for filesystem '{FileSystemName}'.", jobName, filesystemName);
+            throw;
+        }
+    }
 }
 

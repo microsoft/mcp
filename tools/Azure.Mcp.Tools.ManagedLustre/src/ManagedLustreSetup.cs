@@ -4,6 +4,7 @@
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ExpansionJob;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,6 +41,9 @@ public class ManagedLustreSetup : IAreaSetup
         services.AddSingleton<ImportJobCancelCommand>();
         services.AddSingleton<ImportJobGetCommand>();
         services.AddSingleton<ImportJobDeleteCommand>();
+        services.AddSingleton<ExpansionJobCreateCommand>();
+        services.AddSingleton<ExpansionJobGetCommand>();
+        services.AddSingleton<ExpansionJobDeleteCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -88,6 +92,13 @@ public class ManagedLustreSetup : IAreaSetup
         blobImport.AddCommand<ImportJobCancelCommand>(serviceProvider);
         blobImport.AddCommand<ImportJobGetCommand>(serviceProvider);
         blobImport.AddCommand<ImportJobDeleteCommand>(serviceProvider);
+
+        var expansion = new CommandGroup("expansion", "Expansion job operations for Azure Managed Lustre - Commands for creating jobs to expand (resize) the storage capacity of an AMLFS filesystem.");
+        fileSystem.AddSubGroup(expansion);
+
+        expansion.AddCommand<ExpansionJobCreateCommand>(serviceProvider);
+        expansion.AddCommand<ExpansionJobGetCommand>(serviceProvider);
+        expansion.AddCommand<ExpansionJobDeleteCommand>(serviceProvider);
 
         return managedLustre;
     }
