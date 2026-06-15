@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ExpansionJob;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 
@@ -44,5 +45,12 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands;
 [JsonSerializable(typeof(SkuGetCommand.SkuGetResult))]
 [JsonSerializable(typeof(SubnetSizeAskCommand.FileSystemSubnetSizeResult))]
 [JsonSerializable(typeof(SubnetSizeValidateCommand.FileSystemCheckSubnetResult))]
+[JsonSerializable(typeof(ExpansionJobCreateCommand.ExpansionJobCreateResult))]
+[JsonSerializable(typeof(ExpansionJobGetCommand.ExpansionJobGetResult))]
+[JsonSerializable(typeof(ExpansionJobGetCommand.ExpansionJobListResult))]
+[JsonSerializable(typeof(ExpansionJobDeleteCommand.ExpansionJobDeleteResult))]
+[JsonSerializable(typeof(ExpansionJob))]
+[JsonSerializable(typeof(ExpansionJobProperties))]
+[JsonSerializable(typeof(ExpansionJobStatus))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal partial class ManagedLustreJsonContext : JsonSerializerContext;

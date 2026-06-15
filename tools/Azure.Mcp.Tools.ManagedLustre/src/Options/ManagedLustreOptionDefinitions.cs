@@ -281,6 +281,26 @@ public static class ManagedLustreOptionDefinitions
         Description = "Total non-conflict-oriented errors (e.g., OS errors) that import will tolerate before exiting with failure. -1: infinite. 0: exit immediately on any error."
     };
 
+    // Expansion job options
+    public const string newSize = "new-size";
+    public const string expansionJobName = "expansion-job-name";
+
+    public static readonly Option<float> NewSizeOption = new(
+        $"--{newSize}"
+    )
+    {
+        Required = true,
+        Description = "The new storage capacity in TiB for the AML file system after expansion. Must be a multiple of the SKU step size and greater than the current storage capacity. Example: --new-size 64"
+    };
+
+    public static readonly Option<string> ExpansionJobNameOption = new(
+        $"--{expansionJobName}"
+    )
+    {
+        Required = false,
+        Description = "The name of the expansion job. If not specified, a timestamped name will be generated."
+    };
+
     // Blob Import specific options
     public static readonly Option<string[]> ImportPrefixesOption = new(
         "--import-prefixes"
