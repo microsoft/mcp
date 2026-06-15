@@ -36,3 +36,5 @@ eng/tools/CopilotCliTester/src/results/
 
 # VM-specific documentation (internal/personal notes)
 docs/vm-docs/
+
+vally-results/
