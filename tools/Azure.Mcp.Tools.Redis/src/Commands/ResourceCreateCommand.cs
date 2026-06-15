@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Redis.Models;
 using Azure.Mcp.Tools.Redis.Options;
@@ -96,13 +95,6 @@ public sealed class ResourceCreateCommand(IRedisService redisService, ILogger<Re
 
         return context.Response;
     }
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        InvalidOperationException => HttpStatusCode.NotFound,
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
 
     internal record ResourceCreateCommandResult(Resource Resource);
 }

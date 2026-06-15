@@ -111,7 +111,7 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
     {
         // Arrange
         Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new InvalidOperationException("Subscription 'sub123' not found"));
+            .ThrowsAsync(new KeyNotFoundException("Subscription 'sub123' not found"));
 
         // Act
         var response = await ExecuteCommandAsync("--subscription", "sub123");

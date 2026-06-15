@@ -26,7 +26,7 @@ public class RedisServiceTests
     }
 
     [Fact]
-    public async Task ListResourcesAsync_ThrowsInvalidOperationException_WhenSubscriptionNotFound()
+    public async Task ListResourcesAsync_ThrowsKeyNotFoundException_WhenSubscriptionNotFound()
     {
         // Arrange - GetSubscription returning null should surface as a typed
         // not-found exception (404) rather than a plain Exception (500). See #458.
@@ -37,12 +37,12 @@ public class RedisServiceTests
         var service = CreateService(subscriptionService);
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        await Assert.ThrowsAsync<KeyNotFoundException>(
             () => service.ListResourcesAsync("sub123", cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
-    public async Task CreateResourceAsync_ThrowsInvalidOperationException_WhenSubscriptionNotFound()
+    public async Task CreateResourceAsync_ThrowsKeyNotFoundException_WhenSubscriptionNotFound()
     {
         // Arrange
         var subscriptionService = Substitute.For<ISubscriptionService>();
@@ -52,7 +52,7 @@ public class RedisServiceTests
         var service = CreateService(subscriptionService);
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        await Assert.ThrowsAsync<KeyNotFoundException>(
             () => service.CreateResourceAsync("sub123", "rg1", "cache1", "eastus", "Balanced_B0", cancellationToken: TestContext.Current.CancellationToken));
     }
 

@@ -442,7 +442,7 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-        .ThrowsAsync(new InvalidOperationException("Resource group 'test-rg' not found in subscription 'sub123'"));
+        .ThrowsAsync(new KeyNotFoundException("Resource group 'test-rg' not found in subscription 'sub123'"));
 
         // Act
         var response = await ExecuteCommandAsync(

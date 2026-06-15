@@ -35,7 +35,7 @@ public class RedisService(
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
-            ?? throw new InvalidOperationException($"Subscription '{subscription}' not found");
+            ?? throw new KeyNotFoundException($"Subscription '{subscription}' not found");
 
         var resources = new List<Resource>();
         var resourcesTasks = new List<Task<IEnumerable<Resource>>>();
@@ -92,14 +92,14 @@ public class RedisService(
         }
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
-            ?? throw new InvalidOperationException($"Subscription '{subscription}' not found");
+            ?? throw new KeyNotFoundException($"Subscription '{subscription}' not found");
 
         var resourceGroups = subscriptionResource.GetResourceGroups();
         var resourceGroupResource = await resourceGroups.GetAsync(resourceGroup, cancellationToken);
 
         if (resourceGroupResource.Value == null)
         {
-            throw new InvalidOperationException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
+            throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
         }
 
         var accessKeyAuthenticationString = accessKeyAuthenticationEnabled == true
