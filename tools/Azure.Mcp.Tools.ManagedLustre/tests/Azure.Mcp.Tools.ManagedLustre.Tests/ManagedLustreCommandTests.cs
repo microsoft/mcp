@@ -577,80 +577,86 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
         var importDeleteJobName = importDeleteResult.AssertProperty("jobName");
         Assert.Contains(importJobNameStr, importDeleteJobName.GetRawText());
+    }
 
-        // Wait for filesystem to stabilize after deleting import job and before creating expansion job
-        await Task.Delay(PollInterval(15_000), TestContext.Current.CancellationToken);
+    [Fact]
+    public async Task Should_create_get_list_and_delete_expansion_job()
+    {
+        var amlfsId = Settings.DeploymentOutputs.GetValueOrDefault("AMLFS_ID", "");
+        var amlfsName = amlfsId.Split('/').Last();
+        var sanitizedAmlfsName = SanitizeAndRecordBaseName(amlfsName, "existingAmlfsName");
+        var resourceGroupName = SanitizeAndRecordResourceGroupName(Settings.ResourceGroupName, "resourceGroupName");
 
-        // Test expansion job lifecycle
-        var expansionJobNameStr = $"expansion-{fsName}";
-        var expansionCreateResult = await CallToolAsync(
+        var expansionJobNameStr = $"expansion-{Guid.NewGuid().ToString()[..8]}";
+
+        // Create expansion job
+        var createResult = await CallToolAsync(
             "managedlustre_fs_expansion_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
-                { "filesystem-name", fsName },
+                { "filesystem-name", sanitizedAmlfsName },
                 { "new-size", 8 },
                 { "expansion-job-name", expansionJobNameStr },
                 { "tenant", Settings.TenantId }
             });
 
-        var expansionJobName = expansionCreateResult.AssertProperty("jobName");
-        Assert.Equal(JsonValueKind.String, expansionJobName.ValueKind);
-        Assert.False(string.IsNullOrWhiteSpace(expansionJobName.GetString()));
+        var createdJobName = createResult.AssertProperty("jobName");
+        Assert.Equal(JsonValueKind.String, createdJobName.ValueKind);
+        Assert.False(string.IsNullOrWhiteSpace(createdJobName.GetString()));
 
-        // Wait for expansion job to complete before listing/getting
-        var expansionMaxWaitTime = TimeSpan.FromMinutes(30);
-        var expansionStartTime = DateTime.UtcNow;
-        var expansionCompleted = false;
+        // Wait for expansion job to complete
+        var maxWaitTime = TimeSpan.FromMinutes(30);
+        var startTime = DateTime.UtcNow;
+        var completed = false;
 
-        while (DateTime.UtcNow - expansionStartTime < expansionMaxWaitTime)
+        while (DateTime.UtcNow - startTime < maxWaitTime)
         {
-            var expansionCheckResult = await CallToolAsync(
+            var checkResult = await CallToolAsync(
                 "managedlustre_fs_expansion_get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", resourceGroupName },
-                    { "filesystem-name", fsName },
+                    { "filesystem-name", sanitizedAmlfsName },
                     { "expansion-job-name", expansionJobNameStr },
                     { "tenant", Settings.TenantId }
                 });
 
-            var expansionCheckJob = expansionCheckResult.AssertProperty("job");
-            var expansionCheckJobText = expansionCheckJob.GetRawText();
-            Output.WriteLine($"Expansion job status: {expansionCheckJobText}");
+            var checkJob = checkResult.AssertProperty("job");
+            var checkJobText = checkJob.GetRawText();
+            Output.WriteLine($"Expansion job status: {checkJobText}");
 
-            if (expansionCheckJobText.Contains("Succeeded", StringComparison.OrdinalIgnoreCase) ||
-                expansionCheckJobText.Contains("Completed", StringComparison.OrdinalIgnoreCase))
+            if (checkJobText.Contains("Succeeded", StringComparison.OrdinalIgnoreCase) ||
+                checkJobText.Contains("Completed", StringComparison.OrdinalIgnoreCase))
             {
-                expansionCompleted = true;
+                completed = true;
                 break;
             }
 
             await Task.Delay(PollInterval(30_000), TestContext.Current.CancellationToken);
         }
 
-        Assert.True(expansionCompleted, $"Expansion job '{expansionJobNameStr}' did not complete within {expansionMaxWaitTime.TotalMinutes} minutes.");
+        Assert.True(completed, $"Expansion job '{expansionJobNameStr}' did not complete within {maxWaitTime.TotalMinutes} minutes.");
 
         // List expansion jobs (get without expansion-job-name returns all jobs)
-        var expansionListResult = await CallToolAsync(
+        var listResult = await CallToolAsync(
             "managedlustre_fs_expansion_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
-                { "filesystem-name", fsName },
+                { "filesystem-name", sanitizedAmlfsName },
                 { "tenant", Settings.TenantId }
-                // Intentionally omitting expansion-job-name to list all jobs
             });
 
-        var expansionJobs = expansionListResult.AssertProperty("jobs");
-        Assert.Equal(JsonValueKind.Array, expansionJobs.ValueKind);
+        var jobs = listResult.AssertProperty("jobs");
+        Assert.Equal(JsonValueKind.Array, jobs.ValueKind);
         var foundExpansion = false;
-        var expansionJobTexts = expansionJobs.EnumerateArray().Select(job => job.GetRawText());
-        foreach (var jobText in expansionJobTexts)
+        foreach (var job in jobs.EnumerateArray())
         {
+            var jobText = job.GetRawText();
             Output.WriteLine($"Checking expansion job: {jobText}");
             if (jobText.Contains(expansionJobNameStr))
             {
@@ -661,39 +667,38 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         }
         Assert.True(foundExpansion, $"Expected to find expansion job '{expansionJobNameStr}' in the list.");
 
-        // Get expansion job
-        var expansionGetResult = await CallToolAsync(
+        // Get specific expansion job
+        var getResult = await CallToolAsync(
             "managedlustre_fs_expansion_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
-                { "filesystem-name", fsName },
+                { "filesystem-name", sanitizedAmlfsName },
                 { "expansion-job-name", expansionJobNameStr },
                 { "tenant", Settings.TenantId }
             });
 
-        var expansionJob = expansionGetResult.AssertProperty("job");
+        var expansionJob = getResult.AssertProperty("job");
         Assert.Equal(JsonValueKind.Object, expansionJob.ValueKind);
-        var expansionJobText = expansionJob.GetRawText();
-        Assert.Contains(expansionJobNameStr, expansionJobText);
+        Assert.Contains(expansionJobNameStr, expansionJob.GetRawText());
 
         // Delete expansion job
-        var expansionDeleteResult = await CallToolAsync(
+        var deleteResult = await CallToolAsync(
             "managedlustre_fs_expansion_delete",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
-                { "filesystem-name", fsName },
+                { "filesystem-name", sanitizedAmlfsName },
                 { "expansion-job-name", expansionJobNameStr },
                 { "tenant", Settings.TenantId }
             });
 
-        var expansionDeleteJobName = expansionDeleteResult.AssertProperty("jobName");
-        Assert.Contains(expansionJobNameStr, expansionDeleteJobName.GetRawText());
-        var expansionDeleteStatus = expansionDeleteResult.AssertProperty("status");
-        Assert.Equal("Deleted", expansionDeleteStatus.GetString());
+        var deleteJobName = deleteResult.AssertProperty("jobName");
+        Assert.Contains(expansionJobNameStr, deleteJobName.GetRawText());
+        var deleteStatus = deleteResult.AssertProperty("status");
+        Assert.Equal("Deleted", deleteStatus.GetString());
     }
 
     [Fact]
