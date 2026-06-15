@@ -213,6 +213,7 @@ internal class Program
             new Azure.Mcp.Tools.KeyVault.KeyVaultSetup(),
             new Azure.Mcp.Tools.Kusto.KustoSetup(),
             new Azure.Mcp.Tools.LoadTesting.LoadTestingSetup(),
+            new Azure.Mcp.Tools.ManagedCleanroom.ManagedCleanroomSetup(),
             new Azure.Mcp.Tools.Marketplace.MarketplaceSetup(),
             new Azure.Mcp.Tools.Quota.QuotaSetup(),
             new Azure.Mcp.Tools.Monitor.MonitorSetup(),

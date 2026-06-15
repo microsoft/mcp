@@ -158,6 +158,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.ConfidentialLedger/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.ConfidentialLedger/tests/Azure.Mcp.Tools.ConfidentialLedger.Tests/Azure.Mcp.Tools.ConfidentialLedger.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ManagedCleanroom/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.ManagedCleanroom/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.ManagedCleanroom/src/Azure.Mcp.Tools.ManagedCleanroom.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ManagedCleanroom/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.ManagedCleanroom/tests/Azure.Mcp.Tools.ManagedCleanroom.Tests/Azure.Mcp.Tools.ManagedCleanroom.Tests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ContainerApps/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ContainerApps/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.ContainerApps/src/Azure.Mcp.Tools.ContainerApps.csproj" />
