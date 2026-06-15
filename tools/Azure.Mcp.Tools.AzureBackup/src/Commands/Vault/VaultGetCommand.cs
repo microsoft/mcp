@@ -137,7 +137,7 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Vault not found. Verify the vault name and resource group.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            "Authorization failed listing vaults. Ensure you have 'Reader' or 'Backup Reader' role at subscription scope.",
+            "Authorization failed accessing vault information. Ensure you have 'Reader' or 'Backup Reader' role at subscription scope.",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
