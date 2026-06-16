@@ -2,11 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Azure.ResourceManager;
+using Azure.ResourceManager.Resources;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models;
@@ -14,6 +16,7 @@ using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.Tests;
@@ -193,6 +196,44 @@ public class CosmosServiceTests : IAsyncDisposable
             CacheKeyBuilder.Build("clients", "myaccount", "sub123", string.Empty, "Credential"),
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetCosmosAccounts_ResourceGroupNotFound_ThrowsKeyNotFoundException()
+    {
+        // Arrange: the resource group lookup returns a 404, which should surface as a not-found.
+        var subscriptionResource = Substitute.For<SubscriptionResource>();
+        _subscriptionService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(subscriptionResource);
+        subscriptionResource.GetResourceGroupAsync("missing-rg", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(404, "Resource group not found"));
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            _service.GetCosmosAccounts("sub123", "missing-rg", cancellationToken: TestContext.Current.CancellationToken));
+        Assert.Contains("Resource group 'missing-rg' not found", ex.Message);
+    }
+
+    [Fact]
+    public async Task ListDatabases_KeyAuthResourceGroupNotFound_ThrowsKeyNotFoundException()
+    {
+        // Arrange: key auth resolves the account through the resource group fast path; a missing
+        // resource group should surface as a KeyNotFoundException (HTTP 404) rather than a raw 404.
+        _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(default(CosmosClient));
+        _cacheService.GetAsync<List<string>>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(default(List<string>));
+
+        var subscriptionResource = Substitute.For<SubscriptionResource>();
+        _subscriptionService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(subscriptionResource);
+        subscriptionResource.GetResourceGroupAsync("missing-rg", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(404, "Resource group not found"));
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            _service.ListDatabases("myaccount", "sub123", AuthMethod.Key, resourceGroup: "missing-rg", cancellationToken: TestContext.Current.CancellationToken));
+        Assert.Contains("Resource group 'missing-rg' not found", ex.Message);
     }
 
     [Fact]

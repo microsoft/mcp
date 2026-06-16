@@ -25,5 +25,6 @@
   "azure-validate",
   "entra-agent-id",
   "entra-app-registration",
-  "microsoft-foundry"
+  "microsoft-foundry",
+  "python-appservice-deploy"
 ]

@@ -18,12 +18,11 @@ public class ServerParamSetCommandTests : CommandUnitTestsBase<ServerParamSetCom
     public async Task ExecuteAsync_SetsParameter_WhenSuccessful()
     {
         var newValue = "100";
-        Service.SetServerParameterAsync("sub123", "rg1", "user1", "test-server", "max_connections", newValue, Arg.Any<CancellationToken>()).Returns(newValue);
+        Service.SetServerParameterAsync("sub123", "rg1", "test-server", "max_connections", newValue, Arg.Any<CancellationToken>()).Returns(newValue);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "test-server",
             "--param", "max_connections",
             "--value", newValue);
@@ -36,13 +35,12 @@ public class ServerParamSetCommandTests : CommandUnitTestsBase<ServerParamSetCom
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenServiceThrows()
     {
-        Service.SetServerParameterAsync("sub123", "rg1", "user1", "test-server", "invalid_param", "100", Arg.Any<CancellationToken>())
+        Service.SetServerParameterAsync("sub123", "rg1", "test-server", "invalid_param", "100", Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Parameter 'invalid_param' not found."));
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "test-server",
             "--param", "invalid_param",
             "--value", "100");

@@ -16,6 +16,7 @@ using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Npgsql;
 
@@ -257,9 +258,11 @@ public class PostgresService(
         string resourceGroup,
         string user,
         string server,
-        CancellationToken cancellationToken)
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
 
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
@@ -280,9 +283,11 @@ public class PostgresService(
         string user,
         string server,
         string param,
-        CancellationToken cancellationToken)
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
 
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
@@ -302,9 +307,11 @@ public class PostgresService(
         string server,
         string param,
         string value,
-        CancellationToken cancellationToken)
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
 
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
