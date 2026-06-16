@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Buffers;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
-using AnalyticsFrontendAPI;
 using Azure;
 using Azure.Core;
-using Azure.Core.Pipeline;
 using Azure.Mcp.Tools.ManagedCleanroom.Commands;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -24,8 +25,11 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    private const string CollaborationsListPath = "gets";
     private static readonly TimeSpan ProvisioningPollInterval = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan ProvisioningTimeout = TimeSpan.FromMinutes(40);
+
+    // Note: These constants are retained for future use in a dedicated status-check command.
 
     public async Task<JsonElement> ListCollaborationsAsync(
         string endpoint,
@@ -35,13 +39,44 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        var client = await BuildClientAsync(endpoint, allowUntrustedCert, tokenScope, tenant, cancellationToken)
-            .ConfigureAwait(false);
+        ValidateRequiredParameters((nameof(endpoint), endpoint));
 
-        var requestContext = new RequestContext { CancellationToken = cancellationToken };
-        Response response = await client.GetGetsAsync(activeOnly, requestContext).ConfigureAwait(false);
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var endpointUri))
+        {
+            throw new ArgumentException($"Endpoint '{endpoint}' is not a valid absolute URI.", nameof(endpoint));
+        }
 
-        return ParseResponse(response);
+        if (endpointUri.Scheme != Uri.UriSchemeHttps)
+        {
+            throw new ArgumentException("Endpoint must use HTTPS.", nameof(endpoint));
+        }
+
+        var requestUri = BuildCollaborationsListUri(endpointUri, activeOnly);
+        using var client = CreateHttpClient(allowUntrustedCert);
+        using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+
+        var credential = await GetCredential(tenant, cancellationToken).ConfigureAwait(false);
+        var scope = ResolveTokenScope(endpointUri, tokenScope);
+        var token = await credential.GetTokenAsync(
+            new TokenRequestContext([scope]),
+            cancellationToken).ConfigureAwait(false);
+
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+
+        using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        var responseBody = await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var message = responseBody.Length > 0
+                ? Encoding.UTF8.GetString(responseBody)
+                : $"Managed Cleanroom list request failed with HTTP {(int)response.StatusCode}.";
+            throw new InvalidOperationException(message);
+        }
+
+        return responseBody.Length == 0
+            ? default
+            : JsonSerializer.Deserialize(responseBody, ManagedCleanroomJsonContext.Default.JsonElement);
     }
 
     public async Task<CollaborationCreateResult> CreateCollaborationArmResourceAsync(
@@ -86,7 +121,7 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
             });
         }
 
-        // Fire the ARM PUT without blocking — provisioning takes ~25 minutes.
+        // Fire the ARM PUT and return immediately — provisioning takes ~25 minutes in the background.
         await resourceGroupResource.GetCollaborations()
             .CreateOrUpdateAsync(
                 WaitUntil.Started,
@@ -95,91 +130,45 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
                 cancellationToken)
             .ConfigureAwait(false);
 
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        var timeoutAt = DateTimeOffset.UtcNow + ProvisioningTimeout;
-        var resource = armClient.GetCollaborationResource(
-            CollaborationResource.CreateResourceIdentifier(subscriptionResource.Id.SubscriptionId!, resourceGroup, name));
-        var provisioningState = "Accepted";
-        JsonElement properties = default;
+        var message = $"Collaboration '{name}' creation request accepted. " +
+            "Provisioning is running in the background and typically takes ~25 minutes to complete. " +
+            $"You can check the status by asking to get the collaboration '{name}' in resource group '{resourceGroup}'.";
 
-        while (provisioningState is not ("Succeeded" or "Failed" or "Canceled"))
-        {
-            if (DateTimeOffset.UtcNow >= timeoutAt)
-            {
-                throw new TimeoutException(
-                    $"Timed out waiting for collaboration provisioning to reach a terminal state. Last known state: '{provisioningState}'.");
-            }
-
-            await Task.Delay(ProvisioningPollInterval, cancellationToken).ConfigureAwait(false);
-
-            var getResponse = await resource.GetAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-            properties = SerializeCollaborationData(getResponse.Value.Data);
-            provisioningState = getResponse.Value.Data.ProvisioningState?.ToString() ?? "Unknown";
-        }
-
-        stopwatch.Stop();
-        var elapsed = stopwatch.Elapsed;
-
-        if (provisioningState is "Failed" or "Canceled")
-        {
-            throw new InvalidOperationException(
-                $"Collaboration provisioning {provisioningState.ToLowerInvariant()} after " +
-                $"{(int)elapsed.TotalMinutes}m {elapsed.Seconds}s. " +
-                $"Properties: {properties}");
-        }
-
-        var message = $"Collaboration provisioning succeeded after " +
-            $"{(int)elapsed.TotalMinutes}m {elapsed.Seconds}s " +
-            "(expected ~25 minutes).";
-
-        return new CollaborationCreateResult(properties, message);
+        return new CollaborationCreateResult(default, message);
     }
 
-    private async Task<CollaborationClient> BuildClientAsync(
-        string endpoint,
-        bool allowUntrustedCert,
-        string? tokenScope,
-        string? tenant,
-        CancellationToken cancellationToken)
+    private HttpClient CreateHttpClient(bool allowUntrustedCert)
     {
-        ValidateRequiredParameters((nameof(endpoint), endpoint));
+        var clientName = allowUntrustedCert
+            ? ManagedCleanroomSetup.UnsafeHttpClientName
+            : ManagedCleanroomSetup.DefaultHttpClientName;
 
-        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var endpointUri))
+        return _httpClientFactory.CreateClient(clientName);
+    }
+
+    internal static Uri BuildCollaborationsListUri(Uri endpointUri, bool? activeOnly)
+    {
+        // The current frontend route for listing collaborations is /gets.
+        var basePath = endpointUri.AbsolutePath.TrimEnd('/');
+        var path = string.IsNullOrEmpty(basePath) || basePath == "/"
+            ? $"/{CollaborationsListPath}"
+            : $"{basePath}/{CollaborationsListPath}";
+
+        var builder = new UriBuilder(endpointUri)
         {
-            throw new ArgumentException($"Endpoint '{endpoint}' is not a valid absolute URI.", nameof(endpoint));
+            Path = path
+        };
+
+        if (activeOnly.HasValue)
+        {
+            var existingQuery = endpointUri.Query.TrimStart('?');
+            var activeOnlyParam = $"activeOnly={activeOnly.Value.ToString().ToLowerInvariant()}";
+            builder.Query = string.IsNullOrEmpty(existingQuery)
+                ? activeOnlyParam
+                : $"{existingQuery}&{activeOnlyParam}";
         }
 
-        if (endpointUri.Scheme != Uri.UriSchemeHttps)
-        {
-            throw new ArgumentException("Endpoint must use HTTPS.", nameof(endpoint));
-        }
-
-        var credential = await GetCredential(tenant, cancellationToken).ConfigureAwait(false);
-        var options = new CollaborationClientOptions();
-        var scope = ResolveTokenScope(endpointUri, tokenScope);
-        options.AddPolicy(
-            new BearerTokenAuthenticationPolicy(credential, scope),
-            HttpPipelinePosition.PerCall);
-
-        var testProxyUrl = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
-        if (!string.IsNullOrWhiteSpace(testProxyUrl))
-        {
-            options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
-        }
-        else if (allowUntrustedCert)
-        {
-            var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-            };
-            options.Transport = new HttpClientTransport(handler);
-        }
-        else
-        {
-            options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
-        }
-
-        return new CollaborationClient(endpointUri, options);
+        return builder.Uri;
     }
 
     internal static string ResolveTokenScope(Uri endpointUri, string? tokenScope)
@@ -190,18 +179,6 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
         }
 
         return $"{endpointUri.GetLeftPart(UriPartial.Authority)}/.default";
-    }
-
-    private static JsonElement ParseResponse(Response response)
-    {
-        if (response.Content is null)
-        {
-            return default;
-        }
-
-        return JsonSerializer.Deserialize(
-            response.Content.ToMemory().Span,
-            ManagedCleanroomJsonContext.Default.JsonElement);
     }
 
     private static JsonElement SerializeCollaborationData(CollaborationData data)
