@@ -36,7 +36,7 @@ public sealed class ServerConfigGetCommand(IPostgresService postgresService, ILo
         try
         {
 
-            var config = await _postgresService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, cancellationToken);
+            var config = await _postgresService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Tenant, options.RetryPolicy, cancellationToken);
             context.Response.Results = config?.Length > 0 ?
                 ResponseResult.Create(new(config), PostgresJsonContext.Default.ServerConfigGetCommandResult) :
                 null;

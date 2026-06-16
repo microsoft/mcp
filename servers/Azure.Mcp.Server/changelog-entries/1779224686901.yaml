@@ -1,0 +1,8 @@
+changes:
+  - section: "Bugs Fixed"
+    description: |
+      Fixed several issues in the MySQL toolset:
+      - `azmcp mysql list` now works when `--resource-group` is omitted. It now lists all MySQL servers across the subscription using a single ARM API call, matching the behavior of the PostgreSQL toolset.
+      - `--user` is no longer required for ARM-only commands (`server config get`, `server param get`, `server param set`). It is now only required for commands that open a direct database connection (`database query`, `table schema get`).
+      - Resource-group and parameter not-found errors now return HTTP 404 instead of HTTP 500, enabling callers to distinguish missing resources from unexpected failures.
+      - The query safety validator's compiled regex is now initialized once at startup rather than on every call, improving performance and ensuring AOT compatibility.
