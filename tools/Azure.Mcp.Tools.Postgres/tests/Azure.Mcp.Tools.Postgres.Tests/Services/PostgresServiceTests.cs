@@ -202,6 +202,7 @@ namespace Azure.Mcp.Tools.Postgres.Tests.Services
                 () => sut.ListServersAsync(subscriptionId, resourceGroup, TestContext.Current.CancellationToken));
             Assert.Contains(resourceGroup, ex.Message);
         }
+
         [Fact]
         public async Task ListTablesAsync_UsesParameterizedSchemaQuery_AndDefaultsAreNotInterpolated()
         {
@@ -225,6 +226,9 @@ namespace Azure.Mcp.Tools.Postgres.Tests.Services
             Assert.Equal("analytics", command.Parameters[0].Value);
         }
     }
+
+    /// <summary>
+    /// Subclass that replaces the un-mockable ARM SDK extension-method calls with
     /// in-memory sequences, isolating <see cref="PostgresService.ListServersAsync"/> logic.
     /// </summary>
     internal sealed class TestablePostgresService(
