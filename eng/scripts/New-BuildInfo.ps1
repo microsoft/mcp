@@ -459,6 +459,15 @@ function Get-ServerDetails {
                 $vsixVersion = "$($version.Major).$($version.Minor).$($version.PrereleaseNumber)"
                 $vsixIsPrerelease = $true
             }
+            elseif ($serverName -eq 'Fabric.Mcp.Server') {
+                # Fabric MCP Server follows a GA-only, minor-increment versioning strategy and
+                # drives its own explicit version numbers. Use the .csproj version verbatim so the
+                # VSIX stays in sync with the other release targets (npm, NuGet, etc.) instead of the
+                # Major.0.X marketplace-derived patch scheme used by other servers.
+                $vsixVersion = "$($version.Major).$($version.Minor).$($version.Patch)"
+                $vsixIsPrerelease = $false
+                Write-Host "Fabric MCP Server: using .csproj version for VSIX: $vsixVersion" -ForegroundColor Green
+            }
             else {
                 # For all non-beta versions, calculate next patch version from marketplace
                 $vscodePath = "$RepoRoot/servers/$serverName/vscode"
