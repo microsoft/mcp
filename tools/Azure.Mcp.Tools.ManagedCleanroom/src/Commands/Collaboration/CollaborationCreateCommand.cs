@@ -34,12 +34,12 @@ namespace Azure.Mcp.Tools.ManagedCleanroom.Commands.Collaboration;
     LocalRequired = false)]
 public sealed class CollaborationCreateCommand(
     ILogger<CollaborationCreateCommand> logger,
-    IManagedCleanroomService service,
+    IManagedCleanroomServiceControlPlane service,
     ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<CollaborationCreateOptions, CollaborationCreateCommand.CollaborationCreateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<CollaborationCreateCommand> _logger = logger;
-    private readonly IManagedCleanroomService _service = service;
+    private readonly IManagedCleanroomServiceControlPlane _service = service;
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context, CollaborationCreateOptions options, CancellationToken cancellationToken)

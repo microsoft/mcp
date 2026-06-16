@@ -21,7 +21,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.ManagedCleanroom.Services;
 
 public class ManagedCleanroomService(ISubscriptionService subscriptionService, ITenantService tenantService, IHttpClientFactory httpClientFactory)
-    : BaseAzureResourceService(subscriptionService, tenantService), IManagedCleanroomService
+    : BaseAzureResourceService(subscriptionService, tenantService), IManagedCleanroomServiceDataPlane, IManagedCleanroomServiceControlPlane
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));

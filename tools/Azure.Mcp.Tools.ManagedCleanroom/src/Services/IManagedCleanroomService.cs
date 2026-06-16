@@ -6,7 +6,11 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ManagedCleanroom.Services;
 
-public interface IManagedCleanroomService
+/// <summary>
+/// Data-plane operations against the Cleanroom Analytics Frontend service.
+/// Authentication uses a bearer token scoped to the frontend endpoint.
+/// </summary>
+public interface IManagedCleanroomServiceDataPlane
 {
     Task<JsonElement> ListCollaborationsAsync(
         string endpoint,
@@ -15,7 +19,14 @@ public interface IManagedCleanroomService
         string? tokenScope = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
+}
 
+/// <summary>
+/// Control-plane (ARM) operations for managing Cleanroom collaboration resources.
+/// Authentication uses the standard Azure Resource Manager credential.
+/// </summary>
+public interface IManagedCleanroomServiceControlPlane
+{
     Task<CollaborationCreateResult> CreateCollaborationArmResourceAsync(
         string name,
         string resourceGroup,
@@ -28,7 +39,7 @@ public interface IManagedCleanroomService
         CancellationToken cancellationToken = default);
 }
 
-/// <summary>Result returned by <see cref="IManagedCleanroomService.CreateCollaborationArmResourceAsync"/>.</summary>
+/// <summary>Result returned by <see cref="IManagedCleanroomServiceControlPlane.CreateCollaborationArmResourceAsync"/>.</summary>
 /// <param name="Properties">ARM resource properties as a raw <see cref="System.Text.Json.JsonElement"/>.</param>
 /// <param name="Message">Human-readable summary of the provisioning outcome including elapsed time.</param>
 public sealed record CollaborationCreateResult(System.Text.Json.JsonElement Properties, string Message);
