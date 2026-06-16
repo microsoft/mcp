@@ -2,15 +2,11 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.4 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
-
-### Bugs Fixed
+## 2.0.4 (2026-06-16)
 
 ### Other Changes
+
+- Moved server `identity` configuration (`appsettings`) to embedded resources and updated telemetry tagging [[#2873](https://github.com/microsoft/mcp/pull/2873)]
 
 ## 2.0.3 (2026-06-05)
 
