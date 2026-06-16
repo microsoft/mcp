@@ -16,4 +16,17 @@ public static class StringComparisons
     /// case-insensitively.
     /// </summary>
     public static StringComparison TenantId => StringComparison.OrdinalIgnoreCase;
+
+    /// <summary>
+    /// The comparison to use when comparing Azure subscription IDs. Subscription
+    /// IDs are GUIDs whose casing is not significant, so they are compared
+    /// case-insensitively.
+    /// </summary>
+    public static StringComparison SubscriptionId => StringComparison.OrdinalIgnoreCase;
+
+    /// <summary>
+    /// The comparison to use when comparing Azure subscription display names,
+    /// which are matched case-insensitively.
+    /// </summary>
+    public static StringComparison SubscriptionDisplayName => StringComparison.OrdinalIgnoreCase;
 }
