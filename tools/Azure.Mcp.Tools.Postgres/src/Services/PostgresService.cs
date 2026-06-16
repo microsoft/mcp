@@ -366,11 +366,11 @@ public class PostgresService(
         {
             if (string.IsNullOrEmpty(password))
             {
-                throw new CommandValidationException($"Password must be provided for '{AuthTypes.PostgreSQL}' authentication.", HttpStatusCode.BadRequest);
+                throw new CommandValidationException($"Password must be provided for '{AuthTypes.PostgreSQL}' authentication.");
             }
             return password;
         }
 
-        throw new CommandValidationException($"Unsupported authentication type. Please use '{AuthTypes.MicrosoftEntra}' or '{AuthTypes.PostgreSQL}'", HttpStatusCode.BadRequest);
+        throw new CommandValidationException($"Unsupported authentication type. Please use '{AuthTypes.MicrosoftEntra}' or '{AuthTypes.PostgreSQL}'");
     }
 }
