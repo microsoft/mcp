@@ -35,7 +35,7 @@ public sealed class CollaborationsListCommandTests : CommandUnitTestsBase<Collab
         if (shouldSucceed)
         {
             Service.ListCollaborationsAsync(
-                Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
                 .Returns(default(JsonElement));
         }
 
@@ -53,7 +53,7 @@ public sealed class CollaborationsListCommandTests : CommandUnitTestsBase<Collab
     {
         var expected = JsonDocument.Parse("""{"collaborations":[{"collaborationId":"c1","collaborationName":"test","userStatus":"Active"}]}""").RootElement;
         Service.ListCollaborationsAsync(
-            Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--endpoint", TestEndpoint);
@@ -67,28 +67,28 @@ public sealed class CollaborationsListCommandTests : CommandUnitTestsBase<Collab
     public async Task ExecuteAsync_ReturnsServiceResponse()
     {
         Service.ListCollaborationsAsync(
-            Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(default(JsonElement));
 
         var response = await ExecuteCommandAsync("--endpoint", TestEndpoint);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).ListCollaborationsAsync(
-            TestEndpoint, null, false, null, null, null, Arg.Any<CancellationToken>());
+            TestEndpoint, null, null, null, null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_WithActiveOnly_PassesFlagThrough()
     {
         Service.ListCollaborationsAsync(
-            Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(default(JsonElement));
 
         var response = await ExecuteCommandAsync("--endpoint", TestEndpoint, "--active-only", "true");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).ListCollaborationsAsync(
-            TestEndpoint, true, false, null, null, null, Arg.Any<CancellationToken>());
+            TestEndpoint, true, null, null, null, Arg.Any<CancellationToken>());
 
     }
 
@@ -96,7 +96,7 @@ public sealed class CollaborationsListCommandTests : CommandUnitTestsBase<Collab
     public async Task ExecuteAsync_WithTokenScope_PassesScopeThrough()
     {
         Service.ListCollaborationsAsync(
-            Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(default(JsonElement));
 
         var scope = "https://my-cleanroom.cloudapp.azure.net/.default";
@@ -104,14 +104,14 @@ public sealed class CollaborationsListCommandTests : CommandUnitTestsBase<Collab
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).ListCollaborationsAsync(
-            TestEndpoint, null, false, scope, null, null, Arg.Any<CancellationToken>());
+            TestEndpoint, null, scope, null, null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         Service.ListCollaborationsAsync(
-            Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync("--endpoint", TestEndpoint);
