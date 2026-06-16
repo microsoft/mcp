@@ -56,13 +56,15 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
             if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.DatasourceType.Name))
             {
                 var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.DatasourceType.Name);
-                if (!string.IsNullOrWhiteSpace(value) &&
-                    RsvDatasourceRegistry.Resolve(value) is null &&
-                    DppDatasourceRegistry.TryAutoDetect(value) is null &&
+                var normalizedValue = value?.Trim();
+
+                if (string.IsNullOrWhiteSpace(normalizedValue) ||
+                    RsvDatasourceRegistry.Resolve(normalizedValue) is null &&
+                    DppDatasourceRegistry.TryAutoDetect(normalizedValue) is null &&
                     !DppDatasourceRegistry.AllProfiles.Any(p =>
-                        p.FriendlyName.Equals(value, StringComparison.OrdinalIgnoreCase) ||
-                        p.ArmResourceType.Equals(value, StringComparison.OrdinalIgnoreCase) ||
-                        p.Aliases.Any(a => a.Equals(value, StringComparison.OrdinalIgnoreCase))))
+                        p.FriendlyName.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase) ||
+                        p.ArmResourceType.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase) ||
+                        p.Aliases.Any(a => a.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase))))
                 {
                     commandResult.AddError(
                         $"Unknown datasource type '{value}'. " +
