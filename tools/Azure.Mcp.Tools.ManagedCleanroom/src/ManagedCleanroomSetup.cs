@@ -44,10 +44,10 @@ public class ManagedCleanroomSetup : IAreaSetup
 
         collaborations.AddCommand<CollaborationsListCommand>(serviceProvider);
 
-        var collaboration = new CommandGroup("collaboration", "Cleanroom ARM management operations - Commands for creating and managing Azure Cleanroom collaboration ARM resources.");
-        root.AddSubGroup(collaboration);
+        var collaborationArm = new CommandGroup("collaborationArm", "Cleanroom ARM management operations - Commands for creating and managing Azure Cleanroom collaboration ARM resources.");
+        root.AddSubGroup(collaborationArm);
 
-        collaboration.AddCommand<CollaborationCreateCommand>(serviceProvider);
+        collaborationArm.AddCommand<CollaborationCreateCommand>(serviceProvider);
 
         return root;
     }
