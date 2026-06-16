@@ -5,7 +5,6 @@ using System.Net;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Microsoft.Mcp.Core.Extensions;
-// using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
 using Azure.Mcp.Tools.NetAppFiles.Options.VolumeGroup;
