@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Time;
 using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using Xunit;
 
@@ -83,6 +84,11 @@ public sealed class AzqrCommandTests : CommandUnitTestsBase<AzqrCommand, IExtern
         }
         finally
         {
+            if (field is not null)
+            {
+                field.SetValue(null, originalAzqrPath);
+            }
+
             // Cleanup
             if (File.Exists(xlsxReportFilePath))
             {
@@ -102,6 +108,8 @@ public sealed class AzqrCommandTests : CommandUnitTestsBase<AzqrCommand, IExtern
     [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingSubscriptionArgument()
     {
+        TestEnvironment.SkipIfDefaultSubscriptionConfigured();
+
         // Arrange & Act
         var response = await ExecuteCommandAsync("");
 
