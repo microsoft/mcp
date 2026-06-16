@@ -98,6 +98,10 @@ public class ItemVectorSearchCommandTests : CommandUnitTestsBase<ItemVectorSearc
     [InlineData("https://other-server.com/")]
     [InlineData("https://aoai.openai.azure.com.other.com/")]
     [InlineData("http://aoai.openai.azure.com/")]
+    [InlineData("https://attacker.com#.openai.azure.com")]
+    [InlineData("https://attacker.com#openai.azure.com")]
+    [InlineData("https://attacker.com/#.openai.azure.com")]
+    [InlineData("https://attacker.com?x=.openai.azure.com")]
     public async Task ExecuteAsync_RejectsUntrustedOpenAIEndpoint(string endpoint)
     {
         var response = await ExecuteCommandAsync(

@@ -65,6 +65,10 @@ public class CosmosServiceTests : IAsyncDisposable
     [InlineData("https://other-server.com/")]
     [InlineData("https://aoai.openai.azure.com.other.com/")]
     [InlineData("http://aoai.openai.azure.com/")]
+    [InlineData("https://attacker.com#.openai.azure.com")]
+    [InlineData("https://attacker.com#openai.azure.com")]
+    [InlineData("https://attacker.com/#.openai.azure.com")]
+    [InlineData("https://attacker.com?x=.openai.azure.com")]
     public async Task GenerateEmbedding_RejectsUntrustedEndpoint(string endpoint)
     {
         var request = new EmbeddingRequest(endpoint, "my-deployment", null);
