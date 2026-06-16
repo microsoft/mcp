@@ -12,35 +12,41 @@ Commands interact with:
 
 ## Command Surfaces
 
-| Command Group | Command | Plane | Status |
-| --- | --- | --- | --- |
-| Collaborations | `collaborations list` | Data Plane | Completed |
-| Collaborations | `collaborations get` | Data Plane | Pending |
-| Analytics | `analytics get` | Data Plane | Pending |
-| Analytics | `analytics skr-policy` | Data Plane | Pending |
-| OIDC | `oidc issuer-info` | Data Plane | Pending |
-| OIDC | `oidc keys` | Data Plane | Pending |
-| OIDC | `oidc set-issuer-url` | Data Plane | Pending |
-| Collaboration | `collaboration create` | Control Plane | Completed |
-| Collaboration | `collaboration get` | Control Plane | Pending |
-| Collaboration | `collaboration add-collaborator` | Control Plane | Pending |
-| Collaboration | `collaboration enable-workload` | Control Plane | Pending |
-| Collaboration | `collaboration get-readonly-kubeconfig` | Control Plane | Pending |
-| Invitations | `invitations list` | Data Plane | Pending |
-| Invitations | `invitations accept` | Data Plane | Pending |
-| Datasets | `datasets publish` | Data Plane | Pending |
-| Datasets | `datasets get` | Data Plane | Pending |
-| Datasets | `datasets list` | Data Plane | Pending |
-| Consent | `consent put` | Data Plane | Pending |
-| Queries | `queries publish` | Data Plane | Pending |
-| Queries | `queries get` | Data Plane | Pending |
-| Queries | `queries list` | Data Plane | Pending |
-| Queries | `queries vote` | Data Plane | Pending |
-| Queries | `queries run` | Data Plane | Pending |
-| Queries | `queries runs` | Data Plane | Pending |
-| Runs | `runs get` | Data Plane | Pending |
-| Audit Events | `auditevents list` | Data Plane | Pending |
+- **Data Plane Commands**:
 
+| Command Group | Command | Status |
+| --- | --- | --- |
+| Collaborations | `collaborations list` | Completed |
+| Collaborations | `collaborations get` | Pending |
+| Analytics | `analytics get` | Pending |
+| Analytics | `analytics skr-policy` | Pending |
+| OIDC | `oidc issuer-info` | Pending |
+| OIDC | `oidc keys` | Pending |
+| OIDC | `oidc set-issuer-url` | Pending |
+| Invitations | `invitations list` | Pending |
+| Invitations | `invitations accept` | Pending |
+| Datasets | `datasets publish` | Pending |
+| Datasets | `datasets get` | Pending |
+| Datasets | `datasets list` | Pending |
+| Consent | `consent put` | Pending |
+| Queries | `queries publish` | Pending |
+| Queries | `queries get` | Pending |
+| Queries | `queries list` | Pending |
+| Queries | `queries vote` | Pending |
+| Queries | `queries run` | Pending |
+| Queries | `queries runs` | Pending |
+| Runs | `runs get` | Pending |
+| Audit Events | `auditevents list` | Pending |
+
+- **Management Plane Commands**:
+
+| Command Group | Command | Status |
+| --- | --- | --- |
+| Collaboration | `collaboration create` | Completed |
+| Collaboration | `collaboration get` | Pending |
+| Collaboration | `collaboration add-collaborator` | Pending |
+| Collaboration | `collaboration enable-workload` | Pending |
+| Collaboration | `collaboration get-readonly-kubeconfig` | Pending |
 ---
 
 ## Project Structure
@@ -52,19 +58,19 @@ Azure.Mcp.Tools.ManagedCleanroom/
 │   ├── Commands/
 │   │   ├── ManagedCleanroomJsonContext.cs            # AOT-safe JSON serialization
 │   │   ├── Collaboration/
-│   │   │   ├── CollaborationCreateCommand.cs (✅)
-│   │   │   └── [Other collaboration commands - ⏳]
+│   │   │   ├── CollaborationCreateCommand.cs 
+│   │   │   └── [Other collaboration commands ]
 │   │   ├── Collaborations/
-│   │   │   ├── CollaborationsListCommand.cs (✅)
-│   │   │   └── [Other collaboration commands - ⏳]
-│   │   ├── Analytics/                              # ⏳ Analytics operations
-│   │   ├── Oidc/                                   # ⏳ OIDC configuration
-│   │   ├── Invitations/                            # ⏳ Invitation management
-│   │   ├── Datasets/                               # ⏳ Dataset operations
-│   │   ├── Consent/                                # ⏳ Consent documents
-│   │   ├── Queries/                                # ⏳ Query operations
-│   │   ├── Runs/                                   # ⏳ Query run tracking
-│   │   └── AuditEvents/                            # ⏳ Audit event listing
+│   │   │   ├── CollaborationsListCommand.cs 
+│   │   │   └── [Other collaboration commands ]
+│   │   ├── Analytics/                              # Analytics operations
+│   │   ├── Oidc/                                   # OIDC configuration
+│   │   ├── Invitations/                            # Invitation management
+│   │   ├── Datasets/                               # Dataset operations
+│   │   ├── Consent/                                # Consent documents
+│   │   ├── Queries/                                # Query operations
+│   │   ├── Runs/                                   # Query run tracking
+│   │   └── AuditEvents/                            # Audit event listing
 │   ├── Options/
 │   │   ├── ManagedCleanroomOptionDefinitions.cs
 │   │   ├── Collaboration/
@@ -76,10 +82,10 @@ Azure.Mcp.Tools.ManagedCleanroom/
 └── tests/
     └── Azure.Mcp.Tools.ManagedCleanroom.Tests/
         ├── Collaboration/
-        │   ├── CollaborationCreateCommandTests.cs (✅)
+        │   ├── CollaborationCreateCommandTests.cs 
         │   └── [Other tests - ⏳]
         ├── Collaborations/
-        │   ├── CollaborationsListCommandTests.cs (✅)
+        │   ├── CollaborationsListCommandTests.cs 
         │   └── [Other tests - ⏳]
         └── [Tests for remaining command groups - ⏳]
 ```
