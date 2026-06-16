@@ -16,6 +16,7 @@ using Azure.ResourceManager.ResourceGraph.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.AppLens.Services;
@@ -107,7 +108,7 @@ public class AppLensService(
         if (!string.IsNullOrEmpty(resourceGroup))
         {
             var rgFiltered = filteredResults
-                .Where(r => r.ResourceGroup.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase))
+                .Where(r => r.ResourceGroup.Equals(resourceGroup, StringComparisons.ResourceGroup))
                 .ToImmutableArray();
 
             if (rgFiltered.Length == 0)

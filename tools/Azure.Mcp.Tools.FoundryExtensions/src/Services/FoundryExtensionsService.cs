@@ -648,7 +648,7 @@ public class FoundryExtensionsService(
             {
                 var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
                 resources.Add(resourceInfo);
-                if (account.Data.Id.ResourceGroupName?.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase) == true)
+                if (account.Data.Id.ResourceGroupName?.Equals(resourceGroup, StringComparisons.ResourceGroup) == true)
                 {
                     var retrieved = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
                     resources.Add(retrieved);

@@ -29,4 +29,10 @@ public static class StringComparisons
     /// which are matched case-insensitively.
     /// </summary>
     public static StringComparison SubscriptionDisplayName => StringComparison.OrdinalIgnoreCase;
+
+    /// <summary>
+    /// The comparison to use when comparing Azure resource group names, which
+    /// Azure Resource Manager treats case-insensitively.
+    /// </summary>
+    public static StringComparison ResourceGroup => StringComparison.OrdinalIgnoreCase;
 }
