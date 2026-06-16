@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security;
 using Azure.AI.OpenAI;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Cosmos.Models;
-using Azure.Mcp.Tools.Cosmos.Validation;
 using Azure.ResourceManager.CosmosDB;
 using Azure.ResourceManager.Resources;
 using Microsoft.Azure.Cosmos;
@@ -777,10 +777,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             (nameof(request.Endpoint), request?.Endpoint),
             (nameof(request.DeploymentName), request?.DeploymentName));
 
-        if (!OpenAIEndpointValidator.IsValid(request!.Endpoint, out var endpointError))
-        {
-            throw new ArgumentException(endpointError, nameof(request));
-        }
+        ValidateOpenAIEndpoint(request!.Endpoint!);
 
         var credential = await GetCredential(tenant, cancellationToken);
         var clientOptions = new AzureOpenAIClientOptions
@@ -799,6 +796,32 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             : await embeddingClient.GenerateEmbeddingAsync(text, cancellationToken: cancellationToken);
 
         return response.Value.ToFloats().ToArray();
+    }
+
+    private static readonly string[] s_openAIEndpointServiceTypes = ["azure-openai", "foundry"];
+
+    private void ValidateOpenAIEndpoint(string endpoint)
+    {
+        var armEnvironment = _tenantService.CloudConfiguration.ArmEnvironment;
+        Exception? lastError = null;
+
+        foreach (var serviceType in s_openAIEndpointServiceTypes)
+        {
+            try
+            {
+                EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, armEnvironment);
+                return;
+            }
+            catch (Exception ex) when (ex is SecurityException or ArgumentException)
+            {
+                lastError = ex;
+            }
+        }
+
+        throw new ArgumentException(
+            "The provided Azure OpenAI endpoint is not a trusted Azure OpenAI, Cognitive Services, or AI Foundry endpoint for the configured Azure cloud.",
+            nameof(EmbeddingRequest.Endpoint),
+            lastError);
     }
 
     internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>

@@ -72,7 +72,7 @@ public class CosmosServiceTests : IAsyncDisposable
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             _service.GenerateEmbedding("hello", request, cancellationToken: TestContext.Current.CancellationToken));
 
-        Assert.Contains("Open AI endpoint", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Azure OpenAI endpoint", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

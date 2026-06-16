@@ -111,7 +111,7 @@ public class ItemVectorSearchCommandTests : CommandUnitTestsBase<ItemVectorSearc
             "--embedding-deployment", "my-deployment");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Open AI endpoint", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Azure OpenAI endpoint", response.Message, StringComparison.OrdinalIgnoreCase);
 
         await Service.DidNotReceive().GenerateEmbedding(
             Arg.Any<string>(),
