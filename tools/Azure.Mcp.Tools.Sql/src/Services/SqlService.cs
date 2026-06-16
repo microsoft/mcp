@@ -18,7 +18,27 @@ namespace Azure.Mcp.Tools.Sql.Services;
 
 public class SqlService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<SqlService> logger) : BaseAzureResourceService(subscriptionService, tenantService), ISqlService
 {
+    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ILogger<SqlService> _logger = logger;
+
+    /// <summary>
+    /// Resolves a subscription name or ID to a subscription ID. When the value is already a
+    /// subscription ID no additional ARM request is made, preserving the existing network
+    /// behavior for ID-based callers.
+    /// </summary>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy configuration</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>The resolved subscription ID</returns>
+    private async Task<string> ResolveSubscriptionIdAsync(
+        string subscription,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        return _subscriptionService.IsSubscriptionId(subscription)
+            ? subscription
+            : await _subscriptionService.GetSubscriptionIdByName(subscription, null, retryPolicy, cancellationToken);
+    }
 
     /// <summary>
     /// Helper method to navigate the Azure resource hierarchy and retrieve a SQL Server resource.
@@ -367,7 +387,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+        var subscriptionId = await ResolveSubscriptionIdAsync(subscription, retryPolicy, cancellationToken);
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, retryPolicy, cancellationToken);
 
         var databases = new List<SqlDatabase>();
         await foreach (var database in sqlServerResource.GetSqlDatabases().GetAllAsync(cancellationToken: cancellationToken))
@@ -452,7 +473,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+        var subscriptionId = await ResolveSubscriptionIdAsync(subscription, retryPolicy, cancellationToken);
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, retryPolicy, cancellationToken);
 
         var elasticPools = new List<SqlElasticPool>();
         await foreach (var elasticPool in sqlServerResource.GetElasticPools().GetAllAsync(cancellationToken: cancellationToken))
