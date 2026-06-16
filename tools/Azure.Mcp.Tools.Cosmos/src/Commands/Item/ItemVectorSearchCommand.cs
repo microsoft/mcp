@@ -76,6 +76,12 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
             {
                 result.AddError("--count must be between 1 and 20.");
             }
+
+            var openAIEndpoint = result.GetValueOrDefault<string>(CosmosOptionDefinitions.OpenAIEndpoint.Name);
+            if (!OpenAIEndpointValidator.IsValid(openAIEndpoint, out var openAIEndpointError))
+            {
+                result.AddError(openAIEndpointError!);
+            }
         });
     }
 
