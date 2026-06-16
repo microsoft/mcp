@@ -33,7 +33,7 @@ public class HttpOnBehalfOfTokenCredentialProvider(
         if (tenantId is not null)
         {
             if (httpContext.User.FindFirst("tid")?.Value is string tidClaim
-                && tidClaim != tenantId)
+                && !string.Equals(tidClaim, tenantId, StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogWarning(
                     "The requested token tenant '{GetTokenTenant}' does not match the tenant of the authenticated user '{TidClaim}'. Going to throw.",
