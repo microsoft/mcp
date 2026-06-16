@@ -4,13 +4,13 @@
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Tools.ManagedCleanroom.Options.Collaboration;
+using Azure.Mcp.Tools.ManagedCleanroom.Options.CollaborationArm;
 using Azure.Mcp.Tools.ManagedCleanroom.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.ManagedCleanroom.Commands.Collaboration;
+namespace Azure.Mcp.Tools.ManagedCleanroom.Commands.CollaborationArm;
 
 [CommandMetadata(
     Id = "e247b9e0-2d87-43a7-8e5d-57eea22237a3",

@@ -32,13 +32,12 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
     public async Task<JsonElement> ListCollaborationsAsync(
         string endpoint,
         bool? activeOnly = null,
-        bool allowUntrustedCert = false,
         string? tokenScope = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var client = await BuildClientAsync(endpoint, allowUntrustedCert, tokenScope, tenant, cancellationToken)
+        var client = await BuildClientAsync(endpoint, tokenScope, tenant, cancellationToken)
             .ConfigureAwait(false);
 
         var requestContext = new RequestContext { CancellationToken = cancellationToken };
@@ -105,18 +104,8 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
         return new CollaborationCreateResult(default, message);
     }
 
-    private HttpClient CreateHttpClient(bool allowUntrustedCert)
-    {
-        var clientName = allowUntrustedCert
-            ? ManagedCleanroomSetup.UnsafeHttpClientName
-            : ManagedCleanroomSetup.DefaultHttpClientName;
-
-        return _httpClientFactory.CreateClient(clientName);
-    }
-
     private async Task<CollaborationClient> BuildClientAsync(
         string endpoint,
-        bool allowUntrustedCert,
         string? tokenScope,
         string? tenant,
         CancellationToken cancellationToken)
@@ -145,17 +134,13 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
         {
             options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
         }
-        else if (allowUntrustedCert)
+        else
         {
             var handler = new HttpClientHandler
             {
                 ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             };
             options.Transport = new HttpClientTransport(handler);
-        }
-        else
-        {
-            options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
         }
 
         return new CollaborationClient(endpointUri, options);
@@ -169,6 +154,30 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
         }
 
         return $"{endpointUri.GetLeftPart(UriPartial.Authority)}/.default";
+    }
+
+    internal static Uri BuildCollaborationsListUri(Uri endpointUri, bool? activeOnly)
+    {
+        var builder = new UriBuilder(endpointUri);
+        var path = builder.Path;
+        if (string.IsNullOrEmpty(path) || path == "/")
+        {
+            builder.Path = "/gets";
+        }
+        else
+        {
+            builder.Path = path.TrimEnd('/') + "/gets";
+        }
+
+        if (activeOnly.HasValue)
+        {
+            var activeOnlyQuery = $"activeOnly={(activeOnly.Value ? "true" : "false")}";
+            builder.Query = string.IsNullOrEmpty(builder.Query)
+                ? activeOnlyQuery
+                : builder.Query.TrimStart('?') + "&" + activeOnlyQuery;
+        }
+
+        return builder.Uri;
     }
 
     private static JsonElement ParseResponse(Response response)

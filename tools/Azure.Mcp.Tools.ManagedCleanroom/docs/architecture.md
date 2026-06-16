@@ -12,6 +12,16 @@ Commands interact with:
 
 ## Command Surfaces
 
+- **Management Plane Commands**:
+
+| Command Group | Command | Status |
+| --- | --- | --- |
+| Collaboration | `collaboration create` | Completed |
+| Collaboration | `collaboration get` | Pending |
+| Collaboration | `collaboration add-collaborator` | Pending |
+| Collaboration | `collaboration enable-workload` | Pending |
+| Collaboration | `collaboration get-readonly-kubeconfig` | Pending |
+
 - **Data Plane Commands**:
 
 | Command Group | Command | Status |
@@ -38,15 +48,6 @@ Commands interact with:
 | Runs | `runs get` | Pending |
 | Audit Events | `auditevents list` | Pending |
 
-- **Management Plane Commands**:
-
-| Command Group | Command | Status |
-| --- | --- | --- |
-| Collaboration | `collaboration create` | Completed |
-| Collaboration | `collaboration get` | Pending |
-| Collaboration | `collaboration add-collaborator` | Pending |
-| Collaboration | `collaboration enable-workload` | Pending |
-| Collaboration | `collaboration get-readonly-kubeconfig` | Pending |
 ---
 
 ## Project Structure

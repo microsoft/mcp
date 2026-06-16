@@ -7,17 +7,17 @@ using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedCleanroom.Commands;
-using Azure.Mcp.Tools.ManagedCleanroom.Commands.Collaboration;
+using Azure.Mcp.Tools.ManagedCleanroom.Commands.CollaborationArm;
 using Azure.Mcp.Tools.ManagedCleanroom.Services;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
-namespace Azure.Mcp.Tools.ManagedCleanroom.Tests.Collaboration;
+namespace Azure.Mcp.Tools.ManagedCleanroom.Tests.CollaborationArm;
 
 public sealed class CollaborationCreateCommandTests
-    : SubscriptionCommandUnitTestsBase<CollaborationCreateCommand, IManagedCleanroomService>
+    : SubscriptionCommandUnitTestsBase<CollaborationCreateCommand, IManagedCleanroomServiceControlPlane>
 {
     private const string TestName = "my-collab";
     private const string TestLocation = "eastus";
@@ -67,7 +67,7 @@ public sealed class CollaborationCreateCommandTests
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<string?>(),
             Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(new CollaborationCreateResult(expected, "Collaboration provisioning succeeded after 24m 0s (expected ~25 minutes)."));
+            .Returns(new CollaborationCreateResult(expected, "Collaboration 'my-collab' creation request accepted. Provisioning is running in the background and typically takes ~25 minutes to complete."));
 
         var response = await ExecuteCommandAsync(
             "--name", TestName, "--location", TestLocation,
@@ -85,14 +85,14 @@ public sealed class CollaborationCreateCommandTests
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<string?>(),
             Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(new CollaborationCreateResult(default, "Collaboration provisioning succeeded after 24m 0s (expected ~25 minutes)."));
+            .Returns(new CollaborationCreateResult(default, "Collaboration 'my-collab' creation request accepted. Provisioning is running in the background and typically takes ~25 minutes to complete."));
 
         var response = await ExecuteCommandAsync(
             "--name", TestName, "--location", TestLocation,
             "--resource-group", TestResourceGroup, "--subscription", TestSubscription);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Contains("succeeded", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("accepted", response.Message, StringComparison.OrdinalIgnoreCase);
         await Service.Received(1).CreateCollaborationArmResourceAsync(
             TestName, TestResourceGroup, TestSubscription, TestLocation,
             null, null, null, Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>());

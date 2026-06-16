@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ManagedCleanroom.Commands.Collaboration;
+using Azure.Mcp.Tools.ManagedCleanroom.Commands.CollaborationArm;
 using Azure.Mcp.Tools.ManagedCleanroom.Commands.Collaborations;
 using Azure.Mcp.Tools.ManagedCleanroom.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,7 +44,7 @@ public class ManagedCleanroomSetup : IAreaSetup
 
         collaborations.AddCommand<CollaborationsListCommand>(serviceProvider);
 
-        var collaborationArm = new CommandGroup("collaborationArm", "Cleanroom ARM management operations - Commands for creating and managing Azure Cleanroom collaboration ARM resources.");
+        var collaborationArm = new CommandGroup("collaborationarm", "Cleanroom ARM management operations - Commands for creating and managing Azure Cleanroom collaboration ARM resources.");
         root.AddSubGroup(collaborationArm);
 
         collaborationArm.AddCommand<CollaborationCreateCommand>(serviceProvider);

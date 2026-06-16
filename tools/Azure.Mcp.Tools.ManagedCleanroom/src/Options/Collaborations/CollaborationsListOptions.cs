@@ -6,24 +6,9 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ManagedCleanroom.Options.Collaborations;
 
-public class CollaborationsListOptions
+public class CollaborationsListOptions : BaseManagedCleanroomDataPlaneOptions
 {
-    [Option(ManagedCleanroomOptionDescriptions.Endpoint)]
-    public required string Endpoint { get; set; }
-
     [Option("When true, returns only active collaborations (email-only lookup). When omitted, returns all collaborations.")]
     public bool? ActiveOnly { get; set; }
-
-    [Option(ManagedCleanroomOptionDescriptions.AllowUntrustedCert)]
-    public bool AllowUntrustedCert { get; set; }
-
-    [Option(ManagedCleanroomOptionDescriptions.TokenScope)]
-    public string? TokenScope { get; set; }
-
-    [Option(OptionDescriptions.Tenant)]
-    public string? Tenant { get; set; }
-
-    [Option(Name = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 
