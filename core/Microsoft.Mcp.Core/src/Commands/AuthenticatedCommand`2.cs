@@ -9,6 +9,11 @@ using Microsoft.Identity.Client;
 
 namespace Microsoft.Mcp.Core.Commands;
 
+/// <summary>
+/// A base class for commands that require authentication.
+/// </summary>
+/// <typeparam name="TOptions">The type of the options for the command.</typeparam>
+/// <typeparam name="TResult">The type of the result for the command.</typeparam>
 public abstract class AuthenticatedCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult> : BaseCommand<TOptions, TResult>
     where TOptions : class

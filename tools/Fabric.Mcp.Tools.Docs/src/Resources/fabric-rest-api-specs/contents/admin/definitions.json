@@ -60,6 +60,14 @@
             "format": "uuid",
             "readOnly": true,
             "description": "The domain ID of the workspace."
+          },
+          "tags": {
+            "description": "List of applied tags.",
+            "type": "array",
+            "items": {
+              "$ref": "../common/definitions.json#/definitions/WorkspaceAppliedTag"
+            },
+            "readOnly": true
           }
         }
       },
@@ -159,8 +167,13 @@
               "type": "array",
               "items": {
                   "$ref": "../common/definitions.json#/definitions/ItemTag"
-               },
+              },
               "readOnly": true
+          },
+          "defaultIdentity": {
+            "description": "The item's default identity.",
+            "$ref": "../common/definitions.json#/definitions/Principal",
+            "readOnly": true
           }
         }
       },
@@ -1093,6 +1106,318 @@
         "git": {
           "description": "Represents the Git Outbound policy for the specified as part of its networking communication policy.",
           "$ref": "../platform/definitions/workspaceNetworkingPolicy.json#/definitions/NetworkRules"
+        }
+      }
+    },
+    "WorkloadAssignmentInfos": {
+      "description": "A paginated list of workloads in the tenant. Contains workload information with assignment status details.",
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "array",
+          "description": "The list of workloads with their assignment information.",
+          "items": {
+            "$ref": "#/definitions/WorkloadAssignmentInfo"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "WorkloadAssignmentInfo": {
+      "required": [
+        "id",
+        "name",
+        "publisher",
+        "isAssignable",
+        "isAssignedToTenant",
+        "assignedCapacitiesCount",
+        "assignedWorkspacesCount"
+      ],
+      "description": "Workload assignment information. Contains details about a workload and its assignment status across the tenant, capacities, and workspaces.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The unique identifier of the workload.",
+          "readOnly": true
+        },
+        "name": {
+          "type": "string",
+          "description": "The display name of the workload.",
+          "readOnly": true
+        },
+        "publisher": {
+          "type": "string",
+          "description": "The publisher of the workload.",
+          "readOnly": true
+        },
+        "isAssignable": {
+          "type": "boolean",
+          "description": "Specifies if the workload is assignable. When true, the workload can be assigned to tenant, capacities or workspaces.",
+          "readOnly": true
+        },
+        "isAssignedToTenant": {
+          "type": "boolean",
+          "description": "Specifies if the workload is assigned to the tenant scope. When true, the workload is available across the entire tenant.",
+          "readOnly": true
+        },
+        "assignedCapacitiesCount": {
+          "type": "integer",
+          "description": "The number of capacities to which the workload has been assigned.",
+          "readOnly": true
+        },
+        "assignedWorkspacesCount": {
+          "type": "integer",
+          "description": "The number of workspaces to which the workload has been assigned.",
+          "readOnly": true
+        }
+      }
+    },
+    "WorkloadAssignmentType": {
+      "type": "string",
+      "description": "The type of workload assignment. Specifies whether a workload is assigned to a capacity, workspace, or tenant. Additional assignment types may be added over time.",
+      "enum": [
+        "Capacity",
+        "Workspace",
+        "Tenant"
+      ],
+      "x-ms-enum": {
+        "name": "WorkloadAssignmentType",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Capacity",
+            "description": "Capacity assignment type. The workload is assigned to a specific capacity."
+          },
+          {
+            "value": "Workspace",
+            "description": "Workspace assignment type. The workload is assigned to a specific workspace."
+          },
+          {
+            "value": "Tenant",
+            "description": "Tenant assignment type. The workload is assigned to the entire tenant scope."
+          }
+        ]
+      }
+    },
+    "WorkloadAssignments": {
+      "description": "A paginated list of workload assignments. Contains assignments for workloads to capacities, workspaces, or tenant.",
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "array",
+          "description": "The list of workload assignments. Each item can be a Capacity, Workspace, or Tenant assignment.",
+          "items": {
+            "$ref": "#/definitions/BaseWorkloadAssignment"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "BaseWorkloadAssignment": {
+      "required": [
+        "id",
+        "type",
+        "workloadId"
+      ],
+      "description": "Base workload assignment.",
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The unique identifier of the assignment.",
+          "readOnly": true
+        },
+        "type": {
+          "description": "The type of assignment. Possible values: Capacity, Workspace, Tenant.",
+          "$ref": "#/definitions/WorkloadAssignmentType",
+          "readOnly": true
+        },
+        "workloadId": {
+          "type": "string",
+          "description": "The unique identifier of the workload.",
+          "readOnly": true
+        }
+      }
+    },
+    "WorkloadCapacityAssignment": {
+      "description": "Capacity workload assignment. Represents an assignment of a workload to a specific capacity.",
+      "type": "object",
+      "x-ms-discriminator-value": "Capacity",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseWorkloadAssignment"
+        },
+        {
+          "$ref": "#/definitions/WorkloadCapacityAssignmentProperties"
+        }
+      ]
+    },
+    "WorkloadCapacityAssignmentProperties": {
+      "required": [
+        "capacityId",
+        "capacityName"
+      ],
+      "description": "Properties specific to capacity workload assignments. Contains the capacity identifier and display name.",
+      "properties": {
+        "capacityId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The unique identifier of the capacity to which the workload is assigned.",
+          "readOnly": true
+        },
+        "capacityName": {
+          "type": "string",
+          "description": "The display name of the capacity to which the workload is assigned.",
+          "readOnly": true
+        }
+      }
+    },
+    "WorkloadWorkspaceAssignment": {
+      "description": "Workspace workload assignment. Represents an assignment of a workload to a specific workspace.",
+      "type": "object",
+      "x-ms-discriminator-value": "Workspace",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseWorkloadAssignment"
+        },
+        {
+          "$ref": "#/definitions/WorkloadWorkspaceAssignmentProperties"
+        }
+      ]
+    },
+    "WorkloadWorkspaceAssignmentProperties": {
+      "required": [
+        "workspaceId",
+        "workspaceName"
+      ],
+      "description": "Properties specific to workspace workload assignments. Contains the workspace identifier and display name.",
+      "properties": {
+        "workspaceId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The unique identifier of the workspace to which the workload is assigned.",
+          "readOnly": true
+        },
+        "workspaceName": {
+          "type": "string",
+          "description": "The display name of the workspace to which the workload is assigned.",
+          "readOnly": true
+        }
+      }
+    },
+    "WorkloadTenantAssignment": {
+      "description": "Tenant workload assignment. Represents an assignment of a workload to the entire tenant scope.",
+      "type": "object",
+      "x-ms-discriminator-value": "Tenant",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseWorkloadAssignment"
+        }
+      ]
+    },
+    "CreateWorkloadBaseAssignmentRequest": {
+      "required": [
+        "type",
+        "workloadId"
+      ],
+      "description": "Base request for creating workload assignments.",
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "description": "The type of assignment to create. Possible values: Capacity, Workspace, Tenant.",
+          "$ref": "#/definitions/WorkloadAssignmentType"
+        },
+        "workloadId": {
+          "type": "string",
+          "description": "The unique identifier of the workload to assign."
+        }
+      }
+    },
+    "CreateWorkloadCapacityAssignmentRequest": {
+      "description": "Request for creating a capacity workload assignment. Assigns a workload to a specific capacity.",
+      "type": "object",
+      "x-ms-discriminator-value": "Capacity",
+      "allOf": [
+        {
+          "$ref": "#/definitions/CreateWorkloadBaseAssignmentRequest"
+        },
+        {
+          "$ref": "#/definitions/CreateWorkloadCapacityAssignmentProperties"
+        }
+      ]
+    },
+    "CreateWorkloadCapacityAssignmentProperties": {
+      "required": [
+        "capacityId"
+      ],
+      "description": "Properties specific to creating a capacity workload assignment. Contains the capacity identifier to which the workload will be assigned.",
+      "properties": {
+        "capacityId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The unique identifier of the capacity to assign the workload to."
+        }
+      }
+    },
+    "CreateWorkloadWorkspaceAssignmentRequest": {
+      "description": "Request for creating a workspace workload assignment. Assigns a workload to a specific workspace.",
+      "type": "object",
+      "x-ms-discriminator-value": "Workspace",
+      "allOf": [
+        {
+          "$ref": "#/definitions/CreateWorkloadBaseAssignmentRequest"
+        },
+        {
+          "$ref": "#/definitions/CreateWorkloadWorkspaceAssignmentProperties"
+        }
+      ]
+    },
+    "CreateWorkloadWorkspaceAssignmentProperties": {
+      "required": [
+        "workspaceId"
+      ],
+      "description": "Properties specific to creating a workspace workload assignment. Contains the workspace identifier to which the workload will be assigned.",
+      "properties": {
+        "workspaceId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The unique identifier of the workspace to assign the workload to."
+        }
+      }
+    },
+    "CreateWorkloadTenantAssignmentRequest": {
+      "description": "Request for creating a tenant workload assignment. Assigns a workload to the entire tenant scope.",
+      "type": "object",
+      "x-ms-discriminator-value": "Tenant",
+      "allOf": [
+        {
+          "$ref": "#/definitions/CreateWorkloadBaseAssignmentRequest"
+        }
+      ]
+    },
+    "DeleteWorkloadAssignmentRequest": {
+      "required": [
+        "id"
+      ],
+      "description": "Request for deleting a workload assignment. Contains the unique identifier of the assignment to delete.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The unique identifier of the assignment to delete."
         }
       }
     }

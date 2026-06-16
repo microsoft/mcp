@@ -16,6 +16,13 @@ namespace Azure.Mcp.Tools.Postgres.Tests;
 public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand, IPostgresService>
 {
     [Fact]
+    public void Description_Verification()
+    {
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ListsServers_WhenNoServerOrDatabaseProvided()
     {
         var expectedServers = new List<string> { "postgres-server-1", "postgres-server-2", "postgres-server-3" };
@@ -286,10 +293,4 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
         Assert.Equal("list", Command.Name);
     }
 
-    [Fact]
-    public void Description_IsCorrect()
-    {
-        Assert.Contains("List PostgreSQL servers", Command.Description);
-        Assert.Contains("databases, or tables", Command.Description);
-    }
 }

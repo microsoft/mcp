@@ -10,6 +10,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using ModelContextProtocol.Server;
 using NSubstitute;
@@ -25,6 +26,19 @@ public class ServiceCollectionExtensionsTests
         services.AddSingleton(sp => CommandFactoryHelpers.CreateCommandFactory(sp));
         services.AddSingleIdentityTokenCredentialProvider();
         services.AddRegistryRoot(typeof(Azure.Mcp.Server.Program).Assembly, "Azure.Mcp.Server.Resources.registry.json");
+
+        var serverConfiguration = new McpServerConfiguration
+        {
+            Name = "Azure.Mcp.Server",
+            ShortName = "azure",
+            DisplayName = "Azure MCP Server",
+            Version = "1.0.0",
+            RootCommandGroupName = "azmcp",
+            Description = "Test description"
+        };
+        services.AddSingleton(serverConfiguration);
+        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(serverConfiguration));
+
         return services;
     }
 

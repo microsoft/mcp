@@ -219,6 +219,7 @@
         },
         "DeploymentPipelineOperationNote": {
             "description": "A note describing the deployment.",
+            "type": "object",
             "required": ["content"],
             "properties": {
                 "content": {
@@ -351,6 +352,7 @@
         },
         "DeploymentExecutionPlan": {
             "description": "A deployment execution plan.",
+            "type": "object",
             "properties": {
                 "steps": {
                     "type": "array",
@@ -370,6 +372,7 @@
                 "noDifferenceItemsCount"
             ],
             "description": "The number of new, different and identical deployed items before deployment.",
+            "type": "object",
             "properties": {
                 "newItemsCount": {
                     "type": "integer",
@@ -661,6 +664,7 @@
             "type": "object",
             "properties": {
                 "value": {
+                    "description": "",
                     "type": "array",
                     "items": {
                         "description": "A list of deployment pipeline role assignments.",

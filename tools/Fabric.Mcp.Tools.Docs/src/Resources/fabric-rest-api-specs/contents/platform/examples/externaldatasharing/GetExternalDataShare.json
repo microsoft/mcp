@@ -16,6 +16,7 @@
                     "type": "User"
                 },
                 "recipient": {
+                    "type": "User",
                     "userPrincipalName": "lisa@fabrikam.com"
                 },
                 "status": "Pending",

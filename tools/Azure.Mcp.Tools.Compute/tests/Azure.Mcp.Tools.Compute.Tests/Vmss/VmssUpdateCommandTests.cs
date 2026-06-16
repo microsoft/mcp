@@ -134,6 +134,59 @@ public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IC
     }
 
     [Fact]
+    public async Task ExecuteAsync_ClearTagsWithBareOption_PassesEmptyTagsToService()
+    {
+        var expectedResult = new VmssUpdateResult(
+            Name: _knownVmssName,
+            Id: "/subscriptions/sub123/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachineScaleSets/test-vmss",
+            Location: "eastus",
+            VmSize: "Standard_D2s_v3",
+            ProvisioningState: "Succeeded",
+            Capacity: 5,
+            UpgradePolicy: "Manual",
+            Zones: null,
+            Tags: new Dictionary<string, string>());
+
+        Service.UpdateVmssAsync(
+            Arg.Is(_knownVmssName),
+            Arg.Is(_knownResourceGroup),
+            Arg.Is(_knownSubscription),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Is(string.Empty),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
+
+        var response = await ExecuteCommandAsync(
+            "--vmss-name", _knownVmssName,
+            "--resource-group", _knownResourceGroup,
+            "--subscription", _knownSubscription,
+            "--tags");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).UpdateVmssAsync(
+            _knownVmssName,
+            _knownResourceGroup,
+            _knownSubscription,
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            string.Empty,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ExecuteAsync_UpdatesVmssUpgradePolicy()
     {
         // Arrange

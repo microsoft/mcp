@@ -42,6 +42,7 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
         command.Options.Add(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.AsOptional());
         command.Options.Add(FileSharesOptionDefinitions.PublicNetworkAccess.AsOptional());
         command.Options.Add(FileSharesOptionDefinitions.NfsRootSquash.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.NfsEncryptionInTransit.AsOptional());
         command.Options.Add(FileSharesOptionDefinitions.AllowedSubnets.AsOptional());
         command.Options.Add(FileSharesOptionDefinitions.Tags.AsOptional());
     }
@@ -56,11 +57,12 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
         options.MediaTier = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.MediaTier.Name);
         options.Redundancy = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Redundancy.Name);
         options.Protocol = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Protocol.Name);
-        options.ProvisionedStorageInGiB = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
-        options.ProvisionedIOPerSec = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedIOPerSec.Name);
-        options.ProvisionedThroughputMiBPerSec = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.Name);
+        options.ProvisionedStorageInGiB = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
+        options.ProvisionedIOPerSec = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedIOPerSec.Name);
+        options.ProvisionedThroughputMiBPerSec = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.Name);
         options.PublicNetworkAccess = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PublicNetworkAccess.Name);
         options.NfsRootSquash = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.NfsRootSquash.Name);
+        options.NfsEncryptionInTransit = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.NfsEncryptionInTransit.Name);
         options.AllowedSubnets = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.AllowedSubnets.Name);
         options.Tags = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Tags.Name);
         return options;
@@ -115,6 +117,7 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
                 options.ProvisionedThroughputMiBPerSec,
                 options.PublicNetworkAccess,
                 options.NfsRootSquash,
+                options.NfsEncryptionInTransit,
                 allowedSubnets,
                 tags,
                 options.Tenant,

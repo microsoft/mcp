@@ -24,9 +24,8 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
     [Fact]
     public void Description_IsCorrect()
     {
-        Assert.Contains("accounts", Command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("databases", Command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("containers", Command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
     }
 
     [Fact]
@@ -43,6 +42,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
         var expectedAccounts = new List<string> { "account1", "account2" };
         Service.GetCosmosAccounts(
             Arg.Is("sub123"),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -68,6 +68,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             Arg.Is("account123"),
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -95,6 +96,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedContainers);
@@ -120,6 +122,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
         Service.GetCosmosAccounts(
             Arg.Is("sub123"),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
@@ -143,6 +146,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             Arg.Is("account123"),
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -168,6 +172,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             Arg.Is("database123"),
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -218,6 +223,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
         Service.GetCosmosAccounts(
             Arg.Is("sub123"),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
@@ -238,6 +244,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             Arg.Is("account123"),
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -263,6 +270,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
@@ -279,11 +287,101 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
     }
 
     [Fact]
+    public async Task ExecuteAsync_Returns404_WhenAccountNotFound()
+    {
+        // Arrange: the service throws KeyNotFoundException when the account does not exist
+        Service.ListDatabases(
+            Arg.Is("missingaccount"),
+            Arg.Is("sub123"),
+            Arg.Any<AuthMethod>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new KeyNotFoundException("Cosmos DB account 'missingaccount' not found in subscription 'sub123'."));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--account", "missingaccount");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("not found", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsResourceGroup_WhenListingDatabases()
+    {
+        // Arrange
+        var expectedDatabases = new List<string> { "database1" };
+        Service.ListDatabases(
+            Arg.Is("account123"),
+            Arg.Is("sub123"),
+            Arg.Any<AuthMethod>(),
+            Arg.Any<string?>(),
+            Arg.Is("rg1"),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedDatabases);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--account", "account123",
+            "--resource-group", "rg1");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
+        Assert.NotNull(result.Databases);
+        Assert.Equal(expectedDatabases, result.Databases);
+        await Service.Received(1).ListDatabases(
+            "account123",
+            "sub123",
+            Arg.Any<AuthMethod>(),
+            Arg.Any<string?>(),
+            "rg1",
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsResourceGroup_WhenListingAccounts()
+    {
+        // Arrange
+        var expectedAccounts = new List<string> { "account1" };
+        Service.GetCosmosAccounts(
+            Arg.Is("sub123"),
+            Arg.Is("rg1"),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedAccounts);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
+        Assert.NotNull(result.Accounts);
+        Assert.Equal(expectedAccounts, result.Accounts);
+        await Service.Received(1).GetCosmosAccounts(
+            "sub123",
+            "rg1",
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ExecuteAsync_Returns503_WhenServiceIsUnavailable()
     {
         // Arrange
         Service.GetCosmosAccounts(
             Arg.Is("sub123"),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())

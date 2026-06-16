@@ -136,7 +136,7 @@ public class AzApiDocsGetCommandTests : CommandUnitTestsBase<AzApiDocsGetCommand
 
         var response = await ExecuteCommandAsync("--resource-type", "Microsoft.Fake/nonexistent");
 
-        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 
     [Theory]

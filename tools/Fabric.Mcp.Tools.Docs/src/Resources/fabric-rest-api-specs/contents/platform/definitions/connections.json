@@ -1338,6 +1338,7 @@
             }
         },
         "ItemConnection": {
+            "description": "",
             "required": ["connectivityType", "connectionDetails"],
             "type": "object",
             "properties": {
@@ -1382,6 +1383,54 @@
                     "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
                 }
             ]
+        },
+        "ConnectionStatusResponse": {
+            "description": "The connection status response returned when testing a connection. Includes the status and any errors encountered.",
+            "required": [ "status" ],
+            "type": "object",
+            "properties": {
+                "status": {
+                    "description": "The status of the connection. Additional statuses may be added over time.",
+                    "type": "string",
+                    "enum": [ "Online", "Offline" ],
+                    "x-ms-enum": {
+                        "name": "TestConnectionStatus",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                              "value": "Online",
+                              "description": "The connection is online."
+                            },
+                            {
+                              "value": "Offline",
+                              "description": "The connection is offline."
+                            }
+                        ]
+                    }
+                },
+                "errors": {
+                    "description": "",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ConnectionStatusError"
+                    }
+                }
+            }
+        },
+        "ConnectionStatusError": {
+            "description": "The error information when the connection is offline.",
+            "required": [ "errorCode", "message" ],
+            "type": "object",
+            "properties": {
+                "errorCode": {
+                    "description": "The error code that caused the connection to be offline.",
+                    "type": "string"
+                },
+                "message": {
+                    "description": "The message that explains why the connection is offline.",
+                    "type": "string"
+                }
+            }
         }
     }
 }

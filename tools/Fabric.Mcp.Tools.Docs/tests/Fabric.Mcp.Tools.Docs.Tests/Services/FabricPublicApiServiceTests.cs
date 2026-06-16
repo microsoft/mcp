@@ -261,6 +261,7 @@ public class FabricPublicApiServiceTests
     [InlineData("graphQLApi")]
     [InlineData("semanticModel")]
     [InlineData("sparkjobdefinition")]
+    [InlineData("mirroredCatalog")]
     [InlineData("mirroredAzureDatabricksCatalog")]
     public void GetFabricWorkloadItemDefinition_WithCamelCaseWorkload_ReturnsDefinition(string workloadType)
     {

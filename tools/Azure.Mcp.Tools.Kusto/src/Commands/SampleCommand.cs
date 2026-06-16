@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
@@ -21,46 +22,28 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService kustoService) : BaseTableCommand<SampleOptions>
+public sealed class SampleCommand(
+    ILogger<SampleCommand> logger,
+    IKustoService kustoService,
+    ISubscriptionResolver subscriptionResolver)
+    : BaseTableCommand<SampleOptions, SampleCommand.SampleCommandResult>(subscriptionResolver)
 {
-    private readonly ILogger<SampleCommand> _logger = logger;
-    private readonly IKustoService _kustoService = kustoService;
-
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SampleOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(KustoOptionDefinitions.Limit);
-    }
-
-    protected override SampleOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Limit = parseResult.GetValueOrDefault<int>(KustoOptionDefinitions.Limit.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            List<JsonElement> results;
             // Validate limit is within safe bounds to prevent resource abuse
             var safeLimit = Math.Clamp(options.Limit ?? 10, 1, 10000);
 
-            var query = $"{KustoService.EscapeKqlIdentifier(options.Table!)} | sample {safeLimit}";
+            var query = $"{KustoService.EscapeKqlIdentifier(options.Table)} | sample {safeLimit}";
+
+            List<JsonElement> results;
 
             if (UseClusterUri(options))
             {
-                results = await _kustoService.QueryItemsAsync(
+                results = await kustoService.QueryItemsAsync(
                     options.ClusterUri!,
-                    options.Database!,
+                    options.Database,
                     query,
                     options.Tenant,
                     options.AuthMethod,
@@ -69,10 +52,10 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService k
             }
             else
             {
-                results = await _kustoService.QueryItemsAsync(
+                results = await kustoService.QueryItemsAsync(
                     options.Subscription!,
                     options.ClusterName!,
-                    options.Database!,
+                    options.Database,
                     query,
                     options.Tenant,
                     options.AuthMethod,
@@ -80,15 +63,15 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService k
                     cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.SampleCommandResult);
+            context.Response.Results = ResponseResult.Create(new SampleCommandResult(results ?? []), KustoJsonContext.Default.SampleCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An exception occurred sampling table. Cluster: {Cluster}, Database: {Database}, Table: {Table}.", options.ClusterUri ?? options.ClusterName, options.Database, options.Table);
+            logger.LogError(ex, "An exception occurred sampling table. Cluster: {Cluster}, Database: {Database}, Table: {Table}.", options.ClusterUri ?? options.ClusterName, options.Database, options.Table);
             HandleException(context, ex);
         }
         return context.Response;
     }
 
-    internal record SampleCommandResult(List<JsonElement> Results);
+    public record SampleCommandResult(List<JsonElement> Results);
 }

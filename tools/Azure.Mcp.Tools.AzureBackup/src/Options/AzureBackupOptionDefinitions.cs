@@ -111,7 +111,7 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> VaultType = new($"--{VaultTypeName}")
     {
-        Description = "The type of backup vault: 'rsv' (Recovery Services vault) or 'dpp' (Backup vault / Data Protection). Required for vault create; optional elsewhere (auto-detected if omitted).",
+        Description = "The type of backup vault: 'rsv' (Recovery Services vault) or 'dpp' (Backup vault / Data Protection). Auto-detected if omitted for existing vaults.",
         Required = false
     };
 
@@ -183,7 +183,7 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> IdentityType = new($"--{IdentityTypeName}")
     {
-        Description = "Managed identity type: 'SystemAssigned', 'UserAssigned', or 'None'.",
+        Description = "Managed identity type: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', or 'None'.",
         Required = false
     };
 

@@ -361,6 +361,7 @@
                 },
                 "changes": {
                     "type": "array",
+                    "description": "",
                     "items": {
                         "$ref": "#/definitions/ItemChange",
                         "description": "A list of changes in remote Git that are not applied to the given workspace, and changes in the workspace that are not applied to remote Git."

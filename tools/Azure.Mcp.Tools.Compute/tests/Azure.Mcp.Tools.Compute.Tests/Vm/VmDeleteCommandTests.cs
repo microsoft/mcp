@@ -124,9 +124,9 @@ public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, ICompu
     }
 
     [Fact]
-    public async Task ExecuteAsync_VmNotFound_ReturnsSuccess()
+    public async Task ExecuteAsync_VmNotFound_ReturnsNotFoundMessage()
     {
-        // Arrange - service returns false (VM was already gone / 404), but delete is idempotent
+        // Arrange - service returns false (VM was already gone / 404); delete is idempotent so HTTP 200
         Service.DeleteVmAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -143,9 +143,12 @@ public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, ICompu
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription);
 
-        // Assert - idempotent: 404 treated as success
+        // Assert - HTTP 200 (idempotent) but message says "not found"
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmDeleteCommandResult);
+        Assert.False(result.Success);
+        Assert.Contains("not found", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(_knownVmName, result.Message);
     }
 
     [Fact]

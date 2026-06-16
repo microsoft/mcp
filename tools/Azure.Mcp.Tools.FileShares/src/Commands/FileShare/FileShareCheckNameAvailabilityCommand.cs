@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Id = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
     Name = "check-name-availability",
     Title = "Check File Share Name Availability",
-    Description = "Check if a file share name is available",
+    Description = "Check if a file share name is available in the specified location in the subscription.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
