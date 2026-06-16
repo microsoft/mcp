@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.CommandLine.Parsing;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.ProtectedItem;
@@ -53,24 +54,27 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
         command.Options.Add(AzureBackupOptionDefinitions.AksIncludeClusterScopeResources);
         command.Validators.Add(commandResult =>
         {
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.DatasourceType.Name))
+            OptionResult? optionResult = commandResult.GetResult(AzureBackupOptionDefinitions.DatasourceType);
+            if (optionResult is null || optionResult.Implicit)
             {
-                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.DatasourceType.Name);
-                var normalizedValue = value?.Trim();
+                return;
+            }
 
-                if (string.IsNullOrWhiteSpace(normalizedValue) ||
-                    RsvDatasourceRegistry.Resolve(normalizedValue) is null &&
-                    DppDatasourceRegistry.TryAutoDetect(normalizedValue) is null &&
-                    !DppDatasourceRegistry.AllProfiles.Any(p =>
-                        p.FriendlyName.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase) ||
-                        p.ArmResourceType.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase) ||
-                        p.Aliases.Any(a => a.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase))))
-                {
-                    commandResult.AddError(
-                        $"Unknown datasource type '{value}'. " +
-                        $"RSV types: {string.Join(", ", RsvDatasourceRegistry.KnownTypeNames)}. " +
-                        $"DPP types: {string.Join(", ", DppDatasourceRegistry.KnownTypeNames)}.");
-                }
+            var value = optionResult.Tokens.LastOrDefault()?.Value ?? string.Empty;
+            var normalizedValue = value.Trim();
+
+            if (string.IsNullOrEmpty(normalizedValue) ||
+                RsvDatasourceRegistry.Resolve(normalizedValue) is null &&
+                DppDatasourceRegistry.TryAutoDetect(normalizedValue) is null &&
+                !DppDatasourceRegistry.AllProfiles.Any(p =>
+                    p.FriendlyName.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase) ||
+                    p.ArmResourceType.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase) ||
+                    p.Aliases.Any(a => a.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase))))
+            {
+                commandResult.AddError(
+                    $"Unknown datasource type '{value}'. " +
+                    $"RSV types: {string.Join(", ", RsvDatasourceRegistry.KnownTypeNames)}. " +
+                    $"DPP types: {string.Join(", ", DppDatasourceRegistry.KnownTypeNames)}.");
             }
         });
     }
