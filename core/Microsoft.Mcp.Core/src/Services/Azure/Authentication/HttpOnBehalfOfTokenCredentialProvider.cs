@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
@@ -33,7 +34,7 @@ public class HttpOnBehalfOfTokenCredentialProvider(
         if (tenantId is not null)
         {
             if (httpContext.User.FindFirst("tid")?.Value is string tidClaim
-                && !string.Equals(tidClaim, tenantId, StringComparison.OrdinalIgnoreCase))
+                && !string.Equals(tidClaim, tenantId, StringComparisons.TenantId))
             {
                 _logger.LogWarning(
                     "The requested token tenant '{GetTokenTenant}' does not match the tenant of the authenticated user '{TidClaim}'. Going to throw.",
