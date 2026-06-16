@@ -18,6 +18,7 @@ public interface IManagedCleanroomServiceDataPlane
         bool allowUntrustedCert = false,
         string? tokenScope = null,
         string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }
 

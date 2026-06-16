@@ -38,6 +38,7 @@ public sealed class CollaborationsListCommand(ILogger<CollaborationsListCommand>
                 options.AllowUntrustedCert,
                 options.TokenScope,
                 options.Tenant,
+                options.RetryPolicy,
                 cancellationToken).ConfigureAwait(false);
 
             context.Response.Results = ResponseResult.Create(

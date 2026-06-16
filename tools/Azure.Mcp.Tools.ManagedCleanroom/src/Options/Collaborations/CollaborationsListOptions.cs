@@ -22,5 +22,8 @@ public class CollaborationsListOptions
 
     [Option(OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
+
+    [Option(Name = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 
