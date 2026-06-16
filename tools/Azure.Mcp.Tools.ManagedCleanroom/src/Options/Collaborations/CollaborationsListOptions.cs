@@ -17,6 +17,9 @@ public class CollaborationsListOptions
     [Option(ManagedCleanroomOptionDescriptions.AllowUntrustedCert)]
     public bool AllowUntrustedCert { get; set; }
 
+    [Option(ManagedCleanroomOptionDescriptions.TokenScope)]
+    public string? TokenScope { get; set; }
+
     [Option(OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 }

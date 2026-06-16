@@ -14,7 +14,30 @@ $ErrorActionPreference = "Stop"
 
 $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
-$cleanroomEndpoint = $DeploymentOutputs['CLEANROOM_ENDPOINT']
+function Get-DeploymentOutputValue {
+    param(
+        [hashtable] $Outputs,
+        [string] $Name
+    )
+
+    $output = $Outputs[$Name]
+
+    if ($null -eq $output) {
+        return $null
+    }
+
+    if ($output -is [hashtable] -and $output.ContainsKey('value')) {
+        return [string] $output['value']
+    }
+
+    if ($output.PSObject.Properties['value']) {
+        return [string] $output.value
+    }
+
+    return [string] $output
+}
+
+$cleanroomEndpoint = Get-DeploymentOutputValue -Outputs $DeploymentOutputs -Name 'CLEANROOM_ENDPOINT'
 
 if ([string]::IsNullOrWhiteSpace($cleanroomEndpoint)) {
     Write-Warning "CLEANROOM_ENDPOINT was not set. Live tests will be skipped until a Cleanroom Analytics Frontend endpoint is provisioned and provided."

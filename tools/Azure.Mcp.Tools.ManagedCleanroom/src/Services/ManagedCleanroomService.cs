@@ -35,6 +35,7 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
         string endpoint,
         bool? activeOnly = null,
         bool allowUntrustedCert = false,
+        string? tokenScope = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -55,8 +56,9 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
         using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
         var credential = await GetCredential(tenant, cancellationToken).ConfigureAwait(false);
+        var scope = ResolveTokenScope(endpointUri, tokenScope);
         var token = await credential.GetTokenAsync(
-            new TokenRequestContext([TenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
+            new TokenRequestContext([scope]),
             cancellationToken).ConfigureAwait(false);
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
@@ -127,7 +129,7 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
 
         var resourceData = new GenericResourceData(new AzureLocation(location))
         {
-            Properties = BinaryData.FromBytes(payloadBuffer.WrittenSpan.ToArray())
+            Properties = new BinaryData(payloadBuffer.WrittenMemory)
         };
 
         await armClient.GetGenericResources()
@@ -205,7 +207,7 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
         return _httpClientFactory.CreateClient(clientName);
     }
 
-    private static Uri BuildCollaborationsListUri(Uri endpointUri, bool? activeOnly)
+    internal static Uri BuildCollaborationsListUri(Uri endpointUri, bool? activeOnly)
     {
         // The current frontend route for listing collaborations is /gets.
         var basePath = endpointUri.AbsolutePath.TrimEnd('/');
@@ -228,5 +230,15 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
         }
 
         return builder.Uri;
+    }
+
+    internal static string ResolveTokenScope(Uri endpointUri, string? tokenScope)
+    {
+        if (!string.IsNullOrWhiteSpace(tokenScope))
+        {
+            return tokenScope;
+        }
+
+        return $"{endpointUri.GetLeftPart(UriPartial.Authority)}/.default";
     }
 }

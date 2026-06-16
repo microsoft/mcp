@@ -12,6 +12,7 @@ public interface IManagedCleanroomService
         string endpoint,
         bool? activeOnly = null,
         bool allowUntrustedCert = false,
+        string? tokenScope = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 

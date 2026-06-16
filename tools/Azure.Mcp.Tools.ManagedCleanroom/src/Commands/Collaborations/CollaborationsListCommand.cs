@@ -36,6 +36,7 @@ public sealed class CollaborationsListCommand(ILogger<CollaborationsListCommand>
                 options.Endpoint,
                 options.ActiveOnly,
                 options.AllowUntrustedCert,
+                options.TokenScope,
                 options.Tenant,
                 cancellationToken).ConfigureAwait(false);
 
