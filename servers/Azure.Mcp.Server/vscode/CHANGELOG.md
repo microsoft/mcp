@@ -4,8 +4,7 @@
 
 ### Changed
 
-- Moved server “identity” configuration (appsettings) to embedded resources and updated telemetry tagging [[#2873](https://github.com/microsoft/mcp/pull/2873)]
-
+- Moved server `identity` configuration (`appsettings`) to embedded resources and updated telemetry tagging [[#2873](https://github.com/microsoft/mcp/pull/2873)]
 
 ## 2.0.3 (2026-06-05)
 
