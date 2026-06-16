@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.Monitor.Services;
 public class MonitorHealthModelService(ITenantService tenantService, IHttpClientFactory httpClientFactory)
     : BaseAzureService(tenantService), IMonitorHealthModelService
 {
-    private const string ApiVersion = "2023-10-01-preview";
+    private const string ApiVersion = "2025-05-01-preview";
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
 
@@ -45,7 +45,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
         ValidateRequiredParameters((nameof(entity), entity), (nameof(healthModelName), healthModelName), (nameof(resourceGroupName), resourceGroupName), (nameof(subscription), subscription));
 
         string dataplaneEndpoint = await GetDataplaneEndpointAsync(subscription, resourceGroupName, healthModelName, cancellationToken);
-        string entityHealthUrl = $"{dataplaneEndpoint}api/entities/{entity}/history";
+        string entityHealthUrl = $"{dataplaneEndpoint.TrimEnd('/')}/api/entities/{Uri.EscapeDataString(entity)}/history";
 
         string healthResponseString = await GetDataplaneResponseAsync(entityHealthUrl, cancellationToken);
         return JsonNode.Parse(healthResponseString) ?? throw new Exception("Failed to parse health response to JSON.");

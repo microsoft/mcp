@@ -1,0 +1,4 @@
+changes:
+  - section: "Bugs Fixed"
+    description: |
+      Fixed `monitor_healthmodels_entity_get` returning HTTP 400 (Bad Request) when querying entity health. The tool now uses a supported `Microsoft.CloudHealth` control-plane API version (`2025-05-01-preview`), and the data-plane request URL is built correctly by joining the dataplane endpoint with a path separator and URL-encoding the entity name.
