@@ -72,7 +72,8 @@ public class NetAppFilesService(
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error retrieving NetApp Files account details for '{account}': {ex.Message}", ex);
+                _logger.LogError(ex, "Error retrieving NetApp Files account details for '{Account}': {Message}", account, ex.Message);
+                throw;
             }
         }
     }
@@ -750,7 +751,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error creating NetApp Files volume '{volume}': {ex.Message}", ex);
+            _logger.LogError("Error creating NetApp Files volume '{Volume}': {Message}", volume, ex.Message);
+            throw;
         }
     }
 
@@ -838,7 +840,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error updating NetApp Files volume '{volume}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error updating NetApp Files volume '{Volume}': {Message}", volume, ex.Message);
+            throw;
         }
     }
 
@@ -904,7 +907,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error creating NetApp Files account '{account}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error creating NetApp Files account '{Account}': {Message}", account, ex.Message);
+            throw;
         }
     }
 
@@ -972,7 +976,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error updating NetApp Files account '{account}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error updating NetApp Files account '{Account}': {Message}", account, ex.Message);
+            throw;
         }
     }
 
@@ -1056,7 +1061,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error creating NetApp Files backup policy '{backupPolicy}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error creating NetApp Files backup policy '{BackupPolicy}': {Message}", backupPolicy, ex.Message);
+            throw;
         }
     }
 
@@ -1140,7 +1146,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error updating NetApp Files backup policy '{backupPolicy}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error updating NetApp Files backup policy '{BackupPolicy}': {Message}", backupPolicy, ex.Message);
+            throw;
         }
     }
 
@@ -1225,7 +1232,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error creating NetApp Files backup '{backup}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error creating NetApp Files backup '{Backup}': {Message}", backup, ex.Message);
+            throw;
         }
     }
 
@@ -1307,7 +1315,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error updating NetApp Files backup '{backup}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error updating NetApp Files backup '{Backup}': {Message}", backup, ex.Message);
+            throw;
         }
     }
 
@@ -1375,7 +1384,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error creating NetApp Files backup vault '{backupVault}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error creating NetApp Files backup vault '{BackupVault}': {Message}", backupVault, ex.Message);
+            throw;
         }
     }
 
@@ -1445,7 +1455,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error updating NetApp Files backup vault '{backupVault}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error updating NetApp Files backup vault '{BackupVault}': {Message}", backupVault, ex.Message);
+            throw;
         }
     }
 
@@ -1535,7 +1546,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error creating NetApp Files capacity pool '{pool}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error creating NetApp Files capacity pool '{Pool}': {Message}", pool, ex.Message);
+            throw;
         }
     }
 
@@ -1623,7 +1635,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error updating NetApp Files capacity pool '{pool}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error updating NetApp Files capacity pool '{Pool}': {Message}", pool, ex.Message);
+            throw;
         }
     }
 
@@ -1697,7 +1710,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error creating NetApp Files snapshot '{snapshot}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error creating NetApp Files snapshot '{Snapshot}': {Message}", snapshot, ex.Message);
+            throw;
         }
     }
 
@@ -1771,7 +1785,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error updating NetApp Files snapshot '{snapshot}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error updating NetApp Files snapshot '{Snapshot}': {Message}", snapshot, ex.Message);
+            throw;
         }
     }
 
@@ -1910,7 +1925,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error creating NetApp Files snapshot policy '{snapshotPolicy}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error creating NetApp Files snapshot policy '{SnapshotPolicy}': {Message}", snapshotPolicy, ex.Message);
+            throw;
         }
     }
 
@@ -2049,7 +2065,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error updating NetApp Files snapshot policy '{snapshotPolicy}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error updating NetApp Files snapshot policy '{SnapshotPolicy}': {Message}", snapshotPolicy, ex.Message);
+            throw;
         }
     }
 
@@ -2136,7 +2153,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error creating NetApp Files volume group '{volumeGroup}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error creating NetApp Files volume group '{VolumeGroup}': {Message}", volumeGroup, ex.Message);
+            throw;
         }
     }
 
@@ -2219,7 +2237,8 @@ public class NetAppFilesService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error updating NetApp Files volume group '{volumeGroup}': {ex.Message}", ex);
+            _logger.LogError(ex, "Error updating NetApp Files volume group '{VolumeGroup}': {Message}", volumeGroup, ex.Message);
+            throw;
         }
     }
 
