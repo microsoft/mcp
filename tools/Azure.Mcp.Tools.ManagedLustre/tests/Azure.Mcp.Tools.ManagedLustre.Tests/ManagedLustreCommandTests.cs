@@ -577,41 +577,36 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
         var importDeleteJobName = importDeleteResult.AssertProperty("jobName");
         Assert.Contains(importJobNameStr, importDeleteJobName.GetRawText());
-    }
 
-    [Fact]
-    public async Task Should_create_get_list_and_delete_expansion_job()
-    {
-        var amlfsId = Settings.DeploymentOutputs.GetValueOrDefault("AMLFS_ID", "");
-        var amlfsName = amlfsId.Split('/').Last();
-        var sanitizedAmlfsName = SanitizeAndRecordBaseName(amlfsName, "existingAmlfsName");
-        var resourceGroupName = SanitizeAndRecordResourceGroupName(Settings.ResourceGroupName, "resourceGroupName");
+        // Wait for filesystem to stabilize before expansion
+        await Task.Delay(PollInterval(15_000), TestContext.Current.CancellationToken);
 
+        // Test expansion job lifecycle
         var expansionJobNameStr = $"expansion-{Guid.NewGuid().ToString()[..8]}";
 
         // Create expansion job
-        var createResult = await CallToolAsync(
+        var expansionCreateResult = await CallToolAsync(
             "managedlustre_fs_expansion_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
-                { "filesystem-name", sanitizedAmlfsName },
+                { "filesystem-name", fsName },
                 { "new-size", 12 },
                 { "expansion-job-name", expansionJobNameStr },
                 { "tenant", Settings.TenantId }
             });
 
-        var createdJobName = createResult.AssertProperty("jobName");
+        var createdJobName = expansionCreateResult.AssertProperty("jobName");
         Assert.Equal(JsonValueKind.String, createdJobName.ValueKind);
         Assert.False(string.IsNullOrWhiteSpace(createdJobName.GetString()));
 
         // Wait for expansion job to complete
-        var maxWaitTime = TimeSpan.FromMinutes(30);
-        var startTime = DateTime.UtcNow;
-        var completed = false;
+        var expansionMaxWaitTime = TimeSpan.FromMinutes(30);
+        var expansionStartTime = DateTime.UtcNow;
+        var expansionCompleted = false;
 
-        while (DateTime.UtcNow - startTime < maxWaitTime)
+        while (DateTime.UtcNow - expansionStartTime < expansionMaxWaitTime)
         {
             var checkResult = await CallToolAsync(
                 "managedlustre_fs_expansion_get",
@@ -619,7 +614,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", resourceGroupName },
-                    { "filesystem-name", sanitizedAmlfsName },
+                    { "filesystem-name", fsName },
                     { "expansion-job-name", expansionJobNameStr },
                     { "tenant", Settings.TenantId }
                 });
@@ -637,7 +632,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
                 if (string.Equals(stateStr, "Succeeded", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(stateStr, "Completed", StringComparison.OrdinalIgnoreCase))
                 {
-                    completed = true;
+                    expansionCompleted = true;
                     break;
                 }
             }
@@ -645,23 +640,23 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
             await Task.Delay(PollInterval(30_000), TestContext.Current.CancellationToken);
         }
 
-        Assert.True(completed, $"Expansion job '{expansionJobNameStr}' did not complete within {maxWaitTime.TotalMinutes} minutes.");
+        Assert.True(expansionCompleted, $"Expansion job '{expansionJobNameStr}' did not complete within {expansionMaxWaitTime.TotalMinutes} minutes.");
 
         // List expansion jobs (get without expansion-job-name returns all jobs)
-        var listResult = await CallToolAsync(
+        var expansionListResult = await CallToolAsync(
             "managedlustre_fs_expansion_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
-                { "filesystem-name", sanitizedAmlfsName },
+                { "filesystem-name", fsName },
                 { "tenant", Settings.TenantId }
             });
 
-        var jobs = listResult.AssertProperty("jobs");
-        Assert.Equal(JsonValueKind.Array, jobs.ValueKind);
+        var expansionJobs = expansionListResult.AssertProperty("jobs");
+        Assert.Equal(JsonValueKind.Array, expansionJobs.ValueKind);
         var foundExpansion = false;
-        foreach (var job in jobs.EnumerateArray())
+        foreach (var job in expansionJobs.EnumerateArray())
         {
             var jobText = job.GetRawText();
             Output.WriteLine($"Checking expansion job: {jobText}");
@@ -675,37 +670,37 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         Assert.True(foundExpansion, $"Expected to find expansion job '{expansionJobNameStr}' in the list.");
 
         // Get specific expansion job
-        var getResult = await CallToolAsync(
+        var expansionGetResult = await CallToolAsync(
             "managedlustre_fs_expansion_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
-                { "filesystem-name", sanitizedAmlfsName },
+                { "filesystem-name", fsName },
                 { "expansion-job-name", expansionJobNameStr },
                 { "tenant", Settings.TenantId }
             });
 
-        var expansionJob = getResult.AssertProperty("job");
+        var expansionJob = expansionGetResult.AssertProperty("job");
         Assert.Equal(JsonValueKind.Object, expansionJob.ValueKind);
         Assert.Contains(expansionJobNameStr, expansionJob.GetRawText());
 
         // Delete expansion job
-        var deleteResult = await CallToolAsync(
+        var expansionDeleteResult = await CallToolAsync(
             "managedlustre_fs_expansion_delete",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
-                { "filesystem-name", sanitizedAmlfsName },
+                { "filesystem-name", fsName },
                 { "expansion-job-name", expansionJobNameStr },
                 { "tenant", Settings.TenantId }
             });
 
-        var deleteJobName = deleteResult.AssertProperty("jobName");
-        Assert.Contains(expansionJobNameStr, deleteJobName.GetRawText());
-        var deleteStatus = deleteResult.AssertProperty("status");
-        Assert.Equal("Deleted", deleteStatus.GetString());
+        var expansionDeleteJobName = expansionDeleteResult.AssertProperty("jobName");
+        Assert.Contains(expansionJobNameStr, expansionDeleteJobName.GetRawText());
+        var expansionDeleteStatus = expansionDeleteResult.AssertProperty("status");
+        Assert.Equal("Deleted", expansionDeleteStatus.GetString());
     }
 
     [Fact]
