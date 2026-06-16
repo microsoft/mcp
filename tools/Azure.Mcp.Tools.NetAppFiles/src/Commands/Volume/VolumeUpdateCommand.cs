@@ -139,12 +139,5 @@ public sealed class VolumeUpdateCommand(ILogger<VolumeUpdateCommand> logger, INe
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
     internal record VolumeUpdateCommandResult([property: JsonPropertyName("volume")] NetAppVolumeCreateResult Volume);
 }

@@ -130,12 +130,5 @@ public sealed class BackupVaultUpdateCommand(ILogger<BackupVaultUpdateCommand> l
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
     internal record BackupVaultUpdateCommandResult([property: JsonPropertyName("backupVault")] BackupVaultCreateResult BackupVault);
 }

@@ -140,12 +140,5 @@ public sealed class PoolUpdateCommand(ILogger<PoolUpdateCommand> logger, INetApp
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
     internal record PoolUpdateCommandResult([property: JsonPropertyName("pool")] CapacityPoolCreateResult Pool);
 }

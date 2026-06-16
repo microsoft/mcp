@@ -127,12 +127,5 @@ public sealed class AccountUpdateCommand(ILogger<AccountUpdateCommand> logger, I
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
     internal record AccountUpdateCommandResult([property: JsonPropertyName("account")] NetAppAccountCreateResult Account);
 }
