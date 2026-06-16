@@ -691,7 +691,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/capacityPools/volumes",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -782,7 +782,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/capacityPools/volumes",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -864,7 +864,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -932,7 +932,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -1005,7 +1005,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/backupPolicies",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -1090,7 +1090,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/backupPolicies",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -1177,7 +1177,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/backupVaults/backups",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -1261,7 +1261,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/backupVaults/backups",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -1341,7 +1341,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/backupVaults",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -1411,7 +1411,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/backupVaults",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -1486,7 +1486,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/capacityPools",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -1576,7 +1576,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/capacityPools",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -1665,7 +1665,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/capacityPools/volumes/snapshots",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -1740,7 +1740,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/capacityPools/volumes/snapshots",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -1820,7 +1820,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/snapshotPolicies",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -1960,7 +1960,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/snapshotPolicies",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -2096,7 +2096,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/volumeGroups",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
@@ -2181,7 +2181,7 @@ public class NetAppFilesService(
         {
             ArmClient armClient = await CreateArmClientWithApiVersionAsync(
                 "Microsoft.NetApp/netAppAccounts/volumeGroups",
-                "2024-03-01",
+                "2026-01-01",
                 tenant,
                 retryPolicy,
                 cancellationToken);
