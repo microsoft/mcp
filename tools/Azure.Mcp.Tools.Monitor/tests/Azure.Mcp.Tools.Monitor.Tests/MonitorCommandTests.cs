@@ -88,7 +88,9 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();
-        _storageAccountName = $"{Settings.ResourceBaseName}mon";
+        // The bicep template appends a uniqueString suffix to the storage account name,
+        // so use the deployed name from the deployment outputs rather than reconstructing it.
+        _storageAccountName = Settings.DeploymentOutputs.GetValueOrDefault("STORAGEACCOUNTNAME", $"{Settings.ResourceBaseName}mon");
         _appInsightsName = $"{Settings.ResourceBaseName}-ai";
         _bingWebTestName = $"{Settings.ResourceBaseName}-bing-test";
 

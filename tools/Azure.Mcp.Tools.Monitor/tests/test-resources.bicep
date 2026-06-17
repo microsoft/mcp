@@ -220,3 +220,5 @@ module webTestsModule 'test-resources.webtests.module.bicep' = {
     testApplicationOid: testApplicationOid
   }
 }
+
+output storageAccountName string = storageAccount.name
