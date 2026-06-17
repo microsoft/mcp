@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Concurrent;
-using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Reflection;
@@ -22,110 +20,13 @@ public static class OptionBinder
         DynamicallyAccessedMemberTypes.PublicParameterlessConstructor;
 
     /// <summary>
-    /// To prevent native AOT builds from trimming away the filled generic Options<T> methods, we have to maintain a
-    /// centralized factory pattern. Each entry provides both the option factory (for registration) and value binder
-    /// (for parsing). If a type is not in this dictionary and is not an enum, it is unsupported and will be rejected
-    /// at option registration time.
-    /// </summary>
-    private static readonly ConcurrentDictionary<Type, OptionTypeHandler> s_typeHandlers = new()
-    {
-        // String
-        [typeof(string)] = new(name => new Option<string>(name), (pr, n) => pr.GetValueOrDefault<string>(n)),
-        [typeof(string[])] = new(name => new Option<string[]>(name), (pr, n) => pr.GetValueOrDefault<string[]>(n)),
-
-        // Boolean
-        [typeof(bool)] = new(name => new Option<bool>(name), (pr, n) => pr.GetValueOrDefault<bool>(n)),
-        [typeof(bool?)] = new(name => new Option<bool?>(name), (pr, n) => pr.GetValueOrDefault<bool?>(n)),
-        [typeof(bool[])] = new(name => new Option<bool[]>(name), (pr, n) => pr.GetValueOrDefault<bool[]>(n)),
-
-        // Int
-        [typeof(int)] = new(name => new Option<int>(name), (pr, n) => pr.GetValueOrDefault<int>(n)),
-        [typeof(int?)] = new(name => new Option<int?>(name), (pr, n) => pr.GetValueOrDefault<int?>(n)),
-        [typeof(int[])] = new(name => new Option<int[]>(name), (pr, n) => pr.GetValueOrDefault<int[]>(n)),
-
-        // Long
-        [typeof(long)] = new(name => new Option<long>(name), (pr, n) => pr.GetValueOrDefault<long>(n)),
-        [typeof(long?)] = new(name => new Option<long?>(name), (pr, n) => pr.GetValueOrDefault<long?>(n)),
-        [typeof(long[])] = new(name => new Option<long[]>(name), (pr, n) => pr.GetValueOrDefault<long[]>(n)),
-
-        // Short
-        [typeof(short)] = new(name => new Option<short>(name), (pr, n) => pr.GetValueOrDefault<short>(n)),
-        [typeof(short?)] = new(name => new Option<short?>(name), (pr, n) => pr.GetValueOrDefault<short?>(n)),
-        [typeof(short[])] = new(name => new Option<short[]>(name), (pr, n) => pr.GetValueOrDefault<short[]>(n)),
-
-        // Byte
-        [typeof(byte)] = new(name => new Option<byte>(name), (pr, n) => pr.GetValueOrDefault<byte>(n)),
-        [typeof(byte?)] = new(name => new Option<byte?>(name), (pr, n) => pr.GetValueOrDefault<byte?>(n)),
-        [typeof(byte[])] = new(name => new Option<byte[]>(name), (pr, n) => pr.GetValueOrDefault<byte[]>(n)),
-
-        // SByte
-        [typeof(sbyte)] = new(name => new Option<sbyte>(name), (pr, n) => pr.GetValueOrDefault<sbyte>(n)),
-        [typeof(sbyte?)] = new(name => new Option<sbyte?>(name), (pr, n) => pr.GetValueOrDefault<sbyte?>(n)),
-        [typeof(sbyte[])] = new(name => new Option<sbyte[]>(name), (pr, n) => pr.GetValueOrDefault<sbyte[]>(n)),
-
-        // UShort
-        [typeof(ushort)] = new(name => new Option<ushort>(name), (pr, n) => pr.GetValueOrDefault<ushort>(n)),
-        [typeof(ushort?)] = new(name => new Option<ushort?>(name), (pr, n) => pr.GetValueOrDefault<ushort?>(n)),
-        [typeof(ushort[])] = new(name => new Option<ushort[]>(name), (pr, n) => pr.GetValueOrDefault<ushort[]>(n)),
-
-        // UInt
-        [typeof(uint)] = new(name => new Option<uint>(name), (pr, n) => pr.GetValueOrDefault<uint>(n)),
-        [typeof(uint?)] = new(name => new Option<uint?>(name), (pr, n) => pr.GetValueOrDefault<uint?>(n)),
-        [typeof(uint[])] = new(name => new Option<uint[]>(name), (pr, n) => pr.GetValueOrDefault<uint[]>(n)),
-
-        // ULong
-        [typeof(ulong)] = new(name => new Option<ulong>(name), (pr, n) => pr.GetValueOrDefault<ulong>(n)),
-        [typeof(ulong?)] = new(name => new Option<ulong?>(name), (pr, n) => pr.GetValueOrDefault<ulong?>(n)),
-        [typeof(ulong[])] = new(name => new Option<ulong[]>(name), (pr, n) => pr.GetValueOrDefault<ulong[]>(n)),
-
-        // Float
-        [typeof(float)] = new(name => new Option<float>(name), (pr, n) => pr.GetValueOrDefault<float>(n)),
-        [typeof(float?)] = new(name => new Option<float?>(name), (pr, n) => pr.GetValueOrDefault<float?>(n)),
-        [typeof(float[])] = new(name => new Option<float[]>(name), (pr, n) => pr.GetValueOrDefault<float[]>(n)),
-
-        // Double
-        [typeof(double)] = new(name => new Option<double>(name), (pr, n) => pr.GetValueOrDefault<double>(n)),
-        [typeof(double?)] = new(name => new Option<double?>(name), (pr, n) => pr.GetValueOrDefault<double?>(n)),
-        [typeof(double[])] = new(name => new Option<double[]>(name), (pr, n) => pr.GetValueOrDefault<double[]>(n)),
-
-        // Decimal
-        [typeof(decimal)] = new(name => new Option<decimal>(name), (pr, n) => pr.GetValueOrDefault<decimal>(n)),
-        [typeof(decimal?)] = new(name => new Option<decimal?>(name), (pr, n) => pr.GetValueOrDefault<decimal?>(n)),
-        [typeof(decimal[])] = new(name => new Option<decimal[]>(name), (pr, n) => pr.GetValueOrDefault<decimal[]>(n)),
-
-        // Char
-        [typeof(char)] = new(name => new Option<char>(name), (pr, n) => pr.GetValueOrDefault<char>(n)),
-        [typeof(char?)] = new(name => new Option<char?>(name), (pr, n) => pr.GetValueOrDefault<char?>(n)),
-        [typeof(char[])] = new(name => new Option<char[]>(name), (pr, n) => pr.GetValueOrDefault<char[]>(n)),
-
-        // DateTime
-        [typeof(DateTime)] = new(name => new Option<DateTime>(name), (pr, n) => pr.GetValueOrDefault<DateTime>(n)),
-        [typeof(DateTime?)] = new(name => new Option<DateTime?>(name), (pr, n) => pr.GetValueOrDefault<DateTime?>(n)),
-        [typeof(DateTime[])] = new(name => new Option<DateTime[]>(name), (pr, n) => pr.GetValueOrDefault<DateTime[]>(n)),
-
-        // DateTimeOffset
-        [typeof(DateTimeOffset)] = new(name => new Option<DateTimeOffset>(name), (pr, n) => pr.GetValueOrDefault<DateTimeOffset>(n)),
-        [typeof(DateTimeOffset?)] = new(name => new Option<DateTimeOffset?>(name), (pr, n) => pr.GetValueOrDefault<DateTimeOffset?>(n)),
-        [typeof(DateTimeOffset[])] = new(name => new Option<DateTimeOffset[]>(name), (pr, n) => pr.GetValueOrDefault<DateTimeOffset[]>(n)),
-
-        // TimeSpan
-        [typeof(TimeSpan)] = new(name => new Option<TimeSpan>(name), (pr, n) => pr.GetValueOrDefault<TimeSpan>(n)),
-        [typeof(TimeSpan?)] = new(name => new Option<TimeSpan?>(name), (pr, n) => pr.GetValueOrDefault<TimeSpan?>(n)),
-        [typeof(TimeSpan[])] = new(name => new Option<TimeSpan[]>(name), (pr, n) => pr.GetValueOrDefault<TimeSpan[]>(n)),
-
-        // Guid
-        [typeof(Guid)] = new(name => new Option<Guid>(name), (pr, n) => pr.GetValueOrDefault<Guid>(n)),
-        [typeof(Guid?)] = new(name => new Option<Guid?>(name), (pr, n) => pr.GetValueOrDefault<Guid?>(n)),
-        [typeof(Guid[])] = new(name => new Option<Guid[]>(name), (pr, n) => pr.GetValueOrDefault<Guid[]>(n)),
-    };
-
-    /// <summary>
     /// Registers System.CommandLine options on a command based on the public properties of <typeparamref name="TOptions"/>.
     /// </summary>
-    public static void RegisterOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(Command command)
+    /// <param name="command">The command to register options on.</param>
+    /// <param name="descriptors">The option descriptors to register.</param>
+    public static void RegisterOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(Command command, OptionDescriptor[] descriptors)
         where TOptions : class
     {
-        var descriptors = OptionDescriptor.FromType<TOptions>();
         foreach (var descriptor in descriptors)
         {
             var option = CreateOption(descriptor);
@@ -137,11 +38,12 @@ public static class OptionBinder
     /// Creates a new <typeparamref name="TOptions"/> instance and populates its properties
     /// from the parsed command-line values.
     /// </summary>
-    public static TOptions BindOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(ParseResult parseResult)
+    /// <param name="parseResult">The parsed command-line values.</param>
+    /// <param name="descriptors">The option descriptors to bind.</param>
+    public static TOptions BindOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(ParseResult parseResult, OptionDescriptor[] descriptors)
         where TOptions : class
     {
         var instance = (TOptions)CreateInstance(typeof(TOptions));
-        var descriptors = OptionDescriptor.FromType<TOptions>();
         List<string> missingOptions = [];
         List<string> errors = [];
         Dictionary<PropertyInfo, object>? parentInstances = null;
@@ -218,9 +120,8 @@ public static class OptionBinder
 
     private static Option CreateOption(OptionDescriptor descriptor)
     {
-        var name = $"--{descriptor.Name}";
-        var handler = GetHandler(descriptor.Type);
-        var option = handler.CreateOption(name);
+        var handler = GetHandler(descriptor);
+        var option = handler.CreateOption(descriptor);
         option.Description = descriptor.Description;
         option.Required = descriptor.Required;
         option.Hidden = descriptor.Hidden;
@@ -236,14 +137,18 @@ public static class OptionBinder
         return option;
     }
 
-    private static object? GetOptionValue(ParseResult parseResult, Type type, string optionName)
+    private static object? GetOptionValue(ParseResult parseResult, OptionDescriptor descriptor)
     {
-        var handler = GetHandler(type);
-        return handler.GetValue(parseResult, optionName);
+        var handler = GetHandler<T>(descriptor);
+        return handler.GetValue<T>(parseResult);
     }
 
-    private static OptionTypeHandler GetHandler(Type type)
+    private static OptionTypeHandler<T> GetHandler<T>(OptionDescriptor descriptor)
     {
+        if (descriptor.Type == typeof(int))
+        {
+            return new OptionTypeHandler<T>(descriptor, d => OptionCreators.Int(d));
+        }
         if (s_typeHandlers.TryGetValue(type, out var handler))
         {
             return handler;
@@ -305,10 +210,11 @@ public static class OptionBinder
     }
 
     private sealed class OptionTypeHandler(
-        Func<string, Option> createOption,
-        Func<ParseResult, string, object?> getValue)
+        OptionDescriptor descriptor,
+        Func<OptionDescriptor, Option> createOption)
     {
-        public Option CreateOption(string name) => createOption(name);
-        public object? GetValue(ParseResult parseResult, string optionName) => getValue(parseResult, optionName);
+        private readonly Lazy<Option> _option = new(() => createOption(descriptor));
+        public Option CreateOption(OptionDescriptor descriptor) => _option.Value;
+        public object? GetValue(ParseResult parseResult) => parseResult.GetValueOrDefault(_option.Value);
     }
 }

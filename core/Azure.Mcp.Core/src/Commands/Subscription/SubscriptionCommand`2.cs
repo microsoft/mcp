@@ -9,15 +9,10 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Core.Commands.Subscription;
 
 public abstract class SubscriptionCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(ISubscriptionResolver subscriptionResolver)
      : AuthenticatedCommand<TOptions, TResult> where TOptions : class, ISubscriptionOption
 {
-    private readonly ISubscriptionResolver _subscriptionResolver;
-
-    protected SubscriptionCommand(ISubscriptionResolver subscriptionResolver)
-    {
-        _subscriptionResolver = subscriptionResolver;
-    }
+    private readonly ISubscriptionResolver _subscriptionResolver = subscriptionResolver;
 
     public override void ValidateOptions(TOptions options, ValidationResult validationResult)
     {
@@ -29,11 +24,9 @@ public abstract class SubscriptionCommand<
         }
     }
 
-    public override TOptions BindOptions(ParseResult parseResult)
+    public override void PostBindOptions(TOptions options)
     {
-        var options = base.BindOptions(parseResult);
         // Always post-process subscription via resolver (env var / CLI profile fallback)
         options.Subscription = _subscriptionResolver.ResolveSubscription(options.Subscription);
-        return options;
     }
 }

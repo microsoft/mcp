@@ -10,7 +10,8 @@ namespace Microsoft.Mcp.Core.Options;
 public class OptionDescriptor
 {
     public required string Name { get; init; }
-    public string? Description { get; init; }
+    public required string Description { get; init; }
+    public string[] Aliases { get; init; } = [];
     public bool Required { get; init; }
     public bool Hidden { get; init; }
     public required PropertyInfo TargetProperty { get; init; }
@@ -51,7 +52,13 @@ public class OptionDescriptor
                 continue;
             }
 
-            OptionAttribute? optionAttribute = property.GetCustomAttribute<OptionAttribute>();
+            var optionAttribute = property.GetCustomAttribute<OptionAttribute>();
+            // Only support properties with OptionAttribute
+            if (optionAttribute == null)
+            {
+                continue;
+            }
+
             string name = optionAttribute?.Name ?? OptionNameConvention.ToKebabCase(property.Name);
 
             if (!string.IsNullOrEmpty(prefix))
@@ -82,7 +89,7 @@ public class OptionDescriptor
                 descriptors.Add(new OptionDescriptor
                 {
                     Name = name,
-                    Description = optionAttribute?.Description,
+                    Description = optionAttribute!.Description!,
                     Type = property.PropertyType,
                     Required = !isNullable,
                     Hidden = optionAttribute?.Hidden ?? false,

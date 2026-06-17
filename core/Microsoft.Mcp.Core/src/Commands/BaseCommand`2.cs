@@ -23,6 +23,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     private const string TroubleshootingUrl = "https://aka.ms/azmcp/troubleshooting";
 
     private readonly Command _command;
+    private readonly OptionDescriptor[] _descriptors;
 
     [UnconditionalSuppressMessage("Trimming", "IL2075:UnrecognizedReflectionPattern",
         Justification = "CommandMetadataAttribute is only applied to concrete command types that are rooted by DI service registration.")]
@@ -45,7 +46,8 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         Metadata = attr.ToToolMetadata();
 
         _command = new ExtendedCommand(this, Name, Description);
-        OptionBinder.RegisterOptions<TOptions>(_command);
+        _descriptors = OptionDescriptor.FromType<TOptions>();
+        OptionBinder.RegisterOptions<TOptions>(_command, _descriptors);
     }
 
     public string Id { get; }
@@ -56,11 +58,26 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
 
     public Command GetCommand() => _command;
 
-    public virtual TOptions BindOptions(ParseResult parseResult)
+    public TOptions BindOptions(ParseResult parseResult)
     {
-        return OptionBinder.BindOptions<TOptions>(parseResult);
+        var options = OptionBinder.BindOptions<TOptions>(parseResult, _descriptors);
+        PostBindOptions(options);
+        return options;
     }
 
+    /// <summary>
+    /// Called after the options have been bound to the command to perform any additional setup or initialization.
+    /// </summary>
+    /// <param name="options">The options that have been bound.</param>
+    public virtual void PostBindOptions(TOptions options)
+    {
+    }
+
+    /// <summary>
+    /// Validates the options after they have been bound.
+    /// </summary>
+    /// <param name="options">The options to validate.</param>
+    /// <param name="validationResult">The validation result to populate.</param>
     public virtual void ValidateOptions(TOptions options, ValidationResult validationResult)
     {
     }

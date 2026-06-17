@@ -109,7 +109,7 @@ public sealed class OptionBinderTests
     {
         var command = new Command("test");
 
-        OptionBinder.RegisterOptions<StringOptions>(command);
+        OptionBinder.RegisterOptions<StringOptions>(command, OptionDescriptor.FromType<StringOptions>());
 
         Assert.Equal(2, command.Options.Count);
         Assert.Contains(command.Options, o => o.Name == "--name");
@@ -121,7 +121,7 @@ public sealed class OptionBinderTests
     {
         var command = new Command("test");
 
-        OptionBinder.RegisterOptions<IntOptions>(command);
+        OptionBinder.RegisterOptions<IntOptions>(command, OptionDescriptor.FromType<IntOptions>());
 
         Assert.Equal(2, command.Options.Count);
         Assert.Contains(command.Options, o => o.Name == "--count");
@@ -133,7 +133,7 @@ public sealed class OptionBinderTests
     {
         var command = new Command("test");
 
-        OptionBinder.RegisterOptions<ArrayOptions>(command);
+        OptionBinder.RegisterOptions<ArrayOptions>(command, OptionDescriptor.FromType<ArrayOptions>());
 
         var tagsOption = command.Options.Single(o => o.Name == "--tags");
         Assert.Equal(ArgumentArity.OneOrMore, tagsOption.Arity);
@@ -145,7 +145,7 @@ public sealed class OptionBinderTests
     {
         var command = new Command("test");
 
-        OptionBinder.RegisterOptions<EnumOptions>(command);
+        OptionBinder.RegisterOptions<EnumOptions>(command, OptionDescriptor.FromType<EnumOptions>());
 
         Assert.Equal(2, command.Options.Count);
         Assert.Contains(command.Options, o => o.Name == "--color");
@@ -158,7 +158,7 @@ public sealed class OptionBinderTests
         var command = new Command("test");
 
         var ex = Assert.Throws<InvalidOperationException>(
-            () => OptionBinder.RegisterOptions<UnsupportedTypeOptions>(command));
+            () => OptionBinder.RegisterOptions<UnsupportedTypeOptions>(command, OptionDescriptor.FromType<UnsupportedTypeOptions>()));
 
         Assert.Contains("non-scalar element type", ex.Message);
     }
@@ -170,11 +170,12 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_String_BindsValues()
     {
+        var descriptors = OptionDescriptor.FromType<StringOptions>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<StringOptions>(command);
+        OptionBinder.RegisterOptions<StringOptions>(command, descriptors);
 
         var parseResult = command.Parse("--name hello --description world");
-        var options = OptionBinder.BindOptions<StringOptions>(parseResult);
+        var options = OptionBinder.BindOptions<StringOptions>(parseResult, descriptors);
 
         Assert.Equal("hello", options.Name);
         Assert.Equal("world", options.Description);
@@ -183,11 +184,12 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_String_NullWhenNotProvided()
     {
+        var descriptors = OptionDescriptor.FromType<StringOptions>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<StringOptions>(command);
+        OptionBinder.RegisterOptions<StringOptions>(command, descriptors);
 
         var parseResult = command.Parse("");
-        var options = OptionBinder.BindOptions<StringOptions>(parseResult);
+        var options = OptionBinder.BindOptions<StringOptions>(parseResult, descriptors);
 
         Assert.Null(options.Name);
         Assert.Null(options.Description);
@@ -196,11 +198,12 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_Int_BindsValues()
     {
+        var descriptors = OptionDescriptor.FromType<IntOptions>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<IntOptions>(command);
+        OptionBinder.RegisterOptions<IntOptions>(command, descriptors);
 
         var parseResult = command.Parse("--count 42 --limit 100");
-        var options = OptionBinder.BindOptions<IntOptions>(parseResult);
+        var options = OptionBinder.BindOptions<IntOptions>(parseResult, descriptors);
 
         Assert.Equal(42, options.Count);
         Assert.Equal(100, options.Limit);
@@ -209,11 +212,12 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_Bool_BindsValues()
     {
+        var descriptors = OptionDescriptor.FromType<BoolOptions>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<BoolOptions>(command);
+        OptionBinder.RegisterOptions<BoolOptions>(command, descriptors);
 
         var parseResult = command.Parse("--verbose true --debug false");
-        var options = OptionBinder.BindOptions<BoolOptions>(parseResult);
+        var options = OptionBinder.BindOptions<BoolOptions>(parseResult, descriptors);
 
         Assert.True(options.Verbose);
         Assert.Equal(false, options.Debug);
@@ -222,11 +226,12 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_Array_BindsMultipleValues()
     {
+        var descriptors = OptionDescriptor.FromType<ArrayOptions>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<ArrayOptions>(command);
+        OptionBinder.RegisterOptions<ArrayOptions>(command, descriptors);
 
         var parseResult = command.Parse("--tags foo bar baz --ports 80 443");
-        var options = OptionBinder.BindOptions<ArrayOptions>(parseResult);
+        var options = OptionBinder.BindOptions<ArrayOptions>(parseResult, descriptors);
 
         Assert.Equal(["foo", "bar", "baz"], options.Tags!);
         Assert.Equal([80, 443], options.Ports!);
@@ -235,11 +240,12 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_Enum_BindsCaseInsensitive()
     {
+        var descriptors = OptionDescriptor.FromType<EnumOptions>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<EnumOptions>(command);
+        OptionBinder.RegisterOptions<EnumOptions>(command, descriptors);
 
         var parseResult = command.Parse("--color green --background BLUE");
-        var options = OptionBinder.BindOptions<EnumOptions>(parseResult);
+        var options = OptionBinder.BindOptions<EnumOptions>(parseResult, descriptors);
 
         Assert.Equal(Color.Green, options.Color);
         Assert.Equal(Color.Blue, options.Background);
@@ -248,11 +254,12 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_Enum_MixedCase()
     {
+        var descriptors = OptionDescriptor.FromType<EnumOptions>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<EnumOptions>(command);
+        OptionBinder.RegisterOptions<EnumOptions>(command, descriptors);
 
         var parseResult = command.Parse("--color ReD");
-        var options = OptionBinder.BindOptions<EnumOptions>(parseResult);
+        var options = OptionBinder.BindOptions<EnumOptions>(parseResult, descriptors);
 
         Assert.Equal(Color.Red, options.Color);
     }
@@ -260,11 +267,12 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_NullableEnum_NullWhenNotProvided()
     {
+        var descriptors = OptionDescriptor.FromType<EnumOptions>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<EnumOptions>(command);
+        OptionBinder.RegisterOptions<EnumOptions>(command, descriptors);
 
         var parseResult = command.Parse("--color Red");
-        var options = OptionBinder.BindOptions<EnumOptions>(parseResult);
+        var options = OptionBinder.BindOptions<EnumOptions>(parseResult, descriptors);
 
         Assert.Equal(Color.Red, options.Color);
         Assert.Null(options.Background);
@@ -273,12 +281,13 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_Guid_BindsValue()
     {
+        var descriptors = OptionDescriptor.FromType<GuidOptions>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<GuidOptions>(command);
+        OptionBinder.RegisterOptions<GuidOptions>(command, descriptors);
         var guid = Guid.NewGuid();
 
         var parseResult = command.Parse($"--id {guid}");
-        var options = OptionBinder.BindOptions<GuidOptions>(parseResult);
+        var options = OptionBinder.BindOptions<GuidOptions>(parseResult, descriptors);
 
         Assert.Equal(guid, options.Id);
         Assert.Null(options.CorrelationId);
@@ -287,11 +296,12 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_DateTime_BindsValue()
     {
+        var descriptors = OptionDescriptor.FromType<DateTimeOptions>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<DateTimeOptions>(command);
+        OptionBinder.RegisterOptions<DateTimeOptions>(command, descriptors);
 
         var parseResult = command.Parse("--start-date 2024-01-15");
-        var options = OptionBinder.BindOptions<DateTimeOptions>(parseResult);
+        var options = OptionBinder.BindOptions<DateTimeOptions>(parseResult, descriptors);
 
         Assert.Equal(new DateTime(2024, 1, 15), options.StartDate);
     }
@@ -300,11 +310,12 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_Decimal_BindsValue()
     {
+        var descriptors = OptionDescriptor.FromType<DecimalOptions>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<DecimalOptions>(command);
+        OptionBinder.RegisterOptions<DecimalOptions>(command, descriptors);
 
         var parseResult = command.Parse("--price 19.99 --rate 3.14");
-        var options = OptionBinder.BindOptions<DecimalOptions>(parseResult);
+        var options = OptionBinder.BindOptions<DecimalOptions>(parseResult, descriptors);
 
         Assert.Equal(19.99m, options.Price);
         Assert.Equal(3.14, options.Rate);
@@ -319,7 +330,7 @@ public sealed class OptionBinderTests
     {
         var command = new Command("test");
 
-        OptionBinder.RegisterOptions<NestedOptional>(command);
+        OptionBinder.RegisterOptions<NestedOptional>(command, OptionDescriptor.FromType<NestedOptional>());
 
         // --name, --optional-host, --optional-port, --required-host, --required-port
         Assert.Equal(5, command.Options.Count);
@@ -337,7 +348,7 @@ public sealed class OptionBinderTests
         // the leaf options remain optional
         var command = new Command("test");
 
-        OptionBinder.RegisterOptions<NestedOptional>(command);
+        OptionBinder.RegisterOptions<NestedOptional>(command, OptionDescriptor.FromType<NestedOptional>());
 
         foreach (var option in command.Options)
         {
@@ -348,11 +359,12 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_NestedOptional_NullWhenNoChildProvided()
     {
+        var descriptors = OptionDescriptor.FromType<NestedOptional>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<NestedOptional>(command);
+        OptionBinder.RegisterOptions<NestedOptional>(command, descriptors);
 
         var parseResult = command.Parse("--name myapp");
-        var options = OptionBinder.BindOptions<NestedOptional>(parseResult);
+        var options = OptionBinder.BindOptions<NestedOptional>(parseResult, descriptors);
 
         Assert.Equal("myapp", options.Name);
         Assert.Null(options.Optional);
@@ -361,11 +373,12 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_NestedOptional_BindsOptionalChild()
     {
+        var descriptors = OptionDescriptor.FromType<NestedOptional>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<NestedOptional>(command);
+        OptionBinder.RegisterOptions<NestedOptional>(command, descriptors);
 
         var parseResult = command.Parse("--optional-host localhost --optional-port 8080");
-        var options = OptionBinder.BindOptions<NestedOptional>(parseResult);
+        var options = OptionBinder.BindOptions<NestedOptional>(parseResult, descriptors);
 
         Assert.NotNull(options.Optional);
         Assert.Equal("localhost", options.Optional!.Host);
@@ -375,11 +388,12 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_NestedOptional_BindsRequiredChild()
     {
+        var descriptors = OptionDescriptor.FromType<NestedOptional>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<NestedOptional>(command);
+        OptionBinder.RegisterOptions<NestedOptional>(command, descriptors);
 
         var parseResult = command.Parse("--required-host 10.0.0.1 --required-port 443");
-        var options = OptionBinder.BindOptions<NestedOptional>(parseResult);
+        var options = OptionBinder.BindOptions<NestedOptional>(parseResult, descriptors);
 
         Assert.NotNull(options.Required);
         Assert.Equal("10.0.0.1", options.Required.Host);
@@ -389,11 +403,12 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_NestedOptional_PartialChildValues()
     {
+        var descriptors = OptionDescriptor.FromType<NestedOptional>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<NestedOptional>(command);
+        OptionBinder.RegisterOptions<NestedOptional>(command, descriptors);
 
         var parseResult = command.Parse("--optional-host localhost");
-        var options = OptionBinder.BindOptions<NestedOptional>(parseResult);
+        var options = OptionBinder.BindOptions<NestedOptional>(parseResult, descriptors);
 
         Assert.NotNull(options.Optional);
         Assert.Equal("localhost", options.Optional!.Host);
@@ -405,7 +420,7 @@ public sealed class OptionBinderTests
     {
         var command = new Command("test");
 
-        OptionBinder.RegisterOptions<NestedRequired>(command);
+        OptionBinder.RegisterOptions<NestedRequired>(command, OptionDescriptor.FromType<NestedRequired>());
 
         // --name, --required-name (required!), --required-port (optional)
         Assert.Equal(3, command.Options.Count);
@@ -420,7 +435,7 @@ public sealed class OptionBinderTests
         // RequiredNetworkSettings.Name is non-nullable string → required
         var command = new Command("test");
 
-        OptionBinder.RegisterOptions<NestedRequired>(command);
+        OptionBinder.RegisterOptions<NestedRequired>(command, OptionDescriptor.FromType<NestedRequired>());
 
         var requiredName = command.Options.Single(o => o.Name == "--required-name");
         Assert.True(requiredName.Required);
@@ -433,11 +448,12 @@ public sealed class OptionBinderTests
     [Fact]
     public void BindOptions_NestedRequired_BindsDeepValues()
     {
+        var descriptors = OptionDescriptor.FromType<NestedRequired>();
         var command = new Command("test");
-        OptionBinder.RegisterOptions<NestedRequired>(command);
+        OptionBinder.RegisterOptions<NestedRequired>(command, descriptors);
 
         var parseResult = command.Parse("--name myapp --required-name primary --required-port 5432");
-        var options = OptionBinder.BindOptions<NestedRequired>(parseResult);
+        var options = OptionBinder.BindOptions<NestedRequired>(parseResult, descriptors);
 
         Assert.Equal("myapp", options.Name);
         Assert.NotNull(options.Required);
@@ -492,11 +508,12 @@ public sealed class OptionBinderTests
         {
             try
             {
+                var descriptors = OptionDescriptor.FromType<EnumOptions>();
                 var command = new Command("test");
-                OptionBinder.RegisterOptions<EnumOptions>(command);
+                OptionBinder.RegisterOptions<EnumOptions>(command, descriptors);
 
                 var parseResult = command.Parse("--color Green");
-                var options = OptionBinder.BindOptions<EnumOptions>(parseResult);
+                var options = OptionBinder.BindOptions<EnumOptions>(parseResult, descriptors);
 
                 Assert.Equal(Color.Green, options.Color);
             }
