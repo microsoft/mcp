@@ -64,7 +64,7 @@ public class OptionDescriptor
             {
                 name = $"{prefix}-{name}";
             }
-            
+
             var required = Attribute.IsDefined(property, typeof(RequiredMemberAttribute));
             if (IsComplexType(property.PropertyType))
             {
