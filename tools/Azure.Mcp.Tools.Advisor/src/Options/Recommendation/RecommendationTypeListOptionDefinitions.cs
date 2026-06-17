@@ -29,7 +29,7 @@ public static class RecommendationTypeListOptionDefinitions
         $"--{CategoryText}"
     )
     {
-        Description = "Optional Advisor category filter. Typical values: 'Cost', 'HighAvailability', 'Security', 'Performance', 'OperationalExcellence' (case-insensitive). New categories that ARM adds in the future will still match.",
+        Description = "Optional Advisor category filter. Typical values: 'Cost', 'HighAvailability', 'Security', 'Performance', 'OperationalExcellence' (case-insensitive). New categories to be supported by Advisor in the future will still match.",
         Required = false
     };
 }

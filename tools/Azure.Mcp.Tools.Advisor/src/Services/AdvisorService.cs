@@ -79,13 +79,17 @@ public class AdvisorService(
         using var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            // Read the response body for diagnostic logging only; do NOT include it in the thrown
-            // exception message because that message is surfaced to the caller and the body may
-            // contain verbose ARM error details we don't want to leak to the user.
+            // Read the error response body for diagnostic logging only; do NOT include it in the
+            // thrown exception message because that message is surfaced to the caller and the body
+            // may contain verbose ARM error details we don't want to leak to the user.
+            //
+            // NOTE: This truncation applies ONLY to the *error* body we write to the log. It does
+            // not affect the successful response below, which is deserialized in full via
+            // ReadFromJsonAsync (no size cap), so all recommendation types are always returned.
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
-            const int maxLoggedBodyLength = 2048;
-            var truncatedBody = body.Length > maxLoggedBodyLength
-                ? body[..maxLoggedBodyLength] + "... [truncated]"
+            const int maxLoggedErrorBodyLength = 2048;
+            var truncatedBody = body.Length > maxLoggedErrorBodyLength
+                ? body[..maxLoggedErrorBodyLength] + "... [truncated]"
                 : body;
             _logger.LogError(
                 "Advisor metadata API returned non-success. Status: {Status}, Reason: {Reason}, Body: {Body}",
