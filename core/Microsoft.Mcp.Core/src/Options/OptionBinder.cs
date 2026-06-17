@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Collections.Concurrent;
-using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Reflection;
