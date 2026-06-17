@@ -492,7 +492,7 @@ public class MonitorService(
         // Find the workspace
         var matchingWorkspace = workspaces.FirstOrDefault(w =>
             isId ? w.CustomerId.Equals(workspace, StringComparison.OrdinalIgnoreCase)
-                : w.Name.Equals(workspace, StringComparison.OrdinalIgnoreCase));
+                : w.Name.Equals(workspace, StringComparisons.ResourceName));
 
         if (matchingWorkspace == null)
         {

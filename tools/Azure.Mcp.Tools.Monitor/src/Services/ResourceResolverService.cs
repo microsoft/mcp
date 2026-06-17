@@ -43,7 +43,7 @@ public class ResourceResolverService(ISubscriptionService subscriptionService, I
 
         // Get all resources matching the name
         var allMatchingResources = await subscriptionResource.GetGenericResourcesAsync(cancellationToken: cancellationToken)
-            .Where(r => r.Data.Name?.Equals(resourceName, StringComparison.OrdinalIgnoreCase) == true)
+            .Where(r => r.Data.Name?.Equals(resourceName, StringComparisons.ResourceName) == true)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (allMatchingResources.Count == 0)

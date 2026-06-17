@@ -78,7 +78,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         await foreach (var account in subscriptionResource.GetCosmosDBAccountsAsync(cancellationToken))
         {
             // Cosmos DB account names are case-insensitive in Azure, so compare accordingly.
-            if (account.Data.Name.Equals(accountName, StringComparison.OrdinalIgnoreCase))
+            if (account.Data.Name.Equals(accountName, StringComparisons.ResourceName))
             {
                 return account;
             }

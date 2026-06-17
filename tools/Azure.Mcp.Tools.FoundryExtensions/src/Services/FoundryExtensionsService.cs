@@ -173,7 +173,7 @@ public class FoundryExtensionsService(
 
         // Find the index by name using async enumerable
         var index = await indexesClient.GetIndicesAsync(cancellationToken: cancellationToken)
-            .Where(i => string.Equals(i.Name, indexName, StringComparison.OrdinalIgnoreCase))
+            .Where(i => string.Equals(i.Name, indexName, StringComparisons.ResourceName))
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
 
         if (index == null)
