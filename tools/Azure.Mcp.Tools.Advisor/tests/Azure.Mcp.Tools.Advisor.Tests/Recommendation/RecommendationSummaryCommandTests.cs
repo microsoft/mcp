@@ -32,8 +32,8 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
     [Theory]
     [InlineData("--subscription sub1 --group-by category", true)]
     [InlineData("--subscription sub1 --group-by impact", true)]
-    [InlineData("--subscription sub1", false)]                            // missing --group-by
-    [InlineData("", false)]                                                // missing everything
+    [InlineData("--subscription sub1", true)]                              // --group-by optional, defaults to category
+    [InlineData("", false)]                                                // missing subscription
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
@@ -64,6 +64,25 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
         await Service.DidNotReceive().SummarizeRecommendationsAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(), Arg.Any<RecommendationFilters?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_GroupByOmitted_DefaultsToCategory()
+    {
+        string? captured = null;
+        Service.SummarizeRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Do<string>(g => captured = g),
+            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(EmptySummary());
+
+        var response = await ExecuteCommandAsync("--subscription", "sub1");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("category", captured);
     }
 
     [Theory]

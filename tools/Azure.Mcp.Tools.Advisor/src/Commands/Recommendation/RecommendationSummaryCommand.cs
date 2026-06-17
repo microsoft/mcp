@@ -21,7 +21,9 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "This is the CORRECT tool whenever the user asks 'how many', 'top N <something>', 'which <X> has the most', " +
         "'breakdown by <field>', 'distribution of', 'count of', or any ranking/comparison question over the recommendation set. " +
         "Do not try to answer such questions by calling 'list' and counting client-side — 'list' is capped at 100 items and will undercount. " +
-        "Required: --group-by (one of 'recommendation-type', 'category', 'impact', 'resource-type'). " +
+        "Optional: --group-by (one of 'recommendation-type', 'category', 'impact', 'resource-type'); defaults to 'category' when omitted, " +
+        "which surfaces the high-level themes (Cost, Security, Reliability, etc.) so prompts like 'summarize the key themes from my Advisor recommendations' work without naming a field. " +
+        "Only active recommendations (status 'New') are aggregated; dismissed and postponed ones are excluded. " +
         "Optional filters (same semantics as 'list'): --category, --impact, --resource-type, --resource, --search — applied BEFORE aggregation. " +
         "Optional --top caps how many buckets are displayed (defaults to all); the 'Unknown' bucket is always preserved at the tail so users can see uncategorized items. " +
         "'TotalRecommendations' always reflects the full filtered population regardless of --top. " +
@@ -40,7 +42,7 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AdvisorOptionDefinitions.GroupBy.AsRequired());
+        command.Options.Add(AdvisorOptionDefinitions.GroupBy.AsOptional());
         command.Options.Add(AdvisorOptionDefinitions.Top.AsOptional());
         command.Options.Add(AdvisorOptionDefinitions.Category.AsOptional());
         command.Options.Add(AdvisorOptionDefinitions.Impact.AsOptional());
@@ -52,7 +54,7 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
         {
             if (!commandResult.TryGetValue(AdvisorOptionDefinitions.GroupBy, out string? value))
             {
-                // Missing --group-by is handled by the required-option check in BaseCommand.Validate.
+                // --group-by is optional; when omitted we default to 'category' in ExecuteAsync.
                 return;
             }
 
@@ -90,9 +92,12 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
 
         var options = BindOptions(parseResult);
 
-        // Validator in RegisterOptions guarantees GroupBy is set and is one of AllowedGroupBy (case-insensitive).
-        // Normalize to lowercase here so the service receives the canonical bucket name.
-        var groupBy = options.GroupBy!.Trim().ToLowerInvariant();
+        // Validator in RegisterOptions guarantees that when --group-by is supplied it is one of
+        // AllowedGroupBy (case-insensitive). When omitted, default to 'category' — the most useful
+        // high-level "key themes" view. Normalize to lowercase so the service receives the canonical bucket name.
+        var groupBy = string.IsNullOrWhiteSpace(options.GroupBy)
+            ? AdvisorService.GroupByCategory
+            : options.GroupBy.Trim().ToLowerInvariant();
 
         try
         {

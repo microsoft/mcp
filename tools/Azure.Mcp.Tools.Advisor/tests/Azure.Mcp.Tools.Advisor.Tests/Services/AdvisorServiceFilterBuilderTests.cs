@@ -9,20 +9,23 @@ namespace Azure.Mcp.Tools.Advisor.Tests.Services;
 
 public class AdvisorServiceFilterBuilderTests
 {
+    // Every filter is always AND-ed with this clause so only active ('New') recommendations are returned.
+    private const string StatusClause = "tostring(properties.recommendationStatus) =~ 'New'";
+
     [Fact]
-    public void BuildAdditionalFilter_NullFilters_ReturnsNull()
+    public void BuildAdditionalFilter_NullFilters_ReturnsStatusClauseOnly()
     {
-        Assert.Null(AdvisorService.BuildAdditionalFilter(null));
+        Assert.Equal(StatusClause, AdvisorService.BuildAdditionalFilter(null));
     }
 
     [Fact]
-    public void BuildAdditionalFilter_AllFieldsNull_ReturnsNull()
+    public void BuildAdditionalFilter_AllFieldsNull_ReturnsStatusClauseOnly()
     {
-        Assert.Null(AdvisorService.BuildAdditionalFilter(new RecommendationFilters()));
+        Assert.Equal(StatusClause, AdvisorService.BuildAdditionalFilter(new RecommendationFilters()));
     }
 
     [Fact]
-    public void BuildAdditionalFilter_WhitespaceFields_ReturnsNull()
+    public void BuildAdditionalFilter_WhitespaceFields_ReturnsStatusClauseOnly()
     {
         var filters = new RecommendationFilters(
             Category: "  ",
@@ -31,7 +34,7 @@ public class AdvisorServiceFilterBuilderTests
             Resource: " ",
             Search: "");
 
-        Assert.Null(AdvisorService.BuildAdditionalFilter(filters));
+        Assert.Equal(StatusClause, AdvisorService.BuildAdditionalFilter(filters));
     }
 
     [Fact]
@@ -39,7 +42,7 @@ public class AdvisorServiceFilterBuilderTests
     {
         var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Category: "Security"));
 
-        Assert.Equal("tostring(properties.category) =~ 'Security'", result);
+        Assert.Equal($"{StatusClause} and tostring(properties.category) =~ 'Security'", result);
     }
 
     [Fact]
@@ -47,7 +50,7 @@ public class AdvisorServiceFilterBuilderTests
     {
         var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Impact: "High"));
 
-        Assert.Equal("tostring(properties.impact) =~ 'High'", result);
+        Assert.Equal($"{StatusClause} and tostring(properties.impact) =~ 'High'", result);
     }
 
     [Fact]
@@ -57,7 +60,8 @@ public class AdvisorServiceFilterBuilderTests
             new RecommendationFilters(ResourceType: "Microsoft.Storage/storageAccounts"));
 
         Assert.Equal(
-            "tostring(properties.resourceMetadata.resourceId) contains 'Microsoft.Storage/storageAccounts'",
+            $"{StatusClause} and "
+            + "tostring(properties.resourceMetadata.resourceId) contains 'Microsoft.Storage/storageAccounts'",
             result);
     }
 
@@ -67,7 +71,8 @@ public class AdvisorServiceFilterBuilderTests
         var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Resource: "mystorage"));
 
         Assert.Equal(
-            "tostring(properties.resourceMetadata.resourceId) contains 'mystorage'",
+            $"{StatusClause} and "
+            + "tostring(properties.resourceMetadata.resourceId) contains 'mystorage'",
             result);
     }
 
@@ -77,7 +82,8 @@ public class AdvisorServiceFilterBuilderTests
         var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Search: "encryption"));
 
         Assert.Equal(
-            "tostring(properties.shortDescription.problem) contains 'encryption'",
+            $"{StatusClause} and "
+            + "tostring(properties.shortDescription.problem) contains 'encryption'",
             result);
     }
 
@@ -92,7 +98,8 @@ public class AdvisorServiceFilterBuilderTests
         var result = AdvisorService.BuildAdditionalFilter(filters);
 
         Assert.Equal(
-            "tostring(properties.category) =~ 'Security' and "
+            $"{StatusClause} and "
+            + "tostring(properties.category) =~ 'Security' and "
             + "tostring(properties.impact) =~ 'High' and "
             + "tostring(properties.shortDescription.problem) contains 'tls'",
             result);

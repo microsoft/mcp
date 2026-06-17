@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "Do NOT use this to answer aggregate questions like 'how many', 'top N resource types', 'breakdown by category', " +
         "or 'which impact has the most' — for those, call the 'summary' tool instead (it aggregates server-side over the " +
         "entire population, while 'list' is capped at 100 items and will silently undercount). " +
+        "Only active recommendations (status 'New') are returned; dismissed and postponed ones are excluded. " +
         "Supports optional filters: --category, --impact, --resource-type, --resource, --search. " +
         "--top caps the number of returned items (default 50, max 100).",
     Destructive = false,

@@ -155,40 +155,44 @@ public class AdvisorService(ISubscriptionService subscriptionService, ITenantSer
 
     internal static string? BuildAdditionalFilter(RecommendationFilters? filters)
     {
-        if (filters is null)
+        // Advisor surfaces recommendations in several lifecycle states (e.g. 'New', 'Dismissed', 'Postponed').
+        // Only 'New' recommendations are active and actionable, so we always constrain results to these and
+        // never expose dismissed or postponed noise in lists or summaries.
+        var clauses = new List<string> { ActiveRecommendationClause };
+
+        if (filters is not null)
         {
-            return null;
+            if (!string.IsNullOrWhiteSpace(filters.Category))
+            {
+                clauses.Add($"tostring(properties.category) =~ '{SanitizeForKql(filters.Category)}'");
+            }
+
+            if (!string.IsNullOrWhiteSpace(filters.Impact))
+            {
+                clauses.Add($"tostring(properties.impact) =~ '{SanitizeForKql(filters.Impact)}'");
+            }
+
+            if (!string.IsNullOrWhiteSpace(filters.ResourceType))
+            {
+                clauses.Add($"tostring(properties.resourceMetadata.resourceId) contains '{SanitizeForKql(filters.ResourceType)}'");
+            }
+
+            if (!string.IsNullOrWhiteSpace(filters.Resource))
+            {
+                clauses.Add($"tostring(properties.resourceMetadata.resourceId) contains '{SanitizeForKql(filters.Resource)}'");
+            }
+
+            if (!string.IsNullOrWhiteSpace(filters.Search))
+            {
+                clauses.Add($"tostring(properties.shortDescription.problem) contains '{SanitizeForKql(filters.Search)}'");
+            }
         }
 
-        var clauses = new List<string>();
-
-        if (!string.IsNullOrWhiteSpace(filters.Category))
-        {
-            clauses.Add($"tostring(properties.category) =~ '{SanitizeForKql(filters.Category)}'");
-        }
-
-        if (!string.IsNullOrWhiteSpace(filters.Impact))
-        {
-            clauses.Add($"tostring(properties.impact) =~ '{SanitizeForKql(filters.Impact)}'");
-        }
-
-        if (!string.IsNullOrWhiteSpace(filters.ResourceType))
-        {
-            clauses.Add($"tostring(properties.resourceMetadata.resourceId) contains '{SanitizeForKql(filters.ResourceType)}'");
-        }
-
-        if (!string.IsNullOrWhiteSpace(filters.Resource))
-        {
-            clauses.Add($"tostring(properties.resourceMetadata.resourceId) contains '{SanitizeForKql(filters.Resource)}'");
-        }
-
-        if (!string.IsNullOrWhiteSpace(filters.Search))
-        {
-            clauses.Add($"tostring(properties.shortDescription.problem) contains '{SanitizeForKql(filters.Search)}'");
-        }
-
-        return clauses.Count == 0 ? null : string.Join(" and ", clauses);
+        return string.Join(" and ", clauses);
     }
+
+    // KQL clause that restricts results to active ('New') recommendations only.
+    internal const string ActiveRecommendationClause = "tostring(properties.recommendationStatus) =~ 'New'";
 
     private static string SanitizeForKql(string value) => EscapeKqlString(value.Replace("|", string.Empty));
 

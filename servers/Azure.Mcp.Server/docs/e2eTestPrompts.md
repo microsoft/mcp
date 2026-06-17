@@ -13,6 +13,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | advisor_recommendation_list | List Cost recommendations for storage accounts in subscription <subscription> |
 | advisor_recommendation_list | Find Advisor recommendations mentioning "right-size" in subscription <subscription> |
 | advisor_recommendation_list | Show me the top 10 Advisor recommendations in subscription <subscription> |
+| advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations in subscription <subscription> |
 | advisor_recommendation_summary | Summarize Advisor recommendations in subscription <subscription> by category |
 | advisor_recommendation_summary | Show the top 10 most common Advisor recommendations in subscription <subscription> |
 | advisor_recommendation_summary | Group Advisor recommendations by impact in subscription <subscription> |

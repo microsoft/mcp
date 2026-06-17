@@ -72,15 +72,13 @@ public class AdvisorServiceSummarizeQueryTests
     }
 
     [Fact]
-    public void BuildSummarizeQuery_NoFilters_DoesNotAddExtraWhereClause()
+    public void BuildSummarizeQuery_NoFilters_StillRestrictsToActiveRecommendations()
     {
         var query = AdvisorService.BuildSummarizeQuery("category", null, null);
 
-        // Should go directly from where type clause to summarize
-        var whereIndex = query.IndexOf("where type");
-        var summarizeIndex = query.IndexOf("summarize");
-        var betweenText = query.Substring(whereIndex, summarizeIndex - whereIndex);
-        Assert.DoesNotContain(" and ", betweenText);
+        // Even with no user filters, the query always restricts to active ('New') recommendations.
+        Assert.Contains("properties.recommendationStatus", query);
+        Assert.Contains("'New'", query);
     }
 
     [Fact]

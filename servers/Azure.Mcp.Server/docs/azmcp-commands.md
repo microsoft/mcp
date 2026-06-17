@@ -328,6 +328,7 @@ azmcp server info
 
 ```bash
 # List Advisor recommendations in a subscription, with optional server-side filters
+# Only active recommendations (status 'New') are returned; dismissed and postponed ones are excluded
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation list --subscription <subscription> \
                                   [--top <top>] \
@@ -338,9 +339,11 @@ azmcp advisor recommendation list --subscription <subscription> \
                                   [--search <search>]
 
 # Summarize Advisor recommendations grouped by a chosen field (recommendation-type, category, impact, or resource-type)
+# --group-by is optional and defaults to 'category' when omitted
+# Only active recommendations (status 'New') are aggregated; dismissed and postponed ones are excluded
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation summary --subscription <subscription> \
-                                     --group-by <group-by> \
+                                     [--group-by <group-by>] \
                                      [--top <top>] \
                                      [--category <category>] \
                                      [--impact <impact>] \
