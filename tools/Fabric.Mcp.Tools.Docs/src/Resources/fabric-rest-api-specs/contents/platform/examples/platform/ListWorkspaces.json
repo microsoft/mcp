@@ -14,7 +14,13 @@
                         "id": "cfafbeb1-8037-4d0c-896e-a46fb27ff227",
                         "displayName": "Marketing",
                         "description": "A  workspace used by the marketing team",
-                        "type": "Workspace"
+                        "type": "Workspace",
+                        "tags": [
+                            {
+                                "id": "b3f2c8e9-4d8e-4a7c-9a32-f8c1b2e4d6af",
+                                "displayName": "Marketing"
+                            }
+                        ]
                     },
                     {
                         "id": "f2d70dc6-8f3e-4f2c-b00e-e2d336d7d711",
@@ -22,7 +28,17 @@
                         "description": "A workspace used by the finance team",
                         "type": "Workspace",
                         "capacityId": "171018af-1531-4e61-942a-74f024b7f9fd",
-                        "domainId": "7c889f28-999b-4945-840d-54da3e3b5a29"
+                        "domainId": "7c889f28-999b-4945-840d-54da3e3b5a29",
+                        "tags": [
+                            {
+                                "id": "9b8c7d6e-5f4a-3b2c-1d0e-9f8a7b6c5d4e",
+                                "displayName": "Finance"
+                            },
+                            {
+                                "id": "b3f2c8e9-4d8e-4a7c-9a32-f8c1b2e4d6af",
+                                "displayName": "Marketing"
+                            }
+                        ]
                     }
                 ]
             }

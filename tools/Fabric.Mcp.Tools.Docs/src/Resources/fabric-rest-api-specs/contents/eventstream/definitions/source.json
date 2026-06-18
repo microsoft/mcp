@@ -22,6 +22,7 @@
                 "AzureIoTHub",
                 "AzureSQLDBCDC",
                 "AzureSQLMIDBCDC",
+                "AzureServiceBus",
                 "ConfluentCloud",
                 "CustomEndpoint",
                 "FabricCapacityOverviewEvents",
@@ -30,6 +31,7 @@
                 "FabricWorkspaceItemEvents",
                 "GooglePubSub",
                 "Http",
+                "MongoDBCDC",
                 "Mqtt",
                 "MySQLCDC",
                 "PostgreSQLCDC",
@@ -91,6 +93,10 @@
                         "description": "The Azure SQL MI DB CDC source type."
                     },
                     {
+                        "value": "AzureServiceBus",
+                        "description": "The Azure Service Bus source type."
+                    },
+                    {
                         "value": "ConfluentCloud",
                         "description": "The Confluent Cloud source type."
                     },
@@ -121,6 +127,10 @@
                     {
                         "value": "Http",
                         "description": "The HTTP source type."
+                    },
+                    {
+                        "value": "MongoDBCDC",
+                        "description": "The MongoDB CDC source type."
                     },
                     {
                         "value": "Mqtt",
@@ -303,6 +313,25 @@
                 }
             ],
             "x-ms-discriminator-value": "AzureBlobStorageEvents"
+        },
+        "AzureServiceBusSourceResponse": {
+            "type": "object",
+            "description": "Azure Service Bus source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Azure Service Bus source.",
+                    "$ref": "#/definitions/AzureServiceBusSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "AzureServiceBus"
         },
         "CustomEndpointSourceResponse": {
             "type": "object",
@@ -554,7 +583,10 @@
                 "properties"
             ],
             "properties": {
-                "properties": {}
+                "properties": {
+                    "description": "The properties of the MySQL CDC source.",
+                    "$ref": "#/definitions/MySQLCDCSourceProperties"
+                }
             },
             "allOf": [
                 {
@@ -638,6 +670,25 @@
                 }
             ],
             "x-ms-discriminator-value": "Http"
+        },
+        "MongoDBCDCSourceResponse": {
+            "type": "object",
+            "description": "MongoDB CDC source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the MongoDB CDC source.",
+                    "$ref": "#/definitions/MongoDBCDCSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "MongoDBCDC"
         },
         "MqttSourceResponse": {
             "type": "object",
@@ -861,7 +912,7 @@
                 },
                 "includedEventTypes": {
                     "type": "array",
-                    "description": "The included event types.",
+                    "description": "The included event types. Additional event types may be added over time.",
                     "items": {
                         "type": "string",
                         "enum": [
@@ -923,6 +974,39 @@
                             ]
                         }
                     }
+                }
+            }
+        },
+        "AzureServiceBusSourceProperties": {
+            "type": "object",
+            "description": "Azure Service Bus source properties.",
+            "required": [
+                "dataConnectionId",
+                "serviceBusType",
+                "topicOrQueueName"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The Azure Service Bus data connection identifier.",
+                    "format": "uuid"
+                },
+                "serviceBusType": {
+                    "type": "string",
+                    "description": "The type of the Azure Service Bus source.",
+                    "enum": [
+                        "Topic",
+                        "Queue"
+                    ]
+                },
+                "topicOrQueueName": {
+                    "type": "string",
+                    "description": "The name of the Azure Service Bus topic or queue."
+                },
+                "subscriptionName": {
+                    "type": "string",
+                    "description": "The name of the Azure Service Bus subscription. This property is required when the entity type is `Topic`."
+
                 }
             }
         },
@@ -1005,7 +1089,7 @@
             "properties": {
                 "type": {
                     "type": "string",
-                    "description": "The sample data type.",
+                    "description": "The sample data type. Additional sample data types may be added over time.",
                     "enum": [
                         "YellowTaxi",
                         "StockMarket",
@@ -1154,7 +1238,7 @@
                 },
                 "region": {
                     "type": "string",
-                    "description": "The Amazon Kinesis region name.",
+                    "description": "The Amazon Kinesis region name. Additional regions may be added over time.",
                     "enum": [
                         "af-south-1",
                         "ap-east-1",
@@ -1323,6 +1407,37 @@
                             }
                         ]
                     }
+                },
+                "startPosition": {
+                    "type": "string",
+                    "description": "The start position in the stream.",
+                    "enum": [
+                        "Latest",
+                        "TrimHorizon",
+                        "AtTimestamp"
+                    ],
+                    "x-ms-enum": {
+                        "name": "StartPosition",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Latest",
+                                "description": "Start from the latest record."
+                            },
+                            {
+                                "value": "TrimHorizon",
+                                "description": "Start from the last untrimmed record."
+                            },
+                            {
+                                "value": "AtTimestamp",
+                                "description": "Start from a specific timestamp."
+                            }
+                        ]
+                    }
+                },
+                "startTimestamp": {
+                    "type": "string",
+                    "description": "The start timestamp in ISO 8601 format (for example, '2024-01-15T10:30:00Z'). Required when `startPosition` is `AtTimestamp`."
                 }
             }
         },
@@ -1389,7 +1504,7 @@
             "properties": {
                 "saslMechanism": {
                     "type": "string",
-                    "description": "The SASL mechanism.",
+                    "description": "The SASL mechanism. Additional SASL mechanisms may be added over time.",
                     "enum": [
                         "PLAIN",
                         "SCRAM-SHA-256",
@@ -1463,7 +1578,7 @@
             "properties": {
                 "saslMechanism": {
                     "type": "string",
-                    "description": "The SASL mechanism.",
+                    "description": "The SASL mechanism. Additional SASL mechanisms may be added over time.",
                     "enum": [
                         "PLAIN",
                         "SCRAM-SHA-256",
@@ -1614,6 +1729,33 @@
                 "tableName": {
                     "type": "string",
                     "description": "The table name."
+                },
+                "decimalHandlingMode": {
+                    "type": "string",
+                    "description": "Specifies how decimal values are represented by the connector (precise decimal, double, or string).",
+                    "enum": [
+                        "Precise",
+                        "Double",
+                        "String"
+                    ],
+                    "x-ms-enum": {
+                        "name": "DecimalHandlingMode",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Precise",
+                                "description": "The decimal handling mode is Precise."
+                            },
+                            {
+                                "value": "Double",
+                                "description": "The decimal handling mode is Double."
+                            },
+                            {
+                                "value": "String",
+                                "description": "The decimal handling mode is String."
+                            }
+                        ]
+                    }
                 }
             }
         },
@@ -1632,6 +1774,28 @@
                     "type": "integer",
                     "description": "The port number. Default is 3306.",
                     "default": 3306
+                },
+                "snapshotLockingMode": {
+                    "type": "string",
+                    "description": "Specifies the locking strategy used when taking the initial snapshot (for example, minimal locks vs extended locking for stronger consistency).",
+                    "enum": [
+                        "Minimal",
+                        "Extended"
+                    ],
+                    "x-ms-enum": {
+                        "name": "SnapshotLockingMode",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Minimal",
+                                "description": "The snapshot locking mode is Minimal."
+                            },
+                            {
+                                "value": "Extended",
+                                "description": "The snapshot locking mode is Extended."
+                            }
+                        ]
+                    }
                 }
             },
             "allOf": [
@@ -1655,6 +1819,37 @@
                     "type": "integer",
                     "description": "The port number. Default is 5432.",
                     "default": 5432
+                },
+                "publicationName": {
+                    "type": "string",
+                    "description": "The publication name for the CDC connector."
+                },
+                "publicationAutoCreateMode": {
+                    "type": "string",
+                    "description": "The publication auto-create mode.",
+                    "enum": [
+                        "Filtered",
+                        "AllTables",
+                        "Disabled"
+                    ],
+                    "x-ms-enum": {
+                        "name": "PublicationAutoCreateMode",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Filtered",
+                                "description": "The publication auto-create mode is Filtered."
+                            },
+                            {
+                                "value": "AllTables",
+                                "description": "The publication auto-create mode is AllTables."
+                            },
+                            {
+                                "value": "Disabled",
+                                "description": "The publication auto-create mode is Disabled."
+                            }
+                        ]
+                    }
                 }
             },
             "allOf": [
@@ -1763,6 +1958,57 @@
                 "retriableHttpStatusCodes": {
                     "type": "string",
                     "description": "The retriable HTTP status codes as a comma-separated string."
+                }
+            }
+        },
+        "MongoDBCDCSourceProperties": {
+            "type": "object",
+            "description": "MongoDB CDC source properties.",
+            "required": [
+                "dataConnectionId",
+                "includedDatabases",
+                "includedCollections"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The MongoDB CDC data connection identifier.",
+                    "format": "uuid"
+                },
+                "includedDatabases": {
+                    "type": "string",
+                    "description": "The comma-separated list of regular expressions that match database names to include."
+                },
+                "includedCollections": {
+                    "type": "string",
+                    "description": "The comma-separated list of regular expressions that match collection names to include."
+                },
+                "snapshotMode": {
+                    "type": "string",
+                    "description": "The snapshot mode.",
+                    "enum": [
+                        "Initial",
+                        "InitialOnly",
+                        "NoData"
+                    ],
+                    "x-ms-enum": {
+                        "name": "SnapshotMode",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Initial",
+                                "description": "The snapshot mode is Initial."
+                            },
+                            {
+                                "value": "InitialOnly",
+                                "description": "The snapshot mode is InitialOnly."
+                            },
+                            {
+                                "value": "NoData",
+                                "description": "The snapshot mode is NoData."
+                            }
+                        ]
+                    }
                 }
             }
         },

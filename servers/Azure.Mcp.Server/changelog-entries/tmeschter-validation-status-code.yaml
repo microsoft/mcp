@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Changed the default HTTP status code for command validation failures (`CommandValidationException`) from 500 (Internal Server Error) to 400 (Bad Request)."

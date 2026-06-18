@@ -13,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
 
 [CommandMetadata(Id = "7c86f73c-bd69-4bb9-908a-d4a02d9f6805", Name = "delete", Title = "Delete Thread", Description = "Delete an SRE Agent thread. Requires confirm=true.", Destructive = true, Idempotent = false, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
-public sealed class ThreadsDeleteCommand(ILogger<ThreadsDeleteCommand> logger, ISreAgentService sreAgentService) : ThreadsCommandBase<ThreadsDeleteOptions>
+public sealed class ThreadsDeleteCommand(ILogger<ThreadsDeleteCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<ThreadsDeleteOptions>
 {
     private readonly ILogger<ThreadsDeleteCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;

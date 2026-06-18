@@ -467,6 +467,503 @@
         }
       }
     },
+    "/capacities/{capacityId}/spark/settings?beta=true": {
+      "get": {
+        "tags": [
+          "CapacitySettings"
+        ],
+        "summary": "Get capacity spark settings.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Permissions\n\nThe caller must be a capacity contributor or a capacity admin. \n\n## Required Delegated Scopes \n\nCapacity.Read.All or Capacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "CapacitySettings_GetSparkSettings_(beta)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "capacityId",
+            "in": "path",
+            "description": "The capacity ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "required": true,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CapacitySparkSettings"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get capacity Spark settings example": {
+            "$ref": "./examples/GetCapacitySparkSettings.json"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "CapacitySettings"
+        ],
+        "summary": "Update capacity spark settings.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Permissions\n\nThe caller must be a capacity admin.\n\n## Required Delegated Scopes \n\nCapacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "CapacitySettings_UpdateSparkSettings_(beta)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "capacityId",
+            "in": "path",
+            "description": "The capacity ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "required": true,
+            "type": "boolean"
+          },
+          {
+            "name": "updateCapacitySettingsRequest",
+            "in": "body",
+            "description": "Update capacity Spark settings request payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateCapacitySparkSettingsRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CapacitySparkSettings"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update capacity Spark settings example": {
+            "$ref": "./examples/UpdateCapacitySparkSettings.json"
+          }
+        }
+      }
+    },
+    "/capacities/{capacityId}/spark/pools?beta=true": {
+      "get": {
+        "tags": [
+          "CustomPools"
+        ],
+        "summary": "List custom pools.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Permissions\n\nThe caller must be a capacity contributor or a capacity admin. \n\n## Required Delegated Scopes \n\nCapacity.Read.All or Capacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "CustomPools_ListCapacityCustomPools_(beta)",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri",
+          "itemName": "value"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "capacityId",
+            "in": "path",
+            "description": "The capacity ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "required": true,
+            "type": "boolean"
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "Continuation token. Used to get the next items in the list.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CustomPools"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List custom pools example": {
+            "$ref": "./examples/ListCapacityCustomPools.json"
+          },
+          "List custom pools with continuation example": {
+            "$ref": "./examples/ListCapacityCustomPoolsWithContinuation.json"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CustomPools"
+        ],
+        "summary": "Create custom pool.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Permissions\n\nThe caller must be a capacity admin.\n\n## Required Delegated Scopes \n\nCapacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "CustomPools_CreateCapacityCustomPool_(beta)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "capacityId",
+            "in": "path",
+            "description": "The capacity ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "required": true,
+            "type": "boolean"
+          },
+          {
+            "name": "createCustomPoolRequest",
+            "in": "body",
+            "description": "Create custom pool request payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CreateCustomPoolRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Request completed successfully.\n\n---\n**Headers:**\n\n**Location** `string` - The URL of the newly created pool.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CustomPool"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create custom pool example": {
+            "$ref": "./examples/CreateCapacityCustomPool.json"
+          }
+        }
+      }
+    },
+    "/capacities/{capacityId}/spark/pools/{poolId}?beta=true": {
+      "get": {
+        "tags": [
+          "CustomPools"
+        ],
+        "summary": "Get custom pool.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Permissions\n\nThe caller must be a capacity contributor or a capacity admin. \n\n## Required Delegated Scopes \n\nCapacity.Read.All or Capacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "CustomPools_GetCapacityCustomPool_(beta)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "capacityId",
+            "in": "path",
+            "description": "The capacity ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "poolId",
+            "in": "path",
+            "description": "The custom pool ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "required": true,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CustomPool"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get custom pool example": {
+            "$ref": "./examples/GetCapacityCustomPool.json"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CustomPools"
+        ],
+        "summary": "Delete custom pool.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Permissions\n\nThe caller must be a capacity admin. \n\n## Required Delegated Scopes \n\nCapacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "CustomPools_DeleteCapacityCustomPool_(beta)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "capacityId",
+            "in": "path",
+            "description": "The capacity ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "poolId",
+            "in": "path",
+            "description": "The custom pool ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "required": true,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete custom pool example": {
+            "$ref": "./examples/DeleteCapacityCustomPool.json"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "CustomPools"
+        ],
+        "summary": "Update custom pool.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Permissions\n\nThe caller must be a capacity admin. \n\n## Required Delegated Scopes \n\nCapacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "CustomPools_UpdateCapacityCustomPool_(beta)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "capacityId",
+            "in": "path",
+            "description": "The capacity ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "poolId",
+            "in": "path",
+            "description": "The custom pool ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "required": true,
+            "type": "boolean"
+          },
+          {
+            "name": "updateCustomPoolRequest",
+            "in": "body",
+            "description": "Update custom pool request payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateCustomPoolRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CustomPool"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update custom pool example": {
+            "$ref": "./examples/UpdateCapacityCustomPool.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/spark/livySessions": {
       "get": {
           "tags": [

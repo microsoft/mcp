@@ -174,10 +174,10 @@
 # ServiceOwners:                        @arazan @kagbakpem @KarishmaGhiya @kirill-linnik
 
 # PRLabel: %tools-Compute
-/tools/Azure.Mcp.Tools.Compute/         @audreytoney @g2vinay @haagha @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Compute/         @audreyttt @g2vinay @haagha @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Compute
-# ServiceOwners:                        @audreytoney @haagha @saakpan
+# ServiceOwners:                        @audreyttt @haagha @saakpan
 
 # PRLabel: %tools-ConfidentialLedger
 /tools/Azure.Mcp.Tools.ConfidentialLedger/      @ivarprudnikov @taicchoumsft @microsoft/azure-mcp

@@ -58,7 +58,7 @@ public class ThreadsGetCommandTests : CommandUnitTestsBase<ThreadsGetCommand, IS
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SreAgentThreadMessage>());
+                .Returns([]);
         }
 
         var response = await ExecuteCommandAsync(args);
@@ -94,10 +94,10 @@ public class ThreadsGetCommandTests : CommandUnitTestsBase<ThreadsGetCommand, IS
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentThreadMessage>
-            {
+            .Returns(
+            [
                 new() { Id = "msg1", Text = "Test message" }
-            });
+            ]);
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "test-agent", "--thread-id", "thread1");
 
@@ -152,7 +152,7 @@ public class ThreadsGetCommandTests : CommandUnitTestsBase<ThreadsGetCommand, IS
             "thread1",
             null,
             Arg.Any<CancellationToken>())
-            .Returns(new List<SreAgentThreadMessage>());
+            .Returns([]);
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "test-agent", "--thread-id", "thread1");
 

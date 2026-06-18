@@ -358,7 +358,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | cosmos_list | List all cosmosdb accounts in my subscription |
 | cosmos_list | Show me my cosmosdb accounts |
 | cosmos_list | Show me the cosmosdb accounts in my subscription |
+| cosmos_list | List all the cosmosdb accounts in resource group <resource_group> |
 | cosmos_list | List all the databases in the cosmosdb account <account_name> |
+| cosmos_list | List all the databases in the cosmosdb account <account_name> in resource group <resource_group> |
 | cosmos_list | Show me the databases in the cosmosdb account <account_name> |
 | cosmos_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> |
 | cosmos_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> |
@@ -500,9 +502,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | fileshares_limits | Get the file share limits for subscription <subscription> in location <location> |
 | fileshares_limits | What are the file share limits in my subscription for location <location>? |
 | fileshares_limits | Show me the file share service limits in location <location> |
-| fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in subscription <subscription> |
-| fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available? |
-| fileshares_fileshare_check-name-availability | Verify availability of file share name <file_share_name> |
+| fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in <location> in subscription <subscription> |
+| fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available in <location>? |
+| fileshares_fileshare_check-name-availability | Verify availability of file share name <file_share_name> in <location> |
 | fileshares_rec | Get provisioning recommendations for file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_rec | Show me provisioning recommendations for file share <file_share_name> |
 | fileshares_rec | What are the recommended provisioning settings for file share <file_share_name>? |
