@@ -16,8 +16,21 @@ public static class ParseResultExtensions
     public static T? GetValueOrDefault<T>(this ParseResult parseResult, Option<T> option)
         => GetValueOrDefault<T>(parseResult, option.Name);
 
-    public static object? GetValueOrDefault(this ParseResult parseResult, Option option)
-        => GetValueOrDefault<object?>(parseResult, option.Name);
+    /// <summary>
+    /// Special version fo GetValueOrDefault for new option binding as the Option is immutable once created.
+    /// <para>
+    /// The name-based lookup was needed as modifying static options to change their requiredness created a new Option
+    /// instance. ParseResult result retrieval uses Option in a Dictionary which performs the lookup using the instance
+    /// refrence as the key for the Dictionary. So, that would break silently and necessitated the name based retrieval.
+    /// That is no longer necessary with the new option binding approach.
+    /// </para>
+    /// </summary>
+    /// <typeparam name="T">The type of the option value</typeparam>
+    /// <param name="parseResult">The parse result</param>
+    /// <param name="option">The option</param>
+    /// <returns>The value of the option, or the default value if not found or not set</returns>
+    internal static T? GetValueOrDefaultWithoutName<T>(this ParseResult parseResult, Option<T> option)
+        => parseResult.CommandResult.GetValueOrDefaultWithoutName<T>(option);
 
     /// <summary>
     /// Gets the value of an option by name, returning default if not found or not set

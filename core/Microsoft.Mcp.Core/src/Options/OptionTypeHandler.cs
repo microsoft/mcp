@@ -304,7 +304,7 @@ public sealed class OptionTypeHandler
     private static (Option, Func<ParseResult, object?>) CreateOptionAndBinderHelper<T>(OptionDescriptor descriptor)
     {
         var option = new Option<T>($"--{descriptor.Name}", [.. descriptor.Aliases.Select(a => $"--{a}")]);
-        return (option, parseResult => parseResult.GetValueOrDefault(option));
+        return (option, parseResult => parseResult.GetValueOrDefaultWithoutName(option));
     }
 
     private static ArgumentArity GetArgumentArity(bool isNullable, bool isMulti)
