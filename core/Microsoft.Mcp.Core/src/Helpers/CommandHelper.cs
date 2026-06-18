@@ -14,6 +14,40 @@ public static class CommandHelper
     private static readonly Lazy<string?> s_profileDefault = new(AzureCliProfileHelper.GetDefaultSubscriptionId);
 
     /// <summary>
+    /// A set of common placeholder values for subscription ID/name options.
+    /// </summary>
+    private static readonly HashSet<string> s_subscriptionPlaceholders = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "<subscription>",
+        "<subscription-id>",
+        "<subscription-name>",
+        "<subscription-id-or-name>",
+        "<subscriptionId>",
+        "<subscription_id>",
+        "<subscription_name>",
+        "<sub-id>",
+        "<your-subscription-id>",
+        "your-subscription-id",
+        "SUBSCRIPTION_ID",
+        "{subscription}",
+        "{subscriptionId}",
+        "{subscription-id}",
+        "{subscription_id}",
+        "{subscription-name}",
+        "{subscription-name-or-id}",
+        "YOUR SUBSCRIPTION",
+        "YOUR SUBSCRIPTION ID",
+        "default",
+        "<default>",
+        "{default}",
+        "default-sub",
+        "<default-sub>",
+        "{default-sub}",
+        "default_sub",
+        "default_subscription",
+    };
+
+    /// <summary>
     /// Checks if a subscription is available from the command option, Azure CLI profile, or AZURE_SUBSCRIPTION_ID environment variable.
     /// </summary>
     /// <param name="commandResult">The command result to check for the subscription option.</param>
@@ -71,5 +105,8 @@ public static class CommandHelper
 
     internal static string? GetProfileSubscription() => s_profileDefault.Value;
 
-    private static bool IsPlaceholder(string value) => value.Contains("subscription") || value.Contains("default");
+    /// <summary>
+    /// Checks if the given <paramref name="value"/> is a common placeholder for subscription ID or name.
+    /// </summary>
+    private static bool IsPlaceholder(string value) => s_subscriptionPlaceholders.Contains(value);
 }

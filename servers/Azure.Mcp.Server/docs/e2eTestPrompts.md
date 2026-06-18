@@ -9,6 +9,18 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | advisor_recommendation_list | List all recommendations in my subscription |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> |
+| advisor_recommendation_list | Show me high-impact Security recommendations in subscription <subscription> |
+| advisor_recommendation_list | List Cost recommendations for storage accounts in subscription <subscription> |
+| advisor_recommendation_list | Find Advisor recommendations mentioning "right-size" in subscription <subscription> |
+| advisor_recommendation_list | Show me the top 10 Advisor recommendations in subscription <subscription> |
+| advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations in subscription <subscription> |
+| advisor_recommendation_summary | Summarize Advisor recommendations in subscription <subscription> by category |
+| advisor_recommendation_summary | Show the top 10 most common Advisor recommendations in subscription <subscription> |
+| advisor_recommendation_summary | Group Advisor recommendations by impact in subscription <subscription> |
+| advisor_recommendation_summary | Which resource types have the most high-impact recommendations in subscription <subscription>? |
+| advisor_recommendation_summary | Summarize high-impact Security recommendations by resource-type in subscription <subscription> |
+| advisor_recommendation_summary | Group Cost recommendations for storage accounts by impact in subscription <subscription> |
+| advisor_recommendation_summary | Summarize Advisor recommendations mentioning "encryption" by category in subscription <subscription> |
 | advisor_recommendation_apply | Apply Advisor recommendations to this ARM template |
 | advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account |
 | advisor_recommendation-type_list | List the catalog of Advisor recommendation types available in my tenant |
@@ -363,7 +375,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | cosmos_list | List all cosmosdb accounts in my subscription |
 | cosmos_list | Show me my cosmosdb accounts |
 | cosmos_list | Show me the cosmosdb accounts in my subscription |
+| cosmos_list | List all the cosmosdb accounts in resource group <resource_group> |
 | cosmos_list | List all the databases in the cosmosdb account <account_name> |
+| cosmos_list | List all the databases in the cosmosdb account <account_name> in resource group <resource_group> |
 | cosmos_list | Show me the databases in the cosmosdb account <account_name> |
 | cosmos_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> |
 | cosmos_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> |

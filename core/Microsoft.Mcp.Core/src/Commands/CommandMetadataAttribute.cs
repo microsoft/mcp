@@ -49,6 +49,11 @@ public sealed class CommandMetadataAttribute : Attribute
     /// <summary>Whether the tool requires local execution. Default: false.</summary>
     public bool LocalRequired { get; init; }
 
+    internal bool IsValid() => !string.IsNullOrWhiteSpace(Id) &&
+        !string.IsNullOrWhiteSpace(Name) &&
+        !string.IsNullOrWhiteSpace(Description) &&
+        !string.IsNullOrWhiteSpace(Title);
+
     internal ToolMetadata ToToolMetadata() => new()
     {
         Destructive = Destructive,

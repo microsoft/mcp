@@ -109,10 +109,6 @@ public abstract class BaseAzureResourceService(
         var queryFilter = $"{tableName} | where type =~ '{EscapeKqlString(resourceType)}'";
         if (!string.IsNullOrEmpty(resourceGroup))
         {
-            if (!await ValidateResourceGroupExistsAsync(subscriptionResource, resourceGroup, cancellationToken))
-            {
-                throw new KeyNotFoundException($"Resource group '{resourceGroup}' does not exist in subscription '{subscriptionResource.Data.SubscriptionId}'");
-            }
             queryFilter += $" and resourceGroup =~ '{EscapeKqlString(resourceGroup)}'";
         }
         if (!string.IsNullOrEmpty(additionalFilter))
@@ -137,6 +133,14 @@ public abstract class BaseAzureResourceService(
                 {
                     results.Add(converter(item));
                 }
+            }
+        }
+        else if (!string.IsNullOrEmpty(resourceGroup))
+        {
+            // If the query returned no results and a resource group filter was applied, validate that the resource group exists to provide better error handling
+            if (!await ValidateResourceGroupExistsAsync(subscriptionResource, resourceGroup, cancellationToken))
+            {
+                throw new KeyNotFoundException($"Resource group '{resourceGroup}' does not exist in subscription '{subscriptionResource.Data.SubscriptionId}'");
             }
         }
 

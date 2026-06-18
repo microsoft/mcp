@@ -13,6 +13,16 @@ public interface IAdvisorService
         string subscription,
         string? resourceGroup,
         RetryPolicyOptions? retryPolicy,
+        RecommendationFilters? filters = null,
+        int top = 50,
+        CancellationToken cancellationToken = default);
+
+    Task<RecommendationSummary> SummarizeRecommendationsAsync(
+        string subscription,
+        string? resourceGroup,
+        RetryPolicyOptions? retryPolicy,
+        string groupBy,
+        RecommendationFilters? filters = null,
         CancellationToken cancellationToken = default);
 
     Task<List<RecommendationType>> ListRecommendationTypesAsync(

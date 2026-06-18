@@ -327,9 +327,29 @@ azmcp server info
 ### Azure Advisor Operations
 
 ```bash
-# List Advisor recommendations in a subscription
+# List Advisor recommendations in a subscription, with optional server-side filters
+# Only active recommendations (status 'New') are returned; dismissed and postponed ones are excluded
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation list --subscription <subscription>
+azmcp advisor recommendation list --subscription <subscription> \
+                                  [--top <top>] \
+                                  [--category <category>] \
+                                  [--impact <impact>] \
+                                  [--resource-type <resource-type>] \
+                                  [--resource <resource>] \
+                                  [--search <search>]
+
+# Summarize Advisor recommendations grouped by a chosen field (recommendation-type, category, impact, or resource-type)
+# --group-by is optional and defaults to 'category' when omitted
+# Only active recommendations (status 'New') are aggregated; dismissed and postponed ones are excluded
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor recommendation summary --subscription <subscription> \
+                                     [--group-by <group-by>] \
+                                     [--top <top>] \
+                                     [--category <category>] \
+                                     [--impact <impact>] \
+                                     [--resource-type <resource-type>] \
+                                     [--resource <resource>] \
+                                     [--search <search>]
 
 # Apply Advisor recommendation to create or modify IaaC files (like ARM, Terraform) for Azure resources
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2090,12 +2110,13 @@ azmcp acr registry repository list --subscription <subscription> \
 
 ```bash
 # List Cosmos DB resources (accounts, databases, or containers) in a subscription.
-# Omit --account to list accounts. Provide --account to list databases.
-# Provide --account and --database to list containers.
+# Omit --account to list accounts; add --resource-group to scope the account list to a resource group.
+# Provide --account to list databases. Provide --account and --database to list containers.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos list --subscription <subscription> \
                   [--account <account>] \
-                  [--database <database>]
+                  [--database <database>] \
+                  [--resource-group <resource-group>]
 
 # Query items in a Cosmos DB container
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2201,7 +2222,11 @@ azmcp kusto table schema [--cluster-uri <cluster-uri> | --subscription <subscrip
                          --database <database> \
                          --table <table>
 
-# Query Azure Data Explorer database
+# Query Azure Data Explorer database.
+# KQL queries are validated for safety: max 10,000 characters; tautology patterns
+# (e.g., 'or 1==1', 'or true') and management commands (.drop, .alter, .create,
+# .delete, .set, .append, .set-or-append, .set-or-replace, .ingest, .purge, .execute)
+# are rejected.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> --cluster <cluster>] \
                   --database <database> \
@@ -2994,7 +3019,11 @@ azmcp monitor table list --subscription <subscription> \
 azmcp monitor workspace list --subscription <subscription> \
                             [--resource-group <resource-group>]
 
-# Query logs from Azure Monitor using KQL
+# Query logs from Azure Monitor using KQL.
+# KQL queries are validated for safety: max 10,000 characters; tautology patterns
+# (e.g., 'or 1==1', 'or true') and management commands (.drop, .alter, .create,
+# .delete, .set, .append, .set-or-append, .set-or-replace, .ingest, .purge, .execute)
+# are rejected.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor resource log query --subscription <subscription> \
                                  --resource-id <resource-id> \
@@ -3003,6 +3032,11 @@ azmcp monitor resource log query --subscription <subscription> \
                                  [--hours <hours>] \
                                  [--limit <limit>]
 
+# Query logs from a Log Analytics workspace using KQL.
+# KQL queries are validated for safety: max 10,000 characters; tautology patterns
+# (e.g., 'or 1==1', 'or true') and management commands (.drop, .alter, .create,
+# .delete, .set, .append, .set-or-append, .set-or-replace, .ingest, .purge, .execute)
+# are rejected.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor workspace log query --subscription <subscription> \
                                   --workspace <workspace> \
