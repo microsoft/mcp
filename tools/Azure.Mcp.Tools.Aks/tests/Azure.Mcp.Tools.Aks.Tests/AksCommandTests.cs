@@ -178,21 +178,36 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
     [Fact]
     public async Task Should_handle_nonexistent_cluster_gracefully()
     {
+        // First, get a list of clusters to find a resource group to test against
+        var listResult = await CallToolAsync(
+            "aks_cluster_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId }
+            });
+
+        var clusters = listResult.AssertProperty("clusters");
+        Assert.True(clusters.GetArrayLength() > 0, "Expected at least one AKS cluster for testing get command");
+
+        // Get the first cluster's resource group
+        var firstCluster = clusters.EnumerateArray().First();
+        var resourceGroupName = RegisterOrRetrieveVariable("firstResourceGroupName", firstCluster.GetProperty("resourceGroupName").GetString()!);
+
+        // Attempt to get a non-existent cluster from that resource group
         var result = await CallToolAsync(
             "aks_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", "nonexistent-rg" },
+                { "resource-group", resourceGroupName },
                 { "cluster", "nonexistent-cluster" }
             });
 
-        // Should return runtime error response with error details
+        // Should return list with zero clusters
         Assert.True(result.HasValue);
-        var errorDetails = result.Value;
-        errorDetails.AssertProperty("message");
-        var typeProperty = errorDetails.AssertProperty("type");
-        Assert.Equal("RequestFailedException", typeProperty.GetString());
+        var results = result.Value;
+        var resultsClusters = results.AssertProperty("clusters");
+        Assert.True(resultsClusters.GetArrayLength() == 0, "Expected no clusters for nonexistent cluster request");
     }
 
     [Fact]
@@ -353,6 +368,7 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
         var errorDetails = result.Value;
         errorDetails.AssertProperty("message");
         var typeProperty = errorDetails.AssertProperty("type");
+
         Assert.Equal("RequestFailedException", typeProperty.GetString());
     }
 

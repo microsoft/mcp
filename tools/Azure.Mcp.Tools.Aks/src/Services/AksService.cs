@@ -76,12 +76,16 @@ public sealed class AksService(
         }
         else
         {
-            ValidateRequiredParameters((nameof(resourceGroup), resourceGroup), (nameof(clusterName), clusterName));
+            ValidateRequiredParameters((nameof(clusterName), clusterName));
 
             // Create cache key
-            var cacheKey = string.IsNullOrEmpty(tenant)
-                ? CacheKeyBuilder.Build("cluster", subscription, resourceGroup!, clusterName)
-                : CacheKeyBuilder.Build("cluster", subscription, resourceGroup!, clusterName, tenant);
+            var cacheKey = (string.IsNullOrEmpty(resourceGroup), string.IsNullOrEmpty(tenant)) switch
+            {
+                (true, true) => CacheKeyBuilder.Build("cluster", subscription, clusterName),
+                (false, true) => CacheKeyBuilder.Build("cluster", subscription, resourceGroup, clusterName),
+                (true, false) => CacheKeyBuilder.Build("cluster", subscription, clusterName, tenant),
+                (false, false) => CacheKeyBuilder.Build("cluster", subscription, resourceGroup, clusterName, tenant)
+            };
 
             // Try to get from cache first
             var cachedCluster = await _cacheService.GetAsync<List<Cluster>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);

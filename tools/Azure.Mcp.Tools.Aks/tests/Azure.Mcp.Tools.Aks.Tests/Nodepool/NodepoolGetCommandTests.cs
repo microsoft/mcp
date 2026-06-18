@@ -29,7 +29,7 @@ public sealed class NodepoolGetCommandTests : CommandUnitTestsBase<NodepoolGetCo
     [InlineData("--subscription sub123 --resource-group rg1 --cluster c1 --nodepool np1 --tenant t1", true)]
     [InlineData("--subscription sub123 --resource-group rg1 --nodepool np1", false)] // missing cluster
     [InlineData("--subscription sub123 --cluster c1 --nodepool np1", false)] // missing rg
-    [InlineData("--resource-group rg1 --cluster c1 --nodepool np1", false)] // missing subscription
+    [InlineData("--resource-group rg1 --cluster c1 --nodepool np1", true)] // ARG querying doesn't require subscription
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {

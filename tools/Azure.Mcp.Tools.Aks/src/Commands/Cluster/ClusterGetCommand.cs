@@ -33,15 +33,6 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksSer
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup);
         command.Options.Add(AksOptionDefinitions.Cluster);
-        command.Validators.Add(commandResults =>
-        {
-            var clusterName = commandResults.GetValueOrDefault(AksOptionDefinitions.Cluster);
-            var resourceGroup = commandResults.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-            if (!string.IsNullOrEmpty(clusterName) && string.IsNullOrEmpty(resourceGroup))
-            {
-                commandResults.AddError("When specifying a cluster name, the --resource-group option is required.");
-            }
-        });
     }
 
     protected override ClusterGetOptions BindOptions(ParseResult parseResult)
