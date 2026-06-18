@@ -16,6 +16,9 @@ public static class ParseResultExtensions
     public static T? GetValueOrDefault<T>(this ParseResult parseResult, Option<T> option)
         => GetValueOrDefault<T>(parseResult, option.Name);
 
+    public static object? GetValueOrDefault(this ParseResult parseResult, Option option)
+        => GetValueOrDefault<object?>(parseResult, option.Name);
+
     /// <summary>
     /// Gets the value of an option by name, returning default if not found or not set
     /// </summary>

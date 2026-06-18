@@ -3,7 +3,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using Microsoft.Mcp.Core.Commands;
 
 namespace Microsoft.Mcp.Core.Options;
 
@@ -89,6 +88,7 @@ public class OptionDescriptor
                 descriptors.Add(new OptionDescriptor
                 {
                     Name = name,
+                    Aliases = optionAttribute!.Aliases ?? [],
                     Description = optionAttribute!.Description!,
                     Type = property.PropertyType,
                     Required = !isNullable,

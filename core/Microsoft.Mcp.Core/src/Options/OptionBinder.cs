@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Reflection;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 
 namespace Microsoft.Mcp.Core.Options;
 
@@ -19,6 +19,8 @@ public static class OptionBinder
         DynamicallyAccessedMemberTypes.PublicProperties |
         DynamicallyAccessedMemberTypes.PublicParameterlessConstructor;
 
+    private static readonly ConcurrentDictionary<Type, OptionTypeHandler[]> s_optionTypeHandlers = new();
+
     /// <summary>
     /// Registers System.CommandLine options on a command based on the public properties of <typeparamref name="TOptions"/>.
     /// </summary>
@@ -27,11 +29,17 @@ public static class OptionBinder
     public static void RegisterOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(Command command, OptionDescriptor[] descriptors)
         where TOptions : class
     {
-        foreach (var descriptor in descriptors)
+        var handlers = s_optionTypeHandlers.GetOrAdd(typeof(TOptions), _ => GetOptionTypeHandlers<TOptions>());
+        foreach (var handler in handlers)
         {
-            var option = CreateOption(descriptor);
-            command.Options.Add(option);
+            command.Options.Add(handler.Option);
         }
+    }
+
+    private static OptionTypeHandler[] GetOptionTypeHandlers<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>() where TOptions : class
+    {
+        var descriptors = OptionDescriptor.FromType<TOptions>();
+        return [.. descriptors.Select(d => new OptionTypeHandler(d))];
     }
 
     /// <summary>
@@ -47,44 +55,43 @@ public static class OptionBinder
         List<string> missingOptions = [];
         List<string> errors = [];
         Dictionary<PropertyInfo, object>? parentInstances = null;
+        var handlers = s_optionTypeHandlers.GetOrAdd(typeof(TOptions), _ => GetOptionTypeHandlers<TOptions>());
 
-        foreach (var descriptor in descriptors)
+        foreach (var handler in handlers)
         {
-            var optionName = $"--{descriptor.Name}";
-
             object? value;
             try
             {
-                value = GetOptionValue(parseResult, descriptor.Type, optionName);
+                value = handler.Binder.Invoke(parseResult);
             }
             catch (Exception ex) when (ex is InvalidOperationException or FormatException or OverflowException or ArgumentException)
             {
-                errors.Add($"Invalid value for '{optionName}': {ex.Message}");
+                errors.Add($"Invalid value for '{handler.Option.Name}': {ex.Message}");
                 continue;
             }
 
             if (value is null)
             {
-                if (descriptor.Required)
+                if (handler.Option.Required)
                 {
-                    missingOptions.Add(optionName);
+                    missingOptions.Add(handler.Option.Name);
                 }
                 continue;
             }
 
-            if (descriptor.ParentProperty is not null)
+            if (handler.Descriptor.ParentProperty is not null)
             {
                 parentInstances ??= [];
-                if (!parentInstances.TryGetValue(descriptor.ParentProperty, out var parent))
+                if (!parentInstances.TryGetValue(handler.Descriptor.ParentProperty, out var parent))
                 {
-                    parent = CreateInstance(descriptor.ParentProperty.PropertyType);
-                    parentInstances[descriptor.ParentProperty] = parent;
+                    parent = CreateInstance(handler.Descriptor.ParentProperty.PropertyType);
+                    parentInstances[handler.Descriptor.ParentProperty] = parent;
                 }
-                descriptor.TargetProperty.SetValue(parent, value);
+                handler.Descriptor.TargetProperty.SetValue(parent, value);
             }
             else
             {
-                descriptor.TargetProperty.SetValue(instance, value);
+                handler.Descriptor.TargetProperty.SetValue(instance, value);
             }
         }
 
@@ -118,87 +125,6 @@ public static class OptionBinder
         return instance;
     }
 
-    private static Option CreateOption(OptionDescriptor descriptor)
-    {
-        var handler = GetHandler(descriptor);
-        var option = handler.CreateOption(descriptor);
-        option.Description = descriptor.Description;
-        option.Required = descriptor.Required;
-        option.Hidden = descriptor.Hidden;
-
-        // For array/collection types, allow multiple values after a single option token
-        // e.g., --modules RedisBloom RedisJSON instead of --modules RedisBloom --modules RedisJSON
-        if (descriptor.Type.IsArray || (descriptor.Type != typeof(string) && descriptor.Type.IsAssignableTo(typeof(System.Collections.IEnumerable))))
-        {
-            option.Arity = ArgumentArity.OneOrMore;
-            option.AllowMultipleArgumentsPerToken = true;
-        }
-
-        return option;
-    }
-
-    private static object? GetOptionValue(ParseResult parseResult, OptionDescriptor descriptor)
-    {
-        var handler = GetHandler<T>(descriptor);
-        return handler.GetValue<T>(parseResult);
-    }
-
-    private static OptionTypeHandler<T> GetHandler<T>(OptionDescriptor descriptor)
-    {
-        if (descriptor.Type == typeof(int))
-        {
-            return new OptionTypeHandler<T>(descriptor, d => OptionCreators.Int(d));
-        }
-        if (s_typeHandlers.TryGetValue(type, out var handler))
-        {
-            return handler;
-        }
-
-        // Enums (and Nullable<enum>): represented as Option<string> with constrained values
-        Type? underlyingEnum = GetUnderlyingEnumType(type);
-        if (underlyingEnum is not null)
-        {
-            return s_typeHandlers.GetOrAdd(type, _ => new OptionTypeHandler(
-                name =>
-                {
-                    var option = new Option<string>(name);
-                    EnumOptionValidator.Configure(option, underlyingEnum);
-                    return option;
-                },
-                (pr, n) =>
-                {
-                    var stringValue = pr.GetValueOrDefault<string>(n);
-
-                    if (stringValue is null)
-                    {
-                        return null;
-                    }
-
-                    return Enum.Parse(underlyingEnum, stringValue, ignoreCase: true);
-                }));
-        }
-
-        throw new InvalidOperationException(
-            $"Unsupported option type '{type}'. Add a handler to s_typeHandlers in OptionBinder, or override RegisterOptions/BindOptions in the command.");
-    }
-
-    private static Type? GetUnderlyingEnumType(Type type)
-    {
-        if (type.IsEnum)
-        {
-            return type;
-        }
-
-        Type? nullable = Nullable.GetUnderlyingType(type);
-
-        if (nullable is not null && nullable.IsEnum)
-        {
-            return nullable;
-        }
-
-        return null;
-    }
-
     [UnconditionalSuppressMessage("Trimming", "IL2067:UnrecognizedReflectionPattern",
         Justification = "Nested option types are rooted by the application via property references.")]
     [UnconditionalSuppressMessage("AOT", "IL3050:RequiresDynamicCode",
@@ -207,14 +133,5 @@ public static class OptionBinder
     {
         return Activator.CreateInstance(type)
             ?? throw new InvalidOperationException($"Failed to create instance of nested options type '{type.Name}'. Ensure it has a public parameterless constructor.");
-    }
-
-    private sealed class OptionTypeHandler(
-        OptionDescriptor descriptor,
-        Func<OptionDescriptor, Option> createOption)
-    {
-        private readonly Lazy<Option> _option = new(() => createOption(descriptor));
-        public Option CreateOption(OptionDescriptor descriptor) => _option.Value;
-        public object? GetValue(ParseResult parseResult) => parseResult.GetValueOrDefault(_option.Value);
     }
 }

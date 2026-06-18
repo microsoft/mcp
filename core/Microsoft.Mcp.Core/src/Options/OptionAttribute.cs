@@ -41,6 +41,11 @@ public sealed class OptionAttribute : Attribute
     public string? Name { get; init; }
 
     /// <summary>
+    /// Additional CLI option names (without the "--" prefix).
+    /// </summary>
+    public string[]? Aliases { get; init; }
+
+    /// <summary>
     /// A description of what the option controls. Used in help text and by AI agents.
     /// </summary>
     public string? Description { get; init; }

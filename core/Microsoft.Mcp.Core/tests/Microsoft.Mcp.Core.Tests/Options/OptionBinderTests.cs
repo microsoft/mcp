@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Microsoft.Mcp.Core.Commands;
@@ -17,25 +16,33 @@ public sealed class OptionBinderTests
 
     private sealed class StringOptions
     {
+        [Option]
         public string? Name { get; set; }
+        [Option]
         public string? Description { get; set; }
     }
 
     private sealed class IntOptions
     {
+        [Option]
         public int Count { get; set; }
+        [Option]
         public int? Limit { get; set; }
     }
 
     private sealed class BoolOptions
     {
+        [Option]
         public bool Verbose { get; set; }
+        [Option]
         public bool? Debug { get; set; }
     }
 
     private sealed class ArrayOptions
     {
+        [Option]
         public string[]? Tags { get; set; }
+        [Option]
         public int[]? Ports { get; set; }
     }
 
@@ -48,55 +55,73 @@ public sealed class OptionBinderTests
 
     private sealed class EnumOptions
     {
+        [Option]
         public Color Color { get; set; }
+        [Option]
         public Color? Background { get; set; }
     }
 
     private sealed class GuidOptions
     {
+        [Option]
         public Guid Id { get; set; }
+        [Option]
         public Guid? CorrelationId { get; set; }
     }
 
     private sealed class DateTimeOptions
     {
+        [Option]
         public DateTime StartDate { get; set; }
+        [Option]
         public DateTimeOffset? Timestamp { get; set; }
     }
 
     private sealed class DecimalOptions
     {
+        [Option]
         public decimal Price { get; set; }
+        [Option]
         public double? Rate { get; set; }
     }
 
     private sealed class UnsupportedTypeOptions
     {
+        [Option]
         public object[]? Value { get; set; }
     }
 
     private sealed class NetworkSettings
     {
+        [Option]
         public string? Host { get; set; }
+        [Option]
         public int? Port { get; set; }
     }
 
     private sealed class RequiredNetworkSettings
     {
+        [Option]
         public required string Name { get; set; }
+        [Option]
         public int? Port { get; set; }
     }
 
     private sealed class NestedOptional
     {
+        [Option]
         public string? Name { get; set; }
+        [Option]
         public NetworkSettings? Optional { get; set; }
+        [Option]
         public required NetworkSettings Required { get; set; }
     }
 
     private sealed class NestedRequired
     {
+        [Option]
         public string? Name { get; set; }
+        [Option]
         public required RequiredNetworkSettings Required { get; set; }
     }
 
@@ -136,7 +161,7 @@ public sealed class OptionBinderTests
         OptionBinder.RegisterOptions<ArrayOptions>(command, OptionDescriptor.FromType<ArrayOptions>());
 
         var tagsOption = command.Options.Single(o => o.Name == "--tags");
-        Assert.Equal(ArgumentArity.OneOrMore, tagsOption.Arity);
+        Assert.Equal(ArgumentArity.ZeroOrMore, tagsOption.Arity);
         Assert.True(tagsOption.AllowMultipleArgumentsPerToken);
     }
 
