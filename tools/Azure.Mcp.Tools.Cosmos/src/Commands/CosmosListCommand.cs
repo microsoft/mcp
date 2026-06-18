@@ -11,6 +11,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
 
@@ -35,6 +36,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
         base.RegisterOptions(command);
         command.Options.Add(CosmosOptionDefinitions.AccountOptional);
         command.Options.Add(CosmosOptionDefinitions.DatabaseOptional);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Validators.Add(result =>
         {
             // Validate that --account is provided when --database is specified
@@ -51,6 +53,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
         var options = base.BindOptions(parseResult);
         options.Account = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.AccountOptional.Name);
         options.Database = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.DatabaseOptional.Name);
+        options.ResourceGroup = parseResult.GetValueOrDefault<string?>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
 
@@ -74,6 +77,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
                     options.Subscription!,
                     options.AuthMethod ?? AuthMethod.Credential,
                     options.Tenant,
+                    options.ResourceGroup,
                     options.RetryPolicy,
                     cancellationToken);
 
@@ -89,6 +93,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
                     options.Subscription!,
                     options.AuthMethod ?? AuthMethod.Credential,
                     options.Tenant,
+                    options.ResourceGroup,
                     options.RetryPolicy,
                     cancellationToken);
 
@@ -98,9 +103,10 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
             }
             else
             {
-                // List all accounts in the subscription
+                // List accounts in the subscription, optionally scoped to a resource group
                 var accounts = await _cosmosService.GetCosmosAccounts(
                     options.Subscription!,
+                    options.ResourceGroup,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -112,7 +118,14 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, Account: {Account}, Database: {Database}.", Name, options.Subscription, options.Account, options.Database);
+            if (string.IsNullOrEmpty(options.ResourceGroup))
+            {
+                _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, Account: {Account}, Database: {Database}.", Name, options.Subscription, options.Account, options.Database);
+            }
+            else
+            {
+                _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Account: {Account}, Database: {Database}.", Name, options.Subscription, options.ResourceGroup, options.Account, options.Database);
+            }
             HandleException(context, ex);
         }
 
@@ -128,6 +141,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         CosmosException cosmosEx => cosmosEx.StatusCode,
+        KeyNotFoundException => HttpStatusCode.NotFound,
         _ => base.GetStatusCode(ex)
     };
 

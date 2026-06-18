@@ -2,11 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.Cosmos.Models;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Azure.ResourceManager;
+using Azure.ResourceManager.Resources;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models;
@@ -14,6 +17,7 @@ using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.Tests;
@@ -55,6 +59,24 @@ public class CosmosServiceTests : IAsyncDisposable
     {
         await _service.DisposeAsync();
         GC.SuppressFinalize(this);
+    }
+
+    [Theory]
+    [InlineData("https://other-server.com/")]
+    [InlineData("https://aoai.openai.azure.com.other.com/")]
+    [InlineData("http://aoai.openai.azure.com/")]
+    [InlineData("https://attacker.com#.openai.azure.com")]
+    [InlineData("https://attacker.com#openai.azure.com")]
+    [InlineData("https://attacker.com/#.openai.azure.com")]
+    [InlineData("https://attacker.com?x=.openai.azure.com")]
+    public async Task GenerateEmbedding_RejectsUntrustedEndpoint(string endpoint)
+    {
+        var request = new EmbeddingRequest(endpoint, "my-deployment", null);
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.GenerateEmbedding("hello", request, cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Contains("Azure OpenAI endpoint", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -193,6 +215,44 @@ public class CosmosServiceTests : IAsyncDisposable
             CacheKeyBuilder.Build("clients", "myaccount", "sub123", string.Empty, "Credential"),
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetCosmosAccounts_ResourceGroupNotFound_ThrowsKeyNotFoundException()
+    {
+        // Arrange: the resource group lookup returns a 404, which should surface as a not-found.
+        var subscriptionResource = Substitute.For<SubscriptionResource>();
+        _subscriptionService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(subscriptionResource);
+        subscriptionResource.GetResourceGroupAsync("missing-rg", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(404, "Resource group not found"));
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            _service.GetCosmosAccounts("sub123", "missing-rg", cancellationToken: TestContext.Current.CancellationToken));
+        Assert.Contains("Resource group 'missing-rg' not found", ex.Message);
+    }
+
+    [Fact]
+    public async Task ListDatabases_KeyAuthResourceGroupNotFound_ThrowsKeyNotFoundException()
+    {
+        // Arrange: key auth resolves the account through the resource group fast path; a missing
+        // resource group should surface as a KeyNotFoundException (HTTP 404) rather than a raw 404.
+        _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(default(CosmosClient));
+        _cacheService.GetAsync<List<string>>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(default(List<string>));
+
+        var subscriptionResource = Substitute.For<SubscriptionResource>();
+        _subscriptionService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(subscriptionResource);
+        subscriptionResource.GetResourceGroupAsync("missing-rg", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(404, "Resource group not found"));
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            _service.ListDatabases("myaccount", "sub123", AuthMethod.Key, resourceGroup: "missing-rg", cancellationToken: TestContext.Current.CancellationToken));
+        Assert.Contains("Resource group 'missing-rg' not found", ex.Message);
     }
 
     [Fact]
@@ -349,6 +409,31 @@ public class CosmosServiceTests : IAsyncDisposable
             CacheKeyBuilder.Build("containers", "myaccount", "mydb", "sub-A", "tenant-A", "Credential"),
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task QueryItems_NonSuccessResponse_Throws()
+    {
+        // Arrange: route the CosmosClient's transport through the mocked IHttpClientFactory so it always returns 403.
+        var handler = new MockHttpHandler(HttpStatusCode.Forbidden);
+        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
+        var clientOptions = new CosmosClientOptions { HttpClientFactory = () => _httpClientFactory.CreateClient() };
+
+        var credential = Substitute.For<TokenCredential>();
+        var token = new AccessToken("fake-token", DateTimeOffset.UtcNow.AddHours(1));
+        credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<AccessToken>(token));
+        credential.GetToken(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(token);
+
+        using var cosmosClient = new CosmosClient("https://myaccount.documents.azure.com", credential, clientOptions);
+
+        _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
+            .Returns(cosmosClient);
+
+        // Act & Assert: a non-success response must throw rather than being returned as a data item
+        await Assert.ThrowsAnyAsync<CosmosException>(() =>
+            _service.QueryItems("myaccount", "mydb", "mycontainer", "SELECT * FROM c", "sub123", AuthMethod.Key, cancellationToken: TestContext.Current.CancellationToken));
     }
 
     private sealed class MockHttpHandler(HttpStatusCode statusCode) : HttpMessageHandler

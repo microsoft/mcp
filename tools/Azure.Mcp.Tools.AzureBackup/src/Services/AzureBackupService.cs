@@ -365,7 +365,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
         if (!VaultTypeResolver.IsRsv(resolved))
         {
-            throw new InvalidOperationException("Update is only supported for RSV (Recovery Services vault) policies. DPP policies do not support update.");
+            throw new ArgumentException("Update is only supported for RSV (Recovery Services vault) policies. DPP policies do not support update.");
         }
 
         return await rsvOps.UpdatePolicyAsync(vaultName, resourceGroup, subscription, policyName, scheduleTime, dailyRetentionDays, tenant, retryPolicy, cancellationToken);

@@ -2,7 +2,60 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.17 (Unreleased)
+## 3.0.0-beta.20 (2026-06-18)
+
+### Bugs Fixed
+
+- Changed the default HTTP status code for command validation failures (`CommandValidationException`) from 500 (Internal Server Error) to 400 (Bad Request). [[#2900](https://github.com/microsoft/mcp/pull/2900)]
+
+- Optimized `BaseAzureResourceService.ExecuteResourceQueryAsync` to reduce ARM calls from two to one in the success path. [[#2735](https://github.com/microsoft/mcp/pull/2735)]
+
+## 3.0.0-beta.19 (2026-06-16)
+
+### Breaking Changes
+
+- Removed unused parameters from Application Insights tools. [[#2874](https://github.com/microsoft/mcp/pull/2874)]
+
+### Bugs Fixed
+
+- Fixed several issues in the MySQL toolset: [[#2677](https://github.com/microsoft/mcp/pull/2677)]
+  - `azmcp mysql list` now works when `--resource-group` is omitted. It now lists all MySQL servers across the subscription using a single ARM API call, matching the behavior of the PostgreSQL toolset.
+  - `--user` is no longer required for ARM-only commands (`server config get`, `server param get`, `server param set`). It is now only required for commands that open a direct database connection (`database query`, `table schema get`).
+  - Resource-group and parameter not-found errors now return HTTP 404 instead of HTTP 500, enabling callers to distinguish missing resources from unexpected failures.
+  - The query safety validator's compiled regex is now initialized once at startup rather than on every call, improving performance and ensuring AOT compatibility.
+- Fixed PostgreSQL server configuration commands (`server config get`, `server param get`, `server param set`) to honor the `--tenant` and retry policy options when making ARM calls, enabling sovereign cloud authentication and configurable retries. [[#2862](https://github.com/microsoft/mcp/pull/2862)]
+- Added Azure OpenAI endpoint validation to the Cosmos DB vector search tool (`cosmos_database_container_item_vector-search`). [[#2895](https://github.com/microsoft/mcp/pull/2895)]
+- Fixed Redis `list` failing with a `NullReferenceException` when a cache has no Redis configuration (common for Basic/Standard tier caches), which previously caused all caches to be dropped from the response. Not-found errors (e.g. subscription or resource group not found) now return a 404 status instead of 500. [[#2886](https://github.com/microsoft/mcp/pull/2886)]
+- Fixed `azureterraform_azapi_get` returning `500 InternalServerError` for invalid resource type or API version inputs. The tool now returns `400 BadRequest` with an actionable message, enabling agents to auto-correct and retry with valid inputs. [[#2657](https://github.com/microsoft/mcp/pull/2657)]
+
+### Other Changes
+
+- Added documentation for KQL query validation restrictions (max 10,000 characters, tautology pattern rejection, management/control command rejection) for `azmcp kusto query`, `azmcp monitor resource log query`, and `azmcp monitor workspace log query`. [[#2814](https://github.com/microsoft/mcp/pull/2814)]
+
+## 3.0.0-beta.18 (2026-06-12)
+
+### Features Added
+
+- Added an optional `--resource-group` parameter to `azmcp cosmos list` so account listing is scoped to the resource group and Cosmos DB account key lookups resolve the account directly instead of enumerating every account in the subscription. [[#2839](https://github.com/microsoft/mcp/pull/2839)]
+
+### Breaking Changes
+
+- Event Hubs namespace create/update now rejects invalid `--sku-tier` values with a validation error instead of silently defaulting to Standard. [[#2678](https://github.com/microsoft/mcp/pull/2678)]
+- Removed auth mode from `acr_registry_list` and `acr_registry_repository_list` tools as they don't use that parameter. [[#2825](https://github.com/microsoft/mcp/pull/2825)]
+
+### Bugs Fixed
+
+- Fixed multiple issues in the EventHubs toolset:
+  - Namespace delete now reports "not found" instead of "deleted successfully" when the namespace does not exist.
+  - Event Hub status values are now matched case-insensitively, and `--status` is correctly applied when updating. Previously it was accepted but silently discarded. [[#2678](https://github.com/microsoft/mcp/pull/2678)]
+- Fixed an issue where the Cosmos DB QueryItems operation silently parsed non-success (e.g. throttled or auth-failure) responses as data. The response is now validated before parsing so failures surface as errors. [[#2836](https://github.com/microsoft/mcp/pull/2836)]
+- Fixed Cosmos DB account lookup to use case-insensitive name matching and return a 404 (KeyNotFoundException) instead of a generic error when an account is not found. [[#2839](https://github.com/microsoft/mcp/pull/2839)]
+- Fixed an issue where a valid subscription name or ID containing the words `subscription` or `default` could be incorrectly treated as a placeholder value and replaced with the default subscription. [[#2849](https://github.com/microsoft/mcp/pull/2849)]
+- Azure Backup: Replace InvalidOperationException with ArgumentException/KeyNotFoundException for user-input validation errors so the telemetry classifier correctly categorizes them as Customer errors instead of MCP Tool Bugs. [[#2841](https://github.com/microsoft/mcp/pull/2841)]
+- Fixed `azurebackup_vault_list` and `azurebackup_governance_find-unprotected` so that when both the RSV and DPP backends fail with `RequestFailedException`, a single `RequestFailedException` is surfaced (preserving the HTTP status and combining both error messages) instead of an `InvalidOperationException`. This ensures the failure is correctly classified as an Azure service error rather than an MCP-side bug. [[#2805](https://github.com/microsoft/mcp/pull/2805)]
+- Fixed `azurebackup_policy_get` and `azurebackup_policy_list` (DPP vaults) failing with `FormatException` from `XmlConvert.ToTimeSpan` when policies contain ISO 8601 duration values that the Azure SDK cannot parse (e.g. fractional seconds, week designators in retention rules). `policy_list` now skips policies that the SDK cannot parse and returns the rest; `policy_get` falls back to listing the vault's policies and matching by name. Tracks the Azure SDK gap in `Azure.ResourceManager.DataProtectionBackup`. [[#2805](https://github.com/microsoft/mcp/pull/2805)]
+
+## 3.0.0-beta.17 (2026-06-09)
 
 ### Breaking Changes
 

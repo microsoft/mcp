@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Options;
+
 namespace Azure.Mcp.Tools.Postgres.Services;
 
 public interface IPostgresService
@@ -56,7 +58,9 @@ public interface IPostgresService
         string resourceGroup,
         string user,
         string server,
-        CancellationToken cancellationToken);
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<string> GetServerParameterAsync(
         string subscriptionId,
@@ -64,7 +68,9 @@ public interface IPostgresService
         string user,
         string server,
         string param,
-        CancellationToken cancellationToken);
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<string> SetServerParameterAsync(
         string subscription,
@@ -73,5 +79,7 @@ public interface IPostgresService
         string server,
         string param,
         string value,
-        CancellationToken cancellationToken);
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

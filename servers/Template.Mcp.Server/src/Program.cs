@@ -172,7 +172,9 @@ internal class Program
     /// <param name="services">A service collection.</param>
     internal static void ConfigureServices(IServiceCollection services)
     {
-        services.InitializeConfigurationAndOptions();
+        var thisAssembly = typeof(Program).Assembly;
+
+        services.InitializeConfigurationAndOptions(thisAssembly);
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();

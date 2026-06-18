@@ -1,5 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Fixed `azurebackup_vault_list` and `azurebackup_governance_find-unprotected` so that when both the RSV and DPP backends fail with `RequestFailedException`, a single `RequestFailedException` is surfaced (preserving the HTTP status and combining both error messages) instead of an `InvalidOperationException`. This ensures the failure is correctly classified as an Azure service error rather than an MCP-side bug."
-  - section: "Bugs Fixed"
-    description: "Fixed `azurebackup_policy_get` and `azurebackup_policy_list` (DPP vaults) failing with `FormatException` from `XmlConvert.ToTimeSpan` when policies contain ISO 8601 duration values that the Azure SDK cannot parse (e.g. fractional seconds, week designators in retention rules). `policy_list` now skips policies that the SDK cannot parse and returns the rest; `policy_get` falls back to listing the vault's policies and matching by name. Tracks the Azure SDK gap in `Azure.ResourceManager.DataProtectionBackup`."
