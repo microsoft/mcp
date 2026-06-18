@@ -15,6 +15,24 @@ using ModelContextProtocol;
 
 namespace Azure.Mcp.Tools.Insights.Commands;
 
+[CommandMetadata(
+    Id = "8d6ac0a4-1b3e-4d2c-8d2a-3a8c1c52cf94",
+    Name = "get",
+    Title = "Get Azure Infrastructure Insights",
+    Description = """
+        Derives insights from an existing Azure environment by analyzing patterns in
+        Azure Resource Graph data. The caller can specify a tenant or subscription scope and
+        optionally provide a free-form query describing their intent, which tailors the
+        insights to that scenario.
+
+        This command can only be used if the client supports MCP sampling.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = true,
+    LocalRequired = false)]
 public sealed class InsightsGetCommand(
     ILogger<InsightsGetCommand> logger,
     IInsightsService insightsService,
@@ -29,24 +47,6 @@ public sealed class InsightsGetCommand(
     private readonly ISamplingService _samplingService = samplingService;
 
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
-
-    private const string CommandTitle = "Get Azure Infrastructure Insights";
-
-    public override string Id => "8d6ac0a4-1b3e-4d2c-8d2a-3a8c1c52cf94";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Derives insights from an existing Azure environment by analyzing patterns in
-        Azure Resource Graph data. The caller can specify a tenant or subscription scope and
-        optionally provide a free-form query describing their intent, which tailors the
-        insights to that scenario.
-
-        This command can only be used if the client supports MCP sampling.
-        """;
-
-    public override string Title => CommandTitle;
 
     private const int SamplingMaxTokens = 20000;
 
@@ -93,16 +93,6 @@ public sealed class InsightsGetCommand(
         ]
         ```
         """;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = true,
-    };
 
     protected override void RegisterOptions(Command command)
     {
