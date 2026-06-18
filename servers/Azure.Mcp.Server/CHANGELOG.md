@@ -4,13 +4,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ## 3.0.0-beta.20 (Unreleased)
 
-### Features Added
-
-### Breaking Changes
-
 ### Bugs Fixed
 
-### Other Changes
+- Changed the default HTTP status code for command validation failures (`CommandValidationException`) from 500 (Internal Server Error) to 400 (Bad Request). [[#2900](https://github.com/microsoft/mcp/pull/2900)]
 
 ## 3.0.0-beta.19 (2026-06-16)
 
