@@ -3,7 +3,7 @@
 
 using Xunit;
 
-namespace CopilotCliTester.Tests;
+namespace McpToolEvaluator.Core.Tests;
 
 public sealed class PromptParserTests : IDisposable
 {
