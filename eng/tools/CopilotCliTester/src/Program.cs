@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
 using CopilotCliTester.Models;
+using McpToolEvaluator.Core;
+using McpToolEvaluator.Core.Models;
 
 namespace CopilotCliTester;
 
