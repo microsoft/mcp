@@ -167,7 +167,17 @@ public static class McpTestUtilities
             Name = "Test Server",
             Command = executablePath,
             Arguments = arguments.ToArray(),
-            StandardErrorLines = line => output?.WriteLine($"[MCP Server] {line}"),
+            StandardErrorLines = line =>
+            {
+                try
+                {
+                    output?.WriteLine($"[MCP Server] {line}");
+                }
+                catch
+                {
+                    // Ignore, probably writing after test has finished.
+                }
+            },
             EnvironmentVariables = environmentVariables
         };
 

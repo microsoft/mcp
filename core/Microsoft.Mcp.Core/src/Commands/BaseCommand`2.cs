@@ -23,7 +23,6 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     private const string TroubleshootingUrl = "https://aka.ms/azmcp/troubleshooting";
 
     private readonly Command _command;
-    private readonly OptionDescriptor[] _descriptors;
 
     [UnconditionalSuppressMessage("Trimming", "IL2075:UnrecognizedReflectionPattern",
         Justification = "CommandMetadataAttribute is only applied to concrete command types that are rooted by DI service registration.")]
@@ -46,8 +45,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         Metadata = attr.ToToolMetadata();
 
         _command = new ExtendedCommand(this, Name, Description);
-        _descriptors = OptionDescriptor.FromType<TOptions>();
-        OptionBinder.RegisterOptions<TOptions>(_command, _descriptors);
+        OptionBinder.RegisterOptions<TOptions>(_command);
     }
 
     public string Id { get; }
@@ -60,15 +58,15 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
 
     public TOptions BindOptions(ParseResult parseResult)
     {
-        var options = OptionBinder.BindOptions<TOptions>(parseResult, _descriptors);
+        var options = OptionBinder.BindOptions<TOptions>(parseResult);
         PostBindOptions(options);
         return options;
     }
 
     /// <summary>
-    /// Called after the options have been bound to the command to perform any additional setup or initialization.
+    /// Performs additional processing on the bound options after they have been bound.
     /// </summary>
-    /// <param name="options">The options that have been bound.</param>
+    /// <param name="options">The bound options to process.</param>
     public virtual void PostBindOptions(TOptions options)
     {
     }

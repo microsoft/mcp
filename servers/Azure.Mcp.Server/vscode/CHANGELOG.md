@@ -1,5 +1,14 @@
 # Release History
 
+## 3.0.20 (2026-06-18) (pre-release)
+
+### Fixed
+
+- Changed the default HTTP status code for command validation failures (`CommandValidationException`) from 500 (Internal Server Error) to 400 (Bad Request). [[#2900](https://github.com/microsoft/mcp/pull/2900)]
+
+- Optimized `BaseAzureResourceService.ExecuteResourceQueryAsync` to reduce ARM calls from two to one in the success path. [[#2735](https://github.com/microsoft/mcp/pull/2735)]
+
+
 
 ## 3.0.19 (2026-06-16) (pre-release)
 

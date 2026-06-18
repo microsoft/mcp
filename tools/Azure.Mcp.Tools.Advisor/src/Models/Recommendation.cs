@@ -8,5 +8,7 @@ namespace Azure.Mcp.Tools.Advisor.Models;
 public record Recommendation(
     [property: JsonPropertyName("resourceId")] string ResourceId,
     [property: JsonPropertyName("recommendationText")] string RecommendationText,
-    [property: JsonPropertyName("category")] string Category
+    [property: JsonPropertyName("category")] string Category,
+    [property: JsonPropertyName("impact")] string? Impact = null,
+    [property: JsonPropertyName("impactedResourceType")] string? ImpactedResourceType = null
 );

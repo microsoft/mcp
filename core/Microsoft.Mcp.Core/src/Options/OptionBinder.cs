@@ -25,8 +25,7 @@ public static class OptionBinder
     /// Registers System.CommandLine options on a command based on the public properties of <typeparamref name="TOptions"/>.
     /// </summary>
     /// <param name="command">The command to register options on.</param>
-    /// <param name="descriptors">The option descriptors to register.</param>
-    public static void RegisterOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(Command command, OptionDescriptor[] descriptors)
+    public static void RegisterOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(Command command)
         where TOptions : class
     {
         var handlers = s_optionTypeHandlers.GetOrAdd(typeof(TOptions), _ => GetOptionTypeHandlers<TOptions>());
@@ -48,7 +47,7 @@ public static class OptionBinder
     /// </summary>
     /// <param name="parseResult">The parsed command-line values.</param>
     /// <param name="descriptors">The option descriptors to bind.</param>
-    public static TOptions BindOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(ParseResult parseResult, OptionDescriptor[] descriptors)
+    public static TOptions BindOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(ParseResult parseResult)
         where TOptions : class
     {
         var instance = (TOptions)CreateInstance(typeof(TOptions));
