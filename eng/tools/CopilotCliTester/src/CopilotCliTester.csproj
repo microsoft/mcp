@@ -16,4 +16,8 @@
     <PackageReference Include="GitHub.Copilot.SDK" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\McpToolEvaluator.Core\src\McpToolEvaluator.Core.csproj" />
+  </ItemGroup>
+
 </Project>
