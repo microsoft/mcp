@@ -46,7 +46,6 @@ public static class OptionBinder
     /// from the parsed command-line values.
     /// </summary>
     /// <param name="parseResult">The parsed command-line values.</param>
-    /// <param name="descriptors">The option descriptors to bind.</param>
     public static TOptions BindOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(ParseResult parseResult)
         where TOptions : class
     {

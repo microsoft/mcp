@@ -124,12 +124,13 @@ public static class CommandResultExtensions
     }
 
     /// <summary>
-    /// Special version fo GetValueOrDefault for new option binding as the Option is immutable once created.
+    /// Special version for GetValueOrDefault for new option binding as the Option is immutable once created.
     /// <para>
-    /// The name-based lookup was needed as modifying static options to change their requiredness created a new Option
-    /// instance. CommandResult result retrieval uses Option in a Dictionary which performs the lookup using the instance
-    /// refrence as the key for the Dictionary. So, that would break silently and necessitated the name based retrieval.
-    /// That is no longer necessary with the new option binding approach.
+    /// The name-based lookup was needed because the static Option would be re-created in RegisterOptions when changing
+    /// requiredness. CommandResult result retrieval uses the Option instance references as a Dictionary key. So,
+    /// changing requiredness in RegisterOptions and using the static Option in BindOptions would break silently and
+    /// necessitated the name based retrieval. That is no longer necessary with the new option binding approach and
+    /// this more performant approach should be used.
     /// </para>
     /// </summary>
     /// <typeparam name="T">The type of the option value</typeparam>

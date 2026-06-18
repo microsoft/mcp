@@ -53,7 +53,7 @@ public sealed class OptionTypeHandler
             type = type.GetElementType()!;
             isMulti = true;
         }
-        else if (type != typeof(string) && type.IsAssignableTo(typeof(System.Collections.IEnumerable)))
+        else if (type != typeof(string) && type.IsAssignableTo(typeof(IEnumerable<>)))
         {
             type = type.GetGenericArguments()[0];
             isMulti = true;
@@ -62,7 +62,7 @@ public sealed class OptionTypeHandler
         var optionAndBinder = CreateOptionAndBinder(type, isNullable, isMulti, descriptor);
         if (optionAndBinder is null)
         {
-            throw new InvalidOperationException($"Unsupported option type '{descriptor.Type}'. Add handling to OptionCreator or use a supported type and handle with PostBindOptions.");
+            throw new InvalidOperationException($"Unsupported option type '{descriptor.Type}'. Add handling to ${nameof(OptionTypeHandler)} or use a supported type and handle with PostBindOptions.");
         }
 
         var option = optionAndBinder.Value.Item1;
@@ -71,7 +71,7 @@ public sealed class OptionTypeHandler
         // For array/collection types, allow multiple values after a single option token
         // e.g., --modules RedisBloom RedisJSON instead of --modules RedisBloom --modules RedisJSON
         option.AllowMultipleArgumentsPerToken = isMulti;
-        option.Arity = GetArgumentArity(isNullable, isMulti);
+        option.Arity = GetArgumentArity(type, isNullable, isMulti);
         option.Hidden = descriptor.Hidden;
 
         if (type.IsEnum)
@@ -101,7 +101,12 @@ public sealed class OptionTypeHandler
                 }
                 if (result is IEnumerable<string> strings)
                 {
-                    return strings.Select(s => Enum.Parse(type, s, ignoreCase: true)).ToArray();
+                    var parsed = strings.Select(s => Enum.Parse(type, s, ignoreCase: true)).ToArray();
+#pragma warning disable IL3050 // Enum array creation shouldn't be an AoT issue here.
+                    var array = Array.CreateInstance(type, parsed.Length);
+#pragma warning restore IL3050
+                    Array.Copy(parsed, array, parsed.Length);
+                    return array;
                 }
                 return result;
             };
@@ -307,7 +312,7 @@ public sealed class OptionTypeHandler
         return (option, parseResult => parseResult.GetValueOrDefaultWithoutName(option));
     }
 
-    private static ArgumentArity GetArgumentArity(bool isNullable, bool isMulti)
+    private static ArgumentArity GetArgumentArity(Type type, bool isNullable, bool isMulti)
     {
         if (isMulti && isNullable)
             return ArgumentArity.ZeroOrMore;
@@ -315,6 +320,6 @@ public sealed class OptionTypeHandler
             return ArgumentArity.OneOrMore;
         if (isNullable)
             return ArgumentArity.ZeroOrOne;
-        return ArgumentArity.ExactlyOne;
+        return typeof(bool) == type ? ArgumentArity.ZeroOrOne : ArgumentArity.ExactlyOne;
     }
 }
