@@ -58,7 +58,7 @@ jobs:
         targetPath: $(Pipeline.Workspace)/build_info
       - input: pipelineArtifact
         artifactName: vsix_npmrc
-        targetPath: $(Pipeline.Workspace)/npmrc
+        targetPath: $(Agent.TempDirectory)/vsix_npmrc
     environment: package-publish
     pool:
       name: azsdk-pool
@@ -99,7 +99,7 @@ jobs:
                 "@
 
                 Write-Host "`nInstalling vsce from authenticated feed..."
-                npm install -g @vscode/vsce --userconfig "$(Pipeline.Workspace)/npmrc/.npmrc"
+                npm install -g @vscode/vsce --userconfig "$(Agent.TempDirectory)/vsix_npmrc/.npmrc"
 
                 Write-Host "Executing: vsce publish $($publishArgs -join ' ')"
                 vsce publish @publishArgs

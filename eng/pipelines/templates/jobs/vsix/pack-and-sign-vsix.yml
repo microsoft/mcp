@@ -24,6 +24,10 @@ jobs:
     inputs:
       version: '24.x'
 
+  - template: /eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml
+    parameters:
+      npmrcPath: $(Agent.TempDirectory)/pack_and_sign_vsix/.npmrc
+
   # --- VS Code Extension Packaging Steps ---
   - task: Powershell@2
     displayName: "Pack binaries for VSIX"
@@ -34,6 +38,8 @@ jobs:
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
+    env:
+      npm_config_userconfig: "$(Agent.TempDirectory)/pack_and_sign_vsix/.npmrc"
 
   - template: pipelines/steps/azd-vscode-signing.yml@azure-sdk-build-tools
     parameters:
@@ -47,6 +53,8 @@ jobs:
       filePath: $(Build.SourcesDirectory)/eng/scripts/Verify-VsixSignatures.ps1
       arguments: >
         -ArtifactsPath '$(Build.ArtifactStagingDirectory)'
+    env:
+      npm_config_userconfig: "$(Agent.TempDirectory)/pack_and_sign_vsix/.npmrc"
 
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
