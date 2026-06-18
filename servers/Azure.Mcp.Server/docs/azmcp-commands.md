@@ -2693,7 +2693,6 @@ azmcp insights get [--scope <subscription|tenant>] \
 
 # Example:
 # Get subscription-scoped insights with an user intent
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
  azmcp insights get --scope subscription \
                     --subscription <subscription> \
                     --query "Prioritise cost and reliability patterns" \
