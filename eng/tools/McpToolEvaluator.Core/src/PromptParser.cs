@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Text.RegularExpressions;
-using CopilotCliTester.Models;
+using McpToolEvaluator.Core.Models;
 
-namespace CopilotCliTester;
+namespace McpToolEvaluator.Core;
 
 /// <summary>
 /// Parses test prompts from e2eTestPrompts.md
 /// </summary>
-internal static partial class PromptParser
+public static partial class PromptParser
 {
     [GeneratedRegex(@"^## (.+)$")]
     private static partial Regex SectionHeaderRegex();

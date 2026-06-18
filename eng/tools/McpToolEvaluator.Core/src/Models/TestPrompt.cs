@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace CopilotCliTester.Models;
+namespace McpToolEvaluator.Core.Models;
 
-internal sealed record TestPrompt(
+public sealed record TestPrompt(
     string Section,
     string Tool,
     string Prompt,
