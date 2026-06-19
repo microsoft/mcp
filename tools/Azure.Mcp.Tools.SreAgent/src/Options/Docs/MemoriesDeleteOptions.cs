@@ -12,7 +12,4 @@ public sealed class MemoriesDeleteOptions : BaseSreAgentOptions
 
     [Option(SreAgentOptionDefinitions.ConfirmDescription)]
     public bool Confirm { get; set; }
-
-    [Option(SreAgentOptionDefinitions.ContentDescription)]
-    public required string Content { get; set; }
 }
