@@ -24,4 +24,11 @@ public interface IAdvisorService
         string groupBy,
         RecommendationFilters? filters = null,
         CancellationToken cancellationToken = default);
+
+    Task<List<RecommendationType>> ListRecommendationTypesAsync(
+        string? tenant,
+        string? resourceType,
+        string? impact,
+        string? category,
+        CancellationToken cancellationToken = default);
 }
