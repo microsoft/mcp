@@ -145,6 +145,14 @@ public sealed class OptionBinderTests
         public string? Address { get; set; }
     }
 
+    private sealed class DefaultedOptions
+    {
+        [Option(DefaultValue = "default")]
+        public string? Name { get; set; }
+        [Option(DefaultValue = 42)]
+        public int? Count { get; set; }
+    }
+
     #endregion
 
     #region RegisterOptions Tests
@@ -451,8 +459,20 @@ public sealed class OptionBinderTests
         if (addressArgName != null)
         {
             Assert.Equal("Seattle", options.Address);
-
         }
+    }
+
+    [Fact]
+    public void BindOptions_DefaultValue_BindsDefault()
+    {
+        var command = new Command("test");
+        OptionBinder.RegisterOptions<DefaultedOptions>(command);
+
+        var parseResult = command.Parse("");
+        var options = OptionBinder.BindOptions<DefaultedOptions>(parseResult);
+
+        Assert.Equal("default", options.Name);
+        Assert.Equal(42, options.Count);
     }
 
     #endregion

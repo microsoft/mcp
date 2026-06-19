@@ -14,6 +14,7 @@ public class OptionDescriptor
     public string[] Aliases { get; init; } = [];
     public bool Required { get; init; }
     public bool Hidden { get; init; }
+    public object? DefaultValue { get; init; }
     public required PropertyInfo TargetProperty { get; init; }
     public required Type Type { get; init; }
     public PropertyInfo? ParentProperty { get; init; }
@@ -91,6 +92,7 @@ public class OptionDescriptor
                     Type = property.PropertyType,
                     Required = required,
                     Hidden = optionAttribute?.Hidden ?? false,
+                    DefaultValue = optionAttribute?.DefaultValue,
                     TargetProperty = property,
                     ParentProperty = parentProperty
                 });

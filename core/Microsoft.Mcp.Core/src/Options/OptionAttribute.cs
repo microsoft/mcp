@@ -51,6 +51,11 @@ public sealed class OptionAttribute : Attribute
     public string? Description { get; init; }
 
     /// <summary>
+    /// A default value for the option when a value is not provided. Must match the property type being attributed.
+    /// </summary>
+    public object? DefaultValue { get; init; }
+
+    /// <summary>
     /// Whether the option is hidden from help output.
     /// </summary>
     public bool Hidden { get; init; }

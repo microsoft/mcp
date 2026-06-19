@@ -309,6 +309,10 @@ public sealed class OptionTypeHandler
     private static (Option, Func<ParseResult, object?>) CreateOptionAndBinderHelper<T>(OptionDescriptor descriptor)
     {
         var option = new Option<T>($"--{descriptor.Name}", [.. descriptor.Aliases.Select(a => $"--{a}")]);
+        if (descriptor.DefaultValue != null)
+        {
+            option.DefaultValueFactory = _ => (T)descriptor.DefaultValue;
+        }
         return (option, parseResult => parseResult.GetValueOrDefaultWithoutName(option));
     }
 
