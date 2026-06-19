@@ -794,7 +794,7 @@ The test `.csproj` **must** have these specific settings or tests will fail with
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Azure.Mcp.Tools.{Toolset}.csproj" />
-    <ProjectReference Include="..\..\..\..\servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj" />
+    <ProjectReference Include="$(RepoRoot)servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj" />
   </ItemGroup>
 </Project>
 ```
