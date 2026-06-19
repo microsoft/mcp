@@ -124,7 +124,7 @@ Rules:
 - Use `subscription` (never `subscriptionId`) — supports both IDs and names
 - Use `resourceGroup` (never `resourceGroupName`)
 - Use singular nouns for resources (`server` not `serverName`)
-- Remove unnecessary `-name` suffixes (`--account` not `--account-name`)
+- Remove unnecessary `name` suffixes (`Account` / `--account` not `AccountName` / `--account-name`)
 - Nullability determines required/optional: `string?` = optional, `required string` = required
 - Order: command-specific options first, then `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`, `RetryPolicy`
 - Keep parameter names consistent with Azure SDK parameters when possible
