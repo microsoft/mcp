@@ -738,11 +738,11 @@ To extract README.md for a specific package, run the `Extract-PackageSpecificRea
 
 ### Configuring External MCP Servers
 
-The Azure MCP Server supports connecting to external MCP servers through an embedded `registry.json` configuration file. This enables the server to act as a proxy, aggregating tools from multiple MCP servers into a single interface. The registry follows the same configuration schema as VS Code's `mcp.json`.
+The Azure MCP Server supports connecting to external MCP servers through an embedded `registry.json` configuration file. This enables the server to act as a proxy, aggregating tools from multiple MCP servers into a single interface.
 
 #### Registry Configuration
 
-External MCP servers are defined in the embedded resource file `core/Azure.Mcp.Core/src/Areas/Server/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following the standard MCP configuration format.
+External MCP servers are defined in the embedded resource file `servers/Azure.Mcp.Server/src/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following a format similar to the standard MCP configuration format.
 
 The registry structure follows this format:
 
@@ -753,7 +753,7 @@ The registry structure follows this format:
       "url": "https://learn.microsoft.com/api/mcp",
       "description": "Search official Microsoft/Azure documentation..."
     },
-    "another-server": {
+    "another-stdio-server": {
       "type": "stdio",
       "command": "path/to/executable",
       "args": ["arg1", "arg2"],
@@ -761,6 +761,13 @@ The registry structure follows this format:
         "ENV_VAR": "value"
       },
       "description": "Another MCP server using stdio transport"
+    },
+    "another-http-server": {
+      "url": "<server_endpoint>",
+      "title": "<server_title>",
+      "description": "Another MCP server that offers X, Y, Z features",
+      "toolPrefix": "uniqueprefix_",
+      "oauthScopes": ["Entra-client-ID/identifier-uri"]
     }
   }
 }
@@ -773,6 +780,20 @@ The registry structure follows this format:
 - Use the `url` property to specify the endpoint
 - Supports HTTP-based communication with automatic transport mode detection
 - Best for web-based MCP servers and remote endpoints
+- Use `title` as the dislay name for the namespace tool (optional)
+- Use `description` as the description of the namespace tool for the MCP server
+- Use `toolPrefix` to assign unique prefix to tools of the MCP server
+- If the MCP server requires authentication, use `oauthScopes` to specify the Entra client registration representing the MCP server
+
+When running in namespace mode, the registered MCP server will appear as a namespace tool like all the built-in namespaces, exposing the underlying tools via dynamic discovery. When running in all mode, the registered MCP server's tools will be listed along with all the built-in tools.
+
+For HTTP-transport external servers, Azure MCP supports unauthenticated endpoints and Entra ID-protected endpoints (via `oauthScopes`). The registered MCP server needs to have an Entra app registration that accepts authorization and token requests from common clients (e.g. Azure CLI and VS Code). Depending on how Azure MCP runs, there are several different authentication scenarios involving the external MCP server.
+
+- Azure MCP runs in stdio mode and uses a user principal. For example, a user starts Azure MCP in stdio mode and lets it use AzureCliCredential. The registered MCP server will receive user principal access tokens from Azure MCP.
+- Azure MCP runs in stdio mode and uses a service principal. For example, a user runs Azure MCP in stdio mode and lets it use EnvironmentCredential (for example, Managed Identity). The registered MCP server will receive service principal access tokens from Azure MCP.
+- Azure MCP runs in remote mode and uses On-Behalf-Of (OBO). For example, a user runs Azure MCP in HTTP mode and hosts it as a service. The user then uses some client to access this Azure MCP service. This Azure MCP service receives a user/service principal access token for itself, exchanges it for a new token for the registered MCP server, and accesses the registered MCP server using the new token. The registered MCP server will receive an OBO token from the Azure MCP service's configured Entra app registration.
+
+There are two kinds of user principals in Entra ID, personal users and organizational users. Each user can be a direct member of a tenant or a guest of a tenant. The configuration of the registered MCP server's Entra client registration may accidentally block access from some users. When adding a registered MCP server that requires authentication, make sure to test the Entra client registration to make sure the expected clients and users can successfully authorize and acquire access tokens for it. Also test the registered MCP server's implementation to make sure it can accept valid access tokens from all kinds of supported scenarios. If a commonly acceptable scenario is by design not supported, document these scenarios in the registered MCP server's entry in [README.md](https://github.com/microsoft/mcp/blob/main/README.md).
 
 **Stdio Transport:**
 
@@ -798,7 +819,7 @@ azmcp server start --mode namespace
 
 To add a new external MCP server to the registry:
 
-1. Edit `core/Azure.Mcp.Core/src/Areas/Server/Resources/registry.json`
+1. Edit `servers/Azure.Mcp.Server/src/Resources/registry.json`
 2. Add your server configuration under the `servers` object using VS Code's MCP configuration schema
 3. Use a unique identifier as the key
 4. Provide either a `url` for SSE transport or `type: "stdio"` with `command` for stdio transport

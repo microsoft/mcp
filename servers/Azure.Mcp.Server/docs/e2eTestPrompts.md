@@ -23,6 +23,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | advisor_recommendation_summary | Summarize Advisor recommendations mentioning "encryption" by category in subscription <subscription> |
 | advisor_recommendation_apply | Apply Advisor recommendations to this ARM template |
 | advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account |
+| advisor_recommendation-type_list | List the catalog of Advisor recommendation types available in my tenant |
+| advisor_recommendation-type_list | Before I deploy any virtual machines, what kinds of recommendations could Advisor produce for them? |
+| advisor_recommendation-type_list | What recommendation types does Advisor have for microsoft.sql/servers/databases, filtered to high impact? |
+| advisor_recommendation-type_list | Show me the catalog of cost recommendations Advisor can generate for storage accounts |
+| advisor_recommendation-type_list | My tenant is brand new and has no Advisor recommendations yet — what kinds of recommendations could Advisor make? |
 
 ## Azure AI Search
 
