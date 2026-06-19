@@ -14,14 +14,14 @@ you through the prerequisites and the most common onboarding tasks:
 6. [Pull request checklist](#6-pull-request-checklist)
 
 > [!TIP]
-> Prefer interactive help? Invoke the `@onboarding` agent (`.github/agents/onboarding.agent.md`)
+> Prefer interactive help? Invoke the [`@onboarding` agent](https://github.com/microsoft/mcp/blob/main/.github/agents/onboarding.agent.md)
 > in GitHub Copilot Chat. It routes you to the right section of this guide and the deeper docs.
 
 This document links to the authoritative deep-dive docs rather than duplicating them. The
 two most important references are:
 
-- [`CONTRIBUTING.md`](../CONTRIBUTING.md) — full contribution workflow and standards
-- [`servers/Azure.Mcp.Server/docs/new-command.md`](../servers/Azure.Mcp.Server/docs/new-command.md) — the authoritative guide for implementing commands
+- [`CONTRIBUTING.md`](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md) — full contribution workflow and standards
+- [`servers/Azure.Mcp.Server/docs/new-command.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md) — the authoritative guide for implementing commands
 
 ---
 
@@ -39,7 +39,7 @@ Install the following tooling before you build:
 | [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) + [Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) | Used heavily for command scaffolding. |
 | [Node.js](https://nodejs.org/en/download) 20 or later | Ensure `node` and `npm` are on your `PATH`. |
 | [PowerShell](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) 7.0 or later | Required for build and test scripts in `eng/scripts`. |
-| .NET SDK | Version is pinned in [`global.json`](../global.json). |
+| .NET SDK | Version is pinned in [`global.json`](https://github.com/microsoft/mcp/blob/main/global.json). |
 
 For **live tests** against real Azure resources you also need:
 
@@ -52,10 +52,10 @@ For **live tests** against real Azure resources you also need:
 ### NuGet feed
 
 This repo uses a single Azure DevOps package feed (configured in
-[`nuget.config`](../nuget.config)) with an upstream to nuget.org. **External contributors**
+[`nuget.config`](https://github.com/microsoft/mcp/blob/main/nuget.config)) with an upstream to nuget.org. **External contributors**
 cannot authenticate as a feed collaborator; if you add a package that is not already cached,
 temporarily add nuget.org as an extra source locally and revert before submitting your PR.
-See [CONTRIBUTING.md → Central NuGet Feed](../CONTRIBUTING.md#central-nuget-feed) for details.
+See [CONTRIBUTING.md → Central NuGet Feed](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#central-nuget-feed) for details.
 
 ---
 
@@ -86,7 +86,7 @@ dotnet build
 
 > [!TIP]
 > **Submit one tool per pull request.** Smaller PRs review faster and iterate more easily.
-> See [CONTRIBUTING.md → Adding a New Command](../CONTRIBUTING.md#adding-a-new-command).
+> See [CONTRIBUTING.md → Adding a New Command](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#adding-a-new-command).
 
 ### Run the server locally
 
@@ -120,7 +120,7 @@ implemented as a **toolset** project under `tools/Azure.Mcp.Tools.{Toolset}`. Ea
 provides an `IAreaSetup` implementation that registers its services and commands.
 
 > The authoritative, end-to-end guide is
-> [`new-command.md`](../servers/Azure.Mcp.Server/docs/new-command.md). The steps below are the
+> [`new-command.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md). The steps below are the
 > onboarding-level summary of what it takes to stand up a brand-new namespace.
 
 ### Steps
@@ -142,13 +142,13 @@ provides an `IAreaSetup` implementation that registers its services and commands
        └── test-resources-post.ps1            # Post-deployment script (Azure services only)
    ```
 
-2. **Add required packages** to [`Directory.Packages.props`](../Directory.Packages.props) first
+2. **Add required packages** to [`Directory.Packages.props`](https://github.com/microsoft/mcp/blob/main/Directory.Packages.props) first
    (central package management), then reference them from the toolset `.csproj`.
 
 3. **Implement `{Toolset}Setup.cs`** as an `IAreaSetup`. It must expose `Name` (the namespace,
    lowercase, no dashes), `Title`, register services in `ConfigureServices`, and build the
    command tree in `RegisterCommands`. Use
-   [`StorageSetup.cs`](../tools/Azure.Mcp.Tools.Storage/src/StorageSetup.cs) as the reference:
+   [`StorageSetup.cs`](https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.Storage/src/StorageSetup.cs) as the reference:
 
    ```csharp
    public class WidgetSetup : IAreaSetup
@@ -172,7 +172,7 @@ provides an `IAreaSetup` implementation that registers its services and commands
    ```
 
 4. **Register the toolset** in
-   [`Program.cs`](../servers/Azure.Mcp.Server/src/Program.cs) `RegisterAreas()`, keeping the
+   [`Program.cs`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/src/Program.cs) `RegisterAreas()`, keeping the
    list **alphabetically sorted** (excluding the fixed `#if !BUILD_NATIVE` block):
 
    ```csharp
@@ -180,7 +180,8 @@ provides an `IAreaSetup` implementation that registers its services and commands
    ```
 
 5. **Add the new projects** to the solution files
-   [`Microsoft.Mcp.slnx`](../Microsoft.Mcp.slnx) and `Azure.Mcp.Server.slnx`.
+   [`Microsoft.Mcp.slnx`](https://github.com/microsoft/mcp/blob/main/Microsoft.Mcp.slnx) and
+   [`Azure.Mcp.Server.slnx`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/Azure.Mcp.Server.slnx).
 
 6. **Implement at least one command** in the namespace — follow
    [Add a new tool](#4-add-a-new-tool-to-an-existing-namespace).
@@ -191,7 +192,7 @@ provides an `IAreaSetup` implementation that registers its services and commands
    ./eng/scripts/Build-Local.ps1 -BuildNative
    ```
 
-   If AOT fails, follow [`aot-compatibility.md`](aot-compatibility.md) to either fix it or
+   If AOT fails, follow [`aot-compatibility.md`](https://github.com/microsoft/mcp/blob/main/docs/aot-compatibility.md) to either fix it or
    exclude the toolset from the native build — do **not** edit the fixed exclusion block.
 
 8. **Add a CODEOWNERS entry** and update docs (see the [PR checklist](#6-pull-request-checklist)).
@@ -207,12 +208,12 @@ contribution.
 > [!TIP]
 > The fastest path is Copilot Chat in Agent mode:
 > `"create [namespace] [resource] [operation] command using #new-command.md as a reference"`.
-> Always review the generated code against [`new-command.md`](../servers/Azure.Mcp.Server/docs/new-command.md).
+> Always review the generated code against [`new-command.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md).
 
 ### Required files
 
 For each new command (see
-[new-command.md → Required Files](../servers/Azure.Mcp.Server/docs/new-command.md#required-files)):
+[new-command.md → Required Files](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#required-files)):
 
 1. Option definitions: `src/Options/{Toolset}OptionDefinitions.cs`
 2. Per-command options: `src/Options/{Resource}/{Operation}Options.cs`
@@ -251,8 +252,8 @@ dotnet format --include="tools/Azure.Mcp.Tools.{Toolset}/**/*.cs"
 ```
 
 Azure resource commands additionally **require recorded live tests**. See
-[`recorded-tests.md`](recorded-tests.md) for the record/playback workflow and
-[CONTRIBUTING.md → Live Tests](../CONTRIBUTING.md#live-tests) for deploying test resources.
+[`recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md) for the record/playback workflow and
+[CONTRIBUTING.md → Live Tests](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#live-tests) for deploying test resources.
 
 ---
 
@@ -260,7 +261,7 @@ Azure resource commands additionally **require recorded live tests**. See
 
 The Azure MCP Server can act as a **proxy** that aggregates tools from external MCP servers
 into a single interface. External servers are declared in the embedded registry file
-[`servers/Azure.Mcp.Server/src/Resources/registry.json`](../servers/Azure.Mcp.Server/src/Resources/registry.json).
+[`servers/Azure.Mcp.Server/src/Resources/registry.json`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/src/Resources/registry.json).
 
 ### Steps
 
@@ -319,8 +320,8 @@ accepts authorization/token requests from common clients (Azure CLI, VS Code). A
 pass user-principal tokens (stdio), service-principal tokens (stdio), or On-Behalf-Of tokens
 (remote HTTP mode). **Test the app registration** against all supported user types (personal,
 organizational, member, guest) and document any unsupported scenarios in the server's entry in
-[README.md](../README.md). Full details:
-[CONTRIBUTING.md → Configuring External MCP Servers](../CONTRIBUTING.md#configuring-external-mcp-servers).
+[README.md](https://github.com/microsoft/mcp/blob/main/README.md). Full details:
+[CONTRIBUTING.md → Configuring External MCP Servers](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#configuring-external-mcp-servers).
 
 ---
 
@@ -331,13 +332,13 @@ Before opening your PR from your fork into `microsoft/mcp:main`:
 - [ ] **Format & build:** `dotnet format` and `dotnet build` are clean.
 - [ ] **Unit tests** pass and cover your changes.
 - [ ] **Live tests** included and **recorded** for Azure resource commands
-      ([`recorded-tests.md`](recorded-tests.md)).
+      ([`recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md)).
 - [ ] **AOT check** for new toolsets: `./eng/scripts/Build-Local.ps1 -BuildNative`.
 - [ ] **Spelling:** `./eng/common/spelling/Invoke-Cspell.ps1` (add new terms to `.vscode/cspell.json`).
-- [ ] **Docs updated:** [`azmcp-commands.md`](../servers/Azure.Mcp.Server/docs/azmcp-commands.md)
-      and test prompts in [`e2eTestPrompts.md`](../servers/Azure.Mcp.Server/docs/e2eTestPrompts.md).
+- [ ] **Docs updated:** [`azmcp-commands.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+      and test prompts in [`e2eTestPrompts.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md).
 - [ ] **Changelog entry** added for user-facing changes
-      ([`changelog-entries.md`](changelog-entries.md)).
+      ([`changelog-entries.md`](https://github.com/microsoft/mcp/blob/main/docs/changelog-entries.md)).
 - [ ] **CODEOWNERS** updated for a new toolset.
 - [ ] **One tool per PR** where possible.
 
@@ -345,10 +346,10 @@ Before opening your PR from your fork into `microsoft/mcp:main`:
 
 ## More resources
 
-- [Command reference (`azmcp-commands.md`)](../servers/Azure.Mcp.Server/docs/azmcp-commands.md)
-- [Implementing a new command (`new-command.md`)](../servers/Azure.Mcp.Server/docs/new-command.md)
-- [Recorded tests guide (`recorded-tests.md`)](recorded-tests.md)
-- [AOT compatibility (`aot-compatibility.md`)](aot-compatibility.md)
-- [Authentication (`Authentication.md`)](Authentication.md)
-- [Changelog entries (`changelog-entries.md`)](changelog-entries.md)
-- [Contributing guide (`CONTRIBUTING.md`)](../CONTRIBUTING.md)
+- [Command reference (`azmcp-commands.md`)](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [Implementing a new command (`new-command.md`)](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md)
+- [Recorded tests guide (`recorded-tests.md`)](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md)
+- [AOT compatibility (`aot-compatibility.md`)](https://github.com/microsoft/mcp/blob/main/docs/aot-compatibility.md)
+- [Authentication (`Authentication.md`)](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md)
+- [Changelog entries (`changelog-entries.md`)](https://github.com/microsoft/mcp/blob/main/docs/changelog-entries.md)
+- [Contributing guide (`CONTRIBUTING.md`)](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md)

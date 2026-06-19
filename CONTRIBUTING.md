@@ -7,7 +7,7 @@ After cloning and building the repo, check out the [GitHub project](https://gith
 If you are contributing significant changes, or if the issue is already assigned to a specific milestone, please discuss with the assignee of the issue first before starting to work on the issue.
 
 >[!TIP]
-> New to the project? Start with the [Onboarding Guide](docs/Onboarding.md) for a guided walkthrough of prerequisites, adding a new namespace or tool, and integrating an external MCP server. You can also invoke the `@onboarding` agent in GitHub Copilot Chat.
+> New to the project? Start with the [Onboarding Guide](https://github.com/microsoft/mcp/blob/main/docs/Onboarding.md) for a guided walkthrough of prerequisites, adding a new namespace or tool, and integrating an external MCP server. You can also invoke the `@onboarding` agent in GitHub Copilot Chat.
 
 ## Table of Contents
 

@@ -6,7 +6,8 @@ description: Azure MCP Server onboarding assistant - guides new contributors thr
 
 This agent helps **new contributors** get productive in the Azure MCP Server repository. It
 orients you, then routes you to the right section of
-[`docs/Onboarding.md`](../../docs/Onboarding.md) and the deeper authoritative docs.
+[Onboarding.md](https://github.com/microsoft/mcp/blob/main/docs/Onboarding.md) and the deeper
+authoritative docs.
 
 ## What This Agent Helps With
 
@@ -27,30 +28,15 @@ Ask about any of these and the agent will point you to the relevant steps and fi
 ## How To Route
 
 Match the contributor's intent to the matching section of
-[`docs/Onboarding.md`](../../docs/Onboarding.md):
+[Onboarding.md](https://github.com/microsoft/mcp/blob/main/docs/Onboarding.md):
 
 | Intent | Section | Authoritative deep dive |
 | --- | --- | --- |
-| Set up my machine / build the repo | [Prerequisites](../../docs/Onboarding.md#1-prerequisites), [Quick start](../../docs/Onboarding.md#2-quick-start) | [`CONTRIBUTING.md`](../../CONTRIBUTING.md) |
-| Create a brand-new namespace | [Add a new namespace](../../docs/Onboarding.md#3-add-a-new-namespace-toolset) | [`new-command.md`](../../servers/Azure.Mcp.Server/docs/new-command.md) |
-| Add one command/tool | [Add a new tool](../../docs/Onboarding.md#4-add-a-new-tool-to-an-existing-namespace) | [`new-command.md`](../../servers/Azure.Mcp.Server/docs/new-command.md) |
-| Proxy an external MCP server | [Integrate an external MCP server](../../docs/Onboarding.md#5-integrate-an-external-mcp-server) | [`CONTRIBUTING.md`](../../CONTRIBUTING.md#configuring-external-mcp-servers) |
-| Get ready to submit | [PR checklist](../../docs/Onboarding.md#6-pull-request-checklist) | [`CONTRIBUTING.md`](../../CONTRIBUTING.md) |
-
-## Key Conventions To Reinforce
-
-When helping with code changes, remind contributors of the repository standards:
-
-- Use **primary constructors** and **System.Text.Json**; make command classes **sealed**.
-- Name commands `{Resource}{Operation}Command` (for example `AccountGetCommand`).
-- Use `subscription` / `resourceGroup` (never `subscriptionId` / `resourceGroupName`); singular
-  resource nouns.
-- Register response models in the toolset's `JsonSerializerContext` for **AOT safety**.
-- Register new tools in `{Toolset}Setup.cs` and new toolsets **alphabetically** in
-  `Program.cs` `RegisterAreas()`.
-- Azure resource commands require **recorded live tests** — see
-  [`recorded-tests.md`](../../docs/recorded-tests.md).
-- **One tool per pull request** where possible.
+| Set up my machine / build the repo | [Prerequisites](https://github.com/microsoft/mcp/blob/main/docs/Onboarding.md#1-prerequisites), [Quick start](https://github.com/microsoft/mcp/blob/main/docs/Onboarding.md#2-quick-start) | [CONTRIBUTING.md](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md) |
+| Create a brand-new namespace | [Add a new namespace](https://github.com/microsoft/mcp/blob/main/docs/Onboarding.md#3-add-a-new-namespace-toolset) | [new-command.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md) |
+| Add one command/tool | [Add a new tool](https://github.com/microsoft/mcp/blob/main/docs/Onboarding.md#4-add-a-new-tool-to-an-existing-namespace) | [new-command.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md) |
+| Proxy an external MCP server | [Integrate an external MCP server](https://github.com/microsoft/mcp/blob/main/docs/Onboarding.md#5-integrate-an-external-mcp-server) | [CONTRIBUTING.md](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#configuring-external-mcp-servers) |
+| Get ready to submit | [PR checklist](https://github.com/microsoft/mcp/blob/main/docs/Onboarding.md#6-pull-request-checklist) | [CONTRIBUTING.md](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md) |
 
 ## Source Control
 
