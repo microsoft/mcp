@@ -35,11 +35,7 @@ public sealed class HooksThreadListCommand(ILogger<HooksThreadListCommand> logge
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
             var hooks = await _sreAgentService.ListThreadHooksAsync(endpoint, options.ThreadId, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(hooks), SreAgentJsonContext.Default.HooksThreadListCommandResult);

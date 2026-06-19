@@ -4,7 +4,7 @@
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
-using Azure.Mcp.Tools.SreAgent.Options.Skills;
+using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -24,22 +24,18 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Agents;
     Secret = false,
     LocalRequired = false)]
 public sealed class AgentsToolsListCommand(ILogger<AgentsToolsListCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<AgentToolsListOptions, AgentsToolsListCommand.AgentsToolsListCommandResult>(subscriptionResolver)
+    : SubscriptionCommand<BaseSreAgentOptions, AgentsToolsListCommand.AgentsToolsListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<AgentsToolsListCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AgentToolsListOptions options, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseSreAgentOptions options, CancellationToken cancellationToken)
     {
         try
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
 
             var tools = await _sreAgentService.ListAgentToolsAsync(endpoint, options.Tenant, cancellationToken);

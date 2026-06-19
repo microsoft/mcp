@@ -40,11 +40,7 @@ public sealed class AgentsDeleteCommand(ILogger<AgentsDeleteCommand> logger, ISr
 
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
 
             var result = await _sreAgentService.DeleteSubAgentAsync(endpoint, options.Name, options.Tenant, cancellationToken);

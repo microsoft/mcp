@@ -34,11 +34,7 @@ public sealed class HooksThreadDeactivateCommand(ILogger<HooksThreadDeactivateCo
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
             await _sreAgentService.DeactivateThreadHookAsync(endpoint, options.ThreadId, options.HookName, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(true, options.ThreadId, options.HookName), SreAgentJsonContext.Default.HooksThreadDeactivateCommandResult);

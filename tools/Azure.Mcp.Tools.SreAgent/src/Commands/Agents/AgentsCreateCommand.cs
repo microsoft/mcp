@@ -35,11 +35,7 @@ public sealed class AgentsCreateCommand(ILogger<AgentsCreateCommand> logger, ISr
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
 
             var request = new SreSubAgentCreateRequest

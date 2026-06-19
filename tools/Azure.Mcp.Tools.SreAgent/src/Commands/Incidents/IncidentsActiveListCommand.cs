@@ -4,7 +4,7 @@
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
-using Azure.Mcp.Tools.SreAgent.Options.Incidents;
+using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -24,22 +24,18 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
     Secret = false,
     LocalRequired = false)]
 public sealed class IncidentsActiveListCommand(ILogger<IncidentsActiveListCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<IncidentRemoteOptions, SreAgentTextResult>(subscriptionResolver)
+    : SubscriptionCommand<BaseSreAgentOptions, SreAgentTextResult>(subscriptionResolver)
 {
     private readonly ILogger<IncidentsActiveListCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, IncidentRemoteOptions options, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseSreAgentOptions options, CancellationToken cancellationToken)
     {
         try
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
             var threads = await _sreAgentService.ListIncidentThreadsAsync(endpoint, options.Tenant, cancellationToken);
             var keywords = new[] { "incident", "🚨", "outage", "alert", "critical", "crash", "failure" };

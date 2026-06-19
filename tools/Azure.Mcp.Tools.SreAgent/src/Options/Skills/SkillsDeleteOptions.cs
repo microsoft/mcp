@@ -1,11 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Options;
+
 namespace Azure.Mcp.Tools.SreAgent.Options.Skills;
 
-public class SkillsDeleteOptions : BaseSreAgentOptions
+public sealed class SkillsDeleteOptions : BaseSreAgentOptions
 {
-    public string Name { get; set; } = string.Empty;
+    [Option(SreAgentOptionDefinitions.NameDescription)]
+    public required string Name { get; set; }
 
+    [Option(SreAgentOptionDefinitions.ConfirmDescription)]
     public bool Confirm { get; set; }
 }

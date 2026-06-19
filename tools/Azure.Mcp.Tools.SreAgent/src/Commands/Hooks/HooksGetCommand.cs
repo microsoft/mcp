@@ -35,11 +35,7 @@ public sealed class HooksGetCommand(ILogger<HooksGetCommand> logger, ISreAgentSe
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
             var hook = await _sreAgentService.GetHookAsync(endpoint, options.Name, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(hook), SreAgentJsonContext.Default.HooksGetCommandResult);

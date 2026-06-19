@@ -35,11 +35,7 @@ public sealed class IncidentsCreateCommand(ILogger<IncidentsCreateCommand> logge
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
             var user = Environment.GetEnvironmentVariable("USER") ?? Environment.GetEnvironmentVariable("USERNAME") ?? "mcp-user";
             var prompt = string.Join('\n', new[]

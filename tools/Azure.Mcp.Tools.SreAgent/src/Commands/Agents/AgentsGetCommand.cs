@@ -4,7 +4,7 @@
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
-using Azure.Mcp.Tools.SreAgent.Options.Agents;
+using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -24,12 +24,12 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Agents;
     Secret = false,
     LocalRequired = false)]
 public sealed class AgentsGetCommand(ILogger<AgentsGetCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<AgentsGetOptions, AgentsGetCommand.AgentsGetCommandResult>(subscriptionResolver)
+    : SubscriptionCommand<BaseSreAgentOptions, AgentsGetCommand.AgentsGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<AgentsGetCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AgentsGetOptions options, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseSreAgentOptions options, CancellationToken cancellationToken)
     {
         try
         {

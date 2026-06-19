@@ -35,11 +35,7 @@ public sealed class ConnectorsTestCommand(ILogger<ConnectorsTestCommand> logger,
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
 
             var result = await _sreAgentService.TestConnectorAsync(endpoint, options.Name, options.Tenant, cancellationToken);

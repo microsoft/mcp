@@ -35,11 +35,7 @@ public sealed class MemoriesReindexCommand(ILogger<MemoriesReindexCommand> logge
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
             await _sreAgentService.ReindexMemoriesAsync(endpoint, options.Tenant, cancellationToken);
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, "✅ Knowledge base reindex triggered. This may take a few minutes to complete.");

@@ -42,11 +42,7 @@ public sealed class IncidentsPlansCreateCommand(ILogger<IncidentsPlansCreateComm
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
             var planId = SreAgentPortedCommandHelpers.SanitizeKebabCase(options.Name);
             var filterId = planId;

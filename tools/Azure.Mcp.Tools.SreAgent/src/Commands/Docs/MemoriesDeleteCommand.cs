@@ -39,11 +39,7 @@ public sealed class MemoriesDeleteCommand(ILogger<MemoriesDeleteCommand> logger,
             }
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
 
             await _sreAgentService.DeleteMemoryAsync(endpoint, options.Name, options.Tenant, cancellationToken);

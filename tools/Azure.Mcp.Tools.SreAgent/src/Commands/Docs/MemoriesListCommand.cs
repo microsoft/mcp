@@ -35,11 +35,7 @@ public sealed class MemoriesListCommand(ILogger<MemoriesListCommand> logger, ISr
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
             var docs = await _sreAgentService.ListMemoriesAsync(endpoint, options.Tenant, cancellationToken);
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, Format(docs));

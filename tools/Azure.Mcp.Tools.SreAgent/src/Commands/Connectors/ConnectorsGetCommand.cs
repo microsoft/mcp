@@ -35,11 +35,7 @@ public sealed class ConnectorsGetCommand(ILogger<ConnectorsGetCommand> logger, I
         {
             var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(
                 _sreAgentService,
-                options.ResourceGroup,
-                options.Subscription!,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
 
             var connector = await _sreAgentService.GetConnectorAsync(

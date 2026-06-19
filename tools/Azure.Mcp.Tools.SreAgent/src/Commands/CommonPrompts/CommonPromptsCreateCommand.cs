@@ -35,11 +35,7 @@ public sealed class CommonPromptsCreateCommand(ILogger<CommonPromptsCreateComman
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
 
             await _sreAgentService.CreateOrUpdateCommonPromptAsync(

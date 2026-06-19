@@ -4,7 +4,7 @@
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
-using Azure.Mcp.Tools.SreAgent.Options.Connectors;
+using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -24,22 +24,18 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
     Secret = false,
     LocalRequired = false)]
 public sealed class ConnectorsListCommand(ILogger<ConnectorsListCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<ConnectorsListOptions, ConnectorsListCommand.ConnectorsListCommandResult>(subscriptionResolver)
+    : SubscriptionCommand<BaseSreAgentOptions, ConnectorsListCommand.ConnectorsListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ConnectorsListCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ConnectorsListOptions options, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseSreAgentOptions options, CancellationToken cancellationToken)
     {
         try
         {
             var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(
                 _sreAgentService,
-                options.ResourceGroup,
-                options.Subscription!,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
 
             var connectors = await _sreAgentService.ListConnectorsAsync(

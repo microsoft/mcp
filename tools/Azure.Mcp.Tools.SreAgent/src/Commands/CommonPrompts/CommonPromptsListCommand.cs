@@ -35,11 +35,7 @@ public sealed class CommonPromptsListCommand(ILogger<CommonPromptsListCommand> l
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
             var prompts = await _sreAgentService.ListCommonPromptsAsync(endpoint, options.Search, options.Tenant, cancellationToken);
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, Format(prompts, options.Search));

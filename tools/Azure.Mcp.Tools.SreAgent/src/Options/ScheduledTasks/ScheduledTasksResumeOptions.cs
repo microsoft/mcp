@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.SreAgent.Options.ScheduledTasks;
 
-public class ScheduledTasksResumeOptions : BaseSreAgentOptions
+public sealed class ScheduledTasksResumeOptions : BaseSreAgentOptions
 {
-    [JsonPropertyName("task-id")]
-    public string? TaskId { get; set; }
+    [Option(SreAgentOptionDefinitions.TaskIdDescription)]
+    public required string TaskId { get; set; }
 }

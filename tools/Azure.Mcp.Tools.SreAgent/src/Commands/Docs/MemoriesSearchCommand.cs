@@ -35,11 +35,7 @@ public sealed class MemoriesSearchCommand(ILogger<MemoriesSearchCommand> logger,
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
             var results = await _sreAgentService.SearchMemoriesAsync(endpoint, options.Query, 10, options.Tenant, cancellationToken);
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, Format(options.Query, results));

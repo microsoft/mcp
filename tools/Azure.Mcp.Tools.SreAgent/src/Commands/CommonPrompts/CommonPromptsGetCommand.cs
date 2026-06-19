@@ -35,11 +35,7 @@ public sealed class CommonPromptsGetCommand(ILogger<CommonPromptsGetCommand> log
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
 
             var prompt = await _sreAgentService.GetCommonPromptAsync(endpoint, options.Name, options.Tenant, cancellationToken);

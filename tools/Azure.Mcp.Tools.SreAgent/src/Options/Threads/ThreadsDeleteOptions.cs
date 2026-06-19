@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.SreAgent.Options.Threads;
 
-public class ThreadsDeleteOptions : BaseSreAgentOptions
+public sealed class ThreadsDeleteOptions : BaseSreAgentOptions
 {
-    [JsonPropertyName("thread-id")]
-    public string? ThreadId { get; set; }
+    [Option(SreAgentOptionDefinitions.ThreadIdDescription)]
+    public required string ThreadId { get; set; }
 
-    [JsonPropertyName("confirm")]
+    [Option(SreAgentOptionDefinitions.ConfirmDescription)]
     public bool Confirm { get; set; }
 }

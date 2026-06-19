@@ -35,11 +35,7 @@ public sealed class MemoriesAddCommand(ILogger<MemoriesAddCommand> logger, ISreA
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
 
             var safe = SreAgentPortedCommandHelpers.SanitizeFileName(options.Name);

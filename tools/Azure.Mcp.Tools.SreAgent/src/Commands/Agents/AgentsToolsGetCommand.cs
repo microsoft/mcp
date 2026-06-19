@@ -35,11 +35,7 @@ public sealed class AgentsToolsGetCommand(ILogger<AgentsToolsGetCommand> logger,
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
 
             var tool = await _sreAgentService.GetAgentToolAsync(endpoint, options.Name, options.Tenant, cancellationToken);

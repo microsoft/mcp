@@ -4,7 +4,7 @@
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
-using Azure.Mcp.Tools.SreAgent.Options.Hooks;
+using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -24,22 +24,18 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Hooks;
     Secret = false,
     LocalRequired = false)]
 public sealed class HooksListCommand(ILogger<HooksListCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<HooksListOptions, HooksListCommand.HooksListCommandResult>(subscriptionResolver)
+    : SubscriptionCommand<BaseSreAgentOptions, HooksListCommand.HooksListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<HooksListCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, HooksListOptions options, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseSreAgentOptions options, CancellationToken cancellationToken)
     {
         try
         {
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
             var hooks = await _sreAgentService.ListHooksAsync(endpoint, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(hooks), SreAgentJsonContext.Default.HooksListCommandResult);

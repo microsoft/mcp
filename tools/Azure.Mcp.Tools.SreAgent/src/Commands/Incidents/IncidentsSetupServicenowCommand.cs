@@ -78,11 +78,7 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
         {
             var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(
                 _sreAgentService,
-                options.ResourceGroup,
-                options.Subscription!,
-                options.Agent,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
             try
             {

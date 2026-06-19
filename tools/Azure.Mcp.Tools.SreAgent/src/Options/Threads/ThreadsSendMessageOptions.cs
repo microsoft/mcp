@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.SreAgent.Options.Threads;
 
-public class ThreadsSendMessageOptions : BaseSreAgentOptions
+public sealed class ThreadsSendMessageOptions : BaseSreAgentOptions
 {
-    [JsonPropertyName("thread-id")]
-    public string? ThreadId { get; set; }
+    [Option(SreAgentOptionDefinitions.ThreadIdDescription)]
+    public required string ThreadId { get; set; }
 
-    [JsonPropertyName("message")]
-    public string? Message { get; set; }
+    [Option(SreAgentOptionDefinitions.MessageDescription)]
+    public required string Message { get; set; }
 }

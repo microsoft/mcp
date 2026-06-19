@@ -1,21 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.SreAgent.Options.ScheduledTasks;
 
-public class ScheduledTasksCreateOptions : BaseSreAgentOptions
+public sealed class ScheduledTasksCreateOptions : BaseSreAgentOptions
 {
-    [JsonPropertyName("name")]
-    public string Name { get; set; } = string.Empty;
+    [Option(SreAgentOptionDefinitions.NameDescription)]
+    public required string Name { get; set; }
 
-    [JsonPropertyName("cron-expression")]
-    public string? CronExpression { get; set; }
+    [Option("The cron expression for the schedule.")]
+    public required string CronExpression { get; set; }
 
-    [JsonPropertyName("message")]
-    public string? Message { get; set; }
+    [Option(SreAgentOptionDefinitions.MessageDescription)]
+    public required string Message { get; set; }
 
-    [JsonPropertyName("description")]
+    [Option(SreAgentOptionDefinitions.DescriptionDescription)]
     public string? Description { get; set; }
 }
