@@ -64,7 +64,11 @@ Required setup steps:
  2. Register the project in solution files by running:
     `powershell eng/scripts/Update-Solutions.ps1 -Al`
 3. Register the new toolset in `servers/Azure.Mcp.Server/src/Program.cs` `RegisterAreas()` (alphabetical order)
-4. For the primary pattern, have commands inherit directly from `SubscriptionCommand<TOptions, TResult>` and inject `ISubscriptionResolver`. Only add a shared base command if you have real cross-command logic.
+ 4. Choose the appropriate base class:
+    - **Commands that need an Azure subscription** (most Azure service tools) → inherit from `SubscriptionCommand<TOptions, TResult>` and inject `ISubscriptionResolver`.
+    - **Commands that do NOT need a subscription** (CLI wrappers, documentation tools, best-practice advisors) → inherit from `BaseCommand<TOptions, TResult>` directly.
+ 
+    Only add a shared intermediate base command if you have real cross-command logic shared by multiple commands in the same toolset.
 5. Register both the service **and the command** as singletons in `{Toolset}Setup.cs` `ConfigureServices`:
    ```csharp
    public void ConfigureServices(IServiceCollection services)
