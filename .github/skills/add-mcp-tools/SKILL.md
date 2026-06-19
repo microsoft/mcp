@@ -473,7 +473,7 @@ Command group naming: concatenated lowercase or dash-separated. Never underscore
 - ✅ Good: `"entraadmin"`, `"resourcegroup"`, `"storageaccount"`, `"entra-admin"`
 - ❌ Bad: `"entra_admin"`, `"resource_group"`, `"storage_account"`
 
-Command hierarchy anti-patterns:
+Command hierarchy patterns and anti-patterns:
 - ✅ Good: `azmcp postgres server param set` (command groups: server → param, operation: set)
 - ❌ Bad: `azmcp postgres server setparam` (mixed operation `setparam` at same level)
 - ✅ Good: `azmcp storage blob upload permission set`
