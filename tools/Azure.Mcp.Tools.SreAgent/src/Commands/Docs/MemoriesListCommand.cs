@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options.Docs;
 using Azure.Mcp.Tools.SreAgent.Services;
@@ -10,24 +12,43 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
 
-[CommandMetadata(Id = "387de9fa-0d29-4b44-b43c-c7d328a751d4", Name = "memories_list", Title = "List Memories", Description = "Retrieve a complete list of all indexed knowledge base documents stored in an SRE Agent's memory. Returns all document names and metadata without any search filter or query. Use this to browse everything in the knowledge base before searching.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
-public sealed class MemoriesListCommand(ILogger<MemoriesListCommand> logger, ISreAgentService sreAgentService) : SreAgentDataPlaneCommand<MemoryRemoteOptions>
+[CommandMetadata(
+    Id = "387de9fa-0d29-4b44-b43c-c7d328a751d4",
+    Name = "memories_list",
+    Title = "List Memories",
+    Description = "Retrieve a complete list of all indexed knowledge base documents stored in an SRE Agent's memory. Returns all document names and metadata without any search filter or query. Use this to browse everything in the knowledge base before searching.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class MemoriesListCommand(ILogger<MemoriesListCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<MemoryRemoteOptions, SreAgentTextResult>(subscriptionResolver)
 {
     private readonly ILogger<MemoriesListCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, MemoryRemoteOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            return context.Response;
-        var o = BindOptions(parseResult);
         try
         {
-            var endpoint = await ResolveEndpointAsync(_sreAgentService, o, cancellationToken);
-            var docs = await _sreAgentService.ListMemoriesAsync(endpoint, o.Tenant, cancellationToken);
+            var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
+                _sreAgentService,
+                options.Subscription!,
+                options.ResourceGroup,
+                options.Agent,
+                options.Tenant,
+                options.RetryPolicy,
+                cancellationToken);
+            var docs = await _sreAgentService.ListMemoriesAsync(endpoint, options.Tenant, cancellationToken);
             SreAgentPortedCommandHelpers.SetTextResult(context.Response, Format(docs));
         }
-        catch (Exception ex) { _logger.LogError(ex, "Error listing memories"); HandleException(context, ex); }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error listing memories");
+            HandleException(context, ex);
+        }
         return context.Response;
     }
 

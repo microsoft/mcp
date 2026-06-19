@@ -1,16 +1,50 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
+
 namespace Azure.Mcp.Tools.SreAgent.Options.Incidents;
 
-public class IncidentPlanCreateOptions : BaseSreAgentOptions
+public sealed class IncidentPlanCreateOptions : ISubscriptionOption
 {
-    public string Name { get; set; } = string.Empty;
-    public string? Severity { get; set; }
-    public string? TriggerCondition { get; set; }
-    public string[]? Services { get; set; }
-    public string[]? Steps { get; set; }
+    [Option(SreAgentOptionDefinitions.AgentDescription)]
+    public required string Agent { get; set; }
+
+    [Option(SreAgentOptionDefinitions.NameDescription)]
+    public required string Name { get; set; }
+
+    [Option(SreAgentOptionDefinitions.SeverityDescription)]
+    public required string Severity { get; set; }
+
+    [Option("Text that triggers the incident response plan.")]
+    public required string TriggerCondition { get; set; }
+
+    [Option(SreAgentOptionDefinitions.ServicesDescription)]
+    public required string[] Services { get; set; }
+
+    [Option("Incident response steps.")]
+    public required string[] Steps { get; set; }
+
+    [Option("Escalation procedure.")]
     public string? Escalation { get; set; }
+
+    [Option("Runbook URL.")]
     public string? RunbookUrl { get; set; }
+
+    [Option("Agent mode: autonomous or review.")]
     public string? AgentMode { get; set; }
+
+    [Option(OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(OptionDescriptions.ResourceGroup)]
+    public string? ResourceGroup { get; set; }
+
+    [Option(Name = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
+
 }

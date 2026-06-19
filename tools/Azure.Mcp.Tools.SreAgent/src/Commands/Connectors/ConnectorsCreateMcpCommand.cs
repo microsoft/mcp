@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Options.Connectors;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
 
@@ -24,69 +24,37 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
     ReadOnly = false,
     Secret = true,
     LocalRequired = false)]
-public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpCommand> logger, ISreAgentService sreAgentService)
-    : BaseSreAgentCommand<ConnectorsCreateMcpOptions>
+public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ConnectorsCreateMcpOptions, ConnectorsCreateMcpCommand.ConnectorsCreateMcpCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ConnectorsCreateMcpCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(ConnectorsCreateMcpOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SreAgentOptionDefinitions.Agent.AsRequired());
-        command.Options.Add(SreAgentOptionDefinitions.Name.AsRequired());
-        command.Options.Add(SreAgentOptionDefinitions.Type.AsRequired());
-        command.Options.Add(SreAgentOptionDefinitions.Command);
-        command.Options.Add(SreAgentOptionDefinitions.Args);
-        command.Options.Add(SreAgentOptionDefinitions.EnvsJson);
-        command.Options.Add(SreAgentOptionDefinitions.Endpoint);
-        command.Options.Add(SreAgentOptionDefinitions.AuthType);
-        command.Options.Add(SreAgentOptionDefinitions.BearerTokenEnv);
-        command.Options.Add(SreAgentOptionDefinitions.HeadersJson);
-    }
+        base.ValidateOptions(options, validationResult);
 
-    protected override ConnectorsCreateMcpOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
-        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
-        options.Type = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Type);
-        options.Command = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Command);
-        options.Args = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Args);
-        options.EnvsJson = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.EnvsJson);
-        options.Endpoint = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Endpoint);
-        options.AuthType = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.AuthType);
-        options.BearerTokenEnv = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.BearerTokenEnv);
-        options.HeadersJson = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.HeadersJson);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        if (!string.Equals(options.Type, "stdio", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(options.Type, "http", StringComparison.OrdinalIgnoreCase))
         {
-            return context.Response;
+            validationResult.Errors.Add("The --type option must be 'stdio' or 'http'.");
         }
 
-        var options = BindOptions(parseResult);
+        if (string.Equals(options.Type, "stdio", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(options.Command))
+        {
+            validationResult.Errors.Add("The --command option is required for stdio MCP connectors.");
+        }
+
+        if (string.Equals(options.Type, "http", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(options.Endpoint))
+        {
+            validationResult.Errors.Add("The --endpoint option is required for http MCP connectors.");
+        }
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ConnectorsCreateMcpOptions options, CancellationToken cancellationToken)
+    {
         try
         {
-            if (!string.Equals(options.Type, "stdio", StringComparison.OrdinalIgnoreCase) &&
-                !string.Equals(options.Type, "http", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException("The --type option must be 'stdio' or 'http'.");
-            }
-
-            if (string.Equals(options.Type, "stdio", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(options.Command))
-            {
-                throw new ArgumentException("The --command option is required for stdio MCP connectors.");
-            }
-
-            if (string.Equals(options.Type, "http", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(options.Endpoint))
-            {
-                throw new ArgumentException("The --endpoint option is required for http MCP connectors.");
-            }
-
             var extendedProperties = new Dictionary<string, object> { ["type"] = options.Type! };
             if (string.Equals(options.Type, "stdio", StringComparison.OrdinalIgnoreCase))
             {
@@ -140,9 +108,25 @@ public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpComman
                 }
             };
 
-            var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(_sreAgentService, options, cancellationToken);
-            var created = await _sreAgentService.CreateOrUpdateConnectorAsync(options.Subscription!, resourceGroup, options.Agent!, options.Name, connector, options.Tenant, cancellationToken);
-            context.Response.Results = ResponseResult.Create(new ConnectorsCreateMcpCommandResult(created), SreAgentJsonContext.Default.ConnectorsCreateMcpCommandResult);
+            var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(
+                _sreAgentService,
+                options.ResourceGroup,
+                options.Subscription!,
+                options.Agent,
+                options.Tenant,
+                options.RetryPolicy,
+                cancellationToken);
+
+            var created = await _sreAgentService.CreateOrUpdateConnectorAsync(
+                options.Subscription!,
+                resourceGroup,
+                options.Agent,
+                options.Name,
+                connector,
+                options.Tenant,
+                cancellationToken);
+
+            context.Response.Results = ResponseResult.Create(new(created), SreAgentJsonContext.Default.ConnectorsCreateMcpCommandResult);
         }
         catch (Exception ex)
         {
@@ -153,6 +137,6 @@ public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpComman
         return context.Response;
     }
 
-    internal record ConnectorsCreateMcpCommandResult(AgentConnector Connector);
+    public sealed record ConnectorsCreateMcpCommandResult(AgentConnector Connector);
 }
 

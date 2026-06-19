@@ -67,23 +67,23 @@ internal static class SreAgentCommandHelpers
     /// </summary>
     public static async Task<string> ResolveAgentResourceGroupAsync(
         ISreAgentService sreAgentService,
-        BaseSreAgentOptions options,
+        string? resourceGroup,
+        string subscription,
+        string agent,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentException.ThrowIfNullOrWhiteSpace(options.Subscription);
-        ArgumentException.ThrowIfNullOrWhiteSpace(options.Agent);
-
-        if (!string.IsNullOrWhiteSpace(options.ResourceGroup))
+        if (!string.IsNullOrWhiteSpace(resourceGroup))
         {
-            return options.ResourceGroup!;
+            return resourceGroup!;
         }
 
         return await sreAgentService.ResolveAgentResourceGroupAsync(
-            options.Subscription!,
-            options.Agent!,
-            options.Tenant,
-            options.RetryPolicy,
+            subscription,
+            agent,
+            tenant,
+            retryPolicy,
             cancellationToken);
     }
 
