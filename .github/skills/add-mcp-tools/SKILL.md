@@ -61,7 +61,8 @@ tools/Azure.Mcp.Tools.{Toolset}/
 Required setup steps:
 
 1. Add package version to `Directory.Packages.props` (if Azure SDK needed)
-2. Add project to `Microsoft.Mcp.slnx` and `Azure.Mcp.Server.slnx`
+ 2. Register the project in solution files by running:
+    `powershell eng/scripts/Update-Solutions.ps1 -Al`
 3. Register the new toolset in `servers/Azure.Mcp.Server/src/Program.cs` `RegisterAreas()` (alphabetical order)
 4. For the primary pattern, have commands inherit directly from `SubscriptionCommand<TOptions, TResult>` and inject `ISubscriptionResolver`. Only add a shared base command if you have real cross-command logic.
 5. Register both the service **and the command** as singletons in `{Toolset}Setup.cs` `ConfigureServices`:
