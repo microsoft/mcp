@@ -398,7 +398,6 @@ public abstract class Base{Toolset}Command<
     }
 }
 ```
-```
 
 ### 1e. JSON Serialization Context
 
