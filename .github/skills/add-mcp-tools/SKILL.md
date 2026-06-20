@@ -125,7 +125,8 @@ Rules:
 - Use `resourceGroup` (never `resourceGroupName`)
 - Use singular nouns for resources (`server` not `serverName`)
 - Remove unnecessary `name` suffixes (`Account` / `--account` not `AccountName` / `--account-name`)
-- Nullability determines required/optional: `string?` = optional, `required string` = required
+- Nullability determines required/optional for reference types: `string?` = optional, `required string` = required
+- Non-nullable value types (e.g., `public int Count { get; set; }`) are always valid without `required` — they default to `0`. Use `required` if the caller must explicitly provide a value, or use `int?` if the parameter should be truly optional.
 - Order: command-specific options first, then `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`, `RetryPolicy`
 - Keep parameter names consistent with Azure SDK parameters when possible
 
