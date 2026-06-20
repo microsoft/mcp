@@ -83,6 +83,6 @@
   <ItemGroup>
     <None Include="..\docs\azmcp-commands.md" />
     <None Include="..\docs\e2eTestPrompts.md" />
-    <None Include="..\..\..\.github\skills\add-mcp-tools\SKILL.md" />
+    <None Include="..\..\..\.github\skills\add-azure-mcp-tools\SKILL.md" />
   </ItemGroup>
 </Project>

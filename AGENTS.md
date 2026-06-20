@@ -119,7 +119,7 @@ Microsoft MCP (Model Context Protocol) servers provide AI agents with structured
 - `servers/Azure.Mcp.Server/` - Main Azure MCP server implementation
 - `tools/Azure.Mcp.Tools.{Service}/` - Individual service toolsets (Storage, SQL, etc.)
 - `eng/scripts/` - Build, test, and deployment PowerShell scripts
-- `.github/skills/add-mcp-tools/SKILL.md` - Implementation guide for new commands
+- `.github/skills/add-azure-mcp-tools/SKILL.md` - Implementation guide for new commands
 - `CONTRIBUTING.md` - Contribution guidelines and workflows
 
 ### Good examples to follow
@@ -167,7 +167,7 @@ dotnet build
 
 ## API Docs and References
 - API documentation: `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` - Complete command reference
-- Implementation guide: `/.github/skills/add-mcp-tools/SKILL.md` - Step-by-step command creation
+- Implementation guide: `/.github/skills/add-azure-mcp-tools/SKILL.md` - Step-by-step command creation
 - Test prompts: `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` - Example prompts for testing
 - Recorded tests: `/docs/recorded-tests.md` - Guide for converting live tests to recorded (playback) tests
 - Contributing guide: `/CONTRIBUTING.md` - Development workflow and standards
@@ -177,8 +177,8 @@ dotnet build
 - Ask clarifying questions about Azure service requirements or command patterns
 - Propose a short plan before implementing complex features
 - Reference existing commands in similar services as templates
-- Check `/.github/skills/add-mcp-tools/SKILL.md` for implementation patterns
-- Use GitHub Copilot Chat with `"create [service] [resource] [operation] command using /skills/add-mcp-tools as a reference"`
+- Check `/.github/skills/add-azure-mcp-tools/SKILL.md` for implementation patterns
+- Use GitHub Copilot Chat with `"create [service] [resource] [operation] command using /skills/add-azure-mcp-tools as a reference"`
 
 ## PR Checklist
 - Format and type check: `dotnet format && dotnet build` - all green
@@ -500,7 +500,7 @@ context.Response.Results = ResponseResult.Create(new(results), StorageJsonContex
 ### Development Process
 1. **Create issue**: "Add command: azmcp [service] [resource] [operation]"
 2. **Use Copilot for generation**: Execute in Copilot Chat: `"create [service] [resource] [operation] command using /skills as a reference"`
-3. **Follow implementation guidelines** in `/.github/skills/add-mcp-tools/SKILL.md`
+3. **Follow implementation guidelines** in `/.github/skills/add-azure-mcp-tools/SKILL.md`
 4. **Create live test infrastructure** (if Azure service): Bicep template and post-deployment script
 5. **Submit one tool per pull request** for faster review cycles
 
@@ -748,4 +748,4 @@ The server includes comprehensive telemetry integration with proper tag propagat
 
 ---
 
-This documentation provides AI agents with comprehensive guidance for working effectively with the Microsoft MCP codebase. For additional details, see `/.github/skills/add-mcp-tools/SKILL.md` for implementation specifics and `CONTRIBUTING.md` for contribution workflows.
+This documentation provides AI agents with comprehensive guidance for working effectively with the Microsoft MCP codebase. For additional details, see `/.github/skills/add-azure-mcp-tools/SKILL.md` for implementation specifics and `CONTRIBUTING.md` for contribution workflows.

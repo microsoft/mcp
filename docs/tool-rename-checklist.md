@@ -2,7 +2,7 @@
 
 This document defines the steps required when renaming an existing MCP tool (i.e., changing the value returned by a command's `Name` property or its parent group name). Tool names form part of the MCP protocol surface, they are how AI agents discover and invoke capabilities, so renames are **breaking changes** and must be handled carefully.
 
-> **Note:** If you are adding a *new* tool rather than renaming an existing one, follow [`.github/skills/add-mcp-tools/SKILL.md`](https://github.com/microsoft/mcp/blob/main/.github/skills/add-mcp-tools/SKILL.md) instead.
+> **Note:** If you are adding a *new* tool rather than renaming an existing one, follow [`.github/skills/add-azure-mcp-tools/SKILL.md`](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md) instead.
 
 ## What counts as a tool rename?
 
@@ -93,4 +93,4 @@ MCP clients including AI agents, IDE extensions, and automation scripts referenc
 - Users who have configured explicit tool allow-lists by name must update their configuration.
 - Recorded sessions keyed on the old name will fail playback until re-recorded.
 
-For these reasons, **avoid renames unless necessary**. If the existing name is genuinely misleading or inconsistent with the naming conventions in [`.github/skills/add-mcp-tools/SKILL.md`](https://github.com/microsoft/mcp/blob/main/.github/skills/add-mcp-tools/SKILL.md), prefer doing the rename as part of a larger breaking-change release batch rather than as a standalone PR.
+For these reasons, **avoid renames unless necessary**. If the existing name is genuinely misleading or inconsistent with the naming conventions in [`.github/skills/add-azure-mcp-tools/SKILL.md`](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md), prefer doing the rename as part of a larger breaking-change release batch rather than as a standalone PR.

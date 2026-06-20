@@ -162,10 +162,10 @@ Do not assume the Pull Request pipeline will always ingest a missing package aut
 
    ```txt
    Execute in Copilot Chat:
-   "create [namespace] [resource] [operation] command using /skills/add-mcp-tools as a reference"
+   "create [namespace] [resource] [operation] command using /skills/add-azure-mcp-tools as a reference"
    ```
 
-4. **Follow implementation guidelines** in [.github/skills/add-mcp-tools/SKILL.md](https://github.com/microsoft/mcp/blob/main/.github/skills/add-mcp-tools/SKILL.md)
+4. **Follow implementation guidelines** in [.github/skills/add-azure-mcp-tools/SKILL.md](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md)
 
 5. **Update documentation**:
    - Add the new command to [/servers/Azure.Mcp.Server/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
@@ -866,7 +866,7 @@ We're building this in the open.  Your feedback is much appreciated, and will he
 ### Additional Resources
 
 - [Azure MCP Documentation](https://github.com/microsoft/mcp/blob/main/README.md)
-- [Command Implementation Guide](https://github.com/microsoft/mcp/blob/main/.github/skills/add-mcp-tools/SKILL.md)
+- [Command Implementation Guide](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md)
 - [VS Code Insiders Download](https://code.visualstudio.com/insiders/)
 - [GitHub Copilot Documentation](https://docs.github.com/en/copilot)
 
