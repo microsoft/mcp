@@ -26,8 +26,6 @@ jobs:
       version: '24.x'
 
   - template: /eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml
-    parameters:
-      npmrcPath: $(Agent.TempDirectory)/live_test/.npmrc
 
   - pwsh: |
       $serverName = $env:SERVERNAME
@@ -42,8 +40,6 @@ jobs:
       exit $LastExitCode
     displayName: "Build local package"
     workingDirectory: $(Build.SourcesDirectory)
-    env:
-      npm_config_userconfig: "$(Agent.TempDirectory)/live_test/.npmrc"
 
   - pwsh: >
       ./eng/scripts/Test-Code.ps1

@@ -6,10 +6,6 @@ parameters:
   default: $(Build.SourcesDirectory)
 
 steps:
-  - template: /eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml
-    parameters:
-      npmrcPath: $(Agent.TempDirectory)/analyze_aot_compact/.npmrc
-
   - task: PowerShell@2
     displayName: "Run AOT Compatibility Analysis"
     inputs:
@@ -20,8 +16,6 @@ steps:
         -OutputFormat Console
       workingDirectory: ${{ parameters.sourceDirectory }}
     continueOnError: true
-    env:
-      npm_config_userconfig: "$(Agent.TempDirectory)/analyze_aot_compact/.npmrc"  
 
   - task: PowerShell@2
     displayName: "Check if AOT report exists and publish artifact"

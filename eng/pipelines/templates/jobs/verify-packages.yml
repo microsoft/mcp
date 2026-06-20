@@ -42,8 +42,6 @@ jobs:
       version: '24.x'
 
   - template: /eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml
-    parameters:
-      npmrcPath: $(Agent.TempDirectory)/verify_packages/.npmrc
 
   - task: Powershell@2
     displayName: "Verify packages/images and run smoke tests"
@@ -55,6 +53,4 @@ jobs:
         -ArtifactsDirectory $(Pipeline.Workspace)
         -TargetOs ${{ parameters.OSName }}
         -TargetArch $(Architecture)
-        -TestDocker:$${{ parameters.PackageDocker }}
-    env:
-      npm_config_userconfig: "$(Agent.TempDirectory)/verify_packages/.npmrc"  
+        -TestDocker:$${{ parameters.PackageDocker }} 
