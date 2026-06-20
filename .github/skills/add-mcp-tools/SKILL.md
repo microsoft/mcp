@@ -697,9 +697,6 @@ public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fi
  dotnet test tools\Azure.Mcp.Tools.{Toolset}\tests\Azure.Mcp.Tools.{Toolset}.Tests `
    --filter "FullyQualifiedName~{Resource}{Operation}"
 
-dotnet test tools\Azure.Mcp.Tools.{Toolset}\tests\Azure.Mcp.Tools.{Toolset}.Tests `
-  --filter "FullyQualifiedName~{Resource}{Operation}"
-
 # Push recordings
 .proxy\Azure.Sdk.Tools.TestProxy push `
   -a tools\Azure.Mcp.Tools.{Toolset}\tests\Azure.Mcp.Tools.{Toolset}.Tests\assets.json
