@@ -129,7 +129,8 @@ Rules:
 - Order: command-specific options first, then `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`, `RetryPolicy`
 - Keep parameter names consistent with Azure SDK parameters when possible
 
-> **Note:** In the new pattern, a static `{Toolset}OptionDefinitions` class is **not required** for simple option declaration. Options are defined via attributes. However, you may still create one for reusable `Option<T>` instances used in custom validators (see Legacy Pattern appendix for details).
+ > **Note:** Options are defined entirely via `[Option]` attributes.
+ > A static `{Toolset}OptionDefinitions` class is not needed
 
 ### 1c. Service Interface and Implementation
 
