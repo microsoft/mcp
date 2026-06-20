@@ -689,7 +689,13 @@ public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fi
 ### 3c. Record and Verify
 
 ```powershell
-# Record
+ # Deploy test resources (provisions infra + generates .testsettings.json)
+ eng/common/TestResources/New-TestResources.ps1 `
+   -TestResourcesDirectory tools/Azure.Mcp.Tools.{Toolset}
+ 
+ # Record tests
+ dotnet test tools\Azure.Mcp.Tools.{Toolset}\tests\Azure.Mcp.Tools.{Toolset}.Tests `
+   --filter "FullyQualifiedName~{Resource}{Operation}"
                ResourceGroupName = "<rg>"; ResourceBaseName = "<base>" } | ConvertTo-Json
 $settings | Set-Content "tools\Azure.Mcp.Tools.{Toolset}\tests\Azure.Mcp.Tools.{Toolset}.Tests\.testsettings.json"
 
