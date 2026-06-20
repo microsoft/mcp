@@ -246,8 +246,6 @@ Sovereign cloud rules:
 public class MyService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IMyService
 {
-    private readonly ITenantService _tenantService = tenantService
-        ?? throw new ArgumentNullException(nameof(tenantService));
 
     private async Task<MyDataPlaneClient> CreateDataPlaneClientAsync(
         string resourceName,
