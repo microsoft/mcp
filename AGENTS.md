@@ -178,7 +178,7 @@ dotnet build
 - Propose a short plan before implementing complex features
 - Reference existing commands in similar services as templates
 - Check `/.github/skills/add-mcp-tools/SKILL.md` for implementation patterns
-- Use GitHub Copilot Chat with `"create [service] [resource] [operation] command using /skills as a reference"`
+- Use GitHub Copilot Chat with `"create [service] [resource] [operation] command using /skills/add-mcp-tools as a reference"`
 
 ## PR Checklist
 - Format and type check: `dotnet format && dotnet build` - all green
