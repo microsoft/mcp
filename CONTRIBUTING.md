@@ -162,7 +162,7 @@ Do not assume the Pull Request pipeline will always ingest a missing package aut
 
    ```txt
    Execute in Copilot Chat:
-   "create [namespace] [resource] [operation] command using /skills as a reference"
+   "create [namespace] [resource] [operation] command using /skills/add-mcp-tools as a reference"
    ```
 
 4. **Follow implementation guidelines** in [.github/skills/add-mcp-tools/SKILL.md](https://github.com/microsoft/mcp/blob/main/.github/skills/add-mcp-tools/SKILL.md)
