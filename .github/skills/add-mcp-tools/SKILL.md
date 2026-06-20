@@ -172,7 +172,6 @@ Choose base class:
  > `BaseAzureResourceService` extends `BaseAzureService` — neither is
  > inherently read-only or write-only. The distinction is whether you
  > need ARG querying functionality.
-- **Write operations (ARM):** inherit `BaseAzureService`
 
 ```csharp
 public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantService tenantService)
