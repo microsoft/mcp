@@ -418,7 +418,7 @@ internal partial class {Toolset}JsonContext : JsonSerializerContext;
 Guidelines:
 - Only include types actually serialized as top-level result payloads
 - Keep `[JsonSerializable]` attributes sorted by `typeof` model name
-- Use one context per toolset (preferred) unless size forces logical grouping
+- Use one context per toolset always
 - Filename must match class name (`{Toolset}JsonContext.cs`)
 - Use `{Toolset}JsonContext.Default.{CommandResult}` when serializing — never `JsonSerializer.Deserialize<T>()` without a context
 
