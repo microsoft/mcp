@@ -689,7 +689,17 @@ public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fi
 ### 3c. Record and Verify
 
 ```powershell
- # Deploy test resources (provisions infra + generates .testsettings.json)
+# Create assets.json
+
+Create `assets.json` if it doesn't exist:
+
+```json
+{
+  "AssetsRepo": "Azure/azure-sdk-assets",
+  "AssetsRepoPrefixPath": "",
+  "TagPrefix": "Azure.Mcp.Tools.{Toolset}.Tests",
+  "Tag": ""
+}
  eng/common/TestResources/New-TestResources.ps1 `
    -TestResourcesDirectory tools/Azure.Mcp.Tools.{Toolset}
  
