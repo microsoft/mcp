@@ -692,8 +692,7 @@ public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fi
 
 ### 3c. Record and Verify
 
-```powershell
-# Create assets.json
+ #### Create assets.json
 
 Create `assets.json` if it doesn't exist:
 
@@ -704,32 +703,28 @@ Create `assets.json` if it doesn't exist:
   "TagPrefix": "Azure.Mcp.Tools.{Toolset}.Tests",
   "Tag": ""
 }
+```
 
-# Deploy
- eng/common/TestResources/New-TestResources.ps1 `
+ #### Deploy
+ ```powershell
+eng/common/TestResources/New-TestResources.ps1 `
    -TestResourcesDirectory tools/Azure.Mcp.Tools.{Toolset}
- 
- # Record tests
+ ```
+
+ #### Record tests
+ ```powershell
  dotnet test tools\Azure.Mcp.Tools.{Toolset}\tests\Azure.Mcp.Tools.{Toolset}.Tests `
    --filter "FullyQualifiedName~{Resource}{Operation}"
+```
 
-# Push recordings
+ #### Push recordings
+ ```powershell
 .proxy\Azure.Sdk.Tools.TestProxy push `
   -a tools\Azure.Mcp.Tools.{Toolset}\tests\Azure.Mcp.Tools.{Toolset}.Tests\assets.json
-
-# Verify playback
-# Change TestMode to "Playback" in .testsettings.json, then re-run tests
 ```
 
-Create `assets.json` if it doesn't exist:
-```json
-{
-  "AssetsRepo": "Azure/azure-sdk-assets",
-  "AssetsRepoPrefixPath": "",
-  "TagPrefix": "Azure.Mcp.Tools.{Toolset}.Tests",
-  "Tag": ""
-}
-```
+ #### Verify playback
+Change TestMode to "Playback" in .testsettings.json, then re-run tests
 
 ### 3c-1. Recorded Test Pitfalls
 
