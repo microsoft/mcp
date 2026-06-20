@@ -592,7 +592,11 @@ public class {Resource}{Operation}CommandTests
 }
 ```
 
-**Critical: Use `SubscriptionCommandUnitTestsBase`** — not `CommandUnitTestsBase`. Without it, DI will fail with "Unable to resolve service for type `ISubscriptionResolver`".
+**Critical: Choose the correct test base class:**
+ - Commands extending `SubscriptionCommand` → use `SubscriptionCommandUnitTestsBase<TCommand, TService>`
+ - Commands extending `BaseCommand` directly (no subscription) → use `CommandUnitTestsBase<TCommand, TService>`
+ 
+ Using the wrong base class will cause DI failures.
 
 **Prefer string args over constructing options directly.** Using `ExecuteCommandAsync("--account", ...)` tests the full pipeline: `[Option]` attribute registration, `OptionBinder` parsing, and `SubscriptionResolver` post-processing.
 
