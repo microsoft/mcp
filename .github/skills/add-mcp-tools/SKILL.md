@@ -278,7 +278,7 @@ public class MyService(ISubscriptionService subscriptionService, ITenantService 
 }
 ```
 
-Anti-patterns:
+Patterns and anti-patterns:
 ```csharp
 // ❌ Hardcoded public-cloud endpoint
 var client = new BlobServiceClient(new($"https://{account}.blob.core.windows.net"), credential, options);
