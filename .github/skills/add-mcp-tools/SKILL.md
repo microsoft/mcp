@@ -266,7 +266,7 @@ public class MyService(ISubscriptionService subscriptionService, ITenantService 
 
     private string GetResourceEndpoint(string resourceName)
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return TenantService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
                 $"https://{resourceName}.service.core.windows.net",
