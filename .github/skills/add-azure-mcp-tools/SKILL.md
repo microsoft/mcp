@@ -1,5 +1,5 @@
 ---
-name: add-mcp-tools
+name: add-azure-mcp-tools
 description: 'Add a new tool/command to any Azure MCP toolset. Full lifecycle from scaffolding through PR submission. USE WHEN: add new command, create tool, new MCP tool, scaffold command, implement operation, add azure service tool, create new toolset.'
 argument-hint: 'Describe the new tool (e.g., "add storage container delete command" or "create new KeyVault toolset with secret get command")'
 ---
