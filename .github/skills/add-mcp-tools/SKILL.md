@@ -704,6 +704,8 @@ Create `assets.json` if it doesn't exist:
   "TagPrefix": "Azure.Mcp.Tools.{Toolset}.Tests",
   "Tag": ""
 }
+
+# Deploy
  eng/common/TestResources/New-TestResources.ps1 `
    -TestResourcesDirectory tools/Azure.Mcp.Tools.{Toolset}
  
