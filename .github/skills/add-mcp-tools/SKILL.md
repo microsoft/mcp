@@ -238,7 +238,7 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
 
 Sovereign cloud rules:
 - ARM/Resource Graph operations: cloud-aware automatically, no extra work
-- Data plane endpoints: use `_tenantService.CloudConfiguration.CloudType` switch — never hardcode URLs
+- Data plane endpoints: use `TenantService.CloudConfiguration.CloudType` switch — never hardcode URLs
 
 **Data plane endpoint pattern** (required for services like Storage, Cosmos, Search):
 
