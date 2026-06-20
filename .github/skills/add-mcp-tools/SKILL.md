@@ -690,7 +690,6 @@ public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fi
 
 ```powershell
 # Record
-$settings = @{ TestMode = "Record"; SubscriptionId = "<sub>"; TenantId = "<tenant>";
                ResourceGroupName = "<rg>"; ResourceBaseName = "<base>" } | ConvertTo-Json
 $settings | Set-Content "tools\Azure.Mcp.Tools.{Toolset}\tests\Azure.Mcp.Tools.{Toolset}.Tests\.testsettings.json"
 
