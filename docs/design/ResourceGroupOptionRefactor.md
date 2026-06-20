@@ -66,7 +66,7 @@ Implemented:
 
 Pending / Follow‑ups (if desired):
 * Ensure every remaining command uses `UseResourceGroup()` / `RequireResourceGroup()` instead of direct `command.Options.Add(_resourceGroupOption)`.
-* Update `docs/new-command.md` to reference helpers (remove any legacy guidance).
+* Update `.github/skills/add-mcp-tools/SKILL.md` to reference helpers (remove any legacy guidance).
 * Add / adjust tests:
   - Required command without RG -> 400 + standard message.
   - Optional command without RG -> succeeds (or broader listing) and does not parse-fail.
