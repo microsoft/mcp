@@ -166,7 +166,12 @@ public interface I{Toolset}Service
 File: `src/Services/{Toolset}Service.cs`
 
 Choose base class:
-- **Read operations (Resource Graph):** inherit `BaseAzureResourceService`
+ - **Operations that need Resource Graph (ARG) queries:** inherit `BaseAzureResourceService`
+ - **All other operations (ARM, data plane):** inherit `BaseAzureService`
+ 
+ > `BaseAzureResourceService` extends `BaseAzureService` — neither is
+ > inherently read-only or write-only. The distinction is whether you
+ > need ARG querying functionality.
 - **Write operations (ARM):** inherit `BaseAzureService`
 
 ```csharp
