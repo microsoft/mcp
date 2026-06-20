@@ -696,7 +696,6 @@ public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fi
  # Record tests
  dotnet test tools\Azure.Mcp.Tools.{Toolset}\tests\Azure.Mcp.Tools.{Toolset}.Tests `
    --filter "FullyQualifiedName~{Resource}{Operation}"
-               ResourceGroupName = "<rg>"; ResourceBaseName = "<base>" } | ConvertTo-Json
 $settings | Set-Content "tools\Azure.Mcp.Tools.{Toolset}\tests\Azure.Mcp.Tools.{Toolset}.Tests\.testsettings.json"
 
 dotnet test tools\Azure.Mcp.Tools.{Toolset}\tests\Azure.Mcp.Tools.{Toolset}.Tests `
