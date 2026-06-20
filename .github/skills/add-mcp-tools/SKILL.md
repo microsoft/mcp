@@ -793,6 +793,8 @@ The test `.csproj` **must** have these specific settings or tests will fail with
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <OutputType>Exe</OutputType>
+    <HasLiveTests>true</HasLiveTests>
+    <HasUnitTests>true</HasUnitTests>
   </PropertyGroup>
 
   <ItemGroup>
