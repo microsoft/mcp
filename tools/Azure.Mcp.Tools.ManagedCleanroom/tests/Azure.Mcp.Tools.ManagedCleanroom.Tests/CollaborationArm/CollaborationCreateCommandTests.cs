@@ -23,6 +23,8 @@ public sealed class CollaborationCreateCommandTests
     private const string TestLocation = "eastus";
     private const string TestResourceGroup = "my-rg";
     private const string TestSubscription = "test-sub";
+    private static readonly JsonElement AcceptedResult = JsonDocument.Parse(
+        """{"name":"my-collab","resourceGroup":"my-rg","subscription":"test-sub","location":"eastus","resourceLocation":"eastus","provisioningState":"Accepted","collaborators":[]}""").RootElement;
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -47,7 +49,7 @@ public sealed class CollaborationCreateCommandTests
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
                 Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<string?>(),
                 Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-                .Returns(new CollaborationCreateResult(default, string.Empty));
+                .Returns(new CollaborationCreateResult(AcceptedResult, string.Empty));
         }
 
         var response = await ExecuteCommandAsync(args);
@@ -85,7 +87,7 @@ public sealed class CollaborationCreateCommandTests
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<string?>(),
             Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(new CollaborationCreateResult(default, "Collaboration 'my-collab' creation request accepted. Provisioning is running in the background and typically takes ~25 minutes to complete."));
+            .Returns(new CollaborationCreateResult(AcceptedResult, "Collaboration 'my-collab' creation request accepted. Provisioning is running in the background and typically takes ~25 minutes to complete."));
 
         var response = await ExecuteCommandAsync(
             "--name", TestName, "--location", TestLocation,
@@ -93,6 +95,9 @@ public sealed class CollaborationCreateCommandTests
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Contains("accepted", response.Message, StringComparison.OrdinalIgnoreCase);
+        var result = ValidateAndDeserializeResponse(response, ManagedCleanroomJsonContext.Default.JsonElement);
+        Assert.Equal(JsonValueKind.Object, result.ValueKind);
+        Assert.Equal("Accepted", result.GetProperty("provisioningState").GetString());
         await Service.Received(1).CreateCollaborationArmResourceAsync(
             TestName, TestResourceGroup, TestSubscription, TestLocation,
             null, null, null, Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>());

@@ -101,7 +101,9 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
             "Provisioning is running in the background and typically takes ~25 minutes to complete. " +
             $"You can check the status by asking to get the collaboration '{name}' in resource group '{resourceGroup}'.";
 
-        return new CollaborationCreateResult(default, message);
+        return new CollaborationCreateResult(
+            BuildAcceptedCreateResult(name, resourceGroup, subscription, location, resourceLocation, collaborators),
+            message);
     }
 
     private async Task<CollaborationClient> BuildClientAsync(
@@ -190,6 +192,43 @@ public class ManagedCleanroomService(ISubscriptionService subscriptionService, I
         return JsonSerializer.Deserialize(
             response.Content.ToMemory().Span,
             ManagedCleanroomJsonContext.Default.JsonElement);
+    }
+
+    private static JsonElement BuildAcceptedCreateResult(
+        string name,
+        string resourceGroup,
+        string subscription,
+        string location,
+        string? resourceLocation,
+        string[]? collaborators)
+    {
+        using var ms = new System.IO.MemoryStream();
+        using (var writer = new Utf8JsonWriter(ms))
+        {
+            writer.WriteStartObject();
+            writer.WriteString("name", name);
+            writer.WriteString("resourceGroup", resourceGroup);
+            writer.WriteString("subscription", subscription);
+            writer.WriteString("location", location);
+            writer.WriteString("resourceLocation", resourceLocation ?? location);
+            writer.WriteString("provisioningState", "Accepted");
+            writer.WritePropertyName("collaborators");
+            writer.WriteStartArray();
+
+            foreach (var collaborator in collaborators ?? [])
+            {
+                writer.WriteStartObject();
+                writer.WriteString("userIdentifier", collaborator);
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+
+        ms.Position = 0;
+        using var doc = JsonDocument.Parse(ms);
+        return doc.RootElement.Clone();
     }
 
     private static JsonElement SerializeCollaborationData(CollaborationData data)
