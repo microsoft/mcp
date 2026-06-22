@@ -331,7 +331,8 @@ azmcp server info
 <!-- cspell:ignore applicationgatewaywebapplicationfirewallpolicies expressrouteports frontdoorwebapplicationfirewallpolicies -->
 <!-- cspell:ignore managedinstances staticsites -->
 
-The `--resource` parameter for `azmcp advisor recommendation apply` accepts the following values:
+The `--resource` parameter for `azmcp advisor recommendation apply` accepts the following values.
+This list is derived from the Advisor recommendation rule resource files in [`tools/Azure.Mcp.Tools.Advisor/src/Resources`](../../../tools/Azure.Mcp.Tools.Advisor/src/Resources); update that source directory and refresh this section when supported resources change:
 
 - `aad_domainservices`
 - `apimanagement_service`
@@ -4674,3 +4675,5 @@ The CLI returns structured JSON responses for errors, including:
 
 - Service availability issues
 - Authentication errors
+
+
