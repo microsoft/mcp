@@ -62,7 +62,7 @@ Required setup steps:
 
 1. Add package version to `Directory.Packages.props` (if Azure SDK needed)
  2. Register the project in solution files by running:
-    `powershell eng/scripts/Update-Solutions.ps1 -Al`
+    `pwsh eng/scripts/Update-Solutions.ps1 -All`
 3. Register the new toolset in `servers/Azure.Mcp.Server/src/Program.cs` `RegisterAreas()` (alphabetical order)
  4. Choose the appropriate base class:
     - **Commands that need an Azure subscription** (most Azure service tools) → inherit from `SubscriptionCommand<TOptions, TResult>` and inject `ISubscriptionResolver`.
