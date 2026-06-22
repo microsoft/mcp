@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
@@ -80,12 +81,12 @@ internal class TelemetryService : ITelemetryService
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Activity? StartActivity(string activityName) => StartActivity(activityName, null);
+    public Activity? StartActivity(string activityName) => StartActivity(activityName, null, null);
 
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Activity? StartActivity(string activityName, Implementation? clientInfo)
+    public Activity? StartActivity(string activityName, Implementation? clientInfo, RequestParams? requestParams)
     {
         if (!_isEnabled)
         {
@@ -101,17 +102,38 @@ internal class TelemetryService : ITelemetryService
             return activity;
         }
 
-        if (clientInfo != null)
-        {
-            activity.AddTag(TagName.ClientName, clientInfo.Name)
-                .AddTag(TagName.ClientVersion, clientInfo.Version);
-        }
+        SetClientNameAndVersion(activity, clientInfo, requestParams);
 
         activity.AddTag(TagName.EventId, Guid.NewGuid().ToString());
 
         _tagsList.ForEach(kvp => activity.AddTag(kvp.Key, kvp.Value));
 
         return activity;
+    }
+
+    internal static void SetClientNameAndVersion(Activity activity, Implementation? clientInfo, RequestParams? requestParams)
+    {
+        if (clientInfo != null)
+        {
+            activity.SetTag(TagName.ClientName, clientInfo.Name)
+                .SetTag(TagName.ClientVersion, clientInfo.Version);
+        }
+
+        if (requestParams?.Meta != null &&
+            requestParams.Meta.TryGetPropertyValue("io.modelcontextprotocol/clientInfo", out var node) &&
+            node is JsonObject requestClientInfo)
+        {
+            if (requestClientInfo.TryGetPropertyValue("name", out var nameNode) &&
+                nameNode is JsonValue nameValue)
+            {
+                activity.SetTag(TagName.ClientName, nameValue.GetValue<string>());
+            }
+            if (requestClientInfo.TryGetPropertyValue("version", out var versionNode) &&
+                versionNode is JsonValue versionValue)
+            {
+                activity.SetTag(TagName.ClientVersion, versionValue.GetValue<string>());
+            }
+        }
     }
 
     public void Dispose()

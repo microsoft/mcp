@@ -13,6 +13,7 @@ using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
 
@@ -74,28 +75,22 @@ public class SingleProxyToolLoaderTests
         }
     }
 
-    private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest()
+    private static RequestContext<ListToolsRequestParams> CreateListToolsRequest()
     {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
-        {
-            Params = new ListToolsRequestParams()
-        };
+        var mockServer = Substitute.For<McpServer>();
+        return new RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList }, new());
     }
 
-    private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(
+    private static RequestContext<CallToolRequestParams> CreateCallToolRequest(
         string toolName = "azure",
         Dictionary<string, JsonElement>? arguments = null)
     {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var mockServer = Substitute.For<McpServer>();
+        return new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = toolName,
-                Arguments = arguments ?? []
-            }
-        };
+            Name = toolName,
+            Arguments = arguments ?? []
+        });
     }
 
     [Fact]
@@ -115,7 +110,7 @@ public class SingleProxyToolLoaderTests
         var azureTool = result.Tools.FirstOrDefault(t => t.Name == "azure");
         Assert.NotNull(azureTool);
         Assert.NotNull(azureTool.Description);
-        Assert.NotEmpty(azureTool.Description!);
+        Assert.NotEmpty(azureTool.Description);
         // Verify the tool has proper structure
         Assert.True(azureTool.InputSchema.ValueKind != JsonValueKind.Undefined);
         Assert.NotNull(azureTool.Annotations);
@@ -248,11 +243,8 @@ public class SingleProxyToolLoaderTests
     {
         // Arrange
         var (toolLoader, _) = CreateToolLoader(useRealDiscovery: true);
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
-        {
-            Params = null
-        };
+        var mockServer = Substitute.For<McpServer>();
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, null!);
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -427,7 +419,7 @@ public class SingleProxyToolLoaderTests
         return new SingleProxyToolLoader(discoveryStrategy, logger, options, CreateServerConfigurationOptions());
     }
 
-    private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequestWithToolAndCommand(
+    private static RequestContext<CallToolRequestParams> CreateCallToolRequestWithToolAndCommand(
         string tool, string command)
     {
         var arguments = new Dictionary<string, JsonElement>
@@ -437,15 +429,12 @@ public class SingleProxyToolLoaderTests
             ["command"] = JsonDocument.Parse($"\"{command}\"").RootElement,
         };
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var mockServer = Substitute.For<McpServer>();
+        return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = "azure",
-                Arguments = arguments
-            }
-        };
+            Name = "azure",
+            Arguments = arguments
+        });
     }
 
     [Fact]

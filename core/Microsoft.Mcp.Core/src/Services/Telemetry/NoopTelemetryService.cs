@@ -21,5 +21,5 @@ public sealed class NoopTelemetryService : ITelemetryService
 
     public Activity? StartActivity(string activityName) => null;
 
-    public Activity? StartActivity(string activityName, Implementation? clientInfo) => null;
+    public Activity? StartActivity(string activityName, Implementation? clientInfo, RequestParams requestParams) => null;
 }

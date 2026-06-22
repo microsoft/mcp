@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -83,7 +85,7 @@ public class TelemetryServiceTests
         };
 
         // Act
-        using var activity = service.StartActivity(activityId, clientInfo);
+        using var activity = service.StartActivity(activityId, clientInfo, null);
 
         // Assert
         Assert.Null(activity);
@@ -218,7 +220,7 @@ public class TelemetryServiceTests
             Version = "1.0.0",
             Title = "Test MCP server"
         };
-        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo));
+        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo, null));
     }
 
     [Fact]
@@ -253,7 +255,7 @@ public class TelemetryServiceTests
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => service.InitializeAsync());
 
-        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo));
+        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo, null));
     }
 
     [Fact]
@@ -544,5 +546,147 @@ public class TelemetryServiceTests
 
         public Task<string?> GetOrCreateDeviceId() => Task.FromException<string?>(
             new ArgumentNullException("test-exception"));
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_NoImplementationOrRequestParams_NothingIsSet()
+    {
+        var activity = new Activity("test");
+        TelemetryService.SetClientNameAndVersion(activity, null, null);
+
+        ValidateClientNameAndVersion(activity, null, null);
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_ImplementationOnly_SetsCorrectly()
+    {
+        var activity = new Activity("test");
+        var clientInfo = new Implementation
+        {
+            Name = "Foo-Bar-MCP",
+            Version = "1.0.0",
+        };
+        TelemetryService.SetClientNameAndVersion(activity, clientInfo, null);
+
+        ValidateClientNameAndVersion(activity, clientInfo.Name, clientInfo.Version);
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_RequestParamsOnly_SetsCorrectly()
+    {
+        var activity = new Activity("test");
+        var requestParams = new ListToolsRequestParams()
+        {
+            Meta = new([new("io.modelcontextprotocol/clientInfo", new JsonObject([new("name", "Fizz-Buzz-MCP"), new("version", "2.0.0")]))])
+        };
+        TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
+
+        ValidateClientNameAndVersion(activity, "Fizz-Buzz-MCP", "2.0.0");
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_BothImplementationAndRequestParams_SetsCorrectly()
+    {
+        var activity = new Activity("test");
+        var clientInfo = new Implementation
+        {
+            Name = "Foo-Bar-MCP",
+            Version = "1.0.0",
+        };
+        var requestParams = new ListToolsRequestParams()
+        {
+            Meta = new([new("io.modelcontextprotocol/clientInfo", new JsonObject([new("name", "Fizz-Buzz-MCP"), new("version", "2.0.0")]))])
+        };
+        TelemetryService.SetClientNameAndVersion(activity, clientInfo, requestParams);
+
+        ValidateClientNameAndVersion(activity, "Fizz-Buzz-MCP", "2.0.0");
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("Fizz-Buzz-MCP", null)]
+    [InlineData(null, "2.0.0")]
+    public void SetClientNameAndVersion_RequestParamsPartial_HandlesCorrectly(string? name, string? version)
+    {
+        var activity = new Activity("test");
+        var meta = new JsonObject();
+        if (name != null)
+        {
+            meta.Add("name", name);
+        }
+        if (version != null)
+        {
+            meta.Add("version", version);
+        }
+        var requestParams = new ListToolsRequestParams()
+        {
+            Meta = new([new("io.modelcontextprotocol/clientInfo", meta)])
+        };
+        TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
+
+        ValidateClientNameAndVersion(activity, name, version);
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_RequestParamsMissingClientInfo_HandlesCorrectly()
+    {
+        var activity = new Activity("test");
+        var requestParams = new ListToolsRequestParams()
+        {
+            Meta = new([])
+        };
+        TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
+
+        ValidateClientNameAndVersion(activity, null, null);
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_RequestParamsArrayClientInfo_HandlesCorrectly()
+    {
+        var activity = new Activity("test");
+        var requestParams = new ListToolsRequestParams()
+        {
+            Meta = new([new("io.modelcontextprotocol/clientInfo", new JsonArray())])
+        };
+        TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
+
+        ValidateClientNameAndVersion(activity, null, null);
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_RequestParamsValueClientInfo_HandlesCorrectly()
+    {
+        var activity = new Activity("test");
+        var requestParams = new ListToolsRequestParams()
+        {
+            Meta = new([new("io.modelcontextprotocol/clientInfo", "string")])
+        };
+        TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
+
+        ValidateClientNameAndVersion(activity, null, null);
+    }
+
+    private static void ValidateClientNameAndVersion(Activity activity, string? name, string? version)
+    {
+        var dictionary = activity.Tags.ToDictionary();
+        if (name == null)
+        {
+            Assert.False(dictionary.ContainsKey(TagName.ClientName));
+        }
+        else
+        {
+            var actualName = Assert.Contains(TagName.ClientName, dictionary);
+            Assert.Equal(name, actualName);
+        }
+
+        if (version == null)
+        {
+            Assert.False(dictionary.ContainsKey(TagName.ClientVersion));
+        }
+        else
+        {
+            var actualVersion = Assert.Contains(TagName.ClientVersion, dictionary);
+            Assert.Equal(version, actualVersion);
+        }
     }
 }

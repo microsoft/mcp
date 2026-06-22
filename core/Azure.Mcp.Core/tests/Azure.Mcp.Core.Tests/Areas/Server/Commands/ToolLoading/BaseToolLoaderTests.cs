@@ -314,7 +314,7 @@ public class BaseToolLoaderTests
             Method = "tools/call",
             Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
         };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest, null!);
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -342,7 +342,7 @@ public class BaseToolLoaderTests
             Method = "tools/call",
             Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
         };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest, null!);
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -374,7 +374,7 @@ public class BaseToolLoaderTests
             Method = "tools/call",
             Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
         };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest, null!);
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -407,7 +407,7 @@ public class BaseToolLoaderTests
             Method = "tools/call",
             Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
         };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest, null!);
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -446,7 +446,7 @@ public class BaseToolLoaderTests
             Method = "tools/call",
             Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
         };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest, null!);
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -490,7 +490,7 @@ public class BaseToolLoaderTests
             Method = "tools/call",
             Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
         };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest, null!);
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -503,17 +503,9 @@ public class BaseToolLoaderTests
         Assert.Contains("Elicitation failed", ((TextContentBlock)result.Content[0]).Text);
     }
 
-    internal sealed class TestableBaseToolLoader : BaseToolLoader
+    internal sealed class TestableBaseToolLoader(ILogger logger) : BaseToolLoader(logger)
     {
-        public TestableBaseToolLoader(ILogger logger)
-            : base(logger)
-        {
-        }
-
-        public McpClientOptions CreateClientOptionsPublic(McpServer server)
-        {
-            return CreateClientOptions(server);
-        }
+        public McpClientOptions CreateClientOptionsPublic(McpServer server) => CreateClientOptions(server);
 
         public static Task<CallToolResult?> HandleElicitationAsyncPublic(
             RequestContext<CallToolRequestParams> request,
