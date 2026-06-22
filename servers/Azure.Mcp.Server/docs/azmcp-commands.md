@@ -2299,7 +2299,7 @@ azmcp mysql server param set --subscription <subscription> \
 # With --server: lists all databases on that server
 # With --server and --database: lists all tables in that database
 # Database and table results are capped at 10,000 entries. When the results are truncated,
-# the response includes "databasesTruncated": true or "tablesTruncated": true respectively.
+# the response includes "resultsTruncated": true.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres list --subscription <subscription> \
                     --resource-group <resource-group> \

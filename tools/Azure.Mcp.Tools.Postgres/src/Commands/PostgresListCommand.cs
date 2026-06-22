@@ -91,7 +91,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new(null, null, tableResult.Tables ?? [], null, tableResult.IsTruncated ? true : null),
+                    new(null, null, tableResult.Tables ?? [], tableResult.IsTruncated ? true : null),
                     PostgresJsonContext.Default.PostgresListCommandResult);
             }
             else if (!string.IsNullOrEmpty(options.Server))
@@ -107,7 +107,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new(null, databaseResult.Databases ?? [], null, databaseResult.IsTruncated ? true : null, null),
+                    new(null, databaseResult.Databases ?? [], null, databaseResult.IsTruncated ? true : null),
                     PostgresJsonContext.Default.PostgresListCommandResult);
             }
             else
@@ -132,5 +132,5 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
         return context.Response;
     }
 
-    public record PostgresListCommandResult(List<string>? Servers, List<string>? Databases, List<string>? Tables, bool? DatabasesTruncated = null, bool? TablesTruncated = null);
+    public record PostgresListCommandResult(List<string>? Servers, List<string>? Databases, List<string>? Tables, bool? ResultsTruncated = null);
 }

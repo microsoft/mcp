@@ -92,7 +92,7 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
         Assert.Null(result.Servers);
         Assert.Equal(expectedDatabases, result.Databases);
         Assert.Null(result.Tables);
-        Assert.Null(result.DatabasesTruncated);
+        Assert.Null(result.ResultsTruncated);
     }
 
     [Fact]
@@ -123,11 +123,11 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
         Assert.Null(result.Servers);
         Assert.Null(result.Databases);
         Assert.Equal(expectedTables, result.Tables);
-        Assert.Null(result.TablesTruncated);
+        Assert.Null(result.ResultsTruncated);
     }
 
     [Fact]
-    public async Task ExecuteAsync_SetsTablesTruncated_WhenServiceReportsTruncation()
+    public async Task ExecuteAsync_SetsResultsTruncated_WhenTableResultsAreTruncated()
     {
         var expectedTables = new List<string> { "users", "products", "orders" };
         Service.ListTablesAsync(
@@ -154,11 +154,11 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
         Assert.Null(result.Servers);
         Assert.Null(result.Databases);
         Assert.Equal(expectedTables, result.Tables);
-        Assert.True(result.TablesTruncated);
+        Assert.True(result.ResultsTruncated);
     }
 
     [Fact]
-    public async Task ExecuteAsync_SetsDatabasesTruncated_WhenServiceReportsTruncation()
+    public async Task ExecuteAsync_SetsResultsTruncated_WhenDatabaseResultsAreTruncated()
     {
         var expectedDatabases = new List<string> { "db1", "db2", "db3" };
         Service.ListDatabasesAsync(
@@ -183,7 +183,7 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
         Assert.Null(result.Servers);
         Assert.Equal(expectedDatabases, result.Databases);
         Assert.Null(result.Tables);
-        Assert.True(result.DatabasesTruncated);
+        Assert.True(result.ResultsTruncated);
     }
 
     [Fact]
@@ -259,7 +259,7 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
         Assert.Null(result.Databases);
         Assert.NotNull(result.Tables);
         Assert.Empty(result.Tables);
-        Assert.Null(result.TablesTruncated);
+        Assert.Null(result.ResultsTruncated);
     }
 
     [Fact]
