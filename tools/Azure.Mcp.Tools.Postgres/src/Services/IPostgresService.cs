@@ -27,7 +27,7 @@ public interface IPostgresService
         string query,
         CancellationToken cancellationToken);
 
-    Task<List<string>> ListTablesAsync(
+    Task<TableListResult> ListTablesAsync(
         string subscriptionId,
         string resourceGroup,
         string authType,

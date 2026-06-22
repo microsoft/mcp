@@ -36,6 +36,8 @@ public class PostgresService(
     private readonly IEntraTokenProvider _entraTokenAuth = entraTokenAuth;
     private readonly IDbProvider _dbProvider = dbProvider;
 
+    private const int MaxRowCount = 10_000;
+
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
         var tokenCredential = await GetCredential(cancellationToken);
@@ -91,15 +93,27 @@ public class PostgresService(
         var host = NormalizeServerName(server);
         var connectionString = BuildConnectionString(host, "postgres", user, passwordToUse);
 
-        var query = "SELECT datname FROM pg_database WHERE datistemplate = false;";
+        var query = "SELECT datname FROM pg_database WHERE datistemplate = false ORDER BY datname LIMIT @maxResults;";
         await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType, cancellationToken);
         await using NpgsqlCommand command = _dbProvider.GetCommand(query, resource);
+        // Cap at exactly MaxRowCount: truncation is signaled by appending a sentinel row to the returned list
+        // (mirrors MySqlService.ListDatabasesAsync). Tables use cap+1 instead because they signal truncation
+        // via a structured IsTruncated flag and need to observe an N+1th row to set it.
+        command.Parameters.AddWithValue("maxResults", MaxRowCount);
         await using DbDataReader reader = await _dbProvider.ExecuteReaderAsync(command, cancellationToken);
         var dbs = new List<string>();
-        while (await reader.ReadAsync(cancellationToken))
+        var dbCount = 0;
+        while (await reader.ReadAsync(cancellationToken) && dbCount < MaxRowCount)
         {
             dbs.Add(reader.GetString(0));
+            dbCount++;
         }
+
+        if (dbCount >= MaxRowCount)
+        {
+            dbs.Add($"... (output limited to {MaxRowCount:N0} databases for security and performance reasons)");
+        }
+
         return dbs;
     }
 
@@ -161,7 +175,7 @@ public class PostgresService(
         return rows;
     }
 
-    public async Task<List<string>> ListTablesAsync(
+    public async Task<TableListResult> ListTablesAsync(
         string subscriptionId,
         string resourceGroup,
         string authType,
@@ -175,16 +189,27 @@ public class PostgresService(
         var host = NormalizeServerName(server);
         var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
-        var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';";
+        var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name LIMIT @maxResults;";
         await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType, cancellationToken);
         await using NpgsqlCommand command = _dbProvider.GetCommand(query, resource);
+        // Fetch cap+1 rows so we can detect truncation by observing whether an extra row exists, then trim it.
+        // Unlike ListDatabasesAsync (which signals truncation via a sentinel row appended to the list),
+        // tables return a structured TableListResult with an IsTruncated flag, so we need the extra row to set it.
+        command.Parameters.AddWithValue("maxResults", MaxRowCount + 1);
         await using DbDataReader reader = await _dbProvider.ExecuteReaderAsync(command, cancellationToken);
         var tables = new List<string>();
         while (await reader.ReadAsync(cancellationToken))
         {
             tables.Add(reader.GetString(0));
         }
-        return tables;
+
+        var isTruncated = tables.Count > MaxRowCount;
+        if (isTruncated)
+        {
+            tables.RemoveRange(MaxRowCount, tables.Count - MaxRowCount);
+        }
+
+        return new TableListResult(tables, isTruncated);
     }
 
     public async Task<List<string>> GetTableSchemaAsync(

@@ -107,7 +107,7 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
             "server1",
             "db1",
             Arg.Any<CancellationToken>())
-            .Returns(expectedTables);
+            .Returns(new TableListResult(expectedTables, false));
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -122,6 +122,38 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
         Assert.Null(result.Servers);
         Assert.Null(result.Databases);
         Assert.Equal(expectedTables, result.Tables);
+        Assert.Null(result.TablesTruncated);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_SetsTablesTruncated_WhenServiceReportsTruncation()
+    {
+        var expectedTables = new List<string> { "users", "products", "orders" };
+        Service.ListTablesAsync(
+            "sub123",
+            "rg1",
+            AuthTypes.MicrosoftEntra,
+            "user1",
+            null,
+            "server1",
+            "db1",
+            Arg.Any<CancellationToken>())
+            .Returns(new TableListResult(expectedTables, true));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--user", "user1",
+            $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
+            "--server", "server1",
+            "--database", "db1");
+
+        var result = ValidateAndDeserializeResponse(response, PostgresJsonContext.Default.PostgresListCommandResult);
+
+        Assert.Null(result.Servers);
+        Assert.Null(result.Databases);
+        Assert.Equal(expectedTables, result.Tables);
+        Assert.True(result.TablesTruncated);
     }
 
     [Fact]
@@ -181,7 +213,7 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
             "server1",
             "db1",
             Arg.Any<CancellationToken>())
-            .Returns([]);
+            .Returns(new TableListResult([], false));
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -197,6 +229,7 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
         Assert.Null(result.Databases);
         Assert.NotNull(result.Tables);
         Assert.Empty(result.Tables);
+        Assert.Null(result.TablesTruncated);
     }
 
     [Fact]

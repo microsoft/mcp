@@ -80,7 +80,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
             if (!string.IsNullOrEmpty(options.Database))
             {
                 // List tables in specified database
-                List<string> tables = await _postgresService.ListTablesAsync(
+                TableListResult tableResult = await _postgresService.ListTablesAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.AuthType!,
@@ -91,7 +91,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new(null, null, tables ?? []),
+                    new(null, null, tableResult.Tables ?? [], tableResult.IsTruncated ? true : null),
                     PostgresJsonContext.Default.PostgresListCommandResult);
             }
             else if (!string.IsNullOrEmpty(options.Server))
@@ -132,5 +132,5 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
         return context.Response;
     }
 
-    public record PostgresListCommandResult(List<string>? Servers, List<string>? Databases, List<string>? Tables);
+    public record PostgresListCommandResult(List<string>? Servers, List<string>? Databases, List<string>? Tables, bool? TablesTruncated = null);
 }
