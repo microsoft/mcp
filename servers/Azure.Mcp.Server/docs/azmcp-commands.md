@@ -4675,4 +4675,3 @@ The CLI returns structured JSON responses for errors, including:
 
 - Service availability issues
 - Authentication errors
-
