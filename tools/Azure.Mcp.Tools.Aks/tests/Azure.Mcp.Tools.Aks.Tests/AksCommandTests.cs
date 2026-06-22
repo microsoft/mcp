@@ -6,6 +6,7 @@ using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
 using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
@@ -14,6 +15,47 @@ namespace Azure.Mcp.Tools.Aks.Tests;
 public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    // ARM SDK calls for GetNodePools include the cluster name in the URL path.
+    // In playback mode Settings.ResourceBaseName is "Sanitized", so the default
+    // GeneralRegexSanitizer for ResourceBaseName is a no-op. A pattern-based
+    // UriRegexSanitizer is needed, just like the resource-group one in the base class.
+    public override List<UriRegexSanitizer> UriRegexSanitizers { get; } =
+    [
+        new(new UriRegexSanitizerBody
+        {
+            Regex = "managedClusters/([^?/]+)",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        })
+    ];
+
+    // ARG query bodies contain resource group and cluster names in KQL syntax like:
+    //   resourceGroup =~ 'masalama-mcpe763185a' and name =~ 'mcpe763185a'
+    // The default GeneralRegexSanitizer for ResourceBaseName is a no-op in playback
+    // (Settings.ResourceBaseName is "Sanitized"), so explicit body sanitizers are needed.
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers { get; } =
+    [
+        new(new BodyRegexSanitizerBody
+        {
+            Regex = "resourceGroup =~ '([^']+)'",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        }),
+        new(new BodyRegexSanitizerBody
+        {
+            Regex = "name =~ '([^']+)'",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        }),
+        // Also handle the path-format that appears in ARG response $id fields
+        new(new BodyRegexSanitizerBody
+        {
+            Regex = "resource[Gg]roups/([^?/\"]+)",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        }),
+    ];
+
     [Fact]
     public async Task Should_list_aks_clusters_by_subscription()
     {
