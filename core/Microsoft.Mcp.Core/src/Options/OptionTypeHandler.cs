@@ -344,10 +344,9 @@ public sealed class OptionTypeHandler
             return;
         }
 
-        var hasNonEmptyOrWhiteSpaceValues = result.Tokens is { Count: > 0 } && result.Tokens.Any(t => !string.IsNullOrWhiteSpace(t.Value));
-        if (!hasNonEmptyOrWhiteSpaceValues)
+        if (result.Tokens is not { Count: > 0 } || result.Tokens.Any(t => string.IsNullOrWhiteSpace(t.Value)))
         {
-            result.AddError("Option was configured to require non-empty, non-whitespace values but only empty or whitespace values were provided.");
+            result.AddError("Option was configured to require non-empty, non-whitespace values but one or more empty or whitespace values were provided.");
         }
     }
 }

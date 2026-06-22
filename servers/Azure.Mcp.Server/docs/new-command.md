@@ -499,7 +499,7 @@ public class {Resource}{Operation}Options : ISubscriptionOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
@@ -535,7 +535,7 @@ The `[Option]` attribute drives automatic option registration and binding via `O
 
 **Conventions:**
 - **Name**: Derived automatically from the property name in kebab-case (e.g., `LocalFilePath` → `--local-file-path`). Only use `[Option(Name = "...")]` when the convention doesn't produce the desired name (e.g., `RetryPolicy` → `--retry` instead of `--retry-policy`). **Do not** specify `Name =` when it matches the default.
-- **Required**: Determined by nullability. Use non-nullable types for required options. Use `?` for optional. Use the `required` keyword to suppress compiler warnings about uninitialized non-nullable reference properties.
+- **Required**: Driven by the `required` keyword (`RequiredMemberAttribute`). Use `required` on required options; use nullable types (`?`) for optional options.
 - **Description**: Always required, passed using attribute properties: `[Option(Description = "description")]`.
 - **Shared descriptions**: Use constants from `OptionDescriptions` (e.g., `OptionDescriptions.Subscription`, `OptionDescriptions.Tenant`).
 - **Nested objects**: Use `[OptionContainer(Prefix = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `RetryPolicyOptions` with `[OptionContainer(Prefix = "retry")]` produces `--retry-delay`, `--retry-max-retries`, etc.

@@ -462,7 +462,7 @@ public sealed class OptionBinderTests
     public void BindOptions_InvalidEnumValue_Throws()
     {
         var command = new Command("test");
-        OptionBinder.RegisterOptions<ArrayEnumOptions>(command);
+        OptionBinder.RegisterOptions<EnumOptions>(command);
 
         var parseResult = command.Parse("--colors Invalid");
         var ex = Assert.Throws<CommandValidationException>(() => OptionBinder.BindOptions<EnumOptions>(parseResult));
