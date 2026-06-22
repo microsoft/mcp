@@ -30,7 +30,7 @@ public class ItemVectorSearchCommandTests : CommandUnitTestsBase<ItemVectorSearc
 
         Service.GenerateEmbedding(
             Arg.Is("hello"),
-            Arg.Is<EmbeddingRequest>(r => r.Endpoint == "https://aoai.example/" && r.DeploymentName == "my-deployment"),
+            Arg.Is<EmbeddingRequest>(r => r.Endpoint == "https://aoai.openai.azure.com/" && r.DeploymentName == "my-deployment"),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new[] { 0.5f, 0.25f });
@@ -54,7 +54,7 @@ public class ItemVectorSearchCommandTests : CommandUnitTestsBase<ItemVectorSearc
             "--properties-to-select", "id,title",
             "--count", "3",
             "--search-text", "hello",
-            "--openai-endpoint", "https://aoai.example/",
+            "--openai-endpoint", "https://aoai.openai.azure.com/",
             "--embedding-deployment", "my-deployment");
 
         var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.ItemVectorSearchCommandResult);
@@ -87,10 +87,40 @@ public class ItemVectorSearchCommandTests : CommandUnitTestsBase<ItemVectorSearc
             "--vector-property", "embedding",
             "--properties-to-select", "*",
             "--search-text", "hi",
-            "--openai-endpoint", "https://aoai.example/",
+            "--openai-endpoint", "https://aoai.openai.azure.com/",
             "--embedding-deployment", "my-deployment");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("wildcard", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("https://other-server.com/")]
+    [InlineData("https://aoai.openai.azure.com.other.com/")]
+    [InlineData("http://aoai.openai.azure.com/")]
+    [InlineData("https://attacker.com#.openai.azure.com")]
+    [InlineData("https://attacker.com#openai.azure.com")]
+    [InlineData("https://attacker.com/#.openai.azure.com")]
+    [InlineData("https://attacker.com?x=.openai.azure.com")]
+    public async Task ExecuteAsync_RejectsUntrustedOpenAIEndpoint(string endpoint)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--account", "acct",
+            "--database", "db",
+            "--container", "c",
+            "--vector-property", "embedding",
+            "--search-text", "hi",
+            "--openai-endpoint", endpoint,
+            "--embedding-deployment", "my-deployment");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Azure OpenAI endpoint", response.Message, StringComparison.OrdinalIgnoreCase);
+
+        await Service.DidNotReceive().GenerateEmbedding(
+            Arg.Any<string>(),
+            Arg.Any<EmbeddingRequest>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 }

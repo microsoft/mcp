@@ -116,6 +116,10 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Recovery point not found. Verify the recovery point ID and protected item.",
+        RequestFailedException reqEx when reqEx.ErrorCode == "BMSUserErrorContainerNameIncorrectFormat" =>
+            $"Container name format is incorrect. Use the fully qualified container name from 'azurebackup protecteditem get' (e.g., 'IaasVMContainer;iaasvmcontainerv2;resourceGroup;vmName'). Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Authorization failed. Ensure the caller has the Backup Reader or Backup Operator role on the vault. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };

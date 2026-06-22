@@ -1,3 +1,0 @@
-changes:
-  - section: "Breaking Changes"
-    description: "Removed resource group, tenant, auth method, and retry options from cloudarchitect_design tool as they aren't used."

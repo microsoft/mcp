@@ -19,10 +19,10 @@ jobs:
     artifact: binaries_signed
     displayName: "Download binaries_signed"
 
-  - task: NodeTool@0
-    displayName: "Use Node.js 20.x"
+  - task: UseNode@1
+    displayName: 'Install Node.js 24'
     inputs:
-      versionSpec: 20.x
+      version: '24.x'
 
   # --- VS Code Extension Packaging Steps ---
   - task: Powershell@2

@@ -421,9 +421,23 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var policyId = DataProtectionBackupPolicyResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, policyName);
         var policyResource = armClient.GetDataProtectionBackupPolicyResource(policyId);
-        var policy = await policyResource.GetAsync(cancellationToken);
 
-        return MapToPolicyInfo(policy.Value.Data);
+        try
+        {
+            var policy = await policyResource.GetAsync(cancellationToken);
+            return MapToPolicyInfo(policy.Value.Data);
+        }
+        catch (FormatException)
+        {
+            // The Azure SDK may throw FormatException when deserializing the policy's
+            // retention/duration fields (XmlConvert.ToTimeSpan limitation in
+            // DataProtectionBackupAbsoluteDeleteSetting). Fall back to listing all
+            // policies and matching by name to work around this SDK limitation.
+            var policies = await ListPoliciesAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+            return policies.FirstOrDefault(p => p.Name == policyName)
+                ?? throw new InvalidOperationException(
+                    $"Policy '{policyName}' not found or cannot be parsed by the Azure SDK due to an unsupported retention/duration field.");
+        }
     }
 
     public async Task<List<BackupPolicyInfo>> ListPoliciesAsync(
@@ -441,9 +455,42 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var collection = vaultResource.GetDataProtectionBackupPolicies();
 
         var policies = new List<BackupPolicyInfo>();
-        await foreach (var policy in collection.GetAllAsync(cancellationToken))
+        var enumerator = collection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        // The Azure SDK may throw FormatException when deserializing policies with
+        // non-standard ISO 8601 retention/duration fields (XmlConvert.ToTimeSpan
+        // limitation in DataProtectionBackupAbsoluteDeleteSetting). When that happens
+        // we try to skip past the offending item and continue, so valid policies that
+        // appear after a bad one are still returned. If the SDK enumerator becomes
+        // unusable (typical for page-level deserialization failures), MoveNextAsync
+        // will keep throwing - cap consecutive failures so we cannot loop forever.
+        const int maxConsecutiveFailures = 3;
+        var consecutiveFailures = 0;
+        try
         {
-            policies.Add(MapToPolicyInfo(policy.Data));
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    policies.Add(MapToPolicyInfo(enumerator.Current.Data));
+                    consecutiveFailures = 0;
+                }
+                catch (FormatException)
+                {
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
         }
 
         return policies;
@@ -520,9 +567,14 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             // The Azure SDK may throw FormatException when parsing the job's duration field
             // (e.g., non-standard ISO 8601 durations from the service). Fall back to listing
             // all jobs and matching by ID to work around this SDK limitation.
+            // Note: ListJobsAsync may return a partial list if it also hits FormatException
+            // during enumeration — so a null result does NOT mean the job is missing; it may
+            // exist beyond the point where the enumerator broke. Re-throw FormatException
+            // (not KeyNotFoundException) to preserve SDK-parse-failure semantics.
+            // Tracked in azure-sdk-for-net#59306.
             var jobs = await ListJobsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
             return jobs.FirstOrDefault(j => j.Name == jobId)
-                ?? throw new InvalidOperationException($"Job '{jobId}' not found. The SDK cannot parse this job's duration field.");
+                ?? throw new FormatException($"Job '{jobId}' exists but the Azure SDK cannot parse its duration field (XmlConvert.ToTimeSpan limitation).");
         }
     }
 
@@ -542,6 +594,13 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
 
         var jobs = new List<BackupJobInfo>();
         var enumerator = collection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        // The Azure SDK may throw FormatException when deserializing jobs with
+        // non-standard ISO 8601 duration fields (XmlConvert.ToTimeSpan limitation).
+        // Try to skip past the offending item so valid jobs after a bad one are still
+        // returned; cap consecutive failures so a permanently-broken enumerator
+        // (typical for page-level deserialization failures) cannot loop forever.
+        const int maxConsecutiveFailures = 3;
+        var consecutiveFailures = 0;
         try
         {
             while (true)
@@ -554,13 +613,14 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
                     }
 
                     jobs.Add(MapToJobInfo(enumerator.Current.Data));
+                    consecutiveFailures = 0;
                 }
                 catch (FormatException)
                 {
-                    // The Azure SDK may throw FormatException when deserializing jobs with
-                    // non-standard ISO 8601 duration fields (XmlConvert.ToTimeSpan limitation).
-                    // Return the jobs collected so far rather than failing the entire list.
-                    break;
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
                 }
             }
         }

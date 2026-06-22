@@ -71,12 +71,12 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new([database], false),
+                    new([database]),
                     SqlJsonContext.Default.DatabaseGetListResult);
             }
             else
             {
-                var result = await _sqlService.ListDatabasesAsync(
+                var databases = await _sqlService.ListDatabasesAsync(
                     options.Server!,
                     options.ResourceGroup!,
                     options.Subscription!,
@@ -84,7 +84,7 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new(result?.Results ?? [], result?.AreResultsTruncated ?? false),
+                    new(databases ?? []),
                     SqlJsonContext.Default.DatabaseGetListResult);
             }
         }
@@ -109,5 +109,5 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseGetListResult(List<SqlDatabase> Databases, bool AreResultsTruncated);
+    internal record DatabaseGetListResult(List<SqlDatabase> Databases);
 }

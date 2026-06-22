@@ -71,8 +71,6 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
     {
         var expectedDatabases = new List<string> { "db1", "db2", "db3" };
         Service.ListDatabasesAsync(
-            "sub123",
-            "rg1",
             AuthTypes.MicrosoftEntra,
             "user1",
             null,
@@ -99,13 +97,12 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
     {
         var expectedTables = new List<string> { "users", "products", "orders" };
         Service.ListTablesAsync(
-            "sub123",
-            "rg1",
             AuthTypes.MicrosoftEntra,
             "user1",
             null,
             "server1",
             "db1",
+            "public",
             Arg.Any<CancellationToken>())
             .Returns(expectedTables);
 
@@ -145,8 +142,6 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
     public async Task ExecuteAsync_ReturnsNull_WhenNoDatabasesExist()
     {
         Service.ListDatabasesAsync(
-            "sub123",
-            "rg1",
             AuthTypes.MicrosoftEntra,
             "user1",
             null,
@@ -173,13 +168,12 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
     public async Task ExecuteAsync_ReturnsNull_WhenNoTablesExist()
     {
         Service.ListTablesAsync(
-            "sub123",
-            "rg1",
             AuthTypes.MicrosoftEntra,
             "user1",
             null,
             "server1",
             "db1",
+            "public",
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -197,6 +191,65 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
         Assert.Null(result.Databases);
         Assert.NotNull(result.Tables);
         Assert.Empty(result.Tables);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListsTablesWithSpecifiedSchema_WhenSchemaProvided()
+    {
+        var expectedTables = new List<string> { "audit_log", "events" };
+        Service.ListTablesAsync(
+            AuthTypes.MicrosoftEntra,
+            "user1",
+            null,
+            "server1",
+            "db1",
+            "analytics",
+            Arg.Any<CancellationToken>())
+            .Returns(expectedTables);
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--user", "user1",
+            $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
+            "--server", "server1",
+            "--database", "db1",
+            $"--{PostgresOptionDefinitions.SchemaName}", "analytics");
+
+        var result = ValidateAndDeserializeResponse(response, PostgresJsonContext.Default.PostgresListCommandResult);
+
+        Assert.Null(result.Servers);
+        Assert.Null(result.Databases);
+        Assert.Equal(expectedTables, result.Tables);
+        await Service.Received(1).ListTablesAsync(
+            AuthTypes.MicrosoftEntra, "user1", null, "server1", "db1", "analytics", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListsTablesWithPublicSchema_WhenSchemaOmitted()
+    {
+        Service.ListTablesAsync(
+            AuthTypes.MicrosoftEntra,
+            "user1",
+            null,
+            "server1",
+            "db1",
+            "public",
+            Arg.Any<CancellationToken>())
+            .Returns(["users"]);
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--user", "user1",
+            $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
+            "--server", "server1",
+            "--database", "db1");
+
+        ValidateAndDeserializeResponse(response, PostgresJsonContext.Default.PostgresListCommandResult);
+
+        await Service.Received(1).ListTablesAsync(
+            AuthTypes.MicrosoftEntra, "user1", null, "server1", "db1", "public", Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -220,8 +273,6 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
     {
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         Service.ListDatabasesAsync(
-            "sub123",
-            "rg1",
             AuthTypes.MicrosoftEntra,
             "user1",
             null,
@@ -246,13 +297,12 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
     {
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         Service.ListTablesAsync(
-            "sub123",
-            "rg1",
             AuthTypes.MicrosoftEntra,
             "user1",
             null,
             "server1",
             "db1",
+            "public",
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
