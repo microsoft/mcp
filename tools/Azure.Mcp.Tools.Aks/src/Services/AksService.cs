@@ -100,7 +100,7 @@ public sealed class AksService(
                 subscription: subscription,
                 retryPolicy: retryPolicy,
                 converter: ConvertToClusterFromJson,
-                additionalFilter: $"name =~ '{EscapeKqlString(clusterName!)}'" ,
+                additionalFilter: $"name =~ '{EscapeKqlString(clusterName!)}'",
                 tenant: tenant,
                 cancellationToken: cancellationToken);
 
