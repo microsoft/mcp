@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added an optional `--schema` parameter to `azmcp postgres list` for listing tables in non-public PostgreSQL schemas (defaults to `public`), and removed unused `--subscription`/`--resource-group` parameters from the PostgreSQL data-plane commands: `database query`, `table schema get`."
