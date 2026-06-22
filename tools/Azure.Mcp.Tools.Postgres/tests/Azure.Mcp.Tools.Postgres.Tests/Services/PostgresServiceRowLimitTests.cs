@@ -30,6 +30,7 @@ public class PostgresServiceRowLimitTests
     private const string User = "test-user";
     private const string Server = "test-server";
     private const string Database = "test-db";
+    private const string Schema = "public";
     private const string AuthType = "MicrosoftEntra";
 
     public PostgresServiceRowLimitTests()
@@ -58,7 +59,7 @@ public class PostgresServiceRowLimitTests
         StubReader(rowCount: 3, columnName: "datname");
 
         var result = await _postgresService.ListDatabasesAsync(
-            SubscriptionId, ResourceGroup, AuthType, User, null, Server, TestContext.Current.CancellationToken);
+            AuthType, User, null, Server, TestContext.Current.CancellationToken);
 
         Assert.Equal(3, result.Databases.Count);
         Assert.False(result.IsTruncated);
@@ -71,7 +72,7 @@ public class PostgresServiceRowLimitTests
         StubReader(rowCount: MaxRowCount, columnName: "datname");
 
         var result = await _postgresService.ListDatabasesAsync(
-            SubscriptionId, ResourceGroup, AuthType, User, null, Server, TestContext.Current.CancellationToken);
+            AuthType, User, null, Server, TestContext.Current.CancellationToken);
 
         Assert.Equal(MaxRowCount, result.Databases.Count);
         Assert.False(result.IsTruncated);
@@ -84,7 +85,7 @@ public class PostgresServiceRowLimitTests
         StubReader(rowCount: MaxRowCount + 1, columnName: "datname");
 
         var result = await _postgresService.ListDatabasesAsync(
-            SubscriptionId, ResourceGroup, AuthType, User, null, Server, TestContext.Current.CancellationToken);
+            AuthType, User, null, Server, TestContext.Current.CancellationToken);
 
         Assert.Equal(MaxRowCount, result.Databases.Count);
         Assert.True(result.IsTruncated);
@@ -96,7 +97,7 @@ public class PostgresServiceRowLimitTests
         StubReader(rowCount: 5, columnName: "table_name");
 
         var result = await _postgresService.ListTablesAsync(
-            SubscriptionId, ResourceGroup, AuthType, User, null, Server, Database, TestContext.Current.CancellationToken);
+            AuthType, User, null, Server, Database, Schema, TestContext.Current.CancellationToken);
 
         Assert.Equal(5, result.Tables.Count);
         Assert.False(result.IsTruncated);
@@ -109,7 +110,7 @@ public class PostgresServiceRowLimitTests
         StubReader(rowCount: MaxRowCount, columnName: "table_name");
 
         var result = await _postgresService.ListTablesAsync(
-            SubscriptionId, ResourceGroup, AuthType, User, null, Server, Database, TestContext.Current.CancellationToken);
+            AuthType, User, null, Server, Database, Schema, TestContext.Current.CancellationToken);
 
         Assert.Equal(MaxRowCount, result.Tables.Count);
         Assert.False(result.IsTruncated);
@@ -122,7 +123,7 @@ public class PostgresServiceRowLimitTests
         StubReader(rowCount: MaxRowCount + 1, columnName: "table_name");
 
         var result = await _postgresService.ListTablesAsync(
-            SubscriptionId, ResourceGroup, AuthType, User, null, Server, Database, TestContext.Current.CancellationToken);
+            AuthType, User, null, Server, Database, Schema, TestContext.Current.CancellationToken);
 
         Assert.Equal(MaxRowCount, result.Tables.Count);
         Assert.True(result.IsTruncated);

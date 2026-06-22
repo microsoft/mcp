@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
@@ -59,7 +58,7 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
     public async Task ExecuteAsync_WithoutDatabaseName_ReturnsAllDatabases()
     {
         // Arrange
-        var mockDatabases = new ResourceQueryResults<SqlDatabase>([CreateMockDatabase("db1"), CreateMockDatabase("db2")], false);
+        var mockDatabases = new List<SqlDatabase> { CreateMockDatabase("db1"), CreateMockDatabase("db2") };
 
         Service.ListDatabasesAsync(
             Arg.Is("server1"),
@@ -171,7 +170,7 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
         {
             Service
                 .ListDatabasesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-                .Returns(new ResourceQueryResults<SqlDatabase>([], false));
+                .Returns(new List<SqlDatabase>());
             Service
                 .GetDatabaseAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(CreateMockDatabase("db1"));

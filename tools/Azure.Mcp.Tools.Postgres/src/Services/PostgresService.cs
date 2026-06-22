@@ -81,8 +81,6 @@ public class PostgresService(
     }
 
     public async Task<DatabaseListResult> ListDatabasesAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,
@@ -115,8 +113,6 @@ public class PostgresService(
     }
 
     public async Task<List<string>> ExecuteQueryAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,
@@ -173,22 +169,22 @@ public class PostgresService(
     }
 
     public async Task<TableListResult> ListTablesAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,
         string server,
         string database,
+        string schema,
         CancellationToken cancellationToken)
     {
         string? passwordToUse = await GetPassword(authType, password, cancellationToken);
         var host = NormalizeServerName(server);
         var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
-        var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name LIMIT @maxResults;";
+        var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = @schema ORDER BY table_name LIMIT @maxResults;";
         await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType, cancellationToken);
         await using NpgsqlCommand command = _dbProvider.GetCommand(query, resource);
+        command.Parameters.AddWithValue("schema", schema);
         // Fetch cap+1 rows so we can detect truncation by observing whether an extra row exists, then trim it.
         command.Parameters.AddWithValue("maxResults", MaxRowCount + 1);
         await using DbDataReader reader = await _dbProvider.ExecuteReaderAsync(command, cancellationToken);
@@ -208,8 +204,6 @@ public class PostgresService(
     }
 
     public async Task<List<string>> GetTableSchemaAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,

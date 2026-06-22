@@ -33,6 +33,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
         command.Options.Add(PostgresOptionDefinitions.User.AsOptional());
         command.Options.Add(PostgresOptionDefinitions.ServerOptional);
         command.Options.Add(PostgresOptionDefinitions.DatabaseOptional);
+        command.Options.Add(PostgresOptionDefinitions.Schema);
         command.Options.Add(PostgresOptionDefinitions.AuthType);
         command.Options.Add(PostgresOptionDefinitions.Password);
         command.Validators.Add(result =>
@@ -58,6 +59,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
         var options = base.BindOptions(parseResult);
         options.Server = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.ServerOptional.Name);
         options.Database = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.DatabaseOptional.Name);
+        options.Schema = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Schema.Name);
         options.AuthType = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.AuthType.Name);
         options.Password = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Password.Name);
         return options;
@@ -81,13 +83,12 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
             {
                 // List tables in specified database
                 TableListResult tableResult = await _postgresService.ListTablesAsync(
-                    options.Subscription!,
-                    options.ResourceGroup!,
                     options.AuthType!,
                     options.User!,
                     options.Password,
                     options.Server!,
                     options.Database!,
+                    string.IsNullOrEmpty(options.Schema) ? "public" : options.Schema,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -98,8 +99,6 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
             {
                 // List databases on specified server
                 DatabaseListResult databaseResult = await _postgresService.ListDatabasesAsync(
-                    options.Subscription!,
-                    options.ResourceGroup!,
                     options.AuthType!,
                     options.User!,
                     options.Password,
