@@ -27,8 +27,8 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
     [Theory]
     [InlineData("--subscription sub1 --resource-group rg1 --cluster cluster1", true)]
     [InlineData("--subscription sub1 --cluster cluster1", true)]  // Resource group is optional with ARG queries
-    [InlineData("--subscription sub1 --cluster cluster1", false)]  // Missing resource-group
     [InlineData("--resource-group rg1 --cluster cluster1", false)] // Missing subscription
+    [InlineData("", false)]  // Missing all required options
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Arrange
