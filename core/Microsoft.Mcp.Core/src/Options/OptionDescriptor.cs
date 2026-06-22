@@ -3,16 +3,18 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using Microsoft.Mcp.Core.Commands;
+using System.Runtime.CompilerServices;
 
 namespace Microsoft.Mcp.Core.Options;
 
 public class OptionDescriptor
 {
     public required string Name { get; init; }
-    public string? Description { get; init; }
+    public required string Description { get; init; }
+    public string[] Aliases { get; init; } = [];
     public bool Required { get; init; }
     public bool Hidden { get; init; }
+    public object? DefaultValue { get; init; }
     public required PropertyInfo TargetProperty { get; init; }
     public required Type Type { get; init; }
     public PropertyInfo? ParentProperty { get; init; }
@@ -27,7 +29,7 @@ public class OptionDescriptor
 
     [UnconditionalSuppressMessage("Trimming", "IL2070:UnrecognizedReflectionPattern",
         Justification = "Nested option types are rooted by the application.")]
-    private static void CollectDescriptors(Type type, string? prefix, List<OptionDescriptor> descriptors, NullabilityInfoContext nullabilityContext, bool parentOptional = false, PropertyInfo? parentProperty = null)
+    private static void CollectDescriptors(Type type, string? prefix, List<OptionDescriptor> descriptors, NullabilityInfoContext nullabilityContext, bool parentRequired = true, PropertyInfo? parentProperty = null)
     {
         PropertyInfo[] allProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
@@ -52,6 +54,12 @@ public class OptionDescriptor
             }
 
             OptionAttribute? optionAttribute = property.GetCustomAttribute<OptionAttribute>();
+            // Only include properties with [Option]
+            if (optionAttribute == null)
+            {
+                continue;
+            }
+
             string name = optionAttribute?.Name ?? OptionNameConvention.ToKebabCase(property.Name);
 
             if (!string.IsNullOrEmpty(prefix))
@@ -59,33 +67,32 @@ public class OptionDescriptor
                 name = $"{prefix}-{name}";
             }
 
+            var required = Attribute.IsDefined(property, typeof(RequiredMemberAttribute));
             if (IsComplexType(property.PropertyType))
             {
-                bool isOptionalGroup = IsNullable(property, nullabilityContext);
-
                 // Flatten nested complex types with a prefix.
-                CollectDescriptors(property.PropertyType, name, descriptors, nullabilityContext, parentOptional: isOptionalGroup, parentProperty: property);
+                CollectDescriptors(property.PropertyType, name, descriptors, nullabilityContext, parentRequired: required, parentProperty: property);
             }
             else
             {
-                bool isNullable = IsNullable(property, nullabilityContext);
-
-                if (parentOptional && !isNullable)
+                if (!parentRequired && required)
                 {
                     throw new InvalidOperationException(
                         $"Optional group contains required member '{property.Name}'. " +
-                        "All properties within a nullable complex type must be nullable. " +
-                        "Either make the parent property required or make all child properties nullable.");
+                        "All properties within a non-required complex type must be non-required. " +
+                        "Either make the parent property required or make all child properties non-required.");
                 }
 
 
                 descriptors.Add(new OptionDescriptor
                 {
                     Name = name,
-                    Description = optionAttribute?.Description,
+                    Aliases = optionAttribute!.Aliases ?? [],
+                    Description = optionAttribute!.Description!,
                     Type = property.PropertyType,
-                    Required = !isNullable,
+                    Required = required,
                     Hidden = optionAttribute?.Hidden ?? false,
+                    DefaultValue = optionAttribute?.DefaultValue,
                     TargetProperty = property,
                     ParentProperty = parentProperty
                 });

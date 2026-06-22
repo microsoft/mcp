@@ -56,11 +56,26 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
 
     public Command GetCommand() => _command;
 
-    public virtual TOptions BindOptions(ParseResult parseResult)
+    public TOptions BindOptions(ParseResult parseResult)
     {
-        return OptionBinder.BindOptions<TOptions>(parseResult);
+        var options = OptionBinder.BindOptions<TOptions>(parseResult);
+        PostBindOptions(options);
+        return options;
     }
 
+    /// <summary>
+    /// Performs additional processing on the bound options after they have been bound.
+    /// </summary>
+    /// <param name="options">The bound options to process.</param>
+    public virtual void PostBindOptions(TOptions options)
+    {
+    }
+
+    /// <summary>
+    /// Validates the options after they have been bound.
+    /// </summary>
+    /// <param name="options">The options to validate.</param>
+    /// <param name="validationResult">The validation result to populate.</param>
     public virtual void ValidateOptions(TOptions options, ValidationResult validationResult)
     {
     }
