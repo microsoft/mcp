@@ -7,7 +7,7 @@ namespace Azure.Mcp.Tools.Postgres.Services;
 
 public interface IPostgresService
 {
-    Task<List<string>> ListDatabasesAsync(
+    Task<DatabaseListResult> ListDatabasesAsync(
         string subscriptionId,
         string resourceGroup,
         string authType,

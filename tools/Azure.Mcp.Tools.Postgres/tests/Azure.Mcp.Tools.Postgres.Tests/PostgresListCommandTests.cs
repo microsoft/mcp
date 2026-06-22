@@ -78,7 +78,7 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
             null,
             "server1",
             Arg.Any<CancellationToken>())
-            .Returns(expectedDatabases);
+            .Returns(new DatabaseListResult(expectedDatabases, false));
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -92,6 +92,7 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
         Assert.Null(result.Servers);
         Assert.Equal(expectedDatabases, result.Databases);
         Assert.Null(result.Tables);
+        Assert.Null(result.DatabasesTruncated);
     }
 
     [Fact]
@@ -157,6 +158,35 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
     }
 
     [Fact]
+    public async Task ExecuteAsync_SetsDatabasesTruncated_WhenServiceReportsTruncation()
+    {
+        var expectedDatabases = new List<string> { "db1", "db2", "db3" };
+        Service.ListDatabasesAsync(
+            "sub123",
+            "rg1",
+            AuthTypes.MicrosoftEntra,
+            "user1",
+            null,
+            "server1",
+            Arg.Any<CancellationToken>())
+            .Returns(new DatabaseListResult(expectedDatabases, true));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--user", "user1",
+            $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
+            "--server", "server1");
+
+        var result = ValidateAndDeserializeResponse(response, PostgresJsonContext.Default.PostgresListCommandResult);
+
+        Assert.Null(result.Servers);
+        Assert.Equal(expectedDatabases, result.Databases);
+        Assert.Null(result.Tables);
+        Assert.True(result.DatabasesTruncated);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenNoServersExist()
     {
         Service.ListServersAsync("sub123", "rg1", Arg.Any<CancellationToken>()).Returns([]);
@@ -184,7 +214,7 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
             null,
             "server1",
             Arg.Any<CancellationToken>())
-            .Returns([]);
+            .Returns(new DatabaseListResult([], false));
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",

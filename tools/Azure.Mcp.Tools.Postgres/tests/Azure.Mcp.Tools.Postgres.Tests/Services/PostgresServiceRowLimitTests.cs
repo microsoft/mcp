@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.Postgres.Tests.Services;
 
 public class PostgresServiceRowLimitTests
 {
-    private const int MaxRowCount = 10_000;
+    private const int MaxRowCount = PostgresService.MaxRowCount;
 
     private readonly IResourceGroupService _resourceGroupService = Substitute.For<IResourceGroupService>();
     private readonly ISubscriptionService _subscriptionService = Substitute.For<ISubscriptionService>();
@@ -54,30 +54,41 @@ public class PostgresServiceRowLimitTests
     }
 
     [Fact]
-    public async Task ListDatabasesAsync_UnderCap_DoesNotAppendSentinel()
+    public async Task ListDatabasesAsync_UnderCap_ReturnsAllAndNotTruncated()
     {
         StubReader(rowCount: 3, columnName: "datname");
 
         var result = await _postgresService.ListDatabasesAsync(
             SubscriptionId, ResourceGroup, AuthType, User, null, Server, TestContext.Current.CancellationToken);
 
-        Assert.Equal(3, result.Count);
-        Assert.DoesNotContain(result, r => r.StartsWith("... (output limited", StringComparison.Ordinal));
+        Assert.Equal(3, result.Databases.Count);
+        Assert.False(result.IsTruncated);
     }
 
     [Fact]
-    public async Task ListDatabasesAsync_AtCap_AppendsSentinelRow()
+    public async Task ListDatabasesAsync_AtCap_ReturnsCapRowsAndNotTruncatedWhenNoExtra()
     {
-        // FakeDbDataReader ignores SQL LIMIT, so simulate the worst case by returning exactly MaxRowCount rows.
+        // Reader returns exactly MaxRowCount rows — boundary case, nothing beyond the cap.
         StubReader(rowCount: MaxRowCount, columnName: "datname");
 
         var result = await _postgresService.ListDatabasesAsync(
             SubscriptionId, ResourceGroup, AuthType, User, null, Server, TestContext.Current.CancellationToken);
 
-        // MaxRowCount real rows + 1 sentinel row (mirrors MySQL behavior).
-        Assert.Equal(MaxRowCount + 1, result.Count);
-        Assert.StartsWith("... (output limited", result[^1]);
-        Assert.Contains("10,000", result[^1]);
+        Assert.Equal(MaxRowCount, result.Databases.Count);
+        Assert.False(result.IsTruncated);
+    }
+
+    [Fact]
+    public async Task ListDatabasesAsync_OverCap_ReturnsCapRowsAndIsTruncated()
+    {
+        // Reader returns MaxRowCount + 1 (the cap+1 LIMIT in production); detect truncation via the extra read.
+        StubReader(rowCount: MaxRowCount + 1, columnName: "datname");
+
+        var result = await _postgresService.ListDatabasesAsync(
+            SubscriptionId, ResourceGroup, AuthType, User, null, Server, TestContext.Current.CancellationToken);
+
+        Assert.Equal(MaxRowCount, result.Databases.Count);
+        Assert.True(result.IsTruncated);
     }
 
     [Fact]
