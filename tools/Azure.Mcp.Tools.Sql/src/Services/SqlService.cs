@@ -83,17 +83,25 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        var result = await ExecuteSingleResourceQueryAsync(
-            "Microsoft.Sql/servers/databases",
-            resourceGroup: resourceGroup,
-            subscription: subscription,
-            retryPolicy: retryPolicy,
-            converter: ConvertToSqlDatabaseModel,
-            additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
-            cancellationToken: cancellationToken)
-            ?? throw new KeyNotFoundException($"SQL database '{databaseName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(databaseName), databaseName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
 
-        return result;
+        try
+        {
+            var subscriptionId = await ResolveSubscriptionIdAsync(subscription, retryPolicy, cancellationToken);
+            var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, retryPolicy, cancellationToken);
+
+            var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
+
+            return ConvertToSqlDatabaseModel(databaseResource.Value);
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
+        {
+            throw new KeyNotFoundException($"SQL database '{databaseName}' not found on server '{serverName}' in resource group '{resourceGroup}' for subscription '{subscription}'.", ex);
+        }
     }
 
     /// <summary>
