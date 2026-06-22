@@ -390,6 +390,10 @@ function Get-TestMatrix {
         [string] $TestType
     )
 
+    # Live tests deploy real Azure resources, so they can only run in clouds the tool supports.
+    # The target cloud for the current run is AzureUSGovernment when running gov tests, otherwise AzureCloud.
+    $targetCloud = $govTest ? 'AzureUSGovernment' : 'AzureCloud'
+
     Write-Host "Forming $($TestType.ToLower()) test matrix"
     $testMatrix = [ordered]@{}
     foreach ($path in $pathsToTest) {
@@ -400,6 +404,11 @@ function Get-TestMatrix {
 
         if ($TestType -eq 'Live') {
             if (!$path.HasLiveTests -or !$path.HasTestResources) {
+                continue
+            }
+
+            if ($path.azureSupportedClouds -and ($path.azureSupportedClouds -notcontains $targetCloud)) {
+                Write-Host "Skipping live tests for '$($path.Path)' in '$targetCloud'; supported clouds: $($path.azureSupportedClouds -join ', ')"
                 continue
             }
 

@@ -249,6 +249,11 @@ resource amlfs 'Microsoft.StorageCache/amlFilesystems@2024-07-01' = {
   sku: {
     name: amlfsSku
   }
+  // amlFilesystems is a zonal resource. usgovvirginia requires an explicit availability
+  // zone at preflight (otherwise the RP returns "Parameter validation failed"); public
+  // regions auto-select, so only pin a zone in Azure US Government to avoid disturbing
+  // existing public-cloud deployments.
+  zones: environment().name == 'AzureUSGovernment' ? ['1'] : null
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {

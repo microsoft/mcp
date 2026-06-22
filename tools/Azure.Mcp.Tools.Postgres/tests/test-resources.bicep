@@ -11,9 +11,15 @@ param testApplicationOid string = '26ffb325-f480-419c-b7a9-2c8a018203a8' // azur
 
 var testDbName string = 'testdb'
 
+// PostgreSQL Flexible Server provisioning is offer/capacity-restricted for the test
+// subscription in usgovvirginia (LocationIsOfferRestricted). Azure recommends retrying in a
+// different location, so deploy the server to an alternate Azure US Government region where
+// the offer is available. Public-cloud deployments keep using the resource group's location.
+var postgresLocation = environment().name == 'AzureUSGovernment' ? 'usgovarizona' : location
+
 resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2025-06-01-preview' = {
   name: '${baseName}-postgres'
-  location: location
+  location: postgresLocation
   sku: {
     name: 'Standard_B1ms'
     tier: 'Burstable'
