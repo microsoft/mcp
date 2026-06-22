@@ -836,6 +836,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| role_approval_approve | Approve the pending PIM role assignment request <approval> stage <stage> for scope <scope> because <justification> |
+| role_approval_list | Show me pending Azure RBAC PIM role assignment approvals for scope <scope> |
 | role_assignment_list | List all available role assignments in my subscription |
 | role_assignment_list | Show me the available role assignments in my subscription |
 
