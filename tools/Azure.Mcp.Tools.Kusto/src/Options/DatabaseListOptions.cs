@@ -9,21 +9,21 @@ namespace Azure.Mcp.Tools.Kusto.Options;
 
 public class DatabaseListOptions : ISubscriptionOption, IClusterOption
 {
-    [Option("Kusto Cluster URI.", Name = "cluster-uri")]
+    [Option(Description = "Kusto Cluster URI.")]
     public string? ClusterUri { get; set; }
 
-    [Option("Kusto Cluster name.", Name = "cluster")]
-    public string? ClusterName { get; set; }
+    [Option(Description = "Kusto Cluster name.")]
+    public string? Cluster { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(OptionDescriptions.AuthMethod, Name = "auth-method")]
+    [Option(Description = OptionDescriptions.AuthMethod)]
     public AuthMethod? AuthMethod { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }

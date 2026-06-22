@@ -9,18 +9,18 @@ namespace Azure.Mcp.Tools.Kusto.Options;
 
 public class ClusterListOptions : ISubscriptionOption
 {
-    [Option(OptionDescriptions.ResourceGroup, Name = "resource-group")]
+    [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(OptionDescriptions.AuthMethod, Name = "auth-method")]
+    [Option(Description = OptionDescriptions.AuthMethod)]
     public AuthMethod? AuthMethod { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }

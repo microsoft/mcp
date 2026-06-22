@@ -32,25 +32,25 @@ The new pattern uses `[Option]` attributes on a flat options POCO. `OptionBinder
 // NEW: options are just a POCO with attributes
 public class BlobUploadOptions : ISubscriptionOption
 {
-    [Option("The name of the Azure Storage account.")]
+    [Option(Description = "The name of the Azure Storage account.")]
     public required string Account { get; set; }
 
-    [Option("The name of the container within the storage account.")]
+    [Option(Description = "The name of the container within the storage account.")]
     public required string Container { get; set; }
 
-    [Option("The blob name/path within the container.")]
+    [Option(Description = "The blob name/path within the container.")]
     public required string Blob { get; set; }
 
-    [Option("The local file path to read content from.")]
+    [Option(Description = "The local file path to read content from.")]
     public required string LocalFilePath { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
@@ -110,9 +110,9 @@ Replace the options class hierarchy with a single flat POCO that implements `ISu
 **Conventions:**
 - **Name**: Derived automatically from the property name in kebab-case (e.g., `LocalFilePath` → `--local-file-path`). Only use `[Option(Name = "...")]` when the convention doesn't produce the desired name (e.g., `RetryPolicy` → `--retry` instead of `--retry-policy`). **Do not** specify `Name =` when it matches the default.
 - **Required**: Determined by nullability. Use `required` keyword or non-nullable types for required options. Use `?` for optional.
-- **Description**: Pass as the constructor argument `[Option("description")]` or via `[Option(Description = "...")]`.
+- **Description**: Always required, passed using attribute properties: `[Option(Description = "description")]`.
 - **Shared descriptions**: Use constants from `OptionDescriptions` (e.g., `OptionDescriptions.Subscription`, `OptionDescriptions.Tenant`).
-- **Nested objects**: Use `[Option(Name = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `RetryPolicyOptions` with `[Option(Name = "retry")]` produces `--retry-delay`, `--retry-max-retries`, etc.
+- **Nested objects**: Use `[OptionContainer(Prefix = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `RetryPolicyOptions` with `[OptionContainer(Prefix = "retry")]` produces `--retry-delay`, `--retry-max-retries`, etc.
 - **Property ordering**: List command-specific options first, then sink common/infrastructure options to the bottom in this order: `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`, `RetryPolicy`. This keeps the most relevant options visible at a glance.
 
 **Before (hierarchy of 6 classes):**
@@ -129,25 +129,25 @@ GlobalOptions                → Tenant, AuthMethod, RetryPolicy
 ```csharp
 public class BlobUploadOptions : ISubscriptionOption
 {
-    [Option("The name of the Azure Storage account.")]
+    [Option(Description = "The name of the Azure Storage account.")]
     public required string Account { get; set; }
 
-    [Option("The name of the container within the storage account.")]
+    [Option(Description = "The name of the container within the storage account.")]
     public required string Container { get; set; }
 
-    [Option("The blob name/path within the container.")]
+    [Option(Description = "The blob name/path within the container.")]
     public required string Blob { get; set; }
 
-    [Option("The local file path to read content from.")]
+    [Option(Description = "The local file path to read content from.")]
     public required string LocalFilePath { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
@@ -279,25 +279,25 @@ The options class stays flat — no inheritance. It just implements the interfac
 ```csharp
 public class BlobUploadOptions : ISubscriptionOption, IBlobOption
 {
-    [Option("The name of the Azure Storage account.")]
+    [Option(Description = "The name of the Azure Storage account.")]
     public required string Account { get; set; }
 
-    [Option("The name of the container within the storage account.")]
+    [Option(Description = "The name of the container within the storage account.")]
     public required string Container { get; set; }
 
-    [Option("The blob name/path within the container.")]
+    [Option(Description = "The blob name/path within the container.")]
     public required string Blob { get; set; }
 
-    [Option("The local file path to read content from.")]
+    [Option(Description = "The local file path to read content from.")]
     public required string LocalFilePath { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```

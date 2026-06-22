@@ -46,7 +46,7 @@ public sealed class DatabaseListCommand(
             {
                 databasesNames = await kustoService.ListDatabasesAsync(
                     options.Subscription!,
-                    options.ClusterName!,
+                    options.Cluster!,
                     options.Tenant,
                     options.AuthMethod,
                     options.RetryPolicy,
@@ -57,7 +57,7 @@ public sealed class DatabaseListCommand(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An exception occurred listing databases. Cluster: {Cluster}.", options.ClusterUri ?? options.ClusterName);
+            logger.LogError(ex, "An exception occurred listing databases. Cluster: {Cluster}.", options.ClusterUri ?? options.Cluster);
             HandleException(context, ex);
         }
         return context.Response;

@@ -487,19 +487,19 @@ Options classes are flat POCOs with `[Option]` attributes. Registration and bind
 ```csharp
 public class {Resource}{Operation}Options : ISubscriptionOption
 {
-    [Option("Description of the required option.")]
+    [Option(Description = "Description of the required option.")]
     public required string RequiredOption { get; set; }
 
-    [Option("Description of the optional option.")]
+    [Option(Description = "Description of the optional option.")]
     public string? OptionalOption { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Name = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
@@ -536,9 +536,9 @@ The `[Option]` attribute drives automatic option registration and binding via `O
 **Conventions:**
 - **Name**: Derived automatically from the property name in kebab-case (e.g., `LocalFilePath` → `--local-file-path`). Only use `[Option(Name = "...")]` when the convention doesn't produce the desired name (e.g., `RetryPolicy` → `--retry` instead of `--retry-policy`). **Do not** specify `Name =` when it matches the default.
 - **Required**: Determined by nullability. Use non-nullable types for required options. Use `?` for optional. Use the `required` keyword to suppress compiler warnings about uninitialized non-nullable reference properties.
-- **Description**: Pass as the constructor argument `[Option("description")]` or via `[Option(Description = "...")]`.
+- **Description**: Always required, passed using attribute properties: `[Option(Description = "description")]`.
 - **Shared descriptions**: Use constants from `OptionDescriptions` (e.g., `OptionDescriptions.Subscription`, `OptionDescriptions.Tenant`).
-- **Nested objects**: Use `[Option(Name = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `RetryPolicyOptions` with `[Option(Name = "retry")]` produces `--retry-delay`, `--retry-max-retries`, etc.
+- **Nested objects**: Use `[OptionContainer(Prefix = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `RetryPolicyOptions` with `[OptionContainer(Prefix = "retry")]` produces `--retry-delay`, `--retry-max-retries`, etc.
 - **Property ordering**: List command-specific options first, then sink common/infrastructure options to the bottom in this order: `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`, `RetryPolicy`. This keeps the most relevant options visible at a glance.
 
 ### Usage Patterns
@@ -550,25 +550,25 @@ The most common pattern — a command that needs some required parameters and so
 ```csharp
 public class {Resource}{Operation}Options : ISubscriptionOption
 {
-    [Option("The name of the Azure Storage account.")]
+    [Option(Description = "The name of the Azure Storage account.")]
     public required string Account { get; set; }
 
-    [Option("The name of the container within the storage account.")]
+    [Option(Description = "The name of the container within the storage account.")]
     public required string Container { get; set; }
 
-    [Option("Optional filter expression.")]
+    [Option(Description = "Optional filter expression.")]
     public string? Filter { get; set; }
 
-    [Option(OptionDescriptions.ResourceGroup)]
+    [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
@@ -580,19 +580,19 @@ When options are mutually exclusive, make them both optional in the POCO and val
 ```csharp
 public class MyCommandOptions : ISubscriptionOption
 {
-    [Option("First exclusive option.")]
+    [Option(Description = "First exclusive option.")]
     public string? EitherThis { get; set; }
 
-    [Option("Second exclusive option.")]
+    [Option(Description = "Second exclusive option.")]
     public string? OrThat { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 
@@ -623,16 +623,16 @@ For options with a fixed set of valid values:
 ```csharp
 public class MyCommandOptions : ISubscriptionOption
 {
-    [Option("The output format.")]
+    [Option(Description = "The output format.")]
     public required string Format { get; set; }  // Validated in ValidateOptions
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 
@@ -669,25 +669,25 @@ The concrete options class implements these interfaces while remaining flat:
 ```csharp
 public class BlobUploadOptions : ISubscriptionOption, IContainerOption
 {
-    [Option("The name of the Azure Storage account.")]
+    [Option(Description = "The name of the Azure Storage account.")]
     public required string Account { get; set; }
 
-    [Option("The name of the container within the storage account.")]
+    [Option(Description = "The name of the container within the storage account.")]
     public required string Container { get; set; }
 
-    [Option("The blob name/path within the container.")]
+    [Option(Description = "The blob name/path within the container.")]
     public required string Blob { get; set; }
 
-    [Option("The local file path to read content from.")]
+    [Option(Description = "The local file path to read content from.")]
     public required string LocalFilePath { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
@@ -699,16 +699,16 @@ Commands that list resources with optional narrowing:
 ```csharp
 public class StorageAccountListOptions : ISubscriptionOption
 {
-    [Option(OptionDescriptions.ResourceGroup)]
+    [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
@@ -2005,19 +2005,19 @@ var subscriptionResource = await _subscriptionService.GetSubscription(subscripti
 // Options are a flat POCO with [Option] attributes
 public class MyOptions : ISubscriptionOption
 {
-    [Option("The resource group name.")]
+    [Option(Description = "The resource group name.")]
     public required string ResourceGroup { get; set; }
 
-    [Option("The service-specific option.")]
+    [Option(Description = "The service-specific option.")]
     public string? ServiceOption { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 

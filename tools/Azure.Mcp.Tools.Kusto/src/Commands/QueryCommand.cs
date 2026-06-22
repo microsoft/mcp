@@ -48,7 +48,7 @@ public sealed class QueryCommand(
             {
                 results = await kustoService.QueryItemsAsync(
                     options.Subscription!,
-                    options.ClusterName!,
+                    options.Cluster!,
                     options.Database,
                     options.Query,
                     options.Tenant,
@@ -62,7 +62,7 @@ public sealed class QueryCommand(
         catch (Exception ex)
         {
             logger.LogError(ex, "An exception occurred querying Kusto. Cluster: {Cluster}, Database: {Database},"
-            + " Query: {Query}", options.ClusterUri ?? options.ClusterName, options.Database, options.Query);
+            + " Query: {Query}", options.ClusterUri ?? options.Cluster, options.Database, options.Query);
             HandleException(context, ex);
         }
         return context.Response;

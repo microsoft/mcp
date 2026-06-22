@@ -47,7 +47,7 @@ public sealed class TableListCommand(
             {
                 tableNames = await kustoService.ListTablesAsync(
                     options.Subscription!,
-                    options.ClusterName!,
+                    options.Cluster!,
                     options.Database,
                     options.Tenant,
                     options.AuthMethod,
@@ -59,7 +59,7 @@ public sealed class TableListCommand(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An exception occurred listing tables. Cluster: {Cluster}, Database: {Database}.", options.ClusterUri ?? options.ClusterName, options.Database);
+            logger.LogError(ex, "An exception occurred listing tables. Cluster: {Cluster}, Database: {Database}.", options.ClusterUri ?? options.Cluster, options.Database);
             HandleException(context, ex);
         }
         return context.Response;
