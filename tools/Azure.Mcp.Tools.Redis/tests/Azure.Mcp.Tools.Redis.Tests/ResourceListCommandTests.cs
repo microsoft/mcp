@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure;
 using Azure.Mcp.Tools.Redis.Commands;
 using Azure.Mcp.Tools.Redis.Models.CacheForRedis;
 using Azure.Mcp.Tools.Redis.Models.ManagedRedis;
@@ -103,6 +104,36 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsNotFound_WhenSubscriptionNotFound()
+    {
+        // Arrange
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new KeyNotFoundException("Subscription 'sub123' not found"));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PreservesStatusCode_WhenRequestFailedException()
+    {
+        // Arrange
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
     }
 
     [Fact]

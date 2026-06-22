@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Aks.Commands;
 using Azure.Mcp.Tools.Aks.Commands.Nodepool;
 using Azure.Mcp.Tools.Aks.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.Tests.Nodepool;
 
-public sealed class NodepoolGetCommandTests : CommandUnitTestsBase<NodepoolGetCommand, IAksService>
+public sealed class NodepoolGetCommandTests : SubscriptionCommandUnitTestsBase<NodepoolGetCommand, IAksService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()

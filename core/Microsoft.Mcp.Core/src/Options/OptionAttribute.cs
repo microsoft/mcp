@@ -41,9 +41,19 @@ public sealed class OptionAttribute : Attribute
     public string? Name { get; init; }
 
     /// <summary>
+    /// Additional CLI option names (without the "--" prefix).
+    /// </summary>
+    public string[]? Aliases { get; init; }
+
+    /// <summary>
     /// A description of what the option controls. Used in help text and by AI agents.
     /// </summary>
     public string? Description { get; init; }
+
+    /// <summary>
+    /// A default value for the option when a value is not provided. Must match the property type being attributed.
+    /// </summary>
+    public object? DefaultValue { get; init; }
 
     /// <summary>
     /// Whether the option is hidden from help output.

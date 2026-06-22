@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added 12 new OneLake tools: Data Access Security (list, get, create-or-update, delete roles), Shortcuts (list, get, create-or-update, delete, reset-cache), and Settings (get, modify-diagnostics, modify-immutability-policy)"

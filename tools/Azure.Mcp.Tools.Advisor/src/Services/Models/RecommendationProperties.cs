@@ -9,6 +9,9 @@ internal sealed class RecommendationProperties
     /// <summary> The category of the recommendation. </summary>
     public string? Category { get; set; }
 
+    /// <summary> The business impact of the recommendation (e.g., High, Medium, Low). </summary>
+    public string? Impact { get; set; }
+
     /// <summary> The creation date of the recommendation. </summary>
     [JsonPropertyName("lastUpdated")]
     public DateTimeOffset? CreatedOn { get; set; }

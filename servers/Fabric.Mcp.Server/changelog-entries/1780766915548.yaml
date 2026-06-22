@@ -1,0 +1,7 @@
+changes:
+  - section: "Features Added"
+    description: "Added 9 per-target shortcut creation tools (OneLake, ADLS Gen2, Amazon S3, Azure Blob, GCS, S3-compatible, Dataverse, OneDrive/SharePoint, External Data Share) with flat typed options for better LLM ergonomics"
+  - section: "Features Added"
+    description: "Flattened JSON-string options into discrete typed parameters for diagnostics, immutability policy, and data access role commands"
+  - section: "Bugs Fixed"
+    description: "Fixed OneLake diagnostics and immutability settings models to match the Fabric REST API contract"

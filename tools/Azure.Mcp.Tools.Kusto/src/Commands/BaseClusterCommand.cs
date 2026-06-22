@@ -17,11 +17,9 @@ public abstract class BaseClusterCommand<
 {
     protected static bool UseClusterUri(TOptions options) => !string.IsNullOrEmpty(options.ClusterUri);
 
-    public override TOptions BindOptions(ParseResult parseResult)
+    public override void PostBindOptions(TOptions options)
     {
-        var options = base.BindOptions(parseResult);
         options.Subscription = subscriptionResolver.ResolveSubscription(options.Subscription);
-        return options;
     }
 
     public override void ValidateOptions(TOptions options, ValidationResult validationResult)
