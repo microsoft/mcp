@@ -221,9 +221,11 @@ namespace Azure.Mcp.Tools.Postgres.Tests.Services
             Assert.DoesNotContain("'public'", capturedQuery);
             Assert.DoesNotContain("analytics", capturedQuery);
 
-            Assert.Single(command.Parameters);
+            Assert.Equal(2, command.Parameters.Count);
             Assert.Equal("schema", command.Parameters[0].ParameterName);
             Assert.Equal("analytics", command.Parameters[0].Value);
+            Assert.Equal("maxResults", command.Parameters[1].ParameterName);
+            Assert.Equal(PostgresService.MaxRowCount + 1, command.Parameters[1].Value);
         }
 
         [Fact]
