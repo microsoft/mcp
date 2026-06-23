@@ -23,7 +23,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- "Improved resource querying in Aks tools". [[#2852](https://github.com/microsoft/mcp/pull/2852)]
+- Improved resource querying in Aks tools. [[#2852](https://github.com/microsoft/mcp/pull/2852)]
 - Clarified the `azmcp redis create` tool description to convey that provisioning is asynchronous and callers should poll `provisioningState` until it shows 'Succeeded' before connecting. [[#2863](https://github.com/microsoft/mcp/pull/2863)]
 
 ## 3.0.0-beta.20 (2026-06-18)
