@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Table;
 
@@ -32,6 +33,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IMonitorS
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(MonitorOptionDefinitions.TableType);
     }
 

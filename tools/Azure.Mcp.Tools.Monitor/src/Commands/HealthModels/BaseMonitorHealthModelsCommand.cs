@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Tools.Monitor.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels;
 
@@ -16,6 +17,7 @@ public abstract class BaseMonitorHealthModelsCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(MonitorOptionDefinitions.Health.Entity);
         command.Options.Add(MonitorOptionDefinitions.Health.HealthModel);
     }

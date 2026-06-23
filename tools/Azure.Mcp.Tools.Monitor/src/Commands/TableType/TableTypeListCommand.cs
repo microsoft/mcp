@@ -5,7 +5,9 @@ using Azure.Mcp.Tools.Monitor.Options.TableType;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.TableType;
 
@@ -24,6 +26,12 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger, I
 {
     private readonly ILogger<TableTypeListCommand> _logger = logger;
     private readonly IMonitorService _monitorService = monitorService;
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+    }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
