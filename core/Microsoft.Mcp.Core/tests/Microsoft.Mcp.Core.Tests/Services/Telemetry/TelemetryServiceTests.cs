@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
@@ -577,7 +578,7 @@ public class TelemetryServiceTests
         var activity = new Activity("test");
         var requestParams = new ListToolsRequestParams()
         {
-            Meta = new([new("io.modelcontextprotocol/clientInfo", new JsonObject([new("name", "Fizz-Buzz-MCP"), new("version", "2.0.0")]))])
+            Meta = CreateClientInfo("Fizz-Buzz-MCP", "2.0.0")
         };
         TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
 
@@ -595,7 +596,7 @@ public class TelemetryServiceTests
         };
         var requestParams = new ListToolsRequestParams()
         {
-            Meta = new([new("io.modelcontextprotocol/clientInfo", new JsonObject([new("name", "Fizz-Buzz-MCP"), new("version", "2.0.0")]))])
+            Meta = CreateClientInfo("Fizz-Buzz-MCP", "2.0.0")
         };
         TelemetryService.SetClientNameAndVersion(activity, clientInfo, requestParams);
 
@@ -609,22 +610,29 @@ public class TelemetryServiceTests
     public void SetClientNameAndVersion_RequestParamsPartial_HandlesCorrectly(string? name, string? version)
     {
         var activity = new Activity("test");
-        var meta = new JsonObject();
-        if (name != null)
-        {
-            meta.Add("name", name);
-        }
-        if (version != null)
-        {
-            meta.Add("version", version);
-        }
         var requestParams = new ListToolsRequestParams()
         {
-            Meta = new([new("io.modelcontextprotocol/clientInfo", meta)])
+            Meta = CreateClientInfo(name, version)
         };
         TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
 
         ValidateClientNameAndVersion(activity, name, version);
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(1, 2)]
+    [InlineData(1.0, 2.0)]
+    public void SetClientNameAndVersion_RequestParamsNonString_AreIgnored(object name, object version)
+    {
+        var activity = new Activity("test");
+        var requestParams = new ListToolsRequestParams()
+        {
+            Meta = CreateClientInfo(name, version)
+        };
+        TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
+
+        ValidateClientNameAndVersion(activity, null, null);
     }
 
     [Fact]
@@ -646,7 +654,7 @@ public class TelemetryServiceTests
         var activity = new Activity("test");
         var requestParams = new ListToolsRequestParams()
         {
-            Meta = new([new("io.modelcontextprotocol/clientInfo", new JsonArray())])
+            Meta = new([new(McpHelper.ClientInfoMetaKey, new JsonArray())])
         };
         TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
 
@@ -659,11 +667,26 @@ public class TelemetryServiceTests
         var activity = new Activity("test");
         var requestParams = new ListToolsRequestParams()
         {
-            Meta = new([new("io.modelcontextprotocol/clientInfo", "string")])
+            Meta = new([new(McpHelper.ClientInfoMetaKey, "string")])
         };
         TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
 
         ValidateClientNameAndVersion(activity, null, null);
+    }
+
+    private static JsonObject CreateClientInfo(object? name, object? version)
+    {
+        var jsonObject = new JsonObject();
+        if (name != null)
+        {
+            jsonObject[McpHelper.ClientInfoNameKey] = JsonValue.Create(name);
+        }
+        if (version != null)
+        {
+            jsonObject[McpHelper.ClientInfoVersionKey] = JsonValue.Create(version);
+        }
+
+        return new([new(McpHelper.ClientInfoMetaKey, jsonObject)]);
     }
 
     private static void ValidateClientNameAndVersion(Activity activity, string? name, string? version)

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using ModelContextProtocol.Protocol;
 
@@ -120,18 +121,20 @@ internal class TelemetryService : ITelemetryService
         }
 
         if (requestParams?.Meta != null &&
-            requestParams.Meta.TryGetPropertyValue("io.modelcontextprotocol/clientInfo", out var node) &&
+            requestParams.Meta.TryGetPropertyValue(McpHelper.ClientInfoMetaKey, out var node) &&
             node is JsonObject requestClientInfo)
         {
-            if (requestClientInfo.TryGetPropertyValue("name", out var nameNode) &&
-                nameNode is JsonValue nameValue)
+            if (requestClientInfo.TryGetPropertyValue(McpHelper.ClientInfoNameKey, out var nameNode) &&
+                nameNode is JsonValue nameValue &&
+                nameValue.TryGetValue<string>(out var nameString))
             {
-                activity.SetTag(TagName.ClientName, nameValue.GetValue<string>());
+                activity.SetTag(TagName.ClientName, nameString);
             }
-            if (requestClientInfo.TryGetPropertyValue("version", out var versionNode) &&
-                versionNode is JsonValue versionValue)
+            if (requestClientInfo.TryGetPropertyValue(McpHelper.ClientInfoVersionKey, out var versionNode) &&
+                versionNode is JsonValue versionValue &&
+                versionValue.TryGetValue<string>(out var versionString))
             {
-                activity.SetTag(TagName.ClientVersion, versionValue.GetValue<string>());
+                activity.SetTag(TagName.ClientVersion, versionString);
             }
         }
     }
@@ -161,10 +164,7 @@ internal class TelemetryService : ITelemetryService
             {
                 // Check after acquiring lock to ensure we honor work
                 // started while we were waiting.
-                if (_initalizationTask == null)
-                {
-                    _initalizationTask = InnerInitializeAsync();
-                }
+                _initalizationTask ??= InnerInitializeAsync();
             }
             finally
             {
