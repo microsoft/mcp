@@ -13,10 +13,6 @@ you through the prerequisites and the most common onboarding tasks:
 5. [Integrate an external MCP server](#5-integrate-an-external-mcp-server)
 6. [Pull request checklist](#6-pull-request-checklist)
 
-> [!TIP]
-> Prefer interactive help? Invoke the [`@onboarding` agent](https://github.com/microsoft/mcp/blob/main/.github/agents/onboarding.agent.md)
-> in GitHub Copilot Chat. It routes you to the right section of this guide and the deeper docs.
-
 This document links to the authoritative deep-dive docs rather than duplicating them. The
 two most important references are:
 
