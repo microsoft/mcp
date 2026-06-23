@@ -7,6 +7,8 @@
 
 The following options are available for all commands:
 
+> **Note:** The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, `--auth-method`, or any `--retry-*` options.
+
 | Option | Required | Default | Description |
 |-----------|----------|---------|-------------|
 | `--subscription` | No | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources |
@@ -4638,7 +4640,7 @@ azmcp cloudarchitect design [--question <question>] \
                             [--answer <answer>] \
                             [--next-question-needed <true/false>] \
                             [--confidence-score <confidence-score>] \
-                            [--architecture-component <architecture-component>]
+                            [--state <state>]
 
 # Example:
 # Start an interactive architecture design session
