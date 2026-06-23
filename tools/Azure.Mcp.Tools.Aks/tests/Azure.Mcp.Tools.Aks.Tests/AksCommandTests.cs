@@ -164,8 +164,10 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
 
         // Get the first cluster's details
         var firstCluster = clusters.EnumerateArray().First();
-        var clusterName = RegisterOrRetrieveVariable("firstClusterName", firstCluster.GetProperty("name").GetString()!);
-        var resourceGroupName = RegisterOrRetrieveVariable("firstResourceGroupName", firstCluster.GetProperty("resourceGroupName").GetString()!);
+        // Use response values directly: in playback these are "Sanitized" (matching the recording);
+        // in record mode they are the real names which get sanitized when stored.
+        var clusterName = firstCluster.GetProperty("name").GetString()!;
+        var resourceGroupName = firstCluster.GetProperty("resourceGroupName").GetString()!;
 
         // Now test the get command
         var getResult = await CallToolAsync(
@@ -187,7 +189,7 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
 
         // Verify the cluster details
         var nameProperty = cluster.AssertProperty("name");
-        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : clusterName, nameProperty.GetString());
+        Assert.Equal(clusterName, nameProperty.GetString());
 
         var rgProperty = cluster.AssertProperty("resourceGroupName");
         Assert.Equal(resourceGroupName, rgProperty.GetString());
@@ -233,7 +235,9 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
 
         // Get the first cluster's resource group
         var firstCluster = clusters.EnumerateArray().First();
-        var resourceGroupName = RegisterOrRetrieveVariable("firstResourceGroupName", firstCluster.GetProperty("resourceGroupName").GetString()!);
+        // Use the response value directly: in playback this is "Sanitized" (matching the recording);
+        // in record mode it's the real name which gets sanitized when stored.
+        var resourceGroupName = firstCluster.GetProperty("resourceGroupName").GetString()!;
 
         // Attempt to get a non-existent cluster from that resource group
         var result = await CallToolAsync(
