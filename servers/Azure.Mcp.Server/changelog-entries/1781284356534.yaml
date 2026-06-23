@@ -1,3 +1,0 @@
-changes:
-  - section: "Breaking Changes"
-    description: "Removed auth mode from aks_cluster_get and aks_nodepool_get tools as they don't use that parameter.\""

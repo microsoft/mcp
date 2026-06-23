@@ -2,15 +2,29 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.21 (Unreleased)
+## 3.0.0-beta.21 (2026-06-23)
 
 ### Features Added
 
+- Added `azmcp advisor recommendation summary` command to aggregate recommendations server-side grouped by `recommendation-type`, `category`, `impact`, or `resource-type`. `--group-by` is optional and defaults to `category` when omitted, surfacing the high-level themes (Cost, Security, Reliability, etc.). Returns the full per-bucket count and a true `TotalRecommendations` over the filtered population. Optional `--top` is a presentation cap on the number of displayed buckets (defaults to all); the `Unknown` bucket is always pushed to the tail and preserved across slicing so uncategorized items remain visible. Added optional `--category`, `--impact`, `--resource-type`, `--resource`, and `--search` filters to both `azmcp advisor recommendation list` and `azmcp advisor recommendation summary`; `--search` supports natural-language phrases like 'related to Microsoft Foundry'. Both commands now return only active recommendations (status 'New'), excluding dismissed and postponed ones. Also added `--top` to `azmcp advisor recommendation list`. [[#2732](https://github.com/microsoft/mcp/pull/2732)]
+- Added `azmcp advisor recommendation-type list` to list the catalog of Advisor recommendation types via the ARM Advisor metadata API. Each entry surfaces the recommendation's category, impact level, target resource type, and sub-category. Results are sorted by impact (High → Medium → Low). Supports optional filters `--resource-type`, `--impact`, and `--category`. Useful both for greenfield (empty environments) and brownfield (onboarding new resource types) scenarios. [[#2830](https://github.com/microsoft/mcp/pull/2830)]
+- Added an optional `--schema` parameter to `azmcp postgres list` for listing tables in non-public PostgreSQL schemas (defaults to `public`), and removed unused `--subscription`/`--resource-group` parameters from the PostgreSQL data-plane commands: `database query`, `table schema get`. [[#2864](https://github.com/microsoft/mcp/pull/2864)]
+
 ### Breaking Changes
+
+- Removed auth mode from `aks_cluster_get` and `aks_nodepool_get` tools as they don't use that parameter. [[#2868](https://github.com/microsoft/mcp/pull/2868)]
+- Removed unused parameters from App Lens tools. [[#2872](https://github.com/microsoft/mcp/pull/2872)]
 
 ### Bugs Fixed
 
+- Cap `azmcp postgres list` database and table results at 10,000 entries to prevent unbounded enumeration on large servers. When the results are truncated, the response includes a `resultsTruncated: true` flag. [[#2920](https://github.com/microsoft/mcp/pull/2920)]
+- Fixed the SQL `db get` and `elastic-pool list` tools returning resources from every server in the resource group, or a database from the wrong server, instead of only the requested server. Listing databases, listing elastic pools, and retrieving a single database by name are now scoped to the specified server. [[#2865](https://github.com/microsoft/mcp/pull/2865)]
+- Fixed Azure SQL tools failing with a cryptic ARM error when a subscription display name (instead of a subscription ID) was provided. The `sql server show`, `sql server list`, `sql server create`, and `sql db rename` operations now resolve the subscription through the subscription service. [[#2861](https://github.com/microsoft/mcp/pull/2861)]
+
 ### Other Changes
+
+- Improved resource querying in Aks tools. [[#2852](https://github.com/microsoft/mcp/pull/2852)]
+- Clarified the `azmcp redis create` tool description to convey that provisioning is asynchronous and callers should poll `provisioningState` until it shows 'Succeeded' before connecting. [[#2863](https://github.com/microsoft/mcp/pull/2863)]
 
 ## 3.0.0-beta.20 (2026-06-18)
 
