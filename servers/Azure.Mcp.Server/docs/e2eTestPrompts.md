@@ -1127,10 +1127,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azureterraform_azapi_get | Get AzAPI Terraform provider documentation for Microsoft.Compute/virtualMachines with API version 2024-07-01 |
 | azureterraform_avm_list | List all available Azure Verified Modules |
 | azureterraform_avm_list | Show me the available AVM modules for Terraform |
+| azureterraform_avm_list | List the AVM pattern modules available for Terraform |
 | azureterraform_avm_versions | Show all versions of avm-res-network-virtualnetwork |
 | azureterraform_avm_versions | What versions are available for avm-res-storage-storageaccount? |
+| azureterraform_avm_versions | Show all versions of the avm-ptn-aiml-ai-foundry pattern module |
 | azureterraform_avm_get | Get the documentation for avm-res-storage-storageaccount version 0.1.0 |
 | azureterraform_avm_get | Get the documentation for the latest version of Azure Verified Module avm-res-network-virtualnetwork |
+| azureterraform_avm_get | Get the documentation for the avm-ptn-aiml-ai-foundry pattern module |
 | azureterraform_aztfexport_resource | Export the resource /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/Microsoft.Storage/storageAccounts/<account> to Terraform |
 | azureterraform_aztfexport_resource | Generate an aztfexport command to export a single Azure resource to Terraform |
 | azureterraform_aztfexport_resourcegroup | Export all resources in resource group my-rg to Terraform |
