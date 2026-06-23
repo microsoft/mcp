@@ -132,8 +132,7 @@ public class AppServiceService(
         var configData = config.Value.Data;
         configData.ConnectionStrings = connectionStrings;
 
-        var updateOperation = await configResource.CreateOrUpdateAsync(WaitUntil.Started, configData, cancellationToken);
-        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
+        var updateOperation = await configResource.CreateOrUpdateAsync(WaitUntil.Completed, configData, cancellationToken);
         if (updateOperation?.Value == null)
         {
             throw new InvalidOperationException($"Failed to update configuration for web app '{webApp.Data.Name}'.");

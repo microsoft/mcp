@@ -65,10 +65,9 @@ internal sealed class RecordingRedirectHandler(Uri proxyUri) : DelegatingHandler
     {
         if (_playbackTesting)
         {
-            if (response.Headers.Remove("Retry-After"))
-            {
-                response.Headers.RetryAfter = new RetryConditionHeaderValue(TimeSpan.Zero);
-            }
+            // Always set Retry-After to TimeSpan.Zero. This allows for centralized handling for LROs as they look at
+            // that to determine the polling interval. So, it effectively removes any polling interval delays.
+            response.Headers.RetryAfter = new RetryConditionHeaderValue(TimeSpan.Zero);
             if (response.Headers.Remove("x-ms-retry-after-ms"))
             {
                 response.Headers.Add("x-ms-retry-after-ms", "0");

@@ -183,7 +183,7 @@ public sealed class KeyVaultService(
         var client = CreateCertificateClient(vaultName, credential, retryPolicy);
 
         var certificateOperation = await client.StartCreateCertificateAsync(certificateName, CertificatePolicy.Default, cancellationToken: cancellationToken);
-        await WaitForLroCompletionAsync(certificateOperation, cancellationToken);
+        await certificateOperation.WaitForCompletionAsync(cancellationToken);
         return certificateOperation.Value;
     }
 

@@ -7,7 +7,6 @@ using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
-using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure;
 
@@ -31,7 +30,6 @@ public abstract class BaseAzureService
     private static readonly string s_framework;
     private static readonly string s_platform;
     private static readonly string s_defaultUserAgent;
-    private static readonly TimeSpan? s_defaultPollInterval = null;
 
     static BaseAzureService()
     {
@@ -43,13 +41,6 @@ public abstract class BaseAzureService
         // Initialize the default user agent policy without transport type
         s_defaultUserAgent = $"azmcp/{s_version} ({s_framework}; {s_platform})";
         s_sharedUserAgentPolicy = new UserAgentPolicy(s_defaultUserAgent);
-
-#if DEBUG
-        if (EnvironmentHelpers.IsPlaybackTesting())
-        {
-            s_defaultPollInterval = TimeSpan.Zero;
-        }
-#endif
     }
 
     /// <summary>
@@ -163,15 +154,11 @@ public abstract class BaseAzureService
         return await TenantService.GetTenantId(tenant, cancellationToken);
     }
 
-    protected async Task<TokenCredential> GetCredential(CancellationToken cancellationToken)
-    {
-        // TODO @vukelich: separate PR for cancellationToken to be required, not optional default
-        return await GetCredential(null, cancellationToken);
-    }
+    protected async Task<TokenCredential> GetCredential(CancellationToken cancellationToken) =>
+        await GetCredential(null, cancellationToken);
 
     protected async Task<TokenCredential> GetCredential(string? tenant, CancellationToken cancellationToken)
     {
-        // TODO @vukelich: separate PR for cancellationToken to be required, not optional default
         var tenantId = string.IsNullOrEmpty(tenant) ? null : await ResolveTenantIdAsync(tenant, cancellationToken);
 
         try
@@ -294,61 +281,6 @@ public abstract class BaseAzureService
         {
             throw new ArgumentException(
                 $"Required parameter{(missingParams.Length > 1 ? "s are" : " is")} null or empty: {string.Join(", ", missingParams)}");
-        }
-    }
-
-    /// <summary>
-    /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes.
-    /// </summary>
-    /// <typeparam name="T">The return type.</typeparam>
-    /// <param name="operation">The long-running operation.</param>
-    /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
-    /// <returns>The response once the long-running operation completes.</returns>
-    protected static async Task WaitForLroCompletionAsync<T>(Operation<T> operation, CancellationToken cancellationToken = default) where T : notnull
-    {
-        ArgumentNullException.ThrowIfNull(operation);
-
-        if (s_defaultPollInterval.HasValue)
-        {
-            await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            await operation.WaitForCompletionAsync(cancellationToken);
-        }
-    }
-
-    /// <summary>
-    /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes.
-    /// </summary>
-    /// <param name="operation">The long-running operation.</param>
-    /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
-    /// <returns>The response once the long-running operation completes.</returns>
-    protected static async Task WaitForLroCompletionAsync(Operation operation, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(operation);
-
-        if (s_defaultPollInterval.HasValue)
-        {
-            await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            await operation.WaitForCompletionResponseAsync(cancellationToken);
-        }
-    }
-
-    private static async Task<Response> WaitForLroCompletionInternalAsync(Operation operation, CancellationToken cancellationToken)
-    {
-        while (true)
-        {
-            Response response = await operation.UpdateStatusAsync(cancellationToken);
-            if (operation.HasCompleted)
-            {
-                return operation.GetRawResponse();
-            }
-
-            await Task.Delay(s_defaultPollInterval!.Value, cancellationToken).ConfigureAwait(false);
         }
     }
 }

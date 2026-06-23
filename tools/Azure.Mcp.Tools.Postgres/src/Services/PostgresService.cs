@@ -328,8 +328,7 @@ public class PostgresService(
             Source = "user-override"
         };
 
-        var updateOperation = await configResponse.Value.UpdateAsync(WaitUntil.Started, configData, cancellationToken);
-        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
+        var updateOperation = await configResponse.Value.UpdateAsync(WaitUntil.Completed, configData, cancellationToken);
         if (updateOperation.HasCompleted && updateOperation.HasValue)
         {
             return $"Parameter '{param}' updated successfully to '{value}'.";

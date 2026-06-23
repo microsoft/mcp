@@ -49,8 +49,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
 
         // Build RequestContent manually to avoid trimming issues from reflection-based serialization.
         using var content = CreateAppendEntryContent(entryData);
-        var operation = await client.PostLedgerEntryAsync(WaitUntil.Started, content, collectionId, new RequestContext() { CancellationToken = cancellationToken });
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+        var operation = await client.PostLedgerEntryAsync(WaitUntil.Completed, content, collectionId, new() { CancellationToken = cancellationToken });
         var response = operation.GetRawResponse();
 
         return new()

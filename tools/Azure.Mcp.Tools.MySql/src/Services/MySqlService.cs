@@ -422,8 +422,7 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
         var configData = configuration.Value.Data;
         configData.Value = value;
 
-        var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Started, param, configData, cancellationToken);
-        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
+        var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Completed, param, configData, cancellationToken);
         return updateOperation.Value.Data.Value;
     }
 

@@ -238,12 +238,11 @@ public class MonitorWebTestService(
 
         var webTestArmResource = await resourceGroupResource.GetApplicationInsightsWebTests()
             .CreateOrUpdateAsync(
-                WaitUntil.Started,
+                WaitUntil.Completed,
                 resourceName,
                 webTestData,
                 cancellationToken
             ).ConfigureAwait(false);
-        await WaitForLroCompletionAsync(webTestArmResource, cancellationToken);
 
         if (webTestArmResource == null || !webTestArmResource.HasCompleted || !webTestArmResource.HasValue)
         {
@@ -406,12 +405,11 @@ public class MonitorWebTestService(
 
         var webTestArmResource = await resourceGroupResource.GetApplicationInsightsWebTests()
             .CreateOrUpdateAsync(
-                WaitUntil.Started,
+                WaitUntil.Completed,
                 resourceName,
                 webTestData,
                 cancellationToken
             ).ConfigureAwait(false);
-        await WaitForLroCompletionAsync(webTestArmResource, cancellationToken);
 
         if (webTestArmResource == null || !webTestArmResource.HasCompleted || !webTestArmResource.HasValue)
         {

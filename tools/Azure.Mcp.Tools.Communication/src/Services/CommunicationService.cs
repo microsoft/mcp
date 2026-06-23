@@ -176,10 +176,9 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
 
             // Send the email
             var sendOperation = await emailClient.SendAsync(
-                WaitUntil.Started,
+                WaitUntil.Completed,
                 emailMessage,
                 cancellationToken);
-            await WaitForLroCompletionAsync(sendOperation, cancellationToken);
 
             // Get the operation result
             var operationResult = sendOperation.Value;

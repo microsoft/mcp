@@ -182,8 +182,7 @@ public class WorkbooksService(
         var workbookName = Guid.NewGuid().ToString();
 
         var workbookCollection = resourceGroupResource.Value.GetApplicationInsightsWorkbooks();
-        var createOperation = await workbookCollection.CreateOrUpdateAsync(WaitUntil.Started, workbookName, workbookData, cancellationToken: cancellationToken);
-        await WaitForLroCompletionAsync(createOperation, cancellationToken);
+        var createOperation = await workbookCollection.CreateOrUpdateAsync(WaitUntil.Completed, workbookName, workbookData, cancellationToken: cancellationToken);
         var createdWorkbook = createOperation.Value;
 
         _logger.LogInformation("Successfully created workbook with name: {WorkbookName} in resource group: {ResourceGroup}", workbookName, resourceGroupName);
@@ -332,8 +331,7 @@ public class WorkbooksService(
         var workbookResource = armClient.GetApplicationInsightsWorkbookResource(workbookResourceId)
             ?? throw new InvalidOperationException($"Workbook with ID '{workbookId}' not found");
 
-        var deleteOperation = await workbookResource.DeleteAsync(WaitUntil.Started, cancellationToken);
-        await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
+        await workbookResource.DeleteAsync(WaitUntil.Completed, cancellationToken);
         _logger.LogInformation("Successfully deleted workbook with ID: {WorkbookId}", workbookId);
     }
 

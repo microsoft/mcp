@@ -215,11 +215,10 @@ public class ComputeService(
         // Create the VM
         var vmCollection = resourceGroupResource.GetVirtualMachines();
         var vmOperation = await vmCollection.CreateOrUpdateAsync(
-            WaitUntil.Started,
+            WaitUntil.Completed,
             vmName,
             vmData,
             cancellationToken);
-        await WaitForLroCompletionAsync(vmOperation, cancellationToken);
 
         var createdVm = vmOperation.Value;
 
@@ -369,11 +368,10 @@ public class ComputeService(
             }
 
             var nsgOperation = await nsgCollection.CreateOrUpdateAsync(
-                WaitUntil.Started,
+                WaitUntil.Completed,
                 nsgName,
                 nsgData,
                 cancellationToken);
-            await WaitForLroCompletionAsync(nsgOperation, cancellationToken);
             nsgResource = nsgOperation.Value;
         }
 
@@ -401,11 +399,10 @@ public class ComputeService(
             });
 
             var vnetOperation = await vnetCollection.CreateOrUpdateAsync(
-                WaitUntil.Started,
+                WaitUntil.Completed,
                 vnetName,
                 vnetData,
                 cancellationToken);
-            await WaitForLroCompletionAsync(vnetOperation, cancellationToken);
             vnetResource = vnetOperation.Value;
         }
 
@@ -438,11 +435,10 @@ public class ComputeService(
                 };
 
                 var pipOperation = await pipCollection.CreateOrUpdateAsync(
-                    WaitUntil.Started,
+                    WaitUntil.Completed,
                     pipName,
                     pipData,
                     cancellationToken);
-                await WaitForLroCompletionAsync(pipOperation, cancellationToken);
                 publicIpResource = pipOperation.Value;
             }
         }
@@ -470,11 +466,10 @@ public class ComputeService(
         nicData.IPConfigurations.Add(ipConfig);
 
         var nicOperation = await nicCollection.CreateOrUpdateAsync(
-            WaitUntil.Started,
+            WaitUntil.Completed,
             nicName,
             nicData,
             cancellationToken);
-        await WaitForLroCompletionAsync(nicOperation, cancellationToken);
 
         return nicOperation.Value.Id;
     }
@@ -872,11 +867,10 @@ public class ComputeService(
         // Create the VMSS
         var vmssCollection = resourceGroupResource.GetVirtualMachineScaleSets();
         var vmssOperation = await vmssCollection.CreateOrUpdateAsync(
-            WaitUntil.Started,
+            WaitUntil.Completed,
             vmssName,
             vmssData,
             cancellationToken);
-        await WaitForLroCompletionAsync(vmssOperation, cancellationToken);
 
         var createdVmss = vmssOperation.Value;
 
@@ -992,10 +986,9 @@ public class ComputeService(
         if (needsUpdate)
         {
             var updateOperation = await vmssResource.UpdateAsync(
-                WaitUntil.Started,
+                WaitUntil.Completed,
                 patch,
                 cancellationToken: cancellationToken);
-            await WaitForLroCompletionAsync(updateOperation, cancellationToken);
             vmssResource = updateOperation.Value;
         }
 
@@ -1092,10 +1085,9 @@ public class ComputeService(
         if (needsUpdate)
         {
             var updateOperation = await vmResource.UpdateAsync(
-                WaitUntil.Started,
+                WaitUntil.Completed,
                 patch,
                 cancellationToken: cancellationToken);
-            await WaitForLroCompletionAsync(updateOperation, cancellationToken);
             vmResource = updateOperation.Value;
         }
 
@@ -1150,8 +1142,7 @@ public class ComputeService(
         {
             var vmResponse = await vmCollection.GetAsync(vmName, cancellationToken: cancellationToken);
             var vmResource = vmResponse.Value;
-            var deleteOperation = await vmResource.DeleteAsync(WaitUntil.Started, forceDeletion, cancellationToken);
-            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
+            var deleteOperation = await vmResource.DeleteAsync(WaitUntil.Completed, forceDeletion, cancellationToken);
             return true;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
@@ -1194,7 +1185,7 @@ public class ComputeService(
 
         if (!noWait)
         {
-            await WaitForLroCompletionAsync(operation, cancellationToken);
+            await operation.WaitForCompletionResponseAsync(cancellationToken);
         }
 
         var completed = !noWait;
@@ -1244,8 +1235,7 @@ public class ComputeService(
         {
             var vmssResponse = await vmssCollection.GetAsync(vmssName, cancellationToken: cancellationToken);
             var vmssResource = vmssResponse.Value;
-            var deleteOperation = await vmssResource.DeleteAsync(WaitUntil.Started, forceDeletion, cancellationToken);
-            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
+            var deleteOperation = await vmssResource.DeleteAsync(WaitUntil.Completed, forceDeletion, cancellationToken);
             return true;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
@@ -1318,11 +1308,10 @@ public class ComputeService(
             };
 
             var vnetOperation = await vnetCollection.CreateOrUpdateAsync(
-                WaitUntil.Started,
+                WaitUntil.Completed,
                 vnetName,
                 vnetData,
                 cancellationToken);
-            await WaitForLroCompletionAsync(vnetOperation, cancellationToken);
             vnetResource = vnetOperation.Value;
         }
 
@@ -1343,11 +1332,10 @@ public class ComputeService(
             };
 
             var subnetOperation = await subnetCollection.CreateOrUpdateAsync(
-                WaitUntil.Started,
+                WaitUntil.Completed,
                 subnetName,
                 subnetData,
                 cancellationToken);
-            await WaitForLroCompletionAsync(subnetOperation, cancellationToken);
             subnetResource = subnetOperation.Value;
         }
 
@@ -1696,8 +1684,7 @@ public class ComputeService(
         _logger.LogInformation("Creating disk {DiskName} in resource group {ResourceGroup}", diskName, resourceGroup);
 
         var createOperation = await rgResource.Value.GetManagedDisks()
-            .CreateOrUpdateAsync(WaitUntil.Started, diskName, diskData, cancellationToken);
-        await WaitForLroCompletionAsync(createOperation, cancellationToken);
+            .CreateOrUpdateAsync(WaitUntil.Completed, diskName, diskData, cancellationToken);
 
         return ConvertToDiskModel(createOperation.Value, resourceGroup);
     }
@@ -1807,8 +1794,7 @@ public class ComputeService(
 
         _logger.LogInformation("Updating disk {DiskName} in resource group {ResourceGroup}", diskName, resourceGroup);
 
-        var updateOperation = await diskResource.Value.UpdateAsync(WaitUntil.Started, diskPatch, cancellationToken);
-        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
+        var updateOperation = await diskResource.Value.UpdateAsync(WaitUntil.Completed, diskPatch, cancellationToken);
 
         return ConvertToDiskModel(updateOperation.Value, resourceGroup);
     }
@@ -1884,8 +1870,7 @@ public class ComputeService(
             var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
             var diskResource = await resourceGroupResource.Value.GetManagedDisks().GetAsync(diskName, cancellationToken);
 
-            var deleteOperation = await diskResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
-            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
+            var deleteOperation = await diskResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted disk. Disk: {Disk}, ResourceGroup: {ResourceGroup}",

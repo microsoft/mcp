@@ -99,11 +99,10 @@ public class LoadTestingService(
         }
         var location = (await rgResource.GetAsync(cancellationToken)).Value.Data.Location;
         var response = await rgResource.GetLoadTestingResources().CreateOrUpdateAsync(
-            WaitUntil.Started,
+            WaitUntil.Completed,
             testResourceName,
             new(location),
             cancellationToken);
-        await WaitForLroCompletionAsync(response, cancellationToken);
         if (response == null || response.Value == null)
         {
             throw new Exception($"Failed to create or update Azure Load Testing resource: {response}");
@@ -234,14 +233,13 @@ public class LoadTestingService(
         using var requestContent = RequestContent.Create(JsonSerializer.Serialize(requestBody, LoadTestJsonContext.Default.TestRunRequest));
 
         var loadTestRunResponse = await loadTestClient.BeginTestRunAsync(
-            0,
+            WaitUntil.Completed,
             testRunId,
             requestContent,
             oldTestRunId: oldTestRunId,
             context: new() { CancellationToken = cancellationToken })
             ?? throw new Exception($"Failed to retrieve Azure Load Test Run.");
 
-        await WaitForLroCompletionAsync(loadTestRunResponse, cancellationToken);
         var loadTestRun = loadTestRunResponse.Value.ToString();
         return JsonSerializer.Deserialize(loadTestRun, LoadTestJsonContext.Default.TestRun) ?? new();
     }

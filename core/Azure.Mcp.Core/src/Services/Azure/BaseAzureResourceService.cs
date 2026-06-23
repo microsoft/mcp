@@ -244,8 +244,7 @@ public abstract class BaseAzureResourceService(
         GenericResourceData data = dataModel.Create(ref reader, new ModelReaderWriterOptions("W"))
             ?? throw new InvalidOperationException("Failed to create deployment data");
         // Create the resource
-        var result = await armClient.GetGenericResources().CreateOrUpdateAsync(WaitUntil.Started, resourceIdentifier, data, cancellationToken);
-        await WaitForLroCompletionAsync(result, cancellationToken);
+        var result = await armClient.GetGenericResources().CreateOrUpdateAsync(WaitUntil.Completed, resourceIdentifier, data, cancellationToken);
         return result.Value;
     }
 }

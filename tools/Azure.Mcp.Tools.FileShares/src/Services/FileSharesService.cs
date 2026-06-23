@@ -184,11 +184,10 @@ public sealed class FileSharesService(
         }
 
         var operation = await resourceGroupResource.Value.GetFileShares().CreateOrUpdateAsync(
-            WaitUntil.Started,
+            WaitUntil.Completed,
             fileShareName,
             fileShareData,
             cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation(
             "Successfully created or updated file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Location: {Location}",
@@ -281,8 +280,7 @@ public sealed class FileSharesService(
         var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
 
         // Use UpdateAsync to patch the file share
-        var operation = await fileShareResource.Value.UpdateAsync(WaitUntil.Started, patch, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+        var operation = await fileShareResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
 
         _logger.LogInformation(
             "Successfully patched file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
@@ -311,8 +309,7 @@ public sealed class FileSharesService(
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
 
-            var deleteOperation = await fileShareResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
-            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
+            await fileShareResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
@@ -398,11 +395,10 @@ public sealed class FileSharesService(
         }
 
         var operation = await snapshotCollection.CreateOrUpdateAsync(
-            WaitUntil.Started,
+            WaitUntil.Completed,
             snapshotName,
             snapshotData,
             cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation(
             "Successfully created snapshot. Snapshot: {SnapshotName}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
@@ -523,10 +519,9 @@ public sealed class FileSharesService(
 
         // Use UpdateAsync to patch the snapshot
         var operation = await existingSnapshot.Value.UpdateAsync(
-            WaitUntil.Started,
+            WaitUntil.Completed,
             patch,
             cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation(
             "Successfully updated snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
@@ -561,8 +556,7 @@ public sealed class FileSharesService(
 
             // Get the snapshot and delete it
             var snapshotResource = await snapshotCollection.GetAsync(snapshotId, cancellationToken);
-            var deleteOperation = await snapshotResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
-            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
+            await snapshotResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
@@ -816,8 +810,7 @@ public sealed class FileSharesService(
             };
 
             var operation = await fileShareResource.Value.GetFileSharePrivateEndpointConnections()
-                .CreateOrUpdateAsync(WaitUntil.Started, connectionName, connectionData, cancellationToken);
-            await WaitForLroCompletionAsync(operation, cancellationToken);
+                .CreateOrUpdateAsync(WaitUntil.Completed, connectionName, connectionData, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully updated private endpoint connection. Connection: {ConnectionName}, FileShare: {FileShareName}, Status: {Status}",
