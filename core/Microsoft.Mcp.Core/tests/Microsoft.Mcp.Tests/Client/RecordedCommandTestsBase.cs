@@ -191,7 +191,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         await StartRecordOrPlayback();
 
         // apply custom matcher if test has attribute
-        await ApplyAttributeMatcherSettings(methodInfo);
+        await ApplyAttributeMatcherSettings(TestMethodResolver.TryResolveCurrentMethodInfo());
 
         SetRecordingOptions(RecordingOptions);
     }

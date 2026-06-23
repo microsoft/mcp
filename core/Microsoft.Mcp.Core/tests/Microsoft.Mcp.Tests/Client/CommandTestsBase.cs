@@ -238,6 +238,18 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         return resultProcessor.Invoke(root);
     }
 
+    internal void CheckLiveOnly()
+    {
+        // resolve the current test method once for all attribute checks
+        var methodInfo = TestMethodResolver.TryResolveCurrentMethodInfo();
+
+        // skip tests marked [LiveTestOnly] when not in Live mode
+        if (TestMode != TestMode.Live && methodInfo?.GetCustomAttribute<LiveTestOnlyAttribute>() != null)
+        {
+            Assert.Skip("Test is marked [LiveTestOnly] and cannot run in Playback or Record mode.");
+        }
+    }
+
     public void Dispose()
     {
         Dispose(disposing: true);
