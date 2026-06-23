@@ -36,9 +36,6 @@ namespace Azure.Mcp.Tools.Sql.Commands;
 [JsonSerializable(typeof(SqlDatabaseData))]
 [JsonSerializable(typeof(SqlDatabaseProperties))]
 [JsonSerializable(typeof(SqlServerAadAdministratorData))]
-[JsonSerializable(typeof(SqlElasticPoolData))]
-[JsonSerializable(typeof(SqlElasticPoolProperties))]
-[JsonSerializable(typeof(SqlElasticPoolPerDatabaseSettings))]
 [JsonSerializable(typeof(SqlFirewallRuleData))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
