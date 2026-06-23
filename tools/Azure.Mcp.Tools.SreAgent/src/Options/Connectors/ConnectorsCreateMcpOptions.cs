@@ -7,30 +7,30 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Connectors;
 
 public sealed class ConnectorsCreateMcpOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.NameDescription)]
+    [Option(Description = SreAgentOptionDefinitions.NameDescription)]
     public required string Name { get; set; }
 
-    [Option("The MCP connector type: stdio or http.")]
+    [Option(Description = "The MCP connector type: stdio or http.")]
     public required string Type { get; set; }
 
-    [Option("The command for stdio MCP connectors.")]
+    [Option(Description = "The command for stdio MCP connectors.")]
     public string? Command { get; set; }
 
-    [Option("The command for stdio MCP connectors.")]
+    [Option(Description = "The command for stdio MCP connectors.")]
     public string[]? Args { get; set; }
 
-    [Option("JSON object of environment variables for stdio MCP connectors.")]
+    [Option(Description = "JSON object of environment variables for stdio MCP connectors.")]
     public string? EnvsJson { get; set; }
 
-    [Option("The HTTP MCP connector endpoint.")]
+    [Option(Description = "The HTTP MCP connector endpoint.")]
     public string? Endpoint { get; set; }
 
-    [Option(SreAgentOptionDefinitions.AuthTypeDescription)]
+    [Option(Description = SreAgentOptionDefinitions.AuthTypeDescription)]
     public string? AuthType { get; set; }
 
-    [Option("Environment variable containing the bearer token.")]
+    [Option(Description = "Environment variable containing the bearer token.")]
     public string? BearerTokenEnv { get; set; }
 
-    [Option("JSON object of HTTP headers.")]
+    [Option(Description = "JSON object of HTTP headers.")]
     public string? HeadersJson { get; set; }
 }

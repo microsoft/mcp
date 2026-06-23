@@ -38,7 +38,7 @@ public sealed class ConnectorsCreateKustoCommand(ILogger<ConnectorsCreateKustoCo
             // the URL path when --database is supplied so server-side validation passes.
             var dataSource = string.IsNullOrWhiteSpace(options.Database)
                 ? options.ClusterUrl
-                : $"{options.ClusterUrl!.TrimEnd('/')}/{Uri.EscapeDataString(options.Database!)}";
+                : $"{options.ClusterUrl.TrimEnd('/')}/{Uri.EscapeDataString(options.Database!)}";
             var connector = new AgentConnectorEnvelope
             {
                 Name = options.Name,

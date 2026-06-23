@@ -7,9 +7,9 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Docs;
 
 public sealed class MemoriesAddOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.NameDescription)]
+    [Option(Description = SreAgentOptionDefinitions.NameDescription)]
     public required string Name { get; set; }
 
-    [Option(SreAgentOptionDefinitions.ContentDescription)]
+    [Option(Description = SreAgentOptionDefinitions.ContentDescription)]
     public required string Content { get; set; }
 }

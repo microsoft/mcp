@@ -7,6 +7,6 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Agents;
 
 public sealed class AgentsToolsGetOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.NameDescription)]
+    [Option(Description = SreAgentOptionDefinitions.NameDescription)]
     public required string Name { get; set; }
 }

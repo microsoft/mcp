@@ -7,6 +7,6 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Workflows;
 
 public sealed class WorkflowsValidateOptions
 {
-    [Option(SreAgentOptionDefinitions.YamlContentDescription)]
+    [Option(Description = SreAgentOptionDefinitions.YamlContentDescription)]
     public required string YamlContent { get; set; }
 }

@@ -7,6 +7,6 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Docs;
 
 public sealed class DocsGetOptions
 {
-    [Option("Documentation topic.")]
+    [Option(Description = "Documentation topic.")]
     public required string Topic { get; set; }
 }

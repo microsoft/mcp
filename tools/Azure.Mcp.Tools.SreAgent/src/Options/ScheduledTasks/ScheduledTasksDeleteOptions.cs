@@ -8,9 +8,9 @@ namespace Azure.Mcp.Tools.SreAgent.Options.ScheduledTasks;
 
 public sealed class ScheduledTasksDeleteOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.TaskIdDescription)]
+    [Option(Description = SreAgentOptionDefinitions.TaskIdDescription)]
     public required string TaskId { get; set; }
 
-    [Option(SreAgentOptionDefinitions.ConfirmDescription)]
+    [Option(Description = SreAgentOptionDefinitions.ConfirmDescription)]
     public bool Confirm { get; set; }
 }

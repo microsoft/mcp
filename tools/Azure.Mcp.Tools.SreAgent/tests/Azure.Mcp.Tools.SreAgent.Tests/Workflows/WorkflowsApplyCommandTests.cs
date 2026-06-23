@@ -30,7 +30,6 @@ public class WorkflowsApplyCommandTests : SubscriptionCommandUnitTestsBase<Workf
     {
         var command = Command.GetCommand();
         Assert.Contains(command.Options, o => o.Name == $"--{SreAgentOptionDefinitions.YamlContentName}");
-        Assert.Contains(command.Options, o => o.Name == $"--{SreAgentOptionDefinitions.SourceNameName}");
     }
 
     [Theory]

@@ -7,15 +7,15 @@ namespace Azure.Mcp.Tools.SreAgent.Options.ScheduledTasks;
 
 public sealed class ScheduledTasksCreateOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.NameDescription)]
+    [Option(Description = SreAgentOptionDefinitions.NameDescription)]
     public required string Name { get; set; }
 
-    [Option("The cron expression for the schedule.")]
+    [Option(Description = "The cron expression for the schedule.")]
     public required string CronExpression { get; set; }
 
-    [Option(SreAgentOptionDefinitions.MessageDescription)]
+    [Option(Description = SreAgentOptionDefinitions.MessageDescription)]
     public required string Message { get; set; }
 
-    [Option(SreAgentOptionDefinitions.DescriptionDescription)]
+    [Option(Description = SreAgentOptionDefinitions.DescriptionDescription)]
     public string? Description { get; set; }
 }

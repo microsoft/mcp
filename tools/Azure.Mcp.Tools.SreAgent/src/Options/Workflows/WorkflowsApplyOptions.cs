@@ -7,10 +7,6 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Workflows;
 
 public sealed class WorkflowsApplyOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.YamlContentDescription)]
+    [Option(Description = SreAgentOptionDefinitions.YamlContentDescription)]
     public required string YamlContent { get; set; }
-
-    [Option("Optional source name.")]
-    public string? SourceName { get; set; }
-
 }

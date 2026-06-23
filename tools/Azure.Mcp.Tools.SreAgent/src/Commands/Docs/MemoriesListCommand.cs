@@ -4,7 +4,7 @@
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
-using Azure.Mcp.Tools.SreAgent.Options.Docs;
+using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -24,12 +24,12 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
     Secret = false,
     LocalRequired = false)]
 public sealed class MemoriesListCommand(ILogger<MemoriesListCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<MemoryRemoteOptions, SreAgentTextResult>(subscriptionResolver)
+    : SubscriptionCommand<BaseSreAgentOptions, SreAgentTextResult>(subscriptionResolver)
 {
     private readonly ILogger<MemoriesListCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, MemoryRemoteOptions options, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseSreAgentOptions options, CancellationToken cancellationToken)
     {
         try
         {

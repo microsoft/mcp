@@ -7,27 +7,27 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Incidents;
 
 public sealed class IncidentPlanCreateOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.NameDescription)]
+    [Option(Description = SreAgentOptionDefinitions.NameDescription)]
     public required string Name { get; set; }
 
-    [Option(SreAgentOptionDefinitions.SeverityDescription)]
+    [Option(Description = SreAgentOptionDefinitions.SeverityDescription)]
     public required string Severity { get; set; }
 
-    [Option("Text that triggers the incident response plan.")]
+    [Option(Description = "Text that triggers the incident response plan.")]
     public required string TriggerCondition { get; set; }
 
-    [Option(SreAgentOptionDefinitions.ServicesDescription)]
+    [Option(Description = SreAgentOptionDefinitions.ServicesDescription)]
     public required string[] Services { get; set; }
 
-    [Option("Incident response steps.")]
+    [Option(Description = "Incident response steps.")]
     public required string[] Steps { get; set; }
 
-    [Option("Escalation procedure.")]
+    [Option(Description = "Escalation procedure.")]
     public string? Escalation { get; set; }
 
-    [Option("Runbook URL.")]
+    [Option(Description = "Runbook URL.")]
     public string? RunbookUrl { get; set; }
 
-    [Option("Agent mode: autonomous or review.")]
+    [Option(Description = "Agent mode: autonomous or review.")]
     public string? AgentMode { get; set; }
 }

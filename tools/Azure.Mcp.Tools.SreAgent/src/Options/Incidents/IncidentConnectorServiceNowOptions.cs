@@ -7,21 +7,21 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Incidents;
 
 public sealed class IncidentConnectorServiceNowOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.NameDescription)]
+    [Option(Description = SreAgentOptionDefinitions.NameDescription)]
     public required string Name { get; set; }
 
-    [Option("ServiceNow instance URL.")]
+    [Option(Description = "ServiceNow instance URL.")]
     public required string InstanceUrl { get; set; }
 
-    [Option(SreAgentOptionDefinitions.AuthTypeDescription)]
+    [Option(Description = SreAgentOptionDefinitions.AuthTypeDescription)]
     public required string AuthType { get; set; }
 
-    [Option("Environment variable containing bearer token.")]
+    [Option(Description = "Environment variable containing bearer token.")]
     public string? TokenEnv { get; set; }
 
-    [Option("Environment variable containing username.")]
+    [Option(Description = "Environment variable containing username.")]
     public string? UsernameEnv { get; set; }
 
-    [Option("Environment variable containing password.")]
+    [Option(Description = "Environment variable containing password.")]
     public string? PasswordEnv { get; set; }
 }

@@ -7,12 +7,12 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Threads;
 
 public sealed class ThreadsInvestigateOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.MessageDescription)]
+    [Option(Description = SreAgentOptionDefinitions.MessageDescription)]
     public required string Message { get; set; }
 
-    [Option(SreAgentOptionDefinitions.MaxIterationsDescription)]
+    [Option(Description = SreAgentOptionDefinitions.MaxIterationsDescription)]
     public int? MaxIterations { get; set; }
 
-    [Option(SreAgentOptionDefinitions.TimeoutSecondsDescription)]
+    [Option(Description = SreAgentOptionDefinitions.TimeoutSecondsDescription)]
     public int? TimeoutSeconds { get; set; }
 }

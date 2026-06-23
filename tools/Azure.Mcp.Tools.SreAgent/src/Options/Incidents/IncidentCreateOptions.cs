@@ -7,15 +7,15 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Incidents;
 
 public sealed class IncidentCreateOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.SeverityDescription)]
+    [Option(Description = SreAgentOptionDefinitions.SeverityDescription)]
     public required string Severity { get; set; }
 
-    [Option("Incident title.")]
+    [Option(Description = "Incident title.")]
     public required string Title { get; set; }
 
-    [Option(SreAgentOptionDefinitions.DescriptionDescription)]
+    [Option(Description = SreAgentOptionDefinitions.DescriptionDescription)]
     public required string Description { get; set; }
 
-    [Option(SreAgentOptionDefinitions.ServicesDescription)]
+    [Option(Description = SreAgentOptionDefinitions.ServicesDescription)]
     public required string[] Services { get; set; }
 }

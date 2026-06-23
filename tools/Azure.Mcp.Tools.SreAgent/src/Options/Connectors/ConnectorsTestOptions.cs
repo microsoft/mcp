@@ -7,6 +7,6 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Connectors;
 
 public sealed class ConnectorsTestOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.NameDescription)]
+    [Option(Description = SreAgentOptionDefinitions.NameDescription)]
     public required string Name { get; set; }
 }

@@ -7,9 +7,9 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Threads;
 
 public sealed class ThreadsDeleteOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.ThreadIdDescription)]
+    [Option(Description = SreAgentOptionDefinitions.ThreadIdDescription)]
     public required string ThreadId { get; set; }
 
-    [Option(SreAgentOptionDefinitions.ConfirmDescription)]
+    [Option(Description = SreAgentOptionDefinitions.ConfirmDescription)]
     public bool Confirm { get; set; }
 }

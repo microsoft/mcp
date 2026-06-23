@@ -7,18 +7,18 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Agents;
 
 public sealed class AgentsCreateOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.NameDescription)]
+    [Option(Description = SreAgentOptionDefinitions.NameDescription)]
     public required string Name { get; set; }
 
-    [Option(SreAgentOptionDefinitions.DescriptionDescription)]
+    [Option(Description = SreAgentOptionDefinitions.DescriptionDescription)]
     public string? Description { get; set; }
 
-    [Option("Instructions for the sub-agent.")]
+    [Option(Description = "Instructions for the sub-agent.")]
     public string? Instructions { get; set; }
 
-    [Option(SreAgentOptionDefinitions.ToolsDescription)]
+    [Option(Description = SreAgentOptionDefinitions.ToolsDescription)]
     public string[]? Tools { get; set; }
 
-    [Option(SreAgentOptionDefinitions.HandoffsDescription)]
+    [Option(Description = SreAgentOptionDefinitions.HandoffsDescription)]
     public string[]? Handoffs { get; set; }
 }

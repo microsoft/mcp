@@ -7,9 +7,9 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Threads;
 
 public sealed class ThreadsSendMessageOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.ThreadIdDescription)]
+    [Option(Description = SreAgentOptionDefinitions.ThreadIdDescription)]
     public required string ThreadId { get; set; }
 
-    [Option(SreAgentOptionDefinitions.MessageDescription)]
+    [Option(Description = SreAgentOptionDefinitions.MessageDescription)]
     public required string Message { get; set; }
 }

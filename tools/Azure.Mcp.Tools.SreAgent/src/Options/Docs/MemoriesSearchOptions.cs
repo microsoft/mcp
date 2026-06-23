@@ -7,6 +7,6 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Docs;
 
 public sealed class MemoriesSearchOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.QueryDescription)]
+    [Option(Description = SreAgentOptionDefinitions.QueryDescription)]
     public required string Query { get; set; }
 }

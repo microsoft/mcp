@@ -7,12 +7,12 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Connectors;
 
 public sealed class ConnectorsCreateKustoOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.NameDescription)]
+    [Option(Description = SreAgentOptionDefinitions.NameDescription)]
     public required string Name { get; set; }
 
-    [Option("The Azure Data Explorer cluster URL.")]
-    public string? ClusterUrl { get; set; }
+    [Option(Description = "The Azure Data Explorer cluster URL.")]
+    public required string ClusterUrl { get; set; }
 
-    [Option(SreAgentOptionDefinitions.DatabaseDescription)]
+    [Option(Description = SreAgentOptionDefinitions.DatabaseDescription)]
     public string? Database { get; set; }
 }

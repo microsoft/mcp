@@ -7,12 +7,12 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Architecture;
 
 public sealed class PlanOptions
 {
-    [Option("Architecture requirements.")]
+    [Option(Description = "Architecture requirements.")]
     public required string Requirements { get; set; }
 
-    [Option("Trigger type, such as manual or scheduled.")]
+    [Option(Description = "Trigger type, such as manual or scheduled.")]
     public string? TriggerType { get; set; }
 
-    [Option("Kusto connector name.")]
+    [Option(Description = "Kusto connector name.")]
     public string? KustoConnector { get; set; }
 }

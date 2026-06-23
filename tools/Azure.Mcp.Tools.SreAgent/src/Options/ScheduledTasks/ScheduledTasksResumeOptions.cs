@@ -7,6 +7,6 @@ namespace Azure.Mcp.Tools.SreAgent.Options.ScheduledTasks;
 
 public sealed class ScheduledTasksResumeOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.TaskIdDescription)]
+    [Option(Description = SreAgentOptionDefinitions.TaskIdDescription)]
     public required string TaskId { get; set; }
 }

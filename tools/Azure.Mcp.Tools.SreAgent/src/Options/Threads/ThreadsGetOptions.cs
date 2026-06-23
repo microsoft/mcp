@@ -7,6 +7,6 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Threads;
 
 public sealed class ThreadsGetOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.ThreadIdDescription)]
+    [Option(Description = SreAgentOptionDefinitions.ThreadIdDescription)]
     public required string ThreadId { get; set; }
 }

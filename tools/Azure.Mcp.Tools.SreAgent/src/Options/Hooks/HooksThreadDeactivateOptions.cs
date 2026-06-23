@@ -7,9 +7,9 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Hooks;
 
 public sealed class HooksThreadDeactivateOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.ThreadIdDescription)]
+    [Option(Description = SreAgentOptionDefinitions.ThreadIdDescription)]
     public required string ThreadId { get; set; }
 
-    [Option(SreAgentOptionDefinitions.HookNameDescription)]
+    [Option(Description = SreAgentOptionDefinitions.HookNameDescription)]
     public required string HookName { get; set; }
 }

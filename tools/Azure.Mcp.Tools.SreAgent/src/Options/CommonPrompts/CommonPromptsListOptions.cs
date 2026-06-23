@@ -7,6 +7,6 @@ namespace Azure.Mcp.Tools.SreAgent.Options.CommonPrompts;
 
 public sealed class CommonPromptsListOptions : BaseSreAgentOptions
 {
-    [Option("Optional search filter.")]
+    [Option(Description = "Optional search filter.")]
     public string? Search { get; set; }
 }

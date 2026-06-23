@@ -7,12 +7,12 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Skills;
 
 public sealed class SkillsCreateOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.NameDescription)]
+    [Option(Description = SreAgentOptionDefinitions.NameDescription)]
     public required string Name { get; set; }
 
-    [Option(SreAgentOptionDefinitions.ContentDescription)]
+    [Option(Description = SreAgentOptionDefinitions.ContentDescription)]
     public required string Content { get; set; }
 
-    [Option(SreAgentOptionDefinitions.DescriptionDescription)]
+    [Option(Description = SreAgentOptionDefinitions.DescriptionDescription)]
     public string? Description { get; set; }
 }

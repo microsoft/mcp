@@ -7,6 +7,6 @@ namespace Azure.Mcp.Tools.SreAgent.Options.CommonPrompts;
 
 public sealed class CommonPromptsGetOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.NameDescription)]
+    [Option(Description = SreAgentOptionDefinitions.NameDescription)]
     public required string Name { get; set; }
 }

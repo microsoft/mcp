@@ -7,12 +7,12 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Incidents;
 
 public sealed class IncidentConnectorPagerDutyOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.NameDescription)]
+    [Option(Description = SreAgentOptionDefinitions.NameDescription)]
     public required string Name { get; set; }
 
-    [Option("Environment variable containing the API key.")]
+    [Option(Description = "Environment variable containing the API key.")]
     public required string ApiKeyEnv { get; set; }
 
-    [Option("PagerDuty subdomain.")]
+    [Option(Description = "PagerDuty subdomain.")]
     public string? Subdomain { get; set; }
 }

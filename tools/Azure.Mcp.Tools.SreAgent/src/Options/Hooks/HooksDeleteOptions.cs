@@ -7,9 +7,9 @@ namespace Azure.Mcp.Tools.SreAgent.Options.Hooks;
 
 public sealed class HooksDeleteOptions : BaseSreAgentOptions
 {
-    [Option(SreAgentOptionDefinitions.NameDescription)]
+    [Option(Description = SreAgentOptionDefinitions.NameDescription)]
     public required string Name { get; set; }
 
-    [Option(SreAgentOptionDefinitions.ConfirmDescription)]
+    [Option(Description = SreAgentOptionDefinitions.ConfirmDescription)]
     public bool Confirm { get; set; }
 }
