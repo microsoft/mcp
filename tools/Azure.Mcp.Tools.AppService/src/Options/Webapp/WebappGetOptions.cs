@@ -8,18 +8,18 @@ namespace Azure.Mcp.Tools.AppService.Options.Webapp;
 
 public sealed class WebappGetOptions : ISubscriptionOption
 {
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = AppServiceOptionDefinitions.App)]
+    public string? App { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.ResourceGroup)]
+    [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
-
-    [Option(AppServiceOptionDefinitions.App)]
-    public string? App { get; set; }
 }

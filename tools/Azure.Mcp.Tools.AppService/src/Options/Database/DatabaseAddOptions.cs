@@ -8,30 +8,30 @@ namespace Azure.Mcp.Tools.AppService.Options.Database;
 
 public sealed class DatabaseAddOptions : ISubscriptionOption
 {
-    [Option(OptionDescriptions.Tenant)]
-    public string? Tenant { get; set; }
-
-    [Option(OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
-
-    [Option(OptionDescriptions.ResourceGroup)]
-    public required string ResourceGroup { get; set; }
-
-    [Option(Name = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
-
-    [Option(AppServiceOptionDefinitions.App)]
+    [Option(Description = AppServiceOptionDefinitions.App)]
     public required string App { get; set; }
 
-    [Option("The type of database (e.g., SqlServer, MySQL, PostgreSQL, CosmosDB).")]
+    [Option(Description = "The type of database (e.g., SqlServer, MySQL, PostgreSQL, CosmosDB).")]
     public required string DatabaseType { get; set; }
 
-    [Option("The server name or endpoint for the database (e.g., myserver.database.windows.net).")]
+    [Option(Description = "The server name or endpoint for the database (e.g., myserver.database.windows.net).")]
     public required string DatabaseServer { get; set; }
 
-    [Option("The name of the database to connect to (e.g., mydb).")]
+    [Option(Description = "The name of the database to connect to (e.g., mydb).")]
     public required string Database { get; set; }
 
-    [Option("The connection string for the database. If not provided, a default will be generated.")]
+    [Option(Description = "The connection string for the database. If not provided, a default will be generated.")]
     public string? ConnectionString { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public required string ResourceGroup { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
