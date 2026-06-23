@@ -35,7 +35,7 @@ public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logge
 
         try
         {
-            var config = await _mysqlService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, cancellationToken);
+            var config = await _mysqlService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.Server!, cancellationToken);
             context.Response.Results = !string.IsNullOrEmpty(config) ?
                 ResponseResult.Create(new(config), MySqlJsonContext.Default.ServerConfigGetCommandResult) :
                 null;

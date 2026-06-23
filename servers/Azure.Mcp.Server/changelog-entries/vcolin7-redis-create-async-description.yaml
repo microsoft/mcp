@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Clarified the `azmcp redis create` tool description to convey that provisioning is asynchronous and callers should poll `provisioningState` until it shows 'Succeeded' before connecting."

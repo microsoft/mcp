@@ -33,6 +33,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
         command.Options.Add(PostgresOptionDefinitions.User.AsOptional());
         command.Options.Add(PostgresOptionDefinitions.ServerOptional);
         command.Options.Add(PostgresOptionDefinitions.DatabaseOptional);
+        command.Options.Add(PostgresOptionDefinitions.Schema);
         command.Options.Add(PostgresOptionDefinitions.AuthType);
         command.Options.Add(PostgresOptionDefinitions.Password);
         command.Validators.Add(result =>
@@ -58,6 +59,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
         var options = base.BindOptions(parseResult);
         options.Server = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.ServerOptional.Name);
         options.Database = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.DatabaseOptional.Name);
+        options.Schema = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Schema.Name);
         options.AuthType = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.AuthType.Name);
         options.Password = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Password.Name);
         return options;
@@ -80,26 +82,23 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
             if (!string.IsNullOrEmpty(options.Database))
             {
                 // List tables in specified database
-                List<string> tables = await _postgresService.ListTablesAsync(
-                    options.Subscription!,
-                    options.ResourceGroup!,
+                TableListResult tableResult = await _postgresService.ListTablesAsync(
                     options.AuthType!,
                     options.User!,
                     options.Password,
                     options.Server!,
                     options.Database!,
+                    string.IsNullOrEmpty(options.Schema) ? "public" : options.Schema,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new(null, null, tables ?? []),
+                    new(null, null, tableResult.Tables ?? [], tableResult.IsTruncated ? true : null),
                     PostgresJsonContext.Default.PostgresListCommandResult);
             }
             else if (!string.IsNullOrEmpty(options.Server))
             {
                 // List databases on specified server
-                List<string> databases = await _postgresService.ListDatabasesAsync(
-                    options.Subscription!,
-                    options.ResourceGroup!,
+                DatabaseListResult databaseResult = await _postgresService.ListDatabasesAsync(
                     options.AuthType!,
                     options.User!,
                     options.Password,
@@ -107,7 +106,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new(null, databases ?? [], null),
+                    new(null, databaseResult.Databases ?? [], null, databaseResult.IsTruncated ? true : null),
                     PostgresJsonContext.Default.PostgresListCommandResult);
             }
             else
@@ -132,5 +131,5 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
         return context.Response;
     }
 
-    public record PostgresListCommandResult(List<string>? Servers, List<string>? Databases, List<string>? Tables);
+    public record PostgresListCommandResult(List<string>? Servers, List<string>? Databases, List<string>? Tables, bool? ResultsTruncated = null);
 }
