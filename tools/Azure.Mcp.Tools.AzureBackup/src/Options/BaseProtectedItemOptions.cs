@@ -7,9 +7,9 @@ namespace Azure.Mcp.Tools.AzureBackup.Options;
 
 public class BaseProtectedItemOptions : BaseAzureBackupOptions
 {
-    [Option(AzureBackupOptionDefinitions.ProtectedItem)]
+    [Option(Description = AzureBackupOptionDefinitions.ProtectedItem)]
     public string? ProtectedItem { get; set; }
 
-    [Option(AzureBackupOptionDefinitions.Container)]
+    [Option(Description = AzureBackupOptionDefinitions.Container)]
     public string? Container { get; set; }
 }

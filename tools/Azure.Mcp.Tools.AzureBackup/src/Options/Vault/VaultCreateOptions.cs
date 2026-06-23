@@ -5,14 +5,14 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Vault;
 
-public class VaultCreateOptions : BaseAzureBackupOptions
+public sealed class VaultCreateOptions : BaseAzureBackupOptions
 {
-    [Option(AzureBackupOptionDefinitions.Location)]
+    [Option(Description = AzureBackupOptionDefinitions.Location)]
     public required string Location { get; set; }
 
-    [Option("The vault SKU.")]
+    [Option(Description = "The vault SKU.")]
     public string? Sku { get; set; }
 
-    [Option("Storage redundancy: 'GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant'.")]
+    [Option(Description = "Storage redundancy: 'GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant'.")]
     public string? StorageType { get; set; }
 }

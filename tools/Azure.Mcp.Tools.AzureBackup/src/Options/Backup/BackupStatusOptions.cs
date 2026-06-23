@@ -8,18 +8,18 @@ namespace Azure.Mcp.Tools.AzureBackup.Options.Backup;
 
 public sealed class BackupStatusOptions : ISubscriptionOption
 {
-    [Option(OptionDescriptions.Tenant)]
-    public string? Tenant { get; set; }
-
-    [Option(OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
-
-    [Option(Name = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
-
-    [Option(AzureBackupOptionDefinitions.DatasourceId)]
+    [Option(Description = AzureBackupOptionDefinitions.DatasourceId)]
     public required string DatasourceId { get; set; }
 
-    [Option(AzureBackupOptionDefinitions.LocationName)]
+    [Option(Description = AzureBackupOptionDefinitions.LocationName)]
     public required string Location { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

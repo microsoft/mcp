@@ -5,8 +5,8 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Governance;
 
-public class GovernanceImmutabilityOptions : BaseAzureBackupOptions
+public sealed class GovernanceImmutabilityOptions : BaseAzureBackupOptions
 {
-    [Option(AzureBackupOptionDefinitions.ImmutabilityState)]
+    [Option(Description = AzureBackupOptionDefinitions.ImmutabilityState)]
     public required string ImmutabilityState { get; set; }
 }

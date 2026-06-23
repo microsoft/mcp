@@ -5,8 +5,8 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Policy;
 
-public class PolicyGetOptions : BaseAzureBackupOptions
+public sealed class PolicyGetOptions : BaseAzureBackupOptions
 {
-    [Option(AzureBackupOptionDefinitions.Policy)]
+    [Option(Description = AzureBackupOptionDefinitions.Policy)]
     public string? Policy { get; set; }
 }

@@ -5,11 +5,11 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Governance;
 
-public class GovernanceSoftDeleteOptions : BaseAzureBackupOptions
+public sealed class GovernanceSoftDeleteOptions : BaseAzureBackupOptions
 {
-    [Option(AzureBackupOptionDefinitions.SoftDelete)]
+    [Option(Description = AzureBackupOptionDefinitions.SoftDelete)]
     public required string SoftDelete { get; set; }
 
-    [Option(AzureBackupOptionDefinitions.SoftDeleteRetentionDays)]
+    [Option(Description = AzureBackupOptionDefinitions.SoftDeleteRetentionDays)]
     public string? SoftDeleteRetentionDays { get; set; }
 }

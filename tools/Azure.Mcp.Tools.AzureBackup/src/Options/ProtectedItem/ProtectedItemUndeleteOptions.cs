@@ -5,11 +5,11 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.ProtectedItem;
 
-public class ProtectedItemUndeleteOptions : BaseAzureBackupOptions
+public sealed class ProtectedItemUndeleteOptions : BaseAzureBackupOptions
 {
-    [Option(AzureBackupOptionDefinitions.DatasourceId)]
+    [Option(Description = AzureBackupOptionDefinitions.DatasourceId)]
     public required string DatasourceId { get; set; }
 
-    [Option(AzureBackupOptionDefinitions.Container)]
+    [Option(Description = AzureBackupOptionDefinitions.Container)]
     public string? Container { get; set; }
 }

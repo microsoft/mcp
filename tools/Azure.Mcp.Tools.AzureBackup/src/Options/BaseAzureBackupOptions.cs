@@ -8,21 +8,21 @@ namespace Azure.Mcp.Tools.AzureBackup.Options;
 
 public class BaseAzureBackupOptions : ISubscriptionOption
 {
-    [Option(OptionDescriptions.Tenant)]
-    public string? Tenant { get; set; }
-
-    [Option(OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
-
-    [Option(OptionDescriptions.ResourceGroup)]
-    public required string ResourceGroup { get; set; }
-
-    [Option(Name = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
-
-    [Option(AzureBackupOptionDefinitions.Vault)]
+    [Option(Description = AzureBackupOptionDefinitions.Vault)]
     public required string Vault { get; set; }
 
-    [Option(AzureBackupOptionDefinitions.VaultType)]
+    [Option(Description = AzureBackupOptionDefinitions.VaultType)]
     public string? VaultType { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public required string ResourceGroup { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

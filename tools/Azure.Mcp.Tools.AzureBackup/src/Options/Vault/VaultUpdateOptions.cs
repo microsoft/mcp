@@ -5,23 +5,23 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Vault;
 
-public class VaultUpdateOptions : BaseAzureBackupOptions
+public sealed class VaultUpdateOptions : BaseAzureBackupOptions
 {
-    [Option("Storage redundancy: 'GeoRedundant', 'LocallyRedundant', 'ZoneRedundant', or 'ReadAccessGeoZoneRedundant'.")]
+    [Option(Description = "Storage redundancy: 'GeoRedundant', 'LocallyRedundant', 'ZoneRedundant', or 'ReadAccessGeoZoneRedundant'.")]
     public string? Redundancy { get; set; }
 
-    [Option(AzureBackupOptionDefinitions.SoftDelete)]
+    [Option(Description = AzureBackupOptionDefinitions.SoftDelete)]
     public string? SoftDelete { get; set; }
 
-    [Option(AzureBackupOptionDefinitions.SoftDeleteRetentionDays)]
+    [Option(Description = AzureBackupOptionDefinitions.SoftDeleteRetentionDays)]
     public string? SoftDeleteRetentionDays { get; set; }
 
-    [Option(AzureBackupOptionDefinitions.ImmutabilityState)]
+    [Option(Description = AzureBackupOptionDefinitions.ImmutabilityState)]
     public string? ImmutabilityState { get; set; }
 
-    [Option("Managed identity type: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', or 'None'.")]
+    [Option(Description = "Managed identity type: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', or 'None'.")]
     public string? IdentityType { get; set; }
 
-    [Option("Resource tags as JSON key-value object.")]
+    [Option(Description = "Resource tags as JSON key-value object.")]
     public string? Tags { get; set; }
 }
