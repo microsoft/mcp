@@ -7,29 +7,29 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Cosmos.Options;
 
-public class ItemQueryOptions : ISubscriptionOption
+public sealed class ItemQueryOptions : ISubscriptionOption
 {
-    [Option("SQL query to execute against the container. Uses Cosmos DB SQL syntax.")]
+    [Option(Description = "SQL query to execute against the container. Uses Cosmos DB SQL syntax.")]
     public string? Query { get; set; }
 
-    [Option(CosmosOptionDescriptions.Container)]
+    [Option(Description = CosmosOptionDescriptions.Container)]
     public required string Container { get; set; }
 
-    [Option(CosmosOptionDescriptions.Database)]
+    [Option(Description = CosmosOptionDescriptions.Database)]
     public required string Database { get; set; }
 
-    [Option(CosmosOptionDescriptions.Account)]
+    [Option(Description = CosmosOptionDescriptions.Account)]
     public required string Account { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 
-    [Option(OptionDescriptions.AuthMethod)]
+    [Option(Description = OptionDescriptions.AuthMethod)]
     public AuthMethod? AuthMethod { get; set; }
 }

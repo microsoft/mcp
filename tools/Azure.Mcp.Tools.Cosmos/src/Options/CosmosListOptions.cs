@@ -7,26 +7,26 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Cosmos.Options;
 
-public class CosmosListOptions : ISubscriptionOption
+public sealed class CosmosListOptions : ISubscriptionOption
 {
-    [Option("The name of the database (optional). Requires --account to be specified. When provided, lists containers within this database.")]
+    [Option(Description = "The name of the database (optional). Requires --account to be specified. When provided, lists containers within this database.")]
     public string? Database { get; set; }
 
-    [Option("The name of the Cosmos DB account (optional). When not specified, lists all accounts in the subscription. Specify this to list databases, or combine with --database to list containers.")]
+    [Option(Description = "The name of the Cosmos DB account (optional). When not specified, lists all accounts in the subscription. Specify this to list databases, or combine with --database to list containers.")]
     public string? Account { get; set; }
 
-    [Option(OptionDescriptions.ResourceGroup)]
+    [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 
-    [Option(OptionDescriptions.AuthMethod)]
+    [Option(Description = OptionDescriptions.AuthMethod)]
     public AuthMethod? AuthMethod { get; set; }
 }
