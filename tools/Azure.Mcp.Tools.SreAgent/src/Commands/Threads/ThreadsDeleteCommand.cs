@@ -23,8 +23,8 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class ThreadsDeleteCommand(ILogger<ThreadsDeleteCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResovler)
-    : SubscriptionCommand<ThreadsDeleteOptions, SreAgentThreadOperationResult>(subscriptionResovler)
+public sealed class ThreadsDeleteCommand(ILogger<ThreadsDeleteCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ThreadsDeleteOptions, SreAgentThreadOperationResult>(subscriptionResolver)
 {
     private readonly ILogger<ThreadsDeleteCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;

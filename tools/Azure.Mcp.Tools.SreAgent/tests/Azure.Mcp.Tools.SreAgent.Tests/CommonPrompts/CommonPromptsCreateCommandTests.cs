@@ -126,7 +126,3 @@ public class CommonPromptsCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<CancellationToken>());
     }
 }
-
-public class CommandUniSubscriptionCommandUnitTestsBasetTestsBase<T1, T2>
-{
-}
