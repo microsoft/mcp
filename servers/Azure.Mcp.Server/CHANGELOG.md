@@ -12,7 +12,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
-- Removed auth mode from `aks_cluster_get` and `aks_nodepool_get tools` as they don't use that parameter.". [[#2868](https://github.com/microsoft/mcp/pull/2868)]
+- Removed auth mode from `aks_cluster_get` and `aks_nodepool_get` tools as they don't use that parameter. [[#2868](https://github.com/microsoft/mcp/pull/2868)]
 - Removed unused parameters from App Lens tools. [[#2872](https://github.com/microsoft/mcp/pull/2872)]
 
 ### Bugs Fixed
