@@ -123,6 +123,23 @@ public static class CommandResultExtensions
         return GetValueOrDefaultImpl(commandResult, option);
     }
 
+    /// <summary>
+    /// Special version for GetValueOrDefault for new option binding as the Option is immutable once created.
+    /// <para>
+    /// The name-based lookup was needed because the static Option would be re-created in RegisterOptions when changing
+    /// requiredness. CommandResult result retrieval uses the Option instance references as a Dictionary key. So,
+    /// changing requiredness in RegisterOptions and using the static Option in BindOptions would break silently and
+    /// necessitated the name based retrieval. That is no longer necessary with the new option binding approach and
+    /// this more performant approach should be used.
+    /// </para>
+    /// </summary>
+    /// <typeparam name="T">The type of the option value</typeparam>
+    /// <param name="commandResult">The command result</param>
+    /// <param name="option">The option</param>
+    /// <returns>The value of the option, or the default value if not found or not set</returns>
+    internal static T? GetValueOrDefaultWithoutName<T>(this CommandResult commandResult, Option<T> option)
+        => GetValueOrDefaultImpl(commandResult, option);
+
     private static T? GetValueOrDefaultImpl<T>(CommandResult commandResult, Option<T> option)
     {
         ArgumentNullException.ThrowIfNull(commandResult);

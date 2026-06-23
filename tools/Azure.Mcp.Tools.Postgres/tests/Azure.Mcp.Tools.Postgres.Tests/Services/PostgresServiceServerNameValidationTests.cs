@@ -58,7 +58,7 @@ public class PostgresServiceServerNameValidationTests
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             _postgresService.ExecuteQueryAsync(
-                "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
+                AuthTypes.MicrosoftEntra, "test-user", null,
                 maliciousServer, "testdb", "SELECT 1",
                 TestContext.Current.CancellationToken));
 
@@ -72,7 +72,7 @@ public class PostgresServiceServerNameValidationTests
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             _postgresService.ListDatabasesAsync(
-                "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
+                AuthTypes.MicrosoftEntra, "test-user", null,
                 maliciousServer,
                 TestContext.Current.CancellationToken));
 
@@ -86,8 +86,8 @@ public class PostgresServiceServerNameValidationTests
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             _postgresService.ListTablesAsync(
-                "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
-                maliciousServer, "testdb",
+                AuthTypes.MicrosoftEntra, "test-user", null,
+                maliciousServer, "testdb", "public",
                 TestContext.Current.CancellationToken));
 
         Assert.Contains("not a valid Azure Database for PostgreSQL hostname", ex.Message);
@@ -100,7 +100,7 @@ public class PostgresServiceServerNameValidationTests
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             _postgresService.GetTableSchemaAsync(
-                "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
+                AuthTypes.MicrosoftEntra, "test-user", null,
                 maliciousServer, "testdb", "test_table",
                 TestContext.Current.CancellationToken));
 
@@ -116,7 +116,7 @@ public class PostgresServiceServerNameValidationTests
     {
         // Should not throw - valid Azure PostgreSQL FQDNs are accepted
         await _postgresService.ExecuteQueryAsync(
-            "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
+            AuthTypes.MicrosoftEntra, "test-user", null,
             validServer, "testdb", "SELECT 1",
             TestContext.Current.CancellationToken);
 
@@ -130,7 +130,7 @@ public class PostgresServiceServerNameValidationTests
     {
         // Short names (no dot) get the suffix appended automatically
         await _postgresService.ExecuteQueryAsync(
-            "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
+            AuthTypes.MicrosoftEntra, "test-user", null,
             "myserver", "testdb", "SELECT 1",
             TestContext.Current.CancellationToken);
 
@@ -139,3 +139,4 @@ public class PostgresServiceServerNameValidationTests
         Assert.Equal("myserver.postgres.database.azure.com", parsed.Host);
     }
 }
+

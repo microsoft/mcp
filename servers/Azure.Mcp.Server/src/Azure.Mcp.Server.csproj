@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>3.0.0-beta.19</Version>
+    <Version>3.0.0-beta.21</Version>
     <CliName>azmcp</CliName>
     <AssemblyTitle>Azure MCP Server</AssemblyTitle>
     <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
@@ -83,6 +83,6 @@
   <ItemGroup>
     <None Include="..\docs\azmcp-commands.md" />
     <None Include="..\docs\e2eTestPrompts.md" />
-    <None Include="..\docs\new-command.md" />
+    <None Include="..\..\..\.github\skills\add-azure-mcp-tools\SKILL.md" />
   </ItemGroup>
 </Project>

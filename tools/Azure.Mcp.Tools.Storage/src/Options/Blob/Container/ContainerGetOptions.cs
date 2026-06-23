@@ -2,32 +2,27 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
-using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Storage.Options.Blob.Container;
 
 public class ContainerGetOptions : ISubscriptionOption
 {
-    [Option("The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').")]
+    [Option(Description = "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').")]
     public required string Account { get; set; }
 
-    [Option("The name of the container to access within the storage account.")]
+    [Option(Description = "The name of the container to access within the storage account.")]
     public string? Container { get; set; }
 
-    [Option("The prefix to filter containers when listing containers in a storage account. Only containers whose names start with the specified prefix will be listed.")]
+    [Option(Description = "The prefix to filter containers when listing containers in a storage account. Only containers whose names start with the specified prefix will be listed.")]
     public string? Prefix { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    // TODO: Remove unused option — registered and visible to the user but never consumed by the command
-    [Option(OptionDescriptions.AuthMethod)]
-    public AuthMethod? AuthMethod { get; set; }
-
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }

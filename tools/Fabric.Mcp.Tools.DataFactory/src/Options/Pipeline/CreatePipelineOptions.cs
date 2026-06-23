@@ -7,12 +7,12 @@ namespace Fabric.Mcp.Tools.DataFactory.Options.Pipeline;
 
 public class CreatePipelineOptions
 {
-    [Option("The ID of the Microsoft Fabric workspace.")]
+    [Option(Description = "The ID of the Microsoft Fabric workspace.")]
     public required string WorkspaceId { get; set; }
 
-    [Option("The display name for the item.")]
+    [Option(Description = "The display name for the item.")]
     public required string DisplayName { get; set; }
 
-    [Option("Optional description for the item.")]
+    [Option(Description = "Optional description for the item.")]
     public string? Description { get; set; }
 }
