@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Aks.Commands;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.Tests.Cluster;
 
-public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IAksService>
+public class ClusterGetCommandTests : SubscriptionCommandUnitTestsBase<ClusterGetCommand, IAksService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -26,9 +26,9 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
 
     [Theory]
     [InlineData("--subscription sub1 --resource-group rg1 --cluster cluster1", true)]
-    [InlineData("--subscription sub1 --cluster cluster1", false)]  // Missing resource-group
+    [InlineData("--subscription sub1 --cluster cluster1", true)]  // Resource group is optional with ARG queries
     [InlineData("--resource-group rg1 --cluster cluster1", false)] // Missing subscription
-    [InlineData("", false)]                                              // Missing all required options
+    [InlineData("", false)]  // Missing all required options
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Arrange

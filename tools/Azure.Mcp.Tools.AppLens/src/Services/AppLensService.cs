@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 using System.IdentityModel.Tokens.Jwt;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Channels;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;

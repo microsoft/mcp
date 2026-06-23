@@ -10,6 +10,7 @@ public static class PostgresOptionDefinitions
     public const string PasswordText = "password";
     public const string ServerName = "server";
     public const string DatabaseName = "database";
+    public const string SchemaName = "schema";
     public const string TableName = "table";
     public const string QueryText = "query";
     public const string ParamName = "param";
@@ -70,6 +71,15 @@ public static class PostgresOptionDefinitions
     )
     {
         Description = "The PostgreSQL database to list tables from (optional, requires --server)."
+    };
+
+    public static readonly Option<string?> Schema = new(
+        $"--{SchemaName}"
+    )
+    {
+        Description = "The PostgreSQL schema to list tables from when listing tables (optional, defaults to 'public').",
+        Arity = ArgumentArity.ZeroOrOne,
+        Required = false
     };
 
     public static readonly Option<string> Table = new(

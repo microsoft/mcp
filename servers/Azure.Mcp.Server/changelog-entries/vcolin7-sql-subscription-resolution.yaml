@@ -1,0 +1,4 @@
+changes:
+  - section: "Bugs Fixed"
+    description: |
+      Fixed Azure SQL tools failing with a cryptic ARM error when a subscription display name (instead of a subscription ID) was provided. The `sql server show`, `sql server list`, `sql server create`, and `sql db rename` operations now resolve the subscription through the subscription service.

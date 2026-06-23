@@ -71,6 +71,11 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     {
     }
 
+    /// <summary>
+    /// Validates the options after they have been bound.
+    /// </summary>
+    /// <param name="options">The options to validate.</param>
+    /// <param name="validationResult">The validation result to populate.</param>
     public virtual void ValidateOptions(TOptions options, ValidationResult validationResult)
     {
     }
@@ -116,15 +121,8 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         if (ex is CommandValidationException cve)
         {
             response.Status = cve.StatusCode;
-            // If specific missing options are provided, format a consistent message
-            if (cve.MissingOptions is { Count: > 0 })
-            {
-                response.Message = $"{MissingRequiredOptionsPrefix}{string.Join(", ", cve.MissingOptions)}";
-            }
-            else
-            {
-                response.Message = cve.Message;
-            }
+            response.Message = cve.Message;
+
             // Include the command validation exception message as it should be safe. Requires custom validators to
             // exclude any sensitive information from their error messages.
             context.Activity?.SetTag(TagName.ExceptionMessage, response.Message);

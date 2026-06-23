@@ -58,7 +58,7 @@ public class GetExamplesCommandTests : CommandUnitTestsBase<GetExamplesCommand, 
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
-        Assert.Equal("Missing Required options: --workload-type", result.Message);
+        Assert.Contains("Missing Required options: --workload-type", result.Message);
         await Service.DidNotReceive().GetWorkloadExamplesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
