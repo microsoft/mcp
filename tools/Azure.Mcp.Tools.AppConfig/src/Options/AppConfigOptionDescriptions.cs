@@ -6,7 +6,7 @@ namespace Azure.Mcp.Tools.AppConfig.Options;
 /// <summary>
 /// Common option descriptions for App Configuration.
 /// </summary>
-public static class AppConfigOptionDescriptions
+internal static class AppConfigOptionDescriptions
 {
     internal const string Account = "The name of the App Configuration store (e.g., my-appconfig).";
     internal const string Key = "The name of the key to access within the App Configuration store.";

@@ -8,30 +8,30 @@ namespace Azure.Mcp.Tools.AppConfig.Options.KeyValue;
 
 public class KeyValueSetOptions : ISubscriptionOption
 {
-    [Option(OptionDescriptions.Tenant)]
-    public string? Tenant { get; set; }
-
-    [Option(OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
-
-    [Option(Name = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
-
-    [Option(AppConfigOptionDescriptions.Account)]
+    [Option(Description = AppConfigOptionDescriptions.Account)]
     public required string Account { get; set; }
 
-    [Option(AppConfigOptionDescriptions.Key)]
+    [Option(Description = AppConfigOptionDescriptions.Key)]
     public required string Key { get; set; }
 
-    [Option(AppConfigOptionDescriptions.Label)]
+    [Option(Description = AppConfigOptionDescriptions.Label)]
     public string? Label { get; set; }
 
-    [Option("The content type of the configuration value. This is used to indicate how the value should be interpreted or parsed.")]
+    [Option(Description = "The content type of the configuration value. This is used to indicate how the value should be interpreted or parsed.")]
     public string? ContentType { get; set; }
 
-    [Option("The value to set for the configuration key.")]
+    [Option(Description = "The value to set for the configuration key.")]
     public required string Value { get; set; }
 
-    [Option("The tags to associate with the configuration key. Tags should be in the format 'key=value'. Multiple tags can be specified.")]
+    [Option(Description = "The tags to associate with the configuration key. Tags should be in the format 'key=value'. Multiple tags can be specified.")]
     public string[]? Tags { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

@@ -125,13 +125,14 @@ public sealed class OptionTypeHandler
         // Enums are handled as a string with additional binding.
         if (typeof(string) == type || type.IsEnum)
         {
+            Action<OptionResult>? validateEmptyOrWhiteSpace = descriptor.AllowEmptyOrWhiteSpaceString ? null : ValidateEmptyOrWhiteSpace;
             if (isNullable && isMulti)
-                return CreateOptionAndBinderHelper<string[]?>(descriptor);
+                return CreateOptionAndBinderHelper<string[]?>(descriptor, validateEmptyOrWhiteSpace);
             if (isMulti)
-                return CreateOptionAndBinderHelper<string[]>(descriptor);
+                return CreateOptionAndBinderHelper<string[]>(descriptor, validateEmptyOrWhiteSpace);
             if (isNullable)
-                return CreateOptionAndBinderHelper<string?>(descriptor);
-            return CreateOptionAndBinderHelper<string>(descriptor);
+                return CreateOptionAndBinderHelper<string?>(descriptor, validateEmptyOrWhiteSpace);
+            return CreateOptionAndBinderHelper<string>(descriptor, validateEmptyOrWhiteSpace);
         }
         if (typeof(bool) == type)
         {
@@ -306,12 +307,18 @@ public sealed class OptionTypeHandler
         return null;
     }
 
-    private static (Option, Func<ParseResult, object?>) CreateOptionAndBinderHelper<T>(OptionDescriptor descriptor)
+    private static (Option, Func<ParseResult, object?>) CreateOptionAndBinderHelper<T>(
+        OptionDescriptor descriptor,
+        Action<OptionResult>? emptyOrWhiteSpaceValidator = null)
     {
         var option = new Option<T>($"--{descriptor.Name}", [.. descriptor.Aliases.Select(a => $"--{a}")]);
         if (descriptor.DefaultValue != null)
         {
             option.DefaultValueFactory = _ => (T)descriptor.DefaultValue;
+        }
+        if (emptyOrWhiteSpaceValidator != null)
+        {
+            option.Validators.Add(emptyOrWhiteSpaceValidator);
         }
         return (option, parseResult => parseResult.GetValueOrDefaultWithoutName(option));
     }
@@ -325,5 +332,21 @@ public sealed class OptionTypeHandler
         if (isNullable)
             return ArgumentArity.ZeroOrOne;
         return typeof(bool) == type ? ArgumentArity.ZeroOrOne : ArgumentArity.ExactlyOne;
+    }
+
+    private static void ValidateEmptyOrWhiteSpace(OptionResult result)
+    {
+        // Calling on an Option that isn't required, has a default, or doesn't allow values to be passed skips checking.
+        // This matches previous behavior.
+        var option = result.Option;
+        if (!option.Required || option.HasDefaultValue || option.Arity.MaximumNumberOfValues == 0)
+        {
+            return;
+        }
+
+        if (result.Tokens is not { Count: > 0 } || result.Tokens.Any(t => string.IsNullOrWhiteSpace(t.Value)))
+        {
+            result.AddError("Option was configured to require non-empty, non-whitespace values but one or more empty or whitespace values were provided.");
+        }
     }
 }

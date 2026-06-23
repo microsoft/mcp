@@ -1,0 +1,4 @@
+pr: 2852
+changes:
+  - section: "Other Changes"
+    description: "\"Improved resource querying in Aks tools\""

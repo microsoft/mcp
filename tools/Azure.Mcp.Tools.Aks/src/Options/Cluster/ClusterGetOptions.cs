@@ -8,18 +8,18 @@ namespace Azure.Mcp.Tools.Aks.Options.Cluster;
 
 public class ClusterGetOptions : ISubscriptionOption
 {
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.ResourceGroup)]
+    [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 
-    [Option("AKS Cluster name.")]
+    [Option(Description = "AKS Cluster name.")]
     public string? Cluster { get; set; }
 }

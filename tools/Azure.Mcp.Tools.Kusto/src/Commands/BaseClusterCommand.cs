@@ -33,7 +33,7 @@ public abstract class BaseClusterCommand<
         }
 
         // clusterUri not provided, require both subscription and clusterName
-        if (string.IsNullOrEmpty(options.ClusterName) || string.IsNullOrEmpty(options.Subscription))
+        if (string.IsNullOrEmpty(options.Cluster) || string.IsNullOrEmpty(options.Subscription))
         {
             validationResult.Errors.Add("Either --cluster-uri must be provided, or both --subscription and --cluster must be provided.");
         }
