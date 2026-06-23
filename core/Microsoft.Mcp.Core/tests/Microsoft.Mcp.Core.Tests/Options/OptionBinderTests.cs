@@ -41,9 +41,13 @@ public sealed class OptionBinderTests
     private sealed class ArrayOptions
     {
         [Option]
-        public string[]? Tags { get; set; }
+        public required string[] Tags { get; set; }
         [Option]
-        public int[]? Ports { get; set; }
+        public required int[] Ports { get; set; }
+        [Option]
+        public string[]? NullableTags { get; set; }
+        [Option]
+        public int[]? NullablePorts { get; set; }
     }
 
     private enum Color
@@ -59,6 +63,14 @@ public sealed class OptionBinderTests
         public Color Color { get; set; }
         [Option]
         public Color? Background { get; set; }
+    }
+
+    private sealed class ArrayEnumOptions
+    {
+        [Option]
+        public required Color[] Colors { get; set; }
+        [Option]
+        public Color[]? Backgrounds { get; set; }
     }
 
     private sealed class GuidOptions
@@ -125,6 +137,22 @@ public sealed class OptionBinderTests
         public required RequiredNetworkSettings Required { get; set; }
     }
 
+    private sealed class AliasedOptions
+    {
+        [Option(Name = "name", Aliases = ["n", "nm"])]
+        public required string Name { get; set; }
+        [Option(Name = "address", Aliases = ["a", "addr"])]
+        public string? Address { get; set; }
+    }
+
+    private sealed class DefaultedOptions
+    {
+        [Option(DefaultValue = "default")]
+        public string? Name { get; set; }
+        [Option(DefaultValue = 42)]
+        public int? Count { get; set; }
+    }
+
     #endregion
 
     #region RegisterOptions Tests
@@ -154,7 +182,7 @@ public sealed class OptionBinderTests
     }
 
     [Fact]
-    public void RegisterOptions_Array_SetsArityToOneOrMore()
+    public void RegisterOptions_Array_SetsExpectedArity()
     {
         var command = new Command("test");
 
@@ -163,6 +191,10 @@ public sealed class OptionBinderTests
         var tagsOption = command.Options.Single(o => o.Name == "--tags");
         Assert.Equal(ArgumentArity.OneOrMore, tagsOption.Arity);
         Assert.True(tagsOption.AllowMultipleArgumentsPerToken);
+
+        var nullableTagsOption = command.Options.Single(o => o.Name == "--nullable-tags");
+        Assert.Equal(ArgumentArity.ZeroOrMore, nullableTagsOption.Arity);
+        Assert.True(nullableTagsOption.AllowMultipleArgumentsPerToken);
     }
 
     [Fact]
@@ -175,6 +207,22 @@ public sealed class OptionBinderTests
         Assert.Equal(2, command.Options.Count);
         Assert.Contains(command.Options, o => o.Name == "--color");
         Assert.Contains(command.Options, o => o.Name == "--background");
+        Assert.Equal(typeof(string), command.Options.Single(o => o.Name == "--color").ValueType);
+        Assert.Equal(typeof(string), command.Options.Single(o => o.Name == "--background").ValueType);
+    }
+
+    [Fact]
+    public void RegisterOptions_ArrayEnum_RegistersAsStringArrayOption()
+    {
+        var command = new Command("test");
+
+        OptionBinder.RegisterOptions<ArrayEnumOptions>(command);
+
+        Assert.Equal(2, command.Options.Count);
+        Assert.Contains(command.Options, o => o.Name == "--colors");
+        Assert.Contains(command.Options, o => o.Name == "--backgrounds");
+        Assert.Equal(typeof(string[]), command.Options.Single(o => o.Name == "--colors").ValueType);
+        Assert.Equal(typeof(string[]), command.Options.Single(o => o.Name == "--backgrounds").ValueType);
     }
 
     [Fact]
@@ -253,8 +301,10 @@ public sealed class OptionBinderTests
         var parseResult = command.Parse("--tags foo bar baz --ports 80 443");
         var options = OptionBinder.BindOptions<ArrayOptions>(parseResult);
 
-        Assert.Equal(["foo", "bar", "baz"], options.Tags!);
-        Assert.Equal([80, 443], options.Ports!);
+        Assert.Equal(["foo", "bar", "baz"], options.Tags);
+        Assert.Equal([80, 443], options.Ports);
+        Assert.Null(options.NullableTags);
+        Assert.Null(options.NullablePorts);
     }
 
     [Fact]
@@ -296,6 +346,55 @@ public sealed class OptionBinderTests
     }
 
     [Fact]
+    public void BindOptions_ArrayEnum_BindsCaseInsensitive()
+    {
+        var command = new Command("test");
+        OptionBinder.RegisterOptions<ArrayEnumOptions>(command);
+
+        var parseResult = command.Parse("--colors green red --backgrounds BLUE GREEN");
+        var options = OptionBinder.BindOptions<ArrayEnumOptions>(parseResult);
+
+        Assert.Equal(2, options.Colors.Length);
+        Assert.Contains(Color.Green, options.Colors);
+        Assert.Contains(Color.Red, options.Colors);
+
+        Assert.NotNull(options.Backgrounds);
+        Assert.Equal(2, options.Backgrounds.Length);
+        Assert.Contains(Color.Blue, options.Backgrounds);
+        Assert.Contains(Color.Green, options.Backgrounds);
+    }
+
+    [Fact]
+    public void BindOptions_ArrayEnum_MixedCase()
+    {
+        var command = new Command("test");
+        OptionBinder.RegisterOptions<ArrayEnumOptions>(command);
+
+        var parseResult = command.Parse("--colors gREEn ReD");
+        var options = OptionBinder.BindOptions<ArrayEnumOptions>(parseResult);
+
+        Assert.Equal(2, options.Colors.Length);
+        Assert.Contains(Color.Green, options.Colors);
+        Assert.Contains(Color.Red, options.Colors);
+    }
+
+    [Fact]
+    public void BindOptions_NullableArrayEnum_NullWhenNotProvided()
+    {
+        var command = new Command("test");
+        OptionBinder.RegisterOptions<ArrayEnumOptions>(command);
+
+        var parseResult = command.Parse("--colors gREEn Red");
+        var options = OptionBinder.BindOptions<ArrayEnumOptions>(parseResult);
+
+        Assert.Equal(2, options.Colors.Length);
+        Assert.Contains(Color.Green, options.Colors);
+        Assert.Contains(Color.Red, options.Colors);
+
+        Assert.Null(options.Backgrounds);
+    }
+
+    [Fact]
     public void BindOptions_Guid_BindsValue()
     {
         var command = new Command("test");
@@ -333,6 +432,47 @@ public sealed class OptionBinderTests
 
         Assert.Equal(19.99m, options.Price);
         Assert.Equal(3.14, options.Rate);
+    }
+
+    [Theory]
+    [InlineData("name", null)]
+    [InlineData("n", null)]
+    [InlineData("nm", null)]
+    [InlineData("name", "address")]
+    [InlineData("n", "a")]
+    [InlineData("nm", "addr")]
+    public void BindOptions_Aliases_BindsValue(string nameArgName, string? addressArgName)
+    {
+        var command = new Command("test");
+        OptionBinder.RegisterOptions<AliasedOptions>(command);
+
+        var args = new List<string> { $"--{nameArgName}", "John" };
+        if (addressArgName != null)
+        {
+            args.AddRange([$"--{addressArgName}", "Seattle"]);
+        }
+
+        var parseResult = command.Parse(args);
+        var options = OptionBinder.BindOptions<AliasedOptions>(parseResult);
+
+        Assert.Equal("John", options.Name);
+        if (addressArgName != null)
+        {
+            Assert.Equal("Seattle", options.Address);
+        }
+    }
+
+    [Fact]
+    public void BindOptions_DefaultValue_BindsDefault()
+    {
+        var command = new Command("test");
+        OptionBinder.RegisterOptions<DefaultedOptions>(command);
+
+        var parseResult = command.Parse("");
+        var options = OptionBinder.BindOptions<DefaultedOptions>(parseResult);
+
+        Assert.Equal("default", options.Name);
+        Assert.Equal(42, options.Count);
     }
 
     #endregion

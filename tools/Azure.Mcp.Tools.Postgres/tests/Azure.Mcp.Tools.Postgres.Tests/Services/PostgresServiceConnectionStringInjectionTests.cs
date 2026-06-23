@@ -68,7 +68,7 @@ public class PostgresServiceConnectionStringInjectionTests
     {
         // Act
         await _postgresService.ExecuteQueryAsync(
-            "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
+            AuthTypes.MicrosoftEntra, "test-user", null,
             "legitimate-server", maliciousDatabase, "SELECT 1",
             TestContext.Current.CancellationToken);
 
@@ -85,8 +85,8 @@ public class PostgresServiceConnectionStringInjectionTests
     {
         // Act
         await _postgresService.ListTablesAsync(
-            "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
-            "legitimate-server", maliciousDatabase,
+            AuthTypes.MicrosoftEntra, "test-user", null,
+            "legitimate-server", maliciousDatabase, "public",
             TestContext.Current.CancellationToken);
 
         // Assert
@@ -102,7 +102,7 @@ public class PostgresServiceConnectionStringInjectionTests
     {
         // Act
         await _postgresService.GetTableSchemaAsync(
-            "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
+            AuthTypes.MicrosoftEntra, "test-user", null,
             "legitimate-server", maliciousDatabase, "some_table",
             TestContext.Current.CancellationToken);
 
@@ -121,7 +121,7 @@ public class PostgresServiceConnectionStringInjectionTests
 
         // Act
         await _postgresService.ExecuteQueryAsync(
-            "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
+            AuthTypes.MicrosoftEntra, "test-user", null,
             legitimateServer, maliciousDatabase, "SELECT 1",
             TestContext.Current.CancellationToken);
 
@@ -142,7 +142,7 @@ public class PostgresServiceConnectionStringInjectionTests
 
         // Act
         await _postgresService.ExecuteQueryAsync(
-            "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
+            AuthTypes.MicrosoftEntra, "test-user", null,
             "safe-server", maliciousDatabase, "SELECT 1",
             TestContext.Current.CancellationToken);
 
@@ -160,7 +160,7 @@ public class PostgresServiceConnectionStringInjectionTests
     {
         // Act — exercise the normal (non-injection) code path
         await _postgresService.ExecuteQueryAsync(
-            "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
+            AuthTypes.MicrosoftEntra, "test-user", null,
             "safe-server", "mydb", "SELECT 1",
             TestContext.Current.CancellationToken);
 
@@ -171,3 +171,4 @@ public class PostgresServiceConnectionStringInjectionTests
         Assert.Equal(SslMode.Require, parsed.SslMode);
     }
 }
+

@@ -20,6 +20,7 @@ public class AdvisorSetup : IAreaSetup
         services.AddSingleton<RecommendationListCommand>();
         services.AddSingleton<RecommendationSummaryCommand>();
         services.AddSingleton<RecommendationApplyCommand>();
+        services.AddSingleton<RecommendationTypeListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -31,10 +32,14 @@ public class AdvisorSetup : IAreaSetup
         var recommendation = new CommandGroup("recommendation", "Advisor recommendations - Commands for listing, summarizing, and applying Advisor recommendations in your Azure subscription.");
         advisor.AddSubGroup(recommendation);
 
+        var recommendationType = new CommandGroup("recommendation-type", "Advisor recommendation type metadata - Commands for listing the catalog of Advisor recommendation types, categories, and impact levels available in the tenant. Useful for new or empty environments without generated recommendations.");
+        advisor.AddSubGroup(recommendationType);
+
         // Register Advisor commands
         recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationSummaryCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationApplyCommand>(serviceProvider);
+        recommendationType.AddCommand<RecommendationTypeListCommand>(serviceProvider);
 
         return advisor;
     }

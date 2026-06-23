@@ -71,6 +71,11 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     {
     }
 
+    /// <summary>
+    /// Validates the options after they have been bound.
+    /// </summary>
+    /// <param name="options">The options to validate.</param>
+    /// <param name="validationResult">The validation result to populate.</param>
     public virtual void ValidateOptions(TOptions options, ValidationResult validationResult)
     {
     }

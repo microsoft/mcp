@@ -18,7 +18,27 @@ namespace Azure.Mcp.Tools.Sql.Services;
 
 public class SqlService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<SqlService> logger) : BaseAzureResourceService(subscriptionService, tenantService), ISqlService
 {
+    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ILogger<SqlService> _logger = logger;
+
+    /// <summary>
+    /// Resolves a subscription name or ID to a subscription ID. When the value is already a
+    /// subscription ID no additional ARM request is made, preserving the existing network
+    /// behavior for ID-based callers.
+    /// </summary>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy configuration</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>The resolved subscription ID</returns>
+    private async Task<string> ResolveSubscriptionIdAsync(
+        string subscription,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        return _subscriptionService.IsSubscriptionId(subscription)
+            ? subscription
+            : await _subscriptionService.GetSubscriptionIdByName(subscription, null, retryPolicy, cancellationToken);
+    }
 
     /// <summary>
     /// Helper method to navigate the Azure resource hierarchy and retrieve a SQL Server resource.
@@ -63,17 +83,25 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        var result = await ExecuteSingleResourceQueryAsync(
-            "Microsoft.Sql/servers/databases",
-            resourceGroup: resourceGroup,
-            subscription: subscription,
-            retryPolicy: retryPolicy,
-            converter: ConvertToSqlDatabaseModel,
-            additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
-            cancellationToken: cancellationToken)
-            ?? throw new KeyNotFoundException($"SQL database '{databaseName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(databaseName), databaseName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
 
-        return result;
+        try
+        {
+            var subscriptionId = await ResolveSubscriptionIdAsync(subscription, retryPolicy, cancellationToken);
+            var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, retryPolicy, cancellationToken);
+
+            var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
+
+            return ConvertToSqlDatabaseModel(databaseResource.Value);
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
+        {
+            throw new KeyNotFoundException($"SQL database '{databaseName}' not found on server '{serverName}' in resource group '{resourceGroup}' for subscription '{subscription}'.", ex);
+        }
     }
 
     /// <summary>
@@ -355,20 +383,32 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>A list of SQL databases on the specified server</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
-    public async Task<ResourceQueryResults<SqlDatabase>> ListDatabasesAsync(
+    public async Task<List<SqlDatabase>> ListDatabasesAsync(
         string serverName,
         string resourceGroup,
         string subscription,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        return await ExecuteResourceQueryAsync(
-            "Microsoft.Sql/servers/databases",
-            resourceGroup,
-            subscription,
-            retryPolicy,
-            ConvertToSqlDatabaseModel,
-            cancellationToken: cancellationToken);
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var subscriptionId = await ResolveSubscriptionIdAsync(subscription, retryPolicy, cancellationToken);
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, retryPolicy, cancellationToken);
+
+        var databases = new List<SqlDatabase>();
+        await foreach (var database in sqlServerResource.GetSqlDatabases().GetAllAsync(cancellationToken: cancellationToken))
+        {
+            databases.Add(ConvertToSqlDatabaseModel(database));
+        }
+
+        _logger.LogInformation(
+            "Successfully listed SQL databases. Server: {Server}, ResourceGroup: {ResourceGroup}, Count: {Count}",
+            serverName, resourceGroup, databases.Count);
+
+        return databases;
     }
 
     /// <summary>
@@ -429,20 +469,32 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>A list of elastic pools configured on the SQL server</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
-    public async Task<ResourceQueryResults<SqlElasticPool>> GetElasticPoolsAsync(
+    public async Task<List<SqlElasticPool>> GetElasticPoolsAsync(
         string serverName,
         string resourceGroup,
         string subscription,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        return await ExecuteResourceQueryAsync(
-            "Microsoft.Sql/servers/elasticPools",
-            resourceGroup,
-            subscription,
-            retryPolicy,
-            ConvertToSqlElasticPoolModel,
-            cancellationToken: cancellationToken);
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var subscriptionId = await ResolveSubscriptionIdAsync(subscription, retryPolicy, cancellationToken);
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, retryPolicy, cancellationToken);
+
+        var elasticPools = new List<SqlElasticPool>();
+        await foreach (var elasticPool in sqlServerResource.GetElasticPools().GetAllAsync(cancellationToken: cancellationToken))
+        {
+            elasticPools.Add(ConvertToSqlElasticPoolModel(elasticPool));
+        }
+
+        _logger.LogInformation(
+            "Successfully listed SQL elastic pools. Server: {Server}, ResourceGroup: {ResourceGroup}, Count: {Count}",
+            serverName, resourceGroup, elasticPools.Count);
+
+        return elasticPools;
     }
 
     /// <summary>
@@ -917,32 +969,31 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             Tags: tags.Count > 0 ? tags : null);
     }
 
-    private static SqlElasticPool ConvertToSqlElasticPoolModel(JsonElement item)
+    private static SqlElasticPool ConvertToSqlElasticPoolModel(ElasticPoolResource elasticPoolResource)
     {
-        SqlElasticPoolData? elasticPool = SqlElasticPoolData.FromJson(item)
-            ?? throw new InvalidOperationException("Failed to parse SQL elastic pool data");
+        var data = elasticPoolResource.Data;
 
         return new(
-            Name: elasticPool.ResourceName ?? "Unknown",
-            Id: elasticPool.ResourceId ?? "Unknown",
-            Type: elasticPool.ResourceType ?? "Unknown",
-            Location: elasticPool.Location,
-            Sku: elasticPool.Sku != null ? new(
-                Name: elasticPool.Sku.Name,
-                Tier: elasticPool.Sku.Tier,
-                Capacity: elasticPool.Sku.Capacity,
-                Family: elasticPool.Sku.Family,
-                Size: elasticPool.Sku.Size
+            Name: data.Name,
+            Id: data.Id.ToString(),
+            Type: data.ResourceType.ToString(),
+            Location: data.Location.ToString(),
+            Sku: data.Sku != null ? new(
+                Name: data.Sku.Name,
+                Tier: data.Sku.Tier,
+                Capacity: data.Sku.Capacity,
+                Family: data.Sku.Family,
+                Size: data.Sku.Size
             ) : null,
-            State: elasticPool.Properties?.State,
-            CreationDate: elasticPool.Properties?.CreatedOn,
-            MaxSizeBytes: elasticPool.Properties?.MaxSizeBytes,
-            PerDatabaseSettings: elasticPool.Properties?.PerDatabaseSettings != null ? new(
-                MinCapacity: elasticPool.Properties.PerDatabaseSettings.MinCapacity,
-                MaxCapacity: elasticPool.Properties.PerDatabaseSettings.MaxCapacity
+            State: data.State?.ToString(),
+            CreationDate: data.CreatedOn,
+            MaxSizeBytes: data.MaxSizeBytes,
+            PerDatabaseSettings: data.PerDatabaseSettings != null ? new(
+                MinCapacity: data.PerDatabaseSettings.MinCapacity,
+                MaxCapacity: data.PerDatabaseSettings.MaxCapacity
             ) : null,
-            ZoneRedundant: elasticPool.Properties?.IsZoneRedundant,
-            LicenseType: elasticPool.Properties?.LicenseType,
+            ZoneRedundant: data.IsZoneRedundant,
+            LicenseType: data.LicenseType?.ToString(),
             DatabaseDtuMin: null, // DTU properties not available in current SDK
             DatabaseDtuMax: null,
             Dtu: null,

@@ -4,16 +4,17 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Microsoft.Mcp.Core.Commands;
 
 namespace Microsoft.Mcp.Core.Options;
 
 public class OptionDescriptor
 {
     public required string Name { get; init; }
-    public string? Description { get; init; }
+    public required string Description { get; init; }
+    public string[] Aliases { get; init; } = [];
     public bool Required { get; init; }
     public bool Hidden { get; init; }
+    public object? DefaultValue { get; init; }
     public required PropertyInfo TargetProperty { get; init; }
     public required Type Type { get; init; }
     public PropertyInfo? ParentProperty { get; init; }
@@ -58,6 +59,7 @@ public class OptionDescriptor
             {
                 continue;
             }
+
             string name = optionAttribute?.Name ?? OptionNameConvention.ToKebabCase(property.Name);
 
             if (!string.IsNullOrEmpty(prefix))
@@ -85,10 +87,12 @@ public class OptionDescriptor
                 descriptors.Add(new OptionDescriptor
                 {
                     Name = name,
-                    Description = optionAttribute?.Description,
+                    Aliases = optionAttribute!.Aliases ?? [],
+                    Description = optionAttribute!.Description!,
                     Type = property.PropertyType,
                     Required = required,
                     Hidden = optionAttribute?.Hidden ?? false,
+                    DefaultValue = optionAttribute?.DefaultValue,
                     TargetProperty = property,
                     ParentProperty = parentProperty
                 });
