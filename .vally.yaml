@@ -1,7 +1,6 @@
 paths:
-  evals: ["./tools/Azure.Mcp.Tools.*/"]
-  results: "results/"
-  evalFilenames: ["eval.yaml", "eval.yml", "*.eval.yaml"]
+  evals: ["./tools/Azure.Mcp.Tools.*/", "./.work/vally/evals/"]
+  results: "./.work/vally/results/"
 
 environments:
   development:
