@@ -172,8 +172,11 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         // load settings first to determine test mode
         await LoadSettingsAsync();
 
-        // check if the test is allowed to run in the current mode
-        CheckLiveOnly();
+        // resolve the current test method once for all attribute checks
+        var methodInfo = TestMethodResolver.TryResolveCurrentMethodInfo();
+
+        // skip tests marked [LiveTestOnly] when not in Live mode
+        CheckLiveTestOnly(methodInfo);
 
         if (fixture.Proxy == null)
         {
