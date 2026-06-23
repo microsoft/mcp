@@ -68,5 +68,4 @@ public static partial class PromptParser
 
         return prompts;
     }
-
 }
