@@ -26,7 +26,7 @@ public sealed class SampleCommand(
     ILogger<SampleCommand> logger,
     IKustoService kustoService,
     ISubscriptionResolver subscriptionResolver)
-    : BaseTableCommand<SampleOptions, SampleCommand.SampleCommandResult>(subscriptionResolver)
+    : BaseClusterCommand<SampleOptions, SampleCommand.SampleCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SampleOptions options, CancellationToken cancellationToken)
     {
@@ -46,7 +46,6 @@ public sealed class SampleCommand(
                     options.Database,
                     query,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
@@ -58,7 +57,6 @@ public sealed class SampleCommand(
                     options.Database,
                     query,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }

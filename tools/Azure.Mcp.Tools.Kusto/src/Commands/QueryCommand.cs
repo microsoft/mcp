@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
@@ -25,7 +26,7 @@ public sealed class QueryCommand(
     ILogger<QueryCommand> logger,
     IKustoService kustoService,
     ISubscriptionResolver subscriptionResolver)
-    : BaseDatabaseCommand<QueryOptions, QueryCommand.QueryCommandResult>(subscriptionResolver)
+    : BaseClusterCommand<QueryOptions, QueryCommand.QueryCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, QueryOptions options, CancellationToken cancellationToken)
     {
@@ -40,7 +41,6 @@ public sealed class QueryCommand(
                     options.Database,
                     options.Query,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
@@ -52,7 +52,6 @@ public sealed class QueryCommand(
                     options.Database,
                     options.Query,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }

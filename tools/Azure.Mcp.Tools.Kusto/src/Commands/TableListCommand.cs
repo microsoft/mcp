@@ -25,7 +25,7 @@ public sealed class TableListCommand(
     ILogger<TableListCommand> logger,
     IKustoService kustoService,
     ISubscriptionResolver subscriptionResolver)
-    : BaseDatabaseCommand<TableListOptions, TableListCommand.TableListCommandResult>(subscriptionResolver)
+    : BaseClusterCommand<TableListOptions, TableListCommand.TableListCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TableListOptions options, CancellationToken cancellationToken)
     {
@@ -39,7 +39,6 @@ public sealed class TableListCommand(
                     options.ClusterUri!,
                     options.Database,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
@@ -50,7 +49,6 @@ public sealed class TableListCommand(
                     options.Cluster!,
                     options.Database,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }

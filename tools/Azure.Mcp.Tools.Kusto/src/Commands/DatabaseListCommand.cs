@@ -38,7 +38,6 @@ public sealed class DatabaseListCommand(
                 databasesNames = await kustoService.ListDatabasesAsync(
                     options.ClusterUri!,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
@@ -48,7 +47,6 @@ public sealed class DatabaseListCommand(
                     options.Subscription!,
                     options.Cluster!,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }

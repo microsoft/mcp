@@ -116,6 +116,7 @@ public static class OptionBinder
 
             throw new CommandValidationException(
                 string.Join('\n', messages),
+                HttpStatusCode.BadRequest,
                 missingOptions: missingOptions);
         }
 

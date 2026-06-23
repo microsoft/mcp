@@ -25,7 +25,7 @@ public sealed class TableSchemaCommand(
     ILogger<TableSchemaCommand> logger,
     IKustoService kustoService,
     ISubscriptionResolver subscriptionResolver)
-    : BaseTableCommand<TableSchemaOptions, TableSchemaCommand.TableSchemaCommandResult>(subscriptionResolver)
+    : BaseClusterCommand<TableSchemaOptions, TableSchemaCommand.TableSchemaCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TableSchemaOptions options, CancellationToken cancellationToken)
     {
@@ -40,7 +40,6 @@ public sealed class TableSchemaCommand(
                     options.Database,
                     options.Table,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
@@ -52,7 +51,6 @@ public sealed class TableSchemaCommand(
                     options.Database,
                     options.Table,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
