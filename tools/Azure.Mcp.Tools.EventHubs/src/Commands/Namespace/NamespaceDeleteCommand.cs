@@ -75,8 +75,11 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
+            var message = success
+                ? $"Namespace '{options.Namespace}' deleted successfully."
+                : $"Namespace '{options.Namespace}' was not found. Nothing was deleted.";
             context.Response.Results = ResponseResult.Create(
-                new(success, $"Namespace '{options.Namespace}' deleted successfully"),
+                new(success, message),
                 EventHubsJsonContext.Default.NamespaceDeleteCommandResult);
             context.Response.Status = HttpStatusCode.OK;
         }

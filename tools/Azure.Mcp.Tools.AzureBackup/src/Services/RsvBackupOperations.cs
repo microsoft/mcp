@@ -663,7 +663,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         var existingPolicy = await policyCollection.GetAsync(policyName, cancellationToken);
         var policyData = existingPolicy.Value.Data;
         var policyProperties = policyData.Properties as BackupGenericProtectionPolicy
-            ?? throw new InvalidOperationException($"Policy '{policyName}' has an unsupported properties type.");
+            ?? throw new ArgumentException($"Policy '{policyName}' has an unsupported properties type.", nameof(policyName));
 
         DateTimeOffset? newScheduleTime = null;
         if (!string.IsNullOrWhiteSpace(scheduleTime))
@@ -793,18 +793,18 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                 break;
 
             default:
-                throw new InvalidOperationException($"Unsupported policy type '{policyProperties.GetType().Name}'. Only IaasVM, VmWorkload (SQL/HANA), and FileShare policies are supported for update.");
+                throw new ArgumentException($"Unsupported policy type '{policyProperties.GetType().Name}'. Only IaasVM, VmWorkload (SQL/HANA), and FileShare policies are supported for update.");
         }
 
         if (!scheduleApplied)
         {
-            throw new InvalidOperationException(
+            throw new ArgumentException(
                 $"Schedule update could not be applied. Policy uses '{policyProperties.GetType().Name}' with a schedule type that is not supported for update. Only SimpleSchedulePolicy is supported.");
         }
 
         if (!retentionApplied)
         {
-            throw new InvalidOperationException(
+            throw new ArgumentException(
                 $"Retention update could not be applied. Policy uses '{policyProperties.GetType().Name}' with a retention type that is not supported for update. Only LongTermRetentionPolicy with a daily schedule is supported.");
         }
     }
@@ -1407,7 +1407,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             }
             else if (exactMatches.Count > 1)
             {
-                throw new InvalidOperationException(
+                throw new ArgumentException(
                     $"Multiple protected items found with datasource ID '{datasourceId}' in vault '{vaultName}'. " +
                     "Provide --container to disambiguate.");
             }
@@ -1417,7 +1417,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             }
             else if (prefixMatches.Count > 1)
             {
-                throw new InvalidOperationException(
+                throw new ArgumentException(
                     $"Multiple protected items match datasource ID '{datasourceId}' in vault '{vaultName}' " +
                     "(shared storage account prefix). Provide a more specific datasource ID or --container to disambiguate.");
             }
@@ -1447,7 +1447,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         // the full protection definition (PolicyId, ContainerName, etc.).
         if (matchedItemData.Properties is not BackupGenericProtectedItem existingProperties)
         {
-            throw new InvalidOperationException(
+            throw new ArgumentException(
                 "The matched protected item does not contain properties required to perform undelete.");
         }
 

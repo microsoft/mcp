@@ -268,7 +268,7 @@ public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fi
 
         // Verify deletion response for non-existent resource
         var deleteResult = result.AssertProperty("success");
-        Assert.True(deleteResult.GetBoolean(), "Delete operation should succeed even for non-existent resources");
+        Assert.False(deleteResult.GetBoolean(), "Delete operation should report not-found when the namespace does not exist");
 
         var message = result.AssertProperty("message");
         Assert.False(string.IsNullOrEmpty(message.GetString()));

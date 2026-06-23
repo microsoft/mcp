@@ -9,10 +9,14 @@ jobs:
 
   - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
-  - task: NodeTool@0
-    displayName: "Install Node.js 22"
+  - template: /eng/common/pipelines/templates/steps/eng-common-workflow-enforcer.yml
+
+  - template: /eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml
+
+  - task: UseNode@1
+    displayName: 'Install Node.js 24'
     inputs:
-      versionSpec: '22.x'
+      version: '24.x'
   
   - task: Powershell@2
     displayName: "Run source analysis"
