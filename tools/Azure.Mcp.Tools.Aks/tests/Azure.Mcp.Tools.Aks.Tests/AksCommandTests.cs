@@ -30,7 +30,7 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
     ];
 
     // ARG query bodies contain resource group and cluster names in KQL syntax like:
-    //   resourceGroup =~ 'masalama-mcpe763185a' and name =~ 'mcpe763185a'
+    //   resourceGroup =~ 'rg-name' and name =~ 'cluster-name'
     // The default GeneralRegexSanitizer for ResourceBaseName is a no-op in playback
     // (Settings.ResourceBaseName is "Sanitized"), so explicit body sanitizers are needed.
     public override List<BodyRegexSanitizer> BodyRegexSanitizers { get; } =
