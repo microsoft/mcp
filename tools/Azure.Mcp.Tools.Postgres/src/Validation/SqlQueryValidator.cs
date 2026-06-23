@@ -116,14 +116,14 @@ internal static class SqlQueryValidator
     {
         if (string.IsNullOrWhiteSpace(query))
         {
-            throw new CommandValidationException("Query cannot be empty.", HttpStatusCode.BadRequest);
+            throw new CommandValidationException("Query cannot be empty.");
         }
 
         var trimmed = query.Trim();
 
         if (trimmed.Length > MaxQueryLength)
         {
-            throw new CommandValidationException($"Query length exceeds limit of {MaxQueryLength} characters.", HttpStatusCode.BadRequest);
+            throw new CommandValidationException($"Query length exceeds limit of {MaxQueryLength} characters.");
         }
 
         // Allow an optional trailing semicolon; remove for further checks.
@@ -132,7 +132,7 @@ internal static class SqlQueryValidator
         // Must start with SELECT (ignoring leading whitespace already trimmed)
         if (!core.StartsWith("select", StringComparison.OrdinalIgnoreCase))
         {
-            throw new CommandValidationException("Only single read-only SELECT statements are allowed.", HttpStatusCode.BadRequest);
+            throw new CommandValidationException("Only single read-only SELECT statements are allowed.");
         }
 
         // Strip single-quoted string literals before checking for comment markers to avoid
@@ -147,13 +147,13 @@ internal static class SqlQueryValidator
         // Reject inline / block comments which can hide stacked statements or alter logic.
         if (withoutStrings.Contains("--", StringComparison.Ordinal) || withoutStrings.Contains("/*", StringComparison.Ordinal))
         {
-            throw new CommandValidationException("Comments are not allowed in the query.", HttpStatusCode.BadRequest);
+            throw new CommandValidationException("Comments are not allowed in the query.");
         }
 
         // Reject any additional semicolons (stacked statements) inside the core content.
         if (core.Contains(';'))
         {
-            throw new CommandValidationException("Multiple or stacked SQL statements are not allowed.", HttpStatusCode.BadRequest);
+            throw new CommandValidationException("Multiple or stacked SQL statements are not allowed.");
         }
 
         var lower = core.ToLowerInvariant();
@@ -161,20 +161,20 @@ internal static class SqlQueryValidator
         // Naive detection of tautology patterns still applied before token-level allow list.
         if (lower.Contains(" or 1=1") || lower.Contains(" or '1'='1"))
         {
-            throw new CommandValidationException("Suspicious boolean tautology pattern detected.", HttpStatusCode.BadRequest);
+            throw new CommandValidationException("Suspicious boolean tautology pattern detected.");
         }
 
         // Tokenize: capture word tokens (letters / underscore). Numerics & punctuation ignored.
         var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled, RegexHelper.DefaultRegexTimeout);
         if (matches.Count == 0)
         {
-            throw new CommandValidationException("Query must contain a SELECT statement.", HttpStatusCode.BadRequest);
+            throw new CommandValidationException("Query must contain a SELECT statement.");
         }
 
         // First significant token must be SELECT.
         if (!matches[0].Value.Equals("select", StringComparison.OrdinalIgnoreCase))
         {
-            throw new CommandValidationException("Only single read-only SELECT statements are allowed.", HttpStatusCode.BadRequest);
+            throw new CommandValidationException("Only single read-only SELECT statements are allowed.");
         }
 
         // Check all tokens against blocklist of dangerous functions and system catalogs.

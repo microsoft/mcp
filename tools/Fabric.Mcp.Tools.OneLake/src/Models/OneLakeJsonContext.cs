@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Commands.Item;
+using Fabric.Mcp.Tools.OneLake.Commands.Security;
+using Fabric.Mcp.Tools.OneLake.Commands.Settings;
+using Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 using Fabric.Mcp.Tools.OneLake.Commands.Table;
 using Fabric.Mcp.Tools.OneLake.Commands.Workspace;
 
@@ -62,5 +65,55 @@ namespace Fabric.Mcp.Tools.OneLake.Models;
 [JsonSerializable(typeof(List<Lakehouse>))]
 [JsonSerializable(typeof(List<OneLakeFileInfo>))]
 [JsonSerializable(typeof(List<FileSystemItem>))]
+// Data Access Security types
+[JsonSerializable(typeof(DataAccessRole))]
+[JsonSerializable(typeof(DataAccessRoleListResponse))]
+[JsonSerializable(typeof(DataAccessRolePutRequest))]
+[JsonSerializable(typeof(DataAccessRoleMembers))]
+[JsonSerializable(typeof(DecisionRule))]
+[JsonSerializable(typeof(DecisionRuleScope))]
+[JsonSerializable(typeof(List<DecisionRuleScope>))]
+[JsonSerializable(typeof(Constraints))]
+[JsonSerializable(typeof(ColumnConstraint))]
+[JsonSerializable(typeof(RowConstraint))]
+[JsonSerializable(typeof(FabricItemMember))]
+[JsonSerializable(typeof(MicrosoftEntraMember))]
+[JsonSerializable(typeof(DataAccessRoleDeleteCommand.DataAccessRoleDeleteCommandResult))]
+// Shortcut types
+[JsonSerializable(typeof(OneLakeShortcut))]
+[JsonSerializable(typeof(ShortcutTarget))]
+[JsonSerializable(typeof(OneLakeShortcutTarget))]
+[JsonSerializable(typeof(AdlsGen2ShortcutTarget))]
+[JsonSerializable(typeof(AmazonS3ShortcutTarget))]
+[JsonSerializable(typeof(GoogleCloudStorageShortcutTarget))]
+[JsonSerializable(typeof(DataverseShortcutTarget))]
+[JsonSerializable(typeof(S3CompatibleShortcutTarget))]
+[JsonSerializable(typeof(ExternalDataShareShortcutTarget))]
+[JsonSerializable(typeof(AzureBlobStorageShortcutTarget))]
+[JsonSerializable(typeof(OneDriveSharePointShortcutTarget))]
+[JsonSerializable(typeof(ShortcutListResponse))]
+[JsonSerializable(typeof(BulkCreateShortcutsRequest))]
+[JsonSerializable(typeof(CreateShortcutWithTransformRequest))]
+[JsonSerializable(typeof(CsvToDeltaTransform))]
+[JsonSerializable(typeof(CsvToDeltaTransformProperties))]
+[JsonSerializable(typeof(BulkCreateShortcutResponse))]
+[JsonSerializable(typeof(CreateShortcutResponse))]
+[JsonSerializable(typeof(ShortcutRequestInfo))]
+[JsonSerializable(typeof(ShortcutCreateError))]
+[JsonSerializable(typeof(ShortcutDeleteCommand.ShortcutDeleteCommandResult))]
+[JsonSerializable(typeof(ShortcutResetCacheCommand.ShortcutResetCacheCommandResult))]
+[JsonSerializable(typeof(DiagnosticsModifyCommand.DiagnosticsModifyCommandResult))]
+[JsonSerializable(typeof(ImmutabilityPolicyModifyCommand.ImmutabilityPolicyModifyCommandResult))]
+// Settings types
+[JsonSerializable(typeof(OneLakeSettings))]
+[JsonSerializable(typeof(OneLakeDiagnosticSettings))]
+[JsonSerializable(typeof(LakehouseDiagnosticDestination))]
+[JsonSerializable(typeof(ItemReferenceById))]
+[JsonSerializable(typeof(ImmutabilityPolicy))]
+[JsonSerializable(typeof(List<ImmutabilityPolicy>))]
+[JsonSerializable(typeof(LifecycleSettings))]
+// Long running operation types
+[JsonSerializable(typeof(OperationState))]
+[JsonSerializable(typeof(OperationError))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]
 internal partial class OneLakeJsonContext : JsonSerializerContext;

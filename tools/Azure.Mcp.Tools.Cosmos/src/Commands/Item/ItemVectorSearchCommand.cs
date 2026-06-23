@@ -1,14 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security;
 using Azure.Mcp.Tools.Cosmos.Models;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Azure.Mcp.Tools.Cosmos.Options.Item;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Azure.Mcp.Tools.Cosmos.Validation;
+using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -76,7 +79,46 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
             {
                 result.AddError("--count must be between 1 and 20.");
             }
+
+            var openAIEndpoint = result.GetValueOrDefault<string>(CosmosOptionDefinitions.OpenAIEndpoint.Name);
+            ValidateOpenAIEndpoint(openAIEndpoint, result);
         });
+    }
+
+    private static readonly string[] s_openAIEndpointServiceTypes = ["azure-openai", "foundry"];
+
+    private static readonly ArmEnvironment[] s_openAIEndpointClouds =
+        [ArmEnvironment.AzurePublicCloud, ArmEnvironment.AzureChina, ArmEnvironment.AzureGovernment, ArmEnvironment.AzureGermany];
+
+    private static void ValidateOpenAIEndpoint(string? endpoint, System.CommandLine.Parsing.CommandResult result)
+    {
+        if (string.IsNullOrWhiteSpace(endpoint))
+        {
+            result.AddError("--openai-endpoint is required.");
+            return;
+        }
+
+        // The configured Azure cloud is not available during option validation, so accept the
+        // endpoint if it is valid for any supported cloud. The service performs the authoritative,
+        // cloud-aware check before constructing the authenticated client.
+        foreach (var cloud in s_openAIEndpointClouds)
+        {
+            foreach (var serviceType in s_openAIEndpointServiceTypes)
+            {
+                try
+                {
+                    EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, cloud);
+                    return;
+                }
+                catch (Exception ex) when (ex is SecurityException or ArgumentException)
+                {
+                    // Ignored. Will reach error message if endpoint is not valid for any supported cloud.
+                }
+            }
+        }
+
+        result.AddError(
+            $"The provided Azure OpenAI endpoint is not a trusted Azure OpenAI, Cognitive Services, or AI Foundry endpoint for the configured Azure cloud. The value '{endpoint}' is not allowed.");
     }
 
     protected override ItemVectorSearchOptions BindOptions(ParseResult parseResult)

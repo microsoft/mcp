@@ -52,14 +52,13 @@ public static class KqlQueryValidator
     {
         if (string.IsNullOrWhiteSpace(query))
         {
-            throw new CommandValidationException("Query cannot be empty.", HttpStatusCode.BadRequest);
+            throw new CommandValidationException("Query cannot be empty.");
         }
 
         if (query.Length > MaxQueryLength)
         {
             throw new CommandValidationException(
-                $"Query length exceeds the maximum allowed limit of {MaxQueryLength:N0} characters.",
-                HttpStatusCode.BadRequest);
+                $"Query length exceeds the maximum allowed limit of {MaxQueryLength:N0} characters.");
         }
 
         // Strip string literals before structural analysis to avoid false positives

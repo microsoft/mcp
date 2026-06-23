@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Data.Common;
@@ -85,7 +85,7 @@ namespace Azure.Mcp.Tools.Postgres.Tests.Services
             // Act
             CommandValidationException exception = await Assert.ThrowsAsync<CommandValidationException>(async () =>
             {
-                await _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, null, server, database, query, TestContext.Current.CancellationToken);
+                await _postgresService.ExecuteQueryAsync(authType, user, null, server, database, query, TestContext.Current.CancellationToken);
             });
 
             // Assert
@@ -109,7 +109,7 @@ namespace Azure.Mcp.Tools.Postgres.Tests.Services
                     [typeof(string), typeof(int), typeof(InvalidCastItem)]));
 
             // Act
-            List<string> rows = await _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, null, server, database, query, TestContext.Current.CancellationToken);
+            List<string> rows = await _postgresService.ExecuteQueryAsync(authType, user, null, server, database, query, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(4, rows.Count);
@@ -132,7 +132,7 @@ namespace Azure.Mcp.Tools.Postgres.Tests.Services
                     [typeof(string), typeof(int), typeof(InvalidCastItem)]));
 
             // Act
-            List<string> rows = await _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, null, server, database, query, TestContext.Current.CancellationToken);
+            List<string> rows = await _postgresService.ExecuteQueryAsync(authType, user, null, server, database, query, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Single(rows);
@@ -202,6 +202,85 @@ namespace Azure.Mcp.Tools.Postgres.Tests.Services
                 () => sut.ListServersAsync(subscriptionId, resourceGroup, TestContext.Current.CancellationToken));
             Assert.Contains(resourceGroup, ex.Message);
         }
+
+        [Fact]
+        public async Task ListTablesAsync_UsesParameterizedSchemaQuery_AndDefaultsAreNotInterpolated()
+        {
+            // Verify the table listing query is parameterized on @schema (no string interpolation),
+            // orders results deterministically, and actually binds the schema parameter value.
+            string? capturedQuery = null;
+            var command = Substitute.For<NpgsqlCommand>();
+            _dbProvider.GetCommand(Arg.Do<string>(q => capturedQuery = q), Arg.Any<IPostgresResource>())
+                .Returns(command);
+
+            await _postgresService.ListTablesAsync(authType, user, null, server, database, "analytics", TestContext.Current.CancellationToken);
+
+            Assert.NotNull(capturedQuery);
+            Assert.Contains("@schema", capturedQuery);
+            Assert.Contains("ORDER BY table_name", capturedQuery);
+            Assert.DoesNotContain("'public'", capturedQuery);
+            Assert.DoesNotContain("analytics", capturedQuery);
+
+            Assert.Equal(2, command.Parameters.Count);
+            Assert.Equal("schema", command.Parameters[0].ParameterName);
+            Assert.Equal("analytics", command.Parameters[0].Value);
+            Assert.Equal("maxResults", command.Parameters[1].ParameterName);
+            Assert.Equal(PostgresService.MaxRowCount + 1, command.Parameters[1].Value);
+        }
+
+        [Fact]
+        public async Task GetServerConfigAsync_ForwardsTenantAndRetryPolicy()
+        {
+            // Arrange
+            var tenant = "tenant123";
+            var retryPolicy = new Microsoft.Mcp.Core.Options.RetryPolicyOptions();
+            _resourceGroupService
+                .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, Arg.Any<CancellationToken>())
+                .Returns((ResourceGroupResource?)null);
+
+            // Act & Assert — resource group lookup happens first; null triggers the exception
+            await Assert.ThrowsAsync<Exception>(() =>
+                _postgresService.GetServerConfigAsync(subscriptionId, resourceGroup, user, server, tenant, retryPolicy, TestContext.Current.CancellationToken));
+
+            await _resourceGroupService.Received(1)
+                .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
+        public async Task GetServerParameterAsync_ForwardsTenantAndRetryPolicy()
+        {
+            // Arrange
+            var tenant = "tenant123";
+            var retryPolicy = new Microsoft.Mcp.Core.Options.RetryPolicyOptions();
+            _resourceGroupService
+                .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, Arg.Any<CancellationToken>())
+                .Returns((ResourceGroupResource?)null);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<Exception>(() =>
+                _postgresService.GetServerParameterAsync(subscriptionId, resourceGroup, user, server, "param123", tenant, retryPolicy, TestContext.Current.CancellationToken));
+
+            await _resourceGroupService.Received(1)
+                .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
+        public async Task SetServerParameterAsync_ForwardsTenantAndRetryPolicy()
+        {
+            // Arrange
+            var tenant = "tenant123";
+            var retryPolicy = new Microsoft.Mcp.Core.Options.RetryPolicyOptions();
+            _resourceGroupService
+                .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, Arg.Any<CancellationToken>())
+                .Returns((ResourceGroupResource?)null);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<Exception>(() =>
+                _postgresService.SetServerParameterAsync(subscriptionId, resourceGroup, user, server, "param123", "value123", tenant, retryPolicy, TestContext.Current.CancellationToken));
+
+            await _resourceGroupService.Received(1)
+                .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, Arg.Any<CancellationToken>());
+        }
     }
 
     /// <summary>
@@ -237,3 +316,4 @@ namespace Azure.Mcp.Tools.Postgres.Tests.Services
         }
     }
 }
+

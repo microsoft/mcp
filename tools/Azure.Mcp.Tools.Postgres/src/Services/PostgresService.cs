@@ -16,6 +16,7 @@ using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Npgsql;
 
@@ -34,6 +35,8 @@ public class PostgresService(
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IEntraTokenProvider _entraTokenAuth = entraTokenAuth;
     private readonly IDbProvider _dbProvider = dbProvider;
+
+    internal const int MaxRowCount = 10_000;
 
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
@@ -77,9 +80,7 @@ public class PostgresService(
         return server;
     }
 
-    public async Task<List<string>> ListDatabasesAsync(
-        string subscriptionId,
-        string resourceGroup,
+    public async Task<DatabaseListResult> ListDatabasesAsync(
         string authType,
         string user,
         string? password,
@@ -90,21 +91,28 @@ public class PostgresService(
         var host = NormalizeServerName(server);
         var connectionString = BuildConnectionString(host, "postgres", user, passwordToUse);
 
-        var query = "SELECT datname FROM pg_database WHERE datistemplate = false;";
+        var query = "SELECT datname FROM pg_database WHERE datistemplate = false ORDER BY datname LIMIT @maxResults;";
         await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType, cancellationToken);
         await using NpgsqlCommand command = _dbProvider.GetCommand(query, resource);
+        // Fetch cap+1 rows so we can detect truncation by observing whether an extra row exists, then trim it.
+        command.Parameters.AddWithValue("maxResults", MaxRowCount + 1);
         await using DbDataReader reader = await _dbProvider.ExecuteReaderAsync(command, cancellationToken);
         var dbs = new List<string>();
         while (await reader.ReadAsync(cancellationToken))
         {
             dbs.Add(reader.GetString(0));
         }
-        return dbs;
+
+        var isTruncated = dbs.Count > MaxRowCount;
+        if (isTruncated)
+        {
+            dbs.RemoveRange(MaxRowCount, dbs.Count - MaxRowCount);
+        }
+
+        return new DatabaseListResult(dbs, isTruncated);
     }
 
     public async Task<List<string>> ExecuteQueryAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,
@@ -160,35 +168,42 @@ public class PostgresService(
         return rows;
     }
 
-    public async Task<List<string>> ListTablesAsync(
-        string subscriptionId,
-        string resourceGroup,
+    public async Task<TableListResult> ListTablesAsync(
         string authType,
         string user,
         string? password,
         string server,
         string database,
+        string schema,
         CancellationToken cancellationToken)
     {
         string? passwordToUse = await GetPassword(authType, password, cancellationToken);
         var host = NormalizeServerName(server);
         var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
-        var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';";
+        var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = @schema ORDER BY table_name LIMIT @maxResults;";
         await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType, cancellationToken);
         await using NpgsqlCommand command = _dbProvider.GetCommand(query, resource);
+        command.Parameters.AddWithValue("schema", schema);
+        // Fetch cap+1 rows so we can detect truncation by observing whether an extra row exists, then trim it.
+        command.Parameters.AddWithValue("maxResults", MaxRowCount + 1);
         await using DbDataReader reader = await _dbProvider.ExecuteReaderAsync(command, cancellationToken);
         var tables = new List<string>();
         while (await reader.ReadAsync(cancellationToken))
         {
             tables.Add(reader.GetString(0));
         }
-        return tables;
+
+        var isTruncated = tables.Count > MaxRowCount;
+        if (isTruncated)
+        {
+            tables.RemoveRange(MaxRowCount, tables.Count - MaxRowCount);
+        }
+
+        return new TableListResult(tables, isTruncated);
     }
 
     public async Task<List<string>> GetTableSchemaAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,
@@ -263,9 +278,11 @@ public class PostgresService(
         string resourceGroup,
         string user,
         string server,
-        CancellationToken cancellationToken)
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
 
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
@@ -286,9 +303,11 @@ public class PostgresService(
         string user,
         string server,
         string param,
-        CancellationToken cancellationToken)
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
 
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
@@ -308,9 +327,11 @@ public class PostgresService(
         string server,
         string param,
         string value,
-        CancellationToken cancellationToken)
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
 
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
@@ -366,11 +387,11 @@ public class PostgresService(
         {
             if (string.IsNullOrEmpty(password))
             {
-                throw new CommandValidationException($"Password must be provided for '{AuthTypes.PostgreSQL}' authentication.", HttpStatusCode.BadRequest);
+                throw new CommandValidationException($"Password must be provided for '{AuthTypes.PostgreSQL}' authentication.");
             }
             return password;
         }
 
-        throw new CommandValidationException($"Unsupported authentication type. Please use '{AuthTypes.MicrosoftEntra}' or '{AuthTypes.PostgreSQL}'", HttpStatusCode.BadRequest);
+        throw new CommandValidationException($"Unsupported authentication type. Please use '{AuthTypes.MicrosoftEntra}' or '{AuthTypes.PostgreSQL}'");
     }
 }

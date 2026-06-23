@@ -1,5 +1,20 @@
 # Release History
 
+## 1.1.0 (2026-06-15)
+
+### Added
+
+- **Data Factory Tools**: Added 7 new commands for managing Microsoft Fabric Data Factory resources through MCP. Includes pipeline operations (list, create, get, run) and Dataflow Gen2 operations (list, create, execute query). Powered by the [Microsoft.DataFactory.MCP.Core](https://www.nuget.org/packages/Microsoft.DataFactory.MCP.Core) NuGet package.
+
+### Changed
+
+- Add better handling for MsalClientException and MsalServiceException. [[#2587](https://github.com/microsoft/mcp/pull/2587)]
+- Updated Fabric REST API specifications and item definition documentation. [[#2797](https://github.com/microsoft/mcp/pull/2797)]
+
+### Fixed
+
+- Fixed console logging polluting stdout which caused smoke test failures on macOS. Console logs are now redirected to stderr via `LogToStandardErrorThreshold`.
+
 ## 1.0.0 (2026-04-14)
 
 **First Stable Release**

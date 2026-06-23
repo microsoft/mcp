@@ -94,15 +94,15 @@ public sealed class OneLakeItemListDfsCommand(
 
 public sealed class OneLakeItemListDfsOptions
 {
-    [Option("The ID of the Microsoft Fabric workspace.")]
+    [Option(Description = "The ID of the Microsoft Fabric workspace.")]
     public string? WorkspaceId { get; set; }
 
-    [Option("The name or ID of the Microsoft Fabric workspace.")]
+    [Option(Description = "The name or ID of the Microsoft Fabric workspace.")]
     public string? Workspace { get; set; }
 
-    [Option("Whether to perform the operation recursively.")]
+    [Option(Description = "Whether to perform the operation recursively.")]
     public bool Recursive { get; set; }
 
-    [Option("Token for retrieving the next page of results.")]
+    [Option(Description = "Token for retrieving the next page of results.")]
     public string? ContinuationToken { get; set; }
 }

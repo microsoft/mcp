@@ -53,7 +53,7 @@ public class GetBestPracticesCommandTests : CommandUnitTestsBase<GetBestPractice
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
-        Assert.Equal("Missing Required options: --topic", result.Message);
+        Assert.Contains("Missing Required options: --topic", result.Message);
         Service.DidNotReceive().GetTopicBestPractices(Arg.Any<string>());
     }
 

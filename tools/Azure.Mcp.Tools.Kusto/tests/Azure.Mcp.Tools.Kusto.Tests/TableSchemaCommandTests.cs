@@ -5,9 +5,7 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
-using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -34,14 +32,14 @@ public sealed class TableSchemaCommandTests : SubscriptionCommandUnitTestsBase<T
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedSchema);
         }
         else
         {
             Service.GetTableSchemaAsync(
                 "sub1", "mycluster", "db1", "table1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedSchema);
         }
 
@@ -66,14 +64,14 @@ public sealed class TableSchemaCommandTests : SubscriptionCommandUnitTestsBase<T
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
         else
         {
             Service.GetTableSchemaAsync(
                 "sub1", "mycluster", "db1", "table1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
 
@@ -96,14 +94,14 @@ public sealed class TableSchemaCommandTests : SubscriptionCommandUnitTestsBase<T
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
         else
         {
             Service.GetTableSchemaAsync(
                 "sub1", "mycluster", "db1", "table1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
 

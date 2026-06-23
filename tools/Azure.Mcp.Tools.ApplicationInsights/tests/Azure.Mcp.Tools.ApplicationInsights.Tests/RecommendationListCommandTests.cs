@@ -2,17 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Nodes;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ApplicationInsights.Commands;
 using Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
 using Azure.Mcp.Tools.ApplicationInsights.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Tests;
 
-public class RecommendationListCommandTests : CommandUnitTestsBase<RecommendationListCommand, IApplicationInsightsService>
+public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<RecommendationListCommand, IApplicationInsightsService>
 {
     [Fact]
     public async Task ExecuteAsync_WhenServiceReturnsInsights_SetsResults()

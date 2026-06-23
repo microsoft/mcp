@@ -17,11 +17,9 @@ public abstract class BaseClusterCommand<
 {
     protected static bool UseClusterUri(TOptions options) => !string.IsNullOrEmpty(options.ClusterUri);
 
-    public override TOptions BindOptions(ParseResult parseResult)
+    public override void PostBindOptions(TOptions options)
     {
-        var options = base.BindOptions(parseResult);
         options.Subscription = subscriptionResolver.ResolveSubscription(options.Subscription);
-        return options;
     }
 
     public override void ValidateOptions(TOptions options, ValidationResult validationResult)
@@ -35,7 +33,7 @@ public abstract class BaseClusterCommand<
         }
 
         // clusterUri not provided, require both subscription and clusterName
-        if (string.IsNullOrEmpty(options.ClusterName) || string.IsNullOrEmpty(options.Subscription))
+        if (string.IsNullOrEmpty(options.Cluster) || string.IsNullOrEmpty(options.Subscription))
         {
             validationResult.Errors.Add("Either --cluster-uri must be provided, or both --subscription and --cluster must be provided.");
         }
