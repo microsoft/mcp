@@ -240,13 +240,16 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
         var resourceGroupName = firstCluster.GetProperty("resourceGroupName").GetString()!;
 
         // Attempt to get a non-existent cluster from that resource group
+        // In playback, the recording stores the cluster name sanitized as "Sanitized", so we must use
+        // "Sanitized" in playback to match. In record/live mode we use a name that doesn't exist in Azure.
+        var nonExistentClusterName = TestMode == TestMode.Playback ? "Sanitized" : "nonexistent-cluster";
         var result = await CallToolAsync(
             "aks_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
-                { "cluster", "nonexistent-cluster" }
+                { "cluster", nonExistentClusterName }
             });
 
         // Should return list with zero clusters
