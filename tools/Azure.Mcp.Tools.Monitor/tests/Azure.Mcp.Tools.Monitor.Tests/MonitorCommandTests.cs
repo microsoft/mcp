@@ -552,7 +552,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
                 { "args", args }
             });
 
-        Assert.NotEqual(200, result?.GetProperty("status").GetInt32() ?? 500);
+        Assert.Equal(400, result?.GetProperty("status").GetInt32());
     }
 
     #endregion
