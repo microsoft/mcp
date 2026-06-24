@@ -19,6 +19,9 @@ The following options are available for most commands:
 | `--retry-network-timeout` | No | 100 | Network operation timeout (seconds) |
 | `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
+> [!NOTE]
+> `--auth-method` is not supported by `acr registry list`, `acr registry repository list`, or `cloudarchitect design`.
+
 ### Discovery with `--learn`
 
 The `--learn` flag enables AI agents and users to progressively discover the Azure MCP CLI without starting an MCP server. It works at every level of the command hierarchy:
