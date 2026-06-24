@@ -9,24 +9,24 @@ namespace Azure.Mcp.Tools.Insights.Options;
 
 public class InsightsGetOptions : ISubscriptionOption
 {
-    [Option(InsightsOptionDefinitions.QueryDescription)]
+    [Option(Description = InsightsOptionDefinitions.QueryDescription)]
     public string? Query { get; set; }
 
-    [Option(InsightsOptionDefinitions.NoCacheDescription, Name = InsightsOptionDefinitions.NoCacheName)]
+    [Option(Description = InsightsOptionDefinitions.NoCacheDescription, Name = InsightsOptionDefinitions.NoCacheName)]
     public bool NoCache { get; set; }
 
-    [Option(InsightsOptionDefinitions.ScopeDescription, DefaultValue = InsightsOptionDefinitions.ScopeSubscription)]
+    [Option(Description = InsightsOptionDefinitions.ScopeDescription, DefaultValue = InsightsOptionDefinitions.ScopeSubscription)]
     public string? Scope { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(OptionDescriptions.AuthMethod, Name = "auth-method")]
+    [Option(Description = OptionDescriptions.AuthMethod)]
     public AuthMethod? AuthMethod { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
