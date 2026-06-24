@@ -39,7 +39,7 @@ public sealed partial class InsightsGetCommand(
     IInsightsService insightsService,
     ISamplingService samplingService,
     ISubscriptionService subscriptionService)
-    : GlobalCommand<InsightsGetOptions>()
+    : AuthenticatedCommand<InsightsGetOptions, InsightsGetCommand.InsightsGetCommandResult>()
 {
     private readonly ILogger<InsightsGetCommand> _logger = logger;
 
@@ -99,43 +99,23 @@ public sealed partial class InsightsGetCommand(
         ```
         """;
 
-    protected override void RegisterOptions(Command command)
+    public override void PostBindOptions(InsightsGetOptions options)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.Subscription);
-        command.Options.Add(InsightsOptionDefinitions.Query.AsOptional());
-        command.Options.Add(InsightsOptionDefinitions.NoCache.AsOptional());
-        command.Options.Add(InsightsOptionDefinitions.Scope.AsOptional());
-    }
+        base.PostBindOptions(options);
 
-    protected override InsightsGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        var subscription = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription);
-
-        if (!string.IsNullOrEmpty(subscription))
+        if (!string.IsNullOrEmpty(options.Subscription))
         {
-            options.Subscription = subscription.Trim('"', '\'');
+            options.Subscription = options.Subscription.Trim('"', '\'');
         }
 
-        options.Query = SanitizeQuery(parseResult.GetValueOrDefault<string>(InsightsOptionDefinitions.Query));
-        options.NoCache = parseResult.GetValueOrDefault<bool>(InsightsOptionDefinitions.NoCache);
-        options.Scope = parseResult.GetValueOrDefault<string>(InsightsOptionDefinitions.Scope);
-        return options;
+        options.Query = SanitizeQuery(options.Query);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        InsightsGetOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         if (context.McpServer is null || context.McpServer.ClientCapabilities?.Sampling is null)
         {
             // Note: CLI invocation doesn't support MCP sampling
@@ -144,7 +124,7 @@ public sealed partial class InsightsGetCommand(
             return context.Response;
         }
 
-        // Reject overly long queries (already sanitized in BindOptions)
+        // Reject overly long queries (already sanitized in PostBindOptions)
         if (options.Query is { Length: > MaxQueryLength })
         {
             context.Response.Status = System.Net.HttpStatusCode.BadRequest;
@@ -413,7 +393,7 @@ public sealed partial class InsightsGetCommand(
     [GeneratedRegex(@"eyJ[A-Za-z0-9_-]+\.|Server=.*;Password=", RegexOptions.IgnoreCase)]
     private static partial Regex SensitiveContentRegex();
 
-    internal record InsightsGetCommandResult(IReadOnlyList<InsightEntry> Insights);
+    public sealed record InsightsGetCommandResult(IReadOnlyList<InsightEntry> Insights);
 
-    internal record InsightEntry(string Id, string Pattern, string Implication);
+    public sealed record InsightEntry(string Id, string Pattern, string Implication);
 }

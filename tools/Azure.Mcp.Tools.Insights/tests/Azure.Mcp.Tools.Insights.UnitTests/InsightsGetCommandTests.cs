@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Insights.Commands;
 using Azure.Mcp.Tools.Insights.Services;
 using Azure.Mcp.Tools.Insights.Services.Models;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
@@ -317,7 +318,7 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
         var server = Substitute.For<McpServer>();
         server.ClientCapabilities.Returns(new ClientCapabilities { Sampling = new SamplingCapability() });
         var context = new CommandContext(ServiceProvider) { McpServer = server };
-        return Command.ExecuteAsync(context, CommandDefinition.Parse(args), TestContext.Current.CancellationToken);
+        return ((IBaseCommand)Command).ExecuteAsync(context, CommandDefinition.Parse(args), TestContext.Current.CancellationToken);
     }
 
     private static SubscriptionAggregation CreateEmptyAggregation() =>

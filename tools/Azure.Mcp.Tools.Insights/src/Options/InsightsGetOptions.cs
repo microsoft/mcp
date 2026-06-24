@@ -1,19 +1,32 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Insights.Options;
 
-public class InsightsGetOptions : SubscriptionOptions
+public class InsightsGetOptions : ISubscriptionOption
 {
-    [JsonPropertyName(InsightsOptionDefinitions.QueryName)]
+    [Option(InsightsOptionDefinitions.QueryDescription)]
     public string? Query { get; set; }
 
-    [JsonPropertyName(InsightsOptionDefinitions.NoCacheName)]
+    [Option(InsightsOptionDefinitions.NoCacheDescription, Name = InsightsOptionDefinitions.NoCacheName)]
     public bool NoCache { get; set; }
 
-    [JsonPropertyName(InsightsOptionDefinitions.ScopeName)]
+    [Option(InsightsOptionDefinitions.ScopeDescription, DefaultValue = InsightsOptionDefinitions.ScopeSubscription)]
     public string? Scope { get; set; }
+
+    [Option(OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [Option(OptionDescriptions.AuthMethod, Name = "auth-method")]
+    public AuthMethod? AuthMethod { get; set; }
+
+    [Option(Name = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
