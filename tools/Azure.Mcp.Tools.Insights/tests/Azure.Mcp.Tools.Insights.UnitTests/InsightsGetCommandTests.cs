@@ -237,6 +237,62 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
             noCache);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_QueryExceedsMaxLength_ReturnsBadRequest()
+    {
+        var longQuery = new string('a', 1001);
+
+        var response = await ExecuteWithSamplingAsync("--subscription", "sub1", "--query", longQuery);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("query", response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceiveWithAnyArgs().AggregateSubscriptionAsync(
+            default!, default, default, TestContext.Current.CancellationToken);
+        await _samplingService.DidNotReceiveWithAnyArgs().SampleTextAsync(
+            default!, default!, default!, default, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData("build   a\tfinance\u0000app", "build a finance app")]
+    [InlineData("line one\n\nline two", "line one line two")]
+    [InlineData("  trim me  ", "trim me")]
+    public async Task ExecuteAsync_SanitizesQueryBeforeSampling(string rawQuery, string expected)
+    {
+        Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
+            .ReturnsForAnyArgs(CreateEmptyAggregation());
+        _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)
+            .ReturnsForAnyArgs("[]");
+
+        var response = await ExecuteWithSamplingAsync("--subscription", "sub1", "--query", rawQuery);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _samplingService.Received(1).SampleTextAsync(
+            Arg.Any<McpServer>(),
+            Arg.Any<string>(),
+            Arg.Is<string>(payload => payload.Contains(expected)),
+            Arg.Any<int>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhitespaceOnlyQuery_OmittedFromPayload()
+    {
+        Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
+            .ReturnsForAnyArgs(CreateEmptyAggregation());
+        _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)
+            .ReturnsForAnyArgs("[]");
+
+        var response = await ExecuteWithSamplingAsync("--subscription", "sub1", "--query", "  \t  ");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _samplingService.Received(1).SampleTextAsync(
+            Arg.Any<McpServer>(),
+            Arg.Any<string>(),
+            Arg.Is<string>(payload => !payload.Contains("userQuery")),
+            Arg.Any<int>(),
+            Arg.Any<CancellationToken>());
+    }
+
     private Task<CommandResponse> ExecuteWithSamplingAsync(params string[] args)
     {
         var server = Substitute.For<McpServer>();

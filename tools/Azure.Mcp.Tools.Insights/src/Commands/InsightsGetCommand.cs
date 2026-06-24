@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Insights.Options;
 using Azure.Mcp.Tools.Insights.Services;
@@ -33,7 +34,7 @@ namespace Azure.Mcp.Tools.Insights.Commands;
     ReadOnly = true,
     Secret = true,
     LocalRequired = false)]
-public sealed class InsightsGetCommand(
+public sealed partial class InsightsGetCommand(
     ILogger<InsightsGetCommand> logger,
     IInsightsService insightsService,
     ISamplingService samplingService,
@@ -49,6 +50,8 @@ public sealed class InsightsGetCommand(
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
 
     private const int SamplingMaxTokens = 20000;
+
+    private const int MaxQueryLength = 1000;
 
     private const string SystemPrompt = """
         # Role and Objective
@@ -113,7 +116,7 @@ public sealed class InsightsGetCommand(
             options.Subscription = subscription.Trim('"', '\'');
         }
 
-        options.Query = parseResult.GetValueOrDefault<string>(InsightsOptionDefinitions.Query);
+        options.Query = SanitizeQuery(parseResult.GetValueOrDefault<string>(InsightsOptionDefinitions.Query));
         options.NoCache = parseResult.GetValueOrDefault<bool>(InsightsOptionDefinitions.NoCache);
         options.Scope = parseResult.GetValueOrDefault<string>(InsightsOptionDefinitions.Scope);
         return options;
@@ -136,6 +139,16 @@ public sealed class InsightsGetCommand(
             // Note: CLI invocation doesn't support MCP sampling
             context.Response.Status = System.Net.HttpStatusCode.BadRequest;
             context.Response.Message = "Insights require an MCP client that supports sampling.";
+            return context.Response;
+        }
+
+        // Reject overly long queries (already sanitized in BindOptions)
+        if (options.Query is { Length: > MaxQueryLength })
+        {
+            context.Response.Status = System.Net.HttpStatusCode.BadRequest;
+            context.Response.Message =
+                $"--{InsightsOptionDefinitions.QueryName} length ({options.Query.Length}) " +
+                $"exceeds the maximum allowed limit of {MaxQueryLength} characters.";
             return context.Response;
         }
 
@@ -354,6 +367,20 @@ public sealed class InsightsGetCommand(
         }
         return inner.Trim();
     }
+
+    private static string? SanitizeQuery(string? query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return null;
+        }
+
+        var sanitized = QueryWhitespaceRegex().Replace(query, " ").Trim();
+        return sanitized.Length == 0 ? null : sanitized;
+    }
+
+    [GeneratedRegex(@"[\p{C}\s]+")]
+    private static partial Regex QueryWhitespaceRegex();
 
     internal record InsightsGetCommandResult(IReadOnlyList<InsightEntry> Insights);
 
