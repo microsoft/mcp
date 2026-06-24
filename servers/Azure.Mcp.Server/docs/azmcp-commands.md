@@ -5,9 +5,7 @@
 
 ## Global Options
 
-The following options are available for all commands:
-
-> **Note:** The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, `--auth-method`, or any `--retry-*` options.
+The following options are available for most commands:
 
 | Option | Required | Default | Description |
 |-----------|----------|---------|-------------|
@@ -4630,6 +4628,8 @@ azmcp bicepschema get --resource-type <resource-type> \
 ```
 
 ### Cloud Architect
+
+**Note:** The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, `--auth-method`, or any `--retry-*` options.
 
 ```bash
 # Design Azure cloud architectures through guided questions
