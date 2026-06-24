@@ -1,22 +1,20 @@
-namespace Azure.Mcp.Tools.Monitor.Models;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 
 /// <summary>
 /// Builder for creating OnboardingSpec instances with fluent API
 /// </summary>
-public class OnboardingSpecBuilder
+public class OnboardingSpecBuilder(Analysis analysis)
 {
     private string _version = OnboardingConstants.SpecVersion;
     private string? _agentMustExecuteFirst;
-    private Analysis _analysis = null!;
+    private Analysis _analysis = analysis;
     private Decision _decision = null!;
     private readonly List<OnboardingAction> _actions = new();
     private readonly List<string> _warnings = new();
     private int _nextOrder = 0;
-
-    public OnboardingSpecBuilder(Analysis analysis)
-    {
-        _analysis = analysis;
-    }
 
     public OnboardingSpecBuilder WithVersion(string version)
     {
@@ -314,5 +312,10 @@ public class OnboardingSpecBuilder
         }
 
         return sb.ToString();
+    }
+
+    internal object WithAgentPreExecuteInstruction(object agentPreExecuteInstruction)
+    {
+        throw new NotImplementedException();
     }
 }

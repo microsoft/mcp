@@ -1,12 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Options.WebTests;
 
-public class WebTestsGetOptions : BaseMonitorOptions
+public sealed class WebTestsGetOptions : ISubscriptionOption
 {
-    [JsonPropertyName(MonitorOptionDefinitions.WebTestResourceName)]
-    public string? WebTestName { get; set; }
+    [Option(Description = MonitorOptionDefinitions.WebtestResourceDescription)]
+    public string? WebtestResource { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public string? ResourceGroup { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

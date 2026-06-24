@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
+using Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Commands.Table;
 using Azure.Mcp.Tools.Monitor.Commands.TableType;
 using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
-using Azure.Mcp.Tools.Monitor.Detectors;
-using Azure.Mcp.Tools.Monitor.Generators;
-using Azure.Mcp.Tools.Monitor.Pipeline;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Pipeline;
 using Azure.Mcp.Tools.Monitor.Services;
-using Azure.Mcp.Tools.Monitor.Tools;
+using Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;

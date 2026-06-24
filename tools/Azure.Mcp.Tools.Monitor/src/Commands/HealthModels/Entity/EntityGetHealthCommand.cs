@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
+using System.Text.Json.Nodes;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
@@ -19,9 +21,6 @@ namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
         For basic Azure resource availability status, use Resource Health tool instead `azmcp_resourcehealth_availability-status_get`.  
         For querying logs from a Log Analystics workspace, use `azmcp_monitor_workspace_log_query`.  
         For querying logs of a specific Azure resource, use `azmcp_monitor_resource_log_query`. 
-        Required arguments:
-            - --entity: The entity to get health for
-            - --health-model: The health model name
         """,
     Destructive = false,
     Idempotent = true,
@@ -29,26 +28,20 @@ namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logger, IMonitorHealthModelService healthModelService) : BaseMonitorHealthModelsCommand<BaseMonitorHealthModelsOptions>
+public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logger, IMonitorHealthModelService healthModelService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<BaseMonitorHealthModelsOptions, JsonNode>(subscriptionResolver)
 {
     private readonly ILogger<EntityGetHealthCommand> _logger = logger;
     private readonly IMonitorHealthModelService _healthModelService = healthModelService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseMonitorHealthModelsOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var result = await _healthModelService.GetEntityHealth(
-                options.Entity!,
-                options.HealthModelName!,
-                options.ResourceGroup!,
+                options.Entity,
+                options.HealthModel,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.AuthMethod,
                 options.Tenant,
@@ -63,7 +56,7 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
                 "An exception occurred getting health for entity: {Entity} in healthModel: {HealthModelName}, resourceGroup: {ResourceGroup}, subscription: {Subscription}, authMethod: {AuthMethod}"
                 + ", tenant: {Tenant}.",
                 options.Entity,
-                options.HealthModelName,
+                options.HealthModel,
                 options.ResourceGroup,
                 options.Subscription,
                 options.AuthMethod,
@@ -79,12 +72,5 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
         KeyNotFoundException => $"Entity or health model not found. Please check the entity ID, health model name, and resource group.",
         ArgumentException argEx => $"Invalid argument: {argEx.Message}",
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        KeyNotFoundException => HttpStatusCode.NotFound,
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
     };
 }
