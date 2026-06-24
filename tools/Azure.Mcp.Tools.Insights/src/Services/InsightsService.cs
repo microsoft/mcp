@@ -191,6 +191,9 @@ public sealed class InsightsService(
         {
             while (true)
             {
+                pages++;
+                progress?.Report($"Fetching ARG page {pages} for {scopeLabel}...");
+
                 var queryContent = new ResourceQueryContent(KqlQuery)
                 {
                     Options = new ResourceQueryRequestOptions
@@ -210,8 +213,6 @@ public sealed class InsightsService(
                     break;
                 }
 
-                pages++;
-
                 if (result.Count > 0 && result.Data is not null)
                 {
                     var doc = JsonDocument.Parse(result.Data);
@@ -221,8 +222,6 @@ public sealed class InsightsService(
                         rows.AddRange(doc.RootElement.EnumerateArray());
                     }
                 }
-
-                progress?.Report($"Fetched ARG page {pages} ({rows.Count} resources so far) for {scopeLabel}.");
 
                 skipToken = result.SkipToken;
                 if (string.IsNullOrEmpty(skipToken))
