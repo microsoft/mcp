@@ -283,4 +283,60 @@ public class ProtectedItemProtectCommandTests : CommandUnitTestsBase<ProtectedIt
         Assert.Equal("InProgress", result.Result.Status);
         Assert.Equal("33333333-3333-3333-3333-333333333333", result.Result.JobId);
     }
+
+    [Theory]
+    [InlineData("garbage")]
+    [InlineData("'); DROP TABLE--")]
+    [InlineData(" ")]
+    [InlineData("\t")]
+    public async Task ExecuteAsync_RejectsUnknownDatasourceType_AsValidationError(string datasourceType)
+    {
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", "/subscriptions/.../vm1",
+            "--policy", "DefaultPolicy",
+            "--datasource-type", datasourceType);
+
+        // Assert: validation error (400), service never called
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Unknown datasource type", response.Message);
+
+        await Service.DidNotReceive().ProtectItemAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("vm")]
+    [InlineData("VM")]
+    [InlineData("sql")]
+    [InlineData("AzureFileShare")]
+    [InlineData("AzureDisk")]
+    [InlineData("aks")]
+    [InlineData("blob")]
+    [InlineData("Microsoft.Compute/disks")]
+    [InlineData("Microsoft.Storage/storageAccounts")]
+    public async Task ExecuteAsync_AcceptsValidDatasourceType(string datasourceType)
+    {
+        // Arrange
+        Service.ProtectItemAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(new ProtectResult("Succeeded", "item1", "job1", null));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", "/subscriptions/.../vm1",
+            "--policy", "DefaultPolicy",
+            "--datasource-type", datasourceType);
+
+        // Assert: accepted, service was called
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
 }

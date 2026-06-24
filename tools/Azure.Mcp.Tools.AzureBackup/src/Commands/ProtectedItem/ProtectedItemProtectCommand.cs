@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using System.Net;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options;
@@ -51,6 +52,31 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
         command.Options.Add(AzureBackupOptionDefinitions.AksExcludedNamespaces);
         command.Options.Add(AzureBackupOptionDefinitions.AksLabelSelectors);
         command.Options.Add(AzureBackupOptionDefinitions.AksIncludeClusterScopeResources);
+        command.Validators.Add(commandResult =>
+        {
+            OptionResult? optionResult = commandResult.GetResult(AzureBackupOptionDefinitions.DatasourceType);
+            if (optionResult is null || optionResult.Implicit)
+            {
+                return;
+            }
+
+            var value = optionResult.Tokens.LastOrDefault()?.Value ?? string.Empty;
+            var normalizedValue = value.Trim();
+
+            if (string.IsNullOrEmpty(normalizedValue) ||
+                RsvDatasourceRegistry.Resolve(normalizedValue) is null &&
+                DppDatasourceRegistry.TryAutoDetect(normalizedValue) is null &&
+                !DppDatasourceRegistry.AllProfiles.Any(p =>
+                    p.FriendlyName.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase) ||
+                    p.ArmResourceType.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase) ||
+                    p.Aliases.Any(a => a.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase))))
+            {
+                commandResult.AddError(
+                    $"Unknown datasource type '{value}'. " +
+                    $"RSV types: {string.Join(", ", RsvDatasourceRegistry.KnownTypeNames)}. " +
+                    $"DPP types: {string.Join(", ", DppDatasourceRegistry.KnownTypeNames)}.");
+            }
+        });
     }
 
     protected override ProtectedItemProtectOptions BindOptions(ParseResult parseResult)
