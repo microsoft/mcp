@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Options;
+
 namespace Azure.Mcp.Tools.SreAgent.Options.Workflows;
 
-public class WorkflowsApplyOptions : BaseSreAgentOptions
+public sealed class WorkflowsApplyOptions : BaseSreAgentOptions
 {
-    public string? YamlContent { get; set; }
-    public string? SourceName { get; set; }
+    [Option(Description = SreAgentOptionDefinitions.YamlContentDescription)]
+    public required string YamlContent { get; set; }
 }

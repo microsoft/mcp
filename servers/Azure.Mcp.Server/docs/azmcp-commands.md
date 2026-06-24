@@ -5,7 +5,7 @@
 
 ## Global Options
 
-The following options are available for all commands:
+The following options are available for most commands:
 
 | Option | Required | Default | Description |
 |-----------|----------|---------|-------------|
@@ -2494,7 +2494,7 @@ azmcp eventhubs namespace update --subscription <subscription> \
                                  --namespace <namespace> \
                                  [--location <location>] \
                                  [--sku-name <sku-name>] \
-                                 [--sku-tier <sku-tier>] \
+                                 [--sku-tier <Basic|Standard|Premium>] \
                                  [--sku-capacity <sku-capacity>] \
                                  [--is-auto-inflate-enabled <true/false>] \
                                  [--maximum-throughput-units <units>] \
@@ -4654,6 +4654,9 @@ azmcp bicepschema get --resource-type <resource-type> \
 
 ### Cloud Architect
 
+> [!NOTE]
+> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, `--auth-method`, or any `--retry-*` options.
+
 ```bash
 # Design Azure cloud architectures through guided questions
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4663,7 +4666,7 @@ azmcp cloudarchitect design [--question <question>] \
                             [--answer <answer>] \
                             [--next-question-needed <true/false>] \
                             [--confidence-score <confidence-score>] \
-                            [--architecture-component <architecture-component>]
+                            [--state <state>]
 
 # Example:
 # Start an interactive architecture design session

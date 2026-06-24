@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 
@@ -24,28 +23,22 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEnableCrrCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<BaseAzureBackupOptions>()
+public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEnableCrrCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<BaseAzureBackupOptions, DisasterRecoveryEnableCrrCommand.DisasterRecoveryEnableCrrCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<DisasterRecoveryEnableCrrCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseAzureBackupOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
         try
         {
             var result = await _azureBackupService.ConfigureCrossRegionRestoreAsync(
-                options.Vault!,
-                options.ResourceGroup!,
+                options.Vault,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.VaultType,
                 options.Tenant,
@@ -81,5 +74,5 @@ public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEna
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DisasterRecoveryEnableCrrCommandResult(OperationResult Result);
+    public sealed record DisasterRecoveryEnableCrrCommandResult(OperationResult Result);
 }

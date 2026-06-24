@@ -3,11 +3,11 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -15,7 +15,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.Tests.Commands.Webapp.Settings;
 
 [Trait("Command", "AppSettingsGet")]
-public class AppSettingsGetCommandTests : CommandUnitTestsBase<AppSettingsGetCommand, IAppServiceService>
+public class AppSettingsGetCommandTests : SubscriptionCommandUnitTestsBase<AppSettingsGetCommand, IAppServiceService>
 {
     [Fact]
     public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments()

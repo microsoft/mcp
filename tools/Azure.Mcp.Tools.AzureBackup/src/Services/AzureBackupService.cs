@@ -7,7 +7,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.ResourceManager;
 using Azure.ResourceManager.RecoveryServicesBackup;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Azure.ResourceManager.Resources;

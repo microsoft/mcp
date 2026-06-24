@@ -78,15 +78,4 @@ public static partial class OptionDefinitions
             Required = false
         };
     }
-
-    public static class Authorization
-    {
-        public const string ScopeName = "scope";
-
-        public static readonly Option<string> Scope = new($"--{ScopeName}")
-        {
-            Description = "Scope at which the role assignment or definition applies to, e.g., /subscriptions/0b1f6471-1bf0-4dda-aec3-111122223333, /subscriptions/0b1f6471-1bf0-4dda-aec3-111122223333/resourceGroups/myGroup, or /subscriptions/0b1f6471-1bf0-4dda-aec3-111122223333/resourceGroups/myGroup/providers/Microsoft.Compute/virtualMachines/myVM.",
-            Required = true,
-        };
-    }
 }
