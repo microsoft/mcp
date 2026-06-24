@@ -5,7 +5,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Postgres.Options.Server;
 
-public class ServerParamSetOptions : BaseServerOptions
+public sealed class ServerParamSetOptions : BaseServerOptions
 {
     [Option(Description = PostgresOptionDefinitions.ParamDescription)]
     public required string Param { get; set; }
