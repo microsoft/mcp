@@ -4629,7 +4629,8 @@ azmcp bicepschema get --resource-type <resource-type> \
 
 ### Cloud Architect
 
-**Note:** The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, `--auth-method`, or any `--retry-*` options.
+> [!NOTE]
+> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, `--auth-method`, or any `--retry-*` options.
 
 ```bash
 # Design Azure cloud architectures through guided questions
