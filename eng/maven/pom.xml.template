@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>{{GROUP_ID}}</groupId>
+    <artifactId>{{ARTIFACT_ID}}</artifactId>
+    <version>{{VERSION}}</version>
+    <packaging>jar</packaging>
+
+    <name>{{ARTIFACT_ID}}</name>
+    <description>{{DESCRIPTION}}</description>
+    <url>{{HOMEPAGE}}</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://github.com/microsoft/mcp/blob/main/LICENSE</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>Microsoft</name>
+        <url>https://www.microsoft.com</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <id>microsoft</id>
+            <name>Microsoft</name>
+            <email>azuremcp@microsoft.com</email>
+            <organization>Microsoft</organization>
+            <organizationUrl>https://www.microsoft.com</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/microsoft/mcp.git</connection>
+        <developerConnection>scm:git:https://github.com/microsoft/mcp.git</developerConnection>
+        <url>https://github.com/microsoft/mcp</url>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/microsoft/mcp/issues</url>
+    </issueManagement>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
+</project>

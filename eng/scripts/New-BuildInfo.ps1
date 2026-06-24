@@ -603,6 +603,10 @@ function Get-ServerDetails {
             pypiPackageName = $props.PypiPackageName
             pypiDescription = $props.PypiDescription
             pypiPackageKeywords = Split-PropertyGroup $props.PypiPackageKeywords
+            mavenGroupId = $props.MavenGroupId
+            mavenArtifactId = $props.MavenArtifactId
+            mavenDescription = $props.MavenDescription
+            mavenPackageKeywords = Split-PropertyGroup $props.MavenPackageKeywords
             platforms = $platforms
             mcpRepositoryName = $props.McpRepositoryName
             mcpbPlatforms = Split-PropertyGroup $props.McpbPlatforms

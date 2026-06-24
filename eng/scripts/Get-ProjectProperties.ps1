@@ -58,6 +58,11 @@ $propertyList = @(
     'PypiPackageKeywords',
     'PypiDescription',
 
+    'MavenGroupId',
+    'MavenArtifactId',
+    'MavenDescription',
+    'MavenPackageKeywords',
+
     'IsAotCompatible',
 
     'McpRepositoryName',

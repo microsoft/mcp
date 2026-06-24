@@ -132,11 +132,108 @@ a problem.
 
 ---
 
+## Consumer Options
+
+Once published to Maven as `com.microsoft.mcp:azure-mcp:<version>`, the artifact is an
+executable fat JAR (`Main-Class: com.microsoft.mcp.azure.Launcher`). Consumers can pull and
+run it in several ways, from simplest to most integrated.
+
+**Runtime requirements (all options):** Java 11+ on the `PATH`. No .NET install is needed —
+the matching native `azmcp` build is bundled and extracted on first run to
+`~/.azure-mcp/<version>/<platform>/` (override with `-Dazure.mcp.cache.dir=...`). Any
+arguments after the coordinate/JAR (e.g. `server start`, `--namespace storage`, `--debug`,
+`--help`) are forwarded to `azmcp`. Set `AZURE_MCP_EXECUTABLE_PATH` or
+`-Dazure.mcp.executable.path=/path/to/azmcp` to skip extraction and use an existing binary.
+
+### 1. Direct download + `java -jar`
+Pull the artifact from the repository's standard path layout and run it:
+
+```bash
+# Maven Central layout: /<groupId-as-path>/<artifactId>/<version>/<artifactId>-<version>.jar
+curl -L -o azure-mcp.jar \
+  https://repo1.maven.org/maven2/com/microsoft/mcp/azure-mcp/<version>/azure-mcp-<version>.jar
+
+java -jar azure-mcp.jar server start
+```
+
+### 2. `mvn dependency:get` (no project required)
+Resolves into the local `~/.m2` cache, then run from there:
+
+```bash
+mvn dependency:get -Dartifact=com.microsoft.mcp:azure-mcp:<version>
+mvn dependency:copy -Dartifact=com.microsoft.mcp:azure-mcp:<version> -DoutputDirectory=.
+java -jar azure-mcp-<version>.jar server start
+```
+
+### 3. JBang (one-liner; auto-downloads + caches)
+```bash
+jbang com.microsoft.mcp:azure-mcp:<version> server start
+```
+JBang resolves the Maven coordinates, caches the JAR, and runs its `Main-Class` directly —
+ideal for an MCP client `command`/`args` configuration.
+
+### 4. Coursier
+```bash
+cs launch com.microsoft.mcp:azure-mcp:<version> -- server start
+```
+
+### 5. As a project dependency (Maven / Gradle)
+Add the coordinate and invoke the launcher (e.g. via the exec plugin or by running the
+resolved JAR):
+
+```xml
+<dependency>
+  <groupId>com.microsoft.mcp</groupId>
+  <artifactId>azure-mcp</artifactId>
+  <version>VERSION</version>
+</dependency>
+```
+
+```kotlin
+// Gradle (Kotlin DSL)
+dependencies { implementation("com.microsoft.mcp:azure-mcp:VERSION") }
+```
+
+### MCP client configuration examples
+
+Using JBang (no pre-download step):
+
+```json
+{
+  "servers": {
+    "azure-mcp-server": {
+      "type": "stdio",
+      "command": "jbang",
+      "args": ["com.microsoft.mcp:azure-mcp:<version>", "server", "start"]
+    }
+  }
+}
+```
+
+Using a pre-downloaded JAR:
+
+```json
+{
+  "servers": {
+    "azure-mcp-server": {
+      "type": "stdio",
+      "command": "java",
+      "args": ["-jar", "/path/to/azure-mcp-<version>.jar", "server", "start"]
+    }
+  }
+}
+```
+
+**Trade-off to flag for consumers:** because this is a fat JAR, every download includes all
+six platform binaries (one larger artifact) rather than a small per-platform download.
+
+---
+
 ## Verification
 
 1. `./eng/scripts/Build-Code.ps1` (current platform or all) → binaries under `.work/build`.
 2. `./eng/scripts/New-BuildInfo.ps1` → `build_info.json` includes the `maven*` fields.
-3. `./eng/scripts/Pack-Maven.ps1 -UsePaths` → JAR + POM under
+3. `./eng/scripts/Pack-Maven.ps1` → JAR + POM under
    `.work/packages_maven/Azure.Mcp.Server`.
 4. `jar tf azure-mcp-<ver>.jar` shows `Launcher.class` + `native/<platform>/azmcp[.exe]`.
 5. `java -jar azure-mcp-<ver>.jar server start --help` launches the underlying binary.
