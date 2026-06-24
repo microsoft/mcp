@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added `azmcp advisor recommendation-type list` to list the catalog of Advisor recommendation types via the ARM Advisor metadata API. Each entry surfaces the recommendation's category, impact level, target resource type, and sub-category. Results are sorted by impact (High \u2192 Medium \u2192 Low). Supports optional filters `--resource-type`, `--impact`, and `--category`. Useful both for greenfield (empty environments) and brownfield (onboarding new resource types) scenarios."

@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
+using Azure.Mcp.Tools.AppService.Options.Webapp;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -28,38 +30,24 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServiceService appServiceService)
-    : BaseAppServiceCommand<BaseAppServiceOptions>(resourceGroupRequired: false)
+public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServiceService appServiceService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<WebappGetOptions, WebappGetCommand.WebappGetResult>(subscriptionResolver)
 {
     private readonly ILogger<WebappGetCommand> _logger = logger;
     private readonly IAppServiceService _appServiceService = appServiceService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(WebappGetOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Validators.Add(commandResult =>
+        base.ValidateOptions(options, validationResult);
+
+        if (!string.IsNullOrWhiteSpace(options.App) && string.IsNullOrWhiteSpace(options.ResourceGroup))
         {
-            var appName = commandResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppServiceName.Name);
-            var resourceGroup = commandResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-            if (!string.IsNullOrWhiteSpace(appName) && string.IsNullOrWhiteSpace(resourceGroup))
-            {
-                commandResult.AddError($"When specifying '{AppServiceOptionDefinitions.AppServiceName.Name}', you must also specify '{OptionDefinitions.Common.ResourceGroup.Name}'.");
-            }
-        });
+            validationResult.Errors.Add($"When specifying '{AppServiceOptionDefinitions.AppName}', you must also specify '{OptionDefinitions.Common.ResourceGroupName}'.");
+        }
     }
 
-    protected override BaseAppServiceOptions BindOptions(ParseResult parseResult) => base.BindOptions(parseResult);
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, WebappGetOptions options, CancellationToken cancellationToken)
     {
-        // Validate first, then bind
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
@@ -67,7 +55,7 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServi
             var webapps = await _appServiceService.GetWebAppsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
-                options.AppName,
+                options.App,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -76,7 +64,7 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServi
         }
         catch (Exception ex)
         {
-            if (options.AppName == null)
+            if (options.App == null)
             {
                 if (options.ResourceGroup == null)
                 {
@@ -90,8 +78,8 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServi
             }
             else
             {
-                _logger.LogError(ex, "Failed to get Web App details for '{AppName}' in subscription {Subscription} and resource group {ResourceGroup}",
-                    options.AppName, options.Subscription, options.ResourceGroup);
+                _logger.LogError(ex, "Failed to get Web App details for '{App}' in subscription {Subscription} and resource group {ResourceGroup}",
+                    options.App, options.Subscription, options.ResourceGroup);
             }
             HandleException(context, ex);
         }
@@ -99,5 +87,5 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServi
         return context.Response;
     }
 
-    public record WebappGetResult(List<WebappDetails> Webapps);
+    public sealed record WebappGetResult(List<WebappDetails> Webapps);
 }

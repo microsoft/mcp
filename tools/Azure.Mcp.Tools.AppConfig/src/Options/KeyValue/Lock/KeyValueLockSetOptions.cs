@@ -8,9 +8,6 @@ namespace Azure.Mcp.Tools.AppConfig.Options.KeyValue.Lock;
 
 public class KeyValueLockSetOptions : ISubscriptionOption
 {
-    [Option(Description = OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
-
     [Option(Description = "Whether a key-value will be locked (set to read-only) or unlocked (read-only removed).")]
     public bool? Lock { get; set; }
 
@@ -22,6 +19,9 @@ public class KeyValueLockSetOptions : ISubscriptionOption
 
     [Option(Description = "The label to apply to the configuration key. Labels are used to group and organize settings.")]
     public string? Label { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

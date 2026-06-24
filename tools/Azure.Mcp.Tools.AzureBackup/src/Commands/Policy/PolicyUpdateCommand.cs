@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Policy;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 
@@ -25,47 +23,24 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<PolicyUpdateOptions>()
+public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<PolicyUpdateOptions, PolicyUpdateCommand.PolicyUpdateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<PolicyUpdateCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PolicyUpdateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.Policy.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.ScheduleTime);
-        command.Options.Add(AzureBackupOptionDefinitions.DailyRetentionDays);
-    }
-
-    protected override PolicyUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Policy = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Policy.Name);
-        options.ScheduleTime = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ScheduleTime.Name);
-        options.DailyRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DailyRetentionDays.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
         try
         {
             var result = await _azureBackupService.UpdatePolicyAsync(
-                options.Vault!,
-                options.ResourceGroup!,
+                options.Vault,
+                options.ResourceGroup,
                 options.Subscription!,
-                options.Policy!,
+                options.Policy,
                 options.VaultType,
                 options.ScheduleTime,
                 options.DailyRetentionDays,
@@ -105,5 +80,5 @@ public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAz
         _ => base.GetStatusCode(ex)
     };
 
-    internal record PolicyUpdateCommandResult(OperationResult Result);
+    public sealed record PolicyUpdateCommandResult(OperationResult Result);
 }

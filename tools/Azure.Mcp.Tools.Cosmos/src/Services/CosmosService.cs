@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Security;
+using System.Text.Json;
 using Azure.AI.OpenAI;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;

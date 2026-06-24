@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Cap 'azmcp postgres list' database and table results at 10,000 entries to prevent unbounded enumeration on large servers. When the results are truncated, the response includes a 'resultsTruncated: true' flag."
