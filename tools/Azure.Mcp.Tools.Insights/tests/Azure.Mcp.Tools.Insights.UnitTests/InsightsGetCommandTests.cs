@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Insights.Commands;
 using Azure.Mcp.Tools.Insights.Services;
@@ -51,7 +52,7 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
     [Fact]
     public async Task ExecuteAsync_WithSubscription_CallsAggregateSubscription()
     {
-        var aggregation = CreateEmptyAggregation();
+        var aggregation = CreatePopulatedAggregation();
         Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
             .ReturnsForAnyArgs(aggregation);
         _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)
@@ -79,7 +80,7 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
     public async Task ExecuteAsync_WithoutSubscription_CallsAggregateTenant()
     {
         Service.AggregateTenantAsync(default, default, TestContext.Current.CancellationToken)
-            .ReturnsForAnyArgs(CreateEmptyAggregation());
+            .ReturnsForAnyArgs(CreatePopulatedAggregation());
         _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)
             .ReturnsForAnyArgs("[]");
 
@@ -100,7 +101,7 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
     public async Task ExecuteAsync_SamplingReturnsInsights_ReturnsResultsList()
     {
         Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
-            .ReturnsForAnyArgs(CreateEmptyAggregation());
+            .ReturnsForAnyArgs(CreatePopulatedAggregation());
         _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)
             .ReturnsForAnyArgs("""
                 ```json
@@ -136,7 +137,7 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
     public async Task ExecuteAsync_QuotedSubscription_StripsQuotes()
     {
         Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
-            .ReturnsForAnyArgs(CreateEmptyAggregation());
+            .ReturnsForAnyArgs(CreatePopulatedAggregation());
         _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)
             .ReturnsForAnyArgs("[]");
 
@@ -197,7 +198,7 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
     {
         _subscriptionService.GetDefaultSubscriptionId().Returns("default-sub");
         Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
-            .ReturnsForAnyArgs(CreateEmptyAggregation());
+            .ReturnsForAnyArgs(CreatePopulatedAggregation());
         _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)
             .ReturnsForAnyArgs("[]");
 
@@ -219,7 +220,7 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
     public async Task ExecuteAsync_NoCacheFlag_PropagatesToService(bool noCache)
     {
         Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
-            .ReturnsForAnyArgs(CreateEmptyAggregation());
+            .ReturnsForAnyArgs(CreatePopulatedAggregation());
         _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)
             .ReturnsForAnyArgs("[]");
 
@@ -258,7 +259,7 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
     public async Task ExecuteAsync_SanitizesQueryBeforeSampling(string rawQuery, string expected)
     {
         Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
-            .ReturnsForAnyArgs(CreateEmptyAggregation());
+            .ReturnsForAnyArgs(CreatePopulatedAggregation());
         _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)
             .ReturnsForAnyArgs("[]");
 
@@ -277,7 +278,7 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
     public async Task ExecuteAsync_WhitespaceOnlyQuery_OmittedFromPayload()
     {
         Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
-            .ReturnsForAnyArgs(CreateEmptyAggregation());
+            .ReturnsForAnyArgs(CreatePopulatedAggregation());
         _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)
             .ReturnsForAnyArgs("[]");
 
@@ -296,7 +297,7 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
     public async Task ExecuteAsync_SamplingReturnsSensitiveContent_DropsThoseInsights()
     {
         Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
-            .ReturnsForAnyArgs(CreateEmptyAggregation());
+            .ReturnsForAnyArgs(CreatePopulatedAggregation());
         _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)
             .ReturnsForAnyArgs("""
                 [
@@ -313,6 +314,20 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
         Assert.Equal("insight-001", result.Insights[0].Id);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_NoResourcesInScope_ReturnsEmptyWithoutSampling()
+    {
+        Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
+            .ReturnsForAnyArgs(CreateEmptyAggregation());
+
+        var response = await ExecuteWithSamplingAsync("--subscription", "sub1");
+
+        var result = ValidateAndDeserializeResponse(response, InsightsJsonContext.Default.InsightsGetCommandResult);
+        Assert.Empty(result.Insights);
+        await _samplingService.DidNotReceiveWithAnyArgs().SampleTextAsync(
+            default!, default!, default!, default, TestContext.Current.CancellationToken);
+    }
+
     private Task<CommandResponse> ExecuteWithSamplingAsync(params string[] args)
     {
         var server = Substitute.For<McpServer>();
@@ -320,6 +335,15 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
         var context = new CommandContext(ServiceProvider) { McpServer = server };
         return ((IBaseCommand)Command).ExecuteAsync(context, CommandDefinition.Parse(args), TestContext.Current.CancellationToken);
     }
+
+    private static SubscriptionAggregation CreatePopulatedAggregation() =>
+        new(
+            new Dictionary<string, ResourceTypeAggregation>
+            {
+                ["microsoft.compute/virtualmachines"] = new("microsoft.compute/virtualmachines", TotalCount: 1, new JsonObject()),
+            },
+            SubscriptionCount: 1,
+            ResourceGroupCount: 1);
 
     private static SubscriptionAggregation CreateEmptyAggregation() =>
         new(new Dictionary<string, ResourceTypeAggregation>(), SubscriptionCount: 1, ResourceGroupCount: 0);

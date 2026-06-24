@@ -178,6 +178,14 @@ public sealed partial class InsightsGetCommand(
                 ? await _insightsService.AggregateTenantAsync(options.Tenant, options.RetryPolicy, cancellationToken, progress, options.NoCache)
                 : await _insightsService.AggregateSubscriptionAsync(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken, progress, options.NoCache);
 
+            // Return empty list if no resources are found
+            if (aggregation.ResourceTypes.Count == 0)
+            {
+                progress.Report("No resources found in scope; returning no insights.");
+                context.Response.Results = ResponseResult.Create(new InsightsGetCommandResult([]), InsightsJsonContext.Default.InsightsGetCommandResult);
+                return context.Response;
+            }
+
             progress.Report("Summarizing infrastructure patterns...");
 
             var payloadJson = BuildPayload(aggregation, options.Query);
