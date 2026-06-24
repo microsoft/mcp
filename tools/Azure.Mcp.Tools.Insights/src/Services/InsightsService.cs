@@ -66,8 +66,7 @@ public sealed class InsightsService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
-            ?? throw new InvalidOperationException($"Subscription '{subscription}' could not be resolved.");
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
         // Cache ARG data by subscription ID
         var cacheKey = $"sub:{subscriptionResource.Data.SubscriptionId}";
