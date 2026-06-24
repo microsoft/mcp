@@ -19,22 +19,6 @@ namespace Microsoft.Mcp.Core.Options;
 public sealed class OptionAttribute : Attribute
 {
     /// <summary>
-    /// Initializes a new instance with default values.
-    /// Use named properties to override: <c>[Option(Name = "x", Description = "y", Hidden = true)]</c>.
-    /// </summary>
-    public OptionAttribute() { }
-
-    /// <summary>
-    /// Initializes a new instance with a description.
-    /// Shorthand for <c>[Option(Description = "...")]</c>.
-    /// </summary>
-    /// <param name="description">A description of what the option controls.</param>
-    public OptionAttribute(string description)
-    {
-        Description = description;
-    }
-
-    /// <summary>
     /// Override the CLI option name (without the "--" prefix).
     /// When null, the name is derived from the property name in kebab-case.
     /// </summary>
@@ -48,7 +32,7 @@ public sealed class OptionAttribute : Attribute
     /// <summary>
     /// A description of what the option controls. Used in help text and by AI agents.
     /// </summary>
-    public string? Description { get; init; }
+    public required string Description { get; init; }
 
     /// <summary>
     /// A default value for the option when a value is not provided. Must match the property type being attributed.
@@ -56,7 +40,12 @@ public sealed class OptionAttribute : Attribute
     public object? DefaultValue { get; init; }
 
     /// <summary>
-    /// Whether the option is hidden from help output.
+    /// Whether the option is hidden from help output. Default is false.
     /// </summary>
-    public bool Hidden { get; init; }
+    public bool Hidden { get; init; } = false;
+
+    /// <summary>
+    /// Whether the option allows an empty or whitespace-only string as a valid value. Default handling is to reject such values.
+    /// </summary>
+    public bool AllowEmptyOrWhiteSpaceString { get; init; } = false;
 }

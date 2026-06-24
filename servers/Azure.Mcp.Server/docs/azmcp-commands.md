@@ -2298,6 +2298,8 @@ azmcp mysql server param set --subscription <subscription> \
 # Without parameters: lists all PostgreSQL servers in the resource group
 # With --server: lists all databases on that server
 # With --server and --database: lists all tables in that database (optionally scoped to a --schema, defaults to 'public')
+# Database and table results are capped at 10,000 entries. When the results are truncated,
+# the response includes "resultsTruncated": true.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres list --subscription <subscription> \
                     --resource-group <resource-group> \

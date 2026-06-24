@@ -11,6 +11,8 @@ jobs:
 
   - template: /eng/common/pipelines/templates/steps/eng-common-workflow-enforcer.yml
 
+  - template: /eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml
+
   - task: UseNode@1
     displayName: 'Install Node.js 24'
     inputs:
