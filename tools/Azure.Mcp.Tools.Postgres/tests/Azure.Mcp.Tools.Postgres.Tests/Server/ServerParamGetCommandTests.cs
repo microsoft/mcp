@@ -2,17 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Server;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Mcp.Core.TestUtilities;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Postgres.Tests.Server;
 
-public class ServerParamGetCommandTests : CommandUnitTestsBase<ServerParamGetCommand, IPostgresService>
+public class ServerParamGetCommandTests : SubscriptionCommandUnitTestsBase<ServerParamGetCommand, IPostgresService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsParamValue_WhenParamExists()
@@ -66,7 +66,7 @@ public class ServerParamGetCommandTests : CommandUnitTestsBase<ServerParamGetCom
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
+        Assert.Contains($"Missing Required options: {missingParameter}", response.Message);
     }
 
     [Fact]
