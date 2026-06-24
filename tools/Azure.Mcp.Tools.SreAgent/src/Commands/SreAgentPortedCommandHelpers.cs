@@ -4,7 +4,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
-using Azure.Mcp.Tools.SreAgent.Models;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands;
@@ -13,7 +12,7 @@ internal static class SreAgentPortedCommandHelpers
 {
     public static void SetTextResult(CommandResponse response, string message)
     {
-        response.Results = ResponseResult.Create(new SreAgentTextResult(message), SreAgentJsonContext.Default.SreAgentTextResult);
+        response.Results = ResponseResult.Create(new(message), SreAgentJsonContext.Default.SreAgentTextResult);
     }
 
     public static List<T> DeserializeArray<T>(string json, JsonTypeInfo<List<T>> jsonTypeInfo)

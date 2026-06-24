@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
-using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Options.Skills;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Skills;
 
@@ -24,38 +23,14 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Skills;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class SkillsDeleteCommand(ILogger<SkillsDeleteCommand> logger, ISreAgentService sreAgentService)
-    : BaseSreAgentCommand<SkillsDeleteOptions>
+public sealed class SkillsDeleteCommand(ILogger<SkillsDeleteCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<SkillsDeleteOptions, SkillsDeleteCommand.SkillsDeleteCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<SkillsDeleteCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SkillsDeleteOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SreAgentOptionDefinitions.Agent.AsRequired());
-        command.Options.Add(SreAgentOptionDefinitions.Name);
-        command.Options.Add(SreAgentOptionDefinitions.Confirm);
-    }
-
-    protected override SkillsDeleteOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
-        options.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
-        options.Confirm = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Confirm);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             if (!options.Confirm)
@@ -65,11 +40,7 @@ public sealed class SkillsDeleteCommand(ILogger<SkillsDeleteCommand> logger, ISr
 
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
-                options.Subscription!,
-                options.ResourceGroup,
-                options.Agent!,
-                options.Tenant,
-                options.RetryPolicy,
+                options,
                 cancellationToken);
 
             var result = await _sreAgentService.DeleteSkillAsync(endpoint, options.Name, options.Tenant, cancellationToken);
@@ -84,5 +55,5 @@ public sealed class SkillsDeleteCommand(ILogger<SkillsDeleteCommand> logger, ISr
         return context.Response;
     }
 
-    internal record SkillsDeleteCommandResult(SreAgentDeleteResult Tool);
+    public sealed record SkillsDeleteCommandResult(SreAgentDeleteResult Tool);
 }

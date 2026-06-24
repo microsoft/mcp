@@ -1,66 +1,35 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.SreAgent.Options;
+using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options.Workflows;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Workflows;
 
-[CommandMetadata(Id = "6cb0ff68-d279-44bc-9935-84f0b181240b", Name = "generate", Title = "Generate Workflow YAML", Description = "Generate a YAML workflow definition for a named SRE Agent tool or agent. Creates validated YAML configuration for ExtendedAgent, KustoTool, or LinkTool resources.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
-public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> logger) : GlobalCommand<WorkflowsGenerateOptions>
+[CommandMetadata(
+    Id = "6cb0ff68-d279-44bc-9935-84f0b181240b",
+    Name = "generate",
+    Title = "Generate Workflow YAML",
+    Description = "Generate a YAML workflow definition for a named SRE Agent tool or agent. Creates validated YAML configuration for ExtendedAgent, KustoTool, or LinkTool resources.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class WorkflowsGenerateCommand(ILogger<WorkflowsGenerateCommand> logger)
+    : BaseCommand<WorkflowsGenerateOptions, SreAgentTextResult>
 {
     private readonly ILogger<WorkflowsGenerateCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, WorkflowsGenerateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SreAgentOptionDefinitions.Kind);
-        command.Options.Add(SreAgentOptionDefinitions.Name);
-        command.Options.Add(SreAgentOptionDefinitions.Description.AsRequired());
-        command.Options.Add(SreAgentOptionDefinitions.ModelOrType);
-        command.Options.Add(SreAgentOptionDefinitions.Tools);
-        command.Options.Add(SreAgentOptionDefinitions.Handoffs);
-        command.Options.Add(SreAgentOptionDefinitions.Connector);
-        command.Options.Add(SreAgentOptionDefinitions.Database);
-        command.Options.Add(SreAgentOptionDefinitions.Query);
-        command.Options.Add(SreAgentOptionDefinitions.UrlTemplate);
-        command.Options.Add(SreAgentOptionDefinitions.ParametersList);
-    }
-
-    protected override WorkflowsGenerateOptions BindOptions(ParseResult parseResult)
-    {
-        var o = base.BindOptions(parseResult);
-        o.Kind = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Kind);
-        o.Name = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Name) ?? string.Empty;
-        o.Description = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Description);
-        o.ModelOrType = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.ModelOrType);
-        o.Tools = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Tools);
-        o.Handoffs = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Handoffs);
-        o.Connector = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Connector);
-        o.Database = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Database);
-        o.Query = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Query);
-        o.UrlTemplate = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.UrlTemplate);
-        o.Parameters = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.ParametersList);
-        return o;
-    }
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return Task.FromResult(context.Response);
-        }
-
-        var o = BindOptions(parseResult);
-
         try
         {
-            SreAgentPortedCommandHelpers.SetTextResult(context.Response, Generate(o));
+            SreAgentPortedCommandHelpers.SetTextResult(context.Response, Generate(options));
         }
         catch (Exception ex)
         {
