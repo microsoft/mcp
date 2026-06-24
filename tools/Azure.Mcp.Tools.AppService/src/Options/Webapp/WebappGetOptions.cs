@@ -4,15 +4,12 @@
 using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Options;
 
-namespace Azure.Mcp.Tools.AppService.Options.Webapp.Deployment;
+namespace Azure.Mcp.Tools.AppService.Options.Webapp;
 
-public sealed class DeploymentGetOptions : ISubscriptionOption
+public sealed class WebappGetOptions : ISubscriptionOption
 {
     [Option(Description = AppServiceOptionDefinitions.App)]
-    public required string App { get; set; }
-
-    [Option(Description = "The ID of the deployment.")]
-    public string? DeploymentId { get; set; }
+    public string? App { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
@@ -21,7 +18,7 @@ public sealed class DeploymentGetOptions : ISubscriptionOption
     public string? Subscription { get; set; }
 
     [Option(Description = OptionDescriptions.ResourceGroup)]
-    public required string ResourceGroup { get; set; }
+    public string? ResourceGroup { get; set; }
 
     [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }

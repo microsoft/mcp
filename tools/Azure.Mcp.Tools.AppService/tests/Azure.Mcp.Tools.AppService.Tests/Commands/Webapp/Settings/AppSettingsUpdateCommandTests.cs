@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -14,7 +14,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.Tests.Commands.Webapp.Settings;
 
 [Trait("Command", "AppSettingsUpdate")]
-public class AppSettingsUpdateCommandTests : CommandUnitTestsBase<AppSettingsUpdateCommand, IAppServiceService>
+public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<AppSettingsUpdateCommand, IAppServiceService>
 {
     [Theory]
     [InlineData("add", "Setting1", "Value1", "Application setting 'Setting1' added successfully.")]
