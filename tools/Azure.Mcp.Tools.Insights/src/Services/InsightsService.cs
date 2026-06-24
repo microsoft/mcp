@@ -75,7 +75,6 @@ public sealed class InsightsService(
         if (noCache && cooldown is null)
         {
             progress?.Report($"--{InsightsOptionDefinitions.NoCacheName} set; bypassing cache for subscription {subscription}.");
-            await _cacheService.DeleteAsync(CacheGroup, cacheKey, cancellationToken);
         }
         else
         {
@@ -87,7 +86,11 @@ public sealed class InsightsService(
             var cached = await _cacheService.GetAsync<SubscriptionAggregation>(CacheGroup, cacheKey, CacheTtl, cancellationToken);
             if (cached is not null)
             {
-                progress?.Report($"Using cached aggregation for subscription {subscription} (TTL {CacheTtl.TotalMinutes:0} min).");
+                if (!noCache)
+                {
+                    progress?.Report($"Using cached aggregation for subscription {subscription} (TTL {CacheTtl.TotalMinutes:0} min).");
+                }
+
                 return cached;
             }
         }
@@ -127,7 +130,6 @@ public sealed class InsightsService(
         if (noCache && cooldown is null)
         {
             progress?.Report($"--{InsightsOptionDefinitions.NoCacheName} set; bypassing cache for tenant {tenantId}.");
-            await _cacheService.DeleteAsync(CacheGroup, cacheKey, cancellationToken);
         }
         else
         {
@@ -139,7 +141,11 @@ public sealed class InsightsService(
             var cached = await _cacheService.GetAsync<SubscriptionAggregation>(CacheGroup, cacheKey, CacheTtl, cancellationToken);
             if (cached is not null)
             {
-                progress?.Report($"Using cached aggregation for tenant {tenantId} (TTL {CacheTtl.TotalMinutes:0} min).");
+                if (!noCache)
+                {
+                    progress?.Report($"Using cached aggregation for tenant {tenantId} (TTL {CacheTtl.TotalMinutes:0} min).");
+                }
+
                 return cached;
             }
         }
