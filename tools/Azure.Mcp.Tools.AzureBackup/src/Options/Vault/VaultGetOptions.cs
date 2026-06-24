@@ -4,15 +4,15 @@
 using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Options;
 
-namespace Azure.Mcp.Tools.AzureBackup.Options.Governance;
+namespace Azure.Mcp.Tools.AzureBackup.Options.Vault;
 
-public sealed class GovernanceFindUnprotectedOptions : ISubscriptionOption
+public sealed class VaultGetOptions : ISubscriptionOption
 {
-    [Option(Description = "Resource types to filter (comma-separated).")]
-    public string? ResourceTypeFilter { get; set; }
+    [Option(Description = AzureBackupOptionDefinitions.Vault)]
+    public string? Vault { get; set; }
 
-    [Option(Description = "Tag-based filter in key=value format (e.g., 'environment=production').")]
-    public string? TagFilter { get; set; }
+    [Option(Description = AzureBackupOptionDefinitions.VaultType)]
+    public string? VaultType { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

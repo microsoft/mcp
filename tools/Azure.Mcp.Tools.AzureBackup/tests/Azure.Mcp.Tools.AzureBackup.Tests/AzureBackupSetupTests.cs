@@ -139,6 +139,7 @@ public class AzureBackupSetupTests
         services.AddLogging();
         services.AddSingleton(Substitute.For<ITenantService>());
         services.AddSingleton(Substitute.For<ISubscriptionService>());
+        services.AddSingleton(Substitute.For<ISubscriptionResolver>());
         setup.ConfigureServices(services);
         return services.BuildServiceProvider();
     }
