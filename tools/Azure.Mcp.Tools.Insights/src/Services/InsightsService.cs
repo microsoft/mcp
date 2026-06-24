@@ -38,6 +38,9 @@ public sealed class InsightsService(
     // Cache ARG data for 1 hour
     private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(1);
 
+    // Minimum interval between forced ARG scans for the same scope (--nocache)
+    private static readonly TimeSpan NoCacheGuardWindow = TimeSpan.FromMinutes(5);
+
     // Filters out portal/test/managed/system resource groups
     private const string KqlQuery = """
         Resources
@@ -68,13 +71,19 @@ public sealed class InsightsService(
 
         // Cache ARG data by subscription ID
         var cacheKey = $"sub:{subscriptionResource.Data.SubscriptionId}";
-        if (noCache)
+        var cooldown = noCache ? await EnterNoCacheGuardAsync(cacheKey, cancellationToken) : null;
+        if (noCache && cooldown is null)
         {
             progress?.Report($"--{InsightsOptionDefinitions.NoCacheName} set; bypassing cache for subscription {subscription}.");
             await _cacheService.DeleteAsync(CacheGroup, cacheKey, cancellationToken);
         }
         else
         {
+            if (cooldown is not null)
+            {
+                progress?.Report($"--{InsightsOptionDefinitions.NoCacheName} rate limited; generating insights from cached Azure data. Cooldown ends in {cooldown.Value.TotalSeconds:0}s.");
+            }
+
             var cached = await _cacheService.GetAsync<SubscriptionAggregation>(CacheGroup, cacheKey, CacheTtl, cancellationToken);
             if (cached is not null)
             {
@@ -114,13 +123,19 @@ public sealed class InsightsService(
             ?? throw new InvalidOperationException("Could not determine tenant ID from accessible subscriptions.");
 
         var cacheKey = $"tenant:{tenantId}";
-        if (noCache)
+        var cooldown = noCache ? await EnterNoCacheGuardAsync(cacheKey, cancellationToken) : null;
+        if (noCache && cooldown is null)
         {
             progress?.Report($"--{InsightsOptionDefinitions.NoCacheName} set; bypassing cache for tenant {tenantId}.");
             await _cacheService.DeleteAsync(CacheGroup, cacheKey, cancellationToken);
         }
         else
         {
+            if (cooldown is not null)
+            {
+                progress?.Report($"--{InsightsOptionDefinitions.NoCacheName} rate limited; generating insights from cached Azure data. Cooldown ends in {cooldown.Value.TotalSeconds:0}s.");
+            }
+
             var cached = await _cacheService.GetAsync<SubscriptionAggregation>(CacheGroup, cacheKey, CacheTtl, cancellationToken);
             if (cached is not null)
             {
@@ -224,6 +239,23 @@ public sealed class InsightsService(
                 doc.Dispose();
             }
         }
+    }
+
+    /// <summary>
+    /// Get remaining cooldown duration for <c>--nocache</c>; or start a new rate-limit and return null.
+    /// </summary>
+    private async Task<TimeSpan?> EnterNoCacheGuardAsync(string cacheKey, CancellationToken cancellationToken)
+    {
+        var guardKey = $"nocache-guard:{cacheKey}";
+        var cooldownEnds = await _cacheService.GetAsync<DateTimeOffset>(CacheGroup, guardKey, NoCacheGuardWindow, cancellationToken);
+        if (cooldownEnds != default)
+        {
+            var remaining = cooldownEnds - DateTimeOffset.UtcNow;
+            return remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
+        }
+
+        await _cacheService.SetAsync(CacheGroup, guardKey, DateTimeOffset.UtcNow + NoCacheGuardWindow, NoCacheGuardWindow, cancellationToken);
+        return null;
     }
 
     private async Task<TenantResource> GetTenantResourceAsync(Guid? tenantId, CancellationToken cancellationToken)

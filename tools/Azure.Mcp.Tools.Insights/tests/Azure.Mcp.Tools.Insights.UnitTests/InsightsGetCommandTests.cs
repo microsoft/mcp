@@ -248,8 +248,6 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
         Assert.Contains("query", response.Message, StringComparison.OrdinalIgnoreCase);
         await Service.DidNotReceiveWithAnyArgs().AggregateSubscriptionAsync(
             default!, default, default, TestContext.Current.CancellationToken);
-        await _samplingService.DidNotReceiveWithAnyArgs().SampleTextAsync(
-            default!, default!, default!, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -291,6 +289,27 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
             Arg.Is<string>(payload => !payload.Contains("userQuery")),
             Arg.Any<int>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_SamplingReturnsSensitiveContent_DropsThoseInsights()
+    {
+        Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
+            .ReturnsForAnyArgs(CreateEmptyAggregation());
+        _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)
+            .ReturnsForAnyArgs("""
+                [
+                  { "id": "insight-001", "pattern": "TLS1_2 dominates", "implication": "Pin TLS1_2." },
+                  { "id": "insight-002", "pattern": "Storage uses AccountKey=abc123==", "implication": "Rotate keys." },
+                  { "id": "insight-003", "pattern": "Connection found", "implication": "Server=tcp:db;Password=p@ss;" }
+                ]
+                """);
+
+        var response = await ExecuteWithSamplingAsync("--subscription", "sub1");
+
+        var result = ValidateAndDeserializeResponse(response, InsightsJsonContext.Default.InsightsGetCommandResult);
+        Assert.Single(result.Insights);
+        Assert.Equal("insight-001", result.Insights[0].Id);
     }
 
     private Task<CommandResponse> ExecuteWithSamplingAsync(params string[] args)

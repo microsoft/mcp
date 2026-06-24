@@ -53,6 +53,8 @@ public sealed partial class InsightsGetCommand(
 
     private const int MaxQueryLength = 1000;
 
+    private static readonly TimeSpan SamplingTimeout = TimeSpan.FromSeconds(300);
+
     private const string SystemPrompt = """
         # Role and Objective
         You are an expert Azure Insight Agent. Analyze the user's existing infrastructure and produce insights that inform downstream infrastructure plan generation.
@@ -200,12 +202,15 @@ public sealed partial class InsightsGetCommand(
 
             var payloadJson = BuildPayload(aggregation, options.Query);
 
+            using var samplingCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            samplingCts.CancelAfter(SamplingTimeout);
+
             var sampled = await _samplingService.SampleTextAsync(
                 context.McpServer,
                 SystemPrompt,
                 payloadJson,
                 SamplingMaxTokens,
-                cancellationToken);
+                samplingCts.Token);
 
             var insights = ParseInsights(sampled);
 
@@ -313,6 +318,12 @@ public sealed partial class InsightsGetCommand(
                 continue;
             }
 
+            // Drop any insight that surfaced secret-shaped content
+            if (ContainsSensitiveContent(pattern) || ContainsSensitiveContent(implication))
+            {
+                continue;
+            }
+
             list.Add(new InsightEntry(id, pattern, implication));
         }
         return list;
@@ -381,6 +392,26 @@ public sealed partial class InsightsGetCommand(
 
     [GeneratedRegex(@"[\p{C}\s]+")]
     private static partial Regex QueryWhitespaceRegex();
+
+    /// <summary>
+    /// Returns <c>true</c> if the text contains secret-shaped content (connection strings,
+    /// access keys, JWTs) that must not be surfaced in insights.
+    /// </summary>
+    private static bool ContainsSensitiveContent(string? text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return false;
+        }
+
+        return text.Contains("AccountKey=", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("SharedAccessKey=", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("InstrumentationKey=", StringComparison.OrdinalIgnoreCase)
+            || SensitiveContentRegex().IsMatch(text);
+    }
+
+    [GeneratedRegex(@"eyJ[A-Za-z0-9_-]+\.|Server=.*;Password=", RegexOptions.IgnoreCase)]
+    private static partial Regex SensitiveContentRegex();
 
     internal record InsightsGetCommandResult(IReadOnlyList<InsightEntry> Insights);
 
