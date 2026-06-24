@@ -1,15 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Governance;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
@@ -27,71 +25,45 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<GovernanceSoftDeleteOptions>()
+public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<GovernanceSoftDeleteOptions, GovernanceSoftDeleteCommand.GovernanceSoftDeleteCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<GovernanceSoftDeleteCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(GovernanceSoftDeleteOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.SoftDelete.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.SoftDeleteRetentionDays);
-        command.Validators.Add(commandResult =>
+        base.ValidateOptions(options, validationResult);
+
+        if (!string.IsNullOrEmpty(options.SoftDelete) &&
+            !options.SoftDelete.Equals("AlwaysOn", StringComparison.OrdinalIgnoreCase) &&
+            !options.SoftDelete.Equals("On", StringComparison.OrdinalIgnoreCase) &&
+            !options.SoftDelete.Equals("Off", StringComparison.OrdinalIgnoreCase))
         {
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.SoftDelete.Name))
-            {
-                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.SoftDelete.Name);
-                if (!string.IsNullOrEmpty(value) &&
-                    !value.Equals("AlwaysOn", StringComparison.OrdinalIgnoreCase) &&
-                    !value.Equals("On", StringComparison.OrdinalIgnoreCase) &&
-                    !value.Equals("Off", StringComparison.OrdinalIgnoreCase))
-                {
-                    commandResult.AddError("--soft-delete must be 'AlwaysOn', 'On', or 'Off'.");
-                }
-            }
-
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.SoftDeleteRetentionDays.Name))
-            {
-                var retentionValue = commandResult.GetValue<string>(AzureBackupOptionDefinitions.SoftDeleteRetentionDays.Name);
-                if (!string.IsNullOrEmpty(retentionValue))
-                {
-                    if (!int.TryParse(retentionValue, out var retentionDays) || retentionDays < 14 || retentionDays > 180)
-                    {
-                        commandResult.AddError("--soft-delete-retention-days must be an integer between 14 and 180.");
-                    }
-                }
-            }
-        });
-    }
-
-    protected override GovernanceSoftDeleteOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.SoftDeleteState = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.SoftDelete.Name);
-        options.SoftDeleteRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.SoftDeleteRetentionDays.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("--soft-delete must be 'AlwaysOn', 'On', or 'Off'.");
         }
 
-        var options = BindOptions(parseResult);
+        if (!string.IsNullOrEmpty(options.SoftDeleteRetentionDays) &&
+            (!int.TryParse(options.SoftDeleteRetentionDays, out var retentionDays)
+                || retentionDays < 14
+                || retentionDays > 180))
+        {
+            validationResult.Errors.Add("--soft-delete-retention-days must be an integer between 14 and 180.");
+        }
+    }
 
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, GovernanceSoftDeleteOptions options, CancellationToken cancellationToken)
+    {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
         try
         {
             var result = await _azureBackupService.ConfigureSoftDeleteAsync(
-                options.Vault!,
-                options.ResourceGroup!,
+                options.Vault,
+                options.ResourceGroup,
                 options.Subscription!,
-                options.SoftDeleteState!,
+                options.SoftDelete,
                 options.VaultType,
                 options.SoftDeleteRetentionDays,
                 options.Tenant,
@@ -105,12 +77,12 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error configuring soft delete. Vault: {Vault}, State: {SoftDeleteState}",
-                options.Vault, options.SoftDeleteState);
+                options.Vault, options.SoftDelete);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record GovernanceSoftDeleteCommandResult(OperationResult Result);
+    public sealed record GovernanceSoftDeleteCommandResult(OperationResult Result);
 }

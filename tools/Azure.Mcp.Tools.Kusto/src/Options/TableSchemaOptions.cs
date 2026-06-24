@@ -2,34 +2,30 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
-using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Kusto.Options;
 
-public class TableSchemaOptions : ISubscriptionOption, ITableOption
+public sealed class TableSchemaOptions : ISubscriptionOption, ITableOption
 {
-    [Option("Kusto Table name.")]
+    [Option(Description = KustOptionDescriptions.Table)]
     public required string Table { get; set; }
 
-    [Option("Kusto Database name.")]
+    [Option(Description = KustOptionDescriptions.Database)]
     public required string Database { get; set; }
 
-    [Option("Kusto Cluster URI.", Name = "cluster-uri")]
+    [Option(Description = KustOptionDescriptions.ClusterUri)]
     public string? ClusterUri { get; set; }
 
-    [Option("Kusto Cluster name.", Name = "cluster")]
-    public string? ClusterName { get; set; }
+    [Option(Description = KustOptionDescriptions.Cluster)]
+    public string? Cluster { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(OptionDescriptions.AuthMethod, Name = "auth-method")]
-    public AuthMethod? AuthMethod { get; set; }
-
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }

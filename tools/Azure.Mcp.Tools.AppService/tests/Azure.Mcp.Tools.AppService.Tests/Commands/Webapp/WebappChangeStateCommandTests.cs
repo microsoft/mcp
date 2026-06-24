@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -14,7 +14,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.Tests.Commands.Webapp;
 
 [Trait("Command", "WebappChangeState")]
-public class WebappChangeStateCommandTests : CommandUnitTestsBase<WebappChangeStateCommand, IAppServiceService>
+public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<WebappChangeStateCommand, IAppServiceService>
 {
     [Theory]
     [InlineData("start", false, false)]
@@ -147,11 +147,11 @@ public class WebappChangeStateCommandTests : CommandUnitTestsBase<WebappChangeSt
         var response = await ExecuteCommandAsync(unparsedArgs.ToArray());
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
-
         await Service.Received(1).ChangeWebAppStateAsync("sub123", "rg1", "test-app", stateChange,
             softRestart, waitForCompletion, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
     }
 }
