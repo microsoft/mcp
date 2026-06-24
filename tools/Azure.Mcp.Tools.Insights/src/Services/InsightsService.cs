@@ -71,29 +71,31 @@ public sealed class InsightsService(
 
         // Cache ARG data by subscription ID
         var cacheKey = $"sub:{subscriptionResource.Data.SubscriptionId}";
-        var cooldown = noCache ? await EnterNoCacheGuardAsync(cacheKey, cancellationToken) : null;
-        if (noCache && cooldown is null)
-        {
-            progress?.Report($"--{InsightsOptionDefinitions.NoCacheName} set; bypassing cache for subscription {subscription}.");
-        }
-        else
-        {
-            if (cooldown is not null)
-            {
-                progress?.Report($"--{InsightsOptionDefinitions.NoCacheName} rate limited; generating insights from cached Azure data. Cooldown ends in {cooldown.Value.TotalSeconds:0}s.");
-            }
 
+        var cooldown = noCache ? await GetOrStartCooldown(cacheKey, cancellationToken) : null;
+        var isRateLimited = cooldown is not null;
+
+        // Use cache when --nocache is not set, or when it is set but rate limit is in effect.
+        var shouldUseCache = !noCache || isRateLimited;
+
+        if (shouldUseCache)
+        {
+            // Best effort to use cached data
             var cached = await _cacheService.GetAsync<SubscriptionAggregation>(CacheGroup, cacheKey, CacheTtl, cancellationToken);
             if (cached is not null)
             {
-                if (!noCache)
-                {
-                    progress?.Report($"Using cached aggregation for subscription {subscription} (TTL {CacheTtl.TotalMinutes:0} min).");
-                }
-
+                progress?.Report(isRateLimited
+                    ? $"Using cached Azure data due to rate limit. Try again in {cooldown.GetValueOrDefault().TotalSeconds:0}s."
+                    : "Using cached Azure data.");
                 return cached;
             }
         }
+
+        progress?.Report(isRateLimited
+            ? "No cache available; fetching fresh Azure data."
+            : noCache
+                ? $"--{InsightsOptionDefinitions.NoCacheName} set; fetching fresh Azure data."
+                : "Fetching fresh Azure data.");
 
         var tenantResource = await GetTenantResourceAsync(subscriptionResource.Data.TenantId, cancellationToken);
 
@@ -125,30 +127,33 @@ public sealed class InsightsService(
         var tenantId = subscriptions[0].TenantId
             ?? throw new InvalidOperationException("Could not determine tenant ID from accessible subscriptions.");
 
+        // Cache ARG data by tenant ID
         var cacheKey = $"tenant:{tenantId}";
-        var cooldown = noCache ? await EnterNoCacheGuardAsync(cacheKey, cancellationToken) : null;
-        if (noCache && cooldown is null)
-        {
-            progress?.Report($"--{InsightsOptionDefinitions.NoCacheName} set; bypassing cache for tenant {tenantId}.");
-        }
-        else
-        {
-            if (cooldown is not null)
-            {
-                progress?.Report($"--{InsightsOptionDefinitions.NoCacheName} rate limited; generating insights from cached Azure data. Cooldown ends in {cooldown.Value.TotalSeconds:0}s.");
-            }
 
+        var cooldown = noCache ? await GetOrStartCooldown(cacheKey, cancellationToken) : null;
+        var isRateLimited = cooldown is not null;
+
+        // Use cache when --nocache is not set, or when it is set but rate limit is in effect.
+        var shouldUseCache = !noCache || isRateLimited;
+
+        if (shouldUseCache)
+        {
+            // Best effort to use cached data
             var cached = await _cacheService.GetAsync<SubscriptionAggregation>(CacheGroup, cacheKey, CacheTtl, cancellationToken);
             if (cached is not null)
             {
-                if (!noCache)
-                {
-                    progress?.Report($"Using cached aggregation for tenant {tenantId} (TTL {CacheTtl.TotalMinutes:0} min).");
-                }
-
+                progress?.Report(isRateLimited
+                    ? $"Using cached Azure data due to rate limit. Try again in {cooldown.GetValueOrDefault().TotalSeconds:0}s."
+                    : "Using cached Azure data.");
                 return cached;
             }
         }
+
+        progress?.Report(isRateLimited
+            ? "No cache available; fetching fresh Azure data."
+            : noCache
+                ? $"--{InsightsOptionDefinitions.NoCacheName} set; fetching fresh Azure data."
+                : "Fetching fresh Azure data.");
 
         var tenantResource = await GetTenantResourceAsync(tenantId, cancellationToken);
 
@@ -250,7 +255,7 @@ public sealed class InsightsService(
     /// <summary>
     /// Get remaining cooldown duration for <c>--nocache</c>; or start a new rate-limit and return null.
     /// </summary>
-    private async Task<TimeSpan?> EnterNoCacheGuardAsync(string cacheKey, CancellationToken cancellationToken)
+    private async Task<TimeSpan?> GetOrStartCooldown(string cacheKey, CancellationToken cancellationToken)
     {
         var guardKey = $"nocache-guard:{cacheKey}";
         var cooldownEnds = await _cacheService.GetAsync<DateTimeOffset>(CacheGroup, guardKey, NoCacheGuardWindow, cancellationToken);
