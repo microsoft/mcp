@@ -16,7 +16,7 @@ public sealed class ConnectorsCreateMcpOptions : BaseSreAgentOptions
     [Option(Description = "The command for stdio MCP connectors.")]
     public string? Command { get; set; }
 
-    [Option(Description = "The command for stdio MCP connectors.")]
+    [Option(Description = "Arguments for stdio MCP connectors.")]
     public string[]? Args { get; set; }
 
     [Option(Description = "JSON object of environment variables for stdio MCP connectors.")]
