@@ -397,6 +397,7 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             ZoneRedundant: false
         );
 
+        SubscriptionResolver.ResolveSubscription(null).Returns("env-sub-id");
         Service.UpdateDatabaseAsync(
             Arg.Is("server1"),
             Arg.Is("testdb"),
@@ -416,7 +417,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", "env-sub-id",
             "--resource-group", "rg",
             "--server", "server1",
             "--database", "testdb");

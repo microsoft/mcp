@@ -275,6 +275,7 @@ public class DatabaseRenameCommandTests : SubscriptionCommandUnitTestsBase<Datab
             ZoneRedundant: false
         );
 
+        SubscriptionResolver.ResolveSubscription(null).Returns("env-sub-id");
         Service.RenameDatabaseAsync(
             Arg.Is("server1"),
             Arg.Is("olddb"),
@@ -287,7 +288,6 @@ public class DatabaseRenameCommandTests : SubscriptionCommandUnitTestsBase<Datab
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", "env-sub-id",
             "--resource-group", "rg",
             "--server", "server1",
             "--database", "olddb",
