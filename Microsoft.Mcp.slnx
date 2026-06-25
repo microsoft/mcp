@@ -376,6 +376,9 @@
   <Folder Name="/tools/Azure.Mcp.Tools.ResilienceManagement/src/">
     <Project Path="tools/Azure.Mcp.Tools.ResilienceManagement/src/Azure.Mcp.Tools.ResilienceManagement.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ResilienceManagement/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.ResilienceManagement/tests/Azure.Mcp.Tools.ResilienceManagement.Tests/Azure.Mcp.Tools.ResilienceManagement.Tests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ResourceHealth/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ResourceHealth/src/">
     <Project Path="tools/Azure.Mcp.Tools.ResourceHealth/src/Azure.Mcp.Tools.ResourceHealth.csproj" />
