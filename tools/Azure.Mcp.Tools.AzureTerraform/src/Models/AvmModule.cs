@@ -10,6 +10,5 @@ public sealed class AvmModule
     public string Source { get; set; } = string.Empty;
     public string RepoUrl { get; set; } = string.Empty;
 
-    // "resource" for avm-res-* modules, "pattern" for avm-ptn-* modules.
     public string ModuleType { get; set; } = string.Empty;
 }
