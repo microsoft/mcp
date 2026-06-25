@@ -39,7 +39,8 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
     {
         base.ValidateOptions(options, validationResult);
 
-        if (options.WebtestLocations != null && options.WebtestLocations.Length == 0)
+        if (options.WebtestLocations != null &&
+            options.WebtestLocations.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Length == 0)
         {
             validationResult.Errors.Add("If webtest-locations are specified, at least one location must be provided.");
         }
@@ -98,7 +99,7 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
                     throw new ArgumentException("The request-url option is required when creating a new web test.");
                 }
 
-                var locationsArray = options.WebtestLocations!.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                var locationsArray = options.WebtestLocations.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
                 var headersDictionary = options.Headers == null ? new Dictionary<string, string>(0) : OptionParsingHelpers.ParseKeyValuePairStringToDictionary(options.Headers);
 
                 webTest = await _monitorWebTestService.CreateWebTest(
