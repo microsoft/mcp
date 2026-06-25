@@ -2,15 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Knowledge;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
@@ -34,70 +30,46 @@ namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeBaseRetrieveOptions>()
+public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCommand> logger, ISearchService searchService)
+    : AuthenticatedCommand<KnowledgeBaseRetrieveOptions, KnowledgeBaseRetrieveCommand.KnowledgeBaseRetrieveCommandResult>
 {
     private readonly ILogger<KnowledgeBaseRetrieveCommand> _logger = logger;
     private readonly ISearchService _searchService = searchService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(KnowledgeBaseRetrieveOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SearchOptionDefinitions.Service);
-        command.Options.Add(SearchOptionDefinitions.KnowledgeBase);
-        command.Options.Add(SearchOptionDefinitions.KnowledgeQuery.AsOptional());
-        command.Options.Add(SearchOptionDefinitions.Messages.AsOptional());
-        command.Validators.Add(commandResult =>
+        base.ValidateOptions(options, validationResult);
+
+        if (string.IsNullOrEmpty(options.Query) && (options.Messages == null || options.Messages.Length == 0))
         {
-            var query = commandResult.GetValueOrDefault<string>(SearchOptionDefinitions.KnowledgeQuery.Name);
-            var messages = commandResult.GetValueOrDefault<string[]>(SearchOptionDefinitions.Messages.Name) ?? [];
-            if (string.IsNullOrEmpty(query) && messages.Length == 0)
-            {
-                commandResult.AddError("Either --query or at least one --messages entry must be provided.");
-            }
-            else if (!string.IsNullOrEmpty(query) && messages.Length > 0)
-            {
-                commandResult.AddError("Specifying both --query and --messages is not allowed.");
-            }
-
-            if (messages.Length > 0)
-            {
-                foreach ((var index, var message) in messages.Index())
-                {
-                    try
-                    {
-                        ParseMessage(message);
-                    }
-                    catch (ArgumentException ex)
-                    {
-                        commandResult.AddError($"Message {index}: {ex.Message}");
-                        continue;
-                    }
-                }
-            }
-        });
-    }
-
-    protected override KnowledgeBaseRetrieveOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Service = parseResult.GetValueOrDefault<string>(SearchOptionDefinitions.Service.Name);
-        options.KnowledgeBase = parseResult.GetValueOrDefault<string>(SearchOptionDefinitions.KnowledgeBase.Name);
-        options.Query = parseResult.GetValueOrDefault<string>(SearchOptionDefinitions.KnowledgeQuery.Name);
-        options.Messages = parseResult.GetValueOrDefault<string[]>(SearchOptionDefinitions.Messages.Name) ?? [];
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            validationResult.Errors.Add("Either --query or at least one --messages entry must be provided.");
+        }
+        else if (!string.IsNullOrEmpty(options.Query) && options.Messages is { Length: > 0 })
         {
-            return context.Response;
+            validationResult.Errors.Add("Specifying both --query and --messages is not allowed.");
         }
 
-        var options = BindOptions(parseResult);
+        if (options.Messages is { Length: > 0 })
+        {
+            foreach ((var index, var message) in options.Messages.Index())
+            {
+                try
+                {
+                    ParseMessage(message);
+                }
+                catch (ArgumentException ex)
+                {
+                    validationResult.Errors.Add($"Message {index}: {ex.Message}");
+                    continue;
+                }
+            }
+        }
+    }
 
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, KnowledgeBaseRetrieveOptions options, CancellationToken cancellationToken)
+    {
         List<(string role, string message)>? parsedMessages = null;
-        if (options.Messages.Length > 0)
+        if (options.Messages is { Length: > 0 })
         {
             try
             {
@@ -113,7 +85,7 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
 
         try
         {
-            var result = await _searchService.RetrieveFromKnowledgeBase(options.Service!, options.KnowledgeBase!, options.Query, parsedMessages, options.RetryPolicy, cancellationToken);
+            var result = await _searchService.RetrieveFromKnowledgeBase(options.Service, options.KnowledgeBase, options.Query, parsedMessages, options.RetryPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result), SearchJsonContext.Default.KnowledgeBaseRetrieveCommandResult);
         }
         catch (Exception ex)
@@ -145,5 +117,5 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
         return (role, content);
     }
 
-    internal sealed record KnowledgeBaseRetrieveCommandResult(string RetrievalResult);
+    public sealed record KnowledgeBaseRetrieveCommandResult(string RetrievalResult);
 }
