@@ -41,7 +41,7 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
                 options.ResourceGroup,
                 options.Name,
                 options.IncomingTrafficPolicy,
-                options.Tags?.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(tag => tag.Split('=')).ToDictionary(kv => kv[0], kv => kv[1]),
+                options.Tags?.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(tag => tag.Split('=', 2)).ToDictionary(kv => kv[0], kv => kv[1]),
                 options.IdentityType,
                 options.Tenant,
                 options.RetryPolicy,

@@ -41,7 +41,7 @@ public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCr
                 options.ResourceGroup,
                 options.Name,
                 options.Location,
-                options.Tags?.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(tag => tag.Split('=')).ToDictionary(kv => kv[0], kv => kv[1]),
+                options.Tags?.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(tag => tag.Split('=', 2)).ToDictionary(kv => kv[0], kv => kv[1]),
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
