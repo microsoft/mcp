@@ -10,6 +10,6 @@ namespace Azure.Mcp.Tools.ManagedCleanroom.Commands;
 // commands pass through raw JSON payloads from HTTP/ARM responses directly to
 // ResponseResult.Create without wrapping them in typed result models.
 [JsonSerializable(typeof(JsonElement))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal partial class ManagedCleanroomJsonContext : JsonSerializerContext;
 
