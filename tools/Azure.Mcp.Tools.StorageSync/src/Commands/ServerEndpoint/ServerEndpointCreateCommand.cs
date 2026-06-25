@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.StorageSync.Models;
-using Azure.Mcp.Tools.StorageSync.Options;
+using Azure.Mcp.Tools.StorageSync.Options.ServerEndpoint;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
 
@@ -24,64 +23,27 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class ServerEndpointCreateCommand(ILogger<ServerEndpointCreateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<ServerEndpointCreateOptions>
+public sealed class ServerEndpointCreateCommand(ILogger<ServerEndpointCreateCommand> logger, IStorageSyncService service, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ServerEndpointCreateOptions, ServerEndpointCreateCommand.ServerEndpointCreateCommandResult>(subscriptionResolver)
 {
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<ServerEndpointCreateCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ServerEndpointCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.SyncGroup.Name.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.Name.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.ServerResourceId.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.ServerLocalPath.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.CloudTiering.AsOptional());
-        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.VolumeFreeSpacePercent.AsOptional());
-        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.TierFilesOlderThanDays.AsOptional());
-        command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.LocalCacheMode.AsOptional());
-    }
-
-    protected override ServerEndpointCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.StorageSyncServiceName = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Name.Name);
-        options.SyncGroupName = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.SyncGroup.Name.Name);
-        options.ServerEndpointName = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.ServerEndpoint.Name.Name);
-        options.ServerResourceId = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.ServerEndpoint.ServerResourceId.Name);
-        options.ServerLocalPath = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.ServerEndpoint.ServerLocalPath.Name);
-        options.CloudTiering = parseResult.GetValueOrDefault<bool?>(StorageSyncOptionDefinitions.ServerEndpoint.CloudTiering.Name);
-        options.VolumeFreeSpacePercent = parseResult.GetValueOrDefault<int?>(StorageSyncOptionDefinitions.ServerEndpoint.VolumeFreeSpacePercent.Name);
-        options.TierFilesOlderThanDays = parseResult.GetValueOrDefault<int?>(StorageSyncOptionDefinitions.ServerEndpoint.TierFilesOlderThanDays.Name);
-        options.LocalCacheMode = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.ServerEndpoint.LocalCacheMode.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             _logger.LogInformation("Creating server endpoint. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, GroupName: {GroupName}, EndpointName: {EndpointName}",
-                options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.SyncGroupName, options.ServerEndpointName);
+                options.Subscription, options.ResourceGroup, options.Name, options.SyncGroupName, options.ServerEndpointName);
 
             var endpoint = await _service.CreateServerEndpointAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.StorageSyncServiceName!,
-                options.SyncGroupName!,
-                options.ServerEndpointName!,
-                options.ServerResourceId!,
-                options.ServerLocalPath!,
+                options.ResourceGroup,
+                options.Name,
+                options.SyncGroupName,
+                options.ServerEndpointName,
+                options.ServerResourceId,
+                options.ServerLocalPath,
                 options.CloudTiering,
                 options.VolumeFreeSpacePercent,
                 options.TierFilesOlderThanDays,
@@ -101,6 +63,5 @@ public sealed class ServerEndpointCreateCommand(ILogger<ServerEndpointCreateComm
         return context.Response;
     }
 
-    [JsonSerializable(typeof(ServerEndpointCreateCommandResult))]
-    internal record ServerEndpointCreateCommandResult(ServerEndpointDataSchema Result);
+    public sealed record ServerEndpointCreateCommandResult(ServerEndpointDataSchema Result);
 }

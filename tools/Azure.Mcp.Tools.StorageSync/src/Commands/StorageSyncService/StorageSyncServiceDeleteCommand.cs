@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.StorageSync.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.StorageSync.Options.StorageSyncService;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
@@ -23,35 +22,14 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDeleteCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceDeleteOptions>
+public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDeleteCommand> logger, IStorageSyncService service, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<StorageSyncServiceDeleteOptions, StorageSyncServiceDeleteCommand.StorageSyncServiceDeleteCommandResult>(subscriptionResolver)
 {
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceDeleteCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, StorageSyncServiceDeleteOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
-    }
-
-    protected override StorageSyncServiceDeleteOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Name.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             _logger.LogInformation("Deleting storage sync service. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}",
@@ -59,8 +37,8 @@ public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDe
 
             await _service.DeleteStorageSyncServiceAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.Name!,
+                options.ResourceGroup,
+                options.Name,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -77,6 +55,5 @@ public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDe
         return context.Response;
     }
 
-    [JsonSerializable(typeof(StorageSyncServiceDeleteCommandResult))]
-    internal record StorageSyncServiceDeleteCommandResult(string Message);
+    public sealed record StorageSyncServiceDeleteCommandResult(string Message);
 }
