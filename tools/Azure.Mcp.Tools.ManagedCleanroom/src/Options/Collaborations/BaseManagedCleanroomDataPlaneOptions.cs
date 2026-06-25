@@ -21,6 +21,6 @@ public class BaseManagedCleanroomDataPlaneOptions
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(Name = "retry", Description = "Retry policy configuration for requests to Managed Cleanroom services.")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
