@@ -7,7 +7,6 @@ using System.Text;
 using Azure.Mcp.Tools.AzureBestPractices.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -32,70 +31,48 @@ namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand<BestPracticesOptions>
+public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand<BestPracticesOptions, List<string>>
 {
     private readonly ILogger<BestPracticesCommand> _logger = logger;
-    private static readonly Dictionary<string, string> s_bestPracticesCache = new();
+    private static readonly Dictionary<string, string> s_bestPracticesCache = [];
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(BestPracticesOptions options, ValidationResult validationResult)
     {
-        command.Options.Add(BestPracticesOptionDefinitions.Resource);
-        command.Options.Add(BestPracticesOptionDefinitions.Action);
-        command.Validators.Add(commandResult =>
+        base.ValidateOptions(options, validationResult);
+
+        if (string.IsNullOrWhiteSpace(options.Resource) || string.IsNullOrWhiteSpace(options.Action))
         {
-            commandResult.TryGetValue(BestPracticesOptionDefinitions.Resource, out string? resource);
-            commandResult.TryGetValue(BestPracticesOptionDefinitions.Action, out string? action);
-
-            if (string.IsNullOrWhiteSpace(resource) || string.IsNullOrWhiteSpace(action))
-            {
-                commandResult.AddError("Both resource and action parameters are required.");
-            }
-            else
-            {
-                bool validResource = resource == "general" || resource == "azurefunctions" || resource == "static-web-app" || resource == "coding-agent";
-                bool validAction = action == "all" || action == "code-generation" || action == "deployment";
-
-                if (!validResource)
-                {
-                    commandResult.AddError("Invalid resource. Must be 'general', 'azurefunctions', 'static-web-app', or 'coding-agent'.");
-                }
-                if (!validAction)
-                {
-                    commandResult.AddError("Invalid action. Must be 'all', 'code-generation' or 'deployment'.");
-                }
-                if (resource == "static-web-app" && action != "all")
-                {
-                    commandResult.AddError("The 'static-web-app' resource only supports 'all' action.");
-                }
-                if (resource == "coding-agent" && action != "all")
-                {
-                    commandResult.AddError("The 'coding-agent' resource only supports 'all' action.");
-                }
-            }
-        });
-    }
-
-    protected override BestPracticesOptions BindOptions(ParseResult parseResult)
-    {
-        return new BestPracticesOptions
-        {
-            Resource = parseResult.GetValueOrDefault<string>(BestPracticesOptionDefinitions.Resource.Name),
-            Action = parseResult.GetValueOrDefault<string>(BestPracticesOptionDefinitions.Action.Name)
-        };
-    }
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return Task.FromResult(context.Response);
+            validationResult.Errors.Add("Both resource and action parameters are required.");
         }
+        else
+        {
+            bool validResource = options.Resource == "general" || options.Resource == "azurefunctions" || options.Resource == "static-web-app" || options.Resource == "coding-agent";
+            bool validAction = options.Action == "all" || options.Action == "code-generation" || options.Action == "deployment";
 
-        var options = BindOptions(parseResult);
+            if (!validResource)
+            {
+                validationResult.Errors.Add("Invalid resource. Must be 'general', 'azurefunctions', 'static-web-app', or 'coding-agent'.");
+            }
+            if (!validAction)
+            {
+                validationResult.Errors.Add("Invalid action. Must be 'all', 'code-generation' or 'deployment'.");
+            }
+            if (options.Resource == "static-web-app" && options.Action != "all")
+            {
+                validationResult.Errors.Add("The 'static-web-app' resource only supports 'all' action.");
+            }
+            if (options.Resource == "coding-agent" && options.Action != "all")
+            {
+                validationResult.Errors.Add("The 'coding-agent' resource only supports 'all' action.");
+            }
+        }
+    }
 
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, BestPracticesOptions options, CancellationToken cancellationToken)
+    {
         try
         {
-            var resourceFileName = GetResourceFileName(options.Resource!, options.Action!);
+            var resourceFileName = GetResourceFileName(options.Resource, options.Action);
             var bestPractices = GetBestPracticesText(resourceFileName);
 
             context.Response.Status = HttpStatusCode.OK;
