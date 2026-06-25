@@ -313,9 +313,4 @@ public class OnboardingSpecBuilder(Analysis analysis)
 
         return sb.ToString();
     }
-
-    internal object WithAgentPreExecuteInstruction(object agentPreExecuteInstruction)
-    {
-        throw new NotImplementedException();
-    }
 }

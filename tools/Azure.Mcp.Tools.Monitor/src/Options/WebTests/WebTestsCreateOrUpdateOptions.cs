@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Monitor.Options.WebTests;
 
 public sealed class WebTestsCreateOrUpdateOptions : ISubscriptionOption
 {
-    [Option(Description = MonitorOptionDefinitions.WebtestResourceDescription)]
+    [Option(Description = MonitorOptionDescriptions.WebtestResource)]
     public required string WebtestResource { get; set; }
 
     [Option(Description = "The resource id of the Application Insights component to associate with the web test.")]

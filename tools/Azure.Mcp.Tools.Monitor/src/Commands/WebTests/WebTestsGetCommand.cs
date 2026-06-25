@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
@@ -91,5 +92,7 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger, IMoni
         return context.Response;
     }
 
-    public sealed record WebTestsGetCommandResult(WebTestDetailedInfo? WebTest, List<WebTestSummaryInfo>? WebTests);
+    public sealed record WebTestsGetCommandResult(
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] WebTestDetailedInfo? WebTest,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<WebTestSummaryInfo>? WebTests);
 }

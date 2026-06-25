@@ -8,19 +8,19 @@ namespace Azure.Mcp.Tools.Monitor.Options;
 
 public sealed class WorkspaceLogQueryOptions : ISubscriptionOption
 {
-    [Option(Description = MonitorOptionDefinitions.WorkspaceDescription)]
+    [Option(Description = MonitorOptionDescriptions.Workspace)]
     public required string Workspace { get; set; }
 
-    [Option(Description = MonitorOptionDefinitions.QueryDescription)]
+    [Option(Description = MonitorOptionDescriptions.Query)]
     public required string Query { get; set; }
 
-    [Option(Description = MonitorOptionDefinitions.HoursDescription, DefaultValue = 24)]
+    [Option(Description = MonitorOptionDescriptions.Hours, DefaultValue = 24)]
     public int? Hours { get; set; }
 
-    [Option(Description = MonitorOptionDefinitions.LimitDescription, DefaultValue = 20)]
+    [Option(Description = MonitorOptionDescriptions.Limit, DefaultValue = 20)]
     public int? Limit { get; set; }
 
-    [Option(Description = MonitorOptionDefinitions.TableDescription)]
+    [Option(Description = MonitorOptionDescriptions.Table)]
     public required string Table { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

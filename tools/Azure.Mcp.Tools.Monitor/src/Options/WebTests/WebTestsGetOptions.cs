@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.Monitor.Options.WebTests;
 
 public sealed class WebTestsGetOptions : ISubscriptionOption
 {
-    [Option(Description = MonitorOptionDefinitions.WebtestResourceDescription)]
+    [Option(Description = MonitorOptionDescriptions.WebtestResource)]
     public string? WebtestResource { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

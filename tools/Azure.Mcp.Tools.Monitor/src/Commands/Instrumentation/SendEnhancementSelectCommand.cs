@@ -26,11 +26,10 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
     ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
-public sealed class SendEnhancementSelectCommand(ILogger<SendEnhancementSelectCommand> logger, SendEnhancementSelectTool sendEnhancementSelectTool)
+public sealed class SendEnhancementSelectCommand(ILogger<SendEnhancementSelectCommand> logger)
     : BaseCommand<SendEnhancementSelectOptions, string>
 {
     private readonly ILogger<SendEnhancementSelectCommand> _logger = logger;
-    private readonly SendEnhancementSelectTool _sendEnhancementSelectTool = sendEnhancementSelectTool;
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, SendEnhancementSelectOptions options, CancellationToken cancellationToken)
     {

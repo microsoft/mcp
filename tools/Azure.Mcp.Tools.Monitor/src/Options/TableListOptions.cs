@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.Monitor.Options;
 
 public sealed class TableListOptions : ISubscriptionOption
 {
-    [Option(Description = MonitorOptionDefinitions.WorkspaceDescription)]
+    [Option(Description = MonitorOptionDescriptions.Workspace)]
     public required string Workspace { get; set; }
 
     [Option(Description = "The type of table to query. Options: 'CustomLog', 'AzureMetrics', etc. Defaults to 'CustomLog'.", DefaultValue = "CustomLog")]

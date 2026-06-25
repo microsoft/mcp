@@ -22,6 +22,6 @@ public sealed class MetricsDefinitionsOptions : BaseMetricsOptions
     [Option(Description = "The maximum number of metric definitions to return. Defaults to 10.", DefaultValue = 10)]
     public int Limit { get; set; } = 10;
 
-    [Option(Description = MonitorOptionDefinitions.MetricNamespaceDescription)]
+    [Option(Description = MonitorOptionDescriptions.MetricNamespace)]
     public string? MetricNamespace { get; set; }
 }

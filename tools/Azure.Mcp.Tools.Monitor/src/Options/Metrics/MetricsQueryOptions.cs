@@ -52,6 +52,6 @@ public sealed class MetricsQueryOptions : BaseMetricsOptions
     [Option(Description = "The maximum number of time buckets to return. Defaults to 50.", DefaultValue = 50)]
     public int? MaxBuckets { get; set; }
 
-    [Option(Description = MonitorOptionDefinitions.MetricNamespaceDescription)]
+    [Option(Description = MonitorOptionDescriptions.MetricNamespace)]
     public required string MetricNamespace { get; set; }
 }

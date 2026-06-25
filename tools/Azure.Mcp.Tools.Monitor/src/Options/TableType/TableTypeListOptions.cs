@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.Monitor.Options.TableType;
 
 public sealed class TableTypeListOptions : ISubscriptionOption
 {
-    [Option(Description = MonitorOptionDefinitions.WorkspaceDescription)]
+    [Option(Description = MonitorOptionDescriptions.Workspace)]
     public required string Workspace { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

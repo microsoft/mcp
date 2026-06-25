@@ -19,7 +19,7 @@ public sealed class OrchestratorStartOptions
 
 public sealed class OrchestratorNextOptions
 {
-    [Option(Description = MonitorOptionDefinitions.SessionIdDescription)]
+    [Option(Description = MonitorOptionDescriptions.SessionId)]
     public required string SessionId { get; set; }
 
     [Option(Description = "One sentence describing what you executed, e.g., 'Ran dotnet add package command' or 'Added UseAzureMonitor() to Program.cs'")]
@@ -28,7 +28,7 @@ public sealed class OrchestratorNextOptions
 
 public sealed class SendBrownfieldAnalysisOptions
 {
-    [Option(Description = MonitorOptionDefinitions.SessionIdDescription)]
+    [Option(Description = MonitorOptionDescriptions.SessionId)]
     public required string SessionId { get; set; }
 
     [Option(Description = """
@@ -47,7 +47,7 @@ public sealed class SendBrownfieldAnalysisOptions
 
 public sealed class SendEnhancementSelectOptions
 {
-    [Option(Description = MonitorOptionDefinitions.SessionIdDescription)]
+    [Option(Description = MonitorOptionDescriptions.SessionId)]
     public required string SessionId { get; set; }
 
     [Option(Description = "One or more enhancement keys, comma-separated (e.g. 'redis', 'redis,processors', 'entityframework,otlp').")]

@@ -48,9 +48,5 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(double?))]
 [JsonSerializable(typeof(bool))]
 [JsonSerializable(typeof(bool?))]
-[JsonSourceGenerationOptions(
-    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, 
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-internal sealed partial class MonitorJsonContext : JsonSerializerContext
-{
-}
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+internal sealed partial class MonitorJsonContext : JsonSerializerContext;

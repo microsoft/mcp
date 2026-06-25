@@ -69,7 +69,6 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<WorkspaceAnalyzer>();
         services.AddSingleton<OrchestratorTool>();
         services.AddSingleton<SendBrownfieldAnalysisTool>();
-        services.AddSingleton<SendEnhancementSelectTool>();
 
         services.AddSingleton<WorkspaceLogQueryCommand>();
         services.AddSingleton<ResourceLogQueryCommand>();

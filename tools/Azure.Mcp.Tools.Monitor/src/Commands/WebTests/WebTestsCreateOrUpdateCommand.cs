@@ -83,7 +83,7 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
                 // Create new web test - validate required parameters
                 if (string.IsNullOrEmpty(options.AppinsightsComponent))
                 {
-                    throw new ArgumentException("The app-insights-component-id option is required when creating a new web test.");
+                    throw new ArgumentException("The appinsights-component option is required when creating a new web test.");
                 }
                 if (string.IsNullOrEmpty(options.Location))
                 {
@@ -91,7 +91,7 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
                 }
                 if (string.IsNullOrEmpty(options.WebtestLocations))
                 {
-                    throw new ArgumentException("The locations option is required when creating a new web test.");
+                    throw new ArgumentException("The webtest-locations option is required when creating a new web test.");
                 }
                 if (string.IsNullOrEmpty(options.RequestUrl))
                 {
