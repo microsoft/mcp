@@ -328,6 +328,29 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
             default!, default!, default!, default, TestContext.Current.CancellationToken);
     }
 
+    [Theory]
+    [InlineData("I cannot help with that request.")]                    // model refusal (prose)
+    [InlineData("Sorry, I'm unable to comply with these instructions.")] // model refusal (prose)
+    [InlineData("not json at all { broken")]                            // malformed JSON
+    [InlineData("")]                                                    // empty response
+    [InlineData("   ")]                                                 // whitespace-only response
+    [InlineData("""{ "message": "no insights here" }""")]               // valid JSON but not an insights array
+    public async Task ExecuteAsync_SamplingReturnsUnparseable_ReturnsBadGatewayWithoutStackTrace(string sampled)
+    {
+        Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
+            .ReturnsForAnyArgs(CreatePopulatedAggregation());
+        _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)
+            .ReturnsForAnyArgs(sampled);
+
+        var response = await ExecuteWithSamplingAsync("--subscription", "sub1");
+
+        Assert.Equal(HttpStatusCode.BadGateway, response.Status);
+        Assert.False(string.IsNullOrWhiteSpace(response.Message));
+        Assert.DoesNotContain("StackTrace", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Exception", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Null(response.Results);
+    }
+
     private Task<CommandResponse> ExecuteWithSamplingAsync(params string[] args)
     {
         var server = Substitute.For<McpServer>();

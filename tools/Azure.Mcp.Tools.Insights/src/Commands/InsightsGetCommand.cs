@@ -200,7 +200,19 @@ public sealed partial class InsightsGetCommand(
                 SamplingMaxTokens,
                 samplingCts.Token);
 
-            var insights = ParseInsights(sampled);
+            IReadOnlyList<InsightEntry> insights;
+            try
+            {
+                insights = ParseInsights(sampled);
+            }
+            catch (Exception ex) when (ex is JsonException or InvalidOperationException)
+            {
+                // The model returned no usable response, declined the request, or replied in an unexpected format.
+                _logger.LogWarning(ex, "The model returned a response that could not be parsed into insights.");
+                context.Response.Status = System.Net.HttpStatusCode.BadGateway;
+                context.Response.Message = "The model did not return valid insights. Try rephrasing the query or running the command again.";
+                return context.Response;
+            }
 
             context.Response.Results = ResponseResult.Create(new InsightsGetCommandResult(insights), InsightsJsonContext.Default.InsightsGetCommandResult);
         }
