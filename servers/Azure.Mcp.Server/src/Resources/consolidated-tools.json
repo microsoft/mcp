@@ -1,6 +1,51 @@
 {
   "consolidated_tools": [
     {
+      "name": "get_azure_resilience_management_details",
+      "description": "Get details about Azure Resilience Management resources, including resilience goals (templates, assignments, and their resources), usage plans and enrollments, disaster recovery drills (drills, runs, and their resources), and recovery plans (plans, resources, and jobs) for Azure service groups.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_goal_template_get",
+        "resilience_goal_assignment_get",
+        "resilience_goal_resource_get",
+        "resilience_usageplan_get",
+        "resilience_usageplan_enrollment_get",
+        "resilience_drill_get",
+        "resilience_drill_resource_get",
+        "resilience_drill_run_get",
+        "resilience_drill_run_resource_get",
+        "resilience_recovery_plan_get",
+        "resilience_recovery_plan_resource_get",
+        "resilience_recovery_job_get",
+        "resilience_recovery_job_resource_get"
+      ]
+    },
+    {
       "name": "get_azure_subscriptions_and_resource_groups",
       "description": "Get information about Azure subscriptions, resource groups, and resources within resource groups that the user has access to.",
       "toolMetadata": {
