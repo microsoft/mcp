@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.Tests.Vm;
 
-public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, IComputeService>
+public class VmUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmUpdateCommand, IComputeService>
 {
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
@@ -61,7 +61,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
@@ -107,7 +107,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
             Arg.Any<string?>(),
             Arg.Is("env=prod,team=compute"),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -152,7 +152,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Is("Windows_Server"),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -185,7 +185,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -217,7 +217,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -259,7 +259,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -316,7 +316,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Is(base64UserData),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -335,7 +335,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
         await Service.Received(1).UpdateVmAsync(
             _knownVmName, _knownResourceGroup, _knownSubscription,
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), base64UserData, Arg.Any<string?>(),
+            Arg.Any<bool?>(), base64UserData, Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
@@ -362,7 +362,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
             Arg.Any<string?>(),
             Arg.Is(string.Empty),  // empty string triggers tag clearing in service
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -385,7 +385,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
             Arg.Any<string?>(),
             string.Empty,
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -414,7 +414,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
             Arg.Any<string?>(),
             Arg.Is(string.Empty),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -435,7 +435,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
             Arg.Any<string?>(),
             string.Empty,
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),

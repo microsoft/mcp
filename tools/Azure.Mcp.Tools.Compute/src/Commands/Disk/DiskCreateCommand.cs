@@ -3,14 +3,14 @@
 
 using System.Net;
 using System.Security;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Compute.Models;
-using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Disk;
 using Azure.Mcp.Tools.Compute.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 
@@ -28,131 +28,48 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class DiskCreateCommand(
-    ILogger<DiskCreateCommand> logger,
-    IComputeService computeService)
-    : BaseComputeCommand<DiskCreateOptions>(true)
+public sealed class DiskCreateCommand(ILogger<DiskCreateCommand> logger, IComputeService computeService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<DiskCreateOptions, DiskCreateCommand.DiskCreateCommandResult>(subscriptionResolver)
 {
-
     private readonly ILogger<DiskCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(DiskCreateOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(ComputeOptionDefinitions.Disk.AsRequired());
-        command.Options.Add(ComputeOptionDefinitions.Source);
-        command.Options.Add(ComputeOptionDefinitions.Location);
-        command.Options.Add(ComputeOptionDefinitions.SizeGb);
-        command.Options.Add(ComputeOptionDefinitions.Sku);
-        command.Options.Add(ComputeOptionDefinitions.OsType);
-        command.Options.Add(ComputeOptionDefinitions.Zone);
-        command.Options.Add(ComputeOptionDefinitions.HyperVGeneration);
-        command.Options.Add(ComputeOptionDefinitions.MaxShares);
-        command.Options.Add(ComputeOptionDefinitions.NetworkAccessPolicy);
-        command.Options.Add(ComputeOptionDefinitions.EnableBursting);
-        command.Options.Add(ComputeOptionDefinitions.Tags);
-        command.Options.Add(ComputeOptionDefinitions.DiskEncryptionSet);
-        command.Options.Add(ComputeOptionDefinitions.EncryptionType);
-        command.Options.Add(ComputeOptionDefinitions.DiskAccessId);
-        command.Options.Add(ComputeOptionDefinitions.Tier);
-        command.Options.Add(ComputeOptionDefinitions.GalleryImageReference);
-        command.Options.Add(ComputeOptionDefinitions.GalleryImageReferenceLun);
-        command.Options.Add(ComputeOptionDefinitions.DiskIopsReadWrite);
-        command.Options.Add(ComputeOptionDefinitions.DiskMbpsReadWrite);
-        command.Options.Add(ComputeOptionDefinitions.UploadType);
-        command.Options.Add(ComputeOptionDefinitions.UploadSizeBytes);
-        command.Options.Add(ComputeOptionDefinitions.SecurityType);
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+
+        if (string.IsNullOrEmpty(options.Source) &&
+            (options.SizeGb == null || options.SizeGb <= 0) &&
+            string.IsNullOrEmpty(options.GalleryImageReference) &&
+            string.IsNullOrEmpty(options.UploadType))
         {
-            var source = result.GetValueOrDefault<string>(ComputeOptionDefinitions.Source.Name);
-            var sizeGb = result.GetValueOrDefault<int>(ComputeOptionDefinitions.SizeGb.Name);
-            var galleryImageReference = result.GetValueOrDefault<string>(ComputeOptionDefinitions.GalleryImageReference.Name);
-            var uploadType = result.GetValueOrDefault<string>(ComputeOptionDefinitions.UploadType.Name);
-            var uploadSizeBytes = result.GetValueOrDefault<long>(ComputeOptionDefinitions.UploadSizeBytes.Name);
-            var securityType = result.GetValueOrDefault<string>(ComputeOptionDefinitions.SecurityType.Name);
-
-            if (string.IsNullOrEmpty(source) && sizeGb <= 0 && string.IsNullOrEmpty(galleryImageReference) && string.IsNullOrEmpty(uploadType))
-            {
-                result.AddError("Either --source, --size-gb, --gallery-image-reference, or --upload-type must be specified.");
-            }
-
-            if (!string.IsNullOrEmpty(uploadType) && uploadSizeBytes <= 0)
-            {
-                result.AddError("--upload-size-bytes is required when --upload-type is specified.");
-            }
-
-            if (string.Equals(uploadType, "UploadWithSecurityData", StringComparison.OrdinalIgnoreCase)
-                && string.IsNullOrEmpty(securityType))
-            {
-                result.AddError("--security-type is required when --upload-type is 'UploadWithSecurityData'.");
-            }
-        });
-    }
-
-    protected override DiskCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Disk = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Disk.Name);
-        options.Source = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Source.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Location.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-
-        var sizeGb = parseResult.GetValueOrDefault<int>(ComputeOptionDefinitions.SizeGb.Name);
-        options.SizeGb = sizeGb > 0 ? sizeGb : null;
-
-        options.Sku = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Sku.Name);
-        options.OsType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsType.Name);
-        options.Zone = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Zone.Name);
-        options.HyperVGeneration = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.HyperVGeneration.Name);
-
-        var maxShares = parseResult.GetValueOrDefault<int>(ComputeOptionDefinitions.MaxShares.Name);
-        options.MaxShares = maxShares > 0 ? maxShares : null;
-
-        options.NetworkAccessPolicy = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.NetworkAccessPolicy.Name);
-        options.EnableBursting = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.EnableBursting.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name);
-        options.DiskEncryptionSet = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.DiskEncryptionSet.Name);
-        options.EncryptionType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.EncryptionType.Name);
-        options.DiskAccessId = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.DiskAccessId.Name);
-        options.Tier = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tier.Name);
-        options.GalleryImageReference = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.GalleryImageReference.Name);
-
-        options.GalleryImageReferenceLun = parseResult.GetValueOrDefault<int?>(ComputeOptionDefinitions.GalleryImageReferenceLun.Name);
-
-        var iops = parseResult.GetValueOrDefault<long>(ComputeOptionDefinitions.DiskIopsReadWrite.Name);
-        options.DiskIopsReadWrite = iops > 0 ? iops : null;
-
-        var mbps = parseResult.GetValueOrDefault<long>(ComputeOptionDefinitions.DiskMbpsReadWrite.Name);
-        options.DiskMbpsReadWrite = mbps > 0 ? mbps : null;
-
-        options.UploadType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UploadType.Name);
-
-        var uploadSizeBytes = parseResult.GetValueOrDefault<long>(ComputeOptionDefinitions.UploadSizeBytes.Name);
-        options.UploadSizeBytes = uploadSizeBytes > 0 ? uploadSizeBytes : null;
-
-        options.SecurityType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.SecurityType.Name);
-
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("Either --source, --size-gb, --gallery-image-reference, or --upload-type must be specified.");
         }
 
-        var options = BindOptions(parseResult);
+        if (!string.IsNullOrEmpty(options.UploadType) &&
+            (options.UploadSizeBytes == null || options.UploadSizeBytes <= 0))
+        {
+            validationResult.Errors.Add("--upload-size-bytes is required when --upload-type is specified.");
+        }
+
+        if (string.Equals(options.UploadType, "UploadWithSecurityData", StringComparison.OrdinalIgnoreCase)
+            && string.IsNullOrEmpty(options.SecurityType))
+        {
+            validationResult.Errors.Add("--security-type is required when --upload-type is 'UploadWithSecurityData'.");
+        }
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DiskCreateOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             _logger.LogInformation(
                 "Creating disk {DiskName} in resource group {ResourceGroup}, location {Location}, source {Source}",
-                options.Disk, options.ResourceGroup, options.Location ?? "(default)", options.Source ?? "(none)");
+                options.DiskName, options.ResourceGroup, options.Location ?? "(default)", options.Source ?? "(none)");
 
             var disk = await _computeService.CreateDiskAsync(
-                options.Disk!,
-                options.ResourceGroup!,
+                options.DiskName,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.Source,
                 options.Location,
@@ -167,7 +84,7 @@ public sealed class DiskCreateCommand(
                 options.Tags,
                 options.DiskEncryptionSet,
                 options.EncryptionType,
-                options.DiskAccessId,
+                options.DiskAccess,
                 options.Tier,
                 options.GalleryImageReference,
                 options.GalleryImageReferenceLun,
@@ -184,7 +101,7 @@ public sealed class DiskCreateCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating disk. Disk: {Disk}, ResourceGroup: {ResourceGroup}.", options.Disk, options.ResourceGroup);
+            _logger.LogError(ex, "Error creating disk. Disk: {Disk}, ResourceGroup: {ResourceGroup}.", options.DiskName, options.ResourceGroup);
             HandleException(context, ex);
         }
 

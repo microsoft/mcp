@@ -13,6 +13,7 @@ using Azure.ResourceManager.Compute.Models;
 using Azure.ResourceManager.Network;
 using Azure.ResourceManager.Network.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Helpers;
@@ -1018,7 +1019,7 @@ public class ComputeService(
         string? vmSize = null,
         string? tags = null,
         string? licenseType = null,
-        string? bootDiagnostics = null,
+        bool? bootDiagnostics = null,
         string? userData = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -1054,9 +1055,7 @@ public class ComputeService(
 
         if (bootDiagnostics != null)
         {
-            var enabled = bootDiagnostics.Equals("true", StringComparison.OrdinalIgnoreCase) ||
-                          bootDiagnostics.Equals("enable", StringComparison.OrdinalIgnoreCase);
-            patch.BootDiagnostics = new() { Enabled = enabled };
+            patch.BootDiagnostics = new() { Enabled = bootDiagnostics };
             needsUpdate = true;
         }
 
@@ -1552,7 +1551,7 @@ public class ComputeService(
         string? hyperVGeneration = null,
         int? maxShares = null,
         string? networkAccessPolicy = null,
-        string? enableBursting = null,
+        bool? enableBursting = null,
         string? tags = null,
         string? diskEncryptionSet = null,
         string? encryptionType = null,
@@ -1581,13 +1580,13 @@ public class ComputeService(
 
         var diskData = new ManagedDiskData(new(resolvedLocation))
         {
-            CreationData = creationData
+            CreationData = creationData,
+            DiskSizeGB = sizeGb,
+            MaxShares = maxShares,
+            BurstingEnabled = enableBursting,
+            DiskIopsReadWrite = diskIopsReadWrite,
+            DiskMBpsReadWrite = diskMbpsReadWrite
         };
-
-        if (sizeGb.HasValue)
-        {
-            diskData.DiskSizeGB = sizeGb.Value;
-        }
 
         if (!string.IsNullOrEmpty(sku))
         {
@@ -1620,19 +1619,9 @@ public class ComputeService(
             diskData.HyperVGeneration = new(hyperVGeneration);
         }
 
-        if (maxShares.HasValue)
-        {
-            diskData.MaxShares = maxShares.Value;
-        }
-
         if (!string.IsNullOrEmpty(networkAccessPolicy))
         {
             diskData.NetworkAccessPolicy = new(networkAccessPolicy);
-        }
-
-        if (!string.IsNullOrEmpty(enableBursting))
-        {
-            diskData.BurstingEnabled = enableBursting.Equals("true", StringComparison.OrdinalIgnoreCase);
         }
 
         if (tags is not null)
@@ -1675,16 +1664,6 @@ public class ComputeService(
             diskData.Tier = tier;
         }
 
-        if (diskIopsReadWrite.HasValue)
-        {
-            diskData.DiskIopsReadWrite = diskIopsReadWrite.Value;
-        }
-
-        if (diskMbpsReadWrite.HasValue)
-        {
-            diskData.DiskMBpsReadWrite = diskMbpsReadWrite.Value;
-        }
-
         if (!string.IsNullOrEmpty(securityType))
         {
             diskData.SecurityProfile = new()
@@ -1712,7 +1691,7 @@ public class ComputeService(
         long? diskMbpsReadWrite = null,
         int? maxShares = null,
         string? networkAccessPolicy = null,
-        string? enableBursting = null,
+        bool? enableBursting = null,
         string? tags = null,
         string? diskEncryptionSet = null,
         string? encryptionType = null,
@@ -1728,41 +1707,23 @@ public class ComputeService(
         var rgResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
         var diskResource = await rgResource.Value.GetManagedDisks().GetAsync(diskName, cancellationToken);
 
-        var diskPatch = new ManagedDiskPatch();
-
-        if (sizeGb.HasValue)
+        var diskPatch = new ManagedDiskPatch
         {
-            diskPatch.DiskSizeGB = sizeGb.Value;
-        }
+            DiskSizeGB = sizeGb,
+            DiskIopsReadWrite = diskIopsReadWrite,
+            DiskMBpsReadWrite = diskMbpsReadWrite,
+            MaxShares = maxShares,
+            BurstingEnabled = enableBursting
+        };
 
         if (!string.IsNullOrEmpty(sku))
         {
             diskPatch.Sku = new() { Name = new(sku) };
         }
 
-        if (diskIopsReadWrite.HasValue)
-        {
-            diskPatch.DiskIopsReadWrite = diskIopsReadWrite.Value;
-        }
-
-        if (diskMbpsReadWrite.HasValue)
-        {
-            diskPatch.DiskMBpsReadWrite = diskMbpsReadWrite.Value;
-        }
-
-        if (maxShares.HasValue)
-        {
-            diskPatch.MaxShares = maxShares.Value;
-        }
-
         if (!string.IsNullOrEmpty(networkAccessPolicy))
         {
             diskPatch.NetworkAccessPolicy = new(networkAccessPolicy);
-        }
-
-        if (!string.IsNullOrEmpty(enableBursting))
-        {
-            diskPatch.BurstingEnabled = enableBursting.Equals("true", StringComparison.OrdinalIgnoreCase);
         }
 
         if (tags is not null)

@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
-using Azure.Mcp.Tools.Compute.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Compute.Options.Disk;
 using Azure.Mcp.Tools.Compute.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 
@@ -26,37 +25,14 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
     ReadOnly = false,
     Secret = true,
     LocalRequired = false)]
-public sealed class DiskDeleteCommand(
-    ILogger<DiskDeleteCommand> logger,
-    IComputeService computeService)
-    : BaseComputeCommand<DiskDeleteOptions>(true)
+public sealed class DiskDeleteCommand(ILogger<DiskDeleteCommand> logger, IComputeService computeService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<DiskDeleteOptions, DiskDeleteCommand.DiskDeleteCommandResult>(subscriptionResolver)
 {
-
     private readonly ILogger<DiskDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IComputeService _computeService = computeService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DiskDeleteOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(ComputeOptionDefinitions.Disk.AsRequired());
-    }
-
-    protected override DiskDeleteOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.DiskName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Disk.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             _logger.LogInformation(
@@ -64,15 +40,15 @@ public sealed class DiskDeleteCommand(
                 options.DiskName, options.ResourceGroup);
 
             var deleted = await _computeService.DeleteDiskAsync(
-                options.DiskName!,
-                options.ResourceGroup!,
+                options.DiskName,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new DiskDeleteCommandResult(deleted, options.DiskName!),
+                new(deleted, options.DiskName),
                 ComputeJsonContext.Default.DiskDeleteCommandResult);
         }
         catch (Exception ex)
@@ -85,14 +61,6 @@ public sealed class DiskDeleteCommand(
 
         return context.Response;
     }
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
@@ -110,5 +78,5 @@ public sealed class DiskDeleteCommand(
     /// <summary>
     /// Result record for the disk delete command.
     /// </summary>
-    public record DiskDeleteCommandResult(bool Deleted, string DiskName);
+    public sealed record DiskDeleteCommandResult(bool Deleted, string DiskName);
 }

@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.Tests.Vm;
 
-public class VmGetCommandTests : CommandUnitTestsBase<VmGetCommand, IComputeService>
+public class VmGetCommandTests : SubscriptionCommandUnitTestsBase<VmGetCommand, IComputeService>
 {
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
@@ -166,7 +166,8 @@ public class VmGetCommandTests : CommandUnitTestsBase<VmGetCommand, IComputeServ
         var response = await ExecuteCommandAsync("--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetListResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetResult);
+        Assert.NotNull(result.Vms);
         Assert.Equal(2, result.Vms.Count);
         Assert.Equal("vm1", result.Vms[0].Name);
         Assert.Equal("vm2", result.Vms[1].Name);
@@ -205,7 +206,8 @@ public class VmGetCommandTests : CommandUnitTestsBase<VmGetCommand, IComputeServ
             "--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetListResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetResult);
+        Assert.NotNull(result.Vms);
         Assert.Single(result.Vms);
         Assert.Equal("vm1", result.Vms[0].Name);
         Assert.Equal("eastus", result.Vms[0].Location);
@@ -227,7 +229,8 @@ public class VmGetCommandTests : CommandUnitTestsBase<VmGetCommand, IComputeServ
         var response = await ExecuteCommandAsync("--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetListResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetResult);
+        Assert.NotNull(result.Vms);
         Assert.Empty(result.Vms);
     }
 
@@ -263,7 +266,7 @@ public class VmGetCommandTests : CommandUnitTestsBase<VmGetCommand, IComputeServ
             "--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetSingleResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetResult);
         Assert.NotNull(result.Vm);
         Assert.Null(result.InstanceView);
         Assert.Equal("test-vm", result.Vm.Name);
@@ -321,7 +324,7 @@ public class VmGetCommandTests : CommandUnitTestsBase<VmGetCommand, IComputeServ
             "--instance-view");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetSingleResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetResult);
         Assert.NotNull(result.Vm);
         Assert.NotNull(result.InstanceView);
         Assert.Equal("test-vm", result.Vm.Name);
@@ -363,7 +366,7 @@ public class VmGetCommandTests : CommandUnitTestsBase<VmGetCommand, IComputeServ
             "--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetSingleResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetResult);
         Assert.NotNull(result.Vm);
         Assert.Equal("test-vm", result.Vm.Name);
     }
