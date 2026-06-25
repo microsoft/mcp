@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.StorageSync.Models;
-using Azure.Mcp.Tools.StorageSync.Options;
+using Azure.Mcp.Tools.StorageSync.Options.StorageSyncService;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
@@ -24,57 +23,14 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUpdateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceUpdateOptions>
+public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUpdateCommand> logger, IStorageSyncService service, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<StorageSyncServiceUpdateOptions, StorageSyncServiceUpdateCommand.StorageSyncServiceUpdateCommandResult>(subscriptionResolver)
 {
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceUpdateCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, StorageSyncServiceUpdateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.IncomingTrafficPolicy.AsOptional());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Tags.AsOptional());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.IdentityType.AsOptional());
-    }
-
-    protected override StorageSyncServiceUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Name.Name);
-        options.IncomingTrafficPolicy = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.IncomingTrafficPolicy.Name);
-
-        // Parse tags from string format "key1=value1 key2=value2"
-        var tagsString = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Tags.Name);
-        if (!string.IsNullOrEmpty(tagsString))
-        {
-            options.Tags = [];
-            var tagPairs = tagsString.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var pair in tagPairs)
-            {
-                var parts = pair.Split('=', 2);
-                if (parts.Length == 2)
-                {
-                    options.Tags[parts[0]] = parts[1];
-                }
-            }
-        }
-
-        options.IdentityType = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.IdentityType.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             _logger.LogInformation("Updating storage sync service. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}",
@@ -82,10 +38,10 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
 
             var service = await _service.UpdateStorageSyncServiceAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.Name!,
+                options.ResourceGroup,
+                options.Name,
                 options.IncomingTrafficPolicy,
-                options.Tags,
+                options.Tags?.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(tag => tag.Split('=')).ToDictionary(kv => kv[0], kv => kv[1]),
                 options.IdentityType,
                 options.Tenant,
                 options.RetryPolicy,
@@ -102,6 +58,5 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
         return context.Response;
     }
 
-    [JsonSerializable(typeof(StorageSyncServiceUpdateCommandResult))]
-    internal record StorageSyncServiceUpdateCommandResult(StorageSyncServiceDataSchema Result);
+    public sealed record StorageSyncServiceUpdateCommandResult(StorageSyncServiceDataSchema Result);
 }

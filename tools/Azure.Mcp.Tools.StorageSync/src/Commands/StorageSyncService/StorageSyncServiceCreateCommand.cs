@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.StorageSync.Models;
-using Azure.Mcp.Tools.StorageSync.Options;
+using Azure.Mcp.Tools.StorageSync.Options.StorageSyncService;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
@@ -24,37 +23,14 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCreateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceCreateOptions>
+public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCreateCommand> logger, IStorageSyncService service, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<StorageSyncServiceCreateOptions, StorageSyncServiceCreateCommand.StorageSyncServiceCreateCommandResult>(subscriptionResolver)
 {
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceCreateCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, StorageSyncServiceCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Location.AsRequired());
-    }
-
-    protected override StorageSyncServiceCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Name.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Location.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             _logger.LogInformation("Creating storage sync service. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}",
@@ -62,10 +38,10 @@ public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCr
 
             var service = await _service.CreateStorageSyncServiceAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.Name!,
-                options.Location!,
-                null,
+                options.ResourceGroup,
+                options.Name,
+                options.Location,
+                options.Tags?.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(tag => tag.Split('=')).ToDictionary(kv => kv[0], kv => kv[1]),
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -81,6 +57,5 @@ public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCr
         return context.Response;
     }
 
-    [JsonSerializable(typeof(StorageSyncServiceCreateCommandResult))]
-    internal record StorageSyncServiceCreateCommandResult(StorageSyncServiceDataSchema Result);
+    public sealed record StorageSyncServiceCreateCommandResult(StorageSyncServiceDataSchema Result);
 }
