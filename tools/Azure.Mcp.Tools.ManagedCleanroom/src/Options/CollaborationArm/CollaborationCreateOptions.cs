@@ -30,6 +30,6 @@ public class CollaborationCreateOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(Name = "retry")]
+    [Option(Name = "retry", Description = "Retry policy configuration for requests to Azure Resource Manager and Managed Cleanroom services.")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }

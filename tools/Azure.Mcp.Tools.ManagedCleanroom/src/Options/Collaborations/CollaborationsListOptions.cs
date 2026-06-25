@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.ManagedCleanroom.Options.Collaborations;
 
 public class CollaborationsListOptions : BaseManagedCleanroomDataPlaneOptions
 {
-    [Option("When true, returns only active collaborations (email-only lookup). When omitted, returns all collaborations.")]
+    [Option(Description = "When true, returns only active collaborations (email-only lookup). When omitted, returns all collaborations.")]
     public bool? ActiveOnly { get; set; }
 }
 

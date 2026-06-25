@@ -12,15 +12,15 @@ namespace Azure.Mcp.Tools.ManagedCleanroom.Options.Collaborations;
 /// </summary>
 public class BaseManagedCleanroomDataPlaneOptions
 {
-    [Option(ManagedCleanroomOptionDescriptions.Endpoint)]
+    [Option(Description = ManagedCleanroomOptionDescriptions.Endpoint)]
     public required string Endpoint { get; set; }
 
-    [Option(ManagedCleanroomOptionDescriptions.TokenScope)]
+    [Option(Description = ManagedCleanroomOptionDescriptions.TokenScope)]
     public string? TokenScope { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(Name = "retry")]
+    [Option(Name = "retry", Description = "Retry policy configuration for requests to Managed Cleanroom services.")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
