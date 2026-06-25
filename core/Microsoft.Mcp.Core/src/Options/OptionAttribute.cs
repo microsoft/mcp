@@ -38,15 +38,15 @@ public sealed class OptionAttribute : Attribute
     /// Override the CLI option name (without the "--" prefix).
     /// When null, the name is derived from the property name in kebab-case.
     /// </summary>
-    public string? Name { get; init; }
+    public string? Name { get; set; }
 
     /// <summary>
     /// A description of what the option controls. Used in help text and by AI agents.
     /// </summary>
-    public string? Description { get; init; }
+    public string? Description { get; set; }
 
     /// <summary>
     /// Whether the option is hidden from help output.
     /// </summary>
-    public bool Hidden { get; init; }
+    public bool Hidden { get; set; }
 }
