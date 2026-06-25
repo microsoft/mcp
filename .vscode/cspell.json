@@ -628,6 +628,8 @@
         "avmsec",
         "aztfexport",
         "azureterraform",
+        "aiml",
+        "feff",
         "choco",
         "conftest",
         "navm",
