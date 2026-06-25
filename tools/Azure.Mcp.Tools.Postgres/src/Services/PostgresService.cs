@@ -9,7 +9,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
@@ -19,7 +18,6 @@ using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Npgsql;
-
 
 namespace Azure.Mcp.Tools.Postgres.Services;
 
@@ -32,7 +30,6 @@ public class PostgresService(
 {
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IEntraTokenProvider _entraTokenAuth = entraTokenAuth;
     private readonly IDbProvider _dbProvider = dbProvider;
 
@@ -57,7 +54,7 @@ public class PostgresService(
     {
         if (!server.Contains('.'))
         {
-            return _tenantService.CloudConfiguration.CloudType switch
+            return TenantService.CloudConfiguration.CloudType switch
             {
                 AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
                     server + ".postgres.database.azure.com",

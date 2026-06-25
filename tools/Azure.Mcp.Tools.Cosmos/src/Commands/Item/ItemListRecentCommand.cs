@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Cosmos.Options;
+using System.Text.Json;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Cosmos.Options.Item;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -23,48 +23,30 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ItemListRecentCommand(ILogger<ItemListRecentCommand> logger, ICosmosService cosmosService)
-    : BaseContainerCommand<ItemListRecentOptions>()
+public sealed class ItemListRecentCommand(ILogger<ItemListRecentCommand> logger, ICosmosService cosmosService, ISubscriptionResolver subscriptionResolver)
+    : BaseCosmosCommand<ItemListRecentOptions, ItemListRecentCommand.ItemListRecentCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ItemListRecentCommand> _logger = logger;
     private readonly ICosmosService _cosmosService = cosmosService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(ItemListRecentOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(CosmosOptionDefinitions.Count);
-        command.Validators.Add(result =>
-        {
-            var count = result.GetValueOrDefault<int>(CosmosOptionDefinitions.Count.Name);
-            if (count < 1 || count > 20)
-            {
-                result.AddError("--count must be between 1 and 20.");
-            }
-        });
-    }
+        base.ValidateOptions(options, validationResult);
 
-    protected override ItemListRecentOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Count = parseResult.GetValueOrDefault<int>(CosmosOptionDefinitions.Count.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        if (options.Count != null && (options.Count < 1 || options.Count > 20))
         {
-            return context.Response;
+            validationResult.Errors.Add("--count must be between 1 and 20.");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ItemListRecentOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             var items = await _cosmosService.GetRecentItems(
-                options.Account!,
-                options.Database!,
-                options.Container!,
+                options.Account,
+                options.Database,
+                options.Container,
                 options.Count ?? 10,
                 options.Subscription!,
                 options.AuthMethod ?? AuthMethod.Credential,
@@ -86,5 +68,5 @@ public sealed class ItemListRecentCommand(ILogger<ItemListRecentCommand> logger,
         return context.Response;
     }
 
-    internal record ItemListRecentCommandResult(List<JsonElement> Items);
+    public sealed record ItemListRecentCommandResult(List<JsonElement> Items);
 }

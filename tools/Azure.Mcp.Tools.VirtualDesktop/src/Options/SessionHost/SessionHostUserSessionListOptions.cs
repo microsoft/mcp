@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Options.SessionHost;
 
-public class SessionHostUserSessionListOptions : BaseHostPoolOptions
+public sealed class SessionHostUserSessionListOptions : BaseHostPoolOptions
 {
-    [JsonPropertyName(VirtualDesktopOptionDefinitions.SessionHostName)]
-    public string? SessionHostName { get; set; }
+    [Option(Description = "The name of the session host. This is the computer name of the virtual machine in the host pool.")]
+    public required string Sessionhost { get; set; }
 }

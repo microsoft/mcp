@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.Tests;
 
-public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, ICosmosService>
+public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosListCommand, ICosmosService>
 {
     [Fact]
     public void Name_IsCorrect()

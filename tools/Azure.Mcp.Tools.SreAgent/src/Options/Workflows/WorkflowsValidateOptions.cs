@@ -5,7 +5,8 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.SreAgent.Options.Workflows;
 
-public class WorkflowsValidateOptions : GlobalOptions
+public sealed class WorkflowsValidateOptions
 {
-    public string? YamlContent { get; set; }
+    [Option(Description = SreAgentOptionDefinitions.YamlContentDescription)]
+    public required string YamlContent { get; set; }
 }
