@@ -3,18 +3,18 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Authorization.Commands;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Authorization.Tests;
 
-public class RoleAssignmentListCommandTests : CommandUnitTestsBase<RoleAssignmentListCommand, IAuthorizationService>
+public class RoleAssignmentListCommandTests : SubscriptionCommandUnitTestsBase<RoleAssignmentListCommand, IAuthorizationService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsRoleAssignments_WhenRoleAssignmentsExist()

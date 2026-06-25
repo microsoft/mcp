@@ -5,9 +5,14 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.SreAgent.Options.Architecture;
 
-public class PlanOptions : GlobalOptions
+public sealed class PlanOptions
 {
-    public string? Requirements { get; set; }
+    [Option(Description = "Architecture requirements.")]
+    public required string Requirements { get; set; }
+
+    [Option(Description = "Trigger type, such as manual or scheduled.")]
     public string? TriggerType { get; set; }
+
+    [Option(Description = "Kusto connector name.")]
     public string? KustoConnector { get; set; }
 }

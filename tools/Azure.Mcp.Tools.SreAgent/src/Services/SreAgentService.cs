@@ -1055,20 +1055,25 @@ public sealed class SreAgentService(
 
     public static async Task<SreAgentInvestigationResult> RunInvestigationAsync(ISreAgentService service, ThreadsInvestigateOptions options, bool autoApprove, CancellationToken cancellationToken = default)
     {
-        var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(service, options, cancellationToken);
+        var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
+            service,
+            options,
+            cancellationToken);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds)));
+        var timeoutSeconds = Math.Max(1, options.TimeoutSeconds ?? 600);
+        timeout.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
 
-        var thread = await service.CreateThreadAsync(endpoint, SreAgentCommandHelpers.CreateThreadRequest(options.Message!, options.Agent!), options.Tenant, timeout.Token);
+        var thread = await service.CreateThreadAsync(endpoint, SreAgentCommandHelpers.CreateThreadRequest(options.Message, options.Agent), options.Tenant, timeout.Token);
         var threadId = thread?.Id;
         if (string.IsNullOrWhiteSpace(threadId))
         {
             return new(null, "failed", 0, true, "Thread created but no ID was returned.", []);
         }
 
-        var messages = await service.PollThreadForCompletionAsync(endpoint, threadId, options.Tenant, TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds)), autoApprove, timeout.Token);
+        var messages = await service.PollThreadForCompletionAsync(endpoint, threadId, options.Tenant, TimeSpan.FromSeconds(timeoutSeconds), autoApprove, timeout.Token);
         var followUps = 0;
-        while (followUps < Math.Max(0, options.MaxIterations))
+        var maxIterations = Math.Max(0, options.MaxIterations ?? 20);
+        while (followUps < maxIterations)
         {
             var action = ClassifyFollowUp(messages);
             if (action == FollowUpAction.None)
@@ -1087,11 +1092,11 @@ public sealed class SreAgentService(
             }
 
             await service.SendThreadMessageAsync(endpoint, threadId, SreAgentCommandHelpers.CreateMessageRequest(FollowUpPrompt), options.Tenant, timeout.Token);
-            messages = await service.PollThreadForCompletionAsync(endpoint, threadId, options.Tenant, TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds)), autoApprove, timeout.Token);
+            messages = await service.PollThreadForCompletionAsync(endpoint, threadId, options.Tenant, TimeSpan.FromSeconds(timeoutSeconds), autoApprove, timeout.Token);
             followUps++;
         }
 
-        var status = followUps >= Math.Max(0, options.MaxIterations) ? "max-iterations-reached" : "completed";
+        var status = followUps >= maxIterations ? "max-iterations-reached" : "completed";
         return new(threadId, status, followUps, false, null, messages);
     }
 

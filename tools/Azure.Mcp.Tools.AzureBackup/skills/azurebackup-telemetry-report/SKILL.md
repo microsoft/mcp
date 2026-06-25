@@ -1,7 +1,7 @@
 ---
 name: azurebackup-telemetry-report
 description: 'Generate weekly telemetry reports and customer adoption reports for Azure Backup MCP tools. Runs KQL queries against the Kusto telemetry cluster, analyzes error patterns with 3-way classification (Customer/Azure Service/MCP Tool Bug), identifies customers via P360/C360 cross-cluster joins, compares week-over-week metrics, correlates with merged PRs and releases, and produces an Outlook-compatible HTML report. USE WHEN: weekly telemetry report, Azure Backup MCP telemetry, error analysis, telemetry bugs, weekly report, MCP tool success rate, backup telemetry, error classification, customer usage report, who is using Azure Backup MCP, backup adoption, customer report.'
-argument-hint: 'Generate the Azure Backup MCP weekly telemetry report'
+argument-hint: 'Generate an Azure Backup MCP telemetry or customer adoption report'
 ---
 
 # Azure Backup MCP — Weekly Telemetry & Customer Report Generator
@@ -157,7 +157,7 @@ For the Outlook version, apply these rules:
 
 > **Customer Report Queries:** For customer identification, tool adoption, client distribution,
 > and version analysis, refer to [`kql-customer-queries.md`](https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-customer-queries.md)
-> (queries 14–24). These queries use cross-cluster joins to `mabprod1` (P360) and `icmdataro` (C360)
+> (queries 14–24). These queries use cross-cluster joins to `mabprod1` (P360) and `icmdataro.centralus` (C360)
 > for customer name resolution and external/internal classification.
 >
 > **Key rule:** Always use `P360_CustomerName` (not `CustomerName`) from the P360 table.

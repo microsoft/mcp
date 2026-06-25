@@ -1,0 +1,4 @@
+pr: 2922
+changes:
+  - section: "Breaking Changes"
+    description: "Removed unused auth-method parameter from Kusto and Storage tools."

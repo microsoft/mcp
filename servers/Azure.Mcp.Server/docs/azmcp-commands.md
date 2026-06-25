@@ -5,7 +5,7 @@
 
 ## Global Options
 
-The following options are available for all commands:
+The following options are available for most commands:
 
 | Option | Required | Default | Description |
 |-----------|----------|---------|-------------|
@@ -2298,6 +2298,8 @@ azmcp mysql server param set --subscription <subscription> \
 # Without parameters: lists all PostgreSQL servers in the resource group
 # With --server: lists all databases on that server
 # With --server and --database: lists all tables in that database (optionally scoped to a --schema, defaults to 'public')
+# Database and table results are capped at 10,000 entries. When the results are truncated,
+# the response includes "resultsTruncated": true.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres list --subscription <subscription> \
                     --resource-group <resource-group> \
@@ -2492,7 +2494,7 @@ azmcp eventhubs namespace update --subscription <subscription> \
                                  --namespace <namespace> \
                                  [--location <location>] \
                                  [--sku-name <sku-name>] \
-                                 [--sku-tier <sku-tier>] \
+                                 [--sku-tier <Basic|Standard|Premium>] \
                                  [--sku-capacity <sku-capacity>] \
                                  [--is-auto-inflate-enabled <true/false>] \
                                  [--maximum-throughput-units <units>] \
@@ -4629,6 +4631,9 @@ azmcp bicepschema get --resource-type <resource-type> \
 
 ### Cloud Architect
 
+> [!NOTE]
+> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, `--auth-method`, or any `--retry-*` options.
+
 ```bash
 # Design Azure cloud architectures through guided questions
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4638,7 +4643,7 @@ azmcp cloudarchitect design [--question <question>] \
                             [--answer <answer>] \
                             [--next-question-needed <true/false>] \
                             [--confidence-score <confidence-score>] \
-                            [--architecture-component <architecture-component>]
+                            [--state <state>]
 
 # Example:
 # Start an interactive architecture design session

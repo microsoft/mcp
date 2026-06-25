@@ -97,12 +97,12 @@ public sealed class OneLakeItemListCommand(
 
 public sealed class OneLakeItemListOptions
 {
-    [Option("The ID of the Microsoft Fabric workspace.")]
+    [Option(Description = "The ID of the Microsoft Fabric workspace.")]
     public string? WorkspaceId { get; set; }
 
-    [Option("The name or ID of the Microsoft Fabric workspace.")]
+    [Option(Description = "The name or ID of the Microsoft Fabric workspace.")]
     public string? Workspace { get; set; }
 
-    [Option("Token for retrieving the next page of results.")]
+    [Option(Description = "Token for retrieving the next page of results.")]
     public string? ContinuationToken { get; set; }
 }

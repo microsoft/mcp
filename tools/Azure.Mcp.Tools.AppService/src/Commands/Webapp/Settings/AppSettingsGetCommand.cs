@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
@@ -23,34 +25,22 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
     ReadOnly = true,
     Secret = true,
     LocalRequired = false)]
-public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger, IAppServiceService appServiceService)
-    : BaseAppServiceCommand<BaseAppServiceOptions>(resourceGroupRequired: true, appRequired: true)
+public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger, IAppServiceService appServiceService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<BaseAppServiceOptions, AppSettingsGetCommand.AppSettingsGetResult>(subscriptionResolver)
 {
     private readonly ILogger<AppSettingsGetCommand> _logger = logger;
     private readonly IAppServiceService _appServiceService = appServiceService;
 
-    protected override void RegisterOptions(Command command) => base.RegisterOptions(command);
-
-    protected override BaseAppServiceOptions BindOptions(ParseResult parseResult) => base.BindOptions(parseResult);
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseAppServiceOptions options, CancellationToken cancellationToken)
     {
-        // Validate first, then bind
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
             var appSettings = await _appServiceService.GetAppSettingsAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.AppName!,
+                options.ResourceGroup,
+                options.App,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -59,13 +49,13 @@ public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger,
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get application settings for Web App details for '{AppName}' in subscription {Subscription} and resource group {ResourceGroup}",
-                options.AppName, options.Subscription, options.ResourceGroup);
+            _logger.LogError(ex, "Failed to get application settings for Web App details for '{App}' in subscription {Subscription} and resource group {ResourceGroup}",
+                options.App, options.Subscription, options.ResourceGroup);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    public record AppSettingsGetResult(IDictionary<string, string> AppSettings);
+    public sealed record AppSettingsGetResult(IDictionary<string, string> AppSettings);
 }

@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.Tests.Policy;
 
-public class PolicyUpdateCommandTests : CommandUnitTestsBase<PolicyUpdateCommand, IAzureBackupService>
+public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyUpdateCommand, IAzureBackupService>
 {
 
     [Fact]

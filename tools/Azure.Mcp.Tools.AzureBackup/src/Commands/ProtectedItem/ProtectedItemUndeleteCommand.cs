@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.ProtectedItem;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 
@@ -32,35 +30,14 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class ProtectedItemUndeleteCommand(ILogger<ProtectedItemUndeleteCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectedItemUndeleteOptions>()
+public sealed class ProtectedItemUndeleteCommand(ILogger<ProtectedItemUndeleteCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<ProtectedItemUndeleteOptions, ProtectedItemUndeleteCommand.ProtectedItemUndeleteCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ProtectedItemUndeleteCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ProtectedItemUndeleteOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.DatasourceId.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.Container);
-    }
-
-    protected override ProtectedItemUndeleteOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.DatasourceId = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DatasourceId.Name);
-        options.Container = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Container.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
@@ -105,5 +82,5 @@ public sealed class ProtectedItemUndeleteCommand(ILogger<ProtectedItemUndeleteCo
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record ProtectedItemUndeleteCommandResult(OperationResult Result);
+    public sealed record ProtectedItemUndeleteCommandResult(OperationResult Result);
 }

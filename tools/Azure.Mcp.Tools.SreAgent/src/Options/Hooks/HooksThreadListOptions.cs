@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Options;
+
 namespace Azure.Mcp.Tools.SreAgent.Options.Hooks;
 
-public class HooksThreadListOptions : BaseSreAgentOptions
+public sealed class HooksThreadListOptions : BaseSreAgentOptions
 {
-    public string? ThreadId { get; set; }
+    [Option(Description = SreAgentOptionDefinitions.ThreadIdDescription)]
+    public required string ThreadId { get; set; }
 }

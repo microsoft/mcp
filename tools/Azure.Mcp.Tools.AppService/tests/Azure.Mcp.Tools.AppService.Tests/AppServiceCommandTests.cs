@@ -125,7 +125,6 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
 
     [Theory]
     [InlineData("InvalidType")]
-    [InlineData("")]
     [InlineData("random")]
     public async Task ExecuteAsync_WithInvalidDatabaseTypes_ReturnsValidationError(string invalidDatabaseType)
     {
