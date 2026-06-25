@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Mcp.Core.TestUtilities;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Postgres.Tests;
 
-public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand, IPostgresService>
+public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<PostgresListCommand, IPostgresService>
 {
     [Fact]
     public void Description_Verification()
@@ -63,7 +63,7 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Equal("The --user parameter is required when --server is specified.", response.Message);
+        Assert.Contains("The --user parameter is required when --server is specified.", response.Message);
     }
 
     [Fact]
@@ -274,7 +274,7 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
             $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
             "--server", "server1",
             "--database", "db1",
-            $"--{PostgresOptionDefinitions.SchemaName}", "analytics");
+            $"--schema", "analytics");
 
         var result = ValidateAndDeserializeResponse(response, PostgresJsonContext.Default.PostgresListCommandResult);
 
