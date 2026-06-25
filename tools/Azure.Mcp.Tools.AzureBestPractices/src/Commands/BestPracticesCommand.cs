@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Concurrent;
 using System.Net;
 using System.Reflection;
 using System.Text;
@@ -34,7 +35,7 @@ namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
 public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand<BestPracticesOptions, List<string>>
 {
     private readonly ILogger<BestPracticesCommand> _logger = logger;
-    private static readonly Dictionary<string, string> s_bestPracticesCache = [];
+    private static readonly ConcurrentDictionary<string, string> s_bestPracticesCache = [];
 
     public override void ValidateOptions(BestPracticesOptions options, ValidationResult validationResult)
     {

@@ -169,7 +169,7 @@ public class BestPracticesCommandTests : CommandUnitTestsBase<BestPracticesComma
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Both resource and action parameters are required", response.Message);
+        Assert.Contains("Missing Required options: --resource", response.Message);
     }
 
     [Fact]
@@ -180,6 +180,6 @@ public class BestPracticesCommandTests : CommandUnitTestsBase<BestPracticesComma
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Both resource and action parameters are required", response.Message);
+        Assert.Contains("Missing Required options: --action", response.Message);
     }
 }
