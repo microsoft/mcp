@@ -41,12 +41,27 @@ public sealed class OptionAttribute : Attribute
     public string? Name { get; set; }
 
     /// <summary>
+    /// Additional CLI option names (without the "--" prefix).
+    /// </summary>
+    public string[]? Aliases { get; set; }
+
+    /// <summary>
     /// A description of what the option controls. Used in help text and by AI agents.
     /// </summary>
     public string? Description { get; set; }
 
     /// <summary>
-    /// Whether the option is hidden from help output.
+    /// A default value for the option when a value is not provided. Must match the property type being attributed.
     /// </summary>
-    public bool Hidden { get; set; }
+    public object? DefaultValue { get; set; }
+
+    /// <summary>
+    /// Whether the option is hidden from help output. Default is false.
+    /// </summary>
+    public bool Hidden { get; set; } = false;
+
+    /// <summary>
+    /// Whether the option allows an empty or whitespace-only string as a valid value. Default handling is to reject such values.
+    /// </summary>
+    public bool AllowEmptyOrWhiteSpaceString { get; set; } = false;
 }
