@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.RecoveryPoint;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
 
@@ -33,33 +31,14 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> logger, IAzureBackupService azureBackupService) : BaseProtectedItemCommand<RecoveryPointGetOptions>()
+public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<RecoveryPointGetOptions, RecoveryPointGetCommand.RecoveryPointGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<RecoveryPointGetCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecoveryPointGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.RecoveryPoint.AsOptional());
-    }
-
-    protected override RecoveryPointGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.RecoveryPoint = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.RecoveryPoint.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
         context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, string.IsNullOrEmpty(options.RecoveryPoint) ? "list" : "single");
@@ -69,10 +48,10 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
             if (!string.IsNullOrEmpty(options.RecoveryPoint))
             {
                 var rp = await _azureBackupService.GetRecoveryPointAsync(
-                    options.Vault!,
-                    options.ResourceGroup!,
+                    options.Vault,
+                    options.ResourceGroup,
                     options.Subscription!,
-                    options.ProtectedItem!,
+                    options.ProtectedItem,
                     options.RecoveryPoint,
                     options.VaultType,
                     options.Container,
@@ -87,10 +66,10 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
             else
             {
                 var points = await _azureBackupService.ListRecoveryPointsAsync(
-                    options.Vault!,
-                    options.ResourceGroup!,
+                    options.Vault,
+                    options.ResourceGroup,
                     options.Subscription!,
-                    options.ProtectedItem!,
+                    options.ProtectedItem,
                     options.VaultType,
                     options.Container,
                     options.Tenant,
@@ -116,9 +95,13 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Recovery point not found. Verify the recovery point ID and protected item.",
+        RequestFailedException reqEx when reqEx.ErrorCode == "BMSUserErrorContainerNameIncorrectFormat" =>
+            $"Container name format is incorrect. Use the fully qualified container name from 'azurebackup protecteditem get' (e.g., 'IaasVMContainer;iaasvmcontainerv2;resourceGroup;vmName'). Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Authorization failed. Ensure the caller has the Backup Reader or Backup Operator role on the vault. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record RecoveryPointGetCommandResult(List<RecoveryPointInfo> RecoveryPoints);
+    public sealed record RecoveryPointGetCommandResult(List<RecoveryPointInfo> RecoveryPoints);
 }

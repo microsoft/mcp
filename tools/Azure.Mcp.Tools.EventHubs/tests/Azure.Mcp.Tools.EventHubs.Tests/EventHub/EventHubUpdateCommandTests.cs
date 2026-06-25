@@ -18,6 +18,7 @@ public class EventHubUpdateCommandTests : CommandUnitTestsBase<EventHubUpdateCom
     [InlineData("--subscription test-subscription --eventhub test-hub --namespace test-namespace --resource-group test-rg", true)]
     [InlineData("--subscription test-subscription --eventhub test-hub --namespace test-namespace --resource-group test-rg --partition-count 4", true)]
     [InlineData("--subscription test-subscription --eventhub test-hub --namespace test-namespace --resource-group test-rg --message-retention-in-hours 168", true)]
+    [InlineData("--subscription test-subscription --eventhub test-hub --namespace test-namespace --resource-group test-rg --status Active", true)]
     [InlineData("--subscription test-subscription --eventhub test-hub --namespace test-namespace", false)]
     [InlineData("--subscription test-subscription --eventhub test-hub", false)]
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
@@ -44,6 +45,7 @@ public class EventHubUpdateCommandTests : CommandUnitTestsBase<EventHubUpdateCom
                 Arg.Any<string>(),
                 Arg.Any<int?>(),
                 Arg.Any<long?>(),
+                Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
@@ -78,6 +80,7 @@ public class EventHubUpdateCommandTests : CommandUnitTestsBase<EventHubUpdateCom
             Arg.Any<int?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Namespace 'test-namespace' not found in resource group 'test-rg'"));
@@ -105,6 +108,7 @@ public class EventHubUpdateCommandTests : CommandUnitTestsBase<EventHubUpdateCom
             Arg.Any<string>(),
             Arg.Any<int?>(),
             Arg.Any<long?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -146,6 +150,7 @@ public class EventHubUpdateCommandTests : CommandUnitTestsBase<EventHubUpdateCom
             Arg.Is(8),
             Arg.Is(336L),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(eventHub);
@@ -162,5 +167,52 @@ public class EventHubUpdateCommandTests : CommandUnitTestsBase<EventHubUpdateCom
         // Assert
         Assert.Equal(200, (int)response.Status);
         Assert.NotNull(response.Results);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PassesStatusOptionToService()
+    {
+        // Arrange
+        var eventHub = new Models.EventHub(
+            "test-hub",
+            "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.EventHub/namespaces/test-namespace/eventhubs/test-hub",
+            "test-rg",
+            null,
+            4,
+            null,
+            "Disabled",
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow,
+            ["0", "1", "2", "3"]);
+
+        Service.CreateOrUpdateEventHubAsync(
+            Arg.Is("test-hub"),
+            Arg.Is("test-namespace"),
+            Arg.Is("test-rg"),
+            Arg.Is("test-subscription"),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Is("Disabled"),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(eventHub);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
+            "--eventhub", "test-hub",
+            "--namespace", "test-namespace",
+            "--resource-group", "test-rg",
+            "--status", "Disabled");
+
+        // Assert
+        Assert.Equal(200, (int)response.Status);
+        Assert.NotNull(response.Results);
+        await Service.Received(1).CreateOrUpdateEventHubAsync(
+            "test-hub", "test-namespace", "test-rg", Arg.Any<string>(),
+            Arg.Any<int?>(), Arg.Any<long?>(),
+            "Disabled",
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 }

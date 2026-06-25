@@ -46,4 +46,23 @@ public interface IOneLakeService
     Task<TableNamespaceGetResult> GetTableNamespaceAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, CancellationToken cancellationToken = default);
     Task<TableListResult> ListTablesAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, CancellationToken cancellationToken = default);
     Task<TableGetResult> GetTableAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, string tableName, CancellationToken cancellationToken = default);
+
+    // Data Access Security Operations
+    Task<DataAccessRoleListResponse> ListDataAccessRolesAsync(string workspaceId, string itemId, string? continuationToken = null, CancellationToken cancellationToken = default);
+    Task<DataAccessRole> GetDataAccessRoleAsync(string workspaceId, string itemId, string roleName, CancellationToken cancellationToken = default);
+    Task<DataAccessRole> CreateOrUpdateDataAccessRoleAsync(string workspaceId, string itemId, string roleDefinitionJson, CancellationToken cancellationToken = default);
+    Task DeleteDataAccessRoleAsync(string workspaceId, string itemId, string roleName, CancellationToken cancellationToken = default);
+
+    // Shortcut Operations
+    Task<ShortcutListResponse> ListShortcutsAsync(string workspaceId, string itemId, string? parentPath = null, string? continuationToken = null, CancellationToken cancellationToken = default);
+    Task<OneLakeShortcut> GetShortcutAsync(string workspaceId, string itemId, string shortcutPath, string shortcutName, CancellationToken cancellationToken = default);
+    Task<BulkCreateShortcutResponse> CreateOrUpdateShortcutsAsync(string workspaceId, string itemId, string shortcutsJson, string? shortcutConflictPolicy = null, CancellationToken cancellationToken = default);
+    Task<OneLakeShortcut> CreateShortcutAsync(string workspaceId, string itemId, OneLakeShortcut shortcut, string? shortcutConflictPolicy = null, CancellationToken cancellationToken = default);
+    Task DeleteShortcutAsync(string workspaceId, string itemId, string shortcutPath, string shortcutName, CancellationToken cancellationToken = default);
+    Task ResetShortcutCacheAsync(string workspaceId, CancellationToken cancellationToken = default);
+
+    // Settings Operations
+    Task<OneLakeSettings> GetSettingsAsync(string workspaceId, CancellationToken cancellationToken = default);
+    Task ModifyDiagnosticsAsync(string workspaceId, OneLakeDiagnosticSettings settings, CancellationToken cancellationToken = default);
+    Task ModifyImmutabilityPolicyAsync(string workspaceId, ImmutabilityPolicy policy, CancellationToken cancellationToken = default);
 }

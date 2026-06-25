@@ -86,12 +86,13 @@ public class ResourceVisitor
     {
         (string providerName, _, _) = ResourceParser.ParseResourceType(resourceTypeName);
 
-        if (!GetAllResourceTypesAndVersionsByProvider().TryGetValue(providerName, out ProviderResourceTypes? provider))
+        if (!GetAllResourceTypesAndVersionsByProvider().TryGetValue(providerName, out ProviderResourceTypes? provider)
+            || !provider.ResourceTypes.TryGetValue(resourceTypeName.ToLowerInvariant(), out UniqueResourceType? uniqueResourceType))
         {
-            throw new Exception($"Resource type {resourceTypeName} not found.");
+            throw new InvalidDataException($"Resource type {resourceTypeName} not found.");
         }
 
-        return [.. provider.ResourceTypes[resourceTypeName.ToLowerInvariant()].ApiVersions];
+        return [.. uniqueResourceType.ApiVersions];
     }
 
     public TypesDefinitionResult LoadSingleResource(string resourceTypeName, string apiVersion)

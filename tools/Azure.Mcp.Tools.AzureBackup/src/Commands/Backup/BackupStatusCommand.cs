@@ -3,15 +3,13 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Backup;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Backup;
 
@@ -31,44 +29,23 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Backup;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<BackupStatusOptions>()
+public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<BackupStatusOptions, BackupStatusCommand.BackupStatusCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<BackupStatusCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BackupStatusOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.DatasourceId.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.Location.AsRequired());
-    }
-
-    protected override BackupStatusOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.DatasourceId = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DatasourceId.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Location.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, "status-check");
 
         try
         {
             var result = await _azureBackupService.GetBackupStatusAsync(
-                options.DatasourceId!,
+                options.DatasourceId,
                 options.Subscription!,
-                options.Location!,
+                options.Location,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -97,5 +74,5 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record BackupStatusCommandResult(BackupStatusResult Status);
+    public sealed record BackupStatusCommandResult(BackupStatusResult Status);
 }

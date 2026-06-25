@@ -232,34 +232,10 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             return await ListBlobsIntelligentAsync(normalizedWorkspaceId, normalizedItemId, recursive, cancellationToken);
         }
 
-        // Use the OneLake blob endpoint to list files for specific path
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}";
-
-        // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
-        // or a sub-path within Files
-        var trimmedPath = path.TrimStart('/');
-        if (trimmedPath.StartsWith("Files/", StringComparison.OrdinalIgnoreCase))
-        {
-            // Path already includes Files prefix
-            url += $"/{trimmedPath}";
-        }
-        else if (trimmedPath.Equals("Files", StringComparison.OrdinalIgnoreCase))
-        {
-            // Explicitly requesting Files folder
-            url += "/Files";
-        }
-        else if (IsTopLevelFolder(trimmedPath))
-        {
-            // Top-level folder like Tables, Files, etc.
-            url += $"/{trimmedPath}";
-        }
-        else
-        {
-            // Assume it's a sub-path within Files for backward compatibility
-            url += $"/Files/{trimmedPath}";
-        }
-
-        url += $"?restype=container&comp=list";
+        // Blob API: path is part of the URL path per Blob Storage List Blobs spec
+        var directory = ResolveDirectoryPath(path);
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{directory}";
+        url += "?restype=container&comp=list";
         if (recursive)
         {
             url += "&recursive=true";
@@ -600,8 +576,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         {
             try
             {
-                var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{folder}";
-                url += $"?resource=filesystem&recursive={recursive.ToString().ToLowerInvariant()}";
+                var url = BuildAdlsListPathUrl(normalizedWorkspaceId, normalizedItemId, directory: folder, recursive: recursive);
 
                 var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
                 var content = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -719,34 +694,9 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             return await ListPathIntelligentAsync(normalizedWorkspaceId, normalizedItemId, recursive, cancellationToken);
         }
 
-        // Use ADLS Gen2 filesystem API format instead of blob container format
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}";
-
-        // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
-        // or a sub-path within Files
-        var trimmedPath = path.TrimStart('/');
-        if (trimmedPath.StartsWith("Files/", StringComparison.OrdinalIgnoreCase))
-        {
-            // Path already includes Files prefix
-            url += $"/{trimmedPath}";
-        }
-        else if (trimmedPath.Equals("Files", StringComparison.OrdinalIgnoreCase))
-        {
-            // Explicitly requesting Files folder
-            url += "/Files";
-        }
-        else if (IsTopLevelFolder(trimmedPath))
-        {
-            // Top-level folder like Tables, Files, etc.
-            url += $"/{trimmedPath}";
-        }
-        else
-        {
-            // Assume it's a sub-path within Files for backward compatibility
-            url += $"/Files/{trimmedPath}";
-        }
-
-        url += $"?resource=filesystem&recursive={recursive.ToString().ToLowerInvariant()}";
+        // Build ADLS Gen2 compliant URL with directory as a query parameter
+        var directory = ResolveDirectoryPath(path);
+        var url = BuildAdlsListPathUrl(normalizedWorkspaceId, normalizedItemId, directory: directory, recursive: recursive);
 
         var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -894,7 +844,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
                 try
                 {
                     var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{folder}";
-                    url += $"?restype=container&comp=list";
+                    url += "?restype=container&comp=list";
                     if (recursive)
                     {
                         url += "&recursive=true";
@@ -913,34 +863,10 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             return string.Join("\n\n", allResponses);
         }
 
-        // Use the OneLake blob endpoint to list files for specific path
-        var singleUrl = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}";
-
-        // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
-        // or a sub-path within Files
-        var trimmedPath = path.TrimStart('/');
-        if (trimmedPath.StartsWith("Files/", StringComparison.OrdinalIgnoreCase))
-        {
-            // Path already includes Files prefix
-            singleUrl += $"/{trimmedPath}";
-        }
-        else if (trimmedPath.Equals("Files", StringComparison.OrdinalIgnoreCase))
-        {
-            // Explicitly requesting Files folder
-            singleUrl += "/Files";
-        }
-        else if (IsTopLevelFolder(trimmedPath))
-        {
-            // Top-level folder like Tables, Files, etc.
-            singleUrl += $"/{trimmedPath}";
-        }
-        else
-        {
-            // Assume it's a sub-path within Files for backward compatibility
-            singleUrl += $"/Files/{trimmedPath}";
-        }
-
-        singleUrl += $"?restype=container&comp=list";
+        // Blob API: path is part of the URL path per Blob Storage List Blobs spec
+        var directory = ResolveDirectoryPath(path);
+        var singleUrl = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{directory}";
+        singleUrl += "?restype=container&comp=list";
         if (recursive)
         {
             singleUrl += "&recursive=true";
@@ -966,8 +892,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             {
                 try
                 {
-                    var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{folder}";
-                    url += $"?resource=filesystem&recursive={recursive.ToString().ToLowerInvariant()}";
+                    var url = BuildAdlsListPathUrl(normalizedWorkspaceId, normalizedItemId, directory: folder, recursive: recursive);
 
                     var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
                     var content = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -982,34 +907,9 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             return string.Join("\n\n", allResponses);
         }
 
-        // Use ADLS Gen2 filesystem API format instead of blob container format
-        var singleUrl = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}";
-
-        // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
-        // or a sub-path within Files
-        var trimmedPath = path.TrimStart('/');
-        if (trimmedPath.StartsWith("Files/", StringComparison.OrdinalIgnoreCase))
-        {
-            // Path already includes Files prefix
-            singleUrl += $"/{trimmedPath}";
-        }
-        else if (trimmedPath.Equals("Files", StringComparison.OrdinalIgnoreCase))
-        {
-            // Explicitly requesting Files folder
-            singleUrl += "/Files";
-        }
-        else if (IsTopLevelFolder(trimmedPath))
-        {
-            // Top-level folder like Tables, Files, etc.
-            singleUrl += $"/{trimmedPath}";
-        }
-        else
-        {
-            // Assume it's a sub-path within Files for backward compatibility
-            singleUrl += $"/Files/{trimmedPath}";
-        }
-
-        singleUrl += $"?resource=filesystem&recursive={recursive.ToString().ToLowerInvariant()}";
+        // Build ADLS Gen2 compliant URL with directory as a query parameter
+        var directory = ResolveDirectoryPath(path);
+        var singleUrl = BuildAdlsListPathUrl(normalizedWorkspaceId, normalizedItemId, directory: directory, recursive: recursive);
 
         var singleResponse = await SendDataPlaneRequestAsync(HttpMethod.Get, singleUrl, cancellationToken: cancellationToken);
         return await singleResponse.Content.ReadAsStringAsync(cancellationToken);
@@ -1651,6 +1551,73 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     }
 
     // Private helper methods
+
+    /// <summary>
+    /// Builds an ADLS Gen2 Path List API-compliant URL.
+    /// Per https://learn.microsoft.com/en-us/rest/api/storageservices/datalakestoragegen2/path/list
+    /// the directory is a query parameter, not part of the URL path.
+    /// URL format: GET {dfsBase}/{filesystem}?resource=filesystem&amp;directory={dir}&amp;recursive={recursive}
+    /// In OneLake, filesystem = workspaceId; directory = itemId/path.
+    /// </summary>
+    private static string BuildAdlsListPathUrl(
+        string workspaceId,
+        string itemId,
+        string? directory,
+        bool recursive,
+        int? maxResults = null,
+        string? continuation = null,
+        bool? upn = null)
+    {
+        // filesystem = workspaceId
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}?resource=filesystem";
+
+        // Build the directory path: itemId + optional subdirectory
+        var directoryPath = itemId;
+        if (!string.IsNullOrEmpty(directory))
+        {
+            directoryPath = $"{itemId}/{directory.TrimStart('/')}";
+        }
+
+        url += $"&directory={Uri.EscapeDataString(directoryPath)}";
+        url += $"&recursive={recursive.ToString().ToLowerInvariant()}";
+
+        if (maxResults.HasValue)
+        {
+            url += $"&maxResults={maxResults.Value}";
+        }
+
+        if (!string.IsNullOrEmpty(continuation))
+        {
+            url += $"&continuation={Uri.EscapeDataString(continuation)}";
+        }
+
+        if (upn.HasValue)
+        {
+            url += $"&upn={upn.Value.ToString().ToLowerInvariant()}";
+        }
+
+        return url;
+    }
+
+    /// <summary>
+    /// Resolves a user-provided path to the ADLS directory value relative to the item root.
+    /// Handles top-level folders (Files, Tables) and defaults to Files/ prefix for backward compatibility.
+    /// </summary>
+    private static string ResolveDirectoryPath(string path)
+    {
+        var trimmedPath = path.TrimStart('/');
+
+        if (trimmedPath.StartsWith("Files/", StringComparison.OrdinalIgnoreCase) ||
+            trimmedPath.Equals("Files", StringComparison.OrdinalIgnoreCase) ||
+            IsTopLevelFolder(trimmedPath))
+        {
+            return trimmedPath;
+        }
+
+        // Assume it's a sub-path within Files for backward compatibility
+        return $"Files/{trimmedPath}";
+    }
+
     private static void ValidatePathForTraversal(string path, string paramName)
     {
         // Decode percent-encoding so that %2e%2e or %2E%2E variants are caught
@@ -1694,7 +1661,115 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         }
 
         var response = await _httpClient.SendAsync(request, cancellationToken);
-        response.EnsureSuccessStatusCode();
+
+        // Handle long running operations (202 Accepted)
+        if (response.StatusCode == System.Net.HttpStatusCode.Accepted)
+        {
+            var locationUrl = response.Headers.Location?.ToString();
+            if (!string.IsNullOrEmpty(locationUrl))
+            {
+                return await PollFabricLroAsync(locationUrl, cancellationToken) ?? Stream.Null;
+            }
+            return Stream.Null;
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException(
+                $"Response status code does not indicate success: {(int)response.StatusCode} ({response.ReasonPhrase}). Error details: {errorBody}",
+                null,
+                response.StatusCode);
+        }
+
+        return await response.Content.ReadAsStreamAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Polls a Fabric long running operation URL until it succeeds or fails,
+    /// then fetches and returns the result stream.
+    /// </summary>
+    private async Task<Stream?> PollFabricLroAsync(string operationUrl, CancellationToken cancellationToken)
+    {
+        const int MaxAttempts = 120; // ~10 minutes at 5s default
+        var retryDelay = TimeSpan.FromSeconds(5);
+
+        for (var attempt = 0; attempt < MaxAttempts; attempt++)
+        {
+            await Task.Delay(retryDelay, cancellationToken);
+
+            var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.GetFabricScope() });
+            var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
+
+            using var pollRequest = new HttpRequestMessage(HttpMethod.Get, operationUrl);
+            pollRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+            ApplyUserAgent(pollRequest);
+
+            var pollResponse = await _httpClient.SendAsync(pollRequest, cancellationToken);
+            if (!pollResponse.IsSuccessStatusCode)
+            {
+                var errorBody = await pollResponse.Content.ReadAsStringAsync(cancellationToken);
+                throw new HttpRequestException(
+                    $"LRO polling failed: {(int)pollResponse.StatusCode} ({pollResponse.ReasonPhrase}). {errorBody}",
+                    null,
+                    pollResponse.StatusCode);
+            }
+
+            // Update retry delay from Retry-After header
+            if (pollResponse.Headers.TryGetValues("Retry-After", out var retryAfterValues)
+                && int.TryParse(retryAfterValues.FirstOrDefault(), out var retryAfterSecs))
+            {
+                retryDelay = TimeSpan.FromSeconds(Math.Max(1, retryAfterSecs));
+            }
+
+            var stateStream = await pollResponse.Content.ReadAsStreamAsync(cancellationToken);
+            var state = await JsonSerializer.DeserializeAsync(stateStream, OneLakeJsonContext.Default.OperationState, cancellationToken);
+
+            switch (state?.Status)
+            {
+                case "Succeeded":
+                    // Location header on the completed poll response points to the result URL
+                    var resultUrl = pollResponse.Headers.Location?.ToString();
+                    if (!string.IsNullOrEmpty(resultUrl))
+                    {
+                        return await GetFabricLroResultAsync(resultUrl, cancellationToken);
+                    }
+                    return Stream.Null;
+
+                case "Failed":
+                    var errorMessage = state.Error?.Message ?? "Long running operation failed.";
+                    var errorCode = state.Error?.ErrorCode ?? "Unknown";
+                    throw new HttpRequestException(
+                        $"Long running operation failed ({errorCode}): {errorMessage}",
+                        null,
+                        System.Net.HttpStatusCode.InternalServerError);
+            }
+            // NotStarted / Running / Undefined: keep polling
+        }
+
+        throw new HttpRequestException(
+            "Long running operation timed out after maximum polling attempts.",
+            null,
+            System.Net.HttpStatusCode.RequestTimeout);
+    }
+
+    /// <summary>
+    /// GETs the result URL of a completed Fabric long running operation.
+    /// </summary>
+    private async Task<Stream?> GetFabricLroResultAsync(string resultUrl, CancellationToken cancellationToken)
+    {
+        var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.GetFabricScope() });
+        var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, resultUrl);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+        ApplyUserAgent(request);
+
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return Stream.Null;
+        }
 
         return await response.Content.ReadAsStreamAsync(cancellationToken);
     }
@@ -1837,6 +1912,344 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     public void Dispose()
     {
         // DefaultAzureCredential doesn't need disposal
+    }
+
+    // Data Access Security Operations
+    public async Task<DataAccessRoleListResponse> ListDataAccessRolesAsync(string workspaceId, string itemId, string? continuationToken = null, CancellationToken cancellationToken = default)
+    {
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/dataAccessRoles";
+        if (!string.IsNullOrWhiteSpace(continuationToken))
+        {
+            url += $"?continuationToken={Uri.EscapeDataString(continuationToken)}";
+        }
+
+        var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.DataAccessRoleListResponse, cancellationToken) ?? new DataAccessRoleListResponse();
+    }
+
+    public async Task<DataAccessRole> GetDataAccessRoleAsync(string workspaceId, string itemId, string roleName, CancellationToken cancellationToken = default)
+    {
+        var encodedRoleName = Uri.EscapeDataString(roleName);
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/dataAccessRoles/{encodedRoleName}?preview=true";
+        var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.DataAccessRole, cancellationToken) ?? new DataAccessRole();
+    }
+
+    public async Task<DataAccessRole> CreateOrUpdateDataAccessRoleAsync(string workspaceId, string itemId, string roleDefinitionJson, CancellationToken cancellationToken = default)
+    {
+        DataAccessRole roleDefinition;
+        try
+        {
+            roleDefinition = JsonSerializer.Deserialize(roleDefinitionJson, OneLakeJsonContext.Default.DataAccessRole)
+                ?? throw new ArgumentException("Invalid role definition JSON: deserialized to null.", nameof(roleDefinitionJson));
+        }
+        catch (JsonException ex)
+        {
+            throw new ArgumentException($"Invalid role definition JSON: {ex.Message}", nameof(roleDefinitionJson), ex);
+        }
+
+        if (string.IsNullOrWhiteSpace(roleDefinition.Name))
+        {
+            throw new ArgumentException("Role definition must include a non-empty 'name' property.", nameof(roleDefinitionJson));
+        }
+
+        // Default tenantId on Entra members when omitted — saves callers from having to
+        // look up their own tenant ID for the most common single-tenant scenario.
+        if (roleDefinition.Members?.MicrosoftEntraMembers is { Count: > 0 } entraMembers
+            && entraMembers.Any(m => string.IsNullOrWhiteSpace(m.TenantId)))
+        {
+            var tenantId = await GetTenantIdFromTokenAsync(cancellationToken);
+            if (!string.IsNullOrWhiteSpace(tenantId))
+            {
+                foreach (var member in entraMembers)
+                {
+                    member.TenantId ??= tenantId;
+                }
+            }
+        }
+
+        // Resolve any email/UPN-based principals to Entra object IDs via Graph API.
+        if (roleDefinition.Members?.MicrosoftEntraMembers is { Count: > 0 } membersToResolve)
+        {
+            await ResolvePrincipalsAsync(membersToResolve, cancellationToken);
+        }
+
+        // Use the single-role POST endpoint (preview API) with Overwrite conflict policy.
+        // This creates the role if it doesn't exist, or replaces it if it does — without
+        // touching other roles on the item (unlike the bulk PUT approach).
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/dataAccessRoles?preview=true&dataAccessRoleConflictPolicy=Overwrite";
+        var requestBody = JsonSerializer.Serialize(roleDefinition, OneLakeJsonContext.Default.DataAccessRole);
+        var responseStream = await SendFabricApiRequestAsync(HttpMethod.Post, url, requestBody, cancellationToken: cancellationToken);
+        return await JsonSerializer.DeserializeAsync(responseStream, OneLakeJsonContext.Default.DataAccessRole, cancellationToken) ?? roleDefinition;
+    }
+
+    public async Task DeleteDataAccessRoleAsync(string workspaceId, string itemId, string roleName, CancellationToken cancellationToken = default)
+    {
+        var encodedRoleName = Uri.EscapeDataString(roleName);
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/dataAccessRoles/{encodedRoleName}?preview=true";
+        await SendFabricApiDeleteRequestAsync(url, cancellationToken);
+    }
+
+    // Shortcut Operations
+    public async Task<ShortcutListResponse> ListShortcutsAsync(string workspaceId, string itemId, string? parentPath = null, string? continuationToken = null, CancellationToken cancellationToken = default)
+    {
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts";
+        var queryParams = new List<string>();
+        if (!string.IsNullOrWhiteSpace(parentPath))
+        {
+            queryParams.Add($"parentPath={Uri.EscapeDataString(parentPath)}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(continuationToken))
+        {
+            queryParams.Add($"continuationToken={Uri.EscapeDataString(continuationToken)}");
+        }
+
+        if (queryParams.Count > 0)
+        {
+            url += $"?{string.Join("&", queryParams)}";
+        }
+
+        var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.ShortcutListResponse, cancellationToken) ?? new ShortcutListResponse();
+    }
+
+    public async Task<OneLakeShortcut> GetShortcutAsync(string workspaceId, string itemId, string shortcutPath, string shortcutName, CancellationToken cancellationToken = default)
+    {
+        var encodedPath = Uri.EscapeDataString(shortcutPath);
+        var encodedName = Uri.EscapeDataString(shortcutName);
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts/{encodedPath}/{encodedName}";
+        var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.OneLakeShortcut, cancellationToken) ?? new OneLakeShortcut();
+    }
+
+    public async Task<BulkCreateShortcutResponse> CreateOrUpdateShortcutsAsync(string workspaceId, string itemId, string shortcutsJson, string? shortcutConflictPolicy = null, CancellationToken cancellationToken = default)
+    {
+        BulkCreateShortcutsRequest request;
+        try
+        {
+            request = JsonSerializer.Deserialize(shortcutsJson, OneLakeJsonContext.Default.BulkCreateShortcutsRequest)
+                ?? throw new ArgumentException("Invalid shortcuts JSON: deserialized to null.", nameof(shortcutsJson));
+        }
+        catch (JsonException ex)
+        {
+            throw new ArgumentException($"Invalid shortcuts JSON: {ex.Message}", nameof(shortcutsJson), ex);
+        }
+
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts/bulkCreate";
+        if (!string.IsNullOrWhiteSpace(shortcutConflictPolicy))
+            url += $"?shortcutConflictPolicy={Uri.EscapeDataString(shortcutConflictPolicy)}";
+
+        var body = JsonSerializer.Serialize(request, OneLakeJsonContext.Default.BulkCreateShortcutsRequest);
+        var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, body, cancellationToken: cancellationToken);
+        using var reader = new StreamReader(response);
+        var responseBody = await reader.ReadToEndAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(responseBody))
+            return new BulkCreateShortcutResponse();
+        return JsonSerializer.Deserialize(responseBody, OneLakeJsonContext.Default.BulkCreateShortcutResponse)
+            ?? new BulkCreateShortcutResponse();
+    }
+
+    public async Task<OneLakeShortcut> CreateShortcutAsync(string workspaceId, string itemId, OneLakeShortcut shortcut, string? shortcutConflictPolicy = null, CancellationToken cancellationToken = default)
+    {
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts";
+        if (!string.IsNullOrWhiteSpace(shortcutConflictPolicy))
+            url += $"?shortcutConflictPolicy={Uri.EscapeDataString(shortcutConflictPolicy)}";
+
+        var body = JsonSerializer.Serialize(shortcut, OneLakeJsonContext.Default.OneLakeShortcut);
+        var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, body, cancellationToken: cancellationToken);
+        using var reader = new StreamReader(response);
+        var responseBody = await reader.ReadToEndAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(responseBody))
+            return shortcut;
+        return JsonSerializer.Deserialize(responseBody, OneLakeJsonContext.Default.OneLakeShortcut) ?? shortcut;
+    }
+
+    public async Task DeleteShortcutAsync(string workspaceId, string itemId, string shortcutPath, string shortcutName, CancellationToken cancellationToken = default)
+    {
+        var encodedPath = Uri.EscapeDataString(shortcutPath);
+        var encodedName = Uri.EscapeDataString(shortcutName);
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts/{encodedPath}/{encodedName}";
+        await SendFabricApiDeleteRequestAsync(url, cancellationToken);
+    }
+
+    public async Task ResetShortcutCacheAsync(string workspaceId, CancellationToken cancellationToken = default)
+    {
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/onelake/resetShortcutCache";
+        await SendFabricApiRequestAsync(HttpMethod.Post, url, cancellationToken: cancellationToken);
+    }
+
+    // Settings Operations
+    public async Task<OneLakeSettings> GetSettingsAsync(string workspaceId, CancellationToken cancellationToken = default)
+    {
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/onelake/settings";
+        var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.OneLakeSettings, cancellationToken) ?? new OneLakeSettings();
+    }
+
+    public async Task ModifyDiagnosticsAsync(string workspaceId, OneLakeDiagnosticSettings settings, CancellationToken cancellationToken = default)
+    {
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/onelake/settings/modifyDiagnostics";
+        var jsonContent = JsonSerializer.Serialize(settings, OneLakeJsonContext.Default.OneLakeDiagnosticSettings);
+        await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, cancellationToken: cancellationToken);
+    }
+
+    public async Task ModifyImmutabilityPolicyAsync(string workspaceId, ImmutabilityPolicy policy, CancellationToken cancellationToken = default)
+    {
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy";
+        var jsonContent = JsonSerializer.Serialize(policy, OneLakeJsonContext.Default.ImmutabilityPolicy);
+        await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, cancellationToken: cancellationToken);
+    }
+
+    private async Task SendFabricApiDeleteRequestAsync(string url, CancellationToken cancellationToken)
+    {
+        var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.GetFabricScope() });
+        var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
+
+        using var request = new HttpRequestMessage(HttpMethod.Delete, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+        ApplyUserAgent(request);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
+    private async Task<string?> GetTenantIdFromTokenAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.GetFabricScope() });
+            var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
+
+            // JWT is three base64url segments separated by dots; the payload is segment[1].
+            var parts = token.Token.Split('.');
+            if (parts.Length < 2)
+            {
+                return null;
+            }
+
+            var payload = parts[1];
+            // Pad base64url to standard base64
+            switch (payload.Length % 4)
+            {
+                case 2:
+                    payload += "==";
+                    break;
+                case 3:
+                    payload += "=";
+                    break;
+            }
+
+            var bytes = Convert.FromBase64String(payload.Replace('-', '+').Replace('_', '/'));
+            using var doc = JsonDocument.Parse(bytes);
+            if (doc.RootElement.TryGetProperty("tid", out var tidElement))
+            {
+                return tidElement.GetString();
+            }
+        }
+        catch
+        {
+            // Best-effort: if token parsing fails, caller should provide tenantId explicitly.
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Resolves non-GUID objectId values (email/UPN) to Entra object IDs via Microsoft Graph.
+    /// Resolution order: /users/{x} → /groups?$filter=mail eq '{x}'.
+    /// </summary>
+    private async Task ResolvePrincipalsAsync(List<MicrosoftEntraMember> members, CancellationToken cancellationToken)
+    {
+        var membersToResolve = members.Where(m => !string.IsNullOrWhiteSpace(m.ObjectId) && !Guid.TryParse(m.ObjectId, out _)).ToList();
+        if (membersToResolve.Count == 0)
+        {
+            return;
+        }
+
+        const string graphScope = "https://graph.microsoft.com/.default";
+        var tokenContext = new TokenRequestContext(new[] { graphScope });
+        var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
+
+        var errors = new List<string>();
+
+        foreach (var member in membersToResolve)
+        {
+            var principal = member.ObjectId!.Trim();
+            var resolved = await TryResolveUserAsync(principal, token.Token, cancellationToken)
+                        ?? await TryResolveGroupByMailAsync(principal, token.Token, cancellationToken);
+
+            if (resolved == null)
+            {
+                errors.Add($"No Entra principal matched '{principal}'. Ensure the email/UPN is correct and you have User.Read.All and GroupMember.Read.All permissions.");
+                continue;
+            }
+
+            member.ObjectId = resolved.Value.ObjectId;
+            member.ObjectType ??= resolved.Value.ObjectType;
+        }
+
+        if (errors.Count > 0)
+        {
+            throw new ArgumentException("Failed to resolve one or more principals:\n" + string.Join("\n", errors));
+        }
+    }
+
+    private async Task<(string ObjectId, string ObjectType)?> TryResolveUserAsync(string principalValue, string accessToken, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var url = $"https://graph.microsoft.com/v1.0/users/{Uri.EscapeDataString(principalValue)}?$select=id";
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+            var id = doc.RootElement.GetProperty("id").GetString();
+            return id != null ? (id, "User") : null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    private async Task<(string ObjectId, string ObjectType)?> TryResolveGroupByMailAsync(string mail, string accessToken, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var filter = Uri.EscapeDataString($"mail eq '{mail}'");
+            var url = $"https://graph.microsoft.com/v1.0/groups?$filter={filter}&$select=id,displayName&$top=1";
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+            var values = doc.RootElement.GetProperty("value");
+            if (values.GetArrayLength() == 0)
+            {
+                return null;
+            }
+
+            var id = values[0].GetProperty("id").GetString();
+            return id != null ? (id, "Group") : null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
     }
 
     private static string ExtractWarehouseQueryValue(string warehousePrefix)

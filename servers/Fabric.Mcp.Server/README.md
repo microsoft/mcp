@@ -30,6 +30,9 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
   - [Available Tools](#available-tools)
     - [API Documentation & Best Practices](#api-documentation--best-practices)
     - [OneLake Data Operations](#onelake-data-operations)
+    - [OneLake Security — Data Access Roles](#onelake-security--data-access-roles)
+    - [OneLake Shortcuts](#onelake-shortcuts)
+    - [OneLake Settings](#onelake-settings)
     - [Core Fabric Operations](#core-fabric-operations)
     - [Data Factory Operations](#data-factory-operations)
 - [Support and Reference](#support-and-reference)
@@ -251,6 +254,40 @@ The Fabric MCP Server exposes tools organized into three categories:
 | `onelake_get_table_namespace` | Retrieves metadata for a specific namespace. |
 | `onelake_list_tables` | Lists tables published within a namespace. |
 | `onelake_get_table` | Retrieves the definition for a specific table. |
+
+### OneLake Security — Data Access Roles
+
+| Tool Name | Description |
+|-----------|-------------|
+| `onelake_list_data_access_roles` | Lists all data access roles defined on a single item. |
+| `onelake_get_data_access_role` | Gets the full definition of a single data access role (members, permissions, decision rules). |
+| `onelake_create_or_update_data_access_role` | Upserts a single data access role on a single item. |
+| `onelake_delete_data_access_role` | Deletes a single data access role from an item. |
+
+### OneLake Shortcuts
+
+| Tool Name | Description |
+|-----------|-------------|
+| `onelake_list_shortcuts` | Lists shortcuts defined within an item. Hides DW-managed shortcuts by default (`--include-managed` to show). |
+| `onelake_get_shortcut` | Gets the properties of a single shortcut. |
+| `onelake_create_shortcut_onelake` | Creates a shortcut pointing to another OneLake location. |
+| `onelake_create_shortcut_adls_gen2` | Creates a shortcut pointing to Azure Data Lake Storage Gen2. |
+| `onelake_create_shortcut_amazon_s3` | Creates a shortcut pointing to Amazon S3. |
+| `onelake_create_shortcut_azure_blob` | Creates a shortcut pointing to Azure Blob Storage. |
+| `onelake_create_shortcut_gcs` | Creates a shortcut pointing to Google Cloud Storage. |
+| `onelake_create_shortcut_s3_compatible` | Creates a shortcut pointing to S3-compatible storage. |
+| `onelake_create_shortcut_dataverse` | Creates a shortcut pointing to a Dataverse environment. |
+| `onelake_create_shortcut_onedrive_sharepoint` | Creates a shortcut pointing to OneDrive/SharePoint Online. |
+| `onelake_delete_shortcut` | Deletes a single shortcut from an item (preserves destination data). |
+| `onelake_reset_shortcut_cache` | Drops cached shortcut reads, forcing re-resolution from destination. |
+
+### OneLake Settings
+
+| Tool Name | Description |
+|-----------|-------------|
+| `onelake_get_settings` | Gets OneLake settings for a workspace (diagnostics + immutability policy). |
+| `onelake_modify_diagnostics` | Modifies diagnostic logging configuration (status, destination lakehouse) at workspace scope. |
+| `onelake_modify_immutability_policy` | Modifies the workspace-level OneLake immutability policy (scope, retention days). |
 
 ### Core Fabric Operations
 

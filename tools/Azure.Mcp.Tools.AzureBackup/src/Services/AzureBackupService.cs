@@ -7,7 +7,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.ResourceManager;
 using Azure.ResourceManager.RecoveryServicesBackup;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Azure.ResourceManager.Resources;
@@ -60,6 +59,18 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             $"Both RSV and DPP {operationDescription} failed. " +
             $"RSV error: {rsvInner.GetType().Name}: {rsvInner.Message} " +
             $"DPP error: {dppInner.GetType().Name}: {dppInner.Message}";
+
+        if (rsvInner is RequestFailedException rsvRfe && dppInner is RequestFailedException dppRfe)
+        {
+            // NEW-5 fix: when both inners are RequestFailedException, return a
+            // RequestFailedException so the command-layer error mapper classifies the
+            // failure as an Azure service error (with the original HTTP status code)
+            // rather than as an MCP-side bug. Pick a single source for the
+            // (Status, ErrorCode) pair so they are guaranteed to come from the same
+            // exception - prefer the side that reports a non-zero HTTP status.
+            var primary = rsvRfe.Status != 0 ? rsvRfe : dppRfe;
+            return new RequestFailedException(primary.Status, combinedMessage, primary.ErrorCode, primary);
+        }
 
         return new InvalidOperationException(combinedMessage, rsvInner);
     }
@@ -353,7 +364,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
         if (!VaultTypeResolver.IsRsv(resolved))
         {
-            throw new InvalidOperationException("Update is only supported for RSV (Recovery Services vault) policies. DPP policies do not support update.");
+            throw new ArgumentException("Update is only supported for RSV (Recovery Services vault) policies. DPP policies do not support update.");
         }
 
         return await rsvOps.UpdatePolicyAsync(vaultName, resourceGroup, subscription, policyName, scheduleTime, dailyRetentionDays, tenant, retryPolicy, cancellationToken);

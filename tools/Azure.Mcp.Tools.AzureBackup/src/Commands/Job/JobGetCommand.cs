@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Job;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Job;
 
@@ -33,33 +31,14 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Job;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<JobGetOptions>()
+public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<JobGetOptions, JobGetCommand.JobGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<JobGetCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, JobGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.Job.AsOptional());
-    }
-
-    protected override JobGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Job = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Job.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
         context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, string.IsNullOrEmpty(options.Job) ? "list" : "single");
@@ -69,8 +48,8 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
             if (!string.IsNullOrEmpty(options.Job))
             {
                 var job = await _azureBackupService.GetJobAsync(
-                    options.Vault!,
-                    options.ResourceGroup!,
+                    options.Vault,
+                    options.ResourceGroup,
                     options.Subscription!,
                     options.Job,
                     options.VaultType,
@@ -85,8 +64,8 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
             else
             {
                 var jobs = await _azureBackupService.ListJobsAsync(
-                    options.Vault!,
-                    options.ResourceGroup!,
+                    options.Vault,
+                    options.ResourceGroup,
                     options.Subscription!,
                     options.VaultType,
                     options.Tenant,
@@ -115,5 +94,5 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record JobGetCommandResult(List<BackupJobInfo> Jobs);
+    public sealed record JobGetCommandResult(List<BackupJobInfo> Jobs);
 }

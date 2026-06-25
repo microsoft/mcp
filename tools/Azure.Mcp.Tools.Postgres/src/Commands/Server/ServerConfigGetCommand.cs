@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Postgres.Options.Server;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
@@ -20,23 +22,17 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Server;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ServerConfigGetCommand(IPostgresService postgresService, ILogger<ServerConfigGetCommand> logger) : BaseServerCommand<ServerConfigGetOptions>(logger)
+public sealed class ServerConfigGetCommand(IPostgresService postgresService, ILogger<ServerConfigGetCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<BaseServerOptions, ServerConfigGetCommand.ServerConfigGetCommandResult>(subscriptionResolver)
 {
     private readonly IPostgresService _postgresService = postgresService;
+    private readonly ILogger<ServerConfigGetCommand> _logger = logger;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseServerOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-
-            var config = await _postgresService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, cancellationToken);
+            var config = await _postgresService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Tenant, options.RetryPolicy, cancellationToken);
             context.Response.Results = config?.Length > 0 ?
                 ResponseResult.Create(new(config), PostgresJsonContext.Default.ServerConfigGetCommandResult) :
                 null;
@@ -48,5 +44,5 @@ public sealed class ServerConfigGetCommand(IPostgresService postgresService, ILo
         }
         return context.Response;
     }
-    internal record ServerConfigGetCommandResult(string Configuration);
+    public sealed record ServerConfigGetCommandResult(string Configuration);
 }

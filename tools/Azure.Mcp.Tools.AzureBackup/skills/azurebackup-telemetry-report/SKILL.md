@@ -1,18 +1,19 @@
 ---
 name: azurebackup-telemetry-report
-description: 'Generate weekly telemetry reports for Azure Backup MCP tools. Runs KQL queries against the Kusto telemetry cluster, analyzes error patterns with 3-way classification (Customer/Azure Service/MCP Tool Bug), compares week-over-week metrics, correlates with merged PRs and releases, and produces an Outlook-compatible HTML report. USE WHEN: weekly telemetry report, Azure Backup MCP telemetry, error analysis, telemetry bugs, weekly report, MCP tool success rate, backup telemetry, error classification.'
-argument-hint: 'Generate the Azure Backup MCP weekly telemetry report'
+description: 'Generate weekly telemetry reports and customer adoption reports for Azure Backup MCP tools. Runs KQL queries against the Kusto telemetry cluster, analyzes error patterns with 3-way classification (Customer/Azure Service/MCP Tool Bug), identifies customers via P360/C360 cross-cluster joins, compares week-over-week metrics, correlates with merged PRs and releases, and produces an Outlook-compatible HTML report. USE WHEN: weekly telemetry report, Azure Backup MCP telemetry, error analysis, telemetry bugs, weekly report, MCP tool success rate, backup telemetry, error classification, customer usage report, who is using Azure Backup MCP, backup adoption, customer report.'
+argument-hint: 'Generate an Azure Backup MCP telemetry or customer adoption report'
 ---
 
-# Azure Backup MCP — Weekly Telemetry Report Generator
+# Azure Backup MCP — Weekly Telemetry & Customer Report Generator
 
 ## Purpose
 
-Generate a comprehensive weekly telemetry report for the Azure Backup MCP toolset by:
+Generate comprehensive telemetry reports for the Azure Backup MCP toolset by:
 1. Querying live production telemetry from Kusto
 2. Classifying errors into Customer / Azure Service / MCP Tool Bug
-3. Correlating with merged PRs and releases
-4. Producing an Outlook-compatible HTML report
+3. Identifying customers via P360/C360 cross-cluster joins (using `P360_CustomerName`)
+4. Correlating with merged PRs and releases
+5. Producing an Outlook-compatible HTML report
 
 ## When to Use
 
@@ -20,6 +21,8 @@ Generate a comprehensive weekly telemetry report for the Azure Backup MCP toolse
 - After a release to assess error rate impact
 - When triaging production bugs from telemetry data
 - When preparing stakeholder updates on Azure Backup MCP health
+- **Customer adoption reports** for any time range (e.g., last 15 days, 30 days)
+- When asked "who is using Azure Backup MCP?" or "generate customer report"
 
 ## Prerequisites
 
@@ -152,6 +155,14 @@ For the Outlook version, apply these rules:
 
 ## Error Classification Decision Tree
 
+> **Customer Report Queries:** For customer identification, tool adoption, client distribution,
+> and version analysis, refer to [`kql-customer-queries.md`](https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-customer-queries.md)
+> (queries 14–24). These queries use cross-cluster joins to `mabprod1` (P360) and `icmdataro.centralus` (C360)
+> for customer name resolution and external/internal classification.
+>
+> **Key rule:** Always use `P360_CustomerName` (not `CustomerName`) from the P360 table.
+> The `CustomerName` field contains generic tenant names (e.g., "Denis" for Prometeia SpA).
+
 > **Important:** MCP bug exception types must be checked **before** StatusCode.
 > The `HandleException` base class maps `ArgumentNullException` (inherits `ArgumentException`)
 > to HTTP 400, which would incorrectly classify MCP bugs as "Customer" errors if StatusCode
@@ -164,7 +175,13 @@ Is success == true?
       Is ExceptionType FormatException / ArgumentNullException / ArgumentException / InvalidOperationException?
         └─ YES → "MCP Tool Bug"
         └─ NO →
-            Is StatusCode 400/403/404?
+            Is ExceptionType ValidationError?
+              └─ YES → "Customer (4xx)" (user omitted required options)
+            Is ExceptionType System.UnauthorizedAccessException?
+              └─ YES → "Customer (4xx)" (broken credentials / expired token)
+            Is ExceptionType Azure.Identity.CredentialUnavailableException?
+              └─ YES → "Customer (4xx)" (auth not configured)
+            Is StatusCode 400/401/403/404?
               └─ YES → "Customer (4xx)"
               └─ NO →
                   Is ExceptionType Azure.RequestFailedException with 5xx?

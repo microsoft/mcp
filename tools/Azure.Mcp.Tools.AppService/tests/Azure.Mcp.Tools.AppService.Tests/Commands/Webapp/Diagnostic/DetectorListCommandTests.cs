@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -15,7 +15,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.Tests.Commands.Webapp.Diagnostic;
 
 [Trait("Command", "DetectorList")]
-public class DetectorListCommandTests : CommandUnitTestsBase<DetectorListCommand, IAppServiceService>
+public class DetectorListCommandTests : SubscriptionCommandUnitTestsBase<DetectorListCommand, IAppServiceService>
 {
     [Fact]
     public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments()
