@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ManagedCleanroom.Options.CollaborationArm;
@@ -20,11 +21,6 @@ namespace Azure.Mcp.Tools.ManagedCleanroom.Commands.CollaborationArm;
         Creates an Azure Cleanroom collaboration ARM resource in the specified resource group and location.
         Returns immediately once the request is accepted by ARM. Provisioning runs in the background and typically takes ~25 minutes.
         You can check the status by asking to get the collaboration by name once the request is accepted.
-        Required options:
-        - --name: unique collaboration name within the resource group
-        - --location: Azure region for the ARM resource (e.g., 'eastus')
-        - --resource-group: resource group to create the collaboration in
-        - --subscription: Azure subscription
         """,
     Destructive = false,
     Idempotent = true,
@@ -36,7 +32,7 @@ public sealed class CollaborationCreateCommand(
     ILogger<CollaborationCreateCommand> logger,
     IManagedCleanroomServiceControlPlane service,
     ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<CollaborationCreateOptions, CollaborationCreateCommand.CollaborationCreateCommandResult>(subscriptionResolver)
+    : SubscriptionCommand<CollaborationCreateOptions, JsonElement>(subscriptionResolver)
 {
     private readonly ILogger<CollaborationCreateCommand> _logger = logger;
     private readonly IManagedCleanroomServiceControlPlane _service = service;
@@ -80,22 +76,9 @@ public sealed class CollaborationCreateCommand(
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed creating the collaboration. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Resource group not found. Verify the resource group exists and you have access.",
+            "Requested resource was not found. Verify the resource group, subscription, and access.",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
-            HttpStatusCode.Conflict,
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            HttpStatusCode.Forbidden,
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            HttpStatusCode.NotFound,
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
-    public record CollaborationCreateCommandResult;
 }
