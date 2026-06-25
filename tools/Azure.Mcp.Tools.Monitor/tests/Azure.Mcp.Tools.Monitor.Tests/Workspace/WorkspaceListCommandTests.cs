@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.Workspace;
 
-public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceListCommand, IMonitorService>
+public sealed class WorkspaceListCommandTests : SubscriptionCommandUnitTestsBase<WorkspaceListCommand, IMonitorService>
 {
     private const string _knownSubscription = "knownSubscription";
 

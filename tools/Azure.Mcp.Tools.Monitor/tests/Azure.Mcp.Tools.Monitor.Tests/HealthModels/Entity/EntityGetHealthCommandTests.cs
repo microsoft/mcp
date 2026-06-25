@@ -3,18 +3,18 @@
 
 using System.Net;
 using System.Text.Json.Nodes;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.HealthModels.Entity;
 
-public class EntityGetHealthCommandTests : CommandUnitTestsBase<EntityGetHealthCommand, IMonitorHealthModelService>
+public class EntityGetHealthCommandTests : SubscriptionCommandUnitTestsBase<EntityGetHealthCommand, IMonitorHealthModelService>
 {
     // Sample test data
     private const string TestEntity = "entity123";
