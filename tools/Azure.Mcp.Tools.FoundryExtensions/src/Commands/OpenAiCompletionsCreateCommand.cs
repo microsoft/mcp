@@ -37,8 +37,7 @@ public sealed class OpenAiCompletionsCreateCommand(IFoundryExtensionsService fou
     {
         try
         {
-            var foundryService = _foundryExtensionsService;
-            var result = await foundryService.CreateCompletionAsync(
+            var result = await _foundryExtensionsService.CreateCompletionAsync(
                 options.ResourceName,
                 options.Deployment,
                 options.PromptText,
