@@ -2796,7 +2796,7 @@ azmcp keyvault secret get --subscription <subscription> \
 ### Azure Kubernetes Service (AKS) Operations
 
 > [!NOTE]
-> The `aks cluster get` and `aks nodepool get` commands do not support `--auth-method`.
+> The `aks cluster get` and `aks nodepool get` commands do not support `--auth-method` (the `--retry-*` options are still supported).
 
 ```bash
 # Gets Azure Kubernetes Service (AKS) cluster details
