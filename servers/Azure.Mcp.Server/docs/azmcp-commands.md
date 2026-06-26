@@ -2080,6 +2080,9 @@ azmcp containerapps list --subscription <subscription> \
 
 ### Azure Container Registry (ACR) Operations
 
+> [!NOTE]
+> The `acr registry list` and `acr registry repository list` commands do not support `--auth-method`.
+
 ```bash
 # List Azure Container Registries in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
