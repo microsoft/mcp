@@ -69,10 +69,10 @@
 ##################
 
 # PRLabel: %tools-ACR
-/tools/Azure.Mcp.Tools.Acr/            @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Acr/            @conniey @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ACR
-# ServiceOwners:
+# ServiceOwners:                       @conniey
 
 # PRLabel: %tools-Advisor
 /tools/Azure.Mcp.Tools.Advisor/        @ankiga-MSFT @microsoft/azure-mcp
@@ -132,10 +132,10 @@
 # ServiceOwners:                       @JasonYeMSFT @microsoft/azure-mcp
 
 # PRLabel: %tools-Azd
-/tools/Azure.Mcp.Tools.Extension/      @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Extension/      @richardpark-msft @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Azd
-# ServiceOwners:
+# ServiceOwners:                       @richardpark-msft
 
 # PRLabel: %tools-AzureMigrate
 /tools/Azure.Mcp.Tools.AzureMigrate/            @akshayrohilla @microsoft/azure-mcp
