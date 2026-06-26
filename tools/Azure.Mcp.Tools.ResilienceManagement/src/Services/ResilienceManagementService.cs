@@ -3,15 +3,19 @@
 
 using System.Text.Json;
 using Azure;
+using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+// using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.ResilienceManagement;
 using Azure.ResourceManager.ResilienceManagement.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Services;
 
@@ -23,10 +27,15 @@ public sealed class ResilienceManagementService(
 {
 
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
-
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
+    private readonly ILogger<ResilienceManagementService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     public async Task<IEnumerable<ResourceSummary>> ListGoalTemplatesAsync(string serviceGroup, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+            ? subscription
+            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
 
         var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
         GoalTemplateCollection goalTemplates = armClient.GetGoalTemplates(serviceGroupId);

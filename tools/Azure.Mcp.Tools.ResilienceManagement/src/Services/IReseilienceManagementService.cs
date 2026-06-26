@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Microsoft.Mcp.Core.Options;
 
