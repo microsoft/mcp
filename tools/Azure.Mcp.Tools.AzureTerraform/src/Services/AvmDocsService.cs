@@ -114,11 +114,13 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
 
         var resourceTask = FetchModulesAsync(client, ResourceModulesUrl, ModuleTypeResource, cancellationToken);
         var patternTask = FetchModulesAsync(client, PatternModulesUrl, ModuleTypePattern, cancellationToken);
-        await Task.WhenAll(resourceTask, patternTask).ConfigureAwait(false);
 
-        var modules = new List<AvmModule>(resourceTask.Result.Count + patternTask.Result.Count);
-        modules.AddRange(resourceTask.Result);
-        modules.AddRange(patternTask.Result);
+        var resourceModules = await resourceTask.ConfigureAwait(false);
+        var patternModules = await patternTask.ConfigureAwait(false);
+
+        var modules = new List<AvmModule>(resourceModules.Count + patternModules.Count);
+        modules.AddRange(resourceModules);
+        modules.AddRange(patternModules);
 
         lock (CacheLock)
         {
@@ -132,7 +134,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
     private static async Task<List<AvmModule>> FetchModulesAsync(
         HttpClient client, string url, string moduleType, CancellationToken cancellationToken)
     {
-        var response = await client.GetAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
+        using var response = await client.GetAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         var csvContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
