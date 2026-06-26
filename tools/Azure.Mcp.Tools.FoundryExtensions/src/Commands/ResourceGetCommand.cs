@@ -17,12 +17,12 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
     Name = "get",
     Title = "Get Microsoft Foundry Resource Details",
     Description = """
-        Gets detailed information about Microsoft Foundry (Cognitive Services) resources, including endpoint URL,
-        location, SKU, and provisioning state. If a specific resource name is provided, returns details for that
-        resource only. If no resource name is provided, lists all Microsoft Foundry resources in the subscription
-        or resource group. Use this tool when users need endpoint information, want to discover available AI
-        resources, or need to check the configuration of a Foundry account. To list OpenAI model deployments
-        within a resource, use the openai models-list command instead.
+        Lists or gets Microsoft Foundry resources (accounts/services) and returns resource-level details such as
+        endpoint URL, location, SKU, kind, and provisioning state. Use this when users ask to list all Microsoft
+        Foundry resources in a subscription, show resources in a resource group, or get details for a specific
+        resource by name. If resource-name is provided with resource-group, returns that single resource; otherwise
+        returns the resource inventory in scope. This command is for Foundry resource metadata, not model
+        deployment inventory. For Azure OpenAI model deployments inside a Foundry resource, use openai models-list.
         """,
     Destructive = false,
     Idempotent = true,
