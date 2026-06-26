@@ -1,0 +1,47 @@
+name: SpellCheck
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      # default
+      - opened
+      - synchronize
+      - reopened
+      # re-run if base branch is changed, since previous merge commit may
+      # generate incorrect diff
+      - edited
+
+permissions:
+  contents: read
+
+jobs:
+  spellcheck:
+    name: SpellCheck
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Run spelling check
+        run: |
+          ./eng/common/scripts/check-spelling-in-changed-files.ps1 `
+              -CSpellConfigPath './cspell.yaml' `
+              -SourceCommittish HEAD `
+              -TargetCommittish HEAD^ `
+              -SpellCheckRoot (Resolve-Path .) `
+              -ExitWithError
+          if ($LASTEXITCODE) {
+            Write-Host "Spelling errors found in changed files. See https://aka.ms/ci-fix#spell-check"
+            exit $LASTEXITCODE
+          }
+        shell: pwsh
