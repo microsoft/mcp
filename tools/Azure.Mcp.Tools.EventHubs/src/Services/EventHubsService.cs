@@ -26,7 +26,8 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
+        // Resource group is optional for subscription-wide listing.
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
         var namespaces = new List<Namespace>();

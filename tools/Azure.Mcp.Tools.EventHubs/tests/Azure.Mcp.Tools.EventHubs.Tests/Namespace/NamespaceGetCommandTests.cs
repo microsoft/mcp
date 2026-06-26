@@ -15,6 +15,31 @@ namespace Azure.Mcp.Tools.EventHubs.Tests.Namespace;
 
 public class NamespaceGetCommandTests : CommandUnitTestsBase<NamespaceGetCommand, IEventHubsService>
 {
+    [Fact]
+    public async Task ExecuteAsync_ListWithoutResourceGroup_CallsServiceWithNullResourceGroup()
+    {
+        // Arrange
+        Service.GetNamespacesAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "test-subscription");
+
+        // Assert
+        Assert.Equal(200, (int)response.Status);
+        await Service.Received(1).GetNamespacesAsync(
+            Arg.Is<string?>(rg => rg == null),
+            Arg.Is("test-subscription"),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
     [Theory]
     [InlineData("--subscription test-subscription", true)]
     [InlineData("--subscription test-subscription --resource-group test-rg", true)]
