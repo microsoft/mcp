@@ -553,14 +553,17 @@ azmcp appconfig kv set --subscription <subscription> \
 
 ### Azure App Lens Operations
 
+> [!NOTE]
+> The `applens resource diagnose` command does not support `--auth-method` or any `--retry-*` options.
+
 ```bash
 # Diagnose resource using Azure App Lens
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp applens resource diagnose --subscription <subscription> \
-                                --resource-group <resource-group> \
-                                --question <question> \
-                                --resource-type <resource-type> \
-                                --resource <resource>
+azmcp applens resource diagnose --question <question> \
+                                --resource <resource> \
+                                [--subscription <subscription>] \
+                                [--resource-group <resource-group>] \
+                                [--resource-type <resource-type>]
 ```
 
 ### Azure Application Insights Operations
@@ -2791,6 +2794,9 @@ azmcp keyvault secret get --subscription <subscription> \
 ```
 
 ### Azure Kubernetes Service (AKS) Operations
+
+> [!NOTE]
+> The `aks cluster get` and `aks nodepool get` commands do not support `--auth-method`.
 
 ```bash
 # Gets Azure Kubernetes Service (AKS) cluster details
