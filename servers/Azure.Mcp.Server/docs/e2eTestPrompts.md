@@ -854,6 +854,39 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | redis_list | Show me my Redis caches |
 | redis_list | Get Redis clusters |
 
+## Azure Resilience Management
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| resilience_drill_get | List all resilience drills in service group <service_group> |
+| resilience_drill_get | Show me the resilience drills in service group <service_group> |
+| resilience_drill_get | Get the details of resilience drill <drill_name> in service group <service_group> |
+| resilience_drill_resource_get | List all resources (targets) of resilience drill <drill_name> in service group <service_group> |
+| resilience_drill_resource_get | Get the resilience drill resource <resource_name> for drill <drill_name> in service group <service_group> |
+| resilience_drill_run_get | List all runs of resilience drill <drill_name> in service group <service_group> |
+| resilience_drill_run_get | Get the details of drill run <drill_run_name> for drill <drill_name> in service group <service_group> |
+| resilience_drill_run_resource_get | List all resources (targets) of drill run <drill_run_name> for drill <drill_name> in service group <service_group> |
+| resilience_drill_run_resource_get | Get the drill run resource <resource_name> for drill run <drill_run_name> of drill <drill_name> in service group <service_group> |
+| resilience_goal_assignment_get | List all resilience goal assignments in service group <service_group> |
+| resilience_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> |
+| resilience_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> |
+| resilience_goal_resource_get | Get the goal resource <resource_name> for goal assignment <goal_assignment_name> in service group <service_group> |
+| resilience_goal_template_get | List all resilience goal templates in service group <service_group> |
+| resilience_goal_template_get | Get the details of goal template <goal_template_name> in service group <service_group> |
+| resilience_recovery_job_get | List all recovery jobs of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_job_get | Get the details of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_job_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_job_resource_get | Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_plan_get | List all resilience recovery plans in service group <service_group> |
+| resilience_recovery_plan_get | Get the details of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_plan_resource_get | List all resources (members) of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_plan_resource_get | Get the recovery resource <resource_name> for recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_usageplan_enrollment_get | List all enrollments of usage plan <usage_plan_name> in resource group <resource_group_name> |
+| resilience_usageplan_enrollment_get | Get the details of usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> in resource group <resource_group_name> |
+| resilience_usageplan_get | List all resilience usage plans in my subscription |
+| resilience_usageplan_get | List all resilience usage plans in resource group <resource_group_name> |
+| resilience_usageplan_get | Get the details of usage plan <usage_plan_name> in resource group <resource_group_name> |
+
 ## Azure Resource Group
 
 | Tool Name | Test Prompt |
