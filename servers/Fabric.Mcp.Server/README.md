@@ -293,6 +293,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 | Tool Name | Description |
 |-----------|-------------|
+| `core_search_catalog` | Searches the OneLake catalog for items across workspaces by name, description, or workspace name. Optionally filter by item type. |
 | `core_create-item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
 
 ### Data Factory Operations
