@@ -15,7 +15,7 @@ public class CatalogSearchCommandTests : CommandUnitTestsBase<CatalogSearchComma
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("search_catalog", Command.Name);
+        Assert.Equal("search-catalog", Command.Name);
         Assert.Equal("Search Catalog", Command.Title);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
@@ -27,7 +27,7 @@ public class CatalogSearchCommandTests : CommandUnitTestsBase<CatalogSearchComma
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("search_catalog", CommandDefinition.Name);
+        Assert.Equal("search-catalog", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
     }
 

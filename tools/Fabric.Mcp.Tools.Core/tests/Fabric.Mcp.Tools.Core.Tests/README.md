@@ -5,7 +5,7 @@ Unit tests for the Fabric Core toolset.
 ## Test Coverage
 
 - **Commands/ItemCreateCommandTests.cs**: Tests for the `create-item` command
-- **Commands/CatalogSearchCommandTests.cs**: Tests for the `search_catalog` command
+- **Commands/CatalogSearchCommandTests.cs**: Tests for the `search-catalog` command
 - **FabricCoreSetupTests.cs**: Tests for service registration and command setup
 
 ## Running Tests
