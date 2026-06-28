@@ -23,6 +23,7 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
 - [Usage](#usage)
   - [Getting Started](#getting-started)
   - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
+    - [Catalog Discovery](#catalog-discovery)
     - [Fabric Workloads & APIs](#fabric-workloads--apis)
     - [Resource Definitions & Schemas](#resource-definitions--schemas)
     - [Best Practices & Examples](#best-practices--examples)
@@ -189,6 +190,13 @@ Use one of the following options to configure your `mcp.json`:
 ## What can you do with the Fabric MCP Server?
 
 The Fabric MCP Server supercharges your agents with Microsoft Fabric context. Here are some prompts you can try:
+
+### Catalog Discovery
+
+* "Search the OneLake catalog for items related to 'sales revenue'"
+* "Find a Lakehouse with 'customer' in the name across my workspaces"
+* "Discover all Report items in the catalog and show which workspace they live in"
+* "Filter the catalog to Warehouse and Notebook items"
 
 ### Fabric Workloads & APIs
 
