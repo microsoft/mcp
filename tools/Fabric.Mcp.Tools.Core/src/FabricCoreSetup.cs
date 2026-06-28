@@ -28,7 +28,7 @@ public class FabricCoreSetup : IAreaSetup
             Microsoft Fabric Core Operations - Search, create, and manage Fabric items.
             Use this tool when you need to:
             - Search the OneLake catalog to discover Fabric items across workspaces
-            - Create new Fabric items (Lakehouses, Notebooks, etc.)
+            - Create new Fabric items (Lakehouse, Notebook, etc.)
             - Manage core Fabric workspace items
             This tool provides core operations for working with Fabric resources.
             """);
