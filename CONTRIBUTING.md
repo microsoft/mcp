@@ -7,7 +7,10 @@ After cloning and building the repo, check out the [GitHub project](https://gith
 If you are contributing significant changes, or if the issue is already assigned to a specific milestone, please discuss with the assignee of the issue first before starting to work on the issue.
 
 > [!TIP]
-> **New contributor?** Check out the [Onboarding Guide](docs/Onboarding.md) for a streamlined getting-started experience, or invoke `@onboarding` in GitHub Copilot Chat for interactive help.
+> **New contributor?** Use the onboarding agent for interactive help:
+> 1. Open GitHub Copilot Chat in VS Code (or VS Code Insiders)
+> 2. Type `@onboarding` followed by your question (e.g., `@onboarding how do I set up my dev environment?`)
+> 3. The agent will walk you through setup, first issues, adding commands, and more
 
 ## Table of Contents
 
