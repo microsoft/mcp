@@ -968,7 +968,7 @@ To use Azure Entra ID with the Docker image update the MCP client configuration 
    ```json
       {
          "mcpServers": {
-            "Azure MCP Server": {
+            "azure-mcp-server": {
                "command": "docker",
                "args": [
                   "run",
@@ -997,7 +997,7 @@ On Windows, Azure CLI stores credentials in an encrypted format that cannot be a
    ```json
       {
          "mcpServers": {
-            "Azure MCP Server": {
+            "azure-mcp-server": {
                "command": "docker",
                "args": [
                   "run",
@@ -1349,7 +1349,7 @@ This starts the MCP server in **remote HTTP mode** with the following configurat
 ```json
 {
   "servers": {
-    "Azure MCP Server": {
+    "azure-mcp-server": {
       "url": "https://localhost:1031/",
       "type": "http"
     }

@@ -589,7 +589,7 @@ mcp.json configuration for local development:
 # Use in mcp.json
 {
   "servers": {
-    "Azure MCP Server": {
+    "azure-mcp-server": {
       "command": "docker",
       "args": ["run", "-i", "--rm", "--env-file", "/path/to/.env", "azure-sdk/azure-mcp:<version-number-of-docker-image>"]
     }

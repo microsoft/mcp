@@ -368,7 +368,7 @@ Update your mcp.json to point to the locally built azmcp executable.
 ```json
 {
   "servers": {
-    "Azure MCP Server": {
+    "azure-mcp-server": {
       "url": "https://localhost:1031/",
       "type": "http"
     }
@@ -509,7 +509,7 @@ To build a local image for testing purposes:
     ```json
     {
       "servers": {
-        "Azure MCP Server": {
+        "azure-mcp-server": {
           "command": "docker",
           "args": [
             "run",
