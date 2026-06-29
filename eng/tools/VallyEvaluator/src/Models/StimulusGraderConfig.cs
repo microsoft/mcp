@@ -16,5 +16,5 @@ public class GraderConfigEntryPair
 {
     public required string Name { get; set; }
 
-    public required string Command { get; set; }
+    public Dictionary<string, string> Args { get; set; } = new Dictionary<string, string>();
 }
