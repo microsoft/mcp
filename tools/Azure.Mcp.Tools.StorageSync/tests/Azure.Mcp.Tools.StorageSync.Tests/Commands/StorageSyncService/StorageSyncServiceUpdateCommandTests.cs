@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 using Azure.Mcp.Tools.StorageSync.Services;
-using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.StorageSync.Tests.Commands.StorageSyncService;
 
-public class StorageSyncServiceUpdateCommandTests : CommandUnitTestsBase<StorageSyncServiceUpdateCommand, IStorageSyncService>
+public class StorageSyncServiceUpdateCommandTests : SubscriptionCommandUnitTestsBase<StorageSyncServiceUpdateCommand, IStorageSyncService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()

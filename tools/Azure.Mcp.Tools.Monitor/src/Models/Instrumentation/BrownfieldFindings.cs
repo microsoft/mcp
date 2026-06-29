@@ -1,4 +1,7 @@
-namespace Azure.Mcp.Tools.Monitor.Models;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 
 /// <summary>
 /// Combined brownfield findings sent by the LLM after analyzing the codebase.

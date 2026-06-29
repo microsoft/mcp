@@ -15,7 +15,4 @@ namespace Azure.Mcp.Tools.Postgres.Commands;
 [JsonSerializable(typeof(ServerParamSetCommand.ServerParamSetCommandResult))]
 [JsonSerializable(typeof(TableSchemaGetCommand.TableSchemaGetCommandResult))]
 [JsonSerializable(typeof(PostgresListCommand.PostgresListCommandResult))]
-
-internal sealed partial class PostgresJsonContext : JsonSerializerContext
-{
-}
+internal sealed partial class PostgresJsonContext : JsonSerializerContext;

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Monitor.Models;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.Instrumentation.Models;

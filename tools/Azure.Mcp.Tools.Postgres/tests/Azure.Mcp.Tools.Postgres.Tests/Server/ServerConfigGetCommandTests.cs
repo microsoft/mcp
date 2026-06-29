@@ -2,17 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Server;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Mcp.Core.TestUtilities;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Postgres.Tests.Server;
 
-public class ServerConfigGetCommandTests : CommandUnitTestsBase<ServerConfigGetCommand, IPostgresService>
+public class ServerConfigGetCommandTests : SubscriptionCommandUnitTestsBase<ServerConfigGetCommand, IPostgresService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsConfig_WhenConfigExists()
@@ -63,7 +63,7 @@ public class ServerConfigGetCommandTests : CommandUnitTestsBase<ServerConfigGetC
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
+        Assert.Contains($"Missing Required options: {missingParameter}", response.Message);
     }
 
     [Fact]

@@ -1,7 +1,10 @@
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 
 /// <summary>
 /// Generator for Node.js Bunyan greenfield projects (no existing telemetry)
@@ -11,11 +14,10 @@ public class BunyanNodeJsGreenfieldGenerator : IGenerator
     public bool CanHandle(Analysis analysis)
     {
         var bunyanProjects = analysis.Projects
-            .Where(p => p.AppType == AppType.BunyanNodeJs)
-            .ToList();
+            .Count(p => p.AppType == AppType.BunyanNodeJs);
 
         return analysis.Language == Language.NodeJs
-            && bunyanProjects.Count == 1
+            && bunyanProjects == 1
             && analysis.State == InstrumentationState.Greenfield;
     }
 

@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.Monitor.Options;
-using Azure.Mcp.Tools.Monitor.Tools;
+using Azure.Mcp.Tools.Monitor.Options.Instrumentation;
+using Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.Monitor.Commands;
+namespace Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
 
 [CommandMetadata(
     Id = "35f577d9-6378-4d34-b822-111ff6e8957c",
@@ -23,39 +22,19 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
     Secret = false,
     LocalRequired = true)]
 public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> logger, OrchestratorTool orchestratorTool)
-    : BaseCommand<OrchestratorStartOptions>
+    : BaseCommand<OrchestratorStartOptions, string>
 {
     private readonly ILogger<OrchestratorStartCommand> _logger = logger;
     private readonly OrchestratorTool _orchestratorTool = orchestratorTool;
 
-    protected override void RegisterOptions(Command command)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, OrchestratorStartOptions options, CancellationToken cancellationToken)
     {
-        command.Options.Add(MonitorInstrumentationOptionDefinitions.WorkspacePath);
-    }
-
-    protected override OrchestratorStartOptions BindOptions(ParseResult parseResult)
-    {
-        return new OrchestratorStartOptions
-        {
-            WorkspacePath = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.WorkspacePath.Name)
-        };
-    }
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return Task.FromResult(context.Response);
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var result = _orchestratorTool.Start(options.WorkspacePath!);
+            var result = _orchestratorTool.Start(options.WorkspacePath);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
+            context.Response.Results = ResponseResult.Create(result, MonitorJsonContext.Default.String);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)

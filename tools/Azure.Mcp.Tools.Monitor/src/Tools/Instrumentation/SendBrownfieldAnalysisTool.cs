@@ -1,23 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Monitor.Generators;
-using Azure.Mcp.Tools.Monitor.Models;
+using System.Text.Json;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 
-namespace Azure.Mcp.Tools.Monitor.Tools;
+namespace Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
 
 /// <summary>
 /// Receives brownfield analysis findings from the LLM and generates a targeted migration plan.
 /// Called after orchestrator-start returns status "analysis_needed".
 /// </summary>
-public class SendBrownfieldAnalysisTool
+public class SendBrownfieldAnalysisTool(IEnumerable<IGenerator> generators)
 {
-    private readonly IEnumerable<IGenerator> _generators;
-
-    public SendBrownfieldAnalysisTool(IEnumerable<IGenerator> generators)
-    {
-        _generators = generators;
-    }
+    private readonly IEnumerable<IGenerator> _generators = generators;
 
     public string Submit(
         string sessionId,
@@ -29,7 +25,7 @@ public class SendBrownfieldAnalysisTool
         TelemetryPipelineFindings? telemetryPipeline,
         LoggingFindings? logging)
     {
-        if (!OrchestratorTool.Sessions.TryGetValue(sessionId, out var session))
+        if (!OrchestratorTool.s_sessions.TryGetValue(sessionId, out var session))
         {
             return Respond(new OrchestratorResponse
             {
@@ -89,7 +85,7 @@ public class SendBrownfieldAnalysisTool
         // Return first action
         if (spec.Actions.Count == 0)
         {
-            OrchestratorTool.Sessions.TryRemove(sessionId, out _);
+            OrchestratorTool.s_sessions.TryRemove(sessionId, out _);
             return Respond(new OrchestratorResponse
             {
                 Status = "complete",

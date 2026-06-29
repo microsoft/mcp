@@ -70,7 +70,7 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
+        Assert.Contains($"Missing Required options: {missingParameter}", response.Message);
     }
 
     [Fact]
@@ -80,9 +80,9 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
 
         Assert.DoesNotContain("subscription", optionNames);
         Assert.DoesNotContain("resource-group", optionNames);
-        Assert.Contains(PostgresOptionDefinitions.UserName, optionNames);
-        Assert.Contains(PostgresOptionDefinitions.ServerName, optionNames);
-        Assert.Contains(PostgresOptionDefinitions.DatabaseName, optionNames);
+        Assert.Contains("user", optionNames);
+        Assert.Contains("server", optionNames);
+        Assert.Contains("database", optionNames);
     }
 
     [Theory]

@@ -1,24 +1,27 @@
-using System.Text.Json;
-using Azure.Mcp.Tools.Monitor.Models;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Detectors;
+using System.Text.Json;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
 public class NodeJsInstrumentationDetector : IInstrumentationDetector
 {
     public Language SupportedLanguage => Language.NodeJs;
 
-    private static readonly string[] AzureMonitorPackages = {
+    private static readonly string[] s_azureMonitorPackages = {
         "@azure/monitor-opentelemetry",
         "@azure/monitor-opentelemetry-exporter"
     };
 
-    private static readonly string[] OpenTelemetryPackages = {
+    private static readonly string[] s_openTelemetryPackages = {
         "@opentelemetry/api",
         "@opentelemetry/sdk-node",
         "@opentelemetry/auto-instrumentations-node"
     };
 
-    private static readonly string[] ApplicationInsightsPackages = {
+    private static readonly string[] s_applicationInsightsPackages = {
         "applicationinsights"
     };
 
@@ -59,7 +62,7 @@ public class NodeJsInstrumentationDetector : IInstrumentationDetector
             }
 
             // Check for Azure Monitor packages
-            var azureMonitorFound = dependencies.Any(d => AzureMonitorPackages.Contains(d));
+            var azureMonitorFound = dependencies.Any(d => s_azureMonitorPackages.Contains(d));
             if (azureMonitorFound)
             {
                 return new InstrumentationResult(
@@ -67,13 +70,13 @@ public class NodeJsInstrumentationDetector : IInstrumentationDetector
                     new ExistingInstrumentation
                     {
                         Type = InstrumentationType.AzureMonitorDistro,
-                        Evidence = [new Evidence { File = packageJsonPath, Indicator = "Azure Monitor package found in dependencies" }]
+                        Evidence = [new(packageJsonPath, "Azure Monitor package found in dependencies")]
                     }
                 );
             }
 
             // Check for OpenTelemetry packages
-            var openTelemetryFound = dependencies.Any(d => OpenTelemetryPackages.Contains(d));
+            var openTelemetryFound = dependencies.Any(d => s_openTelemetryPackages.Contains(d));
             if (openTelemetryFound)
             {
                 return new InstrumentationResult(
@@ -81,13 +84,13 @@ public class NodeJsInstrumentationDetector : IInstrumentationDetector
                     new ExistingInstrumentation
                     {
                         Type = InstrumentationType.OpenTelemetry,
-                        Evidence = [new Evidence { File = packageJsonPath, Indicator = "OpenTelemetry package found in dependencies" }]
+                        Evidence = [new(packageJsonPath, "OpenTelemetry package found in dependencies")]
                     }
                 );
             }
 
             // Check for Application Insights SDK
-            var appInsightsFound = dependencies.Any(d => ApplicationInsightsPackages.Contains(d));
+            var appInsightsFound = dependencies.Any(d => s_applicationInsightsPackages.Contains(d));
             if (appInsightsFound)
             {
                 return new InstrumentationResult(
@@ -95,23 +98,17 @@ public class NodeJsInstrumentationDetector : IInstrumentationDetector
                     new ExistingInstrumentation
                     {
                         Type = InstrumentationType.ApplicationInsightsSdk,
-                        Evidence = [new Evidence { File = packageJsonPath, Indicator = "Application Insights SDK found in dependencies" }]
+                        Evidence = [new(packageJsonPath, "Application Insights SDK found in dependencies")]
                     }
                 );
             }
 
             // No instrumentation found
-            return new InstrumentationResult(
-                InstrumentationState.Greenfield,
-                null
-            );
+            return new(InstrumentationState.Greenfield, null);
         }
         catch (JsonException)
         {
-            return new InstrumentationResult(
-                InstrumentationState.Greenfield,
-                null
-            );
+            return new(InstrumentationState.Greenfield, null);
         }
     }
 }
