@@ -26,14 +26,11 @@ var storageAccountName = toLower(take('st${uniqueSuffix}', 24))
 
 // Storage account (resource-group scoped) so the service group has a member resource that
 // can surface as a goal/recovery/drill resource target during live tests.
-// ZRS is not offered in every region (e.g. westus), so fall back to westus2 there.
-var storageLocation = resourceGroup().location == 'westus' ? 'westus2' : resourceGroup().location
-
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
-  location: storageLocation
+  location: resourceGroup().location
   sku: {
-    name: 'Standard_ZRS'
+    name: 'Standard_LRS'
   }
   kind: 'StorageV2'
   properties: {
