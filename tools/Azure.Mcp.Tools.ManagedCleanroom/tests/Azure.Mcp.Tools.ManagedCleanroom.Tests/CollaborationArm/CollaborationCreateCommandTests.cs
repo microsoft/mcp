@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedCleanroom.Commands;
 using Azure.Mcp.Tools.ManagedCleanroom.Commands.CollaborationArm;
+using Azure.Mcp.Tools.ManagedCleanroom.Models;
 using Azure.Mcp.Tools.ManagedCleanroom.Services;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;

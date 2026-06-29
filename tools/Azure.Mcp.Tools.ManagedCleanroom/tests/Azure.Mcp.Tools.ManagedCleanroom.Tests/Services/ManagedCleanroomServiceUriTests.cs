@@ -12,7 +12,7 @@ public sealed class ManagedCleanroomServiceUriTests
     {
         var endpoint = new Uri("https://cleanroom.contoso.net");
 
-        var result = ManagedCleanroomService.BuildCollaborationsListUri(endpoint, null);
+        var result = ManagedCleanroomDataPlaneService.BuildCollaborationsListUri(endpoint, null);
 
         Assert.Equal("https://cleanroom.contoso.net/gets", result.ToString());
     }
@@ -22,7 +22,7 @@ public sealed class ManagedCleanroomServiceUriTests
     {
         var endpoint = new Uri("https://cleanroom.contoso.net/api/v1");
 
-        var result = ManagedCleanroomService.BuildCollaborationsListUri(endpoint, true);
+        var result = ManagedCleanroomDataPlaneService.BuildCollaborationsListUri(endpoint, true);
 
         Assert.Equal("https://cleanroom.contoso.net/api/v1/gets?activeOnly=true", result.ToString());
     }
@@ -32,7 +32,7 @@ public sealed class ManagedCleanroomServiceUriTests
     {
         var endpoint = new Uri("https://cleanroom.contoso.net/api?foo=bar");
 
-        var result = ManagedCleanroomService.BuildCollaborationsListUri(endpoint, false);
+        var result = ManagedCleanroomDataPlaneService.BuildCollaborationsListUri(endpoint, false);
 
         Assert.Equal("https://cleanroom.contoso.net/api/gets?foo=bar&activeOnly=false", result.ToString());
     }
@@ -40,21 +40,20 @@ public sealed class ManagedCleanroomServiceUriTests
     [Fact]
     public void ResolveTokenScope_WithExplicitScope_ReturnsScope()
     {
-        var endpoint = new Uri("https://cleanroom.contoso.net");
         const string explicitScope = "api://cleanroom-api/.default";
 
-        var result = ManagedCleanroomService.ResolveTokenScope(endpoint, explicitScope);
+        var result = ManagedCleanroomDataPlaneService.ResolveTokenScope(explicitScope, "https://management.azure.com/.default");
 
         Assert.Equal(explicitScope, result);
     }
 
     [Fact]
-    public void ResolveTokenScope_WithoutScope_UsesEndpointOriginDefaultScope()
+    public void ResolveTokenScope_WithoutScope_UsesProvidedDefaultScope()
     {
-        var endpoint = new Uri("https://cleanroom.contoso.net/api");
+        const string defaultScope = "https://management.azure.com/.default";
 
-        var result = ManagedCleanroomService.ResolveTokenScope(endpoint, null);
+        var result = ManagedCleanroomDataPlaneService.ResolveTokenScope(null, defaultScope);
 
-        Assert.Equal("https://cleanroom.contoso.net/.default", result);
+        Assert.Equal(defaultScope, result);
     }
 }

@@ -23,7 +23,7 @@ namespace Azure.Mcp.Tools.ManagedCleanroom.Commands.CollaborationArm;
         You can check the status by asking to get the collaboration by name once the request is accepted.
         """,
     Destructive = false,
-    Idempotent = true,
+    Idempotent = false,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,

@@ -27,9 +27,8 @@ public class ManagedCleanroomSetup : IAreaSetup
             {
                 ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             });
-        services.AddSingleton<ManagedCleanroomService>();
-        services.AddSingleton<IManagedCleanroomServiceDataPlane>(sp => sp.GetRequiredService<ManagedCleanroomService>());
-        services.AddSingleton<IManagedCleanroomServiceControlPlane>(sp => sp.GetRequiredService<ManagedCleanroomService>());
+        services.AddSingleton<IManagedCleanroomServiceDataPlane, ManagedCleanroomDataPlaneService>();
+        services.AddSingleton<IManagedCleanroomServiceControlPlane, ManagedCleanroomControlPlaneService>();
         services.AddSingleton<CollaborationsListCommand>();
         services.AddSingleton<CollaborationCreateCommand>();
     }
