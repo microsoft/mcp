@@ -1,6 +1,4 @@
-﻿using McpToolEvaluator.Core.Models;
-
-namespace McpToolEvaluator.Core;
+﻿namespace McpToolEvaluator.Core;
 
 public class PromptDatastore
 {
@@ -12,6 +10,11 @@ public class PromptDatastore
         prompts = PromptParser.ParseFile(promptFilePath);
         promptsByNamespace = prompts.GroupBy(x => x.Namespace)
                                     .ToDictionary(g => g.Key, g => g.ToList());
+    }
+
+    public List<string> GetNamespaces()
+    {
+        return [.. promptsByNamespace.Keys];
     }
 
     public List<TestPrompt> GetPromptsByNamespace(string toolNamespace)
