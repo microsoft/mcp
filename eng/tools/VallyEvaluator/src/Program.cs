@@ -65,12 +65,29 @@ internal class Program
         }
 
         var promptDatastore = new PromptDatastore(promptsPath);
-        var vallyEvalDirectory = Path.Combine(configuration.WorkingDirectory, "vallyEvals");
+        var vallyEvalDirectory = Path.Combine(configuration.WorkingDirectory, "evals");
         Directory.CreateDirectory(vallyEvalDirectory);
 
-        foreach (var ns in configuration.Namespaces)
+        List<string> namespaces;
+        if (configuration.Namespaces == null || configuration.Namespaces.Count == 0)
+        {
+            Console.WriteLine("No namespaces specified. Using all available namespaces.");
+            namespaces = promptDatastore.GetNamespaces();
+        }
+        else
+        {
+            namespaces = configuration.Namespaces;
+        }
+
+        foreach (var ns in namespaces)
         {
             var prompts = promptDatastore.GetPromptsByNamespace(ns)
+                .Select(p =>
+                {
+                    var prompt = p.Prompt.Replace("\\<", "<");
+                    p.Prompt = VallyUtilities.ReplaceAngleBracketPlaceholders(prompt, VallyUtilities.Replacements);
+                    return p;
+                })
                 .OrderBy(p => p.Prompt)
                 .ToList();
 
@@ -80,20 +97,5 @@ internal class Program
 
             await VallyUtilities.WritePromptsAsync(prompts, outputFile, force: true);
         }
-
-        //var evaluator = new VallyEvaluator();
-        //await evaluator.RunEvaluationAsync(outputDirectory);
-    }
-
-    private static async Task<TestPrompt[]> GetTestPromptAsync(PromptDatastore datastore)
-    {
-        var namespaces = datastore.GetPromptsByNamespace("");
-        Console.WriteLine($"Available namespaces ({namespaces.Count}):");
-        foreach (var ns in namespaces)
-        {
-            Console.WriteLine($"  - {ns}");
-        }
-
-        return [];
     }
 }
