@@ -2,7 +2,7 @@
 
 ## Overview
 
-`Azure.Mcp.Tools.ManagedCleanroom` provides comprehensive operations for interacting with Azure Managed Cleanroom services. Commands are organized into logical groups for managing collaborations, analytics workloads, OIDC configuration, datasets, queries, consent documents, and audit events.
+`Azure.Mcp.Tools.ManagedCleanroom` currently provides an initial set of operations for interacting with Azure Managed Cleanroom services. The current implementation includes `collaborations list` (data plane) and `collaborationarm create` (control plane), with additional command groups planned.
 
 Commands interact with:
 - **Data Plane APIs**: Cleanroom Analytics Frontend for read operations (list collaborations, queries, datasets)
@@ -16,11 +16,11 @@ Commands interact with:
 
 | Command Group | Command | Status |
 | --- | --- | --- |
-| Collaboration | `collaboration create` | Completed |
-| Collaboration | `collaboration get` | Pending |
-| Collaboration | `collaboration add-collaborator` | Pending |
-| Collaboration | `collaboration enable-workload` | Pending |
-| Collaboration | `collaboration get-readonly-kubeconfig` | Pending |
+| CollaborationArm | `collaborationarm create` | Completed |
+| CollaborationArm | `collaborationarm get` | Pending |
+| CollaborationArm | `collaborationarm add-collaborator` | Pending |
+| CollaborationArm | `collaborationarm enable-workload` | Pending |
+| CollaborationArm | `collaborationarm get-readonly-kubeconfig` | Pending |
 
 - **Data Plane Commands**:
 
@@ -73,16 +73,20 @@ Azure.Mcp.Tools.ManagedCleanroom/
 │   │   ├── Runs/                                   # Query run tracking
 │   │   └── AuditEvents/                            # Audit event listing
 │   ├── Options/
-│   │   ├── ManagedCleanroomOptionDefinitions.cs
+│   │   ├── ManagedCleanroomOptionDescriptions.cs
 │   │   ├── Collaboration/
 │   │   │   └── [Options classes - mixed status]
 │   │   └── [Options for all command groups]
+│   ├── Models/
+│   │   └── CollaborationCreateResult.cs
 │   └── Services/
-│       ├── IManagedCleanroomService.cs
-│       └── ManagedCleanroomService.cs
+│       ├── IManagedCleanroomServiceDataPlane.cs
+│       ├── IManagedCleanroomServiceControlPlane.cs
+│       ├── ManagedCleanroomDataPlaneService.cs
+│       └── ManagedCleanroomControlPlaneService.cs
 └── tests/
     └── Azure.Mcp.Tools.ManagedCleanroom.Tests/
-        ├── Collaboration/
+        ├── CollaborationArm/
         │   ├── CollaborationCreateCommandTests.cs 
         │   └── [Other tests - ⏳]
         ├── Collaborations/
