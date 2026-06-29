@@ -2,7 +2,7 @@
   <PropertyGroup>
     <IsTestProject>true</IsTestProject>
     <OutputType>Exe</OutputType>
-    <HasLiveTests>false</HasLiveTests>
+    <HasLiveTests>true</HasLiveTests>
     <HasUnitTests>true</HasUnitTests>
   </PropertyGroup>
   <ItemGroup>
