@@ -4375,7 +4375,7 @@
           "description": "This tool performs only additive updates without deleting or modifying existing resources."
         },
         "idempotent": {
-          "value": true,
+          "value": false,
           "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
         },
         "openWorld": {
