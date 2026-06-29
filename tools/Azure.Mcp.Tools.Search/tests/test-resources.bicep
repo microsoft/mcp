@@ -42,7 +42,10 @@ resource openai 'Microsoft.CognitiveServices/accounts@2023-05-01' = if (!isTmeTe
     name: 'embedding-model'
     sku: {
         name: isGovCloud ? 'Standard' : 'GlobalStandard'
-        capacity: 50 // This is the Tokens Per Minute (TPM) capacity for the model
+        // Azure Government has a much tighter shared text-embedding-ada-002 TPM
+        // quota than commercial, so request a smaller capacity there to stay
+        // within the available quota.
+        capacity: isGovCloud ? 10 : 50 // This is the Tokens Per Minute (TPM) capacity for the model
     }
     properties: {
         model: {

@@ -20,6 +20,13 @@ var azureAiUserRoleId = '53ca6127-db72-4b80-b1b0-d745d6d5456d' // Azure AI User 
 
 var isGov = environment().name == 'AzureUSGovernment'
 
+// Sovereign clouds (e.g. usgovvirginia) have much tighter Cognitive Services
+// TPM quotas than commercial. In gov both gpt-4o deployments below map to the
+// same shared "gpt-4o" quota (gpt-4o-mini is unavailable there), and the
+// embedding deployment shares the constrained text-embedding-ada-002 quota, so
+// request a smaller per-deployment capacity to stay within available quota.
+var deploymentCapacity = isGov ? 10 : 30
+
 resource aiServicesAccount 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
   name: baseName
   location: location
@@ -108,7 +115,7 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-
   name: 'gpt-4o'
   sku: {
     name: 'Standard'
-    capacity: 30
+    capacity: deploymentCapacity
   }
   properties: {
     model: {
@@ -124,7 +131,7 @@ resource gpt4oMiniDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
   name: 'gpt-4o-mini'
   sku: {
     name: isGov ? 'Standard' : 'GlobalStandard'
-    capacity: 30
+    capacity: deploymentCapacity
   }
   properties: {
     model: {
@@ -140,7 +147,7 @@ resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
   name: 'embedding-model'
   sku: {
     name: isGov ? 'Standard' : 'GlobalStandard'
-    capacity: 30
+    capacity: deploymentCapacity
   }
   properties: {
     model: {
