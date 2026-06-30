@@ -13,8 +13,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests;
 /// <summary>
 /// Live / recorded integration tests for the Resilience Management toolset.
 /// Resources are provisioned by test-resources.bicep + test-resources-post.ps1.
-/// Drill get tools are intentionally excluded (the drill service is unavailable, so
-/// drills are not provisioned).
+/// Drill tools are not part of this toolset (they are onboarded separately).
 /// </summary>
 public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)

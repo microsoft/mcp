@@ -3,10 +3,6 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
-using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
-using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
-using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Templates;
@@ -42,10 +38,6 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands;
 [JsonSerializable(typeof(UsagePlanEnrollmentInfoProperties))]
 [JsonSerializable(typeof(UsagePlanEnrollmentInfoErrorDetails))]
 [JsonSerializable(typeof(UsagePlanEnrollmentInfoSystemData))]
-[JsonSerializable(typeof(DrillGetCommand.DrillGetCommandResult))]
-[JsonSerializable(typeof(DrillResourceGetCommand.DrillResourceGetCommandResult))]
-[JsonSerializable(typeof(DrillRunGetCommand.DrillRunGetCommandResult))]
-[JsonSerializable(typeof(DrillRunResourceGetCommand.DrillRunResourceGetCommandResult))]
 [JsonSerializable(typeof(RecoveryPlanGetCommand.RecoveryPlanGetCommandResult))]
 [JsonSerializable(typeof(RecoveryResourceGetCommand.RecoveryResourceGetCommandResult))]
 [JsonSerializable(typeof(RecoveryJobGetCommand.RecoveryJobGetCommandResult))]

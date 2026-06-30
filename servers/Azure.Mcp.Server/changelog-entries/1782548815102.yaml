@@ -1,3 +1,3 @@
 changes:
   - section: "Features Added"
-    description: "Added the 'resilience' toolset (Azure Resilience Management) with read-only 'get' commands for goals (templates, assignments, resources), usage plans and enrollments, drills (drills, runs, resources), and recovery plans (plans, resources, jobs)."
+    description: "Added the 'resilience' toolset (Azure Resilience Management) with read-only 'get' commands for goals (templates, assignments, resources), usage plans and enrollments, and recovery plans (plans, resources, jobs)."

@@ -9,7 +9,6 @@ var serviceGroupName = 'sgr${uniqueSuffix}'
 var goalTemplateName = take('gt${uniqueSuffix}', 24)
 var goalAssignmentName = take('ga${uniqueSuffix}', 24)
 var recoveryPlanName = take('rp${uniqueSuffix}', 24)
-var drillName = take('dr${uniqueSuffix}', 24)
 var storageAccountName = toLower(take('st${uniqueSuffix}', 24))
 
 // The test identity is automatically granted access to this resource group by the
@@ -22,10 +21,10 @@ var storageAccountName = toLower(take('st${uniqueSuffix}', 24))
 //  - Microsoft.Management/serviceGroups (the service group itself)
 //  - the resource group -> service group membership
 //  - the usage plan enrollment
-//  - goal template, goal assignment, recovery plan and drill (extension resources on the service group)
+//  - goal template, goal assignment and recovery plan (extension resources on the service group)
 
 // Storage account (resource-group scoped) so the service group has a member resource that
-// can surface as a goal/recovery/drill resource target during live tests.
+// can surface as a goal/recovery resource target during live tests.
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
   location: resourceGroup().location
@@ -56,6 +55,4 @@ output serviceGroupName string = serviceGroupName
 output goalTemplateName string = goalTemplateName
 output goalAssignmentName string = goalAssignmentName
 output recoveryPlanName string = recoveryPlanName
-output drillName string = drillName
 output storageAccountName string = storageAccountName
-output location string = resourceGroup().location

@@ -3646,34 +3646,6 @@ azmcp resilience usageplan enrollment get --subscription <subscription> \
                                           --usage-plan <usage-plan> \
                                           [--name <name>]
 
-# Get a resilience drill, or list all drills in a service group (omit --name)
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience drill get --subscription <subscription> \
-                           --service-group <service-group> \
-                           [--name <name>]
-
-# Get a resource (target) of a drill, or list all resources of the drill (omit --name)
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience drill resource get --subscription <subscription> \
-                                    --service-group <service-group> \
-                                    --drill <drill> \
-                                    [--name <name>]
-
-# Get a drill run, or list all runs of a drill (omit --name)
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience drill run get --subscription <subscription> \
-                               --service-group <service-group> \
-                               --drill <drill> \
-                               [--name <name>]
-
-# Get a resource (target) of a drill run, or list all resources of the drill run (omit --name)
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience drill run resource get --subscription <subscription> \
-                                        --service-group <service-group> \
-                                        --drill <drill> \
-                                        --drill-run <drill-run> \
-                                        [--name <name>]
-
 # Get a resilience recovery plan, or list all recovery plans in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recovery plan get --subscription <subscription> \

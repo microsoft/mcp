@@ -127,7 +127,7 @@ Invoke-ResilienceRestPut -Path $serviceGroupPath -Body @{
 Wait-ResilienceProvisioning -Path $serviceGroupPath
 
 # 2) Add the resource group as a member of the service group so its resources
-#    (e.g. the storage account) surface as goal/recovery/drill resource targets.
+#    (e.g. the storage account) surface as goal/recovery resource targets.
 $membershipPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-rg-member`?api-version=$membershipApiVersion"
 Invoke-ResilienceRestPut -Path $membershipPath -Body @{
     properties = @{

@@ -2,7 +2,7 @@
   "consolidated_tools": [
     {
       "name": "get_azure_resilience_management_details",
-      "description": "Get details about Azure Resilience Management resources, including resilience goals (templates, assignments, and their resources), usage plans and enrollments, disaster recovery drills (drills, runs, and their resources), and recovery plans (plans, resources, and jobs) for Azure service groups.",
+      "description": "Get details about Azure Resilience Management resources, including resilience goals (templates, assignments, and their resources), usage plans and enrollments, and recovery plans (plans, resources, and jobs) for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -35,10 +35,6 @@
         "resilience_goal_resource_get",
         "resilience_usageplan_get",
         "resilience_usageplan_enrollment_get",
-        "resilience_drill_get",
-        "resilience_drill_resource_get",
-        "resilience_drill_run_get",
-        "resilience_drill_run_resource_get",
         "resilience_recovery_plan_get",
         "resilience_recovery_plan_resource_get",
         "resilience_recovery_job_get",

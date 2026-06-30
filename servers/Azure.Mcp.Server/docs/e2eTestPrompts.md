@@ -858,15 +858,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| resilience_drill_get | List all resilience drills in service group <service_group> |
-| resilience_drill_get | Show me the resilience drills in service group <service_group> |
-| resilience_drill_get | Get the details of resilience drill <drill_name> in service group <service_group> |
-| resilience_drill_resource_get | List all resources (targets) of resilience drill <drill_name> in service group <service_group> |
-| resilience_drill_resource_get | Get the resilience drill resource <resource_name> for drill <drill_name> in service group <service_group> |
-| resilience_drill_run_get | List all runs of resilience drill <drill_name> in service group <service_group> |
-| resilience_drill_run_get | Get the details of drill run <drill_run_name> for drill <drill_name> in service group <service_group> |
-| resilience_drill_run_resource_get | List all resources (targets) of drill run <drill_run_name> for drill <drill_name> in service group <service_group> |
-| resilience_drill_run_resource_get | Get the drill run resource <resource_name> for drill run <drill_run_name> of drill <drill_name> in service group <service_group> |
 | resilience_goal_assignment_get | List all resilience goal assignments in service group <service_group> |
 | resilience_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> |
 | resilience_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> |
