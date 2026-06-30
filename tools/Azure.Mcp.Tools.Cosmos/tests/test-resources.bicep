@@ -30,6 +30,12 @@ var embeddingDeploymentName = 'embedding-model'
 // matching the vector container's embedding policy below.
 var embeddingModelName = environment().name == 'AzureUSGovernment' ? 'text-embedding-ada-002' : 'text-embedding-3-small'
 
+// Sovereign clouds have tight Cognitive Services quotas (e.g. the shared
+// text-embedding-ada-002 quota in usgovvirginia), so request a smaller TPM
+// capacity there to stay within the available quota while still satisfying the
+// deployment's minimum requirements.
+var embeddingDeploymentCapacity = environment().name == 'AzureUSGovernment' ? 10 : 50
+
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
   name: baseName
   location: location
@@ -259,7 +265,7 @@ resource openai 'Microsoft.CognitiveServices/accounts@2023-05-01' = if (!isTmeTe
     name: embeddingDeploymentName
     sku: {
       name: 'Standard'
-      capacity: 50
+      capacity: embeddingDeploymentCapacity
     }
     properties: {
       model: {

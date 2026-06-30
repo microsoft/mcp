@@ -11,6 +11,15 @@ param testApplicationOid string = '26ffb325-f480-419c-b7a9-2c8a018203a8' // azur
 
 var testDbName string = 'testdb'
 
+// The deploying identity is also the test identity in CI and local runs. Service
+// principals (CI, including sovereign clouds like usgovvirginia) only expose
+// objectId/tenantId, while interactive user principals also expose userPrincipalName.
+// Safe-dereference (.?) lets us detect which kind of principal is deploying without
+// failing template evaluation when userPrincipalName is absent.
+var knownDevOpsServicePrincipalOid = '26ffb325-f480-419c-b7a9-2c8a018203a8'
+var deployerUserPrincipalName = deployer().?userPrincipalName
+var isServicePrincipal = testApplicationOid == knownDevOpsServicePrincipalOid || deployerUserPrincipalName == null
+
 // PostgreSQL Flexible Server provisioning is offer/capacity-restricted for the test
 // subscription in usgovvirginia (LocationIsOfferRestricted). Azure recommends retrying in a
 // different location, so deploy the server to an alternate Azure US Government region where
@@ -63,8 +72,8 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2025-06-01-pr
   resource postgresAdministrator 'administrators' = {
     name: testApplicationOid
     properties: {
-      principalType: testApplicationOid == '26ffb325-f480-419c-b7a9-2c8a018203a8' ? 'ServicePrincipal' : 'User'
-      principalName: testApplicationOid == '26ffb325-f480-419c-b7a9-2c8a018203a8' ? 'azure-sdk-internal-devops-connections' :  deployer().userPrincipalName
+      principalType: isServicePrincipal ? 'ServicePrincipal' : 'User'
+      principalName: testApplicationOid == knownDevOpsServicePrincipalOid ? 'azure-sdk-internal-devops-connections' : (deployerUserPrincipalName ?? testApplicationOid)
       tenantId: tenant().tenantId
     }
     dependsOn: [
