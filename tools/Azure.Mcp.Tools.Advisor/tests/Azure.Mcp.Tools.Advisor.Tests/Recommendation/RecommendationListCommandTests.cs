@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -32,11 +31,6 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
     [InlineData("", false)]                    // Missing all required options
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        if (!shouldSucceed && string.IsNullOrWhiteSpace(args))
-        {
-            TestEnvironment.SkipIfDefaultSubscriptionConfigured();
-        }
-
         // Arrange
         if (shouldSucceed)
         {
