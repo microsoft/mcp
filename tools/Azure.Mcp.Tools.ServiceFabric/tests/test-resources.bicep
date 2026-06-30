@@ -18,6 +18,9 @@ param adminUsername string = 'sfadmin'
 @secure()
 param adminPassword string = newGuid()
 
+@description('The VM size for the primary node type. Default differs for sovereign clouds where Standard_D2s_v3 is not available.')
+param vmSize string = environment().name == 'AzureUSGovernment' ? 'Standard_D2as_v6' : 'Standard_D2s_v3'
+
 // Create a basic Service Fabric managed cluster for testing
 resource sfCluster 'Microsoft.ServiceFabric/managedClusters@2024-04-01' = {
   name: baseName
@@ -40,7 +43,7 @@ resource primaryNodeType 'Microsoft.ServiceFabric/managedClusters/nodeTypes@2024
   name: 'primary'
   properties: {
     isPrimary: true
-    vmSize: 'Standard_D2s_v3'
+    vmSize: vmSize
     vmInstanceCount: 3
     dataDiskSizeGB: 128
     vmImagePublisher: 'MicrosoftWindowsServer'

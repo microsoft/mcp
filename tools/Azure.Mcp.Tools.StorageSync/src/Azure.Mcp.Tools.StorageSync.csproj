@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsAotCompatible>true</IsAotCompatible>
+    <!-- Azure File Sync (Microsoft.StorageSync) is not offered in Azure US Government;
+         its preflight validation fails with "Subscription does not exist". Restrict
+         live tests to the public cloud where the service is available. -->
+    <AzureSupportedClouds>AzureCloud</AzureSupportedClouds>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="**\Resources\*.txt" />

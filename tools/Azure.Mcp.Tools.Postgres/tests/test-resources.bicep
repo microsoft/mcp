@@ -4,16 +4,31 @@
 param baseName string = resourceGroup().name
 
 @description('The location of the resource. By default, this is the same as the resource group.')
-param location string = 'northeurope' // resourceGroup().location
+param location string = resourceGroup().location // resourceGroup().location
 
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string = '26ffb325-f480-419c-b7a9-2c8a018203a8' // azure-sdk-internal-devops-connections
 
 var testDbName string = 'testdb'
 
+// The deploying identity is also the test identity in CI and local runs. Service
+// principals (CI, including sovereign clouds like usgovvirginia) only expose
+// objectId/tenantId, while interactive user principals also expose userPrincipalName.
+// Safe-dereference (.?) lets us detect which kind of principal is deploying without
+// failing template evaluation when userPrincipalName is absent.
+var knownDevOpsServicePrincipalOid = '26ffb325-f480-419c-b7a9-2c8a018203a8'
+var deployerUserPrincipalName = deployer().?userPrincipalName
+var isServicePrincipal = testApplicationOid == knownDevOpsServicePrincipalOid || deployerUserPrincipalName == null
+
+// PostgreSQL Flexible Server provisioning is offer/capacity-restricted for the test
+// subscription in usgovvirginia (LocationIsOfferRestricted). Azure recommends retrying in a
+// different location, so deploy the server to an alternate Azure US Government region where
+// the offer is available. Public-cloud deployments keep using the resource group's location.
+var postgresLocation = environment().name == 'AzureUSGovernment' ? 'usgovarizona' : location
+
 resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2025-06-01-preview' = {
   name: '${baseName}-postgres'
-  location: location
+  location: postgresLocation
   sku: {
     name: 'Standard_B1ms'
     tier: 'Burstable'
@@ -57,8 +72,8 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2025-06-01-pr
   resource postgresAdministrator 'administrators' = {
     name: testApplicationOid
     properties: {
-      principalType: testApplicationOid == '26ffb325-f480-419c-b7a9-2c8a018203a8' ? 'ServicePrincipal' : 'User'
-      principalName: testApplicationOid == '26ffb325-f480-419c-b7a9-2c8a018203a8' ? 'azure-sdk-internal-devops-connections' :  deployer().userPrincipalName
+      principalType: isServicePrincipal ? 'ServicePrincipal' : 'User'
+      principalName: testApplicationOid == knownDevOpsServicePrincipalOid ? 'azure-sdk-internal-devops-connections' : (deployerUserPrincipalName ?? testApplicationOid)
       tenantId: tenant().tenantId
     }
     dependsOn: [

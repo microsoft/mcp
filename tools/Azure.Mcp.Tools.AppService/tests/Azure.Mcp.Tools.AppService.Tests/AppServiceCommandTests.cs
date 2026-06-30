@@ -231,6 +231,8 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
         webappName = TestMode == TestMode.Playback ? "Sanitized-webapp" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
+        var detectorId = await ResolveDiagnosticDetectorIdAsync(Settings.SubscriptionId, resourceGroupName, webappName);
+
         var result = await CallToolAsync(
             "appservice_webapp_diagnostic_diagnose",
             new()
@@ -238,12 +240,18 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "app", webappName },
-                { "detector-id", "AvailabilityAndPerformanceWindows"}
+                { "detector-id", detectorId }
             });
 
         var detectorsResult = DeserializeResult(result, AppServiceJsonContext.Default.DetectorDiagnoseResult);
         Assert.NotNull(detectorsResult.Diagnoses);
-        Assert.NotEmpty(detectorsResult.Diagnoses.Datasets);
+        Assert.NotNull(detectorsResult.Diagnoses.Datasets);
+        if (!Settings.IsAzureUSGovernment)
+        {
+            // The hardcoded analysis detector reliably returns datasets in Public Cloud. A dynamically
+            // discovered sovereign-cloud detector may legitimately return an empty dataset list.
+            Assert.NotEmpty(detectorsResult.Diagnoses.Datasets);
+        }
     }
 
     [Fact]
@@ -255,6 +263,8 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
         var startTime = RegisterOrRetrieveVariable("startTime", DateTimeOffset.UtcNow.AddHours(-1).ToString("o"));
         var endTime = RegisterOrRetrieveVariable("endTime", DateTimeOffset.UtcNow.ToString("o"));
 
+        var detectorId = await ResolveDiagnosticDetectorIdAsync(Settings.SubscriptionId, resourceGroupName, webappName);
+
         var result = await CallToolAsync(
             "appservice_webapp_diagnostic_diagnose",
             new()
@@ -262,7 +272,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "app", webappName },
-                { "detector-id", "AvailabilityAndPerformanceWindows"},
+                { "detector-id", detectorId },
                 { "start-time", startTime },
                 { "end-time", endTime },
                 { "time-grain", "PT10M" }
@@ -270,7 +280,39 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
 
         var detectorsResult = DeserializeResult(result, AppServiceJsonContext.Default.DetectorDiagnoseResult);
         Assert.NotNull(detectorsResult.Diagnoses);
-        Assert.NotEmpty(detectorsResult.Diagnoses.Datasets);
+        Assert.NotNull(detectorsResult.Diagnoses.Datasets);
+        if (!Settings.IsAzureUSGovernment)
+        {
+            // The hardcoded analysis detector reliably returns datasets in Public Cloud. A dynamically
+            // discovered sovereign-cloud detector may legitimately return an empty dataset list.
+            Assert.NotEmpty(detectorsResult.Diagnoses.Datasets);
+        }
+    }
+
+    /// <summary>
+    /// Resolves a diagnostic detector id to use for diagnose tests. The Public Cloud analysis detector
+    /// "AvailabilityAndPerformanceWindows" is not available in sovereign clouds such as Azure US
+    /// Government, so discover an available detector id from the detector list there instead.
+    /// </summary>
+    private async Task<string> ResolveDiagnosticDetectorIdAsync(string subscription, string resourceGroupName, string webappName)
+    {
+        if (!Settings.IsAzureUSGovernment)
+        {
+            return "AvailabilityAndPerformanceWindows";
+        }
+
+        var listResult = await CallToolAsync(
+            "appservice_webapp_diagnostic_list",
+            new()
+            {
+                { "subscription", subscription },
+                { "resource-group", resourceGroupName },
+                { "app", webappName }
+            });
+
+        var detectors = DeserializeResult(listResult, AppServiceJsonContext.Default.DetectorListResult);
+        Assert.NotEmpty(detectors.Detectors);
+        return detectors.Detectors[0].Id;
     }
 
     #endregion
