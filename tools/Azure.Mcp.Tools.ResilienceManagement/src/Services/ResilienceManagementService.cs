@@ -546,4 +546,34 @@ public sealed class ResilienceManagementService(
         GoalTemplateKind.Resiliency => ResilienceManagementGoalType.Resiliency,
         _ => throw new ArgumentOutOfRangeException(nameof(goalType), goalType, "Unsupported goal type.")
     };
+
+    public async Task<UsagePlanInfo> CreateUsagePlanAsync(string resourceGroup, string usagePlan, UsagePlanKind planType, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+            ? subscription
+            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var resourceGroupId = new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}");
+        var resourceGroupResource = armClient.GetResourceGroupResource(resourceGroupId);
+        UsagePlanCollection usagePlans = resourceGroupResource.GetUsagePlans();
+
+        var usagePlanData = new UsagePlanData(new AzureLocation("global"))
+        {
+            Properties = new UsagePlanProperties
+            {
+                PlanType = planType switch
+                {
+                    UsagePlanKind.Standard => UsagePlanType.Standard,
+                    UsagePlanKind.Basic => UsagePlanType.Basic,
+                    _ => throw new ArgumentOutOfRangeException(nameof(planType), planType, "Unsupported plan type.")
+                }
+            }
+        };
+
+        ArmOperation<UsagePlanResource> operation = await usagePlans.CreateOrUpdateAsync(WaitUntil.Completed, usagePlan, usagePlanData, cancellationToken);
+
+        return MapUsagePlan(operation.Value.Data);
+    }
 }

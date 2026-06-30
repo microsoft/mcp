@@ -31,6 +31,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands;
 [JsonSerializable(typeof(GoalResourceServiceGroupMembership))]
 [JsonSerializable(typeof(GoalResourceInfoSystemData))]
 [JsonSerializable(typeof(UsagePlanGetCommand.UsagePlanGetCommandResult))]
+[JsonSerializable(typeof(UsagePlanCreateCommand.UsagePlanCreateCommandResult))]
 [JsonSerializable(typeof(UsagePlanInfo))]
 [JsonSerializable(typeof(UsagePlanInfoProperties))]
 [JsonSerializable(typeof(UsagePlanInfoSystemData))]
