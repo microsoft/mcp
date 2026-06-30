@@ -1,3 +1,0 @@
-changes:
-  - section: "Breaking Changes"
-    description: "Removed unused parameters from AppConfig tools. '--label' and '--label-filter' are now mutually excluside in appconfig_kv_get."
