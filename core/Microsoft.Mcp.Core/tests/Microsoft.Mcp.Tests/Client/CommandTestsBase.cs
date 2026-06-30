@@ -92,6 +92,17 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
             // { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
         ];
 
+        // For live (non-playback) runs, provide the target subscription as the server's default
+        // subscription. Some tests intentionally omit '--subscription' to exercise the default
+        // subscription fallback. On developer machines and the public pipeline this value is
+        // typically present ambiently in the host environment, but sovereign-cloud pipelines
+        // (e.g. Azure US Government) do not export it, so set it explicitly to keep behavior
+        // deterministic across clouds. Skipped in playback to avoid the issues described in #1103.
+        if (TestMode != TestMode.Playback && !string.IsNullOrEmpty(Settings?.SubscriptionId))
+        {
+            envVarDictionary["AZURE_SUBSCRIPTION_ID"] = Settings.SubscriptionId;
+        }
+
         // Add any custom environment variables from settings
         if (Settings?.EnvironmentVariables != null)
         {

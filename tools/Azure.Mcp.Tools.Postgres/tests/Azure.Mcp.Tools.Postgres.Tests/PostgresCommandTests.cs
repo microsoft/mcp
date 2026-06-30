@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Postgres.Options;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Protocol;
 using Npgsql;
 using Xunit;
@@ -59,14 +60,27 @@ public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture li
         Output.WriteLine($"AdminUsername: {AdminUsername}");
         Output.WriteLine($"TestDatabaseName: {TestDatabaseName}");
 
-        // Get Entra ID access token for PostgreSQL
+        // Get Entra ID access token for PostgreSQL. Both the authority host and the OSS RDBMS
+        // AAD resource (token audience) differ per cloud, so resolve them from the target cloud
+        // to support sovereign clouds (Public, US Gov, China).
+        var (authorityHost, ossRdbmsScope) = Settings.Cloud switch
+        {
+            AzureCloud.AzureUSGovernmentCloud =>
+                (AzureAuthorityHosts.AzureGovernment, "https://ossrdbms-aad.database.usgovcloudapi.net/.default"),
+            AzureCloud.AzureChinaCloud =>
+                (AzureAuthorityHosts.AzureChina, "https://ossrdbms-aad.database.chinacloudapi.cn/.default"),
+            _ =>
+                (AzureAuthorityHosts.AzurePublicCloud, "https://ossrdbms-aad.database.windows.net/.default"),
+        };
+
         var options = new DefaultAzureCredentialOptions
         {
             TenantId = Settings.TenantId,
             ExcludeManagedIdentityCredential = true,  // We don't want to use ADO build server identity
+            AuthorityHost = authorityHost,
         };
         var tokenCredential = new DefaultAzureCredential(options);
-        var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"], tenantId: Settings.TenantId);
+        var tokenRequestContext = new TokenRequestContext([ossRdbmsScope], tenantId: Settings.TenantId);
         AccessToken accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, TestContext.Current.CancellationToken);
 
         string connectionString = $"Host={ServerFqdn};Database={TestDatabaseName};Username={AdminUsername};Password={accessToken.Token};SSL Mode=Require;Trust Server Certificate=true;";

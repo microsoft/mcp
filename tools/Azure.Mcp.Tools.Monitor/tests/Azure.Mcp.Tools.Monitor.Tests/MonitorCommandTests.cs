@@ -641,6 +641,12 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         var webTestName = $"test-webtest-{DateTime.UtcNow:yyyyMMddHHmmss}";
         var appInsightsComponentId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Insights/components/{_appInsightsName}";
 
+        // microsoft.insights/webtests is only available in cloud-specific regions, and the
+        // test runner geo-locations differ per cloud. Mirror the values used in
+        // test-resources.webtests.module.bicep so the test works in sovereign clouds.
+        var webTestRegion = Settings.IsAzureUSGovernment ? "usgovvirginia" : "West US";
+        var webTestGeoLocation = Settings.IsAzureUSGovernment ? "usgov-va-azr" : "us-ca-sjc-azr";
+
         var result = await CallToolAsync(
             "monitor_webtests_createorupdate",
             new()
@@ -649,8 +655,8 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
                 { "resource-group", Settings.ResourceGroupName },
                 { "webtest-resource", webTestName },
                 { "appinsights-component", appInsightsComponentId },
-                { "location", "West US" },
-                { "webtest-locations", "us-ca-sjc-azr" },
+                { "location", webTestRegion },
+                { "webtest-locations", webTestGeoLocation },
                 { "request-url", "https://example.com" },
                 { "webtest", "Test Web Test" },
                 { "description", "Integration test web test" },
