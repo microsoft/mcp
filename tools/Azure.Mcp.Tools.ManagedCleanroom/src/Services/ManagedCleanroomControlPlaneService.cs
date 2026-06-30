@@ -6,6 +6,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.ManagedCleanroom.Commands;
 using Azure.Mcp.Tools.ManagedCleanroom.Models;
 using Azure.ResourceManager.CleanRoom;
 using Azure.ResourceManager.CleanRoom.Models;
@@ -62,7 +63,7 @@ public class ManagedCleanroomControlPlaneService(ISubscriptionService subscripti
         }
 
         // Fire the ARM PUT and return immediately — provisioning takes ~25 minutes in the background.
-        await resourceGroupResource.GetCollaborations()
+        var operation = await resourceGroupResource.GetCollaborations()
             .CreateOrUpdateAsync(
                 WaitUntil.Started,
                 name,
@@ -75,44 +76,19 @@ public class ManagedCleanroomControlPlaneService(ISubscriptionService subscripti
             $"You can check the status by asking to get the collaboration '{name}' in resource group '{resourceGroup}'.";
 
         return new CollaborationCreateResult(
-            BuildAcceptedCreateResult(name, resourceGroup, subscription, location, resourceLocation, collaborators),
+            ParseResponse(operation.GetRawResponse()),
             message);
     }
 
-    private static JsonElement BuildAcceptedCreateResult(
-        string name,
-        string resourceGroup,
-        string subscription,
-        string location,
-        string? resourceLocation,
-        string[]? collaborators)
+    private static JsonElement ParseResponse(Response response)
     {
-        using var ms = new System.IO.MemoryStream();
-        using (var writer = new Utf8JsonWriter(ms))
+        if (response.Content is null)
         {
-            writer.WriteStartObject();
-            writer.WriteString("name", name);
-            writer.WriteString("resourceGroup", resourceGroup);
-            writer.WriteString("subscription", subscription);
-            writer.WriteString("location", location);
-            writer.WriteString("resourceLocation", resourceLocation ?? location);
-            writer.WriteString("provisioningState", "Accepted");
-            writer.WritePropertyName("collaborators");
-            writer.WriteStartArray();
-
-            foreach (var collaborator in collaborators ?? [])
-            {
-                writer.WriteStartObject();
-                writer.WriteString("userIdentifier", collaborator);
-                writer.WriteEndObject();
-            }
-
-            writer.WriteEndArray();
-            writer.WriteEndObject();
+            return default;
         }
 
-        ms.Position = 0;
-        using var doc = JsonDocument.Parse(ms);
-        return doc.RootElement.Clone();
+        return JsonSerializer.Deserialize(
+            response.Content.ToMemory().Span,
+            ManagedCleanroomJsonContext.Default.JsonElement);
     }
 }

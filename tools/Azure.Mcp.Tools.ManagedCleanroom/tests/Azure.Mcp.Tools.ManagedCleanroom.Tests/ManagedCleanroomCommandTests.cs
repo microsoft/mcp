@@ -107,7 +107,10 @@ public class ManagedCleanroomCommandTests(ITestOutputHelper output, TestProxyFix
             Assert.Equal(collaborationName, name.GetString());
         }
 
-        var provisioningState = result.Value.AssertProperty("provisioningState");
+        var properties = result.Value.AssertProperty("properties");
+        Assert.Equal(JsonValueKind.Object, properties.ValueKind);
+
+        var provisioningState = properties.AssertProperty("provisioningState");
         Assert.Equal(JsonValueKind.String, provisioningState.ValueKind);
         Assert.Equal("Accepted", provisioningState.GetString());
     }
