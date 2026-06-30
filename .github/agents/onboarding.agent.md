@@ -254,6 +254,17 @@ Point your `mcp.json` at the freshly built binary:
 }
 ```
 
+### Debugging in VS Code
+
+The repo includes preconfigured debug launch configurations in `.vscode/launch.json` for stepping through individual commands (e.g., Cosmos, Storage, KeyVault). To use them:
+
+1. Open the **Run and Debug** panel (`Ctrl+Shift+D`)
+2. Select a configuration from the dropdown (e.g., "Debug Cosmos Databases List")
+3. Set breakpoints in command or service code
+4. Press `F5` to launch
+
+You can duplicate an existing configuration to debug your own new command.
+
 ### Server Start Modes
 
 | Mode | Args | Description |
