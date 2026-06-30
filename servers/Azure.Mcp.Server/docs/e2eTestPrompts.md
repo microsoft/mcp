@@ -768,7 +768,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | monitor_activitylog_list | List the activity logs of the last month for <resource_name> |
-| monitor_healthmodels_entity_get | Show me the health status of entity <entity_id> using the health model <health_model_name> |
+| monitor_healthmodels_get | Show me the health model <health_model_name> in resource group <resource_group> |
+| monitor_healthmodels_list | List the Azure Monitor health models in my subscription |
+| monitor_healthmodels_list | What health models are in resource group <resource_group>? |
 | monitor_instrumentation_get-learning-resource | Get the onboarding learning resource at path <resource_path> |
 | monitor_instrumentation_get-learning-resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> |
 | monitor_instrumentation_get-learning-resource | Get the content of the Azure Monitor learning resource file at path <resource_path> |
