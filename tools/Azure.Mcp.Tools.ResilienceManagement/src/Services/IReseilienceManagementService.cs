@@ -51,4 +51,6 @@ public interface IResilienceManagementService
     Task<GoalTemplateInfo> CreateGoalTemplateAsync(string serviceGroup, string goalTemplate, GoalTemplateKind goalType, GoalRequirement requireHighAvailability, GoalRequirement requireDisasterRecovery, string regionalRecoveryPointObjective, string regionalRecoveryTimeObjective, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
     Task<UsagePlanInfo> CreateUsagePlanAsync(string resourceGroup, string usagePlan, UsagePlanKind planType, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    
+    Task<UsagePlanEnrollmentInfo> CreateUsagePlanEnrollmentAsync(string resourceGroup, string usagePlan, string enrollment, string serviceGroup, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 }
