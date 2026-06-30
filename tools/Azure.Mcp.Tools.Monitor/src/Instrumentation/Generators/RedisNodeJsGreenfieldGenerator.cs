@@ -1,7 +1,10 @@
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 
 /// <summary>
 /// Generator for Node.js Redis greenfield projects (no existing telemetry)
@@ -11,11 +14,10 @@ public class RedisNodeJsGreenfieldGenerator : IGenerator
     public bool CanHandle(Analysis analysis)
     {
         var redisProjects = analysis.Projects
-            .Where(p => p.AppType == AppType.RedisNodeJs)
-            .ToList();
+            .Count(p => p.AppType == AppType.RedisNodeJs);
 
         return analysis.Language == Language.NodeJs
-            && redisProjects.Count == 1
+            && redisProjects == 1
             && analysis.State == InstrumentationState.Greenfield;
     }
 

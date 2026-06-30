@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
-using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Tests;
 
-public class OpenAiChatCompletionsCreateCommandTests : CommandUnitTestsBase<OpenAiChatCompletionsCreateCommand, IFoundryExtensionsService>
+public class OpenAiChatCompletionsCreateCommandTests : SubscriptionCommandUnitTestsBase<OpenAiChatCompletionsCreateCommand, IFoundryExtensionsService>
 {
     [Fact]
     public void Name_ReturnsCorrectCommandName()
