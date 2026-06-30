@@ -1,5 +1,4 @@
 ﻿using McpToolEvaluator.Core;
-using McpToolEvaluator.Core.Models;
 using Microsoft.Extensions.Configuration;
 
 namespace VallyEvaluator;
@@ -20,13 +19,6 @@ internal class Program
             runConfig.Namespaces = [.. runConfig.NamespacesValue.Split(',')];
         }
 
-        var outputDirectory = runConfig.OutputDirectory;
-        if (string.IsNullOrEmpty(outputDirectory))
-        {
-            Console.WriteLine("Output directory is required.");
-            return -1;
-        }
-
         var repoRoot = Utilities.FindRepoRoot(AppContext.BaseDirectory);
         if (string.IsNullOrEmpty(runConfig.WorkingDirectory))
         {
@@ -38,9 +30,22 @@ internal class Program
             Directory.CreateDirectory(runConfig.WorkingDirectory);
         }
 
+        BuildInfo? buildInfo = null;
+
+        if (!string.IsNullOrEmpty(runConfig.BuildInfo))
+        {
+            if (!File.Exists(runConfig.BuildInfo))
+            {
+                Console.WriteLine($"Build info file not found: {runConfig.BuildInfo}");
+                return -1;
+            }
+
+            buildInfo = new BuildInfo(runConfig.BuildInfo);
+        }
+
         try
         {
-            await RunEvaluationAsync(repoRoot, runConfig);
+            await RunEvaluationAsync(repoRoot, runConfig, buildInfo);
         }
         catch (Exception ex)
         {
@@ -52,7 +57,41 @@ internal class Program
         return 0;
     }
 
-    private static async Task RunEvaluationAsync(string repoRoot, RunConfiguration configuration)
+    internal static List<string> GetTestToolNamespaces(BuildInfo buildInfo, PromptDatastore promptDatastore)
+    {
+        var promptNamespaces = promptDatastore.GetNamespaces().ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+        var results = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+        foreach(var pathToTest in buildInfo.Data.PathsToTest)
+        {
+            var split = pathToTest.Path.Split(['/', '\\'], 2);
+            if (split.Length != 2)
+            {
+                continue;
+            }
+
+            if (!"tools".Equals(split[0], StringComparison.InvariantCultureIgnoreCase))
+            {
+                continue;
+            }
+
+            var lastPeriod = split[1].LastIndexOf('.');
+            var possibleNamespace = split[1].Substring(lastPeriod + 1).ToLowerInvariant();
+
+            if (promptNamespaces.Contains(possibleNamespace))
+            {
+                results.Add(possibleNamespace);
+            }
+            else
+            {
+                Console.Error.WriteLine($"Namespace not found in prompt datastore: {possibleNamespace}. Original: {split[1]}");
+            }
+        }
+
+        return results.ToList();
+    }
+
+    private static async Task RunEvaluationAsync(string repoRoot, RunConfiguration configuration, BuildInfo? buildInfo = null)
     {
         string promptsPath = string.Empty;
         if (string.IsNullOrEmpty(configuration.PromptFilePath))
@@ -68,15 +107,30 @@ internal class Program
         var vallyEvalDirectory = Path.Combine(configuration.WorkingDirectory, "evals");
         Directory.CreateDirectory(vallyEvalDirectory);
 
-        List<string> namespaces;
-        if (configuration.Namespaces == null || configuration.Namespaces.Count == 0)
+        HashSet<string> namespaces = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+        if (buildInfo != null)
         {
-            Console.WriteLine("No namespaces specified. Using all available namespaces.");
-            namespaces = promptDatastore.GetNamespaces();
+            var testToolNamespaces = GetTestToolNamespaces(buildInfo, promptDatastore);
+            if (testToolNamespaces.Count == 0)
+            {
+                Console.WriteLine("No valid namespaces found in build info. Exiting.");
+                return;
+            }
+
+            namespaces.UnionWith(testToolNamespaces);
         }
-        else
+
+        if (configuration.Namespaces != null && configuration.Namespaces.Count > 0)
         {
-            namespaces = configuration.Namespaces;
+            Console.WriteLine($"Using specified namespaces: {string.Join(", ", configuration.Namespaces)}");
+
+            namespaces.UnionWith(configuration.Namespaces);
+        }
+        else if (buildInfo == null)
+        {
+            Console.WriteLine("No namespaces specified and no build info provided. Using all available namespaces.");
+            namespaces.UnionWith(promptDatastore.GetNamespaces());
         }
 
         foreach (var ns in namespaces)
@@ -90,6 +144,12 @@ internal class Program
                 })
                 .OrderBy(p => p.Prompt)
                 .ToList();
+
+            if (prompts.Count == 0)
+            {
+                Console.WriteLine($"- No prompts found for namespace: {ns}");
+                continue;
+            }
 
             var outputDirectory = Path.Combine(vallyEvalDirectory, ns);
             Directory.CreateDirectory(outputDirectory);

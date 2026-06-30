@@ -1,12 +1,19 @@
 paths:
-  evals: ["./tools/Azure.Mcp.Tools.*/", "./.work/vally/evals/"]
-  results: "./.work/vally/results/"
+  evals: ["tools/Azure.Mcp.Tools.*/tests/", ".work/evals/**/"]
+  results: ".work/vally/results/"
 
 environments:
   development:
     mcpServers:
       azmcp:
         type: stdio
-        command: "./.work/build/Azure.Mcp.Server/windows-x64/azmcp"
+        command: ".work/build/Azure.Mcp.Server/linux-x64/azmcp"
+        args: ["server", "start"]
+        timeout: "2m"
+  windows:
+    mcpServers:
+      azmcp:
+        type: stdio
+        command: ".work/build/Azure.Mcp.Server/windows-x64/azmcp"
         args: ["server", "start"]
         timeout: "2m"
