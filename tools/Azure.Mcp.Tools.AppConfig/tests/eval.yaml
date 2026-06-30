@@ -1,20 +1,115 @@
-name: App Configuration tools evaluator
-description: Evaluate App Configuration tools
-
-defaults:
-  runs: 1
-  timeout: 2m
-  model: gpt-5.5
-  judge_model: gpt-5.5
-  executor: copilot-sdk
-
+name: Azure App Configuration evaluations
+description: Evaluation of prompts in the section Azure App Configuration
+type: capability
 stimuli:
-  - name: gets-account-list
-    prompt: "List all App Configuration stores in my subscription"
+  - name: appconfig evaluation 0
+    prompt: Delete the key Foo in App Configuration store AppConfigStore
+    tags: 
     environment: development
     graders:
       - type: tool-calls
         config:
           required:
             - name: appconfig
-              command: "appconfig_account_list"
+              args:
+                command: appconfig_kv_delete
+  - name: appconfig evaluation 1
+    prompt: List all App Configuration stores in my subscription
+    tags: 
+    environment: development
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: appconfig
+              command: appconfig_account_list
+  - name: appconfig evaluation 2
+    prompt: List all key-value settings in App Configuration store AppConfigStore
+    tags: 
+    environment: development
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: appconfig
+              command: appconfig_kv_get
+  - name: appconfig evaluation 3
+    prompt: List all key-value settings with key name starting with 'prod-' in App Configuration store AppConfigStore
+    tags: 
+    environment: development
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: appconfig
+              command: appconfig_kv_get
+  - name: appconfig evaluation 4
+    prompt: Lock the key Foo in App Configuration store AppConfigStore
+    tags: 
+    environment: development
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: appconfig
+              command: appconfig_kv_lock_set
+  - name: appconfig evaluation 5
+    prompt: Set the key Foo in App Configuration store AppConfigStore to TestValue
+    tags: 
+    environment: development
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: appconfig
+              command: appconfig_kv_set
+  - name: appconfig evaluation 6
+    prompt: Show me my App Configuration stores
+    tags: 
+    environment: development
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: appconfig
+              command: appconfig_account_list
+  - name: appconfig evaluation 7
+    prompt: Show me the App Configuration stores in my subscription
+    tags: 
+    environment: development
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: appconfig
+              command: appconfig_account_list
+  - name: appconfig evaluation 8
+    prompt: Show me the key-value settings in App Configuration store AppConfigStore
+    tags: 
+    environment: development
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: appconfig
+              command: appconfig_kv_get
+  - name: appconfig evaluation 9
+    prompt: Show the content for the key Foo in App Configuration store AppConfigStore
+    tags: 
+    environment: development
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: appconfig
+              command: appconfig_kv_get
+  - name: appconfig evaluation 10
+    prompt: Unlock the key Foo in App Configuration store AppConfigStore
+    tags: 
+    environment: development
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: appconfig
+              command: appconfig_kv_lock_set
