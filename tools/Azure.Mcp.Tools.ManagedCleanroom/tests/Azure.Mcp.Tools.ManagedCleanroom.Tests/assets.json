@@ -2,7 +2,7 @@
   "AssetsRepo": "Azure/azure-sdk-assets",
   "AssetsRepoPrefixPath": "",
   "TagPrefix": "Azure.Mcp.Tools.ManagedCleanroom.Tests",
-  "Tag": "Azure.Mcp.Tools.ManagedCleanroom.Tests_af13b78763",
+  "Tag": "Azure.Mcp.Tools.ManagedCleanroom.Tests_411678757a",
   "Sanitizers": [
     {
       "type": "UriRegexSanitizer",

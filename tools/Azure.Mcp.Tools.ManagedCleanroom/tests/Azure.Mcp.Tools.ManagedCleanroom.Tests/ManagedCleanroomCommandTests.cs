@@ -52,7 +52,7 @@ public class ManagedCleanroomCommandTests(ITestOutputHelper output, TestProxyFix
     {
         var location = RegisterOrRetrieveVariable(
             "location",
-            Settings.DeploymentOutputs.GetValueOrDefault("CLEANROOM_LOCATION", 
+            Settings.DeploymentOutputs.GetValueOrDefault("CLEANROOM_LOCATION",
                 Settings.DeploymentOutputs.GetValueOrDefault("LOCATION", string.Empty)));
 
         if (string.IsNullOrWhiteSpace(location))
