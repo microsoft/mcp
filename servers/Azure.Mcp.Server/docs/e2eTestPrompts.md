@@ -862,6 +862,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | resilience_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> |
 | resilience_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> |
 | resilience_goal_resource_get | Get the goal resource <resource_name> for goal assignment <goal_assignment_name> in service group <service_group> |
+| resilience_goal_template_create | Create a resilience goal template <goal_template_name> in service group <service_group> with goal type Resiliency, high availability required, disaster recovery not required, a regional recovery point objective of PT15M and a regional recovery time objective of PT30M |
 | resilience_goal_template_get | List all resilience goal templates in service group <service_group> |
 | resilience_goal_template_get | Get the details of goal template <goal_template_name> in service group <service_group> |
 | resilience_recovery_job_get | List all recovery jobs of recovery plan <recovery_plan_name> in service group <service_group> |

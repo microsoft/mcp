@@ -28,6 +28,7 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<IResilienceManagementService, ResilienceManagementService>();
 
         services.AddSingleton<GoalTemplateGetCommand>();
+        services.AddSingleton<GoalTemplateCreateCommand>();
         services.AddSingleton<GoalAssignmentGetCommand>();
         services.AddSingleton<GoalResourceGetCommand>();
         services.AddSingleton<UsagePlanGetCommand>();
@@ -67,6 +68,7 @@ public class ResilienceManagementSetup : IAreaSetup
 
         // Register commands
         templates.AddCommand<GoalTemplateGetCommand>(serviceProvider);
+        templates.AddCommand<GoalTemplateCreateCommand>(serviceProvider);
         assignments.AddCommand<GoalAssignmentGetCommand>(serviceProvider);
         goalResources.AddCommand<GoalResourceGetCommand>(serviceProvider);
 

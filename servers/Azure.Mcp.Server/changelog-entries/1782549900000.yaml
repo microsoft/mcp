@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the 'azmcp resilience goal template create' command to create or update a resilience goal template in a service group, including its goal type, high availability and disaster recovery requirements, and regional recovery point and time objectives."

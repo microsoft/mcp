@@ -513,4 +513,37 @@ public sealed class ResilienceManagementService(
         using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content.ToMemory());
         return document.RootElement.Clone();
     }
+
+    public async Task<GoalTemplateInfo> CreateGoalTemplateAsync(string serviceGroup, string goalTemplate, GoalTemplateKind goalType, GoalRequirement requireHighAvailability, GoalRequirement requireDisasterRecovery, string regionalRecoveryPointObjective, string regionalRecoveryTimeObjective, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+            ? subscription
+            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
+        GoalTemplateCollection goalTemplates = armClient.GetGoalTemplates(serviceGroupId);
+
+        var data = new GoalTemplateData
+        {
+            Properties = new GoalTemplateProperties(MapGoalType(goalType))
+            {
+                RequireHighAvailability = new RequirementSelected(requireHighAvailability.ToString()),
+                RequireDisasterRecovery = new RequirementSelected(requireDisasterRecovery.ToString()),
+                RegionalRecoveryPointObjective = regionalRecoveryPointObjective,
+                RegionalRecoveryTimeObjective = regionalRecoveryTimeObjective
+            }
+        };
+
+        ArmOperation<GoalTemplateResource> operation = await goalTemplates.CreateOrUpdateAsync(WaitUntil.Completed, goalTemplate, data, cancellationToken);
+
+        return MapGoalTemplate(operation.Value.Data);
+    }
+
+    private static ResilienceManagementGoalType MapGoalType(GoalTemplateKind goalType) => goalType switch
+    {
+        GoalTemplateKind.Resiliency => ResilienceManagementGoalType.Resiliency,
+        _ => throw new ArgumentOutOfRangeException(nameof(goalType), goalType, "Unsupported goal type.")
+    };
 }

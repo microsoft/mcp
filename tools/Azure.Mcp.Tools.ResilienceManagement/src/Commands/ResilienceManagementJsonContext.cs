@@ -17,6 +17,7 @@ using Azure.Mcp.Tools.ResilienceManagement.Models;
 namespace Azure.Mcp.Tools.ResilienceManagement.Commands;
 
 [JsonSerializable(typeof(GoalTemplateGetCommand.GoalTemplateGetCommandResult))]
+[JsonSerializable(typeof(GoalTemplateCreateCommand.GoalTemplateCreateCommandResult))]
 [JsonSerializable(typeof(GoalTemplateInfo))]
 [JsonSerializable(typeof(GoalTemplateInfoProperties))]
 [JsonSerializable(typeof(GoalTemplateInfoSystemData))]

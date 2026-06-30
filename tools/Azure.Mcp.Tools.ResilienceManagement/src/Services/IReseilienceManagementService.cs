@@ -47,4 +47,5 @@ public interface IResilienceManagementService
     Task<IEnumerable<ResourceSummary>> ListRecoveryJobResourcesAsync(string serviceGroup, string recoveryPlan, string recoveryJob, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
     Task<JsonElement> GetRecoveryJobResourceAsync(string serviceGroup, string recoveryPlan, string recoveryJob, string recoveryJobTarget, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<GoalTemplateInfo> CreateGoalTemplateAsync(string serviceGroup, string goalTemplate, GoalTemplateKind goalType, GoalRequirement requireHighAvailability, GoalRequirement requireDisasterRecovery, string regionalRecoveryPointObjective, string regionalRecoveryTimeObjective, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 }

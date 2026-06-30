@@ -3620,6 +3620,17 @@ azmcp resilience goal template get --subscription <subscription> \
                                    --service-group <service-group> \
                                    [--name <name>]
 
+# Create or update a resilience goal template in a service group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience goal template create --subscription <subscription> \
+                                      --service-group <service-group> \
+                                      --goal-template <goal-template> \
+                                      --goal-type <goal-type> \
+                                      --require-high-availability <require-high-availability> \
+                                      --require-disaster-recovery <require-disaster-recovery> \
+                                      --regional-recovery-point-objective <regional-recovery-point-objective> \
+                                      --regional-recovery-time-objective <regional-recovery-time-objective>
+
 # Get a resilience goal assignment, or list all goal assignments in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience goal assignment get --subscription <subscription> \
