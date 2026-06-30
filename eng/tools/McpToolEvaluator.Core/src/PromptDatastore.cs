@@ -1,4 +1,6 @@
-﻿namespace McpToolEvaluator.Core;
+﻿using McpToolEvaluator.Core.Models;
+
+namespace McpToolEvaluator.Core;
 
 public class PromptDatastore
 {

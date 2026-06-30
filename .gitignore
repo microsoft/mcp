@@ -9,6 +9,7 @@ tests/test-cmds.txt
 bin/
 obj/
 .vs/
+.vscode/
 .idea/
 TestResults/
 *.binlog
