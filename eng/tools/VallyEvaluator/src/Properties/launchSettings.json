@@ -1,6 +1,13 @@
 {
   "profiles": {
-    "VallyEvaluator": {
+    "Default": {
+      "commandName": "Project"
+    },
+    "All": {
+      "commandName": "Project",
+      "commandLineArgs": "--output=\"./\""
+    },
+    "Demo": {
       "commandName": "Project",
       "commandLineArgs": "--output=\"./\" --namespaces=\"storage,appconfig\""
     }

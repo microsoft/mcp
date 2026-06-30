@@ -1,0 +1,40 @@
+name: Pull Request Vally evaluations
+description: |
+  Evaluates E2E prompts to ensure they still pass when tools are changed.
+
+on:
+  pull_request:
+    paths:
+      - 'tools/**'
+      - 'core/Microsoft.Mcp.Core/**'
+      - '.vally.yaml'
+permissions:
+  copilot-requests: write
+  contents: read
+  pull-requests: read
+
+jobs:
+  eval-job:
+    runs-on: ubuntu-latest
+    env:
+      BUILD_REASON: PullRequest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.0
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v5.4.0
+
+      - name: Create build_info.json
+        shell: pwsh
+        run: ./eng/scripts/New-BuildInfo.ps1 -ServerName Azure.Mcp.Server
+
+      - name: Build server code
+        shell: pwsh
+        run: ./eng/scripts/Build-Code.ps1 -BuildInfoPath $($env:GITHUB_WORKSPACE)/.work/build_info.json
+    
+      - name: Run vally evaluations
+        run: dotnet run --project ./eng/tools/VallyEvaluator/VallyEvaluator.csproj --launch-profile "All"
+
+      - name: List evaluations
+        run: ls -R ./.work/evals/
