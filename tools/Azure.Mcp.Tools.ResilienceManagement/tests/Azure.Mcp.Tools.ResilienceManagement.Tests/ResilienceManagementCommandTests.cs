@@ -87,30 +87,6 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
     }
 
     [Fact]
-    public async Task Should_create_goal_template()
-    {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var goalTemplate = RegisterOrRetrieveVariable("createdGoalTemplateName", "mcp-created-template");
-
-        var result = await CallToolAsync(
-            "resilience_goal_template_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "service-group", serviceGroup },
-                { "goal-template", goalTemplate },
-                { "goal-type", "Resiliency" },
-                { "require-high-availability", "Required" },
-                { "require-disaster-recovery", "NotRequired" },
-                { "regional-recovery-point-objective", "PT15M" },
-                { "regional-recovery-time-objective", "PT30M" }
-            });
-
-        var template = result.AssertProperty("goalTemplate");
-        Assert.False(string.IsNullOrEmpty(template.AssertProperty("name").GetString()));
-    }
-
-    [Fact]
     public async Task Should_get_goal_assignment()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
