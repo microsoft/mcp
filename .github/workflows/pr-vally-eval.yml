@@ -8,6 +8,15 @@ on:
       - 'tools/**'
       - 'core/Microsoft.Mcp.Core/**'
       - '.vally.yaml'
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: false
+        default: 'warning'
+        type: choice
+        options: ['info', 'warning', 'debug']
+
 permissions:
   copilot-requests: write
   contents: read
@@ -16,14 +25,17 @@ permissions:
 jobs:
   eval-job:
     runs-on: ubuntu-latest
-    env:
-      BUILD_REASON: PullRequest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7.0.0
 
       - name: Install .NET SDK
         uses: actions/setup-dotnet@v5.4.0
+
+      - name: Set BUILD_REASON environment variable
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          echo "BUILD_REASON=PullRequest" >> $GITHUB_ENV
 
       - name: Create build_info.json
         shell: pwsh
