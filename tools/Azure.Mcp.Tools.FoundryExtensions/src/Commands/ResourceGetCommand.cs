@@ -22,7 +22,7 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
         Foundry resources in a subscription, show resources in a resource group, or get details for a specific
         resource by name. If resource-name is provided with resource-group, returns that single resource; otherwise
         returns the resource inventory in scope. This command is for Foundry resource metadata, not model
-        deployment inventory. For Azure OpenAI model deployments inside a Foundry resource, use openai models-list.
+        deployment inventory. For Azure OpenAI model deployments inside a Foundry resource, use the 'openai models-list' tool.
         """,
     Destructive = false,
     Idempotent = true,
@@ -40,6 +40,12 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoun
     {
         try
         {
+            // Validate that if resource name is provided, resource group must also be provided
+            if (!string.IsNullOrEmpty(options.ResourceName) && string.IsNullOrEmpty(options.ResourceGroup))
+            {
+                throw new ArgumentException("Resource group is required when resource name is specified.");
+            }
+
             // If resource name and resource group are provided, get specific resource
             if (!string.IsNullOrEmpty(options.ResourceName) && !string.IsNullOrEmpty(options.ResourceGroup))
             {

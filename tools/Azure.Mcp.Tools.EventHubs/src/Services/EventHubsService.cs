@@ -32,7 +32,7 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
         var namespaces = new List<Namespace>();
 
-        if (!string.IsNullOrEmpty(resourceGroup))
+        if (!string.IsNullOrWhiteSpace(resourceGroup))
         {
             // Get namespaces from specific resource group
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
