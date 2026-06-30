@@ -858,6 +858,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| resilience_goal_assignment_create | Create a resilience goal assignment <goal_assignment_name> in service group <service_group> that assigns goal template <goal_template_name> from service group <goal_template_service_group> with assignment type Resiliency |
 | resilience_goal_assignment_get | List all resilience goal assignments in service group <service_group> |
 | resilience_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> |
 | resilience_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> |

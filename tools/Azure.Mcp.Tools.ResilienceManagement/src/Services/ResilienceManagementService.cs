@@ -598,4 +598,34 @@ public sealed class ResilienceManagementService(
 
         return MapUsagePlanEnrollment(operation.Value.Data);
     }
+
+    public async Task<GoalAssignmentInfo> CreateGoalAssignmentAsync(string serviceGroup, string goalAssignment, string goalTemplate, string goalTemplateServiceGroup, GoalAssignmentKind goalAssignmentType, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+            ? subscription
+            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
+        GoalAssignmentCollection goalAssignments = armClient.GetGoalAssignments(serviceGroupId);
+        ResourceIdentifier goalTemplateId = GoalTemplateResource.CreateResourceIdentifier(goalTemplateServiceGroup, goalTemplate);
+
+        var data = new GoalAssignmentData
+        {
+            Properties = new GoalAssignmentProperties(goalTemplateId: goalTemplateId, goalAssignmentType: MapGoalAssignmentType(goalAssignmentType))
+        };
+
+        // The create operation does not return the resource body, so fetch it after completion.
+        await goalAssignments.CreateOrUpdateAsync(WaitUntil.Completed, goalAssignment, data, cancellationToken);
+        GoalAssignmentResource resource = await goalAssignments.GetAsync(goalAssignment, cancellationToken);
+
+        return MapGoalAssignment(resource.Data);
+    }
+
+    private static GoalAssignmentType MapGoalAssignmentType(GoalAssignmentKind goalAssignmentType) => goalAssignmentType switch
+    {
+        GoalAssignmentKind.Resiliency => GoalAssignmentType.Resiliency,
+        _ => throw new ArgumentOutOfRangeException(nameof(goalAssignmentType), goalAssignmentType, "Unsupported goal assignment type.")
+    };
 }

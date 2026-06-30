@@ -53,4 +53,6 @@ public interface IResilienceManagementService
     Task<UsagePlanInfo> CreateUsagePlanAsync(string resourceGroup, string usagePlan, UsagePlanKind planType, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     
     Task<UsagePlanEnrollmentInfo> CreateUsagePlanEnrollmentAsync(string resourceGroup, string usagePlan, string enrollment, string serviceGroup, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    
+    Task<GoalAssignmentInfo> CreateGoalAssignmentAsync(string serviceGroup, string goalAssignment, string goalTemplate, string goalTemplateServiceGroup, GoalAssignmentKind goalAssignmentType, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 }

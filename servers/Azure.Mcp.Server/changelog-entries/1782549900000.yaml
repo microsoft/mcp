@@ -5,3 +5,5 @@ changes:
     description: "Added the 'azmcp resilience usageplan create' command to create a resilience usage plan in a resource group, including its plan type."
   - section: "Features Added"
     description: "Added the 'azmcp resilience usageplan enrollment create' command to create or update an enrollment under a resilience usage plan, associating it with a service group."
+  - section: "Features Added"
+    description: "Added the 'azmcp resilience goal assignment create' command to create or update a resilience goal assignment in a service group that assigns a goal template."

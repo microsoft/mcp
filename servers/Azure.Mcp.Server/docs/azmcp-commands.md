@@ -3637,6 +3637,15 @@ azmcp resilience goal assignment get --subscription <subscription> \
                                      --service-group <service-group> \
                                      [--name <name>]
 
+# Create or update a resilience goal assignment in a service group that assigns a goal template
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience goal assignment create --subscription <subscription> \
+                                        --service-group <service-group> \
+                                        --goal-assignment <goal-assignment> \
+                                        --goal-template <goal-template> \
+                                        --goal-template-service-group <goal-template-service-group> \
+                                        --goal-assignment-type <goal-assignment-type>
+
 # Get a resource (member) of a goal assignment, or list all resources of the assignment (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience goal resource get --subscription <subscription> \
