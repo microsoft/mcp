@@ -18,9 +18,11 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests;
 public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    // Prepend the base sanitizers (e.g. WWW-Authenticate) then add tool-specific ones.
     // Sanitize x-ms-operation-identifier response header which contains the real tenant ID and object ID.
     public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
     [
+        .. base.HeaderRegexSanitizers,
         new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("x-ms-operation-identifier")
         {
             Value = "sanitized"
