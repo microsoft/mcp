@@ -6,7 +6,6 @@ on:
   pull_request:
     paths:
       - 'tools/**'
-      - 'core/Microsoft.Mcp.Core/**'
       - '.vally.yaml'
   workflow_dispatch:
     inputs:
@@ -74,7 +73,7 @@ jobs:
           ./eng/scripts/Build-Code.ps1 -BuildInfoPath "${{ github.workspace }}/.work/build_info.json" -PlatformName $platformName
 
       - name: Create vally evaluations
-        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/VallyEvaluator.csproj' --launch-profile "Demo"
+        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' --launch-profile "Demo"
 
       - name: List evaluations
         run: ls -R ${{ github.workspace }}/.work/evals/
