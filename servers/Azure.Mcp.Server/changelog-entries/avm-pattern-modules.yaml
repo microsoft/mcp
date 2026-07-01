@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added support for AVM pattern modules (`avm-ptn-*`) in the Azure Terraform `avm` tools. The `azmcp azureterraform avm list` tool now returns both resource and pattern modules, each tagged with a `moduleType` field, and `avm versions`/`avm get` work for pattern modules as well as resource modules."

@@ -8,8 +8,14 @@ namespace Azure.Mcp.Tools.AzureTerraform.Services;
 
 public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmDocsService
 {
-    private const string AvailableModulesUrl =
+    private const string ResourceModulesUrl =
         "https://raw.githubusercontent.com/Azure/Azure-Verified-Modules/main/docs/static/module-indexes/TerraformResourceModules.csv";
+
+    private const string PatternModulesUrl =
+        "https://raw.githubusercontent.com/Azure/Azure-Verified-Modules/main/docs/static/module-indexes/TerraformPatternModules.csv";
+
+    public const string ModuleTypeResource = "resource";
+    public const string ModuleTypePattern = "pattern";
 
     private const string ModuleNameColumn = "ModuleName";
     private const string DescriptionColumn = "Description";
@@ -106,11 +112,15 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
 
         using var client = httpClientFactory.CreateClient();
 
-        var response = await client.GetAsync(new Uri(AvailableModulesUrl), cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        var resourceTask = FetchModulesAsync(client, ResourceModulesUrl, ModuleTypeResource, cancellationToken);
+        var patternTask = FetchModulesAsync(client, PatternModulesUrl, ModuleTypePattern, cancellationToken);
 
-        var csvContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        var modules = ParseModuleCsv(csvContent);
+        var resourceModules = await resourceTask.ConfigureAwait(false);
+        var patternModules = await patternTask.ConfigureAwait(false);
+
+        var modules = new List<AvmModule>(resourceModules.Count + patternModules.Count);
+        modules.AddRange(resourceModules);
+        modules.AddRange(patternModules);
 
         lock (CacheLock)
         {
@@ -121,7 +131,17 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         return modules;
     }
 
-    internal static List<AvmModule> ParseModuleCsv(string csvContent)
+    private static async Task<List<AvmModule>> FetchModulesAsync(
+        HttpClient client, string url, string moduleType, CancellationToken cancellationToken)
+    {
+        using var response = await client.GetAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+
+        var csvContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        return ParseModuleCsv(csvContent, moduleType);
+    }
+
+    internal static List<AvmModule> ParseModuleCsv(string csvContent, string moduleType)
     {
         var lines = csvContent.Split('\n');
         if (lines.Length == 0)
@@ -129,7 +149,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
             return [];
         }
 
-        var headerLine = lines[0].Trim();
+        var headerLine = lines[0].Trim().TrimStart('\uFEFF');
         if (string.IsNullOrEmpty(headerLine))
         {
             return [];
@@ -182,7 +202,8 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
                 ModuleName = moduleName,
                 Description = descIdx >= 0 && descIdx < values.Count ? values[descIdx] : string.Empty,
                 RepoUrl = repoUrl,
-                Source = SourceFromRepoUrl(repoUrl)
+                Source = SourceFromRepoUrl(repoUrl),
+                ModuleType = moduleType
             });
         }
 

@@ -1197,6 +1197,7 @@ Example prompts that generate Azure CLI commands:
 * "List all available Azure Verified Modules"
 * "Show all versions of avm-res-network-virtualnetwork"
 * "Get the documentation for avm-res-storage-storageaccount version 0.1.0"
+* "Get the documentation for the avm-ptn-aiml-ai-foundry pattern module"
 * "Export all resources in resource group my-rg to Terraform"
 * "Export all storage accounts in my subscription using a resource graph query"
 * "Validate Terraform files in ./my-terraform-folder against Azure security policies"
