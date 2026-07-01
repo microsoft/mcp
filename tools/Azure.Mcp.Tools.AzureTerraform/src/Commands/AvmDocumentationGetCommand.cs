@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     Title = "Get AVM Module Documentation",
     Description = """
         Retrieves the documentation (README.md) for a specific version of an Azure Verified Module (AVM).
+        Works for both resource modules (avm-res-*) and pattern modules (avm-ptn-*).
         Returns the full module documentation including usage examples, input variables,
         output values, and resource descriptions. Use --module-name and --module-version
         to specify the module and version (e.g., --module-name avm-res-storage-storageaccount --module-version 0.4.0).

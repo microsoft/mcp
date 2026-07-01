@@ -169,7 +169,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
     ```json
     {
         "mcpServers": {
-            "Azure MCP Server": {
+            "azure-mcp-server": {
                 "command": "dnx",
                 "args": [
                     "Azure.Mcp",
@@ -196,7 +196,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
     ```json
     {
         "mcpServers": {
-            "Azure MCP Server": {
+            "azure-mcp-server": {
             "command": "npx",
             "args": [
                 "-y",
@@ -218,7 +218,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
     ```json
     {
         "mcpServers": {
-            "Azure MCP Server": {
+            "azure-mcp-server": {
                 "command": "uvx",
                 "args": [
                     "--from",
@@ -381,24 +381,24 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 
 #### Configure MCP client to use Docker
 
-2. Add or update existing `mcp.json`.  Replace `/full/path/to/.env` with the actual `.env` file path.
+2. Add or update existing `mcp.json`. Replace `/full/path/to/.env` with the actual `.env` file path.
 
 ```json
-   {
-      "mcpServers": {
-         "Azure MCP Server": {
+{
+    "mcpServers": {
+        "azure-mcp-server": {
             "command": "docker",
             "args": [
-               "run",
-               "-i",
-               "--rm",
-               "--env-file",
-               "/full/path/to/.env",
-               "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
+                "run",
+                "-i",
+                "--rm",
+                "--env-file",
+                "/full/path/to/.env",
+                "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
             ]
-         }
-      }
-   }
+        }
+    }
+}
 ```
 </details>
 
@@ -1204,6 +1204,7 @@ Example prompts that generate Azure CLI commands:
 * "List all available Azure Verified Modules"
 * "Show all versions of avm-res-network-virtualnetwork"
 * "Get the documentation for avm-res-storage-storageaccount version 0.1.0"
+* "Get the documentation for the avm-ptn-aiml-ai-foundry pattern module"
 * "Export all resources in resource group my-rg to Terraform"
 * "Export all storage accounts in my subscription using a resource graph query"
 * "Validate Terraform files in ./my-terraform-folder against Azure security policies"

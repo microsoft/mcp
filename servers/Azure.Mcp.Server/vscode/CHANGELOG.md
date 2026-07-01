@@ -1,5 +1,31 @@
 # Release History
 
+## 3.0.22 (2026-06-30) (pre-release)
+
+### Changed
+
+- **Breaking:** Removed unused parameters from tools in the following namespaces:
+  - App Configuration [[#2871](https://github.com/microsoft/mcp/pull/2871)]
+  - App Service [[#2875](https://github.com/microsoft/mcp/pull/2875)]
+  - Authorization [[#2885](https://github.com/microsoft/mcp/pull/2885)]
+  - Azure Backup [[#2888](https://github.com/microsoft/mcp/pull/2888)]
+  - Cosmos DB [[#2935](https://github.com/microsoft/mcp/pull/2935)]
+  - Kusto [[#2922](https://github.com/microsoft/mcp/pull/2922)]
+  - Monitor [[#2940](https://github.com/microsoft/mcp/pull/2940)]
+  - SRE Agent [[#2937](https://github.com/microsoft/mcp/pull/2937)]
+  - Storage [[#2922](https://github.com/microsoft/mcp/pull/2922)]
+  - Virtual Desktop [[#2941](https://github.com/microsoft/mcp/pull/2941)]
+  - PostgreSQL [[#2942](https://github.com/microsoft/mcp/pull/2942)]
+  - Foundry Extensions [[#2949](https://github.com/microsoft/mcp/pull/2949)]
+  - Storage Sync [[#2950](https://github.com/microsoft/mcp/pull/2950)]
+- **Breaking:** Parameters `--label` and `--label-filter` are now mutually exclusive in `appconfig kv get`. [[#2871](https://github.com/microsoft/mcp/pull/2871)]
+
+### Fixed
+
+- Fixed handling of nullable numeric options in Foundry Extensions tools. They were previously being ignored due to a type mismatch between the `System.CommandLine` Option definition type and the retrieval type. [[#2949](https://github.com/microsoft/mcp/pull/2949)]
+- Fixed missing `--tags` option in the `storagesync service create` tool. [[#2950](https://github.com/microsoft/mcp/pull/2950)]
+- `eventhubs namespace-get` now correctly supports subscription-wide listing when `--resource-group` is omitted, and treats a whitespace resource group as not provided for robust scope handling. [[#2961](https://github.com/microsoft/mcp/pull/2961)]
+- `foundryextensions resource-get` routing and terminology were clarified to improve namespace tool selection confidence, and validation now fails fast when `--resource-name` is provided without `--resource-group`. [[#2961](https://github.com/microsoft/mcp/pull/2961)]
 
 ## 3.0.21 (2026-06-23) (pre-release)
 
