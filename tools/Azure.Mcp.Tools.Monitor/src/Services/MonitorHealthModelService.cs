@@ -86,9 +86,8 @@ public class MonitorHealthModelService(ISubscriptionService subscriptionService,
             Type = identity.ManagedServiceIdentityType.ToString(),
             PrincipalId = identity.PrincipalId?.ToString(),
             TenantId = identity.TenantId?.ToString(),
-            UserAssignedIdentities = identity.UserAssignedIdentities.Count > 0
-                ? identity.UserAssignedIdentities.Keys.Select(id => id.ToString()).ToList()
-                : null,
+            UserAssignedIdentities = identity.UserAssignedIdentities?
+                .Keys.Select(id => id.ToString()).ToList(),
         };
     }
 

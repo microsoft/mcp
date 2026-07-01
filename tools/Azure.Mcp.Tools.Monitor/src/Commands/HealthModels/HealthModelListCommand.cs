@@ -16,7 +16,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels;
     Name = "list",
     Title = "List Azure Monitor Health Models",
     Description = """
-        List Azure Monitor Health Models in a subscription. Optionally scoped to a resource group.
+        List (find/show/enumerate) Azure Monitor Health Models (Microsoft.CloudHealth/healthmodels) in a subscription, or scoped to a specific resource group.
+        Returns a summary of each health model, including its name, resource group, and location.
         """,
     Destructive = false,
     Idempotent = true,
