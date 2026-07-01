@@ -1117,7 +1117,7 @@ Example prompts that generate Azure CLI commands:
 
 * "Query my Log Analytics workspace"
 * "List my Azure Monitor Health Models"
-* "Get health for my Azure Monitor Health Model 'my-health-model'"
+* "Get details for my Azure Monitor Health Model 'my-health-model'"
 
 ### 🧭 Azure Monitor Instrumentation (under Azure Monitor)
 
