@@ -73,13 +73,22 @@ jobs:
 
           ./eng/scripts/Build-Code.ps1 -BuildInfoPath "${{ github.workspace }}/.work/build_info.json" -PlatformName $platformName
 
-      - name: List evaluations
-        run: ls -R ${{ github.workspace }}/.work/evals/
-    
       - name: Create vally evaluations
         run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/VallyEvaluator.csproj' --launch-profile "Demo"
 
+      - name: List evaluations
+        run: ls -R ${{ github.workspace }}/.work/evals/
+
       - name: Run vally
-        run: vally eval --work-dir '${{ github.workspace }}' --eval-spec '.work/evals/appconfig/eval.yaml'
+        run: |
+          $evalPaths = & ./eng/scripts/Get-EvalPaths.ps1
+          $commandArg = ""
+          $evalPaths | ForEach-Object { $commandArg += "--eval-spec '$($_)' " }
+          $expression = "vally eval --work-dir '${{ github.workspace }}' $commandArg"
+
+          Write-Host $expression
+
+          vally eval --work-dir '${{ github.workspace }}' --eval-spec '.work/evals/appconfig/eval.yaml'
+        shell: pwsh
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
