@@ -39,11 +39,19 @@ jobs:
 
       - name: Create build_info.json
         shell: pwsh
-        run: ./eng/scripts/New-BuildInfo.ps1 -ServerName Azure.Mcp.Server
+        run: |
+          if ($env:BUILD_REASON -eq 'PullRequest') {
+            Write-Host "Run type: PR run"
+          }
+          else {
+            Write-Host "Run type: manual run"
+          }
+          
+          ./eng/scripts/New-BuildInfo.ps1 -ServerName Azure.Mcp.Server
 
       - name: Build server code
         shell: pwsh
-        run: ./eng/scripts/Build-Code.ps1 -BuildInfoPath $($env:GITHUB_WORKSPACE)/.work/build_info.json
+        run: ./eng/scripts/Build-Code.ps1 -BuildInfoPath "${{ github.workspace }}/.work/build_info.json"
     
       - name: Run vally evaluations
         run: dotnet run --project ./eng/tools/VallyEvaluator/VallyEvaluator.csproj --launch-profile "All"
