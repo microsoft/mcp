@@ -85,9 +85,18 @@ jobs:
           $evalPaths | ForEach-Object { $commandArg += "--eval-spec '$($_)' " }
           $expression = "vally eval --work-dir '${{ github.workspace }}' $commandArg"
 
-          Write-Host $expression
+          Write-Host "Calculated: $expression"
+          Write-Host "Server exists: $(Test-Path '.work/build/Azure.Mcp.Server/linux-x64/azmcp')"
 
           vally eval --work-dir '${{ github.workspace }}' --eval-spec '.work/evals/appconfig/eval.yaml'
         shell: pwsh
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+
+      - name: Upload vally results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: vally-results
+          path: ${{ github.workspace }}/vally-results
+          if-no-files-found: warn
