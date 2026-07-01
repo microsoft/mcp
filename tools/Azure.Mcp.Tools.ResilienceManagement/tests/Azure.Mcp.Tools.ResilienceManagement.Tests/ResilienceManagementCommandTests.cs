@@ -200,4 +200,120 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
 
         Assert.Equal(JsonValueKind.Array, result.AssertProperty("recoveryJobResources").ValueKind);
     }
+
+    [Fact]
+    public async Task Should_create_usage_plan()
+    {
+        var resourceGroupName = RegisterOrRetrieveDeploymentOutputVariable("createResourceGroupName", "CREATERESOURCEGROUPNAME");
+        const string usagePlanName = "mcp-usage-plan";
+
+        var result = await CallToolAsync(
+            "resilience_usageplan_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "usage-plan", usagePlanName },
+                { "plan-type", "Basic" }
+            });
+
+        var usagePlan = result.AssertProperty("usagePlan");
+        Assert.False(string.IsNullOrEmpty(usagePlan.AssertProperty("name").GetString()));
+    }
+
+    [Fact]
+    public async Task Should_create_usage_plan_enrollment()
+    {
+        var resourceGroupName = RegisterOrRetrieveDeploymentOutputVariable("createResourceGroupName", "CREATERESOURCEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("createServiceGroupName", "CREATESERVICEGROUPNAME");
+        const string usagePlanName = "mcp-enroll-plan";
+        const string enrollmentName = "mcp-enrollment";
+
+        // An enrollment requires an existing usage plan; create one first so the test is self-contained.
+        await CallToolAsync(
+            "resilience_usageplan_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "usage-plan", usagePlanName },
+                { "plan-type", "Basic" }
+            });
+
+        var result = await CallToolAsync(
+            "resilience_usageplan_enrollment_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "usage-plan", usagePlanName },
+                { "enrollment", enrollmentName },
+                { "service-group", serviceGroup }
+            });
+
+        var enrollment = result.AssertProperty("enrollment");
+        Assert.False(string.IsNullOrEmpty(enrollment.AssertProperty("name").GetString()));
+    }
+
+    [Fact]
+    public async Task Should_create_goal_template()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("createServiceGroupName", "CREATESERVICEGROUPNAME");
+        const string goalTemplateName = "mcp-goal-template";
+
+        var result = await CallToolAsync(
+            "resilience_goal_template_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "service-group", serviceGroup },
+                { "goal-template", goalTemplateName },
+                { "goal-type", "Resiliency" },
+                { "require-high-availability", "Required" },
+                { "require-disaster-recovery", "NotRequired" },
+                { "regional-recovery-point-objective", "PT15M" },
+                { "regional-recovery-time-objective", "PT30M" }
+            });
+
+        var template = result.AssertProperty("goalTemplate");
+        Assert.False(string.IsNullOrEmpty(template.AssertProperty("name").GetString()));
+    }
+
+    [Fact]
+    public async Task Should_create_goal_assignment()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("createServiceGroupName", "CREATESERVICEGROUPNAME");
+        const string goalTemplateName = "mcp-assign-template";
+        const string goalAssignmentName = "mcp-goal-assignment";
+
+        // The assignment references a goal template in the same service group; create it first.
+        await CallToolAsync(
+            "resilience_goal_template_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "service-group", serviceGroup },
+                { "goal-template", goalTemplateName },
+                { "goal-type", "Resiliency" },
+                { "require-high-availability", "Required" },
+                { "require-disaster-recovery", "NotRequired" },
+                { "regional-recovery-point-objective", "PT15M" },
+                { "regional-recovery-time-objective", "PT30M" }
+            });
+
+        var result = await CallToolAsync(
+            "resilience_goal_assignment_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "service-group", serviceGroup },
+                { "goal-assignment", goalAssignmentName },
+                { "goal-template", goalTemplateName },
+                { "goal-template-service-group", serviceGroup },
+                { "goal-assignment-type", "Resiliency" }
+            });
+
+        var assignment = result.AssertProperty("goalAssignment");
+        Assert.False(string.IsNullOrEmpty(assignment.AssertProperty("name").GetString()));
+    }
 }
