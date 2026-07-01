@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.Monitor.Models.HealthModels;
 using Azure.Mcp.Tools.Monitor.Options.HealthModels;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -17,9 +16,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels;
     Name = "list",
     Title = "List Azure Monitor Health Models",
     Description = """
-        List Azure Monitor Health Models (Microsoft.CloudHealth/healthmodels) in a subscription. Optionally scope the
-        results to a single resource group with --resource-group. Returns the health model resources as a JSON array
-        (id, name, location, properties, identity, tags). Use 'azmcp monitor healthmodels get' to retrieve a single model.
+        List Azure Monitor Health Models in a subscription. Optionally scoped to a resource group.
         """,
     Destructive = false,
     Idempotent = true,
@@ -27,10 +24,9 @@ namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class HealthModelListCommand(ILogger<HealthModelListCommand> logger, IMonitorHealthModelService healthModelService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<HealthModelListOptions, List<JsonNode>>(subscriptionResolver)
+public sealed class HealthModelListCommand(IMonitorHealthModelService healthModelService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<HealthModelListOptions, List<HealthModelSummary>>(subscriptionResolver)
 {
-    private readonly ILogger<HealthModelListCommand> _logger = logger;
     private readonly IMonitorHealthModelService _healthModelService = healthModelService;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, HealthModelListOptions options, CancellationToken cancellationToken)
@@ -44,14 +40,10 @@ public sealed class HealthModelListCommand(ILogger<HealthModelListCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(models, MonitorJsonContext.Default.ListJsonNode);
+            context.Response.Results = ResponseResult.Create(models, MonitorJsonContext.Default.ListHealthModelSummary);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,
-                "An exception occurred listing health models. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}.",
-                options.ResourceGroup,
-                options.Subscription);
             HandleException(context, ex);
         }
 

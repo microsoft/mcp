@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.Monitor.Models.HealthModels;
 using Azure.Mcp.Tools.Monitor.Options.HealthModels;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -17,9 +16,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels;
     Name = "get",
     Title = "Get an Azure Monitor Health Model",
     Description = """
-        Get (show/view) a single Azure Monitor Health Model (Microsoft.CloudHealth/healthmodels) by name. Requires
-        --subscription, --resource-group, and --health-model. Returns the full health model resource as JSON
-        (id, name, location, properties, identity, tags, systemData).
+        Get (show/view) a single Azure Monitor Health Model by name, resource group, and subscription.
+        Returns the model's metadata and if available, the health state (e.g. Healthy, Degraded, Unhealthy, Unknown) or null if it cannot be provided.
         """,
     Destructive = false,
     Idempotent = true,
@@ -27,10 +25,9 @@ namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class HealthModelGetCommand(ILogger<HealthModelGetCommand> logger, IMonitorHealthModelService healthModelService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<HealthModelGetOptions, JsonNode>(subscriptionResolver)
+public sealed class HealthModelGetCommand(IMonitorHealthModelService healthModelService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<HealthModelGetOptions, HealthModelGetCommand.HealthModelGetCommandResult>(subscriptionResolver)
 {
-    private readonly ILogger<HealthModelGetCommand> _logger = logger;
     private readonly IMonitorHealthModelService _healthModelService = healthModelService;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, HealthModelGetOptions options, CancellationToken cancellationToken)
@@ -45,18 +42,15 @@ public sealed class HealthModelGetCommand(ILogger<HealthModelGetCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(model, MonitorJsonContext.Default.JsonNode);
+            context.Response.Results = ResponseResult.Create(new(model), MonitorJsonContext.Default.HealthModelGetCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,
-                "An exception occurred getting health model: {HealthModel}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}.",
-                options.HealthModel,
-                options.ResourceGroup,
-                options.Subscription);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
+
+    public sealed record HealthModelGetCommandResult(HealthModelDetail HealthModel);
 }

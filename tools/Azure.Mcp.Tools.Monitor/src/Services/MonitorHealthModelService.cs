@@ -1,28 +1,36 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.ClientModel.Primitives;
-using System.Text.Json.Nodes;
+using System.Linq;
+using Azure;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.Monitor.Models.HealthModels;
 using Azure.ResourceManager.CloudHealth;
+using Azure.ResourceManager.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorHealthModelService(ISubscriptionService subscriptionService, ITenantService tenantService)
+public class MonitorHealthModelService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<MonitorHealthModelService> logger)
     : BaseAzureService(tenantService), IMonitorHealthModelService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly ILogger<MonitorHealthModelService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    private static readonly ModelReaderWriterContext s_context = AzureResourceManagerCloudHealthContext.Default;
+    internal static HealthModelSummary ToSummary(HealthModelData data) =>
+        new()
+        {
+            Id = data.Id?.ToString(),
+            Name = data.Name,
+            ResourceGroup = data.Id?.ResourceGroupName,
+            Location = data.Location.ToString(),
+            ProvisioningState = data.HealthModelProvisioningState?.ToString(),
+        };
 
-    private static JsonNode ToJson(object model) =>
-        JsonNode.Parse(ModelReaderWriter.Write(model, ModelReaderWriterOptions.Json, s_context).ToString())
-            ?? throw new InvalidOperationException("Failed to serialize the health model response.");
-
-    public async Task<List<JsonNode>> ListHealthModels(
+    public async Task<List<HealthModelSummary>> ListHealthModels(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
@@ -32,13 +40,13 @@ public class MonitorHealthModelService(ISubscriptionService subscriptionService,
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-        var results = new List<JsonNode>();
+        var results = new List<HealthModelSummary>();
 
         if (string.IsNullOrEmpty(resourceGroup))
         {
             await foreach (var model in subscriptionResource.GetHealthModelsAsync(cancellationToken))
             {
-                results.Add(ToJson(model.Data));
+                results.Add(ToSummary(model.Data));
             }
         }
         else
@@ -46,14 +54,45 @@ public class MonitorHealthModelService(ISubscriptionService subscriptionService,
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             await foreach (var model in resourceGroupResource.Value.GetHealthModels().GetAllAsync(cancellationToken: cancellationToken))
             {
-                results.Add(ToJson(model.Data));
+                results.Add(ToSummary(model.Data));
             }
         }
 
         return results;
     }
 
-    public async Task<JsonNode> GetHealthModel(
+    internal static HealthModelDetail ToDetail(HealthModelData data, string? healthState) =>
+        new()
+        {
+            Id = data.Id?.ToString(),
+            Name = data.Name,
+            ResourceGroup = data.Id?.ResourceGroupName,
+            Location = data.Location.ToString(),
+            ProvisioningState = data.HealthModelProvisioningState?.ToString(),
+            HealthState = healthState,
+            Identity = ToIdentity(data.Identity),
+            Tags = data.Tags,
+        };
+
+    internal static HealthModelIdentity? ToIdentity(ManagedServiceIdentity? identity)
+    {
+        if (identity is null)
+        {
+            return null;
+        }
+
+        return new HealthModelIdentity
+        {
+            Type = identity.ManagedServiceIdentityType.ToString(),
+            PrincipalId = identity.PrincipalId?.ToString(),
+            TenantId = identity.TenantId?.ToString(),
+            UserAssignedIdentities = identity.UserAssignedIdentities.Count > 0
+                ? identity.UserAssignedIdentities.Keys.Select(id => id.ToString()).ToList()
+                : null,
+        };
+    }
+
+    public async Task<HealthModelDetail> GetHealthModel(
         string subscription,
         string resourceGroup,
         string healthModelName,
@@ -69,6 +108,24 @@ public class MonitorHealthModelService(ISubscriptionService subscriptionService,
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var model = await resourceGroupResource.Value.GetHealthModels().GetAsync(healthModelName, cancellationToken);
-        return ToJson(model.Value.Data);
+        var healthState = await TryGetRootHealthStateAsync(model.Value, healthModelName, cancellationToken);
+        return ToDetail(model.Value.Data, healthState);
+    }
+
+    private async Task<string?> TryGetRootHealthStateAsync(HealthModelResource model, string rootEntityName, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var entity = await model.GetHealthModelEntityAsync(rootEntityName, cancellationToken);
+            return entity.Value.Data.Properties?.HealthState?.ToString();
+        }
+        catch (RequestFailedException ex)
+        {
+            _logger.LogWarning(ex,
+                "Could not resolve root-entity health for health model '{HealthModel}'; returning null healthState. Error: {Message}",
+                rootEntityName,
+                ex.Message);
+            return null;
+        }
     }
 }

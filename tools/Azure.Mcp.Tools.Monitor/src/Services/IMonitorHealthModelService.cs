@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Nodes;
+using Azure.Mcp.Tools.Monitor.Models.HealthModels;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
@@ -9,16 +9,15 @@ namespace Azure.Mcp.Tools.Monitor.Services;
 public interface IMonitorHealthModelService
 {
     /// <summary>
-    /// Lists Azure Monitor Health Models (Microsoft.CloudHealth/healthmodels) in a subscription,
-    /// optionally scoped to a single resource group.
+    /// Lists Azure Monitor Health Models in a subscription or resource group. Returns a summary projection.
     /// </summary>
     /// <param name="subscription">Subscription ID or name.</param>
     /// <param name="resourceGroup">Optional resource group to scope the listing.</param>
-    /// <param name="tenant">Optional tenant ID for cross-tenant operations.</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation.</param>
+    /// <param name="tenant">Optional tenant ID.</param>
+    /// <param name="retryPolicy">Optional retry policy.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns>The health model resources as JSON nodes.</returns>
-    Task<List<JsonNode>> ListHealthModels(
+    /// <returns>List health models.</returns>
+    Task<List<HealthModelSummary>> ListHealthModels(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
@@ -31,11 +30,11 @@ public interface IMonitorHealthModelService
     /// <param name="subscription">Subscription ID or name.</param>
     /// <param name="resourceGroup">The resource group containing the health model.</param>
     /// <param name="healthModelName">The health model name.</param>
-    /// <param name="tenant">Optional tenant ID for cross-tenant operations.</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation.</param>
+    /// <param name="tenant">Optional tenant ID.</param>
+    /// <param name="retryPolicy">Optional retry policy.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns>The health model resource as a JSON node.</returns>
-    Task<JsonNode> GetHealthModel(
+    /// <returns>The health model resource.</returns>
+    Task<HealthModelDetail> GetHealthModel(
         string subscription,
         string resourceGroup,
         string healthModelName,
