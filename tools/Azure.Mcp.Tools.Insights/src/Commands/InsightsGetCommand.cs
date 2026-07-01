@@ -11,7 +11,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 using ModelContextProtocol;
 
 namespace Azure.Mcp.Tools.Insights.Commands;
@@ -156,7 +155,7 @@ public sealed partial class InsightsGetCommand(
         {
             context.Response.Status = System.Net.HttpStatusCode.BadRequest;
             context.Response.Message =
-                $"--{OptionDefinitions.Common.Subscription.Name.TrimStart('-')} is not allowed when " +
+                $"--{InsightsOptionDefinitions.SubscriptionName} is not allowed when " +
                 $"--{InsightsOptionDefinitions.ScopeName} is '{InsightsOptionDefinitions.ScopeTenant}'.";
             return context.Response;
         }

@@ -8,6 +8,7 @@ public static class InsightsOptionDefinitions
     public const string QueryName = "query";
     public const string NoCacheName = "nocache";
     public const string ScopeName = "scope";
+    public const string SubscriptionName = "subscription";
 
     public const string ScopeSubscription = "subscription";
     public const string ScopeTenant = "tenant";
