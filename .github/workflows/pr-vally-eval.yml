@@ -32,6 +32,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7.0.0
+        with:
+          fetch-depth: 0
 
       - name: Install .NET SDK
         uses: actions/setup-dotnet@v5.4.0
@@ -42,12 +44,14 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           echo "BUILD_REASON=PullRequest" >> $GITHUB_ENV
+          echo "SYSTEM_PULLREQUEST_TARGETBRANCH=${{ github.base_ref }}" >> $GITHUB_ENV
+          echo "SYSTEM_PULLREQUEST_SOURCECOMMITID=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
 
       - name: Create build_info.json
         shell: pwsh
         run: |
           if ($env:BUILD_REASON -eq 'PullRequest') {
-            Write-Host "Run type: PR run"
+            Write-Host "Run type: PR run."
           }
           else {
             Write-Host "Run type: manual run"
