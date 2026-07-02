@@ -1,0 +1,13 @@
+{
+  "AssetsRepo": "Azure/azure-sdk-assets",
+  "AssetsRepoPrefixPath": "",
+  "TagPrefix": "Azure.Mcp.Tools.ManagedCleanroom.Tests",
+  "Tag": "Azure.Mcp.Tools.ManagedCleanroom.Tests_411678757a",
+  "Sanitizers": [
+    {
+      "type": "UriRegexSanitizer",
+      "regex": "https://[^/]+\\.cleanroom\\.cloudapp\\.azure\\.net",
+      "value": "https://sanitized.cleanroom.cloudapp.azure.net"
+    }
+  ]
+}
