@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added rollback-on-failure for VM and VMSS creation to clean up orphaned network resources when provisioning fails"
