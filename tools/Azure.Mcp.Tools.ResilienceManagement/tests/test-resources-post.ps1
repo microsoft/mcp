@@ -40,6 +40,8 @@ $enrollmentName = $DeploymentOutputs['ENROLLMENTNAME']
 $goalTemplateName = $DeploymentOutputs['GOALTEMPLATENAME']
 $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
+$createResourceGroupName = $DeploymentOutputs['CREATERESOURCEGROUPNAME']
+$createServiceGroupName = $DeploymentOutputs['CREATESERVICEGROUPNAME']
 
 $serviceGroupApiVersion = '2024-02-01-preview'
 $membershipApiVersion = '2023-09-01-preview'
@@ -125,6 +127,26 @@ Invoke-ResilienceRestPut -Path $serviceGroupPath -Body @{
     }
 } | Out-Null
 Wait-ResilienceProvisioning -Path $serviceGroupPath
+
+# 1b) Create an ISOLATED resource group and service group used only by the "create" live tests.
+#     These are kept separate from the pre-provisioned service group / resource group above so the
+#     create tests can freely create usage plans, enrollments, goal templates and goal assignments
+#     without mutating the resources the get/recovery tests depend on.
+#     NOTE: this resource group is created outside the test harness's managed resource group and is
+#     therefore NOT auto-cleaned by teardown; it is named "<rg>-create" for easy manual cleanup.
+$location = (Get-AzResourceGroup -Name $ResourceGroupName).Location
+New-AzResourceGroup -Name $createResourceGroupName -Location $location -Force | Out-Null
+
+$createServiceGroupPath = "/providers/Microsoft.Management/serviceGroups/$createServiceGroupName`?api-version=$serviceGroupApiVersion"
+Invoke-ResilienceRestPut -Path $createServiceGroupPath -Body @{
+    properties = @{
+        displayName = $createServiceGroupName
+        parent      = @{
+            resourceId = "/providers/Microsoft.Management/serviceGroups/$tenantId"
+        }
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $createServiceGroupPath
 
 # 2) Add the resource group as a member of the service group so its resources
 #    (e.g. the storage account) surface as goal/recovery resource targets.
