@@ -81,6 +81,7 @@ public class VmCreateCommandTests : CommandUnitTestsBase<VmCreateCommand, ICompu
                 Arg.Any<int?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
+                Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(createResult);
@@ -137,6 +138,7 @@ public class VmCreateCommandTests : CommandUnitTestsBase<VmCreateCommand, ICompu
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<int?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -205,6 +207,7 @@ public class VmCreateCommandTests : CommandUnitTestsBase<VmCreateCommand, ICompu
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
@@ -249,6 +252,7 @@ public class VmCreateCommandTests : CommandUnitTestsBase<VmCreateCommand, ICompu
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<int?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -305,6 +309,7 @@ public class VmCreateCommandTests : CommandUnitTestsBase<VmCreateCommand, ICompu
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<int?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
