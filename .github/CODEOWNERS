@@ -69,10 +69,10 @@
 ##################
 
 # PRLabel: %tools-ACR
-/tools/Azure.Mcp.Tools.Acr/            @jongio @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Acr/            @conniey @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ACR
-# ServiceOwners:                       @jongio
+# ServiceOwners:                       @conniey
 
 # PRLabel: %tools-Advisor
 /tools/Azure.Mcp.Tools.Advisor/        @ankiga-MSFT @microsoft/azure-mcp
@@ -81,10 +81,10 @@
 # ServiceOwners:                       @ankiga-MSFT
 
 # PRLabel: %tools-Aks
-/tools/Azure.Mcp.Tools.Aks/            @feiskyer @gossion @jongio @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Aks/            @feiskyer @gossion @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Aks
-# ServiceOwners:                       @feiskyer @gossion @jongio
+# ServiceOwners:                       @feiskyer @gossion
 
 # PRLabel: %tools-AppConfig
 /tools/Azure.Mcp.Tools.AppConfig/      @conniey @JonathanCrd @microsoft/azure-mcp
@@ -117,7 +117,7 @@
 # ServiceOwners:                       @anannya03 @g2vinay @xiangyan99 @microsoft/azure-mcp
 
 # PRLabel: %tools-Authorization
-/tools/Azure.Mcp.Tools.Authorization/  @jongio @vurhanau @xiangyan99 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Authorization/  @vurhanau @xiangyan99 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Authorization
 # ServiceOwners:                       @vurhanau @xiangyan99
@@ -132,10 +132,10 @@
 # ServiceOwners:                       @JasonYeMSFT @microsoft/azure-mcp
 
 # PRLabel: %tools-Azd
-/tools/Azure.Mcp.Tools.Extension/      @wbreza @jongio @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Extension/      @richardpark-msft @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Azd
-# ServiceOwners:                       @wbreza @jongio
+# ServiceOwners:                       @richardpark-msft
 
 # PRLabel: %tools-AzureMigrate
 /tools/Azure.Mcp.Tools.AzureMigrate/            @akshayrohilla @microsoft/azure-mcp
@@ -234,10 +234,10 @@
 # ServiceOwners:                       @jayzzh @xiangyan99
 
 # PRLabel: %tools-FunctionApp
-/tools/Azure.Mcp.Tools.FunctionApp/   @jongio @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.FunctionApp/   @microsoft/azure-mcp
 
 # ServiceLabel: %tools-FunctionApp
-# ServiceOwners:                      @jongio
+# ServiceOwners:
 
 # PRLabel: %tools-Functions
 /tools/Azure.Mcp.Tools.Functions/   @manvkaur @vrdmr @microsoft/azure-mcp
@@ -291,10 +291,10 @@
 # ServiceOwners:                       @conniey @hallipr @microsoft/azure-mcp
 
 # PRLabel: %tools-Monitor
-/tools/Azure.Mcp.Tools.Monitor/        @jongio @smritiy @srnagar @zaaslam @JacksonWeber @lzchen @rads-1996 @rajkumar-rangaraj @xiang17 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Monitor/        @smritiy @srnagar @zaaslam @JacksonWeber @lzchen @rads-1996 @rajkumar-rangaraj @xiang17 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Monitor
-# ServiceOwners:                       @jongio @smritiy @srnagar @zaaslam @JacksonWeber @lzchen @rads-1996 @rajkumar-rangaraj @xiang17
+# ServiceOwners:                       @smritiy @srnagar @zaaslam @JacksonWeber @lzchen @rads-1996 @rajkumar-rangaraj @xiang17
 
 # PRLabel: %tools-MySQL
 /tools/Azure.Mcp.Tools.MySql/          @mattkohnms @ramnov @microsoft/azure-mcp
@@ -345,10 +345,10 @@
 # ServiceOwners:                           @shdesmu @microsoft/azure-mcp
 
 # PRLabel: %tools-Search
-/tools/Azure.Mcp.Tools.Search/         @pablocastro @jongio @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Search/         @pablocastro @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Search
-# ServiceOwners:                       @pablocastro @microsoft/azure-mcp
+# ServiceOwners:                       @pablocastro @microsoft/azure-mcp @alzimmermsft
 
 # PRLabel: %tools-ServiceBus
 /tools/Azure.Mcp.Tools.ServiceBus/     @conniey @microsoft/azure-mcp
@@ -387,22 +387,16 @@
 # ServiceOwners:                       @BandaruDheeraj
 
 # PRLabel: %tools-Storage
-/tools/Azure.Mcp.Tools.Storage/        @alzimmermsft @jongio @xiangyan99 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Storage/        @alzimmermsft @xiangyan99 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Storage
-# ServiceOwners:                       @alzimmermsft  @jongio
+# ServiceOwners:                       @alzimmermsft
 
 # PRLabel: %tools-StorageSync
 /tools/Azure.Mcp.Tools.StorageSync/    @ankushbindlish2 @kszobi @microsoft/azure-mcp
 
 # ServiceLabel: %tools-StorageSync
 # ServiceOwners:                       @ankushbindlish2 @kszobi
-
-# PRLabel: %tools-Authorization
-/tools/Azure.Mcp.Tools.Authorization/  @vurhanau @jongio @xiangyan99 @microsoft/azure-mcp
-
-# ServiceLabel: %tools-Authorization
-# ServiceOwners:                       @vurhanau
 
 # PRLabel: %tools-Deploy
 /tools/Azure.Mcp.Tools.Deploy/         @qianwens @xfz11 @wchigit @microsoft/azure-mcp
