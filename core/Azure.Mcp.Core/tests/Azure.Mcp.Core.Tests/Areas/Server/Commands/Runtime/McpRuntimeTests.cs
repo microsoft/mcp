@@ -38,21 +38,15 @@ public class McpRuntimeTests
     private static ITelemetryService CreateMockTelemetryService() => Substitute.For<ITelemetryService>();
 
     private static RequestContext<ListToolsRequestParams> CreateListToolsRequest() =>
-        new(CreateMockServer(), new() { Method = RequestMethods.ToolsList })
-        {
-            Params = new()
-        };
+        new(CreateMockServer(), new() { Method = RequestMethods.ToolsList }, new());
 
     private static RequestContext<CallToolRequestParams> CreateCallToolRequest(
         string toolName = "test-tool",
-        IDictionary<string, JsonElement>? arguments = null) => new(CreateMockServer(), new() { Method = RequestMethods.ToolsCall })
+        IDictionary<string, JsonElement>? arguments = null) => new(CreateMockServer(), new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new()
-            {
-                Name = toolName,
-                Arguments = arguments ?? new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = toolName,
+            Arguments = arguments ?? new Dictionary<string, JsonElement>()
+        });
 
     private static object GetAndAssertTagKeyValue(Activity activity, string tagName)
     {
@@ -171,7 +165,7 @@ public class McpRuntimeTests
 
         var mockTelemetry = CreateMockTelemetryService();
         var activity = new Activity("test-activity");
-        mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>())
+        mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>())
             .Returns(activity);
 
         var options = CreateOptions();
@@ -196,7 +190,7 @@ public class McpRuntimeTests
         Assert.Equal(expectedResult, result);
         await mockToolLoader.Received(1).ListToolsHandler(request, Arg.Any<CancellationToken>());
 
-        mockTelemetry.Received(1).StartActivity(ActivityName.ListToolsHandler, Arg.Any<Implementation?>());
+        mockTelemetry.Received(1).StartActivity(ActivityName.ListToolsHandler, Arg.Any<Implementation?>(), Arg.Any<RequestParams?>());
         Assert.Equal(ActivityStatusCode.Ok, activity.Status);
     }
 
@@ -210,7 +204,7 @@ public class McpRuntimeTests
 
         var mockTelemetry = CreateMockTelemetryService();
         var activity = new Activity("test-activity");
-        mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>())
+        mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>())
             .Returns(activity);
 
         var options = CreateOptions();
@@ -240,7 +234,7 @@ public class McpRuntimeTests
         Assert.Equal(expectedResult, result);
         await mockToolLoader.Received(1).CallToolHandler(request, Arg.Any<CancellationToken>());
 
-        mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
+        mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>(), Arg.Any<RequestParams?>());
         Assert.Equal(ActivityStatusCode.Ok, activity.Status);
 
         var actualToolName = GetAndAssertTagKeyValue(activity, TagName.ToolName);
@@ -316,7 +310,7 @@ public class McpRuntimeTests
 
         var mockTelemetry = CreateMockTelemetryService();
         var activity = new Activity("test-activity");
-        mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>())
+        mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>())
             .Returns(activity);
 
         var options = CreateOptions();
@@ -334,7 +328,7 @@ public class McpRuntimeTests
 
         Assert.Equal(expectedException.Message, actualException.Message);
 
-        mockTelemetry.Received(1).StartActivity(ActivityName.ListToolsHandler, Arg.Any<Implementation?>());
+        mockTelemetry.Received(1).StartActivity(ActivityName.ListToolsHandler, Arg.Any<Implementation?>(), Arg.Any<RequestParams?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
 
         GetAndAssertTagKeyValue(activity, TagName.ExceptionType);
@@ -350,7 +344,7 @@ public class McpRuntimeTests
 
         var mockTelemetry = CreateMockTelemetryService();
         var activity = new Activity("test-activity");
-        mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>())
+        mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>())
             .Returns(activity);
 
         var options = CreateOptions();
@@ -370,7 +364,7 @@ public class McpRuntimeTests
             runtime.CallToolHandler(request, TestContext.Current.CancellationToken).AsTask());
         Assert.Equal(expectedException.Message, actualException.Message);
 
-        mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
+        mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>(), Arg.Any<RequestParams?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
 
         var actualToolName = GetAndAssertTagKeyValue(activity, TagName.ToolName);
@@ -450,7 +444,7 @@ public class McpRuntimeTests
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
         var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
-        var request = new RequestContext<ListToolsRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsList });
+        var request = new RequestContext<ListToolsRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsList }, null!);
 
         var expectedResult = new ListToolsResult { Tools = [] };
         mockToolLoader.ListToolsHandler(request, Arg.Any<CancellationToken>())
@@ -475,11 +469,11 @@ public class McpRuntimeTests
 
         var mockTelemetry = CreateMockTelemetryService();
         var activity = new Activity("test-activity");
-        mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>())
+        mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>())
             .Returns(activity);
 
         var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
-        var request = new RequestContext<CallToolRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsCall });
+        var request = new RequestContext<CallToolRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsCall }, null!);
 
         // Act
         var result = await runtime.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -497,7 +491,7 @@ public class McpRuntimeTests
         // Verify that the tool loader was NOT called since the null request is handled at the runtime level
         await mockToolLoader.DidNotReceive().CallToolHandler(Arg.Any<RequestContext<CallToolRequestParams>>(), Arg.Any<CancellationToken>());
 
-        mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
+        mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>(), Arg.Any<RequestParams?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
         GetAndAssertTagKeyValue(activity, TagName.ExceptionType);
     }
@@ -644,7 +638,7 @@ public class McpRuntimeTests
 
         var activity = new Activity("test");
         var mockTelemetry = CreateMockTelemetryService();
-        mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>()).Returns(activity);
+        mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>()).Returns(activity);
 
         var options = CreateOptions();
         var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
@@ -770,7 +764,7 @@ public class McpRuntimeTests
 
         var mockTelemetry = CreateMockTelemetryService();
         var activity = new Activity("test-activity");
-        mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>())
+        mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>())
             .Returns(activity);
 
         var options = CreateOptions();
@@ -798,7 +792,7 @@ public class McpRuntimeTests
         // Act
         var result = await runtime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
-        mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
+        mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>(), Arg.Any<RequestParams?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
         GetAndAssertTagKeyValue(activity, TagName.ExceptionType);
 

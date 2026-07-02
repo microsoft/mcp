@@ -35,23 +35,17 @@ public class ServerToolLoaderTests
     private static RequestContext<ListToolsRequestParams> CreateRequest()
     {
         var mockServer = Substitute.For<McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsList })
-        {
-            Params = new()
-        };
+        return new(mockServer, new() { Method = RequestMethods.ToolsList }, new());
     }
 
     private static RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IDictionary<string, JsonElement>? arguments = null)
     {
         var mockServer = Substitute.For<McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
+        return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new()
-            {
-                Name = toolName,
-                Arguments = arguments ?? new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = toolName,
+            Arguments = arguments ?? new Dictionary<string, JsonElement>()
+        });
     }
 
     [Fact]
@@ -275,14 +269,11 @@ public class ServerToolLoaderTests
         }
 
         var mockServer = Substitute.For<McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
+        return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new()
-            {
-                Name = serverName,
-                Arguments = arguments
-            }
-        };
+            Name = serverName,
+            Arguments = arguments
+        });
     }
 
     [Fact]
