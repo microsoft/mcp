@@ -89,6 +89,17 @@ public class ResourceGroupService(
         return resourceGroupResponse?.Value;
     }
 
+    public async Task<ResourceGroupResource> CreateOrUpdateResourceGroup(string subscription, string resourceGroupName, string location, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName), (nameof(location), location));
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var op = await subscriptionResource.GetResourceGroups()
+            .CreateOrUpdateAsync(WaitUntil.Completed, resourceGroupName, new ResourceGroupData(location), cancellationToken)
+            .ConfigureAwait(false);
+        return op.Value;
+    }
+
     public async IAsyncEnumerable<GenericResourceInfo> GetGenericResources(string subscription, string resourceGroupName, string? tenant = null, RetryPolicyOptions? retryPolicy = null, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName));
