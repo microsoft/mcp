@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Server;
@@ -18,10 +20,9 @@ namespace Azure.Mcp.Tools.Sql.Commands.Server;
     Name = "create",
     Title = "Create SQL Server",
     Description = """
-        Creates a new Azure SQL server in the specified resource group and location.
-        The server will be created with the specified administrator credentials and
-        optional configuration settings. Returns the created server with its properties
-        including the fully qualified domain name.
+        Creates a new Azure SQL server in the specified resource group and location, with the specified administrator
+        credentials and optional configuration settings. Returns the created server with its properties including the
+        fully qualified domain name.
         """,
     Destructive = true,
     Idempotent = false,
@@ -29,50 +30,23 @@ namespace Azure.Mcp.Tools.Sql.Commands.Server;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCreateCommand> logger)
-    : BaseSqlCommand<ServerCreateOptions>(logger)
+public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCreateCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ServerCreateOptions, ServerCreateCommand.ServerCreateResult>(subscriptionResolver)
 {
     private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<ServerCreateCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ServerCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SqlOptionDefinitions.AdministratorLoginOption);
-        command.Options.Add(SqlOptionDefinitions.AdministratorPasswordOption);
-        command.Options.Add(SqlOptionDefinitions.LocationOption);
-        command.Options.Add(SqlOptionDefinitions.VersionOption);
-        command.Options.Add(SqlOptionDefinitions.PublicNetworkAccessOption);
-    }
-
-    protected override ServerCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.AdministratorLogin = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.AdministratorLoginOption.Name);
-        options.AdministratorPassword = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.AdministratorPasswordOption.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.LocationOption.Name);
-        options.Version = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.VersionOption.Name);
-        options.PublicNetworkAccess = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.PublicNetworkAccessOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var server = await _sqlService.CreateServerAsync(
-                options.Server!,
-                options.ResourceGroup!,
+                options.Server,
+                options.ResourceGroup,
                 options.Subscription!,
-                options.Location!,
-                options.AdministratorLogin!,
-                options.AdministratorPassword!,
+                options.Location,
+                options.AdministratorLogin,
+                options.AdministratorPassword,
                 options.Version,
                 options.PublicNetworkAccess,
                 options.RetryPolicy,
@@ -104,12 +78,5 @@ public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCr
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
-
-    internal record ServerCreateResult(SqlServer Server);
+    public sealed record ServerCreateResult(SqlServer Server);
 }
