@@ -42,6 +42,42 @@
       ]
     },
     {
+      "name": "create_azure_resilience_management_resources",
+      "description": "Create or update Azure Resilience Management resources, including resilience goal templates and goal assignments, and usage plans and usage plan enrollments, for Azure service groups.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_goal_template_create",
+        "resilience_goal_assignment_create",
+        "resilience_usageplan_create",
+        "resilience_usageplan_enrollment_create"
+      ]
+    },
+    {
       "name": "get_azure_subscriptions_and_resource_groups",
       "description": "Get information about Azure subscriptions, resource groups, and resources within resource groups that the user has access to.",
       "toolMetadata": {
