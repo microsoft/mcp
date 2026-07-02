@@ -1047,6 +1047,12 @@ Example prompts that generate Azure CLI commands:
 * "Show me my container registries in the 'my-resource-group' resource group"
 * "List all my Azure Container Registry repositories"
 
+### 💰 Azure Cost Management
+
+* "How much did we spend this month on subscription 'sub-name'?"
+* "Show last month's Azure costs grouped by service"
+* "Daily cost breakdown for resource group 'rg-prod' between 2026-04-01 and 2026-04-30"
+
 ### 📊 Azure Cosmos DB
 
 * "Show me all my Cosmos DB databases"
@@ -1240,6 +1246,7 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - �🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
+- 💰 **Azure Cost Management** - Query actual Azure costs and usage by subscription, resource group, time range, and dimension
 - 📊 **Azure Cosmos DB** - NoSQL database operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management

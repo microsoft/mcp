@@ -204,6 +204,7 @@ internal class Program
             new Azure.Mcp.Tools.Compute.ComputeSetup(),
             new Azure.Mcp.Tools.ConfidentialLedger.ConfidentialLedgerSetup(),
             new Azure.Mcp.Tools.ContainerApps.ContainerAppsSetup(),
+            new Azure.Mcp.Tools.CostManagement.CostManagementSetup(),
             new Azure.Mcp.Tools.EventHubs.EventHubsSetup(),
             new Azure.Mcp.Tools.FileShares.FileSharesSetup(),
             new Azure.Mcp.Tools.FoundryExtensions.FoundryExtensionsSetup(),

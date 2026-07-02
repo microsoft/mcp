@@ -368,6 +368,21 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | confidentialledger_entries_get | Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name> |
 | confidentialledger_entries_get | Get transaction <transaction_id> from ledger <ledger_name> |
 
+## Azure Cost Management
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| costmanagement_query_run | How much did we spend this month on subscription <subscription>? |
+| costmanagement_query_run | What are my Azure costs month-to-date for subscription <subscription>, broken down by service? |
+| costmanagement_query_run | Show me last month's Azure spend on subscription <subscription> grouped by resource group |
+| costmanagement_query_run | What are the top resource groups by cost in subscription <subscription> last billing month? |
+| costmanagement_query_run | Give me a daily breakdown of costs for resource group <resource-group> in subscription <subscription> for the last month |
+| costmanagement_query_run | How much did we spend in <resource-group> from 2026-04-01 to 2026-04-30? |
+| costmanagement_query_run | Show monthly Azure costs for subscription <subscription> grouped by ServiceName |
+| costmanagement_query_run | Compare this billing month vs the last billing month for subscription <subscription> |
+| costmanagement_query_run | Which services drove the most cost in <subscription> week-to-date? |
+| costmanagement_query_run | Get cost by ResourceLocation for subscription <subscription> month-to-date |
+
 ## Azure Cosmos DB
 
 | Tool Name | Test Prompt |
