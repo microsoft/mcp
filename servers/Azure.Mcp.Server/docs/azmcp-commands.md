@@ -3065,12 +3065,16 @@ azmcp monitor workspace log query --subscription <subscription> \
 #### Health Models
 
 ```bash
-# Get the health of an entity
+# List health models in a subscription (optionally scoped to a resource group)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor healthmodels entity get --subscription <subscription> \
-                                      --resource-group <resource-group> \
-                                      --health-model <health-model-name> \
-                                      --entity <entity-id>
+azmcp monitor healthmodels list --subscription <subscription> \
+                                [--resource-group <resource-group>]
+
+# Get (show) a single health model by name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor healthmodels get --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --health-model <health-model-name>
 ```
 
 #### Metrics
