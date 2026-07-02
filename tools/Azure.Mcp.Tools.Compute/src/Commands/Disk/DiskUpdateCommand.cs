@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Compute.Options.Disk;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -132,7 +133,7 @@ public sealed class DiskUpdateCommand(
                     cancellationToken);
 
                 var matchingDisks = disks
-                    .Where(d => string.Equals(d.Name, options.Disk, StringComparison.OrdinalIgnoreCase))
+                    .Where(d => string.Equals(d.Name, options.Disk, StringComparisons.ResourceName))
                     .ToList();
 
                 if (matchingDisks.Count == 0)

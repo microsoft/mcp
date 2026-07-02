@@ -6,6 +6,7 @@ using Azure.Core.Pipeline;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 
@@ -107,7 +108,7 @@ public class TenantService : BaseAzureService, ITenantService
     public async Task<string> GetTenantNameById(string tenantId, CancellationToken cancellationToken)
     {
         var tenants = await GetTenants(cancellationToken);
-        var tenant = tenants.FirstOrDefault(t => t.Data.TenantId?.ToString().Equals(tenantId, StringComparison.OrdinalIgnoreCase) == true) ??
+        var tenant = tenants.FirstOrDefault(t => t.Data.TenantId?.ToString().Equals(tenantId, StringComparisons.TenantId) == true) ??
             throw new KeyNotFoundException($"Could not find tenant with ID {tenantId}");
 
         string? tenantName = tenant.Data.DisplayName ??
