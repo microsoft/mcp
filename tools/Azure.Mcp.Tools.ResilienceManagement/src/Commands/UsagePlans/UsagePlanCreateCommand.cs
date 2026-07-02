@@ -24,7 +24,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
         provisioning state.
         """,
     Destructive = false,
-    Idempotent = false,
+    Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,

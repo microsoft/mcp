@@ -3669,7 +3669,7 @@ azmcp resilience usageplan get --subscription <subscription> \
                                [--name <name>]
 
 # Create a resilience usage plan in a resource group
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience usageplan create --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --usage-plan <usage-plan> \
