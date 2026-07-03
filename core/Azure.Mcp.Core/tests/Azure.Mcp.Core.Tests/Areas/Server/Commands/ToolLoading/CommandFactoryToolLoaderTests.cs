@@ -542,6 +542,74 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
+    public async Task ListToolsHandler_EveryTool_ProducesValidInputSchema()
+    {
+        // Arrange
+        var (toolLoader, commandFactory) = CreateToolLoader();
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotEmpty(result.Tools);
+
+        var visibleCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands)
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+        foreach (var tool in result.Tools)
+        {
+            var schema = tool.InputSchema;
+            Assert.Equal(JsonValueKind.Object, schema.ValueKind);
+
+            // Raw MCP passthrough commands supply a hand-authored schema verbatim, so they
+            // are not expected to follow the generated strict-object shape. Skip them.
+            if (UsesRawMcpToolInput(visibleCommands[tool.Name]))
+            {
+                continue;
+            }
+
+            Assert.True(schema.TryGetProperty("type", out var typeProperty),
+                $"'{tool.Name}' input schema is missing 'type'.");
+            Assert.Equal("object", typeProperty.GetString());
+
+            Assert.True(schema.TryGetProperty("properties", out var propertiesProperty),
+                $"'{tool.Name}' input schema is missing 'properties'.");
+            Assert.Equal(JsonValueKind.Object, propertiesProperty.ValueKind);
+
+            // OpenAI strict-mode compatibility: additionalProperties must be false.
+            Assert.True(schema.TryGetProperty("additionalProperties", out var additionalProperties),
+                $"'{tool.Name}' input schema is missing 'additionalProperties'.");
+            Assert.Equal(JsonValueKind.False, additionalProperties.ValueKind);
+
+            // Every 'required' entry must reference a declared property.
+            if (schema.TryGetProperty("required", out var requiredProperty))
+            {
+                Assert.Equal(JsonValueKind.Array, requiredProperty.ValueKind);
+
+                foreach (var required in requiredProperty.EnumerateArray())
+                {
+                    var name = required.GetString();
+                    Assert.False(string.IsNullOrEmpty(name),
+                        $"'{tool.Name}' has an empty entry in 'required'.");
+                    Assert.True(propertiesProperty.TryGetProperty(name!, out _),
+                        $"'{tool.Name}' requires '{name}' which is not a declared property.");
+                }
+            }
+        }
+    }
+
+    private static bool UsesRawMcpToolInput(IBaseCommand command)
+    {
+        static bool IsRawName(string name) => string.Equals(
+            NameNormalization.NormalizeOptionName(name),
+            CommandFactoryToolLoader.RawMcpToolInputOptionName,
+            StringComparison.OrdinalIgnoreCase);
+
+        return command.GetCommand().Options.Any(o => IsRawName(o.Name) || o.Aliases.Any(IsRawName));
+    }
+
+    [Fact]
     public async Task ListToolsHandler_ToolsWithSecretMetadata_HaveSecretHintInMeta()
     {
         // Arrange - create a simple fake command with secret metadata
