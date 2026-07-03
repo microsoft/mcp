@@ -24,7 +24,7 @@ namespace Azure.Mcp.Tools.ManagedCleanroom.Commands.CollaborationArm;
         """,
     Destructive = false,
     Idempotent = false,
-    OpenWorld = false,
+    OpenWorld = true,
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
