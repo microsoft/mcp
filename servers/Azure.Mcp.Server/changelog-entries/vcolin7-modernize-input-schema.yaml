@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Modernized MCP tool `inputSchema` generation to use `System.Text.Json.Schema.JsonSchemaExporter` instead of the previous reflection-based mapper. Emitted input schemas are now richer and more spec-accurate: object roots always include `additionalProperties: false`, `Guid` options use `format: \"uuid\"`, nullable value types are typed as `[\"<type>\", \"null\"]`, and nested object/array options produce full nested schemas."
