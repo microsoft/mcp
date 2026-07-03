@@ -2,15 +2,16 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.23 (Unreleased)
+## 3.0.0-beta.23 (2026-07-02)
 
 ### Features Added
 
+- Added the `resilience` toolset (Azure Resilience Management) with read-only `get` commands for goals (templates, assignments, resources), usage plans and enrollments, and recovery plans (plans, resources, jobs). [[#2948](https://github.com/microsoft/mcp/pull/2948)]
+- Added support for AVM pattern modules (`avm-ptn-*`) in the Azure Terraform `avm` tools. The `azureterraform avm list` tool now returns both resource and pattern modules, each tagged with a `moduleType` field, and `avm versions`/`avm get` work for pattern modules as well as resource modules. [[#2946](https://github.com/microsoft/mcp/pull/2946)]
+
 ### Breaking Changes
 
-### Bugs Fixed
-
-### Other Changes
+- Removed unused parameters from Resource Health tools. [[#2952](https://github.com/microsoft/mcp/pull/2952)]
 
 ## 3.0.0-beta.22 (2026-06-30)
 
