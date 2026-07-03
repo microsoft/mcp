@@ -6,7 +6,6 @@ using System.Net;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
@@ -288,30 +287,15 @@ public sealed class CommandFactoryToolLoader(
             .Where(o => !CommandFactory.IsLearnOption(o))
             .ToList();
 
-        var schema = new ToolInputSchema();
-
-        if (options.Count > 0)
+        if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
         {
-            if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
-            {
-                var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? [];
-                tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
-                return tool;
-            }
-            else
-            {
-                foreach (var option in options)
-                {
-                    // Use the CreatePropertySchema method to properly handle array types with items
-                    var propName = NameNormalization.NormalizeOptionName(option.Name);
-                    schema.Properties.Add(propName, TypeToJsonTypeMapper.CreatePropertySchema(option.ValueType, option.Description));
-                }
-
-                schema.Required = [.. options.Where(p => p.Required).Select(p => NameNormalization.NormalizeOptionName(p.Name))];
-            }
+            var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? [];
+            tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
+            return tool;
         }
 
-        tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.ToolInputSchema);
+        var schema = OptionSchemaGenerator.CreateInputSchema(options);
+        tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.JsonObject);
 
         return tool;
     }
