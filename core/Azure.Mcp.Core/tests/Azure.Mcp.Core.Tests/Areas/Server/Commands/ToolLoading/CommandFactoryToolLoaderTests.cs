@@ -599,15 +599,8 @@ public class CommandFactoryToolLoaderTests
         }
     }
 
-    private static bool UsesRawMcpToolInput(IBaseCommand command)
-    {
-        static bool IsRawName(string name) => string.Equals(
-            NameNormalization.NormalizeOptionName(name),
-            CommandFactoryToolLoader.RawMcpToolInputOptionName,
-            StringComparison.OrdinalIgnoreCase);
-
-        return command.GetCommand().Options.Any(o => IsRawName(o.Name) || o.Aliases.Any(IsRawName));
-    }
+    private static bool UsesRawMcpToolInput(IBaseCommand command) =>
+        command.GetCommand().Options.Any(CommandFactoryToolLoader.IsRawMcpToolInputOption);
 
     [Fact]
     public async Task ListToolsHandler_ToolsWithSecretMetadata_HaveSecretHintInMeta()

@@ -34,7 +34,7 @@ public sealed class CommandFactoryToolLoader(
 
     public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
 
-    private static bool IsRawMcpToolInputOption(Option option)
+    internal static bool IsRawMcpToolInputOption(Option option)
     {
         if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
         {
