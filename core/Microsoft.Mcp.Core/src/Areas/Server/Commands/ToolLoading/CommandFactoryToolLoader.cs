@@ -32,26 +32,6 @@ public sealed class CommandFactoryToolLoader(
             ? commandFactory.AllCommands
             : commandFactory.GroupCommands(options.Value.Namespace);
 
-    public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
-
-    internal static bool IsRawMcpToolInputOption(Option option)
-    {
-        if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        foreach (var alias in option.Aliases)
-        {
-            if (string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     /// <summary>
     /// Lists all tools available from the command factory.
     /// </summary>

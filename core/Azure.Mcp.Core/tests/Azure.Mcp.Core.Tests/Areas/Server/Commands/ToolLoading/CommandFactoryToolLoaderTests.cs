@@ -600,7 +600,7 @@ public class CommandFactoryToolLoaderTests
     }
 
     private static bool UsesRawMcpToolInput(IBaseCommand command) =>
-        command.GetCommand().Options.Any(CommandFactoryToolLoader.IsRawMcpToolInputOption);
+        command.GetCommand().Options.Any(BaseToolLoader.IsRawMcpToolInputOption);
 
     [Fact]
     public async Task ListToolsHandler_ToolsWithSecretMetadata_HaveSecretHintInMeta()

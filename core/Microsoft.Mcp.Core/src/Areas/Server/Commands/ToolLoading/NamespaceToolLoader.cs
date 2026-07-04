@@ -647,18 +647,6 @@ public sealed class NamespaceToolLoader(
         return tool;
     }
 
-    private static bool IsRawMcpToolInputOption(Option option)
-    {
-        const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
-        if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        return option.Aliases.Any(alias =>
-            string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase));
-    }
-
     internal static Dictionary<string, JsonElement> GetParametersFromArgs(IDictionary<string, JsonElement>? args)
     {
         if (args == null)
