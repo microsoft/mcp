@@ -223,6 +223,7 @@ internal class Program
             new Azure.Mcp.Tools.Postgres.PostgresSetup(),
             new Azure.Mcp.Tools.Pricing.PricingSetup(),
             new Azure.Mcp.Tools.Redis.RedisSetup(),
+            new Azure.Mcp.Tools.ResilienceManagement.ResilienceManagementSetup(),
             new Azure.Mcp.Tools.ResourceHealth.ResourceHealthSetup(),
             new Azure.Mcp.Tools.Search.SearchSetup(),
             new Azure.Mcp.Tools.Speech.SpeechSetup(),

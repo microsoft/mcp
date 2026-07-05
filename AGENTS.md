@@ -11,8 +11,9 @@
 - Use singular nouns for resource names (e.g., `server`, not `serverName`)
 - Run `dotnet build` after making changes
 - Follow the `{Resource}{Operation}Command` naming pattern
-- Use extension methods `.AsRequired()` and `.AsOptional()` for option handling
-- Use Option-based binding with `parseResult.GetValueOrDefault(Option<T>)`
+- Use the two-generic pattern `SubscriptionCommand<TOptions, TResult>` for new commands
+- Use `[Option]` attributes on flat POCO option classes for option declaration
+- Use `ISubscriptionOption` interface on options classes that need subscription/tenant
 - Always call `HandleException(context, ex)` in catch blocks
 - Include live tests for all commands that interact with Azure resources
 - Create Bicep templates for Azure service commands (`test-resources.bicep`)
@@ -21,9 +22,6 @@
 - Submit one tool per pull request
 - Use `BaseAzureResourceService` for Resource Graph queries when possible
 - Register all response models in JSON serialization context for AOT safety
-- Use static OptionDefinitions for command options (never readonly fields)
-- Always call `base.RegisterOptions()` and `base.Dispose()` in overrides
-- Use OptionDefinitions constants instead of hardcoded option strings
 - Register all commands in the appropriate Setup.cs file
 - Use concatenated lowercase for command group names (no dashes)
 - Prefer file-scoped changes over project-wide modifications when possible
@@ -36,12 +34,11 @@
 ## Don't
 - Use `subscriptionId` parameter name
 - Add unnecessary "-name" suffixes (use `--account` vs `--account-name`)
-- Use readonly option fields in commands
+- Use the old one-generic `RegisterOptions`/`BindOptions` pattern for new commands (see `/docs/option-conversion.md`)
+- Use `OptionDefinitions` static classes for new commands (use `[Option]` attributes instead)
+- Use options class inheritance hierarchies (use flat POCOs with interface constraints)
 - Skip live tests, live test infrastructure, or test recordings for Azure service commands
-- Use `parseResult.GetValue()` without generic type parameter
 - Redefine base class properties in Options classes
-- Skip `base.RegisterOptions()` or `base.Dispose()` calls
-- Use hardcoded option strings
 - Leave commands unregistered
 - Skip error handling or comprehensive tests
 - Use dashes in command group names (use concatenated lowercase)
@@ -67,7 +64,7 @@ dotnet format --include="tools/Azure.Mcp.Tools.Storage/**/*.cs"
 dotnet test --filter "FullyQualifiedName~StorageAccountListCommandTests"
 
 # Type check and validate
-./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx
+./eng/scripts/Build-Local.ps1 -VerifyNpx
 
 # Note: Don't run local builds to check pipeline YAML files (e.g., files in `eng/pipelines/` with `.yml` extension)
 ```
@@ -98,7 +95,7 @@ dotnet build
 - Installing new packages or dependencies
 - Running project-wide builds or tests
 - Modifying `.csproj`, `.slnx`, or configuration files
-- Deploying test resources (`Deploy-TestResources.ps1`)
+- Deploying test resources (`New-TestResources.ps1`)
 - Making breaking changes to public APIs
 - Adding new toolsets to the solution
 
@@ -120,21 +117,23 @@ Microsoft MCP (Model Context Protocol) servers provide AI agents with structured
 - `tools/Azure.Mcp.Tools.{Service}/` - Individual service toolsets (Storage, SQL, etc.)
 - `eng/scripts/` - Build, test, and deployment PowerShell scripts
 - `.github/skills/add-azure-mcp-tools/SKILL.md` - Implementation guide for new commands
+- `docs/option-conversion.md` - Guide for converting to two-generic option pattern
 - `CONTRIBUTING.md` - Contribution guidelines and workflows
 
 ### Good examples to follow
-- Command implementation: `tools/Azure.Mcp.Tools.Storage/src/Commands/Account/StorageAccountGetCommand.cs`
+- Command implementation: `tools/Azure.Mcp.Tools.Storage/src/Commands/Account/AccountGetCommand.cs`
 - Service pattern: `tools/Azure.Mcp.Tools.Storage/src/Services/StorageService.cs`
 - Unit tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/Account/StorageAccountGetCommandTests.cs`
 - Integration tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/StorageCommandTests.cs`
 - Live test infrastructure: `tools/Azure.Mcp.Tools.Storage/tests/test-resources.bicep`
-- Option definitions: `tools/Azure.Mcp.Tools.Storage/src/Options/StorageOptionDefinitions.cs`
+- Option conversion guide: `docs/option-conversion.md`
 
 ### Legacy patterns to avoid
-- Old option handling with readonly fields
+- Old one-generic `RegisterOptions`/`BindOptions` pattern (use two-generic with `[Option]` attributes)
+- `OptionDefinitions` static classes with `.AsRequired()`/`.AsOptional()` (use `[Option]` on flat POCOs)
+- Options class inheritance hierarchies (use flat classes with interface constraints)
 - Commands without proper error handling
 - Missing live test infrastructure for Azure services
-- Hardcoded strings instead of OptionDefinitions
 - Non-sealed command classes
 
 ## Development Environment Setup
@@ -156,7 +155,7 @@ cd mcp
 dotnet build
 
 # Verify everything works
-./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx
+./eng/scripts/Build-Local.ps1 -VerifyNpx
 
 # Run unit tests for specific toolset
 ./eng/scripts/Test-Code.ps1 -Paths Storage
@@ -168,6 +167,7 @@ dotnet build
 ## API Docs and References
 - API documentation: `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` - Complete command reference
 - Implementation guide: `/.github/skills/add-azure-mcp-tools/SKILL.md` - Step-by-step command creation
+- Option conversion: `/docs/option-conversion.md` - Converting to two-generic option pattern
 - Test prompts: `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` - Example prompts for testing
 - Recorded tests: `/docs/recorded-tests.md` - Guide for converting live tests to recorded (playback) tests
 - Contributing guide: `/CONTRIBUTING.md` - Development workflow and standards
@@ -179,6 +179,7 @@ dotnet build
 - Reference existing commands in similar services as templates
 - Check `/.github/skills/add-azure-mcp-tools/SKILL.md` for implementation patterns
 - Use GitHub Copilot Chat with `"create [service] [resource] [operation] command using /skills/add-azure-mcp-tools as a reference"`
+- Check `/docs/option-conversion.md` for the two-generic option pattern
 
 ## PR Checklist
 - Format and type check: `dotnet format && dotnet build` - all green
@@ -251,7 +252,7 @@ azmcp resourcegroup list           # List resource groups
 dotnet build
 
 # Full verification build (recommended before PR)
-./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx
+./eng/scripts/Build-Local.ps1 -VerifyNpx
 
 # AOT-compatible build (tests native compilation)
 ./eng/scripts/Build-Local.ps1 -BuildNative
@@ -272,7 +273,7 @@ dotnet build
 ./eng/scripts/Test-Code.ps1 -Paths Storage, KeyVault
 
 # Deploy test infrastructure for live tests
-./eng/scripts/Deploy-TestResources.ps1 -Paths Storage
+eng/common/TestResources/New-TestResources.ps1 -TestResourcesDirectory tools/Azure.Mcp.Tools.Storage
 
 # Live tests (requires Azure authentication and resources)
 ./eng/scripts/Test-Code.ps1 -TestType Live -Paths Storage
@@ -317,8 +318,7 @@ All commands must include comprehensive unit tests:
 [Fact] public void BindOptions_BindsOptionsCorrectly()
 ```
 
-Command unit tests should extend `CommandUnitTestsBase<TCommand, TService>` where `TCommand` is the command class being
-tested and `TService` is the service that the command uses.
+Command unit tests should extend `SubscriptionCommandUnitTestsBase<TCommand, TService>` for subscription commands or `CommandUnitTestsBase<TCommand, TService>` for non-subscription commands.
 
 ### Live Testing Requirements
 Azure service commands require live tests to validate functionality against actual Azure resources. Live tests must be recorded for playback using `RecordedCommandTestsBase`. See `/docs/recorded-tests.md` for the full recording workflow, sanitizer configuration, and migration guide.
@@ -327,7 +327,7 @@ Azure service commands require live tests to validate functionality against actu
 Azure service commands require Bicep templates for test resources:
 ```powershell
 # Deploy test infrastructure
-./eng/scripts/Deploy-TestResources.ps1 -Paths {Toolset}
+eng/common/TestResources/New-TestResources.ps1 -TestResourcesDirectory tools/Azure.Mcp.Tools.{Toolset}
 
 # Required files for Azure service toolsets:
 # - tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep
@@ -341,7 +341,7 @@ Connect-AzAccount
 az login
 
 # Test resource deployment with proper RBAC
-./eng/scripts/Deploy-TestResources.ps1 -Paths Storage -SubscriptionId {subscription-id}
+eng/common/TestResources/New-TestResources.ps1 -TestResourcesDirectory tools/Azure.Mcp.Tools.Storage
 ```
 
 ## Code Style and Standards
@@ -368,25 +368,43 @@ public class StorageAccountGetOptions          // ✅ Correct
 public class StorageAccountGetCommandTests     // ✅ Correct
 ```
 
-### Option Handling Pattern
+### Option Handling Pattern (Two-Generic)
 ```csharp
-// Use extension methods for flexible option requirements
-protected override void RegisterOptions(Command command)
+// Options are flat POCOs with [Option] attributes — no RegisterOptions/BindOptions needed
+public class AccountGetOptions : ISubscriptionOption
 {
-    base.RegisterOptions(command);
-    command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-    command.Options.Add(StorageOptionDefinitions.Account.AsOptional());
+    [Option(Description = "The name of the Azure Storage account.")]
+    public string? Account { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 
-// Use Option-based binding with type safety
-protected override StorageAccountListOptions BindOptions(ParseResult parseResult)
+// Commands use two-generic base: SubscriptionCommand<TOptions, TResult>
+public sealed class AccountGetCommand(
+    ILogger<AccountGetCommand> logger,
+    IStorageService storageService,
+    ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<AccountGetOptions, AccountGetCommand.AccountGetResult>(subscriptionResolver)
 {
-    var options = base.BindOptions(parseResult);
-    options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-    options.Account = parseResult.GetValueOrDefault(StorageOptionDefinitions.Account);
-    return options;
+    // ExecuteAsync receives pre-bound, pre-validated options
+    public override async Task<CommandResponse> ExecuteAsync(
+        CommandContext context, AccountGetOptions options, CancellationToken cancellationToken)
+    {
+        // options are already bound — just use them directly
+    }
+
+    internal record AccountGetResult(List<StorageAccountInfo> Accounts);
 }
 ```
+
+> See `/docs/option-conversion.md` for the full conversion guide from one-generic to two-generic pattern.
 
 ### Parameter Naming Standards
 - **Use `subscription`** (never `subscriptionId`) - supports both IDs and names
@@ -430,7 +448,7 @@ try
 catch (Exception ex)
 {
     _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}", Name, options.Subscription);
-    HandleException(context, ex);
+    HandleException(context, ex);  // Always call base handler
 }
 ```
 
@@ -499,8 +517,8 @@ context.Response.Results = ResponseResult.Create(new(results), StorageJsonContex
 
 ### Development Process
 1. **Create issue**: "Add command: azmcp [service] [resource] [operation]"
-2. **Use Copilot for generation**: Execute in Copilot Chat: `"create [service] [resource] [operation] command using /skills as a reference"`
-3. **Follow implementation guidelines** in `/.github/skills/add-azure-mcp-tools/SKILL.md`
+2. **Use Copilot for generation**: Execute in Copilot Chat: `"create [service] [resource] [operation]" command using "/skills add-azure-mcp-tools" as a reference`
+3. **Follow implementation guidelines** in `/.github/skills/add-azure-mcp-tools/SKILL.md` and **two-generic pattern** in `/docs/option-conversion.md`
 4. **Create live test infrastructure** (if Azure service): Bicep template and post-deployment script
 5. **Submit one tool per pull request** for faster review cycles
 
@@ -508,9 +526,8 @@ context.Response.Results = ResponseResult.Create(new(results), StorageJsonContex
 ```
 tools/Azure.Mcp.Tools.{Service}/
 ├── src/
-│   ├── Options/{Service}OptionDefinitions.cs        # Static option definitions
-│   ├── Options/{Resource}/{Operation}Options.cs     # Command-specific options
-│   ├── Commands/{Resource}/{Resource}{Operation}Command.cs  # Command implementation
+│   ├── Options/{Resource}/{Operation}Options.cs     # Flat POCO with [Option] attributes
+│   ├── Commands/{Resource}/{Resource}{Operation}Command.cs  # Two-generic command
 │   ├── Services/I{Service}Service.cs                # Service interface
 │   ├── Services/{Service}Service.cs                 # Service implementation
 │   └── Commands/{Service}JsonContext.cs             # JSON serialization context

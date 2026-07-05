@@ -6,6 +6,12 @@ After cloning and building the repo, check out the [GitHub project](https://gith
 >[!IMPORTANT]
 If you are contributing significant changes, or if the issue is already assigned to a specific milestone, please discuss with the assignee of the issue first before starting to work on the issue.
 
+> [!TIP]
+> **New contributor?** Use the onboarding agent for interactive help:
+> 1. Open GitHub Copilot Chat in VS Code (or VS Code Insiders)
+> 2. Type `@onboarding` followed by your question (e.g., `@onboarding how do I set up my dev environment?`)
+> 3. The agent will walk you through setup, first issues, adding commands, and more
+
 ## Table of Contents
 
 - [Contributing to Azure MCP](#contributing-to-azure-mcp)
@@ -240,7 +246,7 @@ Requirements:
 
 To ensure the product code and unit tests can be cancelled quickly, contributors are required to write async methods (any returning `Task`, `ValueTask`, generic variants of those, etc.) to accept and invoke async methods with a `System.Threading.CancellationToken` parameter. The latter is enforced with the [CA2016 analyzer](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2016).
 
-Mocks created with `NSubstitute.Substitue.For<T>()` and have [methods set up](https://nsubstitute.github.io/help/set-return-value/#for-methods) should be passed `NSubstitute.Arg.Any<CancellationToken>()` for required `System.Threading.CancellationToken` parameters. The same should be used when [checking for received calls on a mocked object](https://nsubstitute.github.io/help/received-calls/index.html). If the product code is expected to do something interesting with a supplied `System.Threading.CancellationToken` parameter, such as linking with other `System.Threading.CancellationToken`s with [`System.Threading.CancellationTokenSource.CreateLinkedTokenSource`](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.createlinkedtokensource), then consider testing for that behavior.
+Mocks created with `NSubstitute.Substitute.For<T>()` and have [methods set up](https://nsubstitute.github.io/help/set-return-value/#for-methods) should be passed `NSubstitute.Arg.Any<CancellationToken>()` for required `System.Threading.CancellationToken` parameters. The same should be used when [checking for received calls on a mocked object](https://nsubstitute.github.io/help/received-calls/index.html). If the product code is expected to do something interesting with a supplied `System.Threading.CancellationToken` parameter, such as linking with other `System.Threading.CancellationToken`s with [`System.Threading.CancellationTokenSource.CreateLinkedTokenSource`](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.createlinkedtokensource), then consider testing for that behavior.
 
 Real product code under unit testing must be passed `Xunit.TestContext.Current.CancellationToken` when async methods are invoked. This is to ensure the tests can end to avoid possible issues with the parent process waiting indefinitely for the test runner executable to exit.
 
@@ -700,7 +706,7 @@ The Azure MCP Server implements the [Model Context Protocol specification](https
 
 ### Package README
 
-A single package README.md could be used to generate context specific content for different package types (npm, nuget, vsix) using html comment annotations to mark sections for removal or insertion whem processed with script at `.\eng\scripts\Process-PackageReadMe.ps1`
+A single package README.md could be used to generate context specific content for different package types (npm, nuget, vsix) using html comment annotations to mark sections for removal or insertion when processed with script at `.\eng\scripts\Process-PackageReadMe.ps1`
 
 Supported comment annotations:
 
