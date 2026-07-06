@@ -599,6 +599,59 @@ public class CommandFactoryToolLoaderTests
         }
     }
 
+    [Fact]
+    public async Task ListToolsHandler_EnumOption_IsExportedAsStringType()
+    {
+        // Arrange
+        var (toolLoader, _) = CreateToolLoader();
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        // 'monitor_activitylog_list' declares an ActivityLogEventLevel enum option ('event-level'),
+        // so it is a known enum-backed tool that exercises how enums flow through the schema path.
+        // Enum options are modeled as Option<string> by OptionTypeHandler (a JsonStringEnumConverter is
+        // registered so values round-trip as member names, never integers). The schema generator only sees
+        // Option.ValueType (string), so an enum surfaces as JSON "type": "string" with its allowed values
+        // described in prose - it does not emit a JSON "enum" keyword. This spot-check locks that contract:
+        // an enum-backed option must be exported as a string type, guarding against a regression to integer
+        // (ordinal) serialization.
+        var tool = result.Tools.FirstOrDefault(t => t.Name == "monitor_activitylog_list");
+        Assert.NotNull(tool);
+
+        var schema = tool.InputSchema;
+        Assert.True(schema.TryGetProperty("properties", out var properties),
+            "'monitor_activitylog_list' input schema is missing 'properties'.");
+
+        Assert.True(properties.TryGetProperty("event-level", out var eventLevel),
+            "'monitor_activitylog_list' input schema is missing the 'event-level' enum option.");
+        Assert.Equal(JsonValueKind.Object, eventLevel.ValueKind);
+
+        Assert.True(eventLevel.TryGetProperty("type", out var typeProperty),
+            "'event-level' schema is missing 'type'.");
+
+        // The enum must map to the JSON string type and never to a numeric (ordinal) type. Tolerate a
+        // scalar ("string") or a union array (e.g. ["string", "null"]) representation of nullability.
+        static bool IsStringType(JsonElement type) =>
+            type.ValueKind == JsonValueKind.String && type.GetString() == "string";
+        static bool IsNumericType(JsonElement type) =>
+            type.ValueKind == JsonValueKind.String && type.GetString() is "integer" or "number";
+
+        if (typeProperty.ValueKind == JsonValueKind.Array)
+        {
+            var entries = typeProperty.EnumerateArray().ToArray();
+            Assert.Contains(entries, IsStringType);
+            Assert.DoesNotContain(entries, IsNumericType);
+        }
+        else
+        {
+            Assert.True(IsStringType(typeProperty),
+                $"'event-level' enum option should be exported as a string type but was '{typeProperty}'.");
+        }
+    }
+
     private static bool UsesRawMcpToolInput(IBaseCommand command) =>
         command.GetCommand().Options.Any(BaseToolLoader.IsRawMcpToolInputOption);
 
