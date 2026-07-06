@@ -307,7 +307,9 @@ public sealed class CommandFactoryToolLoader(
     /// <see cref="OptionSchemaGenerator.CreateOutputSchema"/>. Returns <see langword="null"/> when there
     /// is no result payload.
     /// </summary>
-    private static JsonElement? TryBuildStructuredContent(string jsonResponse)
+    /// <remarks><see langword="internal"/> (rather than <see langword="private"/>) so the payload-shaping
+    /// contract can be unit tested directly without exercising the full call-tool pipeline.</remarks>
+    internal static JsonElement? TryBuildStructuredContent(string jsonResponse)
     {
         using var document = JsonDocument.Parse(jsonResponse);
 
