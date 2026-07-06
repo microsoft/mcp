@@ -1,7 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: |
-      Fixed multiple user-facing issues:
-      - Event Hubs namespace-get now supports subscription-wide listing when resource-group is omitted, and treats whitespace resource-group as not provided for robust scope handling.
-      - FoundryExtensions resource-get routing and terminology were clarified to improve namespace tool selection confidence, and validation now fails fast when resource-name is provided without resource-group.
-      - Azure MCP Server README/Copilot CLI setup documentation was corrected for MCP server key usage.
