@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 
@@ -32,6 +33,8 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger,
     private readonly ILogger<KeyValueDeleteCommand> _logger = logger;
     private readonly IAppConfigService _appConfigService = appConfigService;
 
+    public override JsonTypeInfo<KeyValueDeleteCommandResult>? ResultTypeInfo => AppConfigJsonContext.Default.KeyValueDeleteCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, KeyValueDeleteOptions options, CancellationToken cancellationToken)
     {
         try
@@ -49,7 +52,7 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger,
             var message = existed
                 ? $"Key '{options.Key}'{labelSuffix} deleted successfully."
                 : $"Key '{options.Key}'{labelSuffix} did not exist in store '{options.Account}'.";
-            context.Response.Results = ResponseResult.Create(new(options.Key, options.Label, existed, message), AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
+            SetResult(context, new(options.Key, options.Label, existed, message));
         }
         catch (Exception ex)
         {

@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 
@@ -33,6 +34,8 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger, IAppC
     private readonly ILogger<KeyValueSetCommand> _logger = logger;
     private readonly IAppConfigService _appConfigService = appConfigService;
 
+    public override JsonTypeInfo<KeyValueSetCommandResult>? ResultTypeInfo => AppConfigJsonContext.Default.KeyValueSetCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, KeyValueSetOptions options, CancellationToken cancellationToken)
     {
         try
@@ -48,10 +51,7 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger, IAppC
                 options.ContentType,
                 options.Tags,
                 cancellationToken);
-            context.Response.Results = ResponseResult.Create(
-                new(options.Key, options.Value, options.Label, options.ContentType, options.Tags),
-                AppConfigJsonContext.Default.KeyValueSetCommandResult
-            );
+            SetResult(context, new(options.Key, options.Value, options.Label, options.ContentType, options.Tags));
         }
         catch (Exception ex)
         {

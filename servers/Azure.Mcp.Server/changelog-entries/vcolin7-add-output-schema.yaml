@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "MCP tools can now advertise an `outputSchema` and return `structuredContent` describing the shape of their results. Output schemas are generated from each command's source-generated `JsonTypeInfo` via `System.Text.Json.Schema.JsonSchemaExporter`; result roots that are not JSON objects (arrays or scalars) are wrapped under a `value` property so the payload validates against the advertised schema. App Configuration commands are the first to opt in; other namespaces will follow."
