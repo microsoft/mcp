@@ -636,14 +636,21 @@ public class CommandFactoryToolLoaderTests
         // scalar ("string") or a union array (e.g. ["string", "null"]) representation of nullability.
         static bool IsStringType(JsonElement type) =>
             type.ValueKind == JsonValueKind.String && type.GetString() == "string";
-        static bool IsNumericType(JsonElement type) =>
-            type.ValueKind == JsonValueKind.String && type.GetString() is "integer" or "number";
+        static bool IsNullType(JsonElement type) =>
+            type.ValueKind == JsonValueKind.String && type.GetString() == "null";
 
         if (typeProperty.ValueKind == JsonValueKind.Array)
         {
             var entries = typeProperty.EnumerateArray().ToArray();
+
+            // Assert.All invokes the predicate on every element, so a stray numeric (or any other
+            // unexpected) entry fails the test. Whitelisting "string"/"null" is stricter than
+            // blacklisting numeric, since it also rejects anything else the union should not contain.
+            Assert.All(entries, entry => Assert.True(IsStringType(entry) || IsNullType(entry),
+                $"'event-level' type union should contain only 'string'/'null' but had '{entry}'."));
+
+            // The union must also actually include the string type (Assert.Contains is an existence check).
             Assert.Contains(entries, IsStringType);
-            Assert.DoesNotContain(entries, IsNumericType);
         }
         else
         {
