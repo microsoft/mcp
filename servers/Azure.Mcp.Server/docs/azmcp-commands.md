@@ -1293,11 +1293,20 @@ azmcp iothub update --subscription <subscription> \
 
 ```bash
 # List devices in an IoT Hub
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+# Returns one page of device identities. --max-count sets the page size (default 100, maximum 100).
+# When the hub has more devices than were returned, the response sets truncated=true with an explanatory message.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp iothub device list --subscription <subscription> \
                          --resource-group <resource-group> \
                          --name <iothub-name> \
                          [--max-count <max-count>]
+
+# Get device statistics for an IoT Hub identity registry
+# Returns aggregate device counts: disabledDeviceCount, enabledDeviceCount, and totalDeviceCount.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub device stats --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --name <iothub-name>
 
 # Get device twin
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
@@ -1325,6 +1334,38 @@ azmcp iothub device twin query --subscription <subscription> \
 # - List all devices: "SELECT * FROM devices"
 # - Filter by tag: "SELECT * FROM devices WHERE tags.environment = 'production'"
 # - Filter by property: "SELECT * FROM devices WHERE properties.reported.temperature > 75"
+
+# Discover queryable IoT Hub device twin field paths by sampling devices
+# Runs SELECT * FROM devices with --max-count, returning field paths grouped by device, tags, desired, and reported.
+# Pass the returned fields object to azmcp iothub query compile --discovered-fields for strict field validation.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub query discover --subscription <subscription> \
+                            --resource-group <resource-group> \
+                            --name <iothub-name> \
+                            [--max-count <max-count>]
+
+# Compile structured IoT Hub query predicates into a query string
+# Returns a query that can be passed to azmcp iothub query run. If --discovered-fields is supplied,
+# predicates are validated against discovered device twin paths before the query is constructed. When --top is specified,
+# the response includes maxCount for query run instead of embedding SELECT TOP in the query.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub query compile --filters <filters-json> \
+                           [--from <source>] \
+                           [--top <top>] \
+                           [--logical-operator <AND|OR>] \
+                           [--discovered-fields <fields-json>]
+
+# Run an IoT Hub SQL-like query with paging
+# Returns one page of query/twin-shaped results. --max-count sets the page size (default 100, maximum 100).
+# When more results are available, the response includes hasMore=true and a continuationToken;
+# pass that token back via --continuation-token to fetch the next page.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp iothub query run --subscription <subscription> \
+                       --resource-group <resource-group> \
+                       --name <iothub-name> \
+                       --query <sql-query> \
+                       [--max-count <max-count>] \
+                       [--continuation-token <continuation-token>]
 ```
 
 ### Azure Marketplace Operations

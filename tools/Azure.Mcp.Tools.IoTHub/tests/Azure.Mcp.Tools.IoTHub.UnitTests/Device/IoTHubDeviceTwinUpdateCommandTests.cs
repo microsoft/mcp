@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.IoTHub.Commands.Device;
 using Azure.Mcp.Tools.IoTHub.Models;
@@ -56,9 +57,9 @@ public class IoTHubDeviceTwinUpdateCommandTests
             0,
             "SAS",
             1,
-            new TwinProperties(new Dictionary<string, object> { ["temperature"] = 72 }, new Dictionary<string, object>()),
+            new TwinProperties(JsonSerializer.SerializeToElement(new Dictionary<string, object> { ["temperature"] = 72 }), JsonSerializer.SerializeToElement(new Dictionary<string, object>())),
             new DeviceCapabilities(false),
-            new Dictionary<string, object>());
+            JsonSerializer.SerializeToElement(new Dictionary<string, object>()));
 
         _service.UpdateDeviceTwin(
             deviceId,

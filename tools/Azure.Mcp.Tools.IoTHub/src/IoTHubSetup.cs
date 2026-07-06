@@ -28,9 +28,15 @@ public class IoTHubSetup : IAreaSetup
         services.AddSingleton<IoTHubKeysGetCommand>();
 
         services.AddSingleton<IoTHubDeviceListCommand>();
+        services.AddSingleton<IoTHubDeviceShowCommand>();
         services.AddSingleton<IoTHubDeviceTwinGetCommand>();
         services.AddSingleton<IoTHubDeviceTwinUpdateCommand>();
         services.AddSingleton<IoTHubDeviceTwinQueryCommand>();
+        services.AddSingleton<IoTHubDeviceStatisticsCommand>();
+
+        services.AddSingleton<IoTHubQueryRunCommand>();
+        services.AddSingleton<IoTHubQueryCompileCommand>();
+        services.AddSingleton<IoTHubQueryDiscoverCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -63,6 +69,9 @@ public class IoTHubSetup : IAreaSetup
         var deviceListCommand = serviceProvider.GetRequiredService<IoTHubDeviceListCommand>();
         device.AddCommand(deviceListCommand.Name, deviceListCommand);
 
+        var deviceShowCommand = serviceProvider.GetRequiredService<IoTHubDeviceShowCommand>();
+        device.AddCommand(deviceShowCommand.Name, deviceShowCommand);
+
         var deviceTwinGetCommand = serviceProvider.GetRequiredService<IoTHubDeviceTwinGetCommand>();
         device.AddCommand(deviceTwinGetCommand.Name, deviceTwinGetCommand);
 
@@ -71,7 +80,22 @@ public class IoTHubSetup : IAreaSetup
 
         var deviceTwinQueryCommand = serviceProvider.GetRequiredService<IoTHubDeviceTwinQueryCommand>();
         device.AddCommand(deviceTwinQueryCommand.Name, deviceTwinQueryCommand);
-        
+
+        var deviceStatisticsCommand = serviceProvider.GetRequiredService<IoTHubDeviceStatisticsCommand>();
+        device.AddCommand(deviceStatisticsCommand.Name, deviceStatisticsCommand);
+
+        var query = new CommandGroup("query", "IoT Hub query operations.");
+        iothub.AddSubGroup(query);
+
+        var queryRunCommand = serviceProvider.GetRequiredService<IoTHubQueryRunCommand>();
+        query.AddCommand(queryRunCommand.Name, queryRunCommand);
+
+        var queryCompileCommand = serviceProvider.GetRequiredService<IoTHubQueryCompileCommand>();
+        query.AddCommand(queryCompileCommand.Name, queryCompileCommand);
+
+        var queryDiscoverCommand = serviceProvider.GetRequiredService<IoTHubQueryDiscoverCommand>();
+        query.AddCommand(queryDiscoverCommand.Name, queryDiscoverCommand);
+
         return iothub;
     }
 }

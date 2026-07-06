@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.IoTHub.Models;
@@ -18,14 +19,19 @@ public record DeviceTwin(
     [property: JsonPropertyName("version")] long? Version,
     [property: JsonPropertyName("properties")] TwinProperties? Properties,
     [property: JsonPropertyName("capabilities")] DeviceCapabilities? Capabilities,
-    [property: JsonPropertyName("tags")] object? Tags);
+    [property: JsonPropertyName("tags")] JsonElement? Tags);
 
 public record TwinProperties(
-    [property: JsonPropertyName("desired")] object? Desired,
-    [property: JsonPropertyName("reported")] object? Reported);
+    [property: JsonPropertyName("desired")] JsonElement? Desired,
+    [property: JsonPropertyName("reported")] JsonElement? Reported);
 
 public record DeviceCapabilities(
     [property: JsonPropertyName("iotEdge")] bool? IotEdge);
+
+// Only the authentication type is surfaced; symmetric keys and x509 thumbprints
+// from the device identity response are intentionally not mapped so they are not returned.
+public record DeviceAuthentication(
+    [property: JsonPropertyName("type")] string? Type);
 
 public record DeviceIdentity(
     [property: JsonPropertyName("deviceId")] string DeviceId,
@@ -38,7 +44,7 @@ public record DeviceIdentity(
     [property: JsonPropertyName("statusUpdatedTime")] string? StatusUpdatedTime,
     [property: JsonPropertyName("lastActivityTime")] string? LastActivityTime,
     [property: JsonPropertyName("cloudToDeviceMessageCount")] int? CloudToDeviceMessageCount,
-    [property: JsonPropertyName("authenticationType")] string? AuthenticationType,
+    [property: JsonPropertyName("authentication")] DeviceAuthentication? Authentication,
     [property: JsonPropertyName("capabilities")] DeviceCapabilities? Capabilities);
 
 public record TwinPatch(

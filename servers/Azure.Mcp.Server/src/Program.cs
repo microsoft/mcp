@@ -34,7 +34,9 @@ internal class Program
             services.AddLogging(builder =>
             {
                 builder.ConfigureOpenTelemetryLogger();
-                builder.AddConsole();
+                // Send console logs to stderr so stdout carries only the command's JSON
+                // response. Keeps CLI output parseable and avoids corrupting stdio MCP output.
+                builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
                 builder.SetMinimumLevel(LogLevel.Information);
             });
 

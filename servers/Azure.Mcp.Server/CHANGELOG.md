@@ -6,11 +6,18 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added `azmcp iothub device stats` to get device statistics for an IoT Hub identity registry, returning `disabledDeviceCount`, `enabledDeviceCount`, and `totalDeviceCount`.
+- Added `azmcp iothub query discover` to sample `SELECT * FROM devices` and return queryable device twin field paths grouped by device, tags, desired properties, and reported properties.
+- Added `azmcp iothub query compile` to turn structured IoT Hub query predicates into a validated query string and optional `maxCount` hint that can be passed to `azmcp iothub query run`. The new `--discovered-fields` option validates predicate fields against paths returned by `azmcp iothub query discover` before constructing the query.
+- Added paging to `azmcp iothub query run` using IoT Hub query continuation tokens. The `--max-count` option now sets the page size (default 100, maximum 100) and a new `--continuation-token` option fetches the next page. Responses include `hasMore` and a `continuationToken` when more results are available.
+
 ### Breaking Changes
 
 ### Bugs Fixed
 
 ### Other Changes
+
+- `azmcp iothub device list` now applies a default page size of 100 and a maximum of 100 to `--max-count`, returns a validation error when `--max-count` is less than 1, and flags `truncated` (with an explanatory message) when the hub contains more devices than were returned.
 
 ## 2.0.0-beta.7 (2025-11-25)
 

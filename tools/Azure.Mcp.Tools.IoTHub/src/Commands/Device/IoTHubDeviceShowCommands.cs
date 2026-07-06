@@ -16,17 +16,19 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
 
-public sealed class IoTHubDeviceTwinGetCommand(IIoTHubDeviceService service, ILogger<IoTHubDeviceTwinGetCommand> logger)
-    : SubscriptionCommand<IoTHubDeviceTwinGetOptions>
+public sealed class IoTHubDeviceShowCommand(IIoTHubDeviceService service, ILogger<IoTHubDeviceShowCommand> logger)
+    : SubscriptionCommand<IoTHubDeviceShowOptions>
 {
-    public override string Id => "iothub-device-twin-get";
-    public override string Name => "get-twin";
-    public override string Description => "Get a device twin from an IoT Hub device registry.";
-    public override string Title => "Get IoT Hub Device Twin";
+    public override string Id => "iothub-device-show";
+    public override string Name => "show";
+    public override string Description => "Show the device identity for a device in an IoT Hub device registry. Returns the device identity metadata without authentication keys." + 
+    "Always present the complete raw JSON result to the user, including all fields (statusReason, connectionStateUpdatedTime, statusUpdatedTime,capabilities, etc.). Do not summarize, reformat, or omit any fields." + 
+    "Device names/IDs are case-sensitive and must match exactly.";
+    public override string Title => "Show IoT Hub Device";
     public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, LocalRequired = false, Secret = false };
 
     private readonly IIoTHubDeviceService _service = service ?? throw new ArgumentNullException(nameof(service));
-    private readonly ILogger<IoTHubDeviceTwinGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<IoTHubDeviceShowCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     protected override void RegisterOptions(Command command)
     {
@@ -36,7 +38,7 @@ public sealed class IoTHubDeviceTwinGetCommand(IIoTHubDeviceService service, ILo
         command.Options.Add(IoTHubOptionDefinitions.DeviceId.AsRequired());
     }
 
-    protected override IoTHubDeviceTwinGetOptions BindOptions(ParseResult parseResult)
+    protected override IoTHubDeviceShowOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
@@ -56,7 +58,7 @@ public sealed class IoTHubDeviceTwinGetCommand(IIoTHubDeviceService service, ILo
 
         try
         {
-            var result = await _service.GetDeviceTwin(
+            var result = await _service.GetDevice(
                 options.DeviceId!,
                 options.Name!,
                 options.ResourceGroup!,
@@ -64,15 +66,13 @@ public sealed class IoTHubDeviceTwinGetCommand(IIoTHubDeviceService service, ILo
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(result, IoTHubJsonContext.Default.DeviceTwin);
+            context.Response.Results = ResponseResult.Create(result, IoTHubJsonContext.Default.DeviceIdentity);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting device twin from IoT Hub");
+            _logger.LogError(ex, "Error showing device in IoT Hub");
             HandleException(context, ex);
         }
-
         return context.Response;
     }
 }
- 

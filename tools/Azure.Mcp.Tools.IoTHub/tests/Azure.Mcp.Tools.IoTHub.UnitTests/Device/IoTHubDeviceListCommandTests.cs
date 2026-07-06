@@ -45,8 +45,8 @@ public class IoTHubDeviceListCommandTests
 
         var expectedDevices = new List<DeviceIdentity>
         {
-            new DeviceIdentity("device1", "gen1", "aaaa==", "Connected", "Enabled", null, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z", 0, "SAS", null),
-            new DeviceIdentity("device2", "gen2", "bbbb==", "Connected", "Enabled", null, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z", 0, "SAS", null)
+            new DeviceIdentity("device1", "gen1", "aaaa==", "Connected", "Enabled", null, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z", 0, new DeviceAuthentication("SAS"), null),
+            new DeviceIdentity("device2", "gen2", "bbbb==", "Connected", "Enabled", null, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z", 0, new DeviceAuthentication("SAS"), null)
         };
 
         _service.ListDevices(
@@ -56,7 +56,7 @@ public class IoTHubDeviceListCommandTests
             Arg.Any<int?>(),
             Arg.Any<Core.Options.RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(expectedDevices);
+            .Returns(new DeviceListResult(expectedDevices, false));
 
         var args = _commandDefinition.Parse([
             "--name", name,
@@ -83,7 +83,7 @@ public class IoTHubDeviceListCommandTests
 
         var expectedDevices = new List<DeviceIdentity>
         {
-            new DeviceIdentity("device1", "gen1", "aaaa==", "Connected", "Enabled", null, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z", 0, "SAS", null)
+            new DeviceIdentity("device1", "gen1", "aaaa==", "Connected", "Enabled", null, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z", 0, new DeviceAuthentication("SAS"), null)
         };
 
         _service.ListDevices(
@@ -93,7 +93,7 @@ public class IoTHubDeviceListCommandTests
             maxCount,
             Arg.Any<Core.Options.RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(expectedDevices);
+            .Returns(new DeviceListResult(expectedDevices, false));
 
         var args = _commandDefinition.Parse([
             "--name", name,
@@ -111,13 +111,118 @@ public class IoTHubDeviceListCommandTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_MaxCountGreaterThanOneHundred_CapsAtOneHundred()
+    {
+        // Arrange
+        var name = "test-hub";
+        var resourceGroup = "test-rg";
+        var subscription = "sub-id";
+
+        _service.ListDevices(
+            name,
+            resourceGroup,
+            subscription,
+            100,
+            Arg.Any<Core.Options.RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new DeviceListResult([], false));
+
+        var args = _commandDefinition.Parse([
+            "--name", name,
+            "--resource-group", resourceGroup,
+            "--subscription", subscription,
+            "--max-count", "500"
+        ]);
+
+        // Act
+        await _command.ExecuteAsync(_context, args, CancellationToken.None);
+
+        // Assert
+        await _service.Received(1).ListDevices(
+            name,
+            resourceGroup,
+            subscription,
+            100,
+            Arg.Any<Core.Options.RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListDevices_Truncated_SetsMessage()
+    {
+        // Arrange
+        var name = "test-hub";
+        var resourceGroup = "test-rg";
+        var subscription = "sub-id";
+
+        var pageDevices = new List<DeviceIdentity>
+        {
+            new DeviceIdentity("device1", "gen1", "aaaa==", "Connected", "Enabled", null, null, null, null, 0, new DeviceAuthentication("SAS"), null)
+        };
+
+        _service.ListDevices(
+            name,
+            resourceGroup,
+            subscription,
+            Arg.Any<int?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new DeviceListResult(pageDevices, true));
+
+        var args = _commandDefinition.Parse([
+            "--name", name,
+            "--resource-group", resourceGroup,
+            "--subscription", subscription
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(response.Results);
+        Assert.NotNull(response.Message);
+        Assert.Contains("truncated", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_MaxCountLessThanOne_ReturnsBadRequest()
+    {
+        // Arrange
+        var name = "test-hub";
+        var resourceGroup = "test-rg";
+        var subscription = "sub-id";
+
+        var args = _commandDefinition.Parse([
+            "--name", name,
+            "--resource-group", resourceGroup,
+            "--subscription", subscription,
+            "--max-count", "0"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
+        Assert.Null(response.Results);
+        Assert.Contains("less than 1", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
         // Assert
         Assert.Equal("iothub-device-list", _command.Id);
         Assert.Equal("list", _command.Name);
         Assert.NotNull(_command.Description);
+        Assert.Contains("more than 100 devices", _command.Description, StringComparison.Ordinal);
+        Assert.Contains("iothub query run", _command.Description, StringComparison.Ordinal);
+        Assert.Contains("iothub_query_run", _command.Description, StringComparison.Ordinal);
+        Assert.Contains("compact projection", _command.Description, StringComparison.Ordinal);
+        Assert.Contains("compact summary", _command.Description, StringComparison.Ordinal);
+        Assert.Contains("return only one page", _command.Description, StringComparison.Ordinal);
+        Assert.Contains("do not loop", _command.Description, StringComparison.Ordinal);
         Assert.True(_command.Metadata.ReadOnly);
-        Assert.True(_command.Metadata.Secret);
+        Assert.False(_command.Metadata.Secret);
     }
 }

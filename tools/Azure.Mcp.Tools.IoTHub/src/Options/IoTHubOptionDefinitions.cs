@@ -13,9 +13,9 @@ public static class IoTHubOptionDefinitions
     public const string CapacityName = "capacity";
     public const string DeviceIdName = "device-id";
     public const string MaxCountName = "max-count";
+    public const string ContinuationTokenName = "continuation-token";
     public const string QueryName = "query";
     public const string PatchName = "patch";
-
     public static readonly Option<string> Name = new(
         $"--{NameName}"
     )
@@ -60,7 +60,23 @@ public static class IoTHubOptionDefinitions
         $"--{MaxCountName}"
     )
     {
-        Description = "The maximum number of devices to return.",
+        Description = "The maximum number of items to return per page. Defaults to 100 when not specified. Values greater than 100 are capped at 100.",
+        Required = false
+    };
+
+    public static readonly Option<int?> QueryMaxCount = new(
+        $"--{MaxCountName}"
+    )
+    {
+        Description = "The maximum number of query items to return per page. Defaults to 100 when not specified. Values greater than 100 are capped at 100.",
+        Required = false
+    };
+
+    public static readonly Option<string> ContinuationToken = new(
+        $"--{ContinuationTokenName}"
+    )
+    {
+        Description = "The opaque continuationToken string returned by a previous iothub_query_run response to fetch exactly one next page. Omit it to start from the first page. Do not pass hasMore=true/false or any boolean value.",
         Required = false
     };
 
@@ -79,4 +95,5 @@ public static class IoTHubOptionDefinitions
         Description = "The JSON patch document to update the device twin (e.g., {\"properties\":{\"desired\":{\"temperature\":72}}}).",
         Required = true
     };
+
 }

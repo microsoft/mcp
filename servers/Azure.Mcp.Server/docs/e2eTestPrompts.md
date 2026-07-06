@@ -329,6 +329,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | iothub_device_list | Show me the devices in IoT Hub <iothub-name> in resource group <resource-group> |
 | iothub_device_list | List the first 10 devices in IoT Hub <iothub-name> |
 | iothub_device_list | What devices are registered in IoT Hub <iothub-name>? |
+| iothub_device_stats | Get device statistics for IoT Hub <iothub-name> |
+| iothub_device_stats | How many devices are registered in IoT Hub <iothub-name>? |
+| iothub_device_stats | Show me the enabled and disabled device counts for IoT Hub <iothub-name> in resource group <resource-group> |
 | iothub_device_twin_get | Get the device twin for device <device-id> in IoT Hub <iothub-name> |
 | iothub_device_twin_get | Show me the twin for device <device-id> in IoT Hub <iothub-name> |
 | iothub_device_twin_get | Retrieve device twin details for <device-id> in IoT Hub <iothub-name> |
@@ -344,6 +347,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | iothub_get | Get details for IoT Hub <iothub-name> in resource group <resource-group> |
 | iothub_keys | Get the connection keys for IoT Hub <iothub-name> in resource group <resource-group> |
 | iothub_keys | Show me the keys for IoT Hub <iothub-name> |
+| iothub_query_compile | Compile a query for devices where reported batteryLevel is below 20 and return the first 5 |
+| iothub_query_discover | Discover queryable device twin fields in IoT Hub <iothub-name> before building filters |
+| iothub_query_run | Run the query SELECT * FROM devices against IoT Hub <iothub-name> |
+| iothub_query_run | Give me 1000 devices in IoT Hub <iothub-name> |
+| iothub_query_run | Show the next page of results for IoT Hub <iothub-name> |
+| iothub_query_run | Find devices in IoT Hub <iothub-name> with battery below 20, 500 per page |
 | iothub_update | Update IoT Hub <iothub-name> in resource group <resource-group> to use S2 SKU |
 | iothub_update | Change the capacity of IoT Hub <iothub-name> to 2 units |
 

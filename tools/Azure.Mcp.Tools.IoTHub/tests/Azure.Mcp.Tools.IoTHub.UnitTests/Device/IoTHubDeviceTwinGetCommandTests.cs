@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.IoTHub.Commands.Device;
 using Azure.Mcp.Tools.IoTHub.Models;
@@ -55,9 +56,9 @@ public class IoTHubDeviceTwinGetCommandTests
             0,
             "SAS",
             1,
-            new TwinProperties(new Dictionary<string, object>(), new Dictionary<string, object>()),
+            new TwinProperties(JsonSerializer.SerializeToElement(new Dictionary<string, object>()), JsonSerializer.SerializeToElement(new Dictionary<string, object>())),
             new DeviceCapabilities(false),
-            new Dictionary<string, object>());
+            JsonSerializer.SerializeToElement(new Dictionary<string, object>()));
 
         _service.GetDeviceTwin(
             deviceId,
@@ -91,6 +92,6 @@ public class IoTHubDeviceTwinGetCommandTests
         Assert.Equal("get-twin", _command.Name);
         Assert.NotNull(_command.Description);
         Assert.True(_command.Metadata.ReadOnly);
-        Assert.True(_command.Metadata.Secret);
+            Assert.False(_command.Metadata.Secret);
     }
 }

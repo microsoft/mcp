@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
@@ -16,32 +17,33 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
 
-public sealed class IoTHubDeviceTwinGetCommand(IIoTHubDeviceService service, ILogger<IoTHubDeviceTwinGetCommand> logger)
-    : SubscriptionCommand<IoTHubDeviceTwinGetOptions>
+public sealed class IoTHubDeviceStatisticsCommand(IIoTHubDeviceService service, ILogger<IoTHubDeviceStatisticsCommand> logger)
+    : SubscriptionCommand<IoTHubDeviceStatisticsOptions>
 {
-    public override string Id => "iothub-device-twin-get";
-    public override string Name => "get-twin";
-    public override string Description => "Get a device twin from an IoT Hub device registry.";
-    public override string Title => "Get IoT Hub Device Twin";
+    public override string Id => "iothub-device-stats";
+    public override string Name => "stats";
+    public override string Description => "Get device statistics for an IoT Hub identity registry. " +
+    "Returns aggregate device counts for the hub: disabledDeviceCount (the number of currently disabled devices), " +
+    "enabledDeviceCount (the number of currently enabled devices), and totalDeviceCount (the total number of devices registered for the IoT Hub). " +
+    "Hub names/IDs are case-sensitive and must match exactly.";
+    public override string Title => "Get IoT Hub Device Statistics";
     public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, LocalRequired = false, Secret = false };
 
     private readonly IIoTHubDeviceService _service = service ?? throw new ArgumentNullException(nameof(service));
-    private readonly ILogger<IoTHubDeviceTwinGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<IoTHubDeviceStatisticsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.Name.AsRequired());
-        command.Options.Add(IoTHubOptionDefinitions.DeviceId.AsRequired());
     }
 
-    protected override IoTHubDeviceTwinGetOptions BindOptions(ParseResult parseResult)
+    protected override IoTHubDeviceStatisticsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Name = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Name.Name);
-        options.DeviceId = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.DeviceId.Name);
         return options;
     }
 
@@ -56,23 +58,27 @@ public sealed class IoTHubDeviceTwinGetCommand(IIoTHubDeviceService service, ILo
 
         try
         {
-            var result = await _service.GetDeviceTwin(
-                options.DeviceId!,
+            var result = await _service.GetDeviceStatistics(
                 options.Name!,
                 options.ResourceGroup!,
                 options.Subscription!,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(result, IoTHubJsonContext.Default.DeviceTwin);
+            context.Response.Results = ResponseResult.Create(result, IoTHubJsonContext.Default.IoTHubRegistryStatistics);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting device twin from IoT Hub");
+            _logger.LogError(ex, "Error getting device statistics for IoT Hub");
             HandleException(context, ex);
         }
 
         return context.Response;
     }
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        TimeoutException => HttpStatusCode.RequestTimeout,
+        _ => base.GetStatusCode(ex)
+    };
 }
- 
