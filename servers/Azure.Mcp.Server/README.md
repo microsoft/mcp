@@ -2,7 +2,7 @@
 See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate this README.md for package specific output
 -->
 <!-- remove-section: start nuget;vsix;npm;pypi remove_managed_hosting_survey -->
-[![Help shape Azure MCP Managed Remote hosting — take our short survey](images/managed-hosting-survey-banner.png)](https://aka.ms/azmcp/managed-hosting-survey)
+[![Help shape Azure MCP Server's Managed Remote Hosting — take our 1-minute survey](images/managed-hosting-survey-banner.png)](https://aka.ms/azmcp/managed-hosting-survey)
 <!-- remove-section: end remove_managed_hosting_survey -->
 # <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm;pypi {{ToolTitle}} -->
 <!-- remove-section: start nuget;vsix;npm;pypi remove_note_ga -->
