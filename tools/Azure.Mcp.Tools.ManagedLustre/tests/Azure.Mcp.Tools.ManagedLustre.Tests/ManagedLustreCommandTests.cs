@@ -184,6 +184,11 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     [Fact]
     public async Task Should_create_azure_managed_lustre_with_storage_and_cmk()
     {
+        // The AMLFS (HPC Cache) resource provider cannot access the HSM blob container in the
+        // Azure US Government test environment, so filesystem creation with HSM settings fails
+        // preflight with "Storage Container ... is not found or is inaccessible".
+        Assert.SkipWhen(Settings.IsAzureUSGovernment, "AMLFS HSM storage container integration is not available in the Azure US Government test environment.");
+
         // In playback mode, use the exact recorded name; in record mode, generate a new one
         var fsName = RegisterOrRetrieveVariable("amlfsHsmName", $"amlfs-{Guid.NewGuid().ToString("N")[..8]}");
         var subnetId = SanitizeAndRecordSubnetId(Settings.DeploymentOutputs.GetValueOrDefault("AMLFS_SUBNET_ID", ""), "amlfsSubnetId");

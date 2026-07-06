@@ -618,20 +618,25 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         Assert.True(enabled.GetBoolean());
     }
 
-    [Theory]
-    [InlineData("--invalid-param")]
-    [InlineData("--subscription invalidSub")]
-    [InlineData("--subscription sub --resource-group rg")] // Missing required params for get
-    public async Task Should_Return400_WithInvalidWebTestInput(string args)
+    [Fact]
+    public async Task Should_Return400_WithInvalidWebTestInput()
     {
-        var result = await CallToolAsync(
+        // Specifying --webtest-resource without --resource-group is invalid for the get command.
+        // This exercises the command's validator deterministically, independent of whether a
+        // default subscription is available via AZURE_SUBSCRIPTION_ID / the Azure CLI profile.
+        // Use a result processor that returns the full response envelope so we can assert on
+        // the status code (the default processor only returns the "results" payload).
+        var response = await CallToolAsync(
             "monitor_webtests_get",
             new()
             {
-                { "args", args }
-            });
+                { "subscription", Settings.SubscriptionId },
+                { "webtest-resource", "some-webtest" }
+            },
+            resultProcessor: root => root);
 
-        Assert.NotEqual(200, result?.GetProperty("status").GetInt32() ?? 500);
+        Assert.NotNull(response);
+        Assert.Equal(400, response.Value.GetProperty("status").GetInt32());
     }
 
     [Fact]

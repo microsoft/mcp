@@ -20,8 +20,10 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     private string DiskName => $"{Settings.ResourceBaseName}-disk";
 
     // VM size used by create tests. Standard_B2s (burstable) is not offered in some sovereign-cloud
-    // regions such as usgovvirginia, so fall back to a broadly-available general-purpose size there.
-    private string VmSize => Settings.IsAzureUSGovernment ? "Standard_D2s_v3" : "Standard_B2s";
+    // regions such as usgovvirginia. Standard_D2s_v3 is only offered zonally there, so a zoneless
+    // (regional) deployment fails with SkuNotAvailable. Standard_DS2_v2 has regional availability in
+    // usgovvirginia, so fall back to it there.
+    private string VmSize => Settings.IsAzureUSGovernment ? "Standard_DS2_v2" : "Standard_B2s";
 
     // Disable default sanitizer additions to avoid conflicts (following SQL pattern)
     public override bool EnableDefaultSanitizerAdditions => false;

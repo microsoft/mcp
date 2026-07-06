@@ -20,6 +20,16 @@ var knownDevOpsServicePrincipalOid = '26ffb325-f480-419c-b7a9-2c8a018203a8'
 var deployerUserPrincipalName = deployer().?userPrincipalName
 var isServicePrincipal = testApplicationOid == knownDevOpsServicePrincipalOid || deployerUserPrincipalName == null
 
+// The PostgreSQL Entra admin login must match the username the test connects with, which is
+// the deploying principal's name (app display name for service principals, UPN for users).
+// deployer() exposes a display name for neither, so map the known CI service principals to
+// their display names. Sovereign-cloud CI (e.g. usgovvirginia) uses a dedicated service
+// principal whose objectId is not known ahead of time, so it is matched by cloud instead.
+var isUSGovernment = environment().name == 'AzureUSGovernment'
+var entraAdminLogin = testApplicationOid == knownDevOpsServicePrincipalOid
+  ? 'azure-sdk-internal-devops-connections'
+  : (deployerUserPrincipalName ?? (isServicePrincipal && isUSGovernment ? 'azure-mcp-gov-test' : testApplicationOid))
+
 // PostgreSQL Flexible Server provisioning is offer/capacity-restricted for the test
 // subscription in usgovvirginia (LocationIsOfferRestricted). Azure recommends retrying in a
 // different location, so deploy the server to an alternate Azure US Government region where
@@ -73,7 +83,7 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2025-06-01-pr
     name: testApplicationOid
     properties: {
       principalType: isServicePrincipal ? 'ServicePrincipal' : 'User'
-      principalName: testApplicationOid == knownDevOpsServicePrincipalOid ? 'azure-sdk-internal-devops-connections' : (deployerUserPrincipalName ?? testApplicationOid)
+      principalName: entraAdminLogin
       tenantId: tenant().tenantId
     }
     dependsOn: [
@@ -116,4 +126,4 @@ output postgresServerName string = postgresServer.name
 output postgresServerFqdn string = postgresServer.properties.fullyQualifiedDomainName
 output testDatabaseName string = testDbName
 output entraIdAdminObjectId string = testApplicationOid
-output adminLogin string = testApplicationOid
+output adminLogin string = entraAdminLogin
