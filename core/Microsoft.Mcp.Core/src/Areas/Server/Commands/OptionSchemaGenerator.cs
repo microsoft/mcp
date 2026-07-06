@@ -112,4 +112,35 @@ internal static class OptionSchemaGenerator
 
         return root;
     }
+
+    /// <summary>
+    /// Builds the <c>outputSchema</c> root <see cref="JsonObject"/> for the supplied result type.
+    /// MCP requires the root schema to be an <c>"object"</c>, so result types that export as a
+    /// non-object root (arrays or scalars) are wrapped under a single <c>value</c> property. Unlike the
+    /// input schema, <c>additionalProperties</c> is intentionally left unset for forward compatibility
+    /// with evolving result shapes.
+    /// </summary>
+    public static JsonObject CreateOutputSchema(JsonTypeInfo resultTypeInfo)
+    {
+        ArgumentNullException.ThrowIfNull(resultTypeInfo);
+
+        var schema = JsonSchemaExporter.GetJsonSchemaAsNode(resultTypeInfo, s_exporterOptions);
+
+        if (schema is JsonObject rootObject && IsObjectRoot(rootObject))
+        {
+            return rootObject;
+        }
+
+        return new JsonObject
+        {
+            ["type"] = "object",
+            ["properties"] = new JsonObject { ["value"] = schema },
+            ["required"] = new JsonArray { (JsonNode)"value" },
+        };
+    }
+
+    private static bool IsObjectRoot(JsonObject schema)
+        => schema["type"] is JsonValue typeValue
+            && typeValue.TryGetValue<string>(out var typeName)
+            && typeName == "object";
 }
