@@ -12,7 +12,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Added Claude Code installation instructions to the Azure MCP Server README, covering installation of the Azure plugin from Anthropic's official `claude-plugins-official` marketplace. [[#1579](https://github.com/microsoft/mcp/issues/1579)]
+- Added Claude Code installation instructions to the Azure MCP Server README. [[#3003](https://github.com/microsoft/mcp/pull/3003)]
 - Added a `CancellationToken` parameter to async methods to more `I[SomeService]` interfaces. [[#1133](https://github.com/microsoft/mcp/pull/1133)]
 
 ## 2.0.0-beta.3 (2025-11-11)
