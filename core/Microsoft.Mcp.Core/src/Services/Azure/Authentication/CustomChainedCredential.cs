@@ -165,7 +165,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         else
         {
             // Use the default credential chain (respects AZURE_TOKEN_CREDENTIALS if set)
-            creds.Add(CreateDefaultCredential(tenantId));
+            creds.Add(CreateDefaultCredential(tenantId, logger));
         }
 
         // Only add interactive fallback credentials when:
@@ -260,7 +260,16 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         return new TimeoutTokenCredential(browserCredential, TimeSpan.FromSeconds(timeoutSeconds));
     }
 
-    private static ChainedTokenCredential CreateDefaultCredential(string? tenantId)
+    private static readonly string[] AcceptedTokenCredentialValues =
+    [
+        "dev", "prod",
+        "EnvironmentCredential", "WorkloadIdentityCredential", "ManagedIdentityCredential",
+        "VisualStudioCredential", "VisualStudioCodeCredential",
+        "AzureCliCredential", "AzurePowerShellCredential", "AzureDeveloperCliCredential",
+        "DeviceCodeCredential"
+    ];
+
+    private static ChainedTokenCredential CreateDefaultCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null)
     {
         string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
         var credentials = new List<TokenCredential>();
@@ -323,7 +332,10 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
                     break;
 
                 default:
-                    // Unknown value, fall back to default chain
+                    logger?.LogWarning(
+                        "Unrecognized AZURE_TOKEN_CREDENTIALS value '{Value}'. Expected one of: {ValidValues}. Falling back to default credential chain.",
+                        tokenCredentials,
+                        string.Join(", ", AcceptedTokenCredentialValues));
                     AddDefaultCredentialChain(credentials, tenantId);
                     break;
             }
