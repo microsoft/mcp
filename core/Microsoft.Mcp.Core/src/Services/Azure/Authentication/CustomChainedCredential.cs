@@ -84,10 +84,16 @@ namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 /// If not set, System-Assigned Managed Identity will be used.
 /// </para>
 /// </remarks>
-internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null, bool forceBrowserFallback = false) : TokenCredential
+internal class CustomChainedCredential : TokenCredential
 {
-    private TokenCredential? _credential;
-    private readonly ILogger<CustomChainedCredential>? _logger = logger;
+    private readonly Lazy<TokenCredential> _credential;
+
+    internal CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null, bool forceBrowserFallback = false)
+    {
+        _credential = new Lazy<TokenCredential>(
+            () => CreateCredential(tenantId, logger, forceBrowserFallback),
+            LazyThreadSafetyMode.ExecutionAndPublication);
+    }
 
     /// <summary>
     /// Cloud configuration for authority host. Set by DI container during service registration.
@@ -102,14 +108,12 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 
     public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        _credential ??= CreateCredential(tenantId, _logger, forceBrowserFallback);
-        return _credential.GetToken(requestContext, cancellationToken);
+        return _credential.Value.GetToken(requestContext, cancellationToken);
     }
 
     public override ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        _credential ??= CreateCredential(tenantId, _logger, forceBrowserFallback);
-        return _credential.GetTokenAsync(requestContext, cancellationToken);
+        return _credential.Value.GetTokenAsync(requestContext, cancellationToken);
     }
 
     private const string AuthenticationRecordEnvVarName = "AZURE_MCP_AUTHENTICATION_RECORD";
@@ -266,7 +270,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         "EnvironmentCredential", "WorkloadIdentityCredential", "ManagedIdentityCredential",
         "VisualStudioCredential", "VisualStudioCodeCredential",
         "AzureCliCredential", "AzurePowerShellCredential", "AzureDeveloperCliCredential",
-        "DeviceCodeCredential"
+        "DeviceCodeCredential", "InteractiveBrowserCredential"
     ];
 
     private static ChainedTokenCredential CreateDefaultCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null)

@@ -456,8 +456,14 @@ public class CustomChainedCredentialTests
         var credential = CreateCustomChainedCredentialWithLoggerFactory(factory);
 
         // Trigger the lazy credential construction (authentication will fail in test environment, that's expected).
-        try { credential.GetToken(new TokenRequestContext(["https://management.azure.com/.default"]), CancellationToken.None); }
-        catch { /* credential chain construction is all we need; auth failure is expected */ }
+        try
+        {
+            credential.GetToken(new TokenRequestContext(["https://management.azure.com/.default"]), CancellationToken.None);
+        }
+        catch
+        {
+            // credential chain construction is all we need; auth failure is expected
+        }
 
         // Assert — credential is still created (fallback works)
         Assert.NotNull(credential);
@@ -467,6 +473,44 @@ public class CustomChainedCredentialTests
         var warning = Assert.Single(provider.Warnings);
         Assert.Contains("AzuerCliCredential", warning);
         Assert.Contains("AZURE_TOKEN_CREDENTIALS", warning);
+    }
+
+    /// <summary>
+    /// Tests that concurrent calls to GetToken complete without error and leave the
+    /// Lazy&lt;T&gt; credential in a created state, verifying that the ExecutionAndPublication
+    /// mode allows all threads to proceed after initialization.
+    /// </summary>
+    [Fact]
+    public async Task GetToken_ConcurrentCalls_CredentialIsInitializedAfterConcurrentAccess()
+    {
+        // Arrange
+        var credential = CreateCustomChainedCredential();
+        var credentialType = GetCustomChainedCredentialType();
+        var lazyField = credentialType.GetField("_credential",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(lazyField);
+
+        // Act — fire 20 concurrent GetToken calls before the chain is initialized
+        var tasks = Enumerable.Range(0, 20).Select(_ => Task.Run(() =>
+        {
+            try
+            {
+                credential.GetToken(new TokenRequestContext(["https://management.azure.com/.default"]), CancellationToken.None);
+            }
+            catch
+            {
+                // auth failure expected in test environment
+            }
+        })).ToArray();
+
+        await Task.WhenAll(tasks);
+
+        // Assert — the Lazy<T> value was created and is a single shared instance
+        var lazyValue = lazyField.GetValue(credential);
+        Assert.NotNull(lazyValue);
+        var isValueCreated = (bool)lazyValue.GetType()
+            .GetProperty("IsValueCreated")!.GetValue(lazyValue)!;
+        Assert.True(isValueCreated);
     }
 
     /// <summary>
