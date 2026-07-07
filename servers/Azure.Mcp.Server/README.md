@@ -157,7 +157,7 @@ The Azure plugin packages the Azure MCP Server along with Azure-related agents a
    /plugin install azure@claude-plugins-official
    ```
 
-The `claude-plugins-official` marketplace is available in Claude Code by default, so no additional marketplace setup is required. For more information on discovering and installing plugins, see the [Claude Code plugins documentation](https://code.claude.com/docs/en/discover-plugins).
+For more information on discovering and installing plugins, see the [Claude Code plugins documentation](https://code.claude.com/docs/en/discover-plugins).
 
 ### Manual Setup
 Azure MCP Server can also be configured across other IDEs, CLIs, and MCP clients:
