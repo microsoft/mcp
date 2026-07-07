@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.AzureTerraformBestPractices.Commands;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.AzureTerraformBestPractices;
 
@@ -13,6 +13,8 @@ public class AzureTerraformBestPracticesSetup : IAreaSetup
     public string Name => "azureterraformbestpractices";
 
     public string Title => "Azure Terraform Best Practices";
+
+    public CommandCategory Category => CommandCategory.RecommendedTools;
 
     public void ConfigureServices(IServiceCollection services)
     {
@@ -28,8 +30,7 @@ public class AzureTerraformBestPracticesSetup : IAreaSetup
             If this tool needs to be categorized, it belongs to the Azure Best Practices category.", Title
         );
 
-        var practices = serviceProvider.GetRequiredService<AzureTerraformBestPracticesGetCommand>();
-        azureTerraformBestPractices.AddCommand(practices.Name, practices);
+        azureTerraformBestPractices.AddCommand<AzureTerraformBestPracticesGetCommand>(serviceProvider);
 
         return azureTerraformBestPractices;
     }

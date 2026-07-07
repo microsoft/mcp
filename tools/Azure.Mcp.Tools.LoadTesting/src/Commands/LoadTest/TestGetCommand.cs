@@ -1,50 +1,50 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
+
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
+using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 
-public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
-    : BaseLoadTestingCommand<TestGetOptions>
-{
-    private const string _commandTitle = "Test Get";
-    private readonly ILogger<TestGetCommand> _logger = logger;
-
-    public override string Id => "be7c3864-0713-42f8-8eb7-b7ca28a951fb";
-    public override string Name => "get";
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "be7c3864-0713-42f8-8eb7-b7ca28a951fb",
+    Name = "get",
+    Title = "Test Get",
+    Description = """
         Get the configuration and setup details for a load test by its test ID in a Load Testing resource.
         Returns only the test definition, including duration, ramp-up, virtual users, and endpoint. Does not return any test run results or execution data. Also does NOT return and resource details. Only the test configuration is fetched.
-        """;
-    public override string Title => _commandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TestGetCommand(ILogger<TestGetCommand> logger, ILoadTestingService loadTestingService)
+    : BaseLoadTestingCommand<TestGetOptions>
+{
+    private readonly ILogger<TestGetCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.LoadTesting.Test);
+        command.Options.Add(LoadTestingOptionDefinitions.TestResource.AsRequired());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(LoadTestingOptionDefinitions.Test);
     }
 
     protected override TestGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Test.Name);
+        options.TestId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Test.Name);
         return options;
     }
 
@@ -59,18 +59,15 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
 
         try
         {
-
-            // Get the appropriate service from DI
-            var service = context.GetService<ILoadTestingService>();
-
             // Call service operation(s)
-            var results = await service.GetTestAsync(
+            var results = await _loadTestingService.GetTestAsync(
                 options.Subscription!,
                 options.TestResourceName!,
                 options.TestId!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Set results if any were returned
             context.Response.Results = results != null ?

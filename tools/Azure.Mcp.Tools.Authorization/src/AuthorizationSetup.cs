@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Authorization.Commands;
 using Azure.Mcp.Tools.Authorization.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Authorization;
 
@@ -34,8 +34,7 @@ public sealed class AuthorizationSetup : IAreaSetup
         authorization.AddSubGroup(roleAssignment);
 
         // Register role assignment commands
-        var command = serviceProvider.GetRequiredService<RoleAssignmentListCommand>();
-        roleAssignment.AddCommand(command.Name, command);
+        roleAssignment.AddCommand<RoleAssignmentListCommand>(serviceProvider);
 
         return authorization;
     }

@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
 using Azure.Security.KeyVault.Administration;
 using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
 
@@ -20,8 +20,8 @@ public interface IKeyVaultService
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
     /// <param name="retryPolicy">Optional retry policy for the operation</param>
     /// <param name="cancellationToken">A cancellation token</param>
-    /// <returns>The certificate operation</returns>
-    Task<CertificateOperation> CreateCertificate(
+    /// <returns>The created certificate</returns>
+    Task<KeyVaultCertificateWithPolicy> CreateCertificate(
         string vaultName,
         string certificateName,
         string subscriptionId,

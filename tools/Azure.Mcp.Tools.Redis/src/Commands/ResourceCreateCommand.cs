@@ -1,0 +1,101 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Tools.Redis.Models;
+using Azure.Mcp.Tools.Redis.Options;
+using Azure.Mcp.Tools.Redis.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
+
+namespace Azure.Mcp.Tools.Redis.Commands;
+
+/// <summary>
+/// Creates a new Azure Managed Redis resource. Provisioning is asynchronous and the
+/// command returns immediately while the resource is still being created.
+/// </summary>
+[CommandMetadata(
+    Id = "750133dd-d57f-4ed4-9488-c1d406ad4a83",
+    Name = "create",
+    Title = "Create Redis Resource",
+    Description = "Create a new Azure Managed Redis resource in Azure. Use this command to provision a new Redis resource in your subscription. Provisioning is asynchronous and typically takes several minutes; the command returns immediately with status \"Creating\" while the resource is still being created.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ResourceCreateCommand(IRedisService redisService, ILogger<ResourceCreateCommand> logger)
+    : SubscriptionCommand<ResourceCreateOptions>()
+{
+    private readonly IRedisService _redisService = redisService;
+    private readonly ILogger<ResourceCreateCommand> _logger = logger;
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(RedisOptionDefinitions.Resource);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(RedisOptionDefinitions.Sku);
+        command.Options.Add(RedisOptionDefinitions.Location);
+        command.Options.Add(RedisOptionDefinitions.AccessKeyAuthenticationEnabled);
+        command.Options.Add(RedisOptionDefinitions.PublicNetworkAccess);
+        command.Options.Add(RedisOptionDefinitions.Modules);
+    }
+
+    protected override ResourceCreateOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.Name = parseResult.GetValueOrDefault<string>(RedisOptionDefinitions.Resource.Name);
+        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Sku = parseResult.GetValueOrDefault<string>(RedisOptionDefinitions.Sku.Name);
+        options.Location = parseResult.GetValueOrDefault<string>(RedisOptionDefinitions.Location.Name);
+        options.AccessKeyAuthenticationEnabled = parseResult.GetValueOrDefault<bool>(RedisOptionDefinitions.AccessKeyAuthenticationEnabled.Name);
+        options.PublicNetworkAccessEnabled = parseResult.GetValueOrDefault<bool>(RedisOptionDefinitions.PublicNetworkAccess.Name);
+        options.Modules = parseResult.GetValueOrDefault<string[]>(RedisOptionDefinitions.Modules.Name);
+
+        return options;
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
+        var options = BindOptions(parseResult);
+
+        try
+        {
+            var resource = await _redisService.CreateResourceAsync(
+                options.Subscription!,
+                options.ResourceGroup!,
+                options.Name!,
+                options.Location!,
+                options.Sku,
+                options.AccessKeyAuthenticationEnabled,
+                options.PublicNetworkAccessEnabled,
+                options.Modules,
+                options.Tenant,
+                options.RetryPolicy,
+                cancellationToken);
+
+            context.Response.Results = ResponseResult.Create(
+                new(resource),
+                RedisJsonContext.Default.ResourceCreateCommandResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create Redis resource");
+            HandleException(context, ex);
+        }
+
+        return context.Response;
+    }
+
+    internal record ResourceCreateCommandResult(Resource Resource);
+}

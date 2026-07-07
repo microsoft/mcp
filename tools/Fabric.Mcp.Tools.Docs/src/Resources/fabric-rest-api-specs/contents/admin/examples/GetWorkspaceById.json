@@ -1,0 +1,23 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+                "name": "test report",
+                "type": "Workspace",
+                "state": "Active",
+                "capacityId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e84",
+                "domainId": "8badadb6-9945-4e07-8134-00e0defec00b",
+                "tags": [
+                    {
+                        "id": "b3f2c8e9-4d8e-4a7c-9a32-f8c1b2e4d6af",
+                        "displayName": "Finance"
+                    }
+                ]
+            }
+        }
+    }
+}

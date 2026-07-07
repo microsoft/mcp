@@ -1,15 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AppConfig.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
 
 public interface IAppConfigService
 {
-    Task<List<AppConfigurationAccount>> GetAppConfigAccounts(
+    Task<ResourceQueryResults<AppConfigurationAccount>> GetAppConfigAccounts(
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
@@ -21,7 +23,8 @@ public interface IAppConfigService
         string? keyFilter = null,
         string? labelFilter = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
     Task SetKeyValueLockState(
         string accountName,
         string key,
@@ -29,7 +32,8 @@ public interface IAppConfigService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        string? label = null);
+        string? label = null,
+        CancellationToken cancellationToken = default);
     Task SetKeyValue(
         string accountName,
         string key,
@@ -39,12 +43,14 @@ public interface IAppConfigService
         RetryPolicyOptions? retryPolicy = null,
         string? label = null,
         string? contentType = null,
-        string[]? tags = null);
-    Task DeleteKeyValue(
+        string[]? tags = null,
+        CancellationToken cancellationToken = default);
+    Task<bool> DeleteKeyValue(
         string accountName,
         string key,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        string? label = null);
+        string? label = null,
+        CancellationToken cancellationToken = default);
 }

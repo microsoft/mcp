@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.ResourceManager.EventHubs.Models;
 
 namespace Azure.Mcp.Tools.EventHubs.Models;
 

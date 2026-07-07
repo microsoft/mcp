@@ -26,4 +26,6 @@ internal sealed class StorageAccountProperties
     public DateTimeOffset? CreatedOn { get; set; }
     /// <summary> Required for storage accounts where kind = BlobStorage. The access tier is used for billing. The 'Premium' access tier is the default value for premium block blobs storage account type and it cannot be changed for the premium block blobs storage account type. </summary>
     public string? AccessTier { get; set; }
+    /// <summary>The minimum TLS version to be permitted on requests to storage.</summary>
+    public string? MinimumTlsVersion { get; set; }
 }

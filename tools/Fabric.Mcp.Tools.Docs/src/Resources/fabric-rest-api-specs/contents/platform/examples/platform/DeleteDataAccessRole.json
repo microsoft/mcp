@@ -1,0 +1,13 @@
+{
+  "parameters": {
+    "itemId": "25bac802-080d-4f73-8a42-1b406eb1fceb",
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff222",
+    "roleName": "DefaultReader",
+    "preview": true
+  },
+  "responses": {
+    "200": {
+      "description": "Role deleted successfully"
+    }
+  }
+}

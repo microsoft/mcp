@@ -1,0 +1,51 @@
+parameters:
+  - name: DependsOn
+    type: object
+    default: []
+
+jobs:
+- job: PublishSymbols
+  dependsOn: ${{ parameters.DependsOn }}
+  displayName: "Publish symbols"
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  timeoutInMinutes: 120
+
+  steps:
+  - checkout: azure-sdk-build-tools
+
+  - download: current
+    displayName: Download binaries_signed
+    artifact: binaries_signed
+    
+  - task: AzurePowershell@5
+    displayName: 'Reserve symbols api request name'
+    inputs:
+      pwsh: true
+      azureSubscription: 'Azure SDK Symbols Publishing'
+      azurePowerShellVersion: 'LatestVersion'
+      ScriptType: 'FilePath'
+      ScriptPath: $(Build.SourcesDirectory)/scripts/symbols/New-SymbolsApiRequestName.ps1
+      ScriptArguments: >
+        -ProjectName 'azure-sdk'
+        -VariableName 'SymbolsRequestName'
+
+  - task: PublishSymbols@2
+    displayName: 'Publish symbols to Azure DevOps'
+    inputs:
+      SymbolsFolder: $(Pipeline.Workspace)/binaries_signed
+      SearchPattern: '**/*.pdb'
+      SymbolServerType: 'TeamServices'
+      SymbolsArtifactName: '$(SymbolsRequestName)'
+
+  - task: AzurePowershell@5
+    displayName: 'Request SymWeb and MSDL api publishing'
+    inputs:
+      pwsh: true
+      azureSubscription: 'Azure SDK Symbols Publishing'
+      azurePowerShellVersion: 'LatestVersion'
+      ScriptType: 'FilePath'
+      ScriptPath: $(Build.SourcesDirectory)/scripts/symbols/Invoke-SymbolsApiRequest.ps1
+      ScriptArguments: >
+        -ProjectName 'azure-sdk'
+        -RequestName '$(SymbolsRequestName)'
+        -Wait

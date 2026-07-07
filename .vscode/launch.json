@@ -12,7 +12,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "cosmos",
                 "database",
@@ -36,7 +36,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "kusto",
                 "cluster",
@@ -56,7 +56,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "kusto",
                 "cluster",
@@ -78,7 +78,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "kusto",
                 "database",
@@ -100,7 +100,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "monitor",
                 "activitylog",
@@ -130,7 +130,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "kusto",
                 "database",
@@ -150,7 +150,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "kusto",
                 "table",
@@ -174,7 +174,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "kusto",
                 "table",
@@ -196,7 +196,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "kusto",
                 "table",
@@ -222,7 +222,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "kusto",
                 "sample",
@@ -249,7 +249,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "kusto",
                 "query",
@@ -274,7 +274,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "kusto",
                 "query",
@@ -297,7 +297,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "tools",
                 "list",
@@ -314,7 +314,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "monitor",
                 "table",
@@ -338,7 +338,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "storage",
                 "table",
@@ -360,7 +360,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "applens",
                 "resource",
@@ -388,7 +388,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "acr",
                 "registry",
@@ -408,7 +408,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "monitor",
                 "log",
@@ -439,7 +439,7 @@
             "runtimeExecutable": "npx",
             "runtimeArgs": [
                 "@modelcontextprotocol/inspector",
-                "./bin/Debug/net9.0/azmcp.exe",
+                "./bin/Debug/net10.0/azmcp.exe",
                 "server",
                 "start"
             ],
@@ -457,18 +457,16 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp",
+            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp",
             "args": [
                 "server",
                 "start",
                 "--mode",
-                "consolidated",
-                "--namespace",
-                "storage"
+                "consolidated"
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
-            "stopAtEntry": true,
+            "stopAtEntry": false,
             "env": {
                 "DOTNET_ENVIRONMENT": "Development"
             }
@@ -478,7 +476,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "cosmos",
                 "database",
@@ -506,7 +504,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "monitor",
                 "table-type",
@@ -530,7 +528,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "sql",
                 "db",
@@ -555,7 +553,7 @@
             "name": "Debug Azure AI Search knowledge base retrieve",
             "type": "coreclr",
             "request": "launch",
-            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe",
+            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe",
             "args": [
                 "search",
                 "knowledge",

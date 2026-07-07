@@ -1,0 +1,43 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "ontologyId": "5b218778-e7a5-4d73-8187-f10824047715",
+    "updateMetadata": true,
+    "updateOntologyDefinitionRequest": {
+      "definition": {
+        "parts": [
+          {
+            "path": "definition.json",
+            "payload": "e30=",
+            "payloadType": "InlineBase64"
+          },
+          {
+            "path": "EntityTypes/8813598896083/definition.json",
+            "payload": "ewogICJpZCI6ICI4ODEzNTk4ODk2MDgzIiwKICAibmFtZXNwYWNlIjogInVzZXJ0eXBlcyIsCiAgImJhc2VFbnRpdHlUeXBlSWQiOiBudWxsLAogICJuYW1lIjogIkVxdWlwbWVudDEiLAogICJlbnRpdHlJZFBhcnRzIjogWwogICAgIjMxMTcwNjgwMzYzNzQ1OTQwMTMiCiAgXSwKICAiZGlzcGxheU5hbWVQcm9wZXJ0eUlkIjogIjMxMTcwNjgwMzYzNzQ1OTQwMTMiLAogICJuYW1lc3BhY2VUeXBlIjogIkN1c3RvbSIsCiAgInZpc2liaWxpdHkiOiAiVmlzaWJsZSIsCiAgInByb3BlcnRpZXMiOiBbCiAgICB7CiAgICAgICJpZCI6ICIzMTE3MDY4MDM2Mzc0NTk0MDEzIiwKICAgICAgIm5hbWUiOiAiRGlzcGxheU5hbWUiLAogICAgICAicmVkZWZpbmVzIjogbnVsbCwKICAgICAgImJhc2VUeXBlTmFtZXNwYWNlVHlwZSI6IG51bGwsCiAgICAgICJ2YWx1ZVR5cGUiOiAiU3RyaW5nIgogICAgfSwKICAgIHsKICAgICAgImlkIjogIjMxMTcwNjgwMzE5NTAwMDAzMzEiLAogICAgICAibmFtZSI6ICJNYW51ZmFjdHVyZXJOYW1lIiwKICAgICAgInJlZGVmaW5lcyI6IG51bGwsCiAgICAgICJiYXNlVHlwZU5hbWVzcGFjZVR5cGUiOiBudWxsLAogICAgICAidmFsdWVUeXBlIjogIlN0cmluZyIKICAgIH0KICBdLAogICJ0aW1lc2VyaWVzUHJvcGVydGllcyI6IFsKICAgIHsKICAgICAgImlkIjogIjMxMTQ1ODQ5ODEzNjg3OTY5NTMiLAogICAgICAibmFtZSI6ICJQcmVjaXNlVGltZXN0YW1wIiwKICAgICAgInJlZGVmaW5lcyI6IG51bGwsCiAgICAgICJiYXNlVHlwZU5hbWVzcGFjZVR5cGUiOiBudWxsLAogICAgICAidmFsdWVUeXBlIjogIkRhdGVUaW1lIgogICAgfSwKICAgIHsKICAgICAgImlkIjogIjMxMTQ1ODQ5Nzk3NDMzMjA5MzQiLAogICAgICAibmFtZSI6ICJOYW1lIiwKICAgICAgInJlZGVmaW5lcyI6IG51bGwsCiAgICAgICJiYXNlVHlwZU5hbWVzcGFjZVR5cGUiOiBudWxsLAogICAgICAidmFsdWVUeXBlIjogIlN0cmluZyIKICAgIH0sCiAgICB7CiAgICAgICJpZCI6ICIzMTE0NTg0OTc3NTYyNjc5NjcyIiwKICAgICAgIm5hbWUiOiAiVGVtcGVyYXR1cmUiLAogICAgICAicmVkZWZpbmVzIjogbnVsbCwKICAgICAgImJhc2VUeXBlTmFtZXNwYWNlVHlwZSI6IG51bGwsCiAgICAgICJ2YWx1ZVR5cGUiOiAiRG91YmxlIgogICAgfQogIF0KfQ==",
+            "payloadType": "InlineBase64"
+          },
+          {
+            "path": "EntityTypes/8813598896083/DataBindings/66253a71-c26f-4c9d-877f-3af5632a4be2.json",
+            "payload": "ew0KICAiaWQiOiAiNjYyNTNhNzEtYzI2Zi00YzlkLTg3N2YtM2FmNTYzMmE0YmUyIiwNCiAgImRhdGFCaW5kaW5nQ29uZmlndXJhdGlvbiI6IHsNCiAgICAiZGF0YUJpbmRpbmdUeXBlIjogIk5vblRpbWVTZXJpZXMiLA0KICAgICJwcm9wZXJ0eUJpbmRpbmdzIjogWw0KICAgICAgew0KICAgICAgICAic291cmNlQ29sdW1uTmFtZSI6ICJEaXNwbGF5TmFtZSIsDQogICAgICAgICJ0YXJnZXRQcm9wZXJ0eUlkIjogIjMxMTcwNjgwMzYzNzQ1OTQwMTMiDQogICAgICB9LA0KICAgICAgew0KICAgICAgICAic291cmNlQ29sdW1uTmFtZSI6ICJNYW51ZmFjdHVyZXIiLA0KICAgICAgICAidGFyZ2V0UHJvcGVydHlJZCI6ICIzMTE3MDY4MDMxOTUwMDAwMzMxIg0KICAgICAgfQ0KICAgIF0sDQogICAgInNvdXJjZVRhYmxlUHJvcGVydGllcyI6IHsNCiAgICAgICJzb3VyY2VUeXBlIjogIkxha2Vob3VzZVRhYmxlIiwNCiAgICAgICJ3b3Jrc3BhY2VJZCI6ICI1ODBmNDEwZS03MzNkLTQzYmQtOGE4Ny1iZTEyYjUzNmY3ZmYiLA0KICAgICAgIml0ZW1JZCI6ICJkMGQ4NjNiYy00OGUxLTQ1YjItOGY0Yi01NDc5NWM5N2JhNzEiLA0KICAgICAgInNvdXJjZVRhYmxlTmFtZSI6ICJlcXVpcG1lbnQxbm9udGltZXNlcmllcyIsDQogICAgICAic291cmNlU2NoZW1hIjogImRibyINCiAgICB9DQogIH0NCn0=",
+            "payloadType": "InlineBase64"
+          },
+          {
+            "path": ".platform",
+            "payload": "ZG90UGxhdGZvcm1CYXNlNjRTdHJpbmc=",
+            "payloadType": "InlineBase64"
+          }
+        ]
+      }
+    }
+  },
+  "responses": {
+    "200": {},
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "Retry-After": 30
+      }
+    }
+  }
+}

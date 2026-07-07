@@ -1,0 +1,33 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff227"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "cfafbeb1-8037-4d0c-896e-a46fb27ff227",
+                "displayName": "New workspace",
+                "description": "New workspace description",
+                "type": "Workspace",
+                "domainId": "9ce364e0-8e9d-4605-887a-b599b3e8b123",
+                "capacityId": "56bac802-080d-4f73-8a42-1b406eb1fcac",
+                "capacityAssignmentProgress": "Completed",
+                "workspaceIdentity": {
+                    "applicationId" : "00a4a8f9-78d3-41b3-b87a-6ae5271c8d0d",
+                    "servicePrincipalId": "5ba4ae58-d402-45c6-a848-0253e834fd78"
+                },
+                "capacityRegion": "East US",
+                "oneLakeEndpoints": {
+                    "blobEndpoint": "https://eastus-onelake.blob.fabric.microsoft.com",
+                    "dfsEndpoint": "https://eastus-onelake.dfs.fabric.microsoft.com"
+                },
+                "tags": [
+                    {
+                        "id": "b3f2c8e9-4d8e-4a7c-9a32-f8c1b2e4d6af",
+                        "displayName": "Finance"
+                    }
+                ]
+            }
+        }
+    }
+}

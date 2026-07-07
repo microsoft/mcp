@@ -1,0 +1,775 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Notebook data types"
+    },
+    "paths": {},
+    "definitions": {
+        "Notebooks": {
+            "description": "A list of notebooks.",
+            "required": [
+                "value"
+            ],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of notebooks.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Notebook"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "Notebook": {
+            "description": "A notebook object.",
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ]
+        },
+        "CreateNotebookRequest": {
+            "description": "Create notebook request payload.",
+            "required": [
+                "displayName"
+            ],
+            "properties": {
+                "displayName": {
+                    "description": "The notebook display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The notebook description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the notebook is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The notebook public definition.",
+                    "$ref": "#/definitions/NotebookDefinition",
+                    "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the notebook.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateNotebookDefinitionRequest": {
+            "description": "Update notebook public definition request payload.",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/NotebookDefinition"
+                }
+            }
+        },
+        "NotebookDefinitionResponse": {
+            "description": "Notebook public definition response.",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/NotebookDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "NotebookDefinition": {
+            "description": "Notebook public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/notebook-definition) for more details on the structure of the Notebook definition.",
+            "type": "object",
+            "required": [
+                "parts"
+            ],
+            "properties": {
+                "format": {
+                    "description": "The format of the Notebook definition. Supported format: `ipynb` and `fabricGitSource`. If no format is provided, `fabricGitSource` is used.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/NotebookDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "NotebookDefinitionPart": {
+            "description": "Notebook definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The notebook part path. Supported notebook content extensions: `.ipynb` for `ipynb` format; `.py`, `.scala`, `.r`, `.sql` for `fabricGitSource` format.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The notebook part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType": {
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateNotebookRequest": {
+            "description": "Update notebook request.",
+            "properties": {
+                "displayName": {
+                    "description": "The notebook display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The notebook description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "RunNotebookRequest": {
+            "description": "Run notebook request with executionData.",
+            "type": "object",
+            "properties": {
+                "executionData": {
+                    "description": "Optional. The notebook configurations used during execution.",
+                    "$ref": "#/definitions/RunNotebookExecutionData"
+                },
+                "parameters": {
+                    "description": "The parameter list for run on-demand job request. Per-run, user-defined inputs to tailor this invocation. Note: parameter names are case-insensitive, but the casing must match the parameter name used in the code cell.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "../platform/definitions/platform.json#/definitions/Parameter"
+                    }
+                }
+            }
+        },
+        "ComputeType": {
+            "type": "string",
+            "description": "Represents the type of the compute. Additional `ComputeType` types may be added over time.",
+            "enum": [
+                "Spark",
+                "Jupyter",
+                "DataWarehouse"
+            ],
+            "x-ms-enum": {
+                "name": "ComputeType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Spark",
+                        "description": "Spark compute type."
+                    },
+                    {
+                        "value": "Jupyter",
+                        "description": "Jupyter compute type."
+                    },
+                    {
+                        "value": "DataWarehouse",
+                        "description": "Data Warehouse compute type."
+                    }
+                ]
+            }
+        },
+        "RunNotebookExecutionData": {
+            "description": "Execution data for the notebook run.",
+            "type": "object",
+            "required": [
+                "compute"
+            ],
+            "properties": {
+                "compute": {
+                    "description": "The execution engine for the job instance. This value needs to match the language of the notebook.",
+                    "$ref": "#/definitions/ComputeType"
+                }
+            },
+            "discriminator": "compute"
+        },
+        "RunSparkNotebookExecutionData": {
+            "type": "object",
+            "description": "Spark notebook execution data.",
+            "properties": {
+                "computeConfiguration": {
+                    "description": "The Spark notebook execution configuration.",
+                    "$ref": "#/definitions/SparkNotebookComputeConfiguration"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/RunNotebookExecutionData"
+                }
+            ],
+            "x-ms-discriminator-value": "Spark"
+        },
+        "SparkNotebookComputeConfiguration": {
+            "type": "object",
+            "description": "Spark notebook compute configuration.",
+            "properties": {
+                "name": {
+                    "description": "The name of this session.",
+                    "type": "string"
+                },
+                "driverCores": {
+                    "description": "Spark driver core. Must be one of the following values: 4, 8, 16, 32, 64.",
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "driverMemory": {
+                    "description": "Spark driver memory.",
+                    "type": "string",
+                    "$ref": "#/definitions/CustomPoolMemory"
+                },
+                "executorCores": {
+                    "description": "Spark executor core. Must be one of the following values: 4, 8, 16, 32, 64.",
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "executorMemory": {
+                    "description": "Spark executor memory.",
+                    "type": "string",
+                    "$ref": "#/definitions/CustomPoolMemory"
+                },
+                "numExecutors": {
+                    "description": "Number of executors to launch for this session. The minimum value is 1, and the maximum value has to be lower than the instance pool `maxNodeCount`.",
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "jars": {
+                    "description": "The list of abfs path of jars to be used in this session. Jars to include on the driver and executor classpaths.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "pyFiles": {
+                    "description": "The list of abfs path of python files to be used in this session. `.zip`, `.egg`, or `.py` files to place on the PYTHONPATH for Python apps.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "files": {
+                    "description": "The list of abfs path of files to be used in this session. Files to be placed in the working directory of each executor.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "archives": {
+                    "description": "The list of abfs path of archives to be used in this session. Archives to be extracted into the working directory of each executor. `.jar`, `.tar.gz`, `.tgz` and `.zip` are supported. You can specify the directory name to unpack via adding # after the file name to unpack, for example, `file.zip#directory`.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "sparkProperties": {
+                    "type": "array",
+                    "description": "A dictionary of Spark property key to their value.",
+                    "items": {
+                        "$ref": "#/definitions/SparkProperty"
+                    }
+                },
+                "instancePool": {
+                    "description": "Instance pool used to run this notebook.",
+                    "$ref": "../common/spark_definitions.json#/definitions/InstancePool"
+                },
+                "mountPoints": {
+                    "description": "Mount points to be used in this session.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MountPoint"
+                    }
+                },
+                "defaultLakehouse": {
+                    "description": "Default lakehouse to be used in this session.",
+                    "$ref": "../common/definitions.json#/definitions/ItemReferenceById"
+                },
+                "attachedEnvironment": {
+                    "description": "Environment to be used in this session.",
+                    "$ref": "../common/definitions.json#/definitions/ItemReferenceById"
+                },
+                "highConcurrencyModeOptions": {
+                    "description": "High concurrency mode options.",
+                    "$ref": "#/definitions/HighConcurrencyModeOptions"
+                }
+            }
+        },
+        "CustomPoolMemory": {
+            "type": "string",
+            "description": "Custom pool memory for Spark driver or Spark executor. Additional `CustomPoolMemory` types may be added over time.",
+            "enum": ["28g", "56g", "112g", "224g", "400g"],
+            "x-ms-enum": {
+                "name": "CustomPoolMemory",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "28g",
+                        "description": "28GB memory."
+                    },
+                    {
+                        "value": "56g",
+                        "description": "56G memory."
+                    },
+                    {
+                        "value": "112g",
+                        "description": "112G memory."
+                    },
+                    {
+                        "value": "224g",
+                        "description": "224G memory."
+                    },
+                    {
+                        "value": "400g",
+                        "description": "400G memory."
+                    }
+                ]
+            }
+        },
+        "SparkProperty": {
+            "type": "object",
+            "description": "A Spark property key and its value.",
+            "properties": {
+                "key": {
+                    "description": "The Spark property key.",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "The Spark property value.",
+                    "type": "string"
+                }
+            }
+        },
+        "MountPoint": {
+            "description": "The storage mount point.",
+            "type": "object",
+            "required": [
+                "mountPointPath",
+                "source"
+            ],
+            "properties": {
+                "mountPointPath": {
+                    "description": "The local path that to mount the remote storage to.",
+                    "type": "string"
+                },
+                "source": {
+                    "description": "Source storage abfss path.",
+                    "type": "string"
+                }
+            }
+        },
+        "HighConcurrencyModeOptions": {
+            "type": "object",
+            "description": "High concurrency mode options.",
+            "required": [
+                "enabled"
+            ],
+            "properties": {
+                "enabled": {
+                    "description": "The status of the high concurrency mode. False - Disabled, true - Enabled.",
+                    "type": "boolean"
+                },
+                "sessionTag": {
+                    "description": "Setting the session tag instructs Spark to reuse existing Spark sessions which minimizes startup time. Arbitrary string values can be used for the session tag. If no session exists, a new session is created using the tag value.",
+                    "type": "string"
+                }
+            }
+        },
+        "RunJupyterNotebookExecutionData": {
+            "type": "object",
+            "description": "Jupyter notebook execution data.",
+            "properties": {
+                "computeConfiguration": {
+                    "description": "The Jupyter notebook execution configuration.",
+                    "$ref": "#/definitions/JupyterNotebookComputeConfiguration"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/RunNotebookExecutionData"
+                }
+            ],
+            "x-ms-discriminator-value": "Jupyter"
+        },
+        "JupyterNotebookComputeConfiguration": {
+            "type": "object",
+            "description": "Jupyter notebook compute configuration.",
+            "properties": {
+                "name": {
+                    "description": "The name of this session.",
+                    "type": "string"
+                },
+                "numCores": {
+                    "description": "The number of cores that this job can consume. Must be one of the following values: 2, 4, 8, 16, 32, 64.",
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "mountPoints": {
+                    "description": "Mount points to be used in this session.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MountPoint"
+                    }
+                },
+                "defaultLakehouse": {
+                    "description": "Default lakehouse to be used in this session.",
+                    "$ref": "../common/definitions.json#/definitions/ItemReferenceById"
+                },
+                "attachedEnvironment": {
+                    "description": "Environment to be used in this session.",
+                    "$ref": "../common/definitions.json#/definitions/ItemReferenceById"
+                }
+            }
+        },
+        "RunDataWarehouseNotebookExecutionData": {
+            "type": "object",
+            "description": "Data Warehouse notebook execution data. This compute type does not support compute configuration.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/RunNotebookExecutionData"
+                }
+            ],
+            "x-ms-discriminator-value": "DataWarehouse"
+        },
+        "NotebookJobInstance": {
+          "description": "An object representing notebook job instance.",
+          "type": "object",
+          "allOf": [
+              {
+                  "$ref": "../platform/definitions/platform.json#/definitions/ItemJobInstance"
+              }
+          ],
+          "properties": {
+              "properties": {
+                  "description": "Notebook job instance properties.",
+                  "$ref": "#/definitions/NotebookJobInstanceProperties"
+              }
+          }
+        },
+        "NotebookJobInstanceProperties": {
+            "description": "Notebook job instance properties.",
+            "type": "object",
+            "required": [
+                "compute"
+            ],
+            "properties": {
+                "exitValue": {
+                    "description": "User defined exit value in notebook. Refer to this [article](/fabric/data-engineering/notebook-utilities#exit-a-notebook) for more details on how to set the notebook exit value.",
+                    "type": "string"
+                },
+                "compute": {
+                    "description": "The execution engine for the job instance.",
+                    "$ref": "#/definitions/ComputeType"
+                }
+            },
+            "discriminator": "compute"
+        },
+        "SparkNotebookJobInstanceProperties": {
+            "type": "object",
+            "description": "Spark notebook job instance properties.",
+            "required": [
+                "computeDetails"
+            ],
+            "properties": {
+                "computeDetails": {
+                    "description": "The details of spark notebook job instance.",
+                    "$ref": "#/definitions/SparkNotebookComputeDetails"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/NotebookJobInstanceProperties"
+                }
+            ],
+            "x-ms-discriminator-value": "Spark"
+        },
+        "SparkNotebookComputeDetails": {
+            "type": "object",
+            "description": "Spark notebook compute details.",
+            "properties": {
+                "highConcurrencyModeStatus": {
+                    "description": "The high concurrency mode details.",
+                    "$ref": "#/definitions/HighConcurrencyModeStatus"
+                },
+                "livyId": {
+                    "description": "The livy id.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "monitoringInfo": {
+                    "description": "The spark notebook monitoring infomation.",
+                    "$ref": "#/definitions/SparkNotebookMonitoringInfo"
+                }
+            }
+        },
+        "HighConcurrencyModeStatus": {
+            "type": "object",
+            "description": "Spark notebook high concurrency mode status.",
+            "properties": {
+                "sessionSource": {
+                    "description": "A new created session or attach to existing sessions.",
+                    "$ref": "#/definitions/SessionSource"
+                },
+                "sessionTag": {
+                    "description": "Session tag value to execute the notebook in a shared Spark session.",
+                    "type": "string"
+                }
+            }
+        },
+        "SessionSource": {
+            "type": "string",
+            "description": "Represents the session source. Additional source types may be added over time.",
+            "enum": [
+                "Created",
+                "Attached"
+            ],
+            "x-ms-enum": {
+                "name": "SessionSource",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Created",
+                        "description": "The session is created by the current notebook job instance."
+                    },
+                    {
+                        "value": "Attached",
+                        "description": "The current notebook job instance is attached to an existing session."
+                    }
+                ]
+            }
+        },
+        "SparkNotebookMonitoringInfo": {
+            "type": "object",
+            "description": "Spark notebook monitoring information.",
+            "properties": {
+                "activityDetails": {
+                    "description": "Livy session details.",
+                    "$ref": "#/definitions/SparkNotebookActivityDetails"
+                },
+                "sparkUiUrl": {
+                    "description": "Spark UI url.",
+                    "type": "string"
+                },
+                "sparkJobDetailsUrl": {
+                    "description": "Spark job details url.",
+                    "type": "string"
+                },
+                "driverLogUrl": {
+                    "description": "Driver log url.",
+                    "type": "string"
+                },
+                "executionSnapshotUrl": {
+                    "description": "Notebook execution snapshot url.",
+                    "type": "string"
+                }
+            }
+        },
+        "SparkNotebookActivityDetails": {
+            "type": "object",
+            "description": "Spark notebook livy session details.",
+            "properties": {
+                "sparkApplicationId": {
+                    "type": "string",
+                    "description": "A Spark application ID is a unique identifier assigned to each Apache Spark application. It also appears in the Spark UI."
+                },
+                "livyName": {
+                    "type": "string",
+                    "description": "Name of the Livy session."
+                },
+                "creatorItem": {
+                    "description": "ID of the item creator. When `isHighConcurrency` is set to `true` this value might be different than `itemId`.",
+                    "$ref": "../common/definitions.json#/definitions/ItemReferenceById"
+                },
+                "itemName": {
+                    "type": "string",
+                    "description": "Name of the item."
+                },
+                "jobType": {
+                    "description": "Current state of the job.",
+                    "$ref": "#/definitions/LivySessionJobType"
+                },
+                "submittedDateTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the job was submitted in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
+                },
+                "startDateTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the job started in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
+                },
+                "endDateTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the job ended in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
+                },
+                "isHighConcurrency": {
+                    "type": "boolean",
+                    "description": "Flag indicating high concurrency."
+                },
+                "cancellationReason": {
+                    "type": "string",
+                    "description": "Reason for the job cancellation."
+                },
+                "capacityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the capacity."
+                },
+                "operationName": {
+                    "type": "string",
+                    "description": "Name of the operation. Possible values include: _Notebook run_, _Notebook HC run_ and _Notebook pipeline run_."
+                },
+                "runtimeVersion": {
+                    "type": "string",
+                    "description": "The fabric runtime version."
+                }
+            }
+        },
+        "LivySessionJobType": {
+            "type": "string",
+            "description": "Type of the job. Values are: `Unknown`, `SparkSession`, `SparkBatch`, `JupyterSession`. Additional `LivySessionJobType` types may be added over time.",
+            "enum": [
+                "Unknown",
+                "SparkSession",
+                "SparkBatch",
+                "JupyterSession"
+            ],
+            "x-ms-enum": {
+                "name": "JobType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Unknown",
+                        "description": "Job type is unknown."
+                    },
+                    {
+                        "value": "SparkSession",
+                        "description": "Job type is from a spark session."
+                    },
+                    {
+                        "value": "SparkBatch",
+                        "description": "Job type is from a spark batch."
+                    },
+                    {
+                        "value": "JupyterSession",
+                        "description": "Job type is from jupyter session."
+                    }
+                ]
+            }
+        },
+        "JupyterNotebookJobInstanceProperties": {
+            "type": "object",
+            "description": "Jupyter notebook job instance properties.",
+            "required": [
+                "computeDetails"
+            ],
+            "properties": {
+                "computeDetails": {
+                    "description": "The details of jupyter notebook job instance.",
+                    "$ref": "#/definitions/JupyterNotebookComputeDetails"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/NotebookJobInstanceProperties"
+                }
+            ],
+            "x-ms-discriminator-value": "Jupyter"
+        },
+        "JupyterNotebookComputeDetails": {
+            "type": "object",
+            "description": "Jupyter notebook compute details.",
+            "properties": {
+                "activityId": {
+                    "description": "The jupyter session id.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "monitoringInfo": {
+                    "description": "The jupyter notebook monitoring infomation.",
+                    "$ref": "#/definitions/JupyterNotebookMonitoringInfo"
+                }
+            }
+        },
+        "JupyterNotebookMonitoringInfo": {
+            "type": "object",
+            "description": "Jupyter notebook monitoring information.",
+            "properties": {
+                "executionSnapshotUrl": {
+                    "description": "Notebook execution snapshot url.",
+                    "type": "string"
+                }
+            }
+        },
+        "DataWarehouseNotebookJobInstanceProperties": {
+            "type": "object",
+            "description": "Data warehouse notebook job instance properties.",
+            "required": [
+                "computeDetails"
+            ],
+            "properties": {
+                "computeDetails": {
+                    "description": "The details of data warehouse notebook job instance.",
+                    "$ref": "#/definitions/DataWarehouseNotebookComputeDetails"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/NotebookJobInstanceProperties"
+                }
+            ],
+            "x-ms-discriminator-value": "DataWarehouse"
+        },
+        "DataWarehouseNotebookComputeDetails": {
+            "type": "object",
+            "description": "Data warehouse notebook compute details.",
+            "properties": {
+                "primaryWarehouse": {
+                    "description": "The primary warehouse.",
+                    "$ref": "../common/definitions.json#/definitions/ItemReferenceById"
+                },
+                "monitoringInfo": {
+                    "description": "The data warehouse notebook monitoring infomation.",
+                    "$ref": "#/definitions/DataWarehouseNotebookMonitoringInfo"
+                }
+            }
+        },
+        "DataWarehouseNotebookMonitoringInfo": {
+            "type": "object",
+            "description": "Data Warehouse notebook monitoring information.",
+            "properties": {
+                "executionSnapshotUrl": {
+                    "description": "Notebook execution snapshot url.",
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

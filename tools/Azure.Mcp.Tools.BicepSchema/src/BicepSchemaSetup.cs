@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.BicepSchema.Commands;
 using Azure.Mcp.Tools.BicepSchema.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.BicepSchema;
 
@@ -28,9 +27,7 @@ public class BicepSchemaSetup : IAreaSetup
         var bicepschema = new CommandGroup(Name, "Bicep schema operations - Commands for working with Azure Bicep Infrastructure as Code (IaC) generation and schema management. Includes operations for retrieving Bicep schemas, templates, and resource definitions to support infrastructure deployment automation.", Title);
 
         // Register Bicep Schema command
-
-        var bicepSchemaGet = serviceProvider.GetRequiredService<BicepSchemaGetCommand>();
-        bicepschema.AddCommand(bicepSchemaGet.Name, bicepSchemaGet);
+        bicepschema.AddCommand<BicepSchemaGetCommand>(serviceProvider);
 
         return bicepschema;
     }

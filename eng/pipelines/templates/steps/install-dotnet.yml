@@ -1,0 +1,23 @@
+parameters:
+- name: AdditionalVersions
+  type: object
+  default: []
+
+steps:
+  # Need to authenticate so our pipeline can ingest new packages into the feed when restoring.
+- task: NuGetAuthenticate@1
+
+- task: UseDotNet@2
+  displayName: "Use .NET SDK from global.json"
+  retryCountOnTaskFailure: 3
+  inputs:
+    useGlobalJson: true
+
+- ${{ each version in parameters.AdditionalVersions }}:
+  - task: UseDotNet@2
+    displayName: "Use .NET SDK ${{ version }}"
+    retryCountOnTaskFailure: 3
+    inputs:
+      packageType: sdk
+      version: ${{ version }}
+      performMultiLevelLookup: true

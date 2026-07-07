@@ -19,7 +19,7 @@ param sqlAdminLogin string = 'mcptestadmin'
 param sqlAdminPassword string = newGuid()
 
 @description('The SKU for the App Service Plan.')
-param appServicePlanSku string = 'B1'
+param appServicePlanSku string = 'S1'
 
 // Variables
 var webAppName = '${baseName}-webapp'
@@ -28,17 +28,16 @@ var sqlServerName = '${baseName}-sql'
 var sqlDatabaseName = '${baseName}db'
 var cosmosAccountName = '${baseName}-cosmos'
 var cosmosDatabaseName = '${baseName}cosmosdb'
-var cosmosContributorRoleId = '00000000-0000-0000-0000-000000000002' // Built-in Contributor role
 
 // App Service Plan
-resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2025-03-01' = {
   name: appServicePlanName
   location: 'westus2'
   sku: {
     name: appServicePlanSku
-    tier: 'Basic'
+    tier: 'Standard'
     size: appServicePlanSku
-    family: 'B'
+    family: 'S'
     capacity: 1
   }
   properties: {
@@ -56,7 +55,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
 }
 
 // Web App
-resource webApp 'Microsoft.Web/sites@2023-01-01' = {
+resource webApp 'Microsoft.Web/sites@2025-03-01' = {
   name: webAppName
   location: 'westus2'
   kind: 'app'
@@ -78,9 +77,6 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
     reserved: false
     isXenon: false
     hyperV: false
-    vnetRouteAllEnabled: false
-    vnetImagePullEnabled: false
-    vnetContentShareEnabled: false
     siteConfig: {
       numberOfWorkers: 1
       acrUseManagedIdentityCreds: false
@@ -88,6 +84,7 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
       http20Enabled: false
       functionAppScaleLimit: 0
       minimumElasticInstanceCount: 0
+      vnetRouteAllEnabled: false
     }
     scmSiteAlsoStopped: false
     clientAffinityEnabled: true
@@ -103,8 +100,17 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   }
 }
 
+resource webAppAppSettings 'Microsoft.Web/sites/config@2025-03-01' = {
+  parent: webApp
+  name: 'appsettings'
+  properties: {
+    foo: 'bar'
+    fizz: 'buzz'
+  }
+}
+
 // SQL Server
-resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
+resource sqlServer 'Microsoft.Sql/servers@2025-01-01' = {
   name: sqlServerName
   location: 'westus2'
   properties: {
@@ -116,7 +122,7 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   }
 
   // Test SQL Database
-  resource testDatabase 'databases@2023-05-01-preview' = {
+  resource testDatabase 'databases@2025-01-01' = {
     name: sqlDatabaseName
     location: 'westus2'
     sku: {
@@ -137,7 +143,7 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
 }
 
 // Cosmos DB Account
-resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
+resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2025-10-15' = {
   name: cosmosAccountName
   location: 'westus2'
   tags: {
@@ -190,7 +196,7 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
   }
 
   // Test Cosmos Database
-  resource testDatabase 'sqlDatabases@2024-11-15' = {
+  resource testDatabase 'sqlDatabases@2025-10-15' = {
     name: cosmosDatabaseName
     properties: {
       resource: {
@@ -202,7 +208,7 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
     }
 
     // Test container
-    resource testContainer 'containers@2024-11-15' = {
+    resource testContainer 'containers' = {
       name: 'testcontainer'
       properties: {
         resource: {
@@ -226,7 +232,10 @@ resource webAppContributorRoleAssignment 'Microsoft.Authorization/roleAssignment
   scope: webApp
   properties: {
     principalId: testApplicationOid
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'de139f84-1756-47ae-9be6-808fbbe84772') // Website Contributor
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'de139f84-1756-47ae-9be6-808fbbe84772'
+    ) // Website Contributor
   }
 }
 
@@ -237,7 +246,10 @@ resource sqlContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2
   scope: sqlServer
   properties: {
     principalId: testApplicationOid
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '9b7fa17d-e63e-47b0-bb0a-15c516ac86ec') // SQL DB Contributor
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '9b7fa17d-e63e-47b0-bb0a-15c516ac86ec'
+    ) // SQL DB Contributor
   }
 }
 
@@ -247,8 +259,6 @@ output webAppResourceGroup string = resourceGroup().name
 output sqlServerName string = sqlServer.name
 output sqlDatabaseName string = sqlDatabaseName
 output sqlConnectionString string = 'Server=${sqlServer.properties.fullyQualifiedDomainName};Database=${sqlDatabaseName};Authentication=Active Directory Default;TrustServerCertificate=True;'
-
 output cosmosAccountName string = cosmosAccount.name
 output cosmosDatabaseName string = cosmosDatabaseName
 output cosmosConnectionString string = 'AccountEndpoint=${cosmosAccount.properties.documentEndpoint};AccountKey=${cosmosAccount.listKeys().primaryMasterKey};Database=${cosmosDatabaseName};'
-output baseName string = baseName

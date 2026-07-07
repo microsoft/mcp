@@ -1,60 +1,55 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 
-public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logger) : BaseContainerCommand<ContainerCreateOptions>()
+[CommandMetadata(
+    Id = "f5088334-e630-4df0-a5be-ac87787acad0",
+    Name = "create",
+    Title = "Create Storage Blob Container",
+    Description = """
+        Create/provision a new Azure Storage blob container in a storage account.
+
+        Required: --account, --container, --subscription
+        Optional: --tenant
+
+        Returns: container name, lastModified, eTag, leaseStatus, publicAccessLevel, hasImmutabilityPolicy, hasLegalHold.
+        Creates a logical container for organizing blobs within a storage account.
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logger, IStorageService storageService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ContainerCreateOptions, ContainerCreateCommand.ContainerCreateCommandResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "Create Storage Blob Container";
     private readonly ILogger<ContainerCreateCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
-    public override string Id => "f5088334-e630-4df0-a5be-ac87787acad0";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
-        Create/provision a new Azure Storage blob container in a storage account. Required: --account <account>, --container <container>, --subscription <subscription>. Optional: --public-access-level, --tenant <tenant>. Returns: container name, lastModified, eTag, leaseStatus, publicAccessLevel, hasImmutabilityPolicy, hasLegalHold. Creates a logical container for organizing blobs within a storage account.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ContainerCreateOptions options, CancellationToken cancellationToken)
     {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var storageService = context.GetService<IStorageService>();
-            var containerInfo = await storageService.CreateContainer(
-                options.Account!,
-                options.Container!,
+            var containerInfo = await _storageService.CreateContainer(
+                options.Account,
+                options.Container,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(containerInfo), StorageJsonContext.Default.ContainerCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new ContainerCreateCommandResult(containerInfo), StorageJsonContext.Default.ContainerCreateCommandResult);
         }
         catch (Exception ex)
         {
@@ -66,5 +61,5 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
         return context.Response;
     }
 
-    internal record ContainerCreateCommandResult([property: JsonPropertyName("container")] ContainerInfo Container);
+    public record ContainerCreateCommandResult(ContainerInfo Container);
 }

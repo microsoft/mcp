@@ -2,70 +2,59 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Marketplace.Models;
+using Azure.Mcp.Tools.Marketplace.Options;
 using Azure.Mcp.Tools.Marketplace.Options.Product;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
 
-public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : SubscriptionCommand<ProductGetOptions>
-{
-    private const string CommandTitle = "Get Marketplace Product";
-    private readonly ILogger<ProductGetCommand> _logger = logger;
-
-    public override string Id => "729a12ee-9c63-4a31-b1b8-4a81ad093564";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "729a12ee-9c63-4a31-b1b8-4a81ad093564",
+    Name = "get",
+    Title = "Get Marketplace Product",
+    Description = """
         Retrieves detailed information about a specific Azure Marketplace product (offer) for a given subscription,
-         including available plans, pricing, and product metadata.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        including available plans, pricing, and product metadata.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarketplaceService marketplaceService) : SubscriptionCommand<ProductGetOptions>
+{
+    private readonly ILogger<ProductGetCommand> _logger = logger;
+    private readonly IMarketplaceService _marketplaceService = marketplaceService;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Marketplace.ProductId);
-        command.Options.Add(OptionDefinitions.Marketplace.IncludeStopSoldPlans);
-        command.Options.Add(OptionDefinitions.Marketplace.Language);
-        command.Options.Add(OptionDefinitions.Marketplace.Market);
-        command.Options.Add(OptionDefinitions.Marketplace.LookupOfferInTenantLevel);
-        command.Options.Add(OptionDefinitions.Marketplace.PlanId);
-        command.Options.Add(OptionDefinitions.Marketplace.SkuId);
-        command.Options.Add(OptionDefinitions.Marketplace.IncludeServiceInstructionTemplates);
-        command.Options.Add(OptionDefinitions.Marketplace.PricingAudience);
+        command.Options.Add(MarketplaceOptionDefinitions.ProductId);
+        command.Options.Add(MarketplaceOptionDefinitions.IncludeStopSoldPlans);
+        command.Options.Add(MarketplaceOptionDefinitions.Language);
+        command.Options.Add(MarketplaceOptionDefinitions.LookupOfferInTenantLevel);
+        command.Options.Add(MarketplaceOptionDefinitions.PlanId);
+        command.Options.Add(MarketplaceOptionDefinitions.SkuId);
+        command.Options.Add(MarketplaceOptionDefinitions.IncludeServiceInstructionTemplates);
     }
 
     protected override ProductGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ProductId = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.ProductId.Name);
-        options.IncludeStopSoldPlans = parseResult.GetValueOrDefault<bool>(OptionDefinitions.Marketplace.IncludeStopSoldPlans.Name);
-        options.Language = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Language.Name);
-        options.Market = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Market.Name);
-        options.LookupOfferInTenantLevel = parseResult.GetValueOrDefault<bool>(OptionDefinitions.Marketplace.LookupOfferInTenantLevel.Name);
-        options.PlanId = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.PlanId.Name);
-        options.SkuId = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.SkuId.Name);
-        options.IncludeServiceInstructionTemplates = parseResult.GetValueOrDefault<bool>(OptionDefinitions.Marketplace.IncludeServiceInstructionTemplates.Name);
-        options.PricingAudience = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.PricingAudience.Name);
+        options.ProductId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.ProductId.Name);
+        options.IncludeStopSoldPlans = parseResult.GetValueOrDefault<bool>(MarketplaceOptionDefinitions.IncludeStopSoldPlans.Name);
+        options.Language = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Language.Name);
+        options.LookupOfferInTenantLevel = parseResult.GetValueOrDefault<bool>(MarketplaceOptionDefinitions.LookupOfferInTenantLevel.Name);
+        options.PlanId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.PlanId.Name);
+        options.SkuId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.SkuId.Name);
+        options.IncludeServiceInstructionTemplates = parseResult.GetValueOrDefault<bool>(MarketplaceOptionDefinitions.IncludeServiceInstructionTemplates.Name);
         return options;
     }
 
@@ -80,22 +69,16 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
 
         try
         {
-
-            // Get the marketplace service from DI
-            var marketplaceService = context.GetService<IMarketplaceService>();
-
             // Call service operation with required parameters
-            var result = await marketplaceService.GetProduct(
+            var result = await _marketplaceService.GetProduct(
                 options.ProductId!,
                 options.Subscription!,
                 options.IncludeStopSoldPlans,
                 options.Language,
-                options.Market,
                 options.LookupOfferInTenantLevel,
                 options.PlanId,
                 options.SkuId,
                 options.IncludeServiceInstructionTemplates,
-                options.PricingAudience,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

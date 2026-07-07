@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.Account;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.AppConfig;
 
@@ -47,18 +47,13 @@ public class AppConfigSetup : IAreaSetup
         keyValue.AddSubGroup(lockGroup);
 
         // Register AppConfig commands
-        var accountList = serviceProvider.GetRequiredService<AccountListCommand>();
-        accounts.AddCommand(accountList.Name, accountList);
+        accounts.AddCommand<AccountListCommand>(serviceProvider);
 
-        var keyValueDelete = serviceProvider.GetRequiredService<KeyValueDeleteCommand>();
-        keyValue.AddCommand(keyValueDelete.Name, keyValueDelete);
-        var keyValueGet = serviceProvider.GetRequiredService<KeyValueGetCommand>();
-        keyValue.AddCommand(keyValueGet.Name, keyValueGet);
-        var keyValueSet = serviceProvider.GetRequiredService<KeyValueSetCommand>();
-        keyValue.AddCommand(keyValueSet.Name, keyValueSet);
+        keyValue.AddCommand<KeyValueDeleteCommand>(serviceProvider);
+        keyValue.AddCommand<KeyValueGetCommand>(serviceProvider);
+        keyValue.AddCommand<KeyValueSetCommand>(serviceProvider);
 
-        var keyValueLockSet = serviceProvider.GetRequiredService<KeyValueLockSetCommand>();
-        lockGroup.AddCommand(keyValueLockSet.Name, keyValueLockSet);
+        lockGroup.AddCommand<KeyValueLockSetCommand>(serviceProvider);
 
         return appConfig;
     }

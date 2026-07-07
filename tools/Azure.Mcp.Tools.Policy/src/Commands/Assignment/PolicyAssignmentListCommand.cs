@@ -1,0 +1,103 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Tools.Policy.Models;
+using Azure.Mcp.Tools.Policy.Options;
+using Azure.Mcp.Tools.Policy.Options.Assignment;
+using Azure.Mcp.Tools.Policy.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
+
+namespace Azure.Mcp.Tools.Policy.Commands.Assignment;
+
+[CommandMetadata(
+    Id = "b7c4d3e2-0f1a-4b8c-9d6e-5a7b8c9d0e1f",
+    Name = "list",
+    Title = "List Policy Assignments",
+    Description = """
+        List policy assignments in a subscription or scope. This command retrieves all Azure Policy
+        assignments along with their complete policy definition details (rules, effects, parameters schema),
+        enforcement modes, assignment parameters, and metadata. This enables agents to understand policy
+        requirements and design compliant cloud services. You can optionally filter by scope to list
+        assignments at a specific resource group, resource, or management group level.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListCommand> logger, IPolicyService policyService)
+    : SubscriptionCommand<PolicyAssignmentListOptions>
+{
+    private readonly ILogger<PolicyAssignmentListCommand> _logger = logger;
+    private readonly IPolicyService _policyService = policyService;
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(PolicyOptionDefinitions.Scope.AsOptional());
+    }
+
+    protected override PolicyAssignmentListOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.Scope = parseResult.GetValueOrDefault<string>(PolicyOptionDefinitions.Scope.Name);
+        return options;
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
+        var options = BindOptions(parseResult);
+
+        try
+        {
+            var assignments = await _policyService.ListPolicyAssignmentsAsync(
+                options.Subscription!,
+                options.Scope,
+                options.Tenant,
+                options.RetryPolicy,
+                cancellationToken);
+
+            context.Response.Results = ResponseResult.Create(
+                new(assignments ?? []),
+                PolicyJsonContext.Default.PolicyAssignmentListCommandResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error listing policy assignments in subscription '{Subscription}' with scope '{Scope}'.",
+                options.Subscription, options.Scope ?? "all");
+            HandleException(context, ex);
+        }
+
+        return context.Response;
+    }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException reqEx when reqEx.Status == 403 =>
+            $"Authorization failed. Ensure you have the 'Reader' role or higher on the subscription or scope. Details: {reqEx.Message}",
+        Identity.AuthenticationFailedException =>
+            "Authentication failed. Please run 'az login' to sign in.",
+        _ => base.GetErrorMessage(ex)
+    };
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
+        Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
+        _ => base.GetStatusCode(ex)
+    };
+
+    public record PolicyAssignmentListCommandResult(List<PolicyAssignment> Assignments);
+}

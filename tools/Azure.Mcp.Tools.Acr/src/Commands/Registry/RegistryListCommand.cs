@@ -1,72 +1,60 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Acr.Options.Registry;
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Acr.Commands.Registry;
 
-public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger) : BaseAcrCommand<RegistryListOptions>
-{
-    private const string CommandTitle = "List Container Registries";
-    private readonly ILogger<RegistryListCommand> _logger = logger;
-
-    public override string Id => "796f8778-2fa7-4343-87ad-06bdcf6b296c";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "796f8778-2fa7-4343-87ad-06bdcf6b296c",
+    Name = "list",
+    Title = "List Container Registries",
+    Description = """
         List Azure Container Registries in a subscription. Optionally filter by resource group. Each registry result
         includes: name, location, loginServer, skuName, skuTier. If no registries are found the tool returns null results
         (consistent with other list commands).
-        """;
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger, IAcrService acrService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<RegistryListOptions, RegistryListCommand.RegistryListCommandResult>(subscriptionResolver)
+{
+    private readonly ILogger<RegistryListCommand> _logger = logger;
+    private readonly IAcrService _acrService = acrService;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RegistryListOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var acrService = context.GetService<IAcrService>();
-            var registries = await acrService.ListRegistries(
+            var registries = await _acrService.ListRegistries(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(registries ?? []), AcrJsonContext.Default.RegistryListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(registries?.Results ?? [], registries?.AreResultsTruncated ?? false), AcrJsonContext.Default.RegistryListCommandResult);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing container registries. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options);
+                "Error listing container registries. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}.",
+                options.Subscription, options.ResourceGroup);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record RegistryListCommandResult(List<Models.AcrRegistryInfo> Registries);
+    public record RegistryListCommandResult(List<Models.AcrRegistryInfo> Registries, bool AreResultsTruncated);
 }

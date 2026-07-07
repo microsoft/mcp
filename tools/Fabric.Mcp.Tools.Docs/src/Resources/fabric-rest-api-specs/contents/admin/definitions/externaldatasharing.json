@@ -1,0 +1,220 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "ExternalDataSharing - Admin APIs data types"
+    },
+    "paths": {},
+    "definitions": {
+        "ExternalDataShares": {
+            "type": "object",
+            "description": "A list of external data shares with a continuation token.",
+            "required": ["value"],
+            "properties": {
+                "value": {
+                    "type": "array",
+                    "description": "A list of external data shares.",
+                    "items": {
+                        "$ref": "#/definitions/ExternalDataShare"
+                    },
+                    "readOnly": true
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "ExternalDataShare": {
+            "type": "object",
+            "description": "An external data share object.",
+            "required": ["id", "paths", "creatorPrincipal", "recipient", "status", "workspaceId", "itemId"],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The external data share ID.",
+                    "readOnly": true
+                },
+                "paths": {
+                    "type": "array",
+                    "description": "The path or list of paths that are externally shared.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "maxItems": 100,
+                    "readOnly": true
+                },
+                "creatorPrincipal": {
+                    "description": "The principal that created the external data share.",
+                    "$ref": "../../common/definitions.json#/definitions/Principal",
+                    "readOnly": true
+                },
+                "recipient": {
+                    "description": "The recipient who was invited to accept the external data share.",
+                    "$ref": "#/definitions/BaseExternalDataShareRecipient",
+                    "readOnly": true
+                },
+                "status": {
+                    "description": "The status of the external data share.",
+                    "$ref": "#/definitions/ExternalDataShareStatus",
+                    "readOnly": true
+                },
+                "expirationTimeUtc": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The expiration date and time (UTC) of the invitation to the external data share.",
+                    "readOnly": true
+                },
+                "workspaceId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The workspace ID.",
+                    "readOnly": true
+                },
+                "itemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The item ID.",
+                    "readOnly": true
+                },
+                "invitationUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "The URL for accepting the invitation to the external data share.",
+                    "readOnly": true
+                },
+                "acceptedByTenantId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The tenant ID in which the external data share was accepted.",
+                    "readOnly": true
+                }
+            }
+        },
+        "ExternalDataShareStatus": {
+            "type": "string",
+            "description": "The status of a given external data share. Additional `ExternalDataShareStatus` types may be added over time.",
+            "enum": ["Pending", "Active", "Revoked", "InvitationExpired"],
+            "x-ms-enum": {
+                "name": "ExternalDataShareStatus",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Pending",
+                        "description": "An invitation was created and is now pending acceptance by the recipient."
+                    },
+                    {
+                        "value": "Active",
+                        "description": "The invitation has been accepted by the recipient and the external data share is active."
+                    },
+                    {
+                        "value": "Revoked",
+                        "description": "The external data share was revoked."
+                    },
+                    {
+                        "value": "InvitationExpired",
+                        "description": "The invitation expired and can no longer be accepted by the recipient."
+                    }
+                ]
+            }
+        },
+        "ExternalDataShareRecipient": {
+            "type": "object",
+            "description": "A representation of the the external data share recipient.",
+            "required": ["userPrincipalName"],
+            "properties": {
+                "userPrincipalName": {
+                    "type": "string",
+                    "description": "The recipient's email address.",
+                    "maxLength": 256
+                },
+                "tenantId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The recipient's tenant ID."
+                }
+            }
+        },
+        "BaseExternalDataShareRecipient": {
+            "description": "The recipient of an external data share. Use 'ExternalDataShareUserRecipient' to share with a user by email, or 'ExternalDataShareSPRecipient' to share with a service principal by object ID. If 'type' is not specified, it defaults to 'User'.",
+            "type": "object",
+            "required": ["type"],
+            "discriminator": "type",
+            "properties": {
+                "type": {
+                    "description": "The type of the external data share recipient. Additional recipient types may be added over time.",
+                    "$ref": "#/definitions/ExternalDataShareRecipientType"
+                }
+            }
+        },
+        "ExternalDataShareRecipientType": {
+            "description": "The type of the external data share recipient. Defaults to 'User' if not provided. Additional recipient types may be added over time.",
+            "type": "string",
+            "default": "User",
+            "enum": ["ServicePrincipal", "User"],
+            "x-ms-enum": {
+                "name": "ExternalDataShareRecipientType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "ServicePrincipal",
+                        "description": "The recipient is a service principal, identified by object ID and tenant ID."
+                    },
+                    {
+                        "value": "User",
+                        "description": "The recipient is a user, identified by user principal name (email address)."
+
+                    }
+                ]
+            }
+        },
+        "ExternalDataShareSPRecipient": {
+            "description": "An external data share recipient that is a service principal, identified by principal ID and tenant ID.",
+            "type": "object",
+            "required": ["principalId", "tenantId"],
+            "x-ms-discriminator-value": "ServicePrincipal",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseExternalDataShareRecipient"
+                }
+            ],
+            "properties": {
+                "principalId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The principal ID of the service principal recipient. This is equivalent to the Entra ID object ID."
+                },
+                "tenantId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The tenant ID of the service principal recipient."
+                }
+            }
+        },
+        "ExternalDataShareUserRecipient": {
+            "description": "An external data share recipient that is a user, identified by user principal name (email address). This is the default recipient type.",
+            "type": "object",
+            "required": ["userPrincipalName"],
+            "x-ms-discriminator-value": "User",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseExternalDataShareRecipient"
+                }
+            ],
+            "properties": {
+                "userPrincipalName": {
+                    "type": "string",
+                    "description": "The user principal name (email address) of the recipient.",
+                    "maxLength": 256
+                },
+                "tenantId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The tenant ID of the user recipient. Optional."
+                }
+            }
+        }
+    }
+}

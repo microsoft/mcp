@@ -1,69 +1,44 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Table;
 
-public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseWorkspaceMonitorCommand<TableListOptions>()
-{
-    private const string CommandTitle = "List Log Analytics Tables";
-    private readonly ILogger<TableListCommand> _logger = logger;
-
-    public override string Id => "2b1ae0be-d6dd-4db9-9c58-fc4fcb3bf8e6";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        $"""
-        List all tables in a Log Analytics workspace. Requires {WorkspaceOptionDefinitions.WorkspaceIdOrName}.
+[CommandMetadata(
+    Id = "2b1ae0be-d6dd-4db9-9c58-fc4fcb3bf8e6",
+    Name = "list",
+    Title = "List Log Analytics Tables",
+    Description = """
+        List all tables in a Log Analytics workspace. Requires workspace.
         Returns table names and schemas that can be used for constructing KQL queries.
-        """;
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TableListCommand(ILogger<TableListCommand> logger, IMonitorService monitorService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<TableListOptions, TableListCommand.TableListCommandResult>(subscriptionResolver)
+{
+    private readonly ILogger<TableListCommand> _logger = logger;
+    private readonly IMonitorService _monitorService = monitorService;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TableListOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(MonitorOptionDefinitions.TableType);
-    }
-
-    protected override TableListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.TableType = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.TableType.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var monitorService = context.GetService<IMonitorService>();
-            var tables = await monitorService.ListTables(
+            var tables = await _monitorService.ListTables(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.Workspace!,
+                options.ResourceGroup,
+                options.Workspace,
                 options.TableType,
                 options.Tenant,
                 options.RetryPolicy,
@@ -80,5 +55,5 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseWor
         return context.Response;
     }
 
-    internal record TableListCommandResult(List<string> Tables);
+    public sealed record TableListCommandResult(List<string> Tables);
 }

@@ -110,7 +110,7 @@ public static class SqlOptionDefinitions
         $"--{PublicNetworkAccess}"
     )
     {
-        Description = "Whether public network access is enabled for the SQL server ('Enabled' or 'Disabled').",
+        Description = "Whether public network access is enabled for the SQL server ('Enabled' or 'Disabled'). Defaults to 'Disabled'.",
         Required = false
     };
 

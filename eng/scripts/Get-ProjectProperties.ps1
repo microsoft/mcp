@@ -39,6 +39,7 @@ $propertyList = @(
     'Description',
     'ReadmeUrl',
     'ReadmePath',
+    'ServerJsonPath',
     'PackageIcon',
 
     'NpmPackageName',
@@ -53,7 +54,20 @@ $propertyList = @(
     'DnxDescription',
     'DnxToolCommandName',
 
-    'IsAotCompatible'
+    'PypiPackageName',
+    'PypiPackageKeywords',
+    'PypiDescription',
+
+    'IsAotCompatible',
+
+    'McpRepositoryName',
+
+    'McpbPlatforms',
+
+    'AzureSupportedClouds',
+
+    'HasLiveTests',
+    'HasUnitTests'
 )
 
 $projectFile = $projectFiles | Select-Object -First 1

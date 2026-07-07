@@ -11,6 +11,5 @@ namespace Azure.Mcp.Tools.Authorization.Commands;
 [JsonSerializable(typeof(RoleAssignmentProperties))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    WriteIndented = true,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal partial class AuthorizationJsonContext : JsonSerializerContext;

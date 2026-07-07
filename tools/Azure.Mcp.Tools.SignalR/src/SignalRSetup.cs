@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.SignalR.Commands.Runtime;
 using Azure.Mcp.Tools.SignalR.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.SignalR;
 
@@ -31,8 +31,7 @@ public class SignalRSetup : IAreaSetup
             "Runtime operations - Commands for managing Azure SignalR Service resources.");
         signalr.AddSubGroup(runtime);
 
-        var runtimeGet = serviceProvider.GetRequiredService<RuntimeGetCommand>();
-        runtime.AddCommand(runtimeGet.Name, runtimeGet);
+        runtime.AddCommand<RuntimeGetCommand>(serviceProvider);
 
         return signalr;
     }

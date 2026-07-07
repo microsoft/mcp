@@ -4,29 +4,93 @@
 using System.Reflection;
 using System.Runtime.Versioning;
 using Azure.Core;
-using Azure.Mcp.Core.Options;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
 public abstract class BaseAzureService
 {
-    private static readonly UserAgentPolicy s_sharedUserAgentPolicy;
-    public static readonly string DefaultUserAgent;
-
+    private const int MaxAllowedRetries = 10;
+    private const double MaxAllowedNetworkTimeoutSeconds = 300;
+    private const double MaxAllowedDelaySeconds = 60;
+    private const double MinAllowedDelaySeconds = 0.1;
+    private static volatile bool s_retryLimitsDisabled = false;
+    private static UserAgentPolicy s_sharedUserAgentPolicy;
+    private static string? s_userAgent;
+    private static volatile bool s_initialized = false;
+    private static readonly object s_initializeLock = new();
     private readonly ITenantService? _tenantServiceDoNotUseDirectly;
+
+    // Cache assembly metadata to avoid repeated reflection
+    private static readonly string s_version;
+    private static readonly string s_framework;
+    private static readonly string s_platform;
+    private static readonly string s_defaultUserAgent;
+    private static readonly TimeSpan? s_defaultPollInterval = null;
 
     static BaseAzureService()
     {
         var assembly = typeof(BaseAzureService).Assembly;
-        var version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;
-        var framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
-        var platform = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+        s_version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "unknown";
+        s_framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? "unknown";
+        s_platform = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
 
-        DefaultUserAgent = $"azmcp/{version} ({framework}; {platform})";
-        s_sharedUserAgentPolicy = new UserAgentPolicy(DefaultUserAgent);
+        // Initialize the default user agent policy without transport type
+        s_defaultUserAgent = $"azmcp/{s_version} ({s_framework}; {s_platform})";
+        s_sharedUserAgentPolicy = new UserAgentPolicy(s_defaultUserAgent);
+
+#if DEBUG
+        if (EnvironmentHelpers.IsPlaybackTesting())
+        {
+            s_defaultPollInterval = TimeSpan.Zero;
+        }
+#endif
     }
+
+    /// <summary>
+    /// Initializes the user agent policy to include the transport type for all Azure service calls.
+    /// This method must be called once during application startup before creating any <see cref="BaseAzureService"/> instances.
+    /// Subsequent calls will be safely ignored to ensure the policy is initialized only once.
+    /// </summary>
+    /// <param name="transportType">The transport type (e.g., "stdio", "http"). Cannot be null or empty.</param>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="transportType"/> is null or empty.</exception>
+    /// <remarks>
+    /// The user agent string will be formatted as: azmcp/{version} azmcp-{transport}/{version} ({framework}; {platform})
+    /// </remarks>
+    public static void InitializeUserAgentPolicy(string transportType)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(transportType, nameof(transportType));
+
+        // Ensure this method is called only once
+        lock (s_initializeLock)
+        {
+            if (s_initialized)
+            {
+                return;
+            }
+
+            s_userAgent = $"azmcp/{s_version} azmcp-{transportType}/{s_version} ({s_framework}; {s_platform})";
+            s_sharedUserAgentPolicy = new UserAgentPolicy(s_userAgent);
+
+            s_initialized = true;
+        }
+    }
+
+    /// <summary>
+    /// Disables upper bounds enforcement on retry policy values (delays, timeouts, max retries).
+    /// This method should be called once during application startup when the --dangerously-disable-retry-limits flag is set.
+    /// </summary>
+    public static void DisableRetryLimits() => s_retryLimitsDisabled = true;
+
+    /// <summary>
+    /// Resets the retry limits flag. For testing only.
+    /// </summary>
+    internal static void ResetRetryLimits() => s_retryLimitsDisabled = false;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BaseAzureService"/> class.
@@ -38,6 +102,7 @@ public abstract class BaseAzureService
     {
         ArgumentNullException.ThrowIfNull(tenantService, nameof(tenantService));
         TenantService = tenantService;
+        UserAgent = s_userAgent ?? s_defaultUserAgent;
     }
 
     /// <summary>
@@ -47,9 +112,10 @@ public abstract class BaseAzureService
     /// This is only to be used by <see cref="Tenant.TenantService"/> to overcome a circular dependency on itself.</remarks>
     internal BaseAzureService()
     {
+        UserAgent = s_userAgent ?? s_defaultUserAgent;
     }
 
-    protected string UserAgent { get; } = DefaultUserAgent;
+    protected string UserAgent { get; }
 
     /// <summary>
     /// Gets or initializes the tenant service for resolving tenant IDs and obtaining credentials.
@@ -90,27 +156,27 @@ public abstract class BaseAzureService
         return value.Replace("\\", "\\\\").Replace("'", "''");
     }
 
-    protected async Task<string?> ResolveTenantIdAsync(string? tenant)
+    protected async Task<string?> ResolveTenantIdAsync(string? tenant, CancellationToken cancellationToken)
     {
         if (tenant == null)
             return tenant;
-        return await TenantService.GetTenantId(tenant);
+        return await TenantService.GetTenantId(tenant, cancellationToken);
     }
 
-    protected async Task<TokenCredential> GetCredential(CancellationToken cancellationToken = default)
+    protected async Task<TokenCredential> GetCredential(CancellationToken cancellationToken)
     {
         // TODO @vukelich: separate PR for cancellationToken to be required, not optional default
         return await GetCredential(null, cancellationToken);
     }
 
-    protected async Task<TokenCredential> GetCredential(string? tenant, CancellationToken cancellationToken = default)
+    protected async Task<TokenCredential> GetCredential(string? tenant, CancellationToken cancellationToken)
     {
         // TODO @vukelich: separate PR for cancellationToken to be required, not optional default
-        var tenantId = string.IsNullOrEmpty(tenant) ? null : await ResolveTenantIdAsync(tenant);
+        var tenantId = string.IsNullOrEmpty(tenant) ? null : await ResolveTenantIdAsync(tenant, cancellationToken);
 
         try
         {
-            return await TenantService!.GetTokenCredentialAsync(tenantId, cancellationToken);
+            return await TenantService.GetTokenCredentialAsync(tenantId, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -118,10 +184,22 @@ public abstract class BaseAzureService
         }
     }
 
+    /// <summary>
+    /// Gets an ARM access token for the given tenant using the ARM default scope.
+    /// </summary>
+    /// <param name="tenant">Optional tenant ID or name to authenticate against.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    protected async Task<AccessToken> GetArmAccessTokenAsync(string? tenant, CancellationToken cancellationToken)
+    {
+        var credential = await GetCredential(tenant, cancellationToken);
+        return await credential.GetTokenAsync(
+            new TokenRequestContext([TenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
+            cancellationToken);
+    }
+
     protected static T AddDefaultPolicies<T>(T clientOptions) where T : ClientOptions
     {
         clientOptions.AddPolicy(s_sharedUserAgentPolicy, HttpPipelinePosition.BeforeTransport);
-
         return clientOptions;
     }
 
@@ -136,25 +214,33 @@ public abstract class BaseAzureService
     {
         if (retryPolicy != null)
         {
-            if (retryPolicy.HasDelaySeconds)
+            if (retryPolicy.DelaySeconds is { } delaySeconds)
             {
-                clientOptions.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
+                clientOptions.Retry.Delay = s_retryLimitsDisabled
+                    ? TimeSpan.FromSeconds(delaySeconds)
+                    : TimeSpan.FromSeconds(Math.Clamp(delaySeconds, MinAllowedDelaySeconds, MaxAllowedDelaySeconds));
             }
-            if (retryPolicy.HasMaxDelaySeconds)
+            if (retryPolicy.MaxDelaySeconds is { } maxDelaySeconds)
             {
-                clientOptions.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
+                clientOptions.Retry.MaxDelay = s_retryLimitsDisabled
+                    ? TimeSpan.FromSeconds(maxDelaySeconds)
+                    : TimeSpan.FromSeconds(Math.Clamp(maxDelaySeconds, MinAllowedDelaySeconds, MaxAllowedDelaySeconds));
             }
-            if (retryPolicy.HasMaxRetries)
+            if (retryPolicy.MaxRetries is { } maxRetries)
             {
-                clientOptions.Retry.MaxRetries = retryPolicy.MaxRetries;
+                clientOptions.Retry.MaxRetries = s_retryLimitsDisabled
+                    ? maxRetries
+                    : Math.Min(MaxAllowedRetries, maxRetries);
             }
-            if (retryPolicy.HasMode)
+            if (retryPolicy.Mode is { } mode)
             {
-                clientOptions.Retry.Mode = retryPolicy.Mode;
+                clientOptions.Retry.Mode = mode;
             }
-            if (retryPolicy.HasNetworkTimeoutSeconds)
+            if (retryPolicy.NetworkTimeoutSeconds is { } networkTimeoutSeconds)
             {
-                clientOptions.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
+                clientOptions.Retry.NetworkTimeout = s_retryLimitsDisabled
+                    ? TimeSpan.FromSeconds(networkTimeoutSeconds)
+                    : TimeSpan.FromSeconds(Math.Min(MaxAllowedNetworkTimeoutSeconds, networkTimeoutSeconds));
             }
         }
 
@@ -173,12 +259,14 @@ public abstract class BaseAzureService
         ArmClientOptions? armClientOptions = null,
         CancellationToken cancellationToken = default)
     {
-        var tenantId = await ResolveTenantIdAsync(tenantIdOrName);
+        var tenantId = await ResolveTenantIdAsync(tenantIdOrName, cancellationToken);
 
         try
         {
             TokenCredential credential = await GetCredential(tenantId, cancellationToken);
             ArmClientOptions options = armClientOptions ?? new();
+            options.Transport = new HttpClientTransport(TenantService.GetClient());
+            options.Environment = TenantService.CloudConfiguration.ArmEnvironment;
             ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
 
             ArmClient armClient = new(credential, defaultSubscriptionId: default, options);
@@ -206,6 +294,61 @@ public abstract class BaseAzureService
         {
             throw new ArgumentException(
                 $"Required parameter{(missingParams.Length > 1 ? "s are" : " is")} null or empty: {string.Join(", ", missingParams)}");
+        }
+    }
+
+    /// <summary>
+    /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes.
+    /// </summary>
+    /// <typeparam name="T">The return type.</typeparam>
+    /// <param name="operation">The long-running operation.</param>
+    /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
+    /// <returns>The response once the long-running operation completes.</returns>
+    protected static async Task WaitForLroCompletionAsync<T>(Operation<T> operation, CancellationToken cancellationToken = default) where T : notnull
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+
+        if (s_defaultPollInterval.HasValue)
+        {
+            await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await operation.WaitForCompletionAsync(cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes.
+    /// </summary>
+    /// <param name="operation">The long-running operation.</param>
+    /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
+    /// <returns>The response once the long-running operation completes.</returns>
+    protected static async Task WaitForLroCompletionAsync(Operation operation, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+
+        if (s_defaultPollInterval.HasValue)
+        {
+            await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await operation.WaitForCompletionResponseAsync(cancellationToken);
+        }
+    }
+
+    private static async Task<Response> WaitForLroCompletionInternalAsync(Operation operation, CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            Response response = await operation.UpdateStatusAsync(cancellationToken);
+            if (operation.HasCompleted)
+            {
+                return operation.GetRawResponse();
+            }
+
+            await Task.Delay(s_defaultPollInterval!.Value, cancellationToken).ConfigureAwait(false);
         }
     }
 }

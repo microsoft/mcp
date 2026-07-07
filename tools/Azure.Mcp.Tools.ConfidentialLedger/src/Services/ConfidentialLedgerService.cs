@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Security.ConfidentialLedger;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Services;
 
@@ -15,7 +16,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
     : BaseAzureService(tenantService), IConfidentialLedgerService
 {
     // NOTE: We construct the data-plane endpoint from the ledger name.
-    private static Uri BuildLedgerUri(string ledgerName) => new($"https://{ledgerName}.confidential-ledger.azure.com");
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
 
     private static RequestContent CreateAppendEntryContent(string entryData)
     {
@@ -34,30 +35,32 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         return RequestContent.Create(binary);
     }
 
-    public async Task<AppendEntryResult> AppendEntryAsync(string ledgerName, string entryData, string? collectionId = null)
+    public async Task<AppendEntryResult> AppendEntryAsync(string ledgerName, string entryData, string? collectionId = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(ledgerName), ledgerName),
             (nameof(entryData), entryData));
 
-        var credential = await GetCredential();
+        var ledgerUri = new Uri(GetLedgerUri(ledgerName));
+        var credential = await GetCredential(cancellationToken);
 
         // Configure client (retry etc. could be extended later)
-        ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
+        ConfidentialLedgerClient client = new(ledgerUri, credential);
 
         // Build RequestContent manually to avoid trimming issues from reflection-based serialization.
         using var content = CreateAppendEntryContent(entryData);
-        var operation = await client.PostLedgerEntryAsync(WaitUntil.Completed, content, collectionId);
+        var operation = await client.PostLedgerEntryAsync(WaitUntil.Started, content, collectionId, new RequestContext() { CancellationToken = cancellationToken });
+        await WaitForLroCompletionAsync(operation, cancellationToken);
         var response = operation.GetRawResponse();
 
-        return new AppendEntryResult
+        return new()
         {
             TransactionId = operation.Id,
             State = operation.HasCompleted ? "Committed" : "Pending"
         };
     }
 
-    public async Task<LedgerEntryGetResult> GetLedgerEntryAsync(string ledgerName, string transactionId, string? collectionId = null)
+    public async Task<LedgerEntryGetResult> GetLedgerEntryAsync(string ledgerName, string transactionId, string? collectionId = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(ledgerName), ledgerName),
@@ -73,10 +76,10 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             throw new ArgumentException("Transaction ID cannot be empty or whitespace.", nameof(transactionId));
         }
 
-        var credential = await GetCredential();
-        ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
+        var ledgerUri = new Uri(GetLedgerUri(ledgerName));
+        var credential = await GetCredential(cancellationToken);
+        ConfidentialLedgerClient client = new(ledgerUri, credential);
 
-        Response? getByCollectionResponse = null;
         bool loaded = false;
         string? contents = null;
         string? actualTransactionId = null;
@@ -88,7 +91,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             {
                 throw new TimeoutException($"Timed out waiting for ledger entry to load after 15 seconds. Transaction ID: {transactionId}");
             }
-            getByCollectionResponse = await client.GetLedgerEntryAsync(transactionId, collectionId).ConfigureAwait(false);
+            var getByCollectionResponse = await client.GetLedgerEntryAsync(transactionId, collectionId).ConfigureAwait(false);
             using (JsonDocument jsonDoc = JsonDocument.Parse(getByCollectionResponse.Content))
             {
                 loaded = jsonDoc.RootElement.GetProperty("state").GetString() != "Loading";
@@ -108,11 +111,55 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             }
         }
 
-        return new LedgerEntryGetResult
+        return new()
         {
             LedgerName = ledgerName,
             TransactionId = actualTransactionId ?? transactionId,
             Contents = contents ?? string.Empty,
         };
+    }
+
+    private string GetLedgerUri(string ledgerName)
+    {
+        ValidateLedgerName(ledgerName);
+
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
+                $"https://{ledgerName}.confidential-ledger.azure.com",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
+                $"https://{ledgerName}.confidential-ledger.azure.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
+                $"https://{ledgerName}.confidential-ledger.azure.us",
+            _ =>
+                $"https://{ledgerName}.confidential-ledger.azure.com"
+        };
+    }
+
+    /// <summary>
+    /// Validates that a ledger name contains only ASCII characters valid for an Azure Confidential Ledger name
+    /// (a-z, A-Z, 0-9, and hyphens, starting with an ASCII letter).
+    /// </summary>
+    private static void ValidateLedgerName(string ledgerName)
+    {
+        if (string.IsNullOrWhiteSpace(ledgerName))
+        {
+            throw new ArgumentException("Ledger name cannot be null or empty.", nameof(ledgerName));
+        }
+
+        if (!char.IsAsciiLetter(ledgerName[0]))
+        {
+            throw new ArgumentException(
+                $"Ledger name must start with an ASCII letter. Got: '{ledgerName[0]}'.", nameof(ledgerName));
+        }
+
+        foreach (var c in ledgerName)
+        {
+            if (!char.IsAsciiLetterOrDigit(c) && c != '-')
+            {
+                throw new ArgumentException(
+                    $"Ledger name contains invalid character '{c}'. Only ASCII alphanumeric characters and hyphens are allowed.", nameof(ledgerName));
+            }
+        }
     }
 }

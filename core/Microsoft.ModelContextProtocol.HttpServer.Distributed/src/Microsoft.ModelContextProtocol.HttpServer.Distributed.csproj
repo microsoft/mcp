@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageId>Microsoft.ModelContextProtocol.HttpServer.Distributed</PackageId>
+    <Title>Microsoft Model Context Protocol Distributed Http Server Extensions</Title>
+    <Description>ASP.NET Core extensions for building enterprise-grade MCP servers that do not require external session affinity, yet work with session-aware features.</Description>
+    <Company>Microsoft</Company>
+    <Product>Microsoft Model Context Protocol Http Server Distributed Extensions</Product>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    <PackageTags>MCP;ModelContextProtocol;AspNetCore;Distributed</PackageTags>
+    <Version>1.0.0-beta.1</Version>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IsAotCompatible>True</IsAotCompatible>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.ModelContextProtocol.HttpServer.Distributed.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
+    <PackageReference Include="Yarp.ReverseProxy" />
+  </ItemGroup>
+</Project>

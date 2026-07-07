@@ -10,7 +10,6 @@ using Azure.Mcp.Tools.ResourceHealth.Models.Internal;
 namespace Azure.Mcp.Tools.ResourceHealth;
 
 [JsonSourceGenerationOptions(
-    WriteIndented = true,
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     GenerationMode = JsonSourceGenerationMode.Default)]
 [JsonSerializable(typeof(AvailabilityStatus))]
@@ -22,6 +21,5 @@ namespace Azure.Mcp.Tools.ResourceHealth;
 [JsonSerializable(typeof(ServiceHealthEventResponse))]
 [JsonSerializable(typeof(ServiceHealthEventListResponse))]
 [JsonSerializable(typeof(AvailabilityStatusGetCommand.AvailabilityStatusGetCommandResult))]
-[JsonSerializable(typeof(AvailabilityStatusListCommand.AvailabilityStatusListCommandResult))]
 [JsonSerializable(typeof(ServiceHealthEventsListCommand.ServiceHealthEventsListCommandResult))]
 internal partial class ResourceHealthJsonContext : JsonSerializerContext;

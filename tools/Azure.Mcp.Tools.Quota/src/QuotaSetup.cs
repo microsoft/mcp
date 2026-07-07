@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Quota.Commands.Region;
 using Azure.Mcp.Tools.Quota.Commands.Usage;
 using Azure.Mcp.Tools.Quota.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Quota;
 
@@ -18,10 +18,7 @@ public sealed class QuotaSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddHttpClientServices();
-
         services.AddTransient<IQuotaService, QuotaService>();
-
         services.AddTransient<CheckCommand>();
         services.AddTransient<AvailabilityListCommand>();
     }
@@ -32,15 +29,13 @@ public sealed class QuotaSetup : IAreaSetup
                     + " or checking Azure resource quota and usage", Title);
 
         var usageGroup = new CommandGroup("usage", "Resource usage and quota operations");
-        var checkCommand = serviceProvider.GetRequiredService<CheckCommand>();
-        usageGroup.AddCommand(checkCommand.Name, checkCommand);
+        usageGroup.AddCommand<CheckCommand>(serviceProvider);
         quota.AddSubGroup(usageGroup);
 
         var regionGroup = new CommandGroup("region", "Region availability operations");
         var availabilityGroup = new CommandGroup("availability", "Region availability information");
 
-        var availabilityListCommand = serviceProvider.GetRequiredService<AvailabilityListCommand>();
-        availabilityGroup.AddCommand(availabilityListCommand.Name, availabilityListCommand);
+        availabilityGroup.AddCommand<AvailabilityListCommand>(serviceProvider);
         regionGroup.AddSubGroup(availabilityGroup);
         quota.AddSubGroup(regionGroup);
 

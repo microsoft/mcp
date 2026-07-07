@@ -17,7 +17,8 @@ function New-TestSettings {
         [string] $ResourceGroupName,
         [string] $BaseName,
         [hashtable] $DeploymentOutputs,
-        [string] $OutputPath
+        [string] $OutputPath,
+        [hashtable] $AdditionalParameters
     )
 
     if($env:ARM_OIDC_TOKEN -and $TenantId -and $TestApplicationId) {
@@ -57,6 +58,10 @@ function New-TestSettings {
             "AZURE_TOKEN_CREDENTIALS" = "AzurePowerShellCredential"
         }
         TestMode = "Live"
+    }
+
+    if ($AdditionalParameters -and $AdditionalParameters.ContainsKey("UseHttpTransport") -and $AdditionalParameters["UseHttpTransport"]) {
+        $testSettings.EnvironmentVariables["MCP_TEST_TRANSPORT"] = "http"
     }
 
     # Add DeploymentOutputs if provided

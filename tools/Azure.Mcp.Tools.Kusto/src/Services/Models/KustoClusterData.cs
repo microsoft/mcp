@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Services.Azure.Models;
 using Azure.Mcp.Tools.Kusto.Commands;
+using Microsoft.Mcp.Core.Services.Azure.Models;
 
 namespace Azure.Mcp.Tools.Kusto.Services.Models;
 

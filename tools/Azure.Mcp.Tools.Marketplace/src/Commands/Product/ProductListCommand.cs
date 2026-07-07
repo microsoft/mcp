@@ -2,42 +2,33 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Marketplace.Models;
+using Azure.Mcp.Tools.Marketplace.Options;
 using Azure.Mcp.Tools.Marketplace.Options.Product;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
 
-public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : SubscriptionCommand<ProductListOptions>
+[CommandMetadata(
+    Id = "0485e8f9-61bf-4baf-b914-7fa5530a6f78",
+    Name = "list",
+    Title = "List Marketplace Products",
+    Description = "Retrieves and lists all marketplace products (offers) available to a subscription in the Azure Marketplace. Use this tool to search, select, browse, or filter marketplace offers by product name, publisher, pricing, or metadata. Returns information for each product, including display name, publisher details, category, pricing data, and available plans.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMarketplaceService marketplaceService) : SubscriptionCommand<ProductListOptions>
 {
-    private const string CommandTitle = "List Marketplace Products";
     private readonly ILogger<ProductListCommand> _logger = logger;
-
-    public override string Id => "0485e8f9-61bf-4baf-b914-7fa5530a6f78";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        Retrieves and lists all marketplace products (offers) available to a subscription in the Azure Marketplace. Use this tool to search, select, browse, or filter marketplace offers by product name, publisher, pricing, or metadata. Returns information for each product, including display name, publisher details, category, pricing data, and available plans.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IMarketplaceService _marketplaceService = marketplaceService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -45,46 +36,41 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
 
         // Add marketplace-specific options
         var options = command.Options;
-        options.Add(OptionDefinitions.Marketplace.Language);
-        options.Add(OptionDefinitions.Marketplace.Search);
-        options.Add(OptionDefinitions.Marketplace.Filter);
-        options.Add(OptionDefinitions.Marketplace.OrderBy);
-        options.Add(OptionDefinitions.Marketplace.Select);
-        options.Add(OptionDefinitions.Marketplace.NextCursor);
-        options.Add(OptionDefinitions.Marketplace.Expand);
+        options.Add(MarketplaceOptionDefinitions.Language);
+        options.Add(MarketplaceOptionDefinitions.Search);
+        options.Add(MarketplaceOptionDefinitions.Filter);
+        options.Add(MarketplaceOptionDefinitions.OrderBy);
+        options.Add(MarketplaceOptionDefinitions.Select);
+        options.Add(MarketplaceOptionDefinitions.NextCursor);
+        options.Add(MarketplaceOptionDefinitions.Expand);
     }
 
     protected override ProductListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Language = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Language.Name);
-        options.Search = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Search.Name);
-        options.Filter = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Filter.Name);
-        options.OrderBy = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.OrderBy.Name);
-        options.Select = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Select.Name);
-        options.NextCursor = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.NextCursor.Name);
-        options.Expand = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Expand.Name);
+        options.Language = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Language.Name);
+        options.Search = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Search.Name);
+        options.Filter = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Filter.Name);
+        options.OrderBy = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.OrderBy.Name);
+        options.Select = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Select.Name);
+        options.NextCursor = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.NextCursor.Name);
+        options.Expand = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Expand.Name);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
-
-            // Get the marketplace service from DI
-            var marketplaceService = context.GetService<IMarketplaceService>();
-
             // Call service operation with required parameters
-            var results = await marketplaceService.ListProducts(
+            var results = await _marketplaceService.ListProducts(
                 options.Subscription!,
                 options.Language,
                 options.Search,
@@ -104,8 +90,8 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
         {
             // Log error with all relevant context
             _logger.LogError(ex,
-                "Error listing marketplace products. Subscription: {Subscription}, Search: {Search}, Options: {@Options}",
-                options.Subscription, options.Search, options);
+                "Error listing marketplace products. Subscription: {Subscription}, Search: {Search}.",
+                options.Subscription, options.Search);
             HandleException(context, ex);
         }
 

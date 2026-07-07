@@ -23,11 +23,7 @@ jobs:
     displayName: Download binaries_signed
     artifact: binaries_signed
 
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK from global.json"
-    retryCountOnTaskFailure: 3
-    inputs:
-      useGlobalJson: true
+  - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
   - task: NuGetToolInstaller@1
     displayName: "Install NuGet"
@@ -42,7 +38,7 @@ jobs:
         -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
 
-  - task: EsrpCodeSigning@5
+  - task: EsrpCodeSigning@6
     displayName: 'CodeSign Nuget Packages'
     inputs:
       ConnectedServiceName: 'Azure SDK PME Managed Identity'

@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Refactored OneLake DFS ListPath methods to follow ADLS Gen2 Path List API specification (directory as query parameter)"

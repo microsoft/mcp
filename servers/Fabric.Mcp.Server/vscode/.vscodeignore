@@ -1,0 +1,16 @@
+.azure-pipelines
+.eslintignore
+.vscode/**
+.vscode-test/**
+node_modules/**
+!node_modules/vscode-nls
+out/**
+samples/**
+src/**
+.gitignore
+webpack.config.js
+**/tsconfig.json
+**/tslint.json
+**/*.map
+**/*.ts
+**/*.ps1

@@ -1,12 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>2.0.0-beta.4</Version>
+    <Version>3.0.0-beta.24</Version>
     <CliName>azmcp</CliName>
     <AssemblyTitle>Azure MCP Server</AssemblyTitle>
     <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Azure.Mcp.Server/README.md</ReadmePath>
-    <PackageIcon>$(MSBuildThisFileDirectory)../azureicon.png</PackageIcon>
+    <PackageIcon>$(MSBuildThisFileDirectory)../images/azureicon.png</PackageIcon>
+
+    <!-- Official MCP repository settings -->
+    <McpRepositoryName>com.microsoft/azure</McpRepositoryName>
+    <ServerJsonPath>$(MSBuildThisFileDirectory)../server.json</ServerJsonPath>
 
     <!-- npm settings -->
     <NpmPackageName>@azure/mcp</NpmPackageName>
@@ -19,6 +23,13 @@
     <DnxPackageId>Azure.Mcp</DnxPackageId>
     <DnxToolCommandName>$(CliName)</DnxToolCommandName>
     <DnxPackageTags>azure,mcp</DnxPackageTags>
+
+    <!-- pypi settings -->
+    <PypiPackageName>msmcp-azure</PypiPackageName>
+    <PypiPackageKeywords>azure,mcp,model-context-protocol,ai,llm</PypiPackageKeywords>
+
+    <!-- mcpb settings -->
+    <McpbPlatforms>win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</McpbPlatforms>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -59,6 +70,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\*.*" />
+    <EmbeddedResource Include="appsettings.json" />
+    <EmbeddedResource Condition="'$(Configuration)' == 'Debug'" Include="appsettings.Development.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
@@ -66,6 +83,6 @@
   <ItemGroup>
     <None Include="..\docs\azmcp-commands.md" />
     <None Include="..\docs\e2eTestPrompts.md" />
-    <None Include="..\docs\new-command.md" />
+    <None Include="..\..\..\.github\skills\add-azure-mcp-tools\SKILL.md" />
   </ItemGroup>
 </Project>

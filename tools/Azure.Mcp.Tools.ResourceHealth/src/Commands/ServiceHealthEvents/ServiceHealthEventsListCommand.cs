@@ -1,106 +1,60 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ResourceHealth.Options.ServiceHealthEvents;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
 
 /// <summary>
 /// Lists Azure service health events for a subscription, providing insights into ongoing or past service issues.
 /// </summary>
-public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsListCommand> logger)
-    : BaseResourceHealthCommand<ServiceHealthEventsListOptions>()
+[CommandMetadata(
+    Id = "c3211c73-af20-4d8d-bed2-4f181e0e4c92",
+    Name = "list",
+    Title = "List Service Health Events",
+    Description = "List Azure service health events to track service issues that occurred in recent timeframes (last 30 days, weeks, months). Query subscription for planned maintenance, past or ongoing service incidents, advisories, and security events. Provides detailed information about resource availability state, potential issues, and timestamps. Returns: trackingId, title, summary, eventType, status, startTime, endTime, impactedServices. Access Azure Service Health portal data programmatically.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsListCommand> logger, IResourceHealthService resourceHealthService, ISubscriptionResolver subscriptionResolver)
+    : BaseResourceHealthCommand<ServiceHealthEventsListOptions, ServiceHealthEventsListCommand.ServiceHealthEventsListCommandResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "List Service Health Events";
     private readonly ILogger<ServiceHealthEventsListCommand> _logger = logger;
+    private readonly IResourceHealthService _resourceHealthService = resourceHealthService;
 
-    public override string Id => "c3211c73-af20-4d8d-bed2-4f181e0e4c92";
+    private static readonly HashSet<string> s_validEventTypes = new(StringComparer.OrdinalIgnoreCase) { "ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security" };
+    private static readonly HashSet<string> s_validStatuses = new(StringComparer.OrdinalIgnoreCase) { "Active", "Resolved" };
 
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        List Azure service health events to track service issues that occurred in recent timeframes (last 30 days, weeks, months). Query subscription for planned maintenance, past or ongoing service incidents, advisories, and security events. Provides detailed information about resource availability state, potential issues, and timestamps. Returns: trackingId, title, summary, eventType, status, startTime, endTime, impactedServices. Access Azure Service Health portal data programmatically.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(ServiceHealthEventsListOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        base.ValidateOptions(options, validationResult);
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(ResourceHealthOptionDefinitions.EventType);
-        command.Options.Add(ResourceHealthOptionDefinitions.Status);
-        command.Options.Add(ResourceHealthOptionDefinitions.TrackingId);
-        command.Options.Add(ResourceHealthOptionDefinitions.Filter);
-        command.Options.Add(ResourceHealthOptionDefinitions.QueryStartTime);
-        command.Options.Add(ResourceHealthOptionDefinitions.QueryEndTime);
-
-        // Add validators for enum values
-        command.Validators.Add(commandResult =>
+        // Validate event-type enum values
+        if (!string.IsNullOrEmpty(options.EventType) && !s_validEventTypes.Contains(options.EventType))
         {
-            // Validate event-type enum values
-            if (commandResult.TryGetValue(ResourceHealthOptionDefinitions.EventType, out var eventType) && !string.IsNullOrEmpty(eventType))
-            {
-                var validEventTypes = new[] { "ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security" };
-                if (!validEventTypes.Contains(eventType, StringComparer.OrdinalIgnoreCase))
-                {
-                    commandResult.AddError($"Invalid event-type '{eventType}'. Valid values are: {string.Join(", ", validEventTypes)}");
-                }
-            }
-
-            // Validate status enum values
-            if (commandResult.TryGetValue(ResourceHealthOptionDefinitions.Status, out var status) && !string.IsNullOrEmpty(status))
-            {
-                var validStatuses = new[] { "Active", "Resolved" };
-                if (!validStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
-                {
-                    commandResult.AddError($"Invalid status '{status}'. Valid values are: {string.Join(", ", validStatuses)}");
-                }
-            }
-        });
-    }
-
-    protected override ServiceHealthEventsListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.EventType = parseResult.GetValueOrDefault(ResourceHealthOptionDefinitions.EventType);
-        options.Status = parseResult.GetValueOrDefault(ResourceHealthOptionDefinitions.Status);
-        options.TrackingId = parseResult.GetValueOrDefault(ResourceHealthOptionDefinitions.TrackingId);
-        options.Filter = parseResult.GetValueOrDefault(ResourceHealthOptionDefinitions.Filter);
-        options.QueryStartTime = parseResult.GetValueOrDefault(ResourceHealthOptionDefinitions.QueryStartTime);
-        options.QueryEndTime = parseResult.GetValueOrDefault(ResourceHealthOptionDefinitions.QueryEndTime);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add($"Invalid event-type '{options.EventType}'. Valid values are: {string.Join(", ", s_validEventTypes)}");
         }
 
-        var options = BindOptions(parseResult);
+        // Validate status enum values
+        if (!string.IsNullOrEmpty(options.Status) && !s_validStatuses.Contains(options.Status))
+        {
+            validationResult.Errors.Add($"Invalid status '{options.Status}'. Valid values are: {string.Join(", ", s_validStatuses)}");
+        }
+    }
 
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ServiceHealthEventsListOptions options, CancellationToken cancellationToken)
+    {
         try
         {
-            var resourceHealthService = context.GetService<IResourceHealthService>() ??
-                throw new InvalidOperationException("Resource Health service is not available.");
-
-            var events = await resourceHealthService.ListServiceHealthEventsAsync(
+            var events = await _resourceHealthService.ListServiceHealthEventsAsync(
                 options.Subscription!,
                 options.EventType,
                 options.Status,
@@ -123,5 +77,5 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
         return context.Response;
     }
 
-    internal record ServiceHealthEventsListCommandResult(List<Models.ServiceHealthEvent> Events);
+    public sealed record ServiceHealthEventsListCommandResult(List<Models.ServiceHealthEvent> Events);
 }

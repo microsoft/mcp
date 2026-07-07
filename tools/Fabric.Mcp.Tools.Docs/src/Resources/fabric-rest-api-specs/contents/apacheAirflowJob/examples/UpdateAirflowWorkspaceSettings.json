@@ -1,0 +1,16 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "beta": true,
+        "updateAirflowWorkspaceSettingsRequest": {
+            "defaultPoolTemplateId": "12345678-1234-1234-1234-123456789012"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "defaultPoolTemplateId": "12345678-1234-1234-1234-123456789012"
+            }
+        }
+    }
+}

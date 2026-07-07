@@ -1,0 +1,175 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Net;
+using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tools.Postgres.Commands;
+using Azure.Mcp.Tools.Postgres.Commands.Server;
+using Azure.Mcp.Tools.Postgres.Services;
+using Azure.Mcp.Tools.Postgres.Validation;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.TestUtilities;
+using NSubstitute;
+using Xunit;
+
+namespace Azure.Mcp.Tools.Postgres.Tests.Server;
+
+public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<ServerParamSetCommand, IPostgresService>
+{
+    [Fact]
+    public async Task ExecuteAsync_ReturnsSuccessMessage_WhenParamIsSet()
+    {
+        var expectedMessage = "Parameter 'work_mem' updated successfully to '256MB'.";
+        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "work_mem", "256MB", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expectedMessage);
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--user", "user1",
+            "--server", "server123",
+            "--param", "work_mem",
+            "--value", "256MB");
+
+        var result = ValidateAndDeserializeResponse(response, PostgresJsonContext.Default.ServerParamSetCommandResult);
+
+        Assert.Equal(expectedMessage, result.Message);
+        Assert.Equal("work_mem", result.Parameter);
+        Assert.Equal("256MB", result.Value);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsNull_WhenParamDoesNotExist()
+    {
+        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "shared_buffers", "512MB", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns("");
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--user", "user1",
+            "--server", "server123",
+            "--param", "shared_buffers",
+            "--value", "512MB");
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("Success", response.Message);
+        Assert.Null(response.Results);
+    }
+
+    [Theory]
+    [InlineData("--subscription")]
+    [InlineData("--resource-group")]
+    [InlineData("--user")]
+    [InlineData("--server")]
+    [InlineData("--param")]
+    [InlineData("--value")]
+    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
+    {
+        var response = await ExecuteCommandAsync(ArgBuilder.BuildArgs(missingParameter,
+            ("--subscription", "sub123"),
+            ("--resource-group", "rg1"),
+            ("--user", "user1"),
+            ("--server", "server123"),
+            ("--param", "max_connections"),
+            ("--value", "200")
+        ));
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains($"Missing Required options: {missingParameter}", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
+    {
+        var expectedMessage = "Parameter updated successfully.";
+        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expectedMessage);
+
+        await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--user", "user1",
+            "--server", "server123",
+            "--param", "max_connections",
+            "--value", "200");
+
+        await Service.Received(1).SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsTenantAndRetryPolicy()
+    {
+        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns("ok");
+
+        await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--user", "user1",
+            "--server", "server123",
+            "--param", "max_connections",
+            "--value", "200",
+            "--tenant", "tenant123",
+            "--retry-max-retries", "3");
+
+        await Service.Received(1).SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", "tenant123", Arg.Is<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(p => p != null && p.MaxRetries == 3), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("log_connections")]
+    [InlineData("log_disconnections")]
+    [InlineData("log_statement")]
+    [InlineData("password_encryption")]
+    [InlineData("ssl_min_protocol_version")]
+    [InlineData("ssl")]
+    [InlineData("shared_preload_libraries")]
+    [InlineData("row_security")]
+    public async Task ExecuteAsync_ReturnsError_WhenSecuritySensitiveParameterIsUsed(string blockedParam)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--user", "user1",
+            "--server", "server123",
+            "--param", blockedParam,
+            "--value", "off");
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
+        Assert.Contains("security-sensitive", response.Message);
+        await Service.DidNotReceiveWithAnyArgs().SetServerParameterAsync("", "", "", "", "", "", null, null, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_AllowsNonBlockedParameters()
+    {
+        var expectedMessage = "Parameter 'custom_setting' updated successfully.";
+        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "custom_setting", "42", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expectedMessage);
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--user", "user1",
+            "--server", "server123",
+            "--param", "custom_setting",
+            "--value", "42");
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public void EnsureParameterAllowed_ThrowsForNullOrEmpty()
+    {
+        Assert.Throws<CommandValidationException>(() => ServerParameterValidator.EnsureParameterAllowed(null));
+        Assert.Throws<CommandValidationException>(() => ServerParameterValidator.EnsureParameterAllowed(""));
+        Assert.Throws<CommandValidationException>(() => ServerParameterValidator.EnsureParameterAllowed("  "));
+    }
+
+    [Fact]
+    public void EnsureParameterAllowed_BlocklistIsCaseInsensitive()
+    {
+        Assert.Throws<CommandValidationException>(() => ServerParameterValidator.EnsureParameterAllowed("LOG_CONNECTIONS"));
+        Assert.Throws<CommandValidationException>(() => ServerParameterValidator.EnsureParameterAllowed("Log_Connections"));
+        Assert.Throws<CommandValidationException>(() => ServerParameterValidator.EnsureParameterAllowed("log_connections"));
+    }
+}

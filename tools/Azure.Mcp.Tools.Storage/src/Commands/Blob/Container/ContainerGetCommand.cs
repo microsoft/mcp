@@ -1,77 +1,59 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Tools.Storage.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 
-public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : BaseStorageCommand<ContainerGetOptions>()
+[CommandMetadata(
+    Id = "e96eb850-abb8-431d-bdc6-7ccd0a24838e",
+    Name = "get",
+    Title = "Get Storage Container Details",
+    Description = """
+        Show/list containers in a storage account. Use this tool to list all blob containers in the storage account or
+        show details for a specific Storage container. If no container specified, shows all containers in the storage
+        account, optionally filtering on a prefix. The prefix is ignored if a container is specified.
+
+        Required: --account, --subscription
+        Optional: --container, --tenant, --prefix
+
+        Returns: container name, lastModified, leaseStatus, publicAccess, metadata, and container properties.
+        Do not use this tool to list blobs in a container.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IStorageService storageService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ContainerGetOptions, ContainerGetCommand.ContainerGetCommandResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "Get Storage Container Details";
     private readonly ILogger<ContainerGetCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
-    public override string Id => "e96eb850-abb8-431d-bdc6-7ccd0a24838e";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        $"""
-        Show/list containers in a storage account. Use this tool to list all blob containers in the storage account or show details for a specific Storage container. Displays container properties including access policies, lease status, and metadata. If no container specified, shows all containers in the storage account. Required: account <account>, subscription <subscription>. Optional: container <container>, tenant <tenant>. Returns: container name, lastModified, leaseStatus, publicAccessLevel, metadata, and container properties. Do not use this tool to list blobs in a container.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ContainerGetOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(StorageOptionDefinitions.Container.AsOptional());
-    }
-
-    protected override ContainerGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Container = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Container.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var storageService = context.GetService<IStorageService>();
-            var containers = await storageService.GetContainerDetails(
-                options.Account!,
+            var containers = await _storageService.GetContainerDetails(
+                options.Account,
                 options.Container,
                 options.Subscription!,
+                options.Prefix,
                 options.Tenant,
-                options.RetryPolicy
+                options.RetryPolicy,
+                cancellationToken
             );
 
-            context.Response.Results = ResponseResult.Create(new(containers ?? []), StorageJsonContext.Default.ContainerGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new ContainerGetCommandResult(containers ?? []), StorageJsonContext.Default.ContainerGetCommandResult);
             return context.Response;
         }
         catch (Exception ex)
@@ -89,5 +71,5 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : B
         }
     }
 
-    internal record ContainerGetCommandResult([property: JsonPropertyName("containers")] List<ContainerInfo> Containers);
+    public record ContainerGetCommandResult(List<ContainerInfo> Containers);
 }

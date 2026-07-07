@@ -46,15 +46,22 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **TYPE**: `Local`
 - **INSTALL**: [![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022) [![Install Azure MCP in IntelliJ](https://img.shields.io/badge/IntelliJ%20IDEA-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053) [![Install Azure MCP in Eclipse](https://img.shields.io/badge/Eclipse-b6ae1d?style=flat-square&logo=eclipse&logoColor=white)](https://marketplace.eclipse.org/content/azure-toolkit-eclipse) [![Install Azure MCP in Claude Code](https://img.shields.io/badge/Claude_Code-Install-orange?style=flat-square)](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server#claude-code)
 
-### ✨ Azure AI Foundry
-- **REPOSITORY**: [azure-ai-foundry/mcp-foundry](https://github.com/azure-ai-foundry/mcp-foundry)
-- **DESCRIPTION**: A Model Context Protocol server for Azure AI Foundry, providing a unified set of tools for models, knowledge, evaluation, and more.
+### ✨ Microsoft Foundry
+- **DOCUMENTATION**: [Get started with Foundry MCP Server](https://learn.microsoft.com/azure/ai-foundry/mcp/get-started?view=foundry&tabs=user)
+- **DESCRIPTION**: A Model Context Protocol server for Microsoft Foundry, providing a unified set of tools for models, knowledge, evaluation, and more.
 - **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
-- **TYPE**: `Local`
-- **INSTALL**: [![Install Azure AI Foundry MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode:mcp/install?%7B%22name%22%3A%22ai_foundry_server%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22--prerelease%3Dallow%22%2C%22--from%22%2C%22git%2Bhttps%3A%2F%2Fgithub.com%2Fazure-ai-foundry%2Fmcp-foundry.git%22%2C%22run-azure-ai-foundry-mcp%22%2C%22--envFile%22%2C%22%24%7BworkspaceFolder%7D%2F.env%22%5D%7D) [![Install Azure AI Foundry in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode-insiders:mcp/install?%7B%22name%22%3A%22ai_foundry_server%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22--prerelease%3Dallow%22%2C%22--from%22%2C%22git%2Bhttps%3A%2F%2Fgithub.com%2Fazure-ai-foundry%2Fmcp-foundry.git%22%2C%22run-azure-ai-foundry-mcp%22%2C%22--envFile%22%2C%22%24%7BworkspaceFolder%7D%2F.env%22%5D%7D) [![Install Azure AI Foundry in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://aka.ms/vs/mcp-install?%7B%22name%22%3A%22ai_foundry_server%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22--prerelease%3Dallow%22%2C%22--from%22%2C%22git%2Bhttps%3A%2F%2Fgithub.com%2Fazure-ai-foundry%2Fmcp-foundry.git%22%2C%22run-azure-ai-foundry-mcp%22%2C%22--envFile%22%2C%22%24%7BworkspaceFolder%7D%2F.env%22%5D%7D)
+- **TYPE**: `REMOTE` - `https://mcp.ai.azure.com`
+- **INSTALL**: [![Install Microsoft Foundry MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode:mcp/install?%7B%22name%22%3A%22foundry-mcp-remote%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.ai.azure.com%22%7D) [![Install Microsoft Foundry in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode-insiders:mcp/install?%7B%22name%22%3A%22foundry-mcp-remote%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.ai.azure.com%22%7D)
+
+### <img height="18" width="18" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> Azure Resource Manager
+- **REPOSITORY**: [Azure/Azure-Resource-Manager-MCP](https://github.com/Azure/Azure-Resource-Manager-MCP)
+- **DESCRIPTION**: A Model Context Protocol server with tools to use Azure Resource Graph to retrieve and filter information about Azure resources in a customer's subscription, and tools to manage ARM template deployments.
+- **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
+- **TYPE**: `REMOTE` - `https://mcp.management.azure.com`
+- **INSTALL**: [![Install Azure Resource Manager MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode:mcp/install?%7B%22name%22%3A%22arm-mcp-remote%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.management.azure.com%22%7D) [![Install Azure Resource Manager MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode-insiders:mcp/install?%7B%22name%22%3A%22arm-mcp-remote%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.management.azure.com%22%7D)
 
 ### <img height="18" width="18" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/1062064-Products-1.2-24x24" alt="Microsoft Azure DevOps Logo" /> Azure DevOps
-- **REPOSITORY**: [Azure DevOps MCP Server - Public Preview](https://github.com/microsoft/azure-devops-mcp)
+- **REPOSITORY**: [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp)
 - **DESCRIPTION**: This TypeScript project provides a local MCP server for Azure DevOps, enabling you to perform a wide range of Azure DevOps tasks directly from your code editor.
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
@@ -95,6 +102,41 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
 - **INSTALL**: [![Install Microsoft 365 Agents Toolkit in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/TeamsDevApp.ms-teams-vscode-extension) [![Install Microsoft 365 Agents Toolkit in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/TeamsDevApp.ms-teams-vscode-extension)
+
+### 📅 Microsoft 365 Calendar
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_CalendarTools)
+- **DESCRIPTION**: Calendar tools for creating, updating, deleting events, managing invites, and checking availability. Integrates with Microsoft Graph Calendar APIs.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_CalendarTools`
+- **INSTALL**: [![Install Microsoft 365 Calendar MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-calendartools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_CalendarTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install Microsoft 365 Calendar MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-calendartools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_CalendarTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
+
+### 💬 Microsoft 365 Copilot Chat
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_M365Copilot)
+- **DESCRIPTION**: Search across M365 content including documents, emails, sites, files, and chats. Provides tools for starting and maintaining rich chat conversations against Microsoft Graph.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_M365Copilot`
+- **INSTALL**: [![Install Microsoft 365 Copilot Chat MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-m365copilot&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_M365Copilot%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install Microsoft 365 Copilot Chat MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-m365copilot&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_M365Copilot%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
+
+### 📧 Microsoft 365 Mail
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_MailTools)
+- **DESCRIPTION**: Email tools for creating, sending, replying, updating, deleting, and searching messages. Integrates with Microsoft Graph Mail APIs.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_MailTools`
+- **INSTALL**: [![Install Microsoft 365 Mail MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-mailtools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_MailTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install Microsoft 365 Mail MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-mailtools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_MailTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
+
+### 👤 Microsoft 365 User
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_MeServer)
+- **DESCRIPTION**: Tools for retrieving user details, manager, team, or direct reportees from Microsoft Graph. Serves as the agent's self-knowledge and organizational awareness layer.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_MeServer`
+- **INSTALL**: [![Install Microsoft 365 User MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-meserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_MeServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install Microsoft 365 User MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-meserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_MeServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
+
+### ⚙️ Microsoft Admin Center
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_AdminTools)
+- **DESCRIPTION**: MCP Server containing tools relating to Microsoft Admin Center. Integrates with Microsoft Admin Center APIs to provide admin action capabilities.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_AdminTools`
+- **INSTALL**: [![Install Microsoft Admin Center MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-admintools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_AdminTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install Microsoft Admin Center MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-admintools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_AdminTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
 
 ### 📊 Microsoft Clarity
 - **REPOSITORY**: [microsoft/clarity-mcp-server](https://github.com/microsoft/clarity-mcp-server)
@@ -138,12 +180,41 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **TYPE**: `REMOTE` - `https://learn.microsoft.com/api/mcp`
 - **INSTALL**: [![Install Microsoft Learn MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=microsoft.docs.mcp&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Flearn.microsoft.com%2Fapi%2Fmcp%22%7D) [![Install Microsoft Learn MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=microsoft.docs.mcp&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Flearn.microsoft.com%2Fapi%2Fmcp%22%7D&quality=insiders) [![Install Microsoft Learn MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://aka.ms/vs/mcp-install?%7B%22name%22%3A%22microsoft.docs.mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Flearn.microsoft.com%2Fapi%2Fmcp%22%7D)
 
+### 🔐 Microsoft MCP Server for Enterprise
+- **DOCUMENTATION**: [Overview of Microsoft MCP Server for Enterprise](https://learn.microsoft.com/graph/mcp-server/overview)
+- **REPOSITORY**: [microsoft/EnterpriseMCP](https://github.com/microsoft/EnterpriseMCP)
+- **DESCRIPTION**: Access Microsoft Entra data by converting natural-language queries into Microsoft Graph API calls. Supports read-only enterprise IT scenarios including security posture, privileged access, application risk, access governance, device readiness, and audit telemetry.
+- **CATEGORY**: `SECURITY`
+- **TYPE**: `REMOTE` - `https://mcp.svc.cloud.microsoft/enterprise`
+- **INSTALL**: [![Install Microsoft MCP Server for Enterprise in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode:mcp/install?%7B%22name%22%3A%22enterprise-mcp-remote%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.svc.cloud.microsoft%2Fenterprise%22%7D) [![Install Microsoft MCP Server for Enterprise in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode-insiders:mcp/install?%7B%22name%22%3A%22enterprise-mcp-remote%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.svc.cloud.microsoft%2Fenterprise%22%7D)
+
+### 🛡️ Microsoft Sentinel Data Exploration
+- **DOCUMENTATION**: [Explore Microsoft Sentinel data lake with data exploration collection](https://aka.ms/mcp/data-exploration)
+- **DESCRIPTION**: The data exploration tool collection in the Microsoft Sentinel Model Context Protocol (MCP) server lets you search for relevant tables and retrieve data from Microsoft Sentinel's data lake using natural language. Learn more: [aka.ms/mcp/data-exploration](https://aka.ms/mcp/data-exploration).
+- **CATEGORY**: `SECURITY`
+- **TYPE**: `REMOTE` - `https://sentinel.microsoft.com/mcp/data-exploration`
+- **INSTALL**: [![Install Microsoft Sentinel Data Exploration MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode:mcp/install?%7B%22name%22%3A%22microsoft-sentinel-data-exploration%22%2C%22url%22%3A%22https%3A%2F%2Fsentinel.microsoft.com%2Fmcp%2Fdata-exploration%22%7D) [![Install Microsoft Sentinel Data Exploration MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode-insiders:mcp/install?%7B%22name%22%3A%22microsoft-sentinel-data-exploration%22%2C%22url%22%3A%22https%3A%2F%2Fsentinel.microsoft.com%2Fmcp%2Fdata-exploration%22%7D)
+
 ### 🛢️ Microsoft SQL
-- **REPOSITORY**: [MSSQL MCP Server](https://aka.ms/MssqlMcp)
+- **REPOSITORY**: [MSSQL MCP Server](https://aka.ms/sql/mcp)
 - **DESCRIPTION**: Chat with your business data the new agentic way using natural language and AI. Connect to any SQL database—from ground (on-premises) to Azure cloud to Microsoft Fabric via a simple connection string. Discover and define table schemas, manage tables, and perform CRUD operations through conversational prompts.
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
-- **INSTALL**: [MSSQL MCP Server](https://aka.ms/MssqlMcp)
+- **INSTALL**: [MSSQL MCP Server](https://aka.ms/sql/mcp)
+
+### 💬 Microsoft Teams
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_TeamsServer)
+- **DESCRIPTION**: Manage Microsoft Teams chats, channels, users, and messages via Graph API. Features server-side filtering, pagination, and token optimization.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_TeamsServer`
+- **INSTALL**: [![Install Microsoft Teams MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-teamsserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_TeamsServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install Microsoft Teams MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-teamsserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_TeamsServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
+
+### 📄 Microsoft Word
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_WordServer)
+- **DESCRIPTION**: MCP Server containing tools to work with Microsoft Word documents. Enables reading and understanding documents, creating new ones, and collaborating through comments.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_WordServer`
+- **INSTALL**: [![Install Microsoft Word MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-wordserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_WordServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install Microsoft Word MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-wordserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_WordServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
 
 ### 💻 NuGet MCP Server
 - **REPOSITORY**: [NuGet/Home](https://github.com/NuGet/Home)
@@ -151,6 +222,20 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
 - **INSTALL**: [Nuget MCP Server](https://www.nuget.org/packages/NuGet.Mcp.Server)
+
+### 📁 OneDrive and SharePoint
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/FileBased/mcp_ODSPRemoteServer)
+- **DESCRIPTION**: OneDrive and SharePoint Remote MCP Server. All tools supporting OneDrive and SharePoint files integration exposed by the ODSP MCP endpoint are automatically discovered and made available.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_ODSPRemoteServer`
+- **INSTALL**: [![Install OneDrive and SharePoint MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-odspremoteserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_ODSPRemoteServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install OneDrive and SharePoint MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-odspremoteserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_ODSPRemoteServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
+
+### 📋 SharePoint Lists
+- **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/FileBased/mcp_SharepointListsTools)
+- **DESCRIPTION**: MCP server providing Microsoft Graph SharePoint tools for Lists. Includes site management, document libraries, lists, and collaboration features.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_SharePointListsTools`
+- **INSTALL**: [![Install SharePoint Lists MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-sharepointliststools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_SharePointListsTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install SharePoint Lists MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-sharepointliststools&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_SharePointListsTools%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
 
 ### 🎭 Playwright
 - **REPOSITORY**: [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp)
@@ -166,15 +251,24 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **TYPE**: `Local`
 - **INSTALL**: [microsoft/wassette](https://github.com/microsoft/wassette)
 
+## 🔌 Azure Plugin
+Get started with the Azure plugin, which connects [GitHub Copilot CLI](https://github.com/github/copilot-cli) or Claude Code to your Azure account. This integration lets you manage resources, deploy applications, and monitor services directly from your development environment using tools from the Azure MCP server and extended Azure knowledge skills.
+
+To install the Azure plugin into Copilot CLI and Claude Code:
+
+1. Add the marketplace with `/plugin marketplace add microsoft/skills`
+2. Install the plugin with `/plugin install azure-skills@skills`
+3. Update the plugin with `/plugin update azure-skills@skills`
 
 ## 🏗️ Looking for starter templates that use MCP? 
 Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awesome-azd/?tags=mcp) tagged with MCP.
 
+
 ## 📎 Related Resources
 - [Microsoft MCP Resources](https://github.com/microsoft/mcp/tree/main/Resources)
 - [MCP Pattern Overview](https://modelcontextprotocol.io/introduction)
-- [MCP SDKs and Building Blocks](https://modelcontextprotocol.io/sdk)
-- [MCP Specification](https://spec.modelcontextprotocol.io/specification/)
+- [MCP SDKs and Building Blocks](https://modelcontextprotocol.io/docs/sdk)
+- [MCP Specification](https://modelcontextprotocol.io/specification/latest)
 
 ## Contributing
 

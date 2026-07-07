@@ -4,6 +4,7 @@
 .work/
 tests/test-cmds.txt
 .testsettings.json
+.temp.*.slnx
 
 bin/
 obj/
@@ -11,6 +12,7 @@ obj/
 .idea/
 TestResults/
 *.binlog
+*.user
 
 node_modules/
 .npmrc
@@ -21,3 +23,16 @@ node_modules/
 
 generated/
 /docs/commandline
+.DS_Store
+.vscode/mcp.json
+.vscode/settings.json
+
+eng/tools/ToolDescriptionEvaluator/prompts.json
+eng/tools/ToolDescriptionEvaluator/results.md
+eng/tools/ToolDescriptionEvaluator/tools.json
+deploy-log.txt
+
+eng/tools/CopilotCliTester/src/results/
+
+# VM-specific documentation (internal/personal notes)
+docs/vm-docs/
