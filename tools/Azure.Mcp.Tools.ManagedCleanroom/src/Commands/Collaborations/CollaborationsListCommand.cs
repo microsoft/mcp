@@ -35,6 +35,7 @@ public sealed class CollaborationsListCommand(ILogger<CollaborationsListCommand>
             var result = await _service.ListCollaborationsAsync(
                 options.Endpoint,
                 options.ActiveOnly,
+                options.AllowUntrustedCert,
                 options.TokenScope,
                 options.Tenant,
                 options.RetryPolicy,

@@ -15,6 +15,9 @@ public class BaseManagedCleanroomDataPlaneOptions
     [Option(Description = ManagedCleanroomOptionDescriptions.Endpoint)]
     public required string Endpoint { get; set; }
 
+    [Option(Name = "allow-untrusted-cert", Description = ManagedCleanroomOptionDescriptions.AllowUntrustedCert)]
+    public bool AllowUntrustedCert { get; set; }
+
     [Option(Description = ManagedCleanroomOptionDescriptions.TokenScope)]
     public string? TokenScope { get; set; }
 

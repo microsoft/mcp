@@ -15,6 +15,7 @@ public interface IManagedCleanroomServiceDataPlane
     Task<JsonElement> ListCollaborationsAsync(
         string endpoint,
         bool? activeOnly = null,
+    bool allowUntrustedCert = false,
         string? tokenScope = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,

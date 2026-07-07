@@ -22,12 +22,13 @@ public class ManagedCleanroomDataPlaneService(ISubscriptionService subscriptionS
     public async Task<JsonElement> ListCollaborationsAsync(
         string endpoint,
         bool? activeOnly = null,
+        bool allowUntrustedCert = false,
         string? tokenScope = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var client = await BuildClientAsync(endpoint, tokenScope, tenant, cancellationToken)
+        var client = await BuildClientAsync(endpoint, allowUntrustedCert, tokenScope, tenant, cancellationToken)
             .ConfigureAwait(false);
 
         var requestContext = new RequestContext { CancellationToken = cancellationToken };
@@ -38,6 +39,7 @@ public class ManagedCleanroomDataPlaneService(ISubscriptionService subscriptionS
 
     private async Task<CollaborationClient> BuildClientAsync(
         string endpoint,
+        bool allowUntrustedCert,
         string? tokenScope,
         string? tenant,
         CancellationToken cancellationToken)
@@ -66,13 +68,17 @@ public class ManagedCleanroomDataPlaneService(ISubscriptionService subscriptionS
         {
             options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
         }
-        else
+        else if (allowUntrustedCert)
         {
             var handler = new HttpClientHandler
             {
                 ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             };
             options.Transport = new HttpClientTransport(handler);
+        }
+        else
+        {
+            options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
         }
 
         return new CollaborationClient(endpointUri, options);
