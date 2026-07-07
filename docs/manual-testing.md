@@ -33,13 +33,19 @@ Refer to the instructions in [CONTRIBUTING.md — Server Modes](../CONTRIBUTING.
 
 ### Consolidated Mode
 
-To test in consolidated mode, add the following setting to your VS Code `settings.json` and verify that you can see the consolidated tools:
+To test in consolidated mode, configure the Azure MCP Server to start with `--mode consolidated` (see [CONTRIBUTING.md — Server Modes](../CONTRIBUTING.md#server-modes)).
 
-```json
-{
-    "azureMcp.serverMode": "consolidated"
-}
-```
+For example, in your MCP server configuration (`mcp.json`), set:
+
+    {
+      "servers": {
+        "azure-mcp-server": {
+          "type": "stdio",
+          "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
+          "args": ["server", "start", "--mode", "consolidated"]
+        }
+      }
+    }
 
 ## Tests to Execute
 
