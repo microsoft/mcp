@@ -1,6 +1,9 @@
 <!--
 See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate this README.md for package specific output
 -->
+<!-- remove-section: start nuget;vsix;npm;pypi remove_managed_hosting_survey -->
+[![Help shape Azure MCP Server's Managed Remote Hosting — take our 1-minute survey](images/managed-hosting-survey-banner.png)](https://aka.ms/azmcp/managed-hosting-survey)
+<!-- remove-section: end remove_managed_hosting_survey -->
 # <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm;pypi {{ToolTitle}} -->
 <!-- remove-section: start nuget;vsix;npm;pypi remove_note_ga -->
 > [!NOTE]
@@ -1183,6 +1186,18 @@ Example prompts that generate Azure CLI commands:
 * "Turn off DDoS protection in my Platform Landing Zone"
 * "Turn off Bastion host in my Platform Landing Zone"
 
+### 🛡️ Azure Resilience Management
+
+* "List all resilience goal templates in service group 'my-service-group'"
+* "Get the details of goal template 'my-template' in service group 'my-service-group'"
+* "List all resilience goal assignments in service group 'my-service-group'"
+* "List the resources of goal assignment 'my-assignment' in service group 'my-service-group'"
+* "List my resilience usage plans in resource group 'my-rg'"
+* "List the enrollments of usage plan 'my-plan' in resource group 'my-rg'"
+* "List all resilience recovery plans in service group 'my-service-group'"
+* "Get the recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "List the recovery jobs of recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+
 ### Azure Resource Manager
 
 * Use Azure resource graph to query Azure resources
@@ -1212,7 +1227,7 @@ Example prompts that generate Azure CLI commands:
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **43+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **44+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 📊 **Azure Advisor** - Advisor recommendations
@@ -1250,6 +1265,7 @@ The Azure MCP Server provides tools for interacting with **43+ Azure service are
 - 📊 **Azure Quota** - Resource quota and usage management
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
+- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery jobs, and recovery job resources
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations

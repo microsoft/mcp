@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Core.Areas.Subscription.Commands;
@@ -65,7 +66,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             s.DisplayName,
             s.State?.ToString(),
             s.TenantId?.ToString(),
-            hasDefault && s.SubscriptionId.Equals(defaultSubscriptionId, StringComparison.OrdinalIgnoreCase)
+            hasDefault && s.SubscriptionId.Equals(defaultSubscriptionId, StringComparisons.SubscriptionId)
         )).ToList();
 
         // Sort so the default subscription appears first

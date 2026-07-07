@@ -94,7 +94,7 @@ public class SubscriptionService(
     public async Task<string> GetSubscriptionIdByName(string subscriptionName, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
-        var subscription = subscriptions.FirstOrDefault(s => s.DisplayName.Equals(subscriptionName, StringComparison.OrdinalIgnoreCase)) ??
+        var subscription = subscriptions.FirstOrDefault(s => s.DisplayName.Equals(subscriptionName, StringComparisons.SubscriptionDisplayName)) ??
             throw new KeyNotFoundException($"Could not find subscription with name {subscriptionName}");
 
         return subscription.SubscriptionId;
@@ -103,7 +103,7 @@ public class SubscriptionService(
     public async Task<string> GetSubscriptionNameById(string subscriptionId, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
-        var subscription = subscriptions.FirstOrDefault(s => s.SubscriptionId.Equals(subscriptionId, StringComparison.OrdinalIgnoreCase)) ??
+        var subscription = subscriptions.FirstOrDefault(s => s.SubscriptionId.Equals(subscriptionId, StringComparisons.SubscriptionId)) ??
             throw new KeyNotFoundException($"Could not find subscription with ID {subscriptionId}");
 
         return subscription.DisplayName;
