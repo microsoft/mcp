@@ -1,3 +1,5 @@
+#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
+#pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -38,21 +40,15 @@ public class McpRuntimeTests
     private static ITelemetryService CreateMockTelemetryService() => Substitute.For<ITelemetryService>();
 
     private static RequestContext<ListToolsRequestParams> CreateListToolsRequest() =>
-        new(CreateMockServer(), new() { Method = RequestMethods.ToolsList })
-        {
-            Params = new()
-        };
+            new(CreateMockServer(), new() { Method = RequestMethods.ToolsList }, new ListToolsRequestParams());
 
     private static RequestContext<CallToolRequestParams> CreateCallToolRequest(
         string toolName = "test-tool",
-        IDictionary<string, JsonElement>? arguments = null) => new(CreateMockServer(), new() { Method = RequestMethods.ToolsCall })
-        {
-            Params = new()
+            IDictionary<string, JsonElement>? arguments = null) => new(CreateMockServer(), new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
             {
                 Name = toolName,
                 Arguments = arguments ?? new Dictionary<string, JsonElement>()
-            }
-        };
+            });
 
     private static object GetAndAssertTagKeyValue(Activity activity, string tagName)
     {
@@ -450,7 +446,7 @@ public class McpRuntimeTests
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
         var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
-        var request = new RequestContext<ListToolsRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsList });
+        var request = new RequestContext<ListToolsRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsList }, new ListToolsRequestParams());
 
         var expectedResult = new ListToolsResult { Tools = [] };
         mockToolLoader.ListToolsHandler(request, Arg.Any<CancellationToken>())
@@ -479,7 +475,7 @@ public class McpRuntimeTests
             .Returns(activity);
 
         var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
-        var request = new RequestContext<CallToolRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsCall });
+        var request = new RequestContext<CallToolRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams { Name = "unknown-tool" });
 
         // Act
         var result = await runtime.CallToolHandler(request, TestContext.Current.CancellationToken);

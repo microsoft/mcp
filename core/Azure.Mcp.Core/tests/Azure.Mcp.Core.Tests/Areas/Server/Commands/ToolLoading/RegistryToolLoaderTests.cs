@@ -1,3 +1,5 @@
+#pragma warning disable MCP9003
+#pragma warning disable MCP9005
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 

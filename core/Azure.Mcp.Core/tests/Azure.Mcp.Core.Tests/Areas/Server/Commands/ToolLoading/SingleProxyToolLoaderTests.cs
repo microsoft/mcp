@@ -1,3 +1,5 @@
+#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
+#pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -249,10 +251,7 @@ public class SingleProxyToolLoaderTests
         // Arrange
         var (toolLoader, _) = CreateToolLoader(useRealDiscovery: true);
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
-        {
-            Params = null
-        };
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, null!);
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -438,14 +437,11 @@ public class SingleProxyToolLoaderTests
         };
 
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
-        {
-            Params = new CallToolRequestParams
+            return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
             {
                 Name = "azure",
                 Arguments = arguments
-            }
-        };
+            });
     }
 
     [Fact]

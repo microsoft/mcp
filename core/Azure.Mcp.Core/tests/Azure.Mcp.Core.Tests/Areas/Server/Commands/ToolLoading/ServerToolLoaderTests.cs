@@ -1,3 +1,5 @@
+#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
+#pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -35,23 +37,17 @@ public class ServerToolLoaderTests
     private static RequestContext<ListToolsRequestParams> CreateRequest()
     {
         var mockServer = Substitute.For<McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsList })
-        {
-            Params = new()
-        };
+            return new(mockServer, new() { Method = RequestMethods.ToolsList }, new ListToolsRequestParams());
     }
 
     private static RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IDictionary<string, JsonElement>? arguments = null)
     {
         var mockServer = Substitute.For<McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
-        {
-            Params = new()
+            return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
             {
                 Name = toolName,
                 Arguments = arguments ?? new Dictionary<string, JsonElement>()
-            }
-        };
+            });
     }
 
     [Fact]
@@ -275,14 +271,11 @@ public class ServerToolLoaderTests
         }
 
         var mockServer = Substitute.For<McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
-        {
-            Params = new()
+            return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
             {
                 Name = serverName,
                 Arguments = arguments
-            }
-        };
+            });
     }
 
     [Fact]

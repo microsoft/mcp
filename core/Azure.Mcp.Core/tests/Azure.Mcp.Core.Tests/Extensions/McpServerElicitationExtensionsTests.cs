@@ -206,7 +206,7 @@ public class McpServerElicitationExtensionsTests
     {
         // Arrange
         var server = CreateMockServer();
-        server.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new() });
+        server.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability { Form = new() } });
 
         JsonRpcRequest? capturedRequest = null;
         var mockResponse = new JsonRpcResponse
@@ -258,7 +258,7 @@ public class McpServerElicitationExtensionsTests
     {
         // Arrange
         var server = CreateMockServer();
-        server.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new() });
+        server.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability { Form = new() } });
 
         var mockResponse = new JsonRpcResponse
         {
@@ -271,7 +271,12 @@ public class McpServerElicitationExtensionsTests
 
         var request = new ElicitationRequestParams
         {
-            Message = "Approve operation?"
+            Message = "Approve operation?",
+            RequestedSchema = new JsonObject
+            {
+                ["properties"] = new JsonObject { ["confirm"] = new JsonObject { ["type"] = "string" } },
+                ["required"] = new JsonArray("confirm")
+            }
         };
 
         // Act
@@ -286,7 +291,7 @@ public class McpServerElicitationExtensionsTests
     {
         // Arrange
         var server = CreateMockServer();
-        server.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new() });
+        server.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability { Form = new() } });
 
         var mockResponse = new JsonRpcResponse
         {
@@ -299,7 +304,12 @@ public class McpServerElicitationExtensionsTests
 
         var request = new ElicitationRequestParams
         {
-            Message = "Approve operation?"
+            Message = "Approve operation?",
+            RequestedSchema = new JsonObject
+            {
+                ["properties"] = new JsonObject { ["confirm"] = new JsonObject { ["type"] = "string" } },
+                ["required"] = new JsonArray("confirm")
+            }
         };
 
         // Act

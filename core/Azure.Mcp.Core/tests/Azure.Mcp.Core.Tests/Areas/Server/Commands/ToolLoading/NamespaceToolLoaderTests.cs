@@ -1,3 +1,5 @@
+#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
+#pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -891,10 +893,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest()
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsList })
-        {
-            Params = new()
-        };
+            return new(mockServer, new() { Method = RequestMethods.ToolsList }, new ListToolsRequestParams());
     }
 
     private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(
@@ -906,14 +905,11 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             kvp => JsonSerializer.SerializeToElement(kvp.Value));
 
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
-        {
-            Params = new()
+            return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
             {
                 Name = toolName,
                 Arguments = jsonArguments
-            }
-        };
+            });
     }
 
     private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequestWithJsonElements(
@@ -921,14 +917,11 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         Dictionary<string, JsonElement> arguments)
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
-        {
-            Params = new()
+            return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
             {
                 Name = toolName,
                 Arguments = arguments
-            }
-        };
+            });
     }
 
     private static ModelContextProtocol.Client.McpClientOptions CallCreateClientOptions(

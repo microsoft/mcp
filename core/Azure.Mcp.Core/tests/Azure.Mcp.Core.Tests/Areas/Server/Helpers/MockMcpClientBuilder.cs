@@ -1,3 +1,5 @@
+#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
+#pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -144,8 +146,9 @@ public sealed class MockMcpClientBuilder
     {
         var tools = _tools.Values.Select(mockTool => mockTool.Tool).ToList();
 
-        var result = new ListToolsResult { Tools = tools };
-        var json = JsonSerializer.SerializeToNode(result, ServerJsonContext.Default.ListToolsResult);
+            // Serialize tools list using source-generated context, then wrap in a result envelope
+            var toolsNode = JsonSerializer.SerializeToNode(tools, ServerJsonContext.Default.IEnumerableTool);
+            var json = new System.Text.Json.Nodes.JsonObject { ["tools"] = toolsNode };
 
         return Task.FromResult(new JsonRpcResponse
         {

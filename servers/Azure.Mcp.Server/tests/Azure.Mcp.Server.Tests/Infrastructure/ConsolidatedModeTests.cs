@@ -189,6 +189,49 @@ public class ConsolidatedModeTests
         }
     }
 
+    [Fact]
+    public async Task ConsolidatedMode_HttpTransport_Should_Reject_Request_Without_Accept_Header()
+    {
+        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
+        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+
+        Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}.");
+
+        var port = GetAvailablePort();
+        var processStartInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = azmcpPath,
+            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        processStartInfo.Environment["ASPNETCORE_URLS"] = $"http://127.0.0.1:{port}";
+
+        using var process = System.Diagnostics.Process.Start(processStartInfo);
+        Assert.NotNull(process);
+
+        try
+        {
+            using var client = new HttpClient();
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
+            {
+                Content = new StringContent("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}", System.Text.Encoding.UTF8, "application/json")
+            };
+            // Intentionally omit Accept header — server must respond 406
+
+            var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.NotAcceptable, response.StatusCode);
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                process.Kill();
+            }
+        }
+    }
+
     private static int GetAvailablePort()
     {
         using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
