@@ -50,6 +50,8 @@ public class ConsolidatedModeTests
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Contains("\"result\"", content, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("\"tools\"", content, StringComparison.OrdinalIgnoreCase);
+            // Workstream I item 7 / Workstream B: stateless protocol must not set Mcp-Session-Id
+            Assert.False(response.Headers.Contains("Mcp-Session-Id"), "Server must not set Mcp-Session-Id under the 2026-07-28 stateless protocol.");
         }
         finally
         {
