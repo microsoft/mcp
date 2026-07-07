@@ -1,12 +1,65 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Xunit;
 
 namespace Azure.Mcp.Server.Tests.Infrastructure;
 
 public class ConsolidatedModeTests
 {
+    [Fact]
+    public async Task ConsolidatedMode_HttpTransport_Should_List_Tools_On_Root_Endpoint()
+    {
+        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
+        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+
+        Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
+
+        var port = GetAvailablePort();
+        var processStartInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = azmcpPath,
+            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            UseShellExecute = false,
+            RedirectStandardInput = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+        processStartInfo.Environment["ASPNETCORE_URLS"] = $"http://127.0.0.1:{port}";
+
+        using var process = System.Diagnostics.Process.Start(processStartInfo);
+        Assert.NotNull(process);
+
+        try
+        {
+            using var client = new HttpClient();
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
+            {
+                Content = new StringContent("{" + "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}" + "}", System.Text.Encoding.UTF8, "application/json")
+            };
+            request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
+            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
+            request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
+            request.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
+
+            var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
+            var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Contains("\"result\"", content, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("\"tools\"", content, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                process.Kill();
+            }
+        }
+    }
+
     [Fact]
     public async Task ConsolidatedMode_Should_List_Tools_Without_Initialize()
     {
@@ -134,5 +187,54 @@ public class ConsolidatedModeTests
         {
             return null;
         }
+    }
+
+    private static int GetAvailablePort()
+    {
+        using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        listener.Start();
+        return ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+    }
+
+    private static async Task<HttpResponseMessage> SendWithRetryAsync(HttpClient client, HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(10);
+        Exception? lastException = null;
+
+        while (DateTime.UtcNow < deadline)
+        {
+            try
+            {
+                using var clonedRequest = CloneRequest(request);
+                var response = await client.SendAsync(clonedRequest, cancellationToken);
+                if (response.StatusCode != HttpStatusCode.NotFound)
+                {
+                    return response;
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                lastException = ex;
+            }
+
+            await Task.Delay(250, cancellationToken);
+        }
+
+        throw new InvalidOperationException("Timed out waiting for Azure MCP HTTP endpoint to accept requests.", lastException);
+    }
+
+    private static HttpRequestMessage CloneRequest(HttpRequestMessage request)
+    {
+        var clone = new HttpRequestMessage(request.Method, request.RequestUri)
+        {
+            Content = request.Content == null ? null : new StringContent(request.Content.ReadAsStringAsync().GetAwaiter().GetResult(), System.Text.Encoding.UTF8, request.Content.Headers.ContentType?.MediaType)
+        };
+
+        foreach (var header in request.Headers)
+        {
+            clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
+        }
+
+        return clone;
     }
 }
