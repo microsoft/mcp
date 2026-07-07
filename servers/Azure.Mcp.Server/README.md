@@ -224,7 +224,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 | IDE | File Location | Documentation Link |
 |-----|---------------|-------------------|
 | **Amazon Q Developer** | `~/.aws/amazonq/mcp.json` (global)<br>`.amazonq/mcp.json` (workspace) | [AWS Q Developer MCP Guide](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/qdev-mcp.html) |
-| **Claude Code** | Plugin (recommended): see [Claude Code](#claude-code)<br>Manual: `~/.claude.json` or `.mcp.json` (project) | [Claude Code MCP Configuration](https://code.claude.com/docs/en/mcp-quickstart#add-a-local-server) |
+| **Claude Code** | `~/.claude.json` or `.mcp.json` (project) | [Claude Code MCP Configuration](https://code.claude.com/docs/en/mcp-quickstart#add-a-local-server) |
 | **Claude Desktop** | `~/.claude/claude_desktop_config.json` (macOS)<br>`%APPDATA%\Claude\claude_desktop_config.json` (Windows) | [Claude Desktop MCP Setup](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) |
 | **Cursor** | `~/.cursor/mcp.json` or `.cursor/mcp.json` | [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol) |
 | **Eclipse IDE** | GitHub Copilot Chat -> Configure Tools -> MCP Servers  | [Eclipse MCP Documentation](https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/extend-copilot-chat-with-mcp#configuring-mcp-servers-in-eclipse) |
