@@ -8,7 +8,7 @@ namespace Azure.Mcp.Server.Tests.Infrastructure;
 public class ConsolidatedModeTests
 {
     [Fact]
-    public async Task ConsolidatedMode_Should_List_Tools_Successfully()
+    public async Task ConsolidatedMode_Should_List_Tools_Without_Initialize()
     {
         // Arrange
         var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
@@ -36,28 +36,9 @@ public class ConsolidatedModeTests
             // Give the process a moment to start up
             await Task.Delay(500, TestContext.Current.CancellationToken);
 
-            // Send initialize request first (required by MCP protocol)
-            var initRequest = """
-                {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test-client","version":"1.0"}}}
-                """;
-            await process.StandardInput.WriteLineAsync(initRequest);
-            await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
-
-            // Read initialize response
-            var initResponse = await ReadJsonRpcResponseAsync(process.StandardOutput);
-            Assert.NotNull(initResponse);
-            Assert.Contains("\"result\"", initResponse, StringComparison.OrdinalIgnoreCase);
-
-            // Send initialized notification
-            var initializedNotification = """
-                {"jsonrpc":"2.0","method":"notifications/initialized"}
-                """;
-            await process.StandardInput.WriteLineAsync(initializedNotification);
-            await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
-
-            // Send tools/list request
+            // Send tools/list request directly on stateless protocol path.
             var listToolsRequest = """
-                {"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
+                {"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}
                 """;
             await process.StandardInput.WriteLineAsync(listToolsRequest);
             await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
@@ -67,6 +48,69 @@ public class ConsolidatedModeTests
             Assert.NotNull(listToolsResponse);
 
             // Assert - Verify we got tools back
+            Assert.Contains("\"result\"", listToolsResponse, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("\"tools\"", listToolsResponse, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                process.Kill();
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ConsolidatedMode_Should_Interop_With_Legacy_Initialize_Handshake()
+    {
+        // Arrange
+        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
+        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+
+        Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
+
+        var processStartInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = azmcpPath,
+            Arguments = "server start --mode consolidated",
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        using var process = System.Diagnostics.Process.Start(processStartInfo);
+        Assert.NotNull(process);
+
+        try
+        {
+            await Task.Delay(500, TestContext.Current.CancellationToken);
+
+            var initRequest = """
+                {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test-client","version":"1.0"}}}
+                """;
+            await process.StandardInput.WriteLineAsync(initRequest);
+            await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
+
+            var initResponse = await ReadJsonRpcResponseAsync(process.StandardOutput);
+            Assert.NotNull(initResponse);
+            Assert.Contains("\"result\"", initResponse, StringComparison.OrdinalIgnoreCase);
+
+            var initializedNotification = """
+                {"jsonrpc":"2.0","method":"notifications/initialized"}
+                """;
+            await process.StandardInput.WriteLineAsync(initializedNotification);
+            await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
+
+            var listToolsRequest = """
+                {"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
+                """;
+            await process.StandardInput.WriteLineAsync(listToolsRequest);
+            await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
+
+            var listToolsResponse = await ReadJsonRpcResponseAsync(process.StandardOutput);
+            Assert.NotNull(listToolsResponse);
             Assert.Contains("\"result\"", listToolsResponse, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("\"tools\"", listToolsResponse, StringComparison.OrdinalIgnoreCase);
         }

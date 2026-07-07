@@ -13,7 +13,6 @@ namespace Microsoft.Mcp.Core.Areas.Server;
 [JsonSerializable(typeof(RegistryRoot))]
 [JsonSerializable(typeof(Dictionary<string, RegistryServerInfo>))]
 [JsonSerializable(typeof(RegistryServerInfo))]
-[JsonSerializable(typeof(ListToolsResult))]
 [JsonSerializable(typeof(Dictionary<string, object?>))]
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(Tool))]

@@ -8,7 +8,7 @@ namespace Fabric.Mcp.Server.Tests.Infrastructure;
 public class ServerStartupTests
 {
     [Fact]
-    public async Task Server_Should_Initialize_Without_DI_Errors()
+    public async Task Server_Should_List_Tools_Without_Initialize_And_Without_DI_Errors()
     {
         // Arrange
         var exeName = OperatingSystem.IsWindows() ? "fabmcp.exe" : "fabmcp";
@@ -45,11 +45,10 @@ public class ServerStartupTests
         {
             await Task.Delay(500, TestContext.Current.CancellationToken);
 
-            // Send MCP initialize request
-            var initRequest = """
-                {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
+            var listToolsRequest = """
+                {"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}
                 """;
-            await process.StandardInput.WriteLineAsync(initRequest);
+            await process.StandardInput.WriteLineAsync(listToolsRequest);
             await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
 
             // Read response - should get valid JSON, not an exception
@@ -62,6 +61,69 @@ public class ServerStartupTests
             Assert.DoesNotContain("InvalidOperationException", errorOutput);
 
             // Verify we got a valid response
+            Assert.NotNull(response);
+            Assert.Contains("\"result\"", response, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("\"tools\"", response, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                process.Kill();
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Server_Should_Interop_With_Legacy_Initialize_Without_DI_Errors()
+    {
+        // Arrange
+        var exeName = OperatingSystem.IsWindows() ? "fabmcp.exe" : "fabmcp";
+        var fabmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+
+        Assert.True(File.Exists(fabmcpPath), $"Executable not found at {fabmcpPath}");
+
+        var processStartInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = fabmcpPath,
+            Arguments = "server start",
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        using var process = System.Diagnostics.Process.Start(processStartInfo);
+        Assert.NotNull(process);
+
+        var stderrBuilder = new System.Text.StringBuilder();
+        process.ErrorDataReceived += (sender, e) =>
+        {
+            if (e.Data != null)
+            {
+                stderrBuilder.AppendLine(e.Data);
+            }
+        };
+        process.BeginErrorReadLine();
+
+        try
+        {
+            await Task.Delay(500, TestContext.Current.CancellationToken);
+
+            var initRequest = """
+                {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
+                """;
+            await process.StandardInput.WriteLineAsync(initRequest);
+            await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var response = await process.StandardOutput.ReadLineAsync(cts.Token);
+
+            var errorOutput = stderrBuilder.ToString();
+            Assert.DoesNotContain("Unable to resolve service", errorOutput);
+            Assert.DoesNotContain("InvalidOperationException", errorOutput);
+
             Assert.NotNull(response);
             Assert.Contains("\"result\"", response, StringComparison.OrdinalIgnoreCase);
         }

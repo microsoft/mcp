@@ -165,10 +165,11 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
             var allTools = new List<Tool>();
 
             // Create a request for listing tools to populate the tool loader map
-            var listToolsRequest = new RequestContext<ListToolsRequestParams>(server, new() { Method = RequestMethods.ToolsList })
-            {
-                Params = new ListToolsRequestParams()
-            };
+            var listToolsParams = new ListToolsRequestParams();
+            var listToolsRequest = new RequestContext<ListToolsRequestParams>(
+                server,
+                new() { Method = RequestMethods.ToolsList },
+                listToolsParams);
 
             foreach (var loader in _toolLoaders)
             {
