@@ -338,6 +338,12 @@
 # ServiceLabel: %tools-Redis
 # ServiceOwners:                        @carldc @philon-msft @xiangyan99
 
+# PRLabel: %tools-ResilienceManagement
+/tools/Azure.Mcp.Tools.ResilienceManagement/    @g2vinay @gautam714 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ResilienceManagement
+# ServiceOwners:                                @g2vinay @gautam714
+
 # PRLabel: %tools-ResourceHealth
 /tools/Azure.Mcp.Tools.ResourceHealth/     @shdesmu @microsoft/azure-mcp
 
