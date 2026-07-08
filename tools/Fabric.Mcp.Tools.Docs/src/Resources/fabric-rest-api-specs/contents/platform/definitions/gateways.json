@@ -9,7 +9,7 @@
         "GatewayType": {
             "type": "string",
             "description": "The type of the gateway. Additional gateway types may be added over time.",
-            "enum": ["OnPremises", "OnPremisesPersonal", "VirtualNetwork"],
+            "enum": ["OnPremises", "OnPremisesPersonal", "VirtualNetwork", "StreamingVirtualNetwork"],
             "x-ms-enum": {     
                 "name": "GatewayType",
                 "modelAsString": true,
@@ -25,6 +25,10 @@
                     {
                         "value": "VirtualNetwork",
                         "description": "The virtual network gateway."
+                    },
+                    {
+                        "value": "StreamingVirtualNetwork",
+                        "description": "The streaming virtual network gateway."
                     }
                 ]
             }
@@ -201,6 +205,27 @@
                 }
             }
         },
+        "StreamingVirtualNetworkGateway": {
+            "description": "A streaming virtual network gateway.",
+            "required": ["displayName", "virtualNetworkAzureResource"],
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Gateway"
+                }
+            ],
+            "x-ms-discriminator-value": "StreamingVirtualNetwork",
+            "properties": {
+                "displayName": {
+                    "type": "string",
+                    "description": "The display name of the streaming virtual network gateway."
+                },
+                "virtualNetworkAzureResource": {
+                    "description": "The Azure virtual network resource.",
+                    "$ref": "../../common/definitions.json#/definitions/VirtualNetworkAzureResource"
+                }
+            }
+        },
         "ListGatewaysResponse": {
             "required": ["value"],
             "type": "object",
@@ -261,6 +286,27 @@
                 "numberOfMemberGateways": {
                     "description": "The number of member gateways. A number between 1 and 9.",
                     "type": "integer"
+                }
+            }
+        },
+        "CreateStreamingVirtualNetworkGatewayRequest": {
+            "description": "Creates a streaming virtual network gateway.",
+            "required": ["displayName", "virtualNetworkAzureResource"],
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/CreateGatewayRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "StreamingVirtualNetwork",
+            "properties": {
+                "displayName": {
+                    "type": "string",
+                    "description": "The display name of the streaming virtual network gateway. Maximum length is 200 characters."
+                },
+                "virtualNetworkAzureResource": {
+                    "description": "The Azure virtual network resource.",
+                    "$ref": "../../common/definitions.json#/definitions/VirtualNetworkAzureResource"
                 }
             }
         },
@@ -326,6 +372,16 @@
                     "type": "integer"
                 }
             }
+        },
+        "UpdateStreamingVirtualNetworkGatewayRequest": {
+            "description": "Updates a streaming virtual network gateway.",
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UpdateGatewayRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "StreamingVirtualNetwork"
         },
         "ListGatewayMembersResponse": {
             "required": ["value"],
@@ -443,6 +499,66 @@
                         "description": "Enables connection creator access for the gateway."
                     }
                 ]
+            }
+        },
+        "GatewayStatus": {
+            "type": "string",
+            "description": "The status of the gateway. Additional statuses may be added over time.",
+            "enum": ["Online", "Offline"],
+            "x-ms-enum": {
+                "name": "GatewayStatus",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Online",
+                        "description": "The gateway is online and available for use."
+                    },
+                    {
+                        "value": "Offline",
+                        "description": "The gateway is offline. Please check errorDetails property for more information."
+                    }
+                ]
+            }
+        },        
+        "GatewayUpgradeState": {
+            "type": "string",
+            "description": "The gateway version upgrade state. Additional upgrade states may be added over time.",
+            "enum": ["UpToDate", "NewVersionAvailable", "UpgradeRequired", "Unknown"],
+            "x-ms-enum": {
+                "name": "GatewayUpgradeState",
+                "modelAsString": true,
+                "values": [
+                    { "value": "UpToDate", "description": "The gateway is up to date." },
+                    { "value": "NewVersionAvailable", "description": "A new gateway version is available." },
+                    { "value": "UpgradeRequired", "description": "The gateway requires an upgrade." },
+                    { "value": "Unknown", "description": "The gateway upgrade state is unknown." }
+                ]
+            }
+        },
+        "GatewayStatusResponse": {
+            "required": ["status"],
+            "type": "object",
+            "description": "The gateway status response.",
+            "properties": {
+                "status": {
+                    "description": "The status of the gateway.",
+                    "$ref": "#/definitions/GatewayStatus"
+                },
+                "gatewayVersion": {
+                    "type": "string",
+                    "description": "The version of the gateway."
+                },
+                "gatewayUpgradeState": {
+                    "description": "The upgrade state of the gateway.",
+                    "$ref": "#/definitions/GatewayUpgradeState"
+                },
+                "errorDetails": {
+                    "description": "The error details when the gateway is offline or when one or many members of gateway clusters encounters an error.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "../../common/definitions.json#/definitions/ErrorResponseDetails"
+                    }
+                }
             }
         }
     }

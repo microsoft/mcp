@@ -35,6 +35,96 @@
             }
           ]
       },
+      "CreatePaginatedReportRequest": {
+          "description": "The request payload to create a paginated report.",
+          "required": [
+              "displayName",
+              "definition"
+          ],
+          "properties": {
+              "displayName": {
+                  "description": "The paginated report display name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The paginated report description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "definition": {
+                  "description": "The paginated report public definition.",
+                  "$ref": "#/definitions/PaginatedReportDefinition",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdatePaginatedReportDefinitionRequest": {
+          "description": "Update paginated report public definition request payload.",
+          "required": [
+              "definition"
+          ],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/PaginatedReportDefinition"
+              }
+          }
+      },
+      "PaginatedReportDefinitionResponse": {
+          "description": "Paginated report public definition response.",
+          "required": [
+              "definition"
+          ],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/PaginatedReportDefinition",
+                  "readOnly": true
+              }
+          }
+      },
+      "PaginatedReportDefinition": {
+          "description": "Paginated report public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/paginatedreport-definition) for more details on the structure of the Paginated Report definition.",
+          "type": "object",
+          "required": [
+              "parts"
+          ],
+          "properties": {
+              "format": {
+                  "description": "The format of the paginated report definition. Supported format: `PaginatedReportDefinition`. Additional format types may be added over time.",
+                  "$ref": "#/definitions/PaginatedReportDefinitionFormat",
+                  "readOnly": false
+              },
+              "parts": {
+                  "description": "A list of definition parts.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/PaginatedReportDefinitionPart"
+                  },
+                  "readOnly": false
+              }
+          }
+      },
+      "PaginatedReportDefinitionPart": {
+          "description": "Paginated report definition part object.",
+          "type": "object",
+          "properties": {
+              "path": {
+                  "description": "The paginated report part path (e.g., `ContosoReport.rdl`, `.platform`).",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payload": {
+                  "description": "The paginated report part payload.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payloadType": {
+                  "description": "The payload type.",
+                  "$ref": "../common/definitions.json#/definitions/PayloadType",
+                  "readOnly": false
+              }
+          }
+      },
       "UpdatePaginatedReportRequest": {
           "description": "Update paginated report request.",
           "properties": {
@@ -48,6 +138,21 @@
                   "type": "string",
                   "readOnly": false
               }
+          }
+      },
+      "PaginatedReportDefinitionFormat": {
+          "type": "string",
+          "description": "The format of the paginated report definition. Additional format types may be added over time.",
+          "enum": ["PaginatedReportDefinition"],
+          "x-ms-enum": {
+              "name": "PaginatedReportDefinitionFormat",
+              "modelAsString": true,
+              "values": [
+                  {
+                      "value": "PaginatedReportDefinition",
+                      "description": "The default format for paginated report definitions. The definition contains an RDL file encoded as Base64."
+                  }
+              ]
           }
       }
   }
