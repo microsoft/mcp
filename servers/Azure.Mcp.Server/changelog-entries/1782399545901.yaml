@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Fixed Foundry Extension tools handling of nullable numeric options. Previously they were being ignored due to a type mismatch between the System.CommandLine Option definition type and the retrieval type."

@@ -68,7 +68,7 @@ public sealed class AzureTerraformSetup : IAreaSetup
 
         var avmGroup = new CommandGroup(
             "avm",
-            "Azure Verified Modules (AVM) documentation tools - Lists modules, versions, and retrieves module documentation",
+            "Azure Verified Modules (AVM) documentation tools - Lists resource and pattern modules, versions, and retrieves module documentation",
             "AVM"
         );
 

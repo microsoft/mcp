@@ -17,9 +17,10 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     Title = "List AVM Module Versions",
     Description = """
         Retrieves all available versions of a specified Azure Verified Module (AVM).
+        Works for both resource modules (avm-res-*) and pattern modules (avm-ptn-*).
         Returns version tags with creation dates, sorted from newest to oldest.
         The first version in the list is the latest. Use --module-name to specify
-        the module (e.g., avm-res-storage-storageaccount).
+        the module (e.g., avm-res-storage-storageaccount or avm-ptn-aiml-ai-foundry).
         """,
     Destructive = false,
     Idempotent = true,

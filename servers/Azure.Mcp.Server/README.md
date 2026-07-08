@@ -1185,6 +1185,18 @@ Example prompts that generate Azure CLI commands:
 * "Turn off DDoS protection in my Platform Landing Zone"
 * "Turn off Bastion host in my Platform Landing Zone"
 
+### 🛡️ Azure Resilience Management
+
+* "List all resilience goal templates in service group 'my-service-group'"
+* "Get the details of goal template 'my-template' in service group 'my-service-group'"
+* "List all resilience goal assignments in service group 'my-service-group'"
+* "List the resources of goal assignment 'my-assignment' in service group 'my-service-group'"
+* "List my resilience usage plans in resource group 'my-rg'"
+* "List the enrollments of usage plan 'my-plan' in resource group 'my-rg'"
+* "List all resilience recovery plans in service group 'my-service-group'"
+* "Get the recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "List the recovery jobs of recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+
 ### Azure Resource Manager
 
 * Use Azure resource graph to query Azure resources
@@ -1199,6 +1211,7 @@ Example prompts that generate Azure CLI commands:
 * "List all available Azure Verified Modules"
 * "Show all versions of avm-res-network-virtualnetwork"
 * "Get the documentation for avm-res-storage-storageaccount version 0.1.0"
+* "Get the documentation for the avm-ptn-aiml-ai-foundry pattern module"
 * "Export all resources in resource group my-rg to Terraform"
 * "Export all storage accounts in my subscription using a resource graph query"
 * "Validate Terraform files in ./my-terraform-folder against Azure security policies"
@@ -1213,7 +1226,7 @@ Example prompts that generate Azure CLI commands:
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **43+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **44+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 📊 **Azure Advisor** - Advisor recommendations
@@ -1251,6 +1264,7 @@ The Azure MCP Server provides tools for interacting with **43+ Azure service are
 - 📊 **Azure Quota** - Resource quota and usage management
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
+- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery jobs, and recovery job resources
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations

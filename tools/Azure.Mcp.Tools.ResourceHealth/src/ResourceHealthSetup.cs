@@ -19,9 +19,7 @@ public class ResourceHealthSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IResourceHealthService, ResourceHealthService>();
-
         services.AddSingleton<AvailabilityStatusGetCommand>();
-
         services.AddSingleton<ServiceHealthEventsListCommand>();
     }
 
