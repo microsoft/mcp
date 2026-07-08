@@ -1,0 +1,9 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "paginatedReportId": "cfafbeb1-8037-4d0c-896e-28c4f2e65573"
+    },
+    "responses": {
+        "200": {}
+    }
+}

@@ -929,7 +929,7 @@
     "/workspaces/{workspaceId}/dataflows/{dataflowId}/executeQuery": {
       "post": {
         "summary": "Executes a query against a dataflow and returns the result.",
-        "description": "Executes a specified query against a dataflow and streams the results in Apache Arrow format. Supports using custom mashup documents for advanced scenarios.\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have *execute* permissions for the dataflow.\n\n## Required Delegated Scopes\n\nDataflow.Execute.All or Item.Execute.All.\n\n## Limitations\n\nQueries can run for a maximum of 90 seconds.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "Executes a specified query against a dataflow and streams the result back to the caller. Supports using custom mashup documents for advanced scenarios.\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\nThe caller must have *execute* permissions for the dataflow.\n\n## Required Delegated Scopes\n\nDataflow.Execute.All or Item.Execute.All.\n\n## Limitations\n\nQueries can run for a maximum of 90 seconds.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Response formats\n\nUse the `Accept` header to negotiate the response media type. Today, the [Apache Arrow](https://arrow.apache.org/) streaming format is the only available response format; additional formats may be offered in the future.\n\n### Apache Arrow streaming format\n\n**Media type:** `application/vnd.apache.arrow.stream`\n\nWhen sending this media type, the `pq-arrow-version` media-type parameter is **required** and selects the Arrow encoding version:\n\n- `pq-arrow-version=1` — Original Apache Arrow encoding. Compatible with all dataflows, including those that connect through an on-premises data gateway.\n- `pq-arrow-version=2` — Newer Apache Arrow encoding with improved streaming performance. Not supported for dataflows that connect through an on-premises data gateway.\n\nExample: `Accept: application/vnd.apache.arrow.stream;pq-arrow-version=2`\n\nIf the `Accept` header is omitted entirely (or `*/*` is sent), the response defaults to `application/vnd.apache.arrow.stream;pq-arrow-version=1`.\n\n## Interface",
         "tags": [
           "QueryExecution"
         ],
@@ -959,6 +959,13 @@
             "required": true
           },
           {
+            "in": "header",
+            "name": "Accept",
+            "description": "The desired media type of the response. See the operation description for the list of supported response formats. Today, only `application/vnd.apache.arrow.stream` is supported; when sending this media type, the `pq-arrow-version` parameter is required and must be either `1` or `2` (e.g. `application/vnd.apache.arrow.stream;pq-arrow-version=1`). If the header is omitted entirely, the default `application/vnd.apache.arrow.stream;pq-arrow-version=1` is used.",
+            "required": false,
+            "type": "string"
+          },
+          {
             "in": "body",
             "name": "executeQueryRequest",
             "description": "Execute query request payload.",
@@ -970,7 +977,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Query result was succesfully written. Results are streamed in Apache Arrow format. Refer to the [Arrow documentation](https://arrow.apache.org/docs/python/ipc.html#reading-from-stream-and-file-format-for-pandas) on how to read the stream in Python and other languages. \n\nErrors encountered during query execution or during streaming will be in an additional column at the end named 'PQ Arrow Metadata'. \n\nMedia Type: \"application/vnd.apache.arrow.stream\"",
+            "description": "Query result was successfully streamed. The response body is encoded in the media type negotiated via the request's `Accept` header (see the operation description for the list of supported response formats).\n\nWhen the response is in the Apache Arrow streaming format (`application/vnd.apache.arrow.stream`, the only format available today), results are streamed as Apache Arrow IPC; the Arrow encoding version returned matches the `pq-arrow-version` parameter sent on the request's `Accept` header (default `1`). Refer to the [Arrow documentation](https://arrow.apache.org/docs/python/ipc.html#reading-from-stream-and-file-format-for-pandas) on how to read the stream in Python and other languages. Errors encountered during query execution or streaming are reported in an additional column at the end named 'PQ Arrow Metadata'.",
             "schema": {
               "type": "file"
             }
