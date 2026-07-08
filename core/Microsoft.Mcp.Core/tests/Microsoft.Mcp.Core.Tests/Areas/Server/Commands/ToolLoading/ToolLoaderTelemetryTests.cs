@@ -203,13 +203,14 @@ public class ToolLoaderTelemetryTests : IDisposable
 
     private static RequestContext<CallToolRequestParams> CreateToolCallRequest(McpServer mcpServer, string toolName)
     {
-        return new RequestContext<CallToolRequestParams>(mcpServer, CreateJsonRpcRequest("tools/call"))
+        var parameters = new CallToolRequestParams()
         {
-            Params = new CallToolRequestParams()
-            {
-                Name = toolName,
-                Arguments = new Dictionary<string, JsonElement>()
-            }
+            Name = toolName,
+            Arguments = new Dictionary<string, JsonElement>()
+        };
+        return new RequestContext<CallToolRequestParams>(mcpServer, CreateJsonRpcRequest("tools/call"), parameters)
+        {
+            Params = parameters
         };
     }
 
