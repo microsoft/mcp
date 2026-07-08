@@ -588,10 +588,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| insights_get | Give me insights about my subscription <subscription_id> |
-| insights_get | Analyze the resources in subscription <subscription_id> and tell me what patterns you see |
-| insights_get | What can you tell me about the infrastructure in <subscription_name>? |
-| insights_get | Give me insights about my subscription tailored to building an internal web app for the finance team with a relational database backend |
+| insights_get | Generate insights from my current subscription |
+| insights_get | Summarize what's deployed across my Azure environment and highlight notable patterns |
+| insights_get | Analyze my tenant and give me insights about the overall infrastructure |
+| insights_get | What can you tell me about my existing Azure environment? |
+| insights_get | Analyze subscription <subscription_id> for architectural patterns |
+| insights_get | Analyze my Azure infrastructure and surface patterns to help me plan my next project |
+| insights_get | Generate insights about my Azure environment to help me plan a new data analytics platform |
+| insights_get | What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS? |
 
 ## Azure Key Vault
 

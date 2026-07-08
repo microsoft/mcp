@@ -20,10 +20,13 @@ namespace Azure.Mcp.Tools.Insights.Commands;
     Name = "get",
     Title = "Get Azure Infrastructure Insights",
     Description = """
-        Derives insights from an existing Azure environment by analyzing patterns in
-        Azure Resource Graph data. The caller can specify a tenant or subscription scope and
-        optionally provide a free-form query describing their intent, which tailors the
-        insights to that scenario.
+        Analyze an existing Azure environment to derive insights about its infrastructure.
+        Inspects the resources deployed across a single subscription or an entire tenant,
+        aggregates them from Azure Resource Graph, and identifies patterns, trends, and the
+        overall composition of what is deployed. Use it to understand your Azure environment
+        and surface patterns that inform infrastructure planning.
+        Optionally provide a free-form query describing your intent (for example, the kind
+        of application you are building) to tailor the insights toward that scenario.
 
         This command can only be used if the client supports MCP sampling.
         """,
