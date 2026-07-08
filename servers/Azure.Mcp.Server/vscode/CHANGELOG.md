@@ -1,5 +1,12 @@
 # Release History
 
+
+## 3.0.24 (2026-07-08) (pre-release)
+
+### Fixed
+
+- Fixed an issue where the on-behalf-of token tenant comparison was case-sensitive, causing valid requests to be rejected when the configured tenant ID casing differed from the JWT 'tid' claim. [[#2907](https://github.com/microsoft/mcp/pull/2907)]
+
 ## 3.0.23 (2026-07-02) (pre-release)
 
 ### Added
