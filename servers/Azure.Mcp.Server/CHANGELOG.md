@@ -2,15 +2,11 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.24 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
+## 3.0.0-beta.24 (2026-07-08)
 
 ### Bugs Fixed
 
-### Other Changes
+- Fixed an issue where the on-behalf-of token tenant comparison was case-sensitive, causing valid requests to be rejected when the configured tenant ID casing differed from the JWT 'tid' claim. [[#2907](https://github.com/microsoft/mcp/pull/2907)]
 
 ## 3.0.0-beta.23 (2026-07-02)
 
