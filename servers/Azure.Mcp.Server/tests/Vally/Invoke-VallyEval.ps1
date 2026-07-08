@@ -3,7 +3,7 @@
 
 <#
 .SYNOPSIS
-Discovers and runs the vally evaluations for the Azure MCP tools.
+Discovers and runs the vally experiments for the Azure MCP tools.
 
 .DESCRIPTION
 This is a wrapper around the vally CLI (https://microsoft.github.io/vally) that:
@@ -13,53 +13,50 @@ This is a wrapper around the vally CLI (https://microsoft.github.io/vally) that:
   2. Prepends the build output directory to PATH so the `command: azmcp` entry in
      each eval spec resolves to your local build (vally does not interpolate
      environment variables inside eval specs).
-  3. Discovers evaluations laid out by area and tool (see below). For each area it
+  3. Discovers experiments laid out by area and tool (see below). For each area it
      optionally runs a pre-evaluation provisioning script to create the Azure
-     resources the evals expect, and always runs a post-evaluation teardown script
-     afterwards (even when an eval or provisioning fails), so resources are not
-     leaked.
-  4. For each discovered tool, runs two evaluations for comparison:
-       - treatment (<tool>.eval.yaml)          - WITH the Azure MCP server, and
-       - baseline  (<tool>.eval.baseline.yaml) - WITHOUT the Azure MCP server.
+     resources the experiments expect, and always runs a post-evaluation teardown
+     script afterwards (even when a run or provisioning fails), so resources are
+     not leaked.
+  4. For each discovered tool, runs its experiment (<tool>.experiment.yaml) via
+     `vally experiment run`. The experiment executes the shared eval spec as two
+     variants for comparison:
+       - treatment - WITH the Azure MCP server, and
+       - baseline  - WITHOUT the Azure MCP server.
      The delta between them isolates the Azure MCP server's contribution.
 
 Layout / naming convention (discovered automatically):
 
     tests/Vally/
       <area>/                          # e.g. eventhubs
-        <tool>.eval.yaml               # treatment spec (required)
-        <tool>.eval.baseline.yaml      # control spec   (optional)
+        <tool>.experiment.yaml         # experiment (required)
+        <tool>.eval.yaml               # shared eval spec the experiment runs
         New-*Resources.ps1             # per-area provisioning (optional)
         Remove-*Resources.ps1          # per-area teardown     (optional)
 
-The tool name is the eval file name without the '.eval.yaml' suffix (e.g.
-'eventhub-get'). Use -Area / -Tool to filter what runs, or -EvalSpec to run a
-single spec.
+The tool name is the experiment file name without the '.experiment.yaml' suffix
+(e.g. 'eventhub-get'). Use -Area / -Tool to filter what runs, or -ExperimentSpec
+to run a single experiment.
 
 Vally must be installed and on your PATH. See
 https://microsoft.github.io/vally/get-started/install/.
 
-The treatment grades tool *selection* and task *outcome*; the baseline reuses the
-shared *outcome* graders WITHOUT the Azure MCP server, so it is EXPECTED TO FAIL.
-Provide a real subscription (via `az login`) so the treatment can return real data
-and the comparison is meaningful. The script's exit code is non-zero if any
-treatment eval fails; baseline failures are expected and do not affect it.
+Both variants are graded on the same task *outcome*, so their verdicts are
+directly comparable; the baseline (no Azure MCP server) is EXPECTED TO FAIL when
+the tool is required. Provide a real subscription (via `az login`) so the
+treatment can return real data and the comparison is meaningful. The script's exit
+code is non-zero if any experiment fails to run or a treatment stimulus fails;
+baseline failures are expected and do not affect it.
 
-.PARAMETER EvalSpec
-Path to the treatment eval spec (WITH the Azure MCP server). Defaults to
-./eventhubs/eval.yaml next to this script.
-
-.PARAMETER BaselineSpec
-Path to the baseline/control eval spec (WITHOUT the Azure MCP server). Defaults to
-./eventhubs/eval.baseline.yaml next to this script.
+.PARAMETER ExperimentSpec
+Optional path to a single experiment spec (<tool>.experiment.yaml) to run instead
+of discovering them. Cannot be combined with -Area or -Tool.
 
 .PARAMETER OutputDir
-Parent directory where vally writes its run artifacts. Each run goes to a
-'treatment' or 'baseline' subdirectory. Defaults to ./.vally-results next to this
-script.
-
-.PARAMETER Model
-Overrides the model configured in the eval specs (defaults.model).
+Parent directory where vally writes its run artifacts. Each experiment's runs go
+to an '<area>/<tool>' subdirectory, under which `vally experiment run` creates a
+timestamped folder with one subfolder per variant (baseline, treatment). Defaults
+to ./.vally-results next to this script.
 
 .PARAMETER PreEvalScript
 Optional path to a provisioning script run BEFORE the evaluations (e.g.
@@ -80,30 +77,18 @@ convention-named `Remove-*Resources.ps1` script next to the eval spec and uses
 that.
 
 .PARAMETER Area
-Optional filter: only evaluate specs under the named area subdirectory (e.g.
+Optional filter: only run experiments under the named area subdirectory (e.g.
 'eventhubs'). Matches the immediate subfolder name under this script's directory.
 Repeatable. When omitted, all areas are discovered.
 
 .PARAMETER Tool
-Optional filter: only evaluate specs whose tool name matches (e.g. 'eventhub-get').
-The tool name is the eval file name without the '.eval.yaml' suffix. Supports
-wildcards (e.g. 'eventhub-*'). Repeatable. When omitted, all tools are evaluated.
-
-.PARAMETER EvalSpec
-Optional path to a single treatment eval spec to run instead of discovering them.
-Its baseline (if any) is derived by replacing '.eval.yaml' with
-'.eval.baseline.yaml'. Cannot be combined with -Area or -Tool.
-
-.PARAMETER OutputDir
-Parent directory where vally writes its run artifacts. Each spec's runs go to
-'<area>/<tool>/treatment' and '<area>/<tool>/baseline' subdirectories. Defaults to
-./.vally-results next to this script.
-
-.PARAMETER Model
-Overrides the model configured in the eval specs (defaults.model).
+Optional filter: only run experiments whose tool name matches (e.g.
+'eventhub-get'). The tool name is the experiment file name without the
+'.experiment.yaml' suffix. Supports wildcards (e.g. 'eventhub-*'). Repeatable.
+When omitted, all tools are run.
 
 .PARAMETER PreEvalScript
-Optional path to a provisioning script run BEFORE the evaluations of an area (e.g.
+Optional path to a provisioning script run BEFORE the experiments of an area (e.g.
 ./eventhubs/New-EventHubsResources.ps1). Use it to create the Azure resources the
 eval prompts reference. -ResourceGroup and -Subscription are forwarded to it.
 
@@ -111,9 +96,9 @@ If not specified (and -SkipProvisioning is not set), the runner auto-discovers a
 convention-named `New-*Resources.ps1` script in each area directory and uses that.
 
 .PARAMETER PostEvalScript
-Optional path to a teardown script run AFTER an area's evaluations (e.g.
+Optional path to a teardown script run AFTER an area's experiments (e.g.
 ./eventhubs/Remove-EventHubsResources.ps1). It runs in a finally block, so it
-executes even if the eval or the pre-eval provisioning fails. -ResourceGroup and
+executes even if the run or the pre-eval provisioning fails. -ResourceGroup and
 -Subscription are forwarded to it.
 
 If not specified (and -SkipProvisioning is not set), the runner auto-discovers a
@@ -134,14 +119,11 @@ scripts.
 .PARAMETER SkipBuild
 Skip building the server. Use this when azmcp is already built and on PATH.
 
-.PARAMETER SkipBaseline
-Only run the treatment evals; skip the baseline/control runs.
-
 .PARAMETER Verbose
 Passes --verbose to vally for full agent output.
 
 .EXAMPLE
-# Discover and run every <tool>.eval.yaml under every area subfolder,
+# Discover and run every <tool>.experiment.yaml under every area subfolder,
 # provisioning + tearing down each area as needed.
 ./Invoke-VallyEval.ps1 -Subscription <subscription-id>
 
@@ -158,23 +140,21 @@ Passes --verbose to vally for full agent output.
 ./Invoke-VallyEval.ps1 -SkipProvisioning
 
 .EXAMPLE
-# Run one explicit spec
-./Invoke-VallyEval.ps1 -EvalSpec ./eventhubs/eventhub-get.eval.yaml -SkipProvisioning
+# Run one explicit experiment
+./Invoke-VallyEval.ps1 -ExperimentSpec ./eventhubs/eventhub-get.experiment.yaml -SkipProvisioning
 #>
 
 [CmdletBinding()]
 param(
     [string[]] $Area,
     [string[]] $Tool,
-    [string] $EvalSpec,
+    [string] $ExperimentSpec,
     [string] $OutputDir = (Join-Path $PSScriptRoot '.vally-results'),
-    [string] $Model,
     [string] $PreEvalScript,
     [string] $PostEvalScript,
     [string] $ResourceGroup,
     [string] $Subscription,
     [switch] $SkipBuild,
-    [switch] $SkipBaseline,
     [switch] $SkipProvisioning
 )
 
@@ -182,7 +162,7 @@ $ErrorActionPreference = 'Stop'
 
 # vally emits UTF-8 (box-drawing rules, check marks, etc.). If the console is on a
 # legacy OEM code page (e.g. 437), those bytes are decoded wrong and show up as
-# mojibake like '?öÇ'/'?£ö'. Force UTF-8 (BOM-less, so redirected/CI output stays
+# mojibake like '?ï¿½ï¿½'/'?ï¿½ï¿½'. Force UTF-8 (BOM-less, so redirected/CI output stays
 # clean) so vally's output is captured and displayed correctly.
 $OutputEncoding = [System.Text.UTF8Encoding]::new()
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
@@ -214,8 +194,8 @@ if (-not $SkipBuild) {
 # 3. Locate the freshly built azmcp executable and prepend it to PATH.
 $serverBinDir = Join-Path (Split-Path $ServerProject -Parent) 'bin'
 $azmcp = Get-ChildItem -Path $serverBinDir -Recurse -Filter $exeName -ErrorAction SilentlyContinue |
-    Sort-Object LastWriteTime -Descending |
-    Select-Object -First 1
+Sort-Object LastWriteTime -Descending |
+Select-Object -First 1
 
 if (-not $azmcp) {
     throw "Could not find '$exeName' under '$serverBinDir'. Build the server first (omit -SkipBuild)."
@@ -225,21 +205,40 @@ $azmcpDir = Split-Path $azmcp.FullName -Parent
 Write-Info "Using azmcp: $($azmcp.FullName)"
 $env:PATH = "$azmcpDir$([IO.Path]::PathSeparator)$env:PATH"
 
-# 4. Run the evaluation(s).
-function Invoke-VallyEvalSpec {
+# 4. Run the experiment(s).
+#
+# `vally experiment run` executes the shared eval spec once per variant
+# (baseline + treatment) and writes each variant's results under a single
+# timestamped run directory it creates beneath --output-dir:
+#
+#   <RunOutputDir>/<timestamp>/
+#     report.md                      # combined markdown report
+#     <variant>/results.jsonl        # trial-result records (one per stimulus)
+#     <variant>/run-summary.jsonl    # resolved config per variant
+#
+# Returns a result object with the vally exit code and the timestamped run
+# directory (so the caller can read each variant's results.jsonl).
+function Invoke-VallyExperiment {
     param(
         [Parameter(Mandatory)] [string] $Label,
-        [Parameter(Mandatory)] [string] $Spec,
+        [Parameter(Mandatory)] [string] $ExperimentFile,
         [Parameter(Mandatory)] [string] $RunOutputDir
     )
 
     $vallyArgs = @(
-        'eval'
-        '--eval-spec', $Spec
+        'experiment', 'run', $ExperimentFile
         '--output-dir', $RunOutputDir
     )
-    if ($Model) { $vallyArgs += @('--model', $Model) }
     if ($VerbosePreference -ne 'SilentlyContinue') { $vallyArgs += '--verbose' }
+
+    # vally creates a fresh timestamped subdirectory per run. Snapshot the
+    # existing ones so we can identify the new one afterwards (more robust than
+    # parsing stdout, and independent of clock formatting).
+    $before = @{}
+    if (Test-Path -LiteralPath $RunOutputDir) {
+        Get-ChildItem -Path $RunOutputDir -Directory -ErrorAction SilentlyContinue |
+        ForEach-Object { $before[$_.FullName] = $true }
+    }
 
     Write-Info "[$Label] Running: vally $($vallyArgs -join ' ')"
     # Pipe vally's output to the host so it is displayed but NOT emitted on this
@@ -247,7 +246,27 @@ function Invoke-VallyEvalSpec {
     # the exit code into the caller's variable, turning it into an array; the later
     # ($exit -eq 0) checks then misread a passing run (exit 0) as FAIL.
     & vally @vallyArgs | Out-Host
-    return $LASTEXITCODE
+    $exit = $LASTEXITCODE
+
+    # Identify the timestamped run directory vally just created.
+    $runDir = $null
+    if (Test-Path -LiteralPath $RunOutputDir) {
+        $runDir = Get-ChildItem -Path $RunOutputDir -Directory -ErrorAction SilentlyContinue |
+        Where-Object { -not $before.ContainsKey($_.FullName) } |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+        if (-not $runDir) {
+            # Fallback: newest directory (e.g. a rerun that reused an mtime).
+            $runDir = Get-ChildItem -Path $RunOutputDir -Directory -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+        }
+    }
+
+    return [pscustomobject]@{
+        Exit   = $exit
+        RunDir = $runDir ? $runDir.FullName : $null
+    }
 }
 
 # Milliseconds -> "27.4s" for compact display.
@@ -286,8 +305,8 @@ function Get-VallyStimulusResults {
     # vally writes each run to a timestamped subdirectory; pick the newest one that
     # actually contains a results.jsonl.
     $resultsFile = Get-ChildItem -Path $RunOutputDir -Recurse -Filter 'results.jsonl' -File -ErrorAction SilentlyContinue |
-        Sort-Object LastWriteTime -Descending |
-        Select-Object -First 1
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
     if (-not $resultsFile) { return $null }
 
     $byStimulus = [ordered]@{}
@@ -297,12 +316,46 @@ function Get-VallyStimulusResults {
         if ($record.type -ne 'trial-result') { continue }
 
         $metrics = $record.trajectory.metrics
+        $failedGraders = @()
+        $failureEvidence = $null
+        if ($record.gradeResult -and $record.gradeResult.details) {
+            $failedGraderRecords = @($record.gradeResult.details | Where-Object { $_ -and -not $_.passed })
+            if ($failedGraderRecords.Count -gt 0) {
+                $failedGraders = @($failedGraderRecords | ForEach-Object { [string] $_.name })
+                $failureEvidence = [string] $failedGraderRecords[0].evidence
+            }
+        }
+
+        # Fallback when grader-level details are unavailable.
+        if (-not $failureEvidence -and $record.gradeResult) {
+            $failureEvidence = [string] $record.gradeResult.evidence
+        }
+
+        if ($failureEvidence -and $failureEvidence.Length -gt 220) {
+            $failureEvidence = $failureEvidence.Substring(0, 220) + '...'
+        }
+
+        $tokenCount = 0
+        if ($metrics -and $metrics.tokenUsage -and $metrics.tokenUsage.totalTokens) {
+            $tokenCount = [int] $metrics.tokenUsage.totalTokens
+        }
+        $turnCount = 0
+        if ($metrics -and $metrics.turnCount) {
+            $turnCount = [int] $metrics.turnCount
+        }
+        $wallTimeMs = 0
+        if ($metrics -and $metrics.wallTimeMs) {
+            $wallTimeMs = [int] $metrics.wallTimeMs
+        }
+
         $byStimulus[[string] $record.stimulus] = [pscustomobject]@{
-            Stimulus    = [string] $record.stimulus
-            Passed      = [bool] $record.gradeResult.passed
-            TotalTokens = [int] $metrics.tokenUsage.totalTokens
-            TurnCount   = [int] $metrics.turnCount
-            WallTimeMs  = [int] $metrics.wallTimeMs
+            Stimulus        = [string] $record.stimulus
+            Passed          = [bool] $record.gradeResult.passed
+            TotalTokens     = $tokenCount
+            TurnCount       = $turnCount
+            WallTimeMs      = $wallTimeMs
+            FailedGraders   = $failedGraders
+            FailureEvidence = $failureEvidence
         }
     }
     return $byStimulus
@@ -389,10 +442,9 @@ function Invoke-ProvisioningScript {
     }
 }
 
-# The treatment spec file name suffix. The tool name is the file name with this
-# suffix removed; the baseline is the same name with the baseline suffix.
-$TreatmentSuffix = '.eval.yaml'
-$BaselineSuffix = '.eval.baseline.yaml'
+# The experiment file name suffix. The tool name is the file name with this
+# suffix removed (e.g. 'eventhub-get.experiment.yaml' -> 'eventhub-get').
+$ExperimentSuffix = '.experiment.yaml'
 
 # Resolves the pre/post provisioning scripts for an area directory: an explicit
 # override (if given) wins, otherwise auto-discover by convention.
@@ -410,7 +462,7 @@ function Resolve-AreaProvisioning {
     }
     else {
         $auto = Get-ChildItem -Path $AreaDir -Filter 'New-*Resources.ps1' -File -ErrorAction SilentlyContinue |
-            Sort-Object Name | Select-Object -First 1
+        Sort-Object Name | Select-Object -First 1
         if ($auto) { $pre = $auto.FullName }
     }
 
@@ -419,19 +471,20 @@ function Resolve-AreaProvisioning {
     }
     else {
         $auto = Get-ChildItem -Path $AreaDir -Filter 'Remove-*Resources.ps1' -File -ErrorAction SilentlyContinue |
-            Sort-Object Name | Select-Object -First 1
+        Sort-Object Name | Select-Object -First 1
         if ($auto) { $post = $auto.FullName }
     }
 
     return [pscustomobject]@{ Pre = $pre; Post = $post }
 }
 
-# --- Discover the evaluations to run -----------------------------------------
-# An "eval" is a treatment spec (<tool>.eval.yaml) plus an optional baseline
-# (<tool>.eval.baseline.yaml). Evals are grouped by their area (the immediate
-# subdirectory of this script) so provisioning runs once per area.
-if ($EvalSpec -and ($Area -or $Tool)) {
-    throw '-EvalSpec cannot be combined with -Area or -Tool.'
+# --- Discover the experiments to run -----------------------------------------
+# An experiment (<tool>.experiment.yaml) runs a shared eval spec as a baseline
+# variant (no Azure MCP server) and a treatment variant (with it). Experiments
+# are grouped by their area (the immediate subdirectory of this script) so
+# provisioning runs once per area.
+if ($ExperimentSpec -and ($Area -or $Tool)) {
+    throw '-ExperimentSpec cannot be combined with -Area or -Tool.'
 }
 if ($SkipProvisioning -and ($PreEvalScript -or $PostEvalScript)) {
     Write-Warn '-SkipProvisioning was set; ignoring -PreEvalScript/-PostEvalScript.'
@@ -439,51 +492,48 @@ if ($SkipProvisioning -and ($PreEvalScript -or $PostEvalScript)) {
     $PostEvalScript = $null
 }
 
-$treatmentSpecs = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
+$experimentFiles = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
 
-if ($EvalSpec) {
-    $resolvedSpec = Resolve-Path -Path $EvalSpec -ErrorAction SilentlyContinue
-    if (-not $resolvedSpec) { throw "Eval spec not found: $EvalSpec" }
-    $treatmentSpecs.Add((Get-Item $resolvedSpec.Path))
+if ($ExperimentSpec) {
+    $resolvedSpec = Resolve-Path -Path $ExperimentSpec -ErrorAction SilentlyContinue
+    if (-not $resolvedSpec) { throw "Experiment spec not found: $ExperimentSpec" }
+    $experimentFiles.Add((Get-Item $resolvedSpec.Path))
 }
 else {
-    # Every *.eval.yaml (excluding *.eval.baseline.yaml) under any subfolder.
-    $candidates = Get-ChildItem -Path $PSScriptRoot -Recurse -File -Filter '*.eval.yaml' -ErrorAction SilentlyContinue |
-        Where-Object { $_.Name -notlike "*$BaselineSuffix" } |
-        Sort-Object FullName
+    # Every *.experiment.yaml under any subfolder.
+    $candidates = Get-ChildItem -Path $PSScriptRoot -Recurse -File -Filter "*$ExperimentSuffix" -ErrorAction SilentlyContinue |
+    Sort-Object FullName
 
     foreach ($c in $candidates) {
         $areaName = Split-Path (Split-Path $c.FullName -Parent) -Leaf
-        $toolName = $c.Name.Substring(0, $c.Name.Length - $TreatmentSuffix.Length)
+        $toolName = $c.Name.Substring(0, $c.Name.Length - $ExperimentSuffix.Length)
 
         if ($Area -and -not ($Area | Where-Object { $areaName -like $_ })) { continue }
         if ($Tool -and -not ($Tool | Where-Object { $toolName -like $_ })) { continue }
 
-        $treatmentSpecs.Add($c)
+        $experimentFiles.Add($c)
     }
 }
 
-if ($treatmentSpecs.Count -eq 0) {
-    throw "No evaluations matched (Area='$($Area -join ',')', Tool='$($Tool -join ',')'). Expected files named '<tool>$TreatmentSuffix'."
+if ($experimentFiles.Count -eq 0) {
+    throw "No experiments matched (Area='$($Area -join ',')', Tool='$($Tool -join ',')'). Expected files named '<tool>$ExperimentSuffix'."
 }
 
-# Build the ordered list of eval descriptors and group them by area directory.
-$evals = foreach ($spec in $treatmentSpecs) {
+# Build the ordered list of experiment descriptors and group them by area directory.
+$evals = foreach ($spec in $experimentFiles) {
     $areaDir = Split-Path $spec.FullName -Parent
     $areaName = Split-Path $areaDir -Leaf
-    $toolName = $spec.Name.Substring(0, $spec.Name.Length - $TreatmentSuffix.Length)
-    $baselinePath = Join-Path $areaDir ($toolName + $BaselineSuffix)
+    $toolName = $spec.Name.Substring(0, $spec.Name.Length - $ExperimentSuffix.Length)
 
     [pscustomobject]@{
-        Area = $areaName
-        AreaDir = $areaDir
-        Tool = $toolName
-        Treatment = $spec.FullName
-        Baseline = (Test-Path $baselinePath) ? $baselinePath : $null
+        Area       = $areaName
+        AreaDir    = $areaDir
+        Tool       = $toolName
+        Experiment = $spec.FullName
     }
 }
 
-Write-Info ("Discovered {0} evaluation(s): {1}" -f $evals.Count, (($evals | ForEach-Object { "$($_.Area)/$($_.Tool)" }) -join ', '))
+Write-Info ("Discovered {0} experiment(s): {1}" -f $evals.Count, (($evals | ForEach-Object { "$($_.Area)/$($_.Tool)" }) -join ', '))
 
 # --- Run the evaluations, one area at a time ---------------------------------
 $results = [System.Collections.Generic.List[object]]::new()
@@ -505,15 +555,15 @@ foreach ($areaGroup in ($evals | Group-Object AreaDir)) {
             catch {
                 $provisioned = $false
                 Write-Warn "[$areaName] pre-eval provisioning FAILED: $($_.Exception.Message)"
-                Write-Warn "[$areaName] Skipping this area's evaluations."
+                Write-Warn "[$areaName] Skipping this area's experiments."
                 foreach ($eval in $areaGroup.Group) {
                     $results.Add([pscustomobject]@{
-                        Name = "$($eval.Area)/$($eval.Tool)"
-                        ProvisioningFailed = $true
-                        TreatmentExit = $null
-                        BaselineExit = $null
-                        HasBaseline = [bool]$eval.Baseline
-                    })
+                            Name               = "$($eval.Area)/$($eval.Tool)"
+                            ProvisioningFailed = $true
+                            ExperimentExit     = $null
+                            TreatmentDir       = $null
+                            BaselineDir        = $null
+                        })
                 }
             }
         }
@@ -525,32 +575,27 @@ foreach ($areaGroup in ($evals | Group-Object AreaDir)) {
             foreach ($eval in $areaGroup.Group) {
                 $label = "$($eval.Area)/$($eval.Tool)"
                 $runRoot = Join-Path (Join-Path $OutputDir $eval.Area) $eval.Tool
-                $treatmentDir = Join-Path $runRoot 'treatment'
-                $baselineDir = Join-Path $runRoot 'baseline'
 
-                $treatmentExit = Invoke-VallyEvalSpec `
-                    -Label "$label treatment (with Azure MCP)" `
-                    -Spec $eval.Treatment `
-                    -RunOutputDir $treatmentDir
+                # One experiment run produces both variants (baseline + treatment)
+                # under a single timestamped directory.
+                $run = Invoke-VallyExperiment `
+                    -Label $label `
+                    -ExperimentFile $eval.Experiment `
+                    -RunOutputDir $runRoot
 
-                $baselineExit = $null
-                if (-not $SkipBaseline -and $eval.Baseline) {
-                    # The baseline is a control that is EXPECTED to fail; keep going.
-                    $baselineExit = Invoke-VallyEvalSpec `
-                        -Label "$label baseline (no Azure MCP)" `
-                        -Spec $eval.Baseline `
-                        -RunOutputDir $baselineDir
-                }
+                # Each variant's results.jsonl lives in <run>/<variant>/. These
+                # variant names must match the `variants:` keys in the experiment
+                # spec (baseline + treatment).
+                $treatmentDir = $run.RunDir ? (Join-Path $run.RunDir 'treatment') : $null
+                $baselineDir = $run.RunDir ? (Join-Path $run.RunDir 'baseline') : $null
 
                 $results.Add([pscustomobject]@{
-                    Name = $label
-                    ProvisioningFailed = $false
-                    TreatmentExit = $treatmentExit
-                    BaselineExit = $baselineExit
-                    HasBaseline = [bool]$eval.Baseline
-                    TreatmentDir = $treatmentDir
-                    BaselineDir = ($SkipBaseline -or -not $eval.Baseline) ? $null : $baselineDir
-                })
+                        Name               = $label
+                        ProvisioningFailed = $false
+                        ExperimentExit     = $run.Exit
+                        TreatmentDir       = $treatmentDir
+                        BaselineDir        = $baselineDir
+                    })
             }
         }
     }
@@ -570,7 +615,8 @@ foreach ($areaGroup in ($evals | Group-Object AreaDir)) {
 
 # --- Report the comparison ---------------------------------------------------
 # The goal is to measure the Azure MCP server's effectiveness, per stimulus, by
-# comparing treatment (WITH the server) against baseline (WITHOUT it):
+# comparing the two experiment variants - treatment (WITH the server) against
+# baseline (WITHOUT it):
 #
 #   * baseline FAIL + treatment PASS -> VALUABLE      (the server enabled the outcome)
 #   * baseline PASS + treatment FAIL -> REGRESSION    (the server hurt the outcome)
@@ -578,40 +624,74 @@ foreach ($areaGroup in ($evals | Group-Object AreaDir)) {
 #                                        using tokens / turns / wall time (lower is better)
 #   * neither PASS                   -> INCONCLUSIVE
 #
-# A run is only considered failed (non-zero exit) when the treatment itself failed
-# to execute, or an effectiveness REGRESSION is detected. Baseline outcome failures
-# are expected and do not fail the run.
+# A run is only considered failed (non-zero exit) when the experiment itself
+# failed to execute, a treatment stimulus failed, or an effectiveness REGRESSION
+# is detected. Baseline outcome failures are expected and do not fail the run.
 Write-Host ''
 Write-Info '======================= Results ======================='
 $anyFailure = $false
 foreach ($r in $results) {
     if ($r.ProvisioningFailed) {
-        Write-Warn ("{0,-32} PROVISIONING FAILED (evaluations skipped)" -f $r.Name)
+        Write-Warn ("{0,-32} PROVISIONING FAILED (experiment skipped)" -f $r.Name)
         $anyFailure = $true
         continue
     }
 
-    $treatmentVerdict = ($r.TreatmentExit -eq 0) ? 'PASS' : 'FAIL'
-    if ($r.TreatmentExit -ne 0) { $anyFailure = $true }
-
-    # Top-line run status (whether the whole spec executed and passed its threshold).
-    if (-not $r.HasBaseline) {
-        Write-Info ("{0,-32} treatment {1} (no baseline)" -f $r.Name, $treatmentVerdict)
-    }
-    elseif ($null -eq $r.BaselineExit) {
-        Write-Info ("{0,-32} treatment {1} (baseline skipped)" -f $r.Name, $treatmentVerdict)
-    }
-    else {
-        $baselineVerdict = ($r.BaselineExit -eq 0) ? 'PASS' : 'FAIL'
-        Write-Info ("{0,-32} treatment {1} | baseline {2}" -f $r.Name, $treatmentVerdict, $baselineVerdict)
-    }
-
-    # Per-stimulus effectiveness comparison from vally's machine-readable results.
+    # Per-stimulus results for each variant from vally's machine-readable output.
     $treatmentStimuli = Get-VallyStimulusResults -RunOutputDir $r.TreatmentDir
     $baselineStimuli = $r.BaselineDir ? (Get-VallyStimulusResults -RunOutputDir $r.BaselineDir) : $null
+
+    # `vally experiment run` can return non-zero when one variant has grader
+    # failures (for us, baseline failures are expected). Treat it as a hard run
+    # failure only when no usable variant results were produced.
+    if ($r.ExperimentExit -ne 0) {
+        if ($treatmentStimuli -or $baselineStimuli) {
+            Write-Warn ("{0,-32} vally exit {1} (non-zero due to failed graders in one or more variants; see per-stimulus verdicts below)" -f $r.Name, $r.ExperimentExit)
+        }
+        else {
+            Write-Warn ("{0,-32} EXPERIMENT FAILED (vally exit {1}; no variant results found)" -f $r.Name, $r.ExperimentExit)
+            $anyFailure = $true
+        }
+    }
+
     if (-not $treatmentStimuli) {
-        Write-Warn '  (no per-stimulus results.jsonl found - skipping effectiveness comparison)'
+        Write-Warn ("{0,-32} (no treatment results.jsonl found - skipping effectiveness comparison)" -f $r.Name)
+        $anyFailure = $true
         continue
+    }
+
+    # Top-line status: treatment/baseline pass = every stimulus in that variant passed.
+    $treatmentPassed = @($treatmentStimuli.Values | Where-Object { -not $_.Passed }).Count -eq 0
+    $treatmentVerdict = $treatmentPassed ? 'PASS' : 'FAIL'
+    if (-not $treatmentPassed) { $anyFailure = $true }
+
+    if (-not $baselineStimuli) {
+        Write-Info ("{0,-32} treatment {1} (no baseline)" -f $r.Name, $treatmentVerdict)
+    }
+    else {
+        $baselinePassed = @($baselineStimuli.Values | Where-Object { -not $_.Passed }).Count -eq 0
+        $baselineVerdict = $baselinePassed ? 'PASS' : 'FAIL'
+        Write-Info ("{0,-32} treatment {1} | baseline {2}" -f $r.Name, $treatmentVerdict, $baselineVerdict)
+
+        if (-not $baselinePassed) {
+            $failedBaselineStimuli = @($baselineStimuli.Values | Where-Object { -not $_.Passed } | ForEach-Object { $_.Stimulus })
+            if ($failedBaselineStimuli.Count -gt 0) {
+                Write-Info ("  baseline failed stimuli: {0}" -f ($failedBaselineStimuli -join ', '))
+            }
+        }
+    }
+
+    if (-not $treatmentPassed) {
+        $failedTreatmentRecords = @($treatmentStimuli.Values | Where-Object { -not $_.Passed })
+        $failedTreatmentStimuli = @($failedTreatmentRecords | ForEach-Object { $_.Stimulus })
+        if ($failedTreatmentStimuli.Count -gt 0) {
+            Write-Info ("  treatment failed stimuli: {0}" -f ($failedTreatmentStimuli -join ', '))
+            foreach ($failed in $failedTreatmentRecords) {
+                $graderPart = ($failed.FailedGraders -and $failed.FailedGraders.Count -gt 0) ? ($failed.FailedGraders -join ', ') : 'unknown grader'
+                $evidencePart = $failed.FailureEvidence ? $failed.FailureEvidence : 'no grader evidence was emitted in results.jsonl'
+                Write-Info ("    - {0}: {1} - {2}" -f $failed.Stimulus, $graderPart, $evidencePart)
+            }
+        }
     }
 
     foreach ($stimulus in $treatmentStimuli.Keys) {
@@ -623,10 +703,10 @@ foreach ($r in $results) {
         if ($category -eq 'BOTH PASS') {
             $judgment = Get-EfficiencyJudgment -Treatment $t -Baseline $b
             $detail = " - $judgment; " +
-                ("tokens {0} vs {1} ({2}), turns {3} vs {4} ({5}), wall {6} vs {7} ({8})" -f `
-                    $t.TotalTokens, $b.TotalTokens, (Format-Delta -Treatment $t.TotalTokens -Baseline $b.TotalTokens),
-                    $t.TurnCount, $b.TurnCount, (Format-Delta -Treatment $t.TurnCount -Baseline $b.TurnCount),
-                    (Format-Ms $t.WallTimeMs), (Format-Ms $b.WallTimeMs), (Format-Delta -Treatment $t.WallTimeMs -Baseline $b.WallTimeMs -AsSeconds))
+            ("tokens {0} vs {1} ({2}), turns {3} vs {4} ({5}), wall {6} vs {7} ({8})" -f `
+                $t.TotalTokens, $b.TotalTokens, (Format-Delta -Treatment $t.TotalTokens -Baseline $b.TotalTokens),
+            $t.TurnCount, $b.TurnCount, (Format-Delta -Treatment $t.TurnCount -Baseline $b.TurnCount),
+            (Format-Ms $t.WallTimeMs), (Format-Ms $b.WallTimeMs), (Format-Delta -Treatment $t.WallTimeMs -Baseline $b.WallTimeMs -AsSeconds))
             # Both passing means the outcome did not require the server - surface it,
             # but it does not fail the run.
             if ($judgment -like 'treatment less efficient*' -or $judgment -like 'mixed*') {
@@ -652,7 +732,8 @@ foreach ($r in $results) {
 }
 Write-Info "Artifacts under: $OutputDir"
 
-# Non-zero if any treatment eval failed, any area's provisioning failed, or an
-# effectiveness regression (baseline PASS while treatment FAIL) was detected;
-# baseline outcome failures on their own are expected and do not affect the exit code.
+# Non-zero if any experiment failed to run, any treatment stimulus failed, any
+# area's provisioning failed, or an effectiveness regression (baseline PASS while
+# treatment FAIL) was detected; baseline outcome failures on their own are
+# expected and do not affect the exit code.
 exit ($anyFailure ? 1 : 0)
