@@ -20,6 +20,7 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
     private readonly Dictionary<string, IToolLoader> _toolLoaderMap = [];
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
+    // Server-side performance cache only. This should not be treated as protocol freshness metadata.
     private List<Tool>? _cachedTools;
 
     /// <summary>

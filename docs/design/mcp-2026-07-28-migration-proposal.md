@@ -164,7 +164,8 @@ Work items:
 
 Status update:
 - Item 2 progress: added stateless HTTP integration coverage for `server/discover` in consolidated mode (`Mcp-Method`/`Mcp-Name` headers, no initialize handshake, no `Mcp-Session-Id`).
-- Remaining for this workstream: finalize startup metadata vs discovery-surface split (item 1) and caching semantics review (items 4 and 5).
+- Item 1 decision: keep server identity/instructions startup-owned (`ServiceCollectionExtensions`), while runtime capability discovery remains request-driven (`server/discover`, `tools/list`) on the stateless path.
+- Items 4/5 progress: validated repeated stateless `tools/list` behavior in HTTP mode and clarified that tool-list caching is internal server optimization (not protocol freshness metadata).
 
 Acceptance criteria:
 - Discovery works without the initialize handshake.

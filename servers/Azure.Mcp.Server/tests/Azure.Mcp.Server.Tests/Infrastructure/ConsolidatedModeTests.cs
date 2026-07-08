@@ -182,6 +182,82 @@ public class ConsolidatedModeTests
     }
 
     [Fact]
+    public async Task ConsolidatedMode_HttpTransport_Should_Handle_Repeated_ToolsList_Statelessly()
+    {
+        // Phase 2 hardening (Workstream C items 4/5):
+        // repeated tools/list should be stable while protocol-facing cache semantics remain explicit.
+        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
+        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+
+        Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
+
+        var port = GetAvailablePort();
+        var processStartInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = azmcpPath,
+            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            UseShellExecute = false,
+            RedirectStandardInput = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+        processStartInfo.Environment["ASPNETCORE_URLS"] = $"http://127.0.0.1:{port}";
+
+        using var process = System.Diagnostics.Process.Start(processStartInfo);
+        Assert.NotNull(process);
+
+        try
+        {
+            using var client = new HttpClient();
+
+            using var request1 = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
+            {
+                Content = new StringContent("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}", System.Text.Encoding.UTF8, "application/json")
+            };
+            request1.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
+            request1.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
+            request1.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
+            request1.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
+
+            var response1 = await SendWithRetryAsync(client, request1, TestContext.Current.CancellationToken);
+            var content1 = await response1.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+            using var request2 = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
+            {
+                Content = new StringContent("{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\",\"params\":{}}", System.Text.Encoding.UTF8, "application/json")
+            };
+            request2.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
+            request2.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
+            request2.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
+            request2.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
+
+            var response2 = await SendWithRetryAsync(client, request2, TestContext.Current.CancellationToken);
+            var content2 = await response2.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.OK, response1.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, response2.StatusCode);
+            Assert.Contains("\"tools\"", content1, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("\"tools\"", content2, StringComparison.OrdinalIgnoreCase);
+
+            // Stateless protocol should not rely on session affinity.
+            Assert.False(response1.Headers.Contains("Mcp-Session-Id"));
+            Assert.False(response2.Headers.Contains("Mcp-Session-Id"));
+
+            // No implicit HTTP cache-contract is used for protocol freshness here.
+            Assert.False(response1.Headers.Contains("ETag"));
+            Assert.False(response2.Headers.Contains("ETag"));
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                process.Kill();
+            }
+        }
+    }
+
+    [Fact]
     public async Task ConsolidatedMode_Should_List_Tools_Without_Initialize()
     {
         // Arrange

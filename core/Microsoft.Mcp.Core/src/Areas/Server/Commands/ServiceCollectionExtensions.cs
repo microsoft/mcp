@@ -221,6 +221,9 @@ public static partial class ServiceCollectionExtensions
             {
                 var configuration = serverConfiguration.Value;
 
+                // Keep server identity/instructions as startup-owned metadata.
+                // Runtime capability discovery remains request-driven through MCP handlers
+                // (for example server/discover and tools/list) on the stateless protocol path.
                 mcpServerOptions.ServerInfo = new Implementation
                 {
                     Name = configuration.DisplayName,
