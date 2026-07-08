@@ -63,6 +63,66 @@ public class ConsolidatedModeTests
     }
 
     [Fact]
+    public async Task ConsolidatedMode_HttpTransport_Should_Accept_Meta_In_Request_Params()
+    {
+        // Phase 2 hardening (Workstream H): ensure request-scoped metadata in params._meta
+        // does not break stateless tools/list requests.
+        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
+        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+
+        Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
+
+        var port = GetAvailablePort();
+        var processStartInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = azmcpPath,
+            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            UseShellExecute = false,
+            RedirectStandardInput = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+        processStartInfo.Environment["ASPNETCORE_URLS"] = $"http://127.0.0.1:{port}";
+
+        using var process = System.Diagnostics.Process.Start(processStartInfo);
+        Assert.NotNull(process);
+
+        try
+        {
+            using var client = new HttpClient();
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
+            {
+                Content = new StringContent(
+                    "{" +
+                    "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{\"_meta\":{\"traceparent\":\"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01\",\"clientId\":\"phase2-hardening-test\"}}" +
+                    "}",
+                    System.Text.Encoding.UTF8,
+                    "application/json")
+            };
+
+            request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
+            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
+            request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
+            request.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
+
+            var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
+            var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Contains("\"result\"", content, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("\"tools\"", content, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                process.Kill();
+            }
+        }
+    }
+
+    [Fact]
     public async Task ConsolidatedMode_Should_List_Tools_Without_Initialize()
     {
         // Arrange
@@ -234,6 +294,55 @@ public class ConsolidatedModeTests
             Assert.True(
                 (int)response.StatusCode >= 400 && (int)response.StatusCode < 500,
                 $"Expected a 4xx rejection for Mcp-Method/body mismatch but got {(int)response.StatusCode}.");
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                process.Kill();
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ConsolidatedMode_HttpTransport_Should_Reject_Request_Without_McpMethod_Header()
+    {
+        // Phase 2 hardening (Workstream B): Streamable HTTP routing requires Mcp-Method.
+        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
+        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+
+        Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}.");
+
+        var port = GetAvailablePort();
+        var processStartInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = azmcpPath,
+            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        processStartInfo.Environment["ASPNETCORE_URLS"] = $"http://127.0.0.1:{port}";
+
+        using var process = System.Diagnostics.Process.Start(processStartInfo);
+        Assert.NotNull(process);
+
+        try
+        {
+            using var client = new HttpClient();
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
+            {
+                Content = new StringContent("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}", System.Text.Encoding.UTF8, "application/json")
+            };
+            request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
+            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
+            request.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
+            // Intentionally omit Mcp-Method
+
+            var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
+
+            Assert.True(
+                (int)response.StatusCode >= 400 && (int)response.StatusCode < 500,
+                $"Expected a 4xx rejection for missing Mcp-Method header but got {(int)response.StatusCode}.");
         }
         finally
         {

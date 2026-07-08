@@ -2,6 +2,10 @@
 
 Session-aware routing for Model Context Protocol (MCP) servers that need to run across multiple instances. This package builds on ASP.NET Core HybridCache and YARP so every MCP request reaches the server that owns the session state.
 
+> [!IMPORTANT]
+> This package is optional and is **not required** for MCP 2026-07-28 stateless protocol compliance.
+> Use it only when you intentionally need custom stateful routing behavior across replicas.
+
 ## Why Use It
 
 - Keep in-memory session data (prompt history, tool context) with its owning instance
