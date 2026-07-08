@@ -162,6 +162,10 @@ Work items:
 4. Review `tools/list` and any derived discovery result caching in [core/Microsoft.Mcp.Core/src/Areas/Server/Commands/ToolLoading](../core/Microsoft.Mcp.Core/src/Areas/Server/Commands/ToolLoading) for protocol-level cache metadata exposure.
 5. Keep server-side caches if they are still valuable, but do not rely on them to represent protocol freshness semantics.
 
+Status update:
+- Item 2 progress: added stateless HTTP integration coverage for `server/discover` in consolidated mode (`Mcp-Method`/`Mcp-Name` headers, no initialize handshake, no `Mcp-Session-Id`).
+- Remaining for this workstream: finalize startup metadata vs discovery-surface split (item 1) and caching semantics review (items 4 and 5).
+
 Acceptance criteria:
 - Discovery works without the initialize handshake.
 - Tool list surfaces advertise freshness accurately when the SDK supports it.
