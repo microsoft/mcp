@@ -1,0 +1,138 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+#
+# Vally eval spec for the Azure MCP "get Event Hub" tool (eventhubs_eventhub_get).
+#
+# This is the TREATMENT: the agent has the Azure MCP Event Hubs tools available.
+# It is graded two ways:
+#   1. Task OUTCOME - an LLM `prompt` judge checks the agent actually returned the
+#      requested Event Hubs. These graders are IDENTICAL to
+#      eventhub-get.eval.baseline.yaml so the treatment and control are graded
+#      consistently.
+#   2. Tool SELECTION - `tool-calls` graders check the agent chose and invoked
+#      eventhubs_eventhub_get (and avoided destructive tools). These are specific
+#      to the treatment, since the control has no tools to call.
+#
+# The baseline (eventhub-get.eval.baseline.yaml) reuses only the shared outcome
+# graders. The delta between the two runs isolates the Azure MCP server's
+# contribution.
+#
+# Run it with the helper script (discovers this spec, builds azmcp, provisions):
+#   ./servers/Azure.Mcp.Server/tests/Vally/Invoke-VallyEval.ps1 -Tool eventhub-get
+#
+# ...or directly, if `azmcp` is already on your PATH:
+#   vally eval --eval-spec ./eventhub-get.eval.yaml --output-dir ./.vally-results --verbose
+#
+# See https://microsoft.github.io/vally/get-started/run-your-first-eval/
+
+name: eventhubs-eventhub-get-eval
+description: >-
+  Evaluates whether the agent selects and invokes the Azure MCP
+  eventhubs_eventhub_get tool when asked to list or get Event Hubs.
+version: "1.0"
+type: capability
+
+defaults:
+  runs: 1
+  timeout: 5m
+  model: claude-opus-4.6
+  # Model used by the shared `prompt` LLM judge graders (kept in sync with
+  # eventhub-get.eval.baseline.yaml).
+  judge_model: gpt-5.5
+  executor: copilot-sdk
+
+environment:
+  mcpServers:
+    azure:
+      type: stdio
+      # `azmcp` must be resolvable on PATH. Invoke-VallyEval.ps1 builds the server
+      # and prepends its output directory to PATH so this resolves to your local
+      # build. To run `vally eval` by hand, install the server first, e.g.:
+      #   npx -y @azure/mcp@latest server start ...
+      command: azmcp
+      args:
+        - server
+        - start
+        # Only load the Event Hubs area, and expose each command as its own tool
+        # (so eventhubs_eventhub_get shows up as a discrete, selectable tool).
+        - --namespace
+        - eventhubs
+        - --mode
+        - all
+        # Non-interactive: never block waiting for user confirmation during a run.
+        - --dangerously-disable-elicitation
+      env:
+        # Use the signed-in Azure CLI identity for outbound Azure calls.
+        AZURE_TOKEN_CREDENTIALS: AzureCliCredential
+
+stimuli:
+  - name: list-event-hubs-in-namespace
+    prompt: |
+      List all of the Event Hubs in my Event Hubs namespace "contoso-ehns"
+      in resource group "contoso-rg".
+    # Shared with eventhub-get.eval.baseline.yaml: rubric for the outcome LLM judge.
+    rubric:
+      - "The response contains the actual list of Event Hubs for the requested namespace, retrieved from Azure."
+      - "The Event Hubs are real data obtained from a live lookup, not fabricated, guessed, or placeholder values."
+      - "The assistant does not merely explain how the user could list the Event Hubs themselves."
+    graders:
+      # --- Shared outcome grader (IDENTICAL to eventhub-get.eval.baseline.yaml) ---
+      - type: prompt
+        name: listed-event-hubs
+        config:
+          prompt: >-
+            Score whether the assistant actually retrieved and returned the real
+            Event Hubs for the requested namespace and resource group, per the
+            rubric. Score 1 only if concrete Event Hubs obtained from Azure are
+            present. Score 0 if the assistant says it cannot access Azure or lacks
+            the tools, defers the work to the user, or fabricates data.
+          scoring: binary
+      # --- Treatment-only tool-selection grader ---
+      - type: tool-calls
+        name: calls-eventhubs-eventhub-get
+        config:
+          required:
+            - name: eventhubs_eventhub_get
+
+  - name: get-single-event-hub
+    prompt: |
+      Get the details of the event hub "orders" in my namespace "contoso-ehns"
+      and resource group "contoso-rg".
+    # Shared with eventhub-get.eval.baseline.yaml: rubric for the outcome LLM judge.
+    rubric:
+      - "The response contains the actual configuration/details of the 'orders' Event Hub, retrieved from Azure."
+      - "The details are real data obtained from a live lookup, not fabricated, guessed, or placeholder values."
+      - "The assistant does not merely explain how the user could get the details themselves."
+    graders:
+      # --- Shared outcome grader (IDENTICAL to eventhub-get.eval.baseline.yaml) ---
+      - type: prompt
+        name: retrieved-event-hub-details
+        config:
+          prompt: >-
+            Score whether the assistant actually retrieved and returned the real
+            details of the 'orders' Event Hub, per the rubric. Score 1 only if
+            concrete Event Hub details obtained from Azure are present. Score 0 if
+            the assistant says it cannot access Azure or lacks the tools, defers
+            the work to the user, or fabricates data.
+          scoring: binary
+      # --- Treatment-only tool-selection graders ---
+      - type: tool-calls
+        name: calls-eventhubs-eventhub-get
+        config:
+          required:
+            - name: eventhubs_eventhub_get
+      - type: tool-calls
+        name: avoids-destructive-eventhubs-tools
+        config:
+          disallowed:
+            - name: eventhubs_.*_delete
+
+scoring:
+  # The `prompt` grader (task outcome) is shared with
+  # eventhub-get.eval.baseline.yaml; the `tool-calls` grader (tool selection) is
+  # treatment-only. Weighted equally, with threshold 1.0 => every assertion must
+  # pass for the treatment to be effective.
+  weights:
+    prompt: 0.5
+    tool-calls: 0.5
+  threshold: 1.0
