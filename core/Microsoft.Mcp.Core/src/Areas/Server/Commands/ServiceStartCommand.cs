@@ -626,6 +626,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         app.UseAuthentication();
         app.UseAuthorization();
 
+        app.Use(ValidateMcpRoutingHeadersMiddleware);
+
         IEndpointConventionBuilder mcpEndpointBuilder = app.MapMcp();
         // All MCP endpoints require MCP.All scope or role
         mcpEndpointBuilder.RequireAuthorization("McpAccess");
@@ -683,6 +685,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // Configure middleware pipeline
         app.UseCors("McpCorsPolicy");
         app.UseRouting();
+        app.Use(ValidateMcpRoutingHeadersMiddleware);
         app.MapMcp();
 
         return app;
@@ -732,6 +735,25 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
 
         return scheme;
+    }
+
+    private static async Task ValidateMcpRoutingHeadersMiddleware(HttpContext context, Func<Task> next)
+    {
+        // For Streamable HTTP POST requests, require explicit MCP routing headers.
+        // This keeps routing behavior predictable for gateways and clients.
+        if (HttpMethods.IsPost(context.Request.Method))
+        {
+            if (!context.Request.Headers.ContainsKey("Mcp-Method") || !context.Request.Headers.ContainsKey("Mcp-Name"))
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(
+                    "{\"error\":\"Missing required MCP routing headers. Both 'Mcp-Method' and 'Mcp-Name' are required for HTTP POST requests.\"}");
+                return;
+            }
+        }
+
+        await next();
     }
 
     /// <summary>
