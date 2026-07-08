@@ -166,6 +166,7 @@ Status update:
 - Item 2 progress: added stateless HTTP integration coverage for `server/discover` in consolidated mode (`Mcp-Method`/`Mcp-Name` headers, no initialize handshake, no `Mcp-Session-Id`).
 - Item 1 decision: keep server identity/instructions startup-owned (`ServiceCollectionExtensions`), while runtime capability discovery remains request-driven (`server/discover`, `tools/list`) on the stateless path.
 - Items 4/5 progress: validated repeated stateless `tools/list` behavior in HTTP mode and clarified that tool-list caching is internal server optimization (not protocol freshness metadata).
+- Item 3 status: deferred until the RC-compatible SDK exposes protocol cache metadata on list responses (`ttlMs`/`cacheScope`) in the runtime response surface; current server code paths only expose `Tools` on `ListToolsResult`.
 
 Acceptance criteria:
 - Discovery works without the initialize handshake.
