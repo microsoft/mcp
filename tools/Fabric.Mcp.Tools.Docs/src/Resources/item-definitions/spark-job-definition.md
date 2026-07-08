@@ -125,7 +125,7 @@ The update behavior differs significantly between the two formats:
 
 ### executableFile update behavior
 
-The `executableFile` property follows **full-replacement** semantics on update. When updating a Spark Job Definition using [Update Spark Job Definition Definition](/rest/api/fabric/sparkjobdefinition/items/update-spark-job-definition-definition), the incoming value fully replaces the existing one.
+The `executableFile` property follows **full-replacement** semantics on update. When updating a Spark Job Definition using [Update Spark Job Definition Definition](https://learn.microsoft.com/rest/api/fabric/sparkjobdefinition/items/update-spark-job-definition-definition), the incoming value fully replaces the existing one.
 
 The `executableFile` value can be either:
 - A **simple filename** (for example, `main.py`) — requires a corresponding `Main/` file part to be included in the request (V2 format only).
@@ -171,7 +171,7 @@ The `executableFile` value can be either:
 
 ### additionalLibraryUris update behavior
 
-The `additionalLibraryUris` property follows **full-replacement** semantics on update. When updating a Spark Job Definition using [Update Spark Job Definition Definition](/rest/api/fabric/sparkjobdefinition/items/update-spark-job-definition-definition), the caller must provide the complete desired state of library references.
+The `additionalLibraryUris` property follows **full-replacement** semantics on update. When updating a Spark Job Definition using [Update Spark Job Definition Definition](https://learn.microsoft.com/rest/api/fabric/sparkjobdefinition/items/update-spark-job-definition-definition), the caller must provide the complete desired state of library references.
 
 #### Key behaviors
 
