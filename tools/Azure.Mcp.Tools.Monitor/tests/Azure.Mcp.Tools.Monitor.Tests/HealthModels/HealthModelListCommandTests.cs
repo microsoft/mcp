@@ -43,11 +43,11 @@ public class HealthModelListCommandTests : SubscriptionCommandUnitTestsBase<Heal
         // Lean by construction: each serialized item carries ONLY the summary keys (no ARM envelope).
         var json = System.Text.Json.JsonSerializer.Serialize(result, MonitorJsonContext.Default.ListHealthModelSummary);
         var array = System.Text.Json.Nodes.JsonNode.Parse(json)!.AsArray();
-        foreach (var item in array)
+        Assert.All(array, item =>
         {
             var keys = ((System.Text.Json.Nodes.JsonObject)item!).Select(kv => kv.Key).OrderBy(k => k, StringComparer.Ordinal).ToArray();
             Assert.Equal(["id", "location", "name", "provisioningState", "resourceGroup"], keys);
-        }
+        });
     }
 
     [Fact]
