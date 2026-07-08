@@ -148,6 +148,27 @@ public sealed class McpRuntime : IMcpRuntime
     {
         if (activity != null && meta != null)
         {
+            // Capture W3C trace context fields (Workstream H: observability and trace context)
+            var traceParentNode = meta["traceparent"];
+            if (traceParentNode != null && traceParentNode.GetValueKind() == JsonValueKind.String)
+            {
+                var traceParent = traceParentNode.GetValue<string>();
+                activity.AddTag(TagName.TraceParent, traceParent);
+            }
+            var traceStateNode = meta["tracestate"];
+            if (traceStateNode != null && traceStateNode.GetValueKind() == JsonValueKind.String)
+            {
+                var traceState = traceStateNode.GetValue<string>();
+                activity.AddTag(TagName.TraceState, traceState);
+            }
+            var baggageNode = meta["baggage"];
+            if (baggageNode != null && baggageNode.GetValueKind() == JsonValueKind.String)
+            {
+                var baggage = baggageNode.GetValue<string>();
+                activity.AddTag(TagName.Baggage, baggage);
+            }
+
+            // Capture VS Code specific metadata
             var vsCodeConversationIdNode = meta["vscode.conversationId"];
             if (vsCodeConversationIdNode != null && vsCodeConversationIdNode.GetValueKind() == JsonValueKind.String)
             {
@@ -170,6 +191,7 @@ public sealed class McpRuntime : IMcpRuntime
     public async ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
         using var activity = _telemetry.StartActivity(ActivityName.ListToolsHandler, request.Server.ClientInfo);
+        CaptureToolCallMeta(activity, request.Params?.Meta);
 
         try
         {
