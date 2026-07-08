@@ -1094,10 +1094,14 @@ Example prompts that generate Azure CLI commands:
 
 ### 💡 Azure Insights
 
-* "Give me insights about my subscription <subscription_id>"
-* "Analyze the resources in subscription <subscription_id> and tell me what patterns you see"
-* "What can you tell me about the infrastructure in <subscription_name>?"
-* "Give me insights about my subscription tailored to building an internal web app for the finance team with a relational database backend"
+* "Generate insights from my current subscription"
+* "Summarize what's deployed across my Azure environment and highlight notable patterns"
+* "Analyze my tenant and give me insights about the overall infrastructure"
+* "What can you tell me about my existing Azure environment?"
+* "Analyze subscription <subscription_id> for architectural patterns"
+* "Analyze my Azure infrastructure and surface patterns to help me plan my next project"
+* "Generate insights about my Azure environment to help me plan a new data analytics platform"
+* "What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS?"
 
 ### 🔑 Azure Key Vault
 
