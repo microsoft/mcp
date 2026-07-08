@@ -2087,7 +2087,7 @@
     },
     {
       "name": "get_azure_messaging_service_details",
-      "description": "Get details about Azure messaging services including Service Bus queues, topics, subscriptions, and Event Grid topics and subscriptions, Event Hubs namespaces, event hubs, consumer groups, and streaming event ingestion resources.",
+      "description": "Get details about Azure messaging services including Service Bus queues, topics, subscriptions, Event Grid topics and subscriptions, and Event Hubs namespaces, event hubs, consumer groups, and streaming event ingestion resources.",
       "toolMetadata": {
         "destructive": {
           "value": false,
