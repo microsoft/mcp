@@ -96,6 +96,8 @@ The repository still contains a dedicated session-affinity package that keys rou
 
 This is the clearest code-level sign that the repo still carries protocol-era session assumptions. Under the RC, that package is no longer a core MCP requirement. It may still be useful for non-MCP state-routing scenarios, but it should not be treated as foundational to MCP transport correctness.
 
+Phase 2 decision (Workstream B item 4): keep this package for explicit legacy/custom state-routing scenarios only. It remains out of the default Azure MCP server runtime path and is not required for MCP 2026-07-28 compliance.
+
 ### Elicitation is implemented against the current SDK abstraction
 The server currently wraps elicitation in [core/Microsoft.Mcp.Core/src/Extensions/McpServerElicitationExtensions.cs](../core/Microsoft.Mcp.Core/src/Extensions/McpServerElicitationExtensions.cs), which calls `McpServer.ElicitAsync(...)` and reads `ClientCapabilities.Elicitation`.
 
@@ -140,6 +142,10 @@ Work items:
    - kept only for legacy compatibility experiments, or
    - refactored into a generic state-routing package with no MCP-specific contract names.
 5. Remove any deployment guidance that tells operators to treat session affinity as a protocol requirement.
+
+Status update:
+- Item 4 decision: kept only for explicit legacy/custom state-routing scenarios; not part of default Azure MCP runtime behavior.
+- Item 5 update: operator guidance is now header-first and stateless-first for MCP 2026-07-28 (`Mcp-Method` and `Mcp-Name` routing), with session affinity documented as optional.
 
 Acceptance criteria:
 - HTTP requests are routable without any session store or sticky routing requirement.
