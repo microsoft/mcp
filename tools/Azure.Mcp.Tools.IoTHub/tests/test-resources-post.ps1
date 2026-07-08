@@ -1,0 +1,24 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+param(
+    [string] $TenantId,
+    [string] $TestApplicationId,
+    [string] $ResourceGroupName,
+    [string] $BaseName,
+    [hashtable] $DeploymentOutputs,
+    [hashtable] $AdditionalParameters
+)
+
+$ErrorActionPreference = "Stop"
+
+. "$PSScriptRoot/../../../eng/common/scripts/common.ps1"
+. "$PSScriptRoot/../../../eng/scripts/helpers/TestResourcesHelpers.ps1"
+
+$testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
+
+Write-Host "IoTHub post-deployment setup completed successfully." -ForegroundColor Green
+
+if ($DeploymentOutputs) {
+    Write-Host "IoT Hub Name: $($DeploymentOutputs['IOTHUB_NAME'])" -ForegroundColor Green
+}

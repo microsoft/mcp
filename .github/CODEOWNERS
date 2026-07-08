@@ -257,6 +257,12 @@
 # ServiceLabel: %tools-ISV
 # ServiceOwners:                       @agrimayadav @pachaturvedi
 
+# PRLabel: %tools-IoTHub
+/tools/Azure.Mcp.Tools.IoTHub/        @rrao @microsoft/azure-mcp
+
+# ServiceLabel: %tools-IoTHub
+# ServiceOwners:                       @rrao @microsoft/azure-mcp
+
 # PRLabel: %tools-KeyVault
 /tools/Azure.Mcp.Tools.KeyVault/       @JonathanCrd @vcolin7 @microsoft/azure-mcp
 

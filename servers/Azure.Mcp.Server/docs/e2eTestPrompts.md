@@ -584,6 +584,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | functions_template_get | Show me a Cosmos DB trigger with an output binding in Java |
 | functions_template_get | Generate a MCP Tool trigger in TypeScript for Node.js 22 |
 
+## Azure IoT Hub
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| iothub_hub_get | List all IoT Hubs in my subscription |
+| iothub_hub_get | Show me all IoT Hubs in resource group <resource_group_name> |
+| iothub_hub_get | Get details for IoT Hub <name> in resource group <resource_group_name> |
+
 ## Azure Key Vault
 
 | Tool Name | Test Prompt |

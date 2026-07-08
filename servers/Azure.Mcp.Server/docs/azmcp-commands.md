@@ -2714,6 +2714,16 @@ azmcp functions template get --language <language> \
                              [--runtime-version <runtime-version>]
 ```
 
+### Azure IoT Hub Operations
+
+```bash
+# Get IoT Hub details or list IoT Hubs in a subscription or resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub hub get --subscription <subscription> \
+                     [--resource-group <resource-group>] \
+                     [--name <iot-hub-name>]
+```
+
 ### Azure Key Vault Operations
 
 #### Administration
