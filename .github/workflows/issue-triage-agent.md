@@ -39,8 +39,7 @@ safe-outputs:
     max: 2
   noop:
     report-as-issue: false
-  report-incomplete:
-    max: 1
+  report-incomplete: false
 
 ---
 
@@ -56,7 +55,7 @@ You triage exactly one issue, the issue from the triggering event.
 - This workflow can only add labels, never remove them. Do not attempt to remove or replace existing labels.
 - Do not close or lock issues.
 - If the issue already has one of the classification labels (`bug`, `enhancement`, `question`, `engineering item`), do not add another one. If you believe the existing classification is wrong, explain this in your comment and recommend the correct classification instead of relabeling.
-- If required labels or field option values are unavailable or ambiguous, use `report-incomplete` with the missing details instead of guessing.
+- If required labels or field option values are unavailable or ambiguous, do not guess. Explain the missing configuration in the triage comment.
 
 ## Triage outputs
 
@@ -102,7 +101,7 @@ Set the Priority issue field using the strongest applicable signal:
 
 Important:
 - Use the Priority field option values exactly as configured in this repository.
-- If exact option names cannot be resolved confidently, do not set Priority and report what needs confirmation via `report-incomplete`.
+- If exact option names cannot be resolved confidently, do not set Priority and explain what needs confirmation in the triage comment.
 
 ### 5) Owner recommendation
 
@@ -119,3 +118,4 @@ After applying labels and fields, post one concise comment that includes:
 - Priority rationale.
 - Issue Type selected.
 - Owner recommendation or blank-owner reason.
+- Any unavailable labels or field values that prevented a triage update.
