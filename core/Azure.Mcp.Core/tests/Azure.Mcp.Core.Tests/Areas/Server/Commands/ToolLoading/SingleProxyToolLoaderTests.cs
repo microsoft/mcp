@@ -270,27 +270,28 @@ public class SingleProxyToolLoaderTests
     public async Task GetChildToolList_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
     {
         // Arrange
-        var mcpClient = Substitute.For<McpClient>();
-        mcpClient.SendRequestAsync(Arg.Is<JsonRpcRequest>(r => r.Method == RequestMethods.ToolsList), Arg.Any<CancellationToken>())
-            .Returns(new JsonRpcResponse()
-            {
-                Result = new JsonObject([
-                    new("tools", new JsonArray([
-                        new JsonObject([
-                            new("name", "storage"),
-                            new("annotations", new JsonObject([
-                                new("readOnlyHint", true)
-                            ]))
-                        ]),
-                        new JsonObject([
-                            new("name", "keyvault"),
-                            new("annotations", new JsonObject([
-                                new("readOnlyHint", false)
-                            ]))
-                        ])
+        var toolsResult = new JsonObject([
+            new("tools", new JsonArray([
+                new JsonObject([
+                    new("name", "storage"),
+                    new("inputSchema", new JsonObject { ["type"] = "object" }),
+                    new("annotations", new JsonObject([
+                        new("readOnlyHint", true)
+                    ]))
+                ]),
+                new JsonObject([
+                    new("name", "keyvault"),
+                    new("inputSchema", new JsonObject { ["type"] = "object" }),
+                    new("annotations", new JsonObject([
+                        new("readOnlyHint", false)
                     ]))
                 ])
-            });
+            ]))
+        ]);
+        var mcpClient = LoopbackMcpClient.Create(req =>
+            req.Method == RequestMethods.ToolsList
+                ? new JsonRpcResponse { Result = toolsResult }
+                : null);
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
             .Returns(mcpClient);
@@ -312,39 +313,28 @@ public class SingleProxyToolLoaderTests
     public async Task GetChildToolList_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
     {
         // Arrange
-        var storageTool = new Tool()
-        {
-            Name = "storage",
-            Meta = new([new(McpHelper.LocalRequiredHintMetaKey, true)])
-        };
-        var storageClientTool = new McpClientTool(Substitute.For<McpClient>(), storageTool);
-        var keyvaultTool = new Tool()
-        {
-            Name = "keyvault",
-            Meta = new([new(McpHelper.LocalRequiredHintMetaKey, false)])
-        };
-        var keyvaultClientTool = new McpClientTool(Substitute.For<McpClient>(), keyvaultTool);
-        var mcpClient = Substitute.For<McpClient>();
-        mcpClient.SendRequestAsync(Arg.Is<JsonRpcRequest>(r => r.Method == RequestMethods.ToolsList), Arg.Any<CancellationToken>())
-            .Returns(new JsonRpcResponse()
-            {
-                Result = new JsonObject([
-                    new("tools", new JsonArray([
-                        new JsonObject([
-                            new("name", "storage"),
-                            new("meta", new JsonObject([
-                                new(McpHelper.LocalRequiredHintMetaKey, true)
-                            ]))
-                        ]),
-                        new JsonObject([
-                            new("name", "keyvault"),
-                            new("meta", new JsonObject([
-                                new(McpHelper.LocalRequiredHintMetaKey, false)
-                            ]))
-                        ])
+        var toolsResult = new JsonObject([
+            new("tools", new JsonArray([
+                new JsonObject([
+                    new("name", "storage"),
+                    new("inputSchema", new JsonObject { ["type"] = "object" }),
+                    new("meta", new JsonObject([
+                        new(McpHelper.LocalRequiredHintMetaKey, true)
+                    ]))
+                ]),
+                new JsonObject([
+                    new("name", "keyvault"),
+                    new("inputSchema", new JsonObject { ["type"] = "object" }),
+                    new("meta", new JsonObject([
+                        new(McpHelper.LocalRequiredHintMetaKey, false)
                     ]))
                 ])
-            });
+            ]))
+        ]);
+        var mcpClient = LoopbackMcpClient.Create(req =>
+            req.Method == RequestMethods.ToolsList
+                ? new JsonRpcResponse { Result = toolsResult }
+                : null);
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
             .Returns(mcpClient);

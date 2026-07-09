@@ -475,7 +475,8 @@ public class McpRuntimeTests
             .Returns(activity);
 
         var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
-        var request = new RequestContext<CallToolRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams { Name = "unknown-tool" });
+        // Force null Params to exercise the runtime's null-parameter guard.
+        var request = new RequestContext<CallToolRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsCall }, null!);
 
         // Act
         var result = await runtime.CallToolHandler(request, TestContext.Current.CancellationToken);

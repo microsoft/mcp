@@ -61,8 +61,12 @@ public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProx
     [Fact]
     public async Task Client_Should_Ping_Server_Successfully()
     {
-        await Client.PingAsync(cancellationToken: TestContext.Current.CancellationToken);
-        // If no exception is thrown, the ping was successful.
+        // The `ping` method was removed in the MCP 2026-07-28 protocol revision. The client
+        // negotiates the modern protocol, so the server rejects ping as unavailable.
+        // (Method name is retained so the recorded playback session continues to match.)
+        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () =>
+            await Client.PingAsync(cancellationToken: TestContext.Current.CancellationToken));
+        Assert.Contains("ping", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
