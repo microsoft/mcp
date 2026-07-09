@@ -19,6 +19,7 @@ tools:
   github:
     toolsets: [issues, labels]
     min-integrity: none
+    allowed-repos: "${{ github.repository }}"
 
 network:
   allowed:
@@ -52,9 +53,9 @@ You triage exactly one issue, the issue from the triggering event.
 ## Guardrails
 
 - Process only issues, never pull requests.
-- Never remove existing labels in this workflow.
+- This workflow can only add labels, never remove them. Do not attempt to remove or replace existing labels.
 - Do not close or lock issues.
-- If the issue already has one of the classification labels (`bug`, `enhancement`, `question`, `engineering item`), do not replace it unless there is clear evidence the existing classification is wrong.
+- If the issue already has one of the classification labels (`bug`, `enhancement`, `question`, `engineering item`), do not add another one. If you believe the existing classification is wrong, explain this in your comment and recommend the correct classification instead of relabeling.
 - If required labels or field option values are unavailable or ambiguous, use `report-incomplete` with the missing details instead of guessing.
 
 ## Triage outputs
