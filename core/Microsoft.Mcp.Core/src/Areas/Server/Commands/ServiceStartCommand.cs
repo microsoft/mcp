@@ -796,8 +796,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     {
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
         context.Response.ContentType = "application/json";
-        // Encode the message safely for JSON without reflection-based serialization (AOT-safe).
-        await context.Response.WriteAsync($"{{\"error\":\"{JsonEncodedText.Encode(message)}\"}}");
+        // Emit a JSON-RPC 2.0 error envelope with correct string escaping (AOT-safe).
+        var escapedMessage = JsonEncodedText.Encode(message).ToString();
+        await context.Response.WriteAsync(
+            $"{{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{{\"code\":-32600,\"message\":\"{escapedMessage}\"}}}}");
     }
 
     /// <summary>

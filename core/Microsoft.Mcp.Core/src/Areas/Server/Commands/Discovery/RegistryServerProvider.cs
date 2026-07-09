@@ -17,11 +17,12 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 /// with OAuthScopes, the provider uses AccessTokenHandler to obtain and cache bearer tokens
 /// for use in MCP protocol requests.
 ///
-/// MCP 2026-07-28 Authorization Hardening:
-/// - Issuer validation: registry servers must match configured issuer URLs
-/// - Application type checking: registry servers must be registered as appropriate app types (confidential vs public)
-/// - Scope validation: requested scopes must be registered with the OAuth provider
-/// - Protected resource metadata: registry servers should publish .well-known/oauth-protected-resource metadata
+/// MCP 2026-07-28 Authorization Hardening (application-layer checks performed here):
+/// - HTTPS required when OAuthScopes are configured
+/// - OAuthScopes entries must be non-empty
+///
+/// Other checks (issuer validation, application type, protected-resource metadata) are
+/// delegated to Azure Identity and the downstream resource, not performed here.
 /// 
 /// Known gap: MCP protocol requires a 'resource' parameter on token endpoint requests, but
 /// some OAuth providers (e.g., Entra ID) do not support it. This is documented in issue #939.

@@ -23,8 +23,8 @@ public class ConsolidatedModeTests
             Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
             UseShellExecute = false,
             RedirectStandardInput = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
             CreateNoWindow = true
         };
         processStartInfo.Environment["ASPNETCORE_URLS"] = $"http://127.0.0.1:{port}";
@@ -79,8 +79,8 @@ public class ConsolidatedModeTests
             Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
             UseShellExecute = false,
             RedirectStandardInput = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
             CreateNoWindow = true
         };
         processStartInfo.Environment["ASPNETCORE_URLS"] = $"http://127.0.0.1:{port}";
@@ -138,8 +138,8 @@ public class ConsolidatedModeTests
             Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
             UseShellExecute = false,
             RedirectStandardInput = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
             CreateNoWindow = true
         };
         processStartInfo.Environment["ASPNETCORE_URLS"] = $"http://127.0.0.1:{port}";
@@ -198,8 +198,8 @@ public class ConsolidatedModeTests
             Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
             UseShellExecute = false,
             RedirectStandardInput = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
             CreateNoWindow = true
         };
         processStartInfo.Environment["ASPNETCORE_URLS"] = $"http://127.0.0.1:{port}";
@@ -274,7 +274,7 @@ public class ConsolidatedModeTests
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
-            RedirectStandardError = true,
+            RedirectStandardError = false,
             CreateNoWindow = true
         };
 
@@ -327,8 +327,8 @@ public class ConsolidatedModeTests
             Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
             UseShellExecute = false,
             RedirectStandardInput = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
             CreateNoWindow = true
         };
         processStartInfo.Environment["ASPNETCORE_URLS"] = $"http://127.0.0.1:{port}";
@@ -393,7 +393,7 @@ public class ConsolidatedModeTests
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
-            RedirectStandardError = true,
+            RedirectStandardError = false,
             CreateNoWindow = true
         };
 
@@ -777,6 +777,10 @@ public class ConsolidatedModeTests
                 {
                     return response;
                 }
+
+                // The endpoint is not ready yet; dispose the 404 response before retrying
+                // so its socket/handler is not leaked across iterations.
+                response.Dispose();
             }
             catch (HttpRequestException ex)
             {

@@ -23,8 +23,8 @@ public class ServerStartupTests
             Arguments = "server start --transport http --dangerously-disable-http-incoming-auth",
             UseShellExecute = false,
             RedirectStandardInput = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
             CreateNoWindow = true
         };
         processStartInfo.Environment["ASPNETCORE_URLS"] = $"http://127.0.0.1:{port}";
@@ -89,7 +89,7 @@ public class ServerStartupTests
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
-            RedirectStandardError = true,
+            RedirectStandardError = false,
             CreateNoWindow = true
         };
 
@@ -156,7 +156,7 @@ public class ServerStartupTests
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
-            RedirectStandardError = true,
+            RedirectStandardError = false,
             CreateNoWindow = true
         };
 
@@ -224,6 +224,9 @@ public class ServerStartupTests
                 {
                     return response;
                 }
+
+                // Dispose the 404 response before retrying to avoid socket/handler leaks.
+                response.Dispose();
             }
             catch (HttpRequestException ex)
             {
