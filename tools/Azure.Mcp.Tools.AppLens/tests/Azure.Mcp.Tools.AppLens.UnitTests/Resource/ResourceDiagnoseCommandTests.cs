@@ -335,7 +335,7 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns422_WhenServiceThrowsInvalidOperationException()
+    public async Task ExecuteAsync_Returns500_WhenServiceThrowsInvalidOperationException()
     {
         // Arrange - this covers cases like AppLens session failure (not resource-not-found)
         _appLensService.DiagnoseResourceAsync(
@@ -360,7 +360,7 @@ public class ResourceDiagnoseCommandTests
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("AppLens session failed", response.Message);
     }
 
@@ -540,24 +540,20 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Theory]
-    [InlineData("microsoft.web/sites", "app", true)]
-    [InlineData("microsoft.web/sites", "linux", true)]
-    [InlineData("microsoft.web/sites", "functionapp", true)]
-    [InlineData("Microsoft.Web/Sites", "App", true)]
-    [InlineData("MICROSOFT.WEB/SITES", "APP", true)]
-    [InlineData("microsoft.containerservice/managedclusters", "", true)]
-    [InlineData("Microsoft.ContainerService/managedClusters", "", true)]
-    [InlineData("microsoft.apimanagement/service", "", true)]
-    [InlineData("Microsoft.ApiManagement/service", "", true)]
-    [InlineData("microsoft.web/sites", "container", false)]
-    [InlineData("microsoft.web/sites", "", false)]
-    [InlineData("microsoft.compute/virtualmachines", "", false)]
-    [InlineData("microsoft.storage/storageaccounts", "", false)]
-    [InlineData("microsoft.sql/servers", "", false)]
-    public void IsResourceTypeSupported_ReturnsCorrectResult(string resourceType, string resourceKind, bool expected)
+    [InlineData("microsoft.web/sites", true)]
+    [InlineData("Microsoft.Web/Sites", true)]
+    [InlineData("MICROSOFT.WEB/SITES", true)]
+    [InlineData("microsoft.containerservice/managedclusters", true)]
+    [InlineData("Microsoft.ContainerService/managedClusters", true)]
+    [InlineData("microsoft.apimanagement/service", true)]
+    [InlineData("Microsoft.ApiManagement/service", true)]
+    [InlineData("microsoft.compute/virtualmachines", false)]
+    [InlineData("microsoft.storage/storageaccounts", false)]
+    [InlineData("microsoft.sql/servers", false)]
+    public void IsResourceTypeSupported_ReturnsCorrectResult(string resourceType, bool expected)
     {
         // Act
-        var result = AppLensService.IsResourceTypeSupported(resourceType, resourceKind);
+        var result = AppLensService.IsResourceTypeSupported(resourceType);
 
         // Assert
         Assert.Equal(expected, result);
