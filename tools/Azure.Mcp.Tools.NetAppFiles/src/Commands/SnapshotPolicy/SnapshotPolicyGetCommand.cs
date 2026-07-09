@@ -14,34 +14,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.SnapshotPolicy;
 
+[CommandMetadata(
+    Id = "a3c7e1d9-5f2b-4a8e-b6c4-d9e0f1a2b3c4",
+    Name = "get",
+    Description =
+        """
+        Retrieves detailed information about Azure NetApp Files snapshot policies, including policy name, location, resource group, provisioning state, enabled state, and schedule configuration (hourly, daily, weekly, monthly). If a specific snapshot policy name is not provided, the command will return details for all snapshot policies in a subscription. Optionally filter by account.
+        """,
+    Title = "Get NetApp Files Snapshot Policy Details",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class SnapshotPolicyGetCommand(ILogger<SnapshotPolicyGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<SnapshotPolicyGetOptions>()
 {
-    private const string CommandTitle = "Get NetApp Files Snapshot Policy Details";
-
     private readonly ILogger<SnapshotPolicyGetCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "a3c7e1d9-5f2b-4a8e-b6c4-d9e0f1a2b3c4";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Retrieves detailed information about Azure NetApp Files snapshot policies, including policy name, location, resource group, provisioning state, enabled state, and schedule configuration (hourly, daily, weekly, monthly). If a specific snapshot policy name is not provided, the command will return details for all snapshot policies in a subscription. Optionally filter by account.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

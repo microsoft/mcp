@@ -16,34 +16,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.BackupVault;
 
+[CommandMetadata(
+    Id = "b2d4f6a8-0c1e-4b7d-9f3a-e5c7d9b1a3f5",
+    Name = "create",
+    Description =
+        """
+        Creates an Azure NetApp Files backup vault in a specified account and resource group, and returns the created backup vault details including name, location, resource group, and provisioning state. Requires account name, backup vault name, resource group, location, and subscription.
+        """,
+    Title = "Create NetApp Files Backup Vault",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class BackupVaultCreateCommand(ILogger<BackupVaultCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupVaultCreateOptions>()
 {
-    private const string CommandTitle = "Create NetApp Files Backup Vault";
-
     private readonly ILogger<BackupVaultCreateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "b2d4f6a8-0c1e-4b7d-9f3a-e5c7d9b1a3f5";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
-        Creates an Azure NetApp Files backup vault in a specified account and resource group, and returns the created backup vault details including name, location, resource group, and provisioning state. Requires account name, backup vault name, resource group, location, and subscription.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

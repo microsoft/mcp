@@ -14,34 +14,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.BackupVault;
 
+[CommandMetadata(
+    Id = "a1c3e5f7-9b2d-4f6a-8e0c-d2b4a6c8e0f2",
+    Name = "get",
+    Description =
+        """
+        Retrieves detailed information about Azure NetApp Files backup vaults, including vault name, location, resource group, and provisioning state. If a specific backup vault name is not provided, the command will return details for all backup vaults in a subscription. Optionally filter by account.
+        """,
+    Title = "Get NetApp Files Backup Vault Details",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class BackupVaultGetCommand(ILogger<BackupVaultGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupVaultGetOptions>()
 {
-    private const string CommandTitle = "Get NetApp Files Backup Vault Details";
-
     private readonly ILogger<BackupVaultGetCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "a1c3e5f7-9b2d-4f6a-8e0c-d2b4a6c8e0f2";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Retrieves detailed information about Azure NetApp Files backup vaults, including vault name, location, resource group, and provisioning state. If a specific backup vault name is not provided, the command will return details for all backup vaults in a subscription. Optionally filter by account.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

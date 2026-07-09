@@ -14,34 +14,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Snapshot;
 
+[CommandMetadata(
+    Id = "a3c7e1d9-5f2b-4a8c-b6d0-e9f4a2c8d1b5",
+    Name = "get",
+    Description =
+        """
+        Retrieves detailed information about Azure NetApp Files snapshots, including snapshot name, location, resource group, provisioning state, and creation time. If a specific snapshot name is not provided, the command will return details for all snapshots in a subscription. Optionally filter by account, capacity pool, and volume.
+        """,
+    Title = "Get NetApp Files Snapshot Details",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<SnapshotGetOptions>()
 {
-    private const string CommandTitle = "Get NetApp Files Snapshot Details";
-
     private readonly ILogger<SnapshotGetCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "a3c7e1d9-5f2b-4a8c-b6d0-e9f4a2c8d1b5";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Retrieves detailed information about Azure NetApp Files snapshots, including snapshot name, location, resource group, provisioning state, and creation time. If a specific snapshot name is not provided, the command will return details for all snapshots in a subscription. Optionally filter by account, capacity pool, and volume.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

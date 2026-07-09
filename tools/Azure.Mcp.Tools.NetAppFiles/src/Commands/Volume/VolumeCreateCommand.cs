@@ -18,34 +18,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
 
+[CommandMetadata(
+    Id = "d7e2f4a8-3b1c-4d5e-a9f6-c2e8b7d4a1f3",
+    Name = "create",
+    Description =
+        """
+        Creates an Azure NetApp Files volume in a specified capacity pool and returns the created volume details including name, location, resource group, provisioning state, service level, quota, creation token, subnet, and protocol types. Requires account name, pool name, volume name, resource group, location, creation token, usage threshold, and subnet ID.
+        """,
+    Title = "Create NetApp Files Volume",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class VolumeCreateCommand(ILogger<VolumeCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<VolumeCreateOptions>()
 {
-    private const string CommandTitle = "Create NetApp Files Volume";
-
     private readonly ILogger<VolumeCreateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "d7e2f4a8-3b1c-4d5e-a9f6-c2e8b7d4a1f3";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
-        Creates an Azure NetApp Files volume in a specified capacity pool and returns the created volume details including name, location, resource group, provisioning state, service level, quota, creation token, subnet, and protocol types. Requires account name, pool name, volume name, resource group, location, creation token, usage threshold, and subnet ID.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

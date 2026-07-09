@@ -14,34 +14,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.BackupPolicy;
 
+[CommandMetadata(
+    Id = "b8d4f2c5-6e3a-4b9f-c7d8-e0f1a2b3c4d5",
+    Name = "get",
+    Description =
+        """
+        Retrieves detailed information about Azure NetApp Files backup policies, including policy name, location, resource group, provisioning state, daily/weekly/monthly backups to keep, volume backups count, and enabled state. If a specific backup policy name is not provided, the command will return details for all backup policies in a subscription. Optionally filter by account.
+        """,
+    Title = "Get NetApp Files Backup Policy Details",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class BackupPolicyGetCommand(ILogger<BackupPolicyGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupPolicyGetOptions>()
 {
-    private const string CommandTitle = "Get NetApp Files Backup Policy Details";
-
     private readonly ILogger<BackupPolicyGetCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "b8d4f2c5-6e3a-4b9f-c7d8-e0f1a2b3c4d5";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Retrieves detailed information about Azure NetApp Files backup policies, including policy name, location, resource group, provisioning state, daily/weekly/monthly backups to keep, volume backups count, and enabled state. If a specific backup policy name is not provided, the command will return details for all backup policies in a subscription. Optionally filter by account.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

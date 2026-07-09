@@ -17,34 +17,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Pool;
 
+[CommandMetadata(
+    Id = "c4f8a2e6-7d3b-4c9e-a1f5-e8b6d3c7a2f4",
+    Name = "create",
+    Description =
+        """
+        Creates an Azure NetApp Files capacity pool in a specified account and returns the created pool details including name, location, resource group, provisioning state, service level, size, QoS type, cool access, and encryption type. Supports size or sizeInBytes, customThroughputMibps, and tags, with optional policy metadata parameters.
+        """,
+    Title = "Create NetApp Files Capacity Pool",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class PoolCreateCommand(ILogger<PoolCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<PoolCreateOptions>()
 {
-    private const string CommandTitle = "Create NetApp Files Capacity Pool";
-
     private readonly ILogger<PoolCreateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "c4f8a2e6-7d3b-4c9e-a1f5-e8b6d3c7a2f4";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
-        Creates an Azure NetApp Files capacity pool in a specified account and returns the created pool details including name, location, resource group, provisioning state, service level, size, QoS type, cool access, and encryption type. Supports size or sizeInBytes, customThroughputMibps, and tags, with optional policy metadata parameters.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

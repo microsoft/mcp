@@ -17,34 +17,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Account;
 
+[CommandMetadata(
+    Id = "b8d4e2a6-5c3f-4e7a-9b1d-f6a2c8e3d5b7",
+    Name = "create",
+    Description =
+        """
+        Creates an Azure NetApp Files account in a specified resource group and location, and returns the created account details including name, location, resource group, and provisioning state. Requires account name, resource group, location, and subscription.
+        """,
+    Title = "Create NetApp Files Account",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<AccountCreateOptions>()
 {
-    private const string CommandTitle = "Create NetApp Files Account";
-
     private readonly ILogger<AccountCreateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "b8d4e2a6-5c3f-4e7a-9b1d-f6a2c8e3d5b7";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
-        Creates an Azure NetApp Files account in a specified resource group and location, and returns the created account details including name, location, resource group, and provisioning state. Requires account name, resource group, location, and subscription.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

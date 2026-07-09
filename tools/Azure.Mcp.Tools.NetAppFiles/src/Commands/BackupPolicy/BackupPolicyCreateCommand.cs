@@ -16,34 +16,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.BackupPolicy;
 
+[CommandMetadata(
+    Id = "c9e5f3b7-7d4a-4c8e-a2f6-d1b3e4f5a6c8",
+    Name = "create",
+    Description =
+        """
+        Creates an Azure NetApp Files backup policy in a specified account and resource group, and returns the created backup policy details including name, location, resource group, provisioning state, and backup retention settings. Requires account name, backup policy name, resource group, location, and subscription.
+        """,
+    Title = "Create NetApp Files Backup Policy",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class BackupPolicyCreateCommand(ILogger<BackupPolicyCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupPolicyCreateOptions>()
 {
-    private const string CommandTitle = "Create NetApp Files Backup Policy";
-
     private readonly ILogger<BackupPolicyCreateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "c9e5f3b7-7d4a-4c8e-a2f6-d1b3e4f5a6c8";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
-        Creates an Azure NetApp Files backup policy in a specified account and resource group, and returns the created backup policy details including name, location, resource group, provisioning state, and backup retention settings. Requires account name, backup policy name, resource group, location, and subscription.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

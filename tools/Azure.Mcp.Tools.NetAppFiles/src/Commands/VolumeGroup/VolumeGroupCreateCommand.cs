@@ -16,34 +16,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.VolumeGroup;
 
+[CommandMetadata(
+    Id = "c9f4d3a7-1e6b-4c8d-b2a5-e7f1d8c6a3b9",
+    Name = "create",
+    Description =
+        """
+        Creates an Azure NetApp Files volume group in a specified account and returns the created volume group details including name, location, resource group, provisioning state, application type, application identifier, and group description. Requires account name, volume group name, resource group, location, application type, and application identifier.
+        """,
+    Title = "Create NetApp Files Volume Group",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class VolumeGroupCreateCommand(ILogger<VolumeGroupCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<VolumeGroupCreateOptions>()
 {
-    private const string CommandTitle = "Create NetApp Files Volume Group";
-
     private readonly ILogger<VolumeGroupCreateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "c9f4d3a7-1e6b-4c8d-b2a5-e7f1d8c6a3b9";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
-        Creates an Azure NetApp Files volume group in a specified account and returns the created volume group details including name, location, resource group, provisioning state, application type, application identifier, and group description. Requires account name, volume group name, resource group, location, application type, and application identifier.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

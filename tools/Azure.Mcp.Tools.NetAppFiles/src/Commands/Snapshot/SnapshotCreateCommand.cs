@@ -16,34 +16,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Snapshot;
 
+[CommandMetadata(
+    Id = "b4d8e2f0-6c3a-4b9d-a7e1-d5f9c3a8b2e6",
+    Name = "create",
+    Description =
+        """
+        Creates an Azure NetApp Files snapshot for a specified volume in a capacity pool under a NetApp account, and returns the created snapshot details including name, location, resource group, provisioning state, and creation time. Requires account name, pool name, volume name, snapshot name, resource group, location, and subscription.
+        """,
+    Title = "Create NetApp Files Snapshot",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<SnapshotCreateOptions>()
 {
-    private const string CommandTitle = "Create NetApp Files Snapshot";
-
     private readonly ILogger<SnapshotCreateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "b4d8e2f0-6c3a-4b9d-a7e1-d5f9c3a8b2e6";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
-        Creates an Azure NetApp Files snapshot for a specified volume in a capacity pool under a NetApp account, and returns the created snapshot details including name, location, resource group, provisioning state, and creation time. Requires account name, pool name, volume name, snapshot name, resource group, location, and subscription.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

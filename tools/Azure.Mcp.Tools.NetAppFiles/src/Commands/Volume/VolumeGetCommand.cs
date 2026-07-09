@@ -14,34 +14,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
 
+[CommandMetadata(
+    Id = "b8d4f2c5-0e3a-4b9f-c6d7-e4f8a1b3c5d6",
+    Name = "get",
+    Description =
+        """
+        Retrieves detailed information about Azure NetApp Files volumes, including volume name, location, resource group, provisioning state, service level, quota (usage threshold), creation token, subnet, protocol types, and network features. If a specific volume name is not provided, the command will return details for all volumes in a subscription. Optionally filter by account, capacity pool, resource group, or resource IDs.
+        """,
+    Title = "Get NetApp Files Volume Details",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class VolumeGetCommand(ILogger<VolumeGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<VolumeGetOptions>()
 {
-    private const string CommandTitle = "Get NetApp Files Volume Details";
-
     private readonly ILogger<VolumeGetCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "b8d4f2c5-0e3a-4b9f-c6d7-e4f8a1b3c5d6";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Retrieves detailed information about Azure NetApp Files volumes, including volume name, location, resource group, provisioning state, service level, quota (usage threshold), creation token, subnet, protocol types, and network features. If a specific volume name is not provided, the command will return details for all volumes in a subscription. Optionally filter by account, capacity pool, resource group, or resource IDs.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

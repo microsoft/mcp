@@ -17,34 +17,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Pool;
 
+[CommandMetadata(
+    Id = "d5a9b3e7-6c4f-4d8a-b2e1-f7c8a0d3e5b9",
+    Name = "update",
+    Description =
+        """
+        Updates an existing Azure NetApp Files capacity pool in a specified account and resource group, and returns the updated pool details including name, location, resource group, provisioning state, service level, size, QoS type, cool access, and encryption type. Supports updating size (in TiB or bytes), service level, QoS type, custom throughput (MiB/s), cool access, and tags. Requires account name, pool name, resource group, location, and subscription.
+        """,
+    Title = "Update NetApp Files Capacity Pool",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class PoolUpdateCommand(ILogger<PoolUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<PoolUpdateOptions>()
 {
-    private const string CommandTitle = "Update NetApp Files Capacity Pool";
-
     private readonly ILogger<PoolUpdateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "d5a9b3e7-6c4f-4d8a-b2e1-f7c8a0d3e5b9";
-
-    public override string Name => "update";
-
-    public override string Description =>
-        """
-        Updates an existing Azure NetApp Files capacity pool in a specified account and resource group, and returns the updated pool details including name, location, resource group, provisioning state, service level, size, QoS type, cool access, and encryption type. Supports updating size (in TiB or bytes), service level, QoS type, custom throughput (MiB/s), cool access, and tags. Requires account name, pool name, resource group, location, and subscription.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

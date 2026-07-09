@@ -14,31 +14,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Backup;
 
+[CommandMetadata(
+    Id = "b2d4f6a8-0c1e-3b5d-7f9a-c4e6d8f0a2b4",
+    Name = "get",
+    Description =
+        """
+        Retrieves detailed information about Azure NetApp Files backups, including backup name, location, resource group, provisioning state, backup type, size, label, and creation date. If a specific backup name is not provided, the command will return details for all backups in a subscription. Optionally filter by account and backup vault.
+        """,
+    Title = "Get NetApp Files Backup Details",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class BackupGetCommand(ILogger<BackupGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupGetOptions>()
 {
-    private const string CommandTitle = "Get NetApp Files Backup Details";
-
     private readonly ILogger<BackupGetCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "b2d4f6a8-0c1e-3b5d-7f9a-c4e6d8f0a2b4";
-    public override string Name => "get";
-    public override string Description =>
-        """
-        Retrieves detailed information about Azure NetApp Files backups, including backup name, location, resource group, provisioning state, backup type, size, label, and creation date. If a specific backup name is not provided, the command will return details for all backups in a subscription. Optionally filter by account and backup vault.
-        """;
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

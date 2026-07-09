@@ -16,34 +16,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Snapshot;
 
+[CommandMetadata(
+    Id = "c6e9f3a1-7d4b-4c8e-b2a5-f1d8e6b4c9a3",
+    Name = "update",
+    Description =
+        """
+        Updates an existing Azure NetApp Files snapshot for a specified volume in a capacity pool under a NetApp account, and returns the updated snapshot details including name, location, resource group, provisioning state, and creation time. Requires account name, pool name, volume name, snapshot name, resource group, location, and subscription.
+        """,
+    Title = "Update NetApp Files Snapshot",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<SnapshotUpdateOptions>()
 {
-    private const string CommandTitle = "Update NetApp Files Snapshot";
-
     private readonly ILogger<SnapshotUpdateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "c6e9f3a1-7d4b-4c8e-b2a5-f1d8e6b4c9a3";
-
-    public override string Name => "update";
-
-    public override string Description =>
-        """
-        Updates an existing Azure NetApp Files snapshot for a specified volume in a capacity pool under a NetApp account, and returns the updated snapshot details including name, location, resource group, provisioning state, and creation time. Requires account name, pool name, volume name, snapshot name, resource group, location, and subscription.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

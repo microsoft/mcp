@@ -14,34 +14,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.ReplicationStatus;
 
+[CommandMetadata(
+    Id = "c9e5f1a3-7b4d-4c8e-a2d6-f0b3e8c1d5a7",
+    Name = "get",
+    Description =
+        """
+        Retrieves replication status information for Azure NetApp Files volumes, including endpoint type, replication schedule, remote volume resource ID, remote volume region, and replication ID. Only volumes with cross-region replication configured are returned. If a specific volume name is not provided, the command will return replication status for all replicated volumes in a subscription. Optionally filter by account, capacity pool, and volume.
+        """,
+    Title = "Get NetApp Files Volume Replication Status",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class ReplicationStatusGetCommand(ILogger<ReplicationStatusGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<ReplicationStatusGetOptions>()
 {
-    private const string CommandTitle = "Get NetApp Files Volume Replication Status";
-
     private readonly ILogger<ReplicationStatusGetCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "c9e5f1a3-7b4d-4c8e-a2d6-f0b3e8c1d5a7";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Retrieves replication status information for Azure NetApp Files volumes, including endpoint type, replication schedule, remote volume resource ID, remote volume region, and replication ID. Only volumes with cross-region replication configured are returned. If a specific volume name is not provided, the command will return replication status for all replicated volumes in a subscription. Optionally filter by account, capacity pool, and volume.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

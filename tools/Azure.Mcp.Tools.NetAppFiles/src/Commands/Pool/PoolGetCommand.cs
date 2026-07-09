@@ -14,34 +14,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Pool;
 
+[CommandMetadata(
+    Id = "a3c7e1d9-5f2b-4a8e-b6c4-d9e2f7a1b3c5",
+    Name = "get",
+    Description =
+        """
+        Retrieves detailed information about Azure NetApp Files capacity pools, including pool name, location, resource group, provisioning state, service level, size, QoS type, cool access, and encryption type. If a specific pool name is not provided, the command will return details for all capacity pools in a subscription. Optionally filter by account, resource group, or resource IDs.
+        """,
+    Title = "Get NetApp Files Capacity Pool Details",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class PoolGetCommand(ILogger<PoolGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<PoolGetOptions>()
 {
-    private const string CommandTitle = "Get NetApp Files Capacity Pool Details";
-
     private readonly ILogger<PoolGetCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "a3c7e1d9-5f2b-4a8e-b6c4-d9e2f7a1b3c5";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Retrieves detailed information about Azure NetApp Files capacity pools, including pool name, location, resource group, provisioning state, service level, size, QoS type, cool access, and encryption type. If a specific pool name is not provided, the command will return details for all capacity pools in a subscription. Optionally filter by account, resource group, or resource IDs.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

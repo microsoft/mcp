@@ -17,34 +17,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
 
+[CommandMetadata(
+    Id = "f1a3b5c7-9d2e-4f8a-b6c0-e4d7a2f9c3b5",
+    Name = "update",
+    Description =
+        """
+        Updates an existing Azure NetApp Files volume in a specified capacity pool and returns the updated volume details including name, location, resource group, provisioning state, service level, quota, creation token, subnet, and protocol types. Supports updating usage threshold (quota), service level, and tags. Requires account name, pool name, volume name, resource group, location, and subscription.
+        """,
+    Title = "Update NetApp Files Volume",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class VolumeUpdateCommand(ILogger<VolumeUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<VolumeUpdateOptions>()
 {
-    private const string CommandTitle = "Update NetApp Files Volume";
-
     private readonly ILogger<VolumeUpdateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "f1a3b5c7-9d2e-4f8a-b6c0-e4d7a2f9c3b5";
-
-    public override string Name => "update";
-
-    public override string Description =>
-        """
-        Updates an existing Azure NetApp Files volume in a specified capacity pool and returns the updated volume details including name, location, resource group, provisioning state, service level, quota, creation token, subnet, and protocol types. Supports updating usage threshold (quota), service level, and tags. Requires account name, pool name, volume name, resource group, location, and subscription.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

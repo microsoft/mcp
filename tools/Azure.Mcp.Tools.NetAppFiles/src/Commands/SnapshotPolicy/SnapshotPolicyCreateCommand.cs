@@ -16,34 +16,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.SnapshotPolicy;
 
+[CommandMetadata(
+    Id = "d4f8a2c6-6e3b-4d9f-b7a5-e1c2d3f4a5b6",
+    Name = "create",
+    Description =
+        """
+        Creates an Azure NetApp Files snapshot policy in a specified account and resource group, and returns the created snapshot policy details including name, location, resource group, provisioning state, enabled state, and schedule configuration (hourly, daily, weekly, monthly). Requires account name, snapshot policy name, resource group, location, and subscription. Optionally configure hourly, daily, weekly, and monthly snapshot schedules.
+        """,
+    Title = "Create NetApp Files Snapshot Policy",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class SnapshotPolicyCreateCommand(ILogger<SnapshotPolicyCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<SnapshotPolicyCreateOptions>()
 {
-    private const string CommandTitle = "Create NetApp Files Snapshot Policy";
-
     private readonly ILogger<SnapshotPolicyCreateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "d4f8a2c6-6e3b-4d9f-b7a5-e1c2d3f4a5b6";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
-        Creates an Azure NetApp Files snapshot policy in a specified account and resource group, and returns the created snapshot policy details including name, location, resource group, provisioning state, enabled state, and schedule configuration (hourly, daily, weekly, monthly). Requires account name, snapshot policy name, resource group, location, and subscription. Optionally configure hourly, daily, weekly, and monthly snapshot schedules.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

@@ -16,34 +16,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Backup;
 
+[CommandMetadata(
+    Id = "a3d7e1f9-5b2c-4a8d-9e6f-c0d4b8a2f7e3",
+    Name = "create",
+    Description =
+        """
+        Creates an Azure NetApp Files backup in a specified backup vault under a NetApp account, and returns the created backup details including name, location, resource group, provisioning state, volume resource ID, and backup type. Requires account name, backup vault name, backup name, resource group, location, volume resource ID, and subscription.
+        """,
+    Title = "Create NetApp Files Backup",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class BackupCreateCommand(ILogger<BackupCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupCreateOptions>()
 {
-    private const string CommandTitle = "Create NetApp Files Backup";
-
     private readonly ILogger<BackupCreateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "a3d7e1f9-5b2c-4a8d-9e6f-c0d4b8a2f7e3";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
-        Creates an Azure NetApp Files backup in a specified backup vault under a NetApp account, and returns the created backup details including name, location, resource group, provisioning state, volume resource ID, and backup type. Requires account name, backup vault name, backup name, resource group, location, volume resource ID, and subscription.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

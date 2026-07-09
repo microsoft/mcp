@@ -14,34 +14,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.VolumeGroup;
 
+[CommandMetadata(
+    Id = "a7c3e1d4-9f2b-4a8e-b5c6-d3e7f0a2b4c8",
+    Name = "get",
+    Description =
+        """
+        Retrieves detailed information about Azure NetApp Files volume groups, including volume group name, location, resource group, provisioning state, application type, application identifier, and group description. If a specific volume group name is not provided, the command will return details for all volume groups in a subscription. Optionally filter by account.
+        """,
+    Title = "Get NetApp Files Volume Group Details",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class VolumeGroupGetCommand(ILogger<VolumeGroupGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<VolumeGroupGetOptions>()
 {
-    private const string CommandTitle = "Get NetApp Files Volume Group Details";
-
     private readonly ILogger<VolumeGroupGetCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "a7c3e1d4-9f2b-4a8e-b5c6-d3e7f0a2b4c8";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Retrieves detailed information about Azure NetApp Files volume groups, including volume group name, location, resource group, provisioning state, application type, application identifier, and group description. If a specific volume group name is not provided, the command will return details for all volume groups in a subscription. Optionally filter by account.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

@@ -18,34 +18,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Account;
 
+[CommandMetadata(
+    Id = "a3c7d1e5-8b2f-4f6a-9e0d-c5b4a7f2e8d1",
+    Name = "update",
+    Description =
+        """
+        Updates an existing Azure NetApp Files account in a specified resource group, and returns the updated account details including name, location, resource group, and provisioning state. Supports updating tags. Requires account name, resource group, location, and subscription. Optionally accepts tags in JSON format.
+        """,
+    Title = "Update NetApp Files Account",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class AccountUpdateCommand(ILogger<AccountUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<AccountUpdateOptions>()
 {
-    private const string CommandTitle = "Update NetApp Files Account";
-
     private readonly ILogger<AccountUpdateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "a3c7d1e5-8b2f-4f6a-9e0d-c5b4a7f2e8d1";
-
-    public override string Name => "update";
-
-    public override string Description =>
-        """
-        Updates an existing Azure NetApp Files account in a specified resource group, and returns the updated account details including name, location, resource group, and provisioning state. Supports updating tags. Requires account name, resource group, location, and subscription. Optionally accepts tags in JSON format.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

@@ -16,34 +16,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Backup;
 
+[CommandMetadata(
+    Id = "e7b3a1d5-9c4f-4e8a-b2d6-f1a5c3e7d9b4",
+    Name = "update",
+    Description =
+        """
+        Updates an existing Azure NetApp Files backup in a specified backup vault under a NetApp account, and returns the updated backup details including name, location, resource group, provisioning state, volume resource ID, label, and backup type. Supports updating the backup label. Requires account name, backup vault name, backup name, resource group, location, and subscription. Optionally accepts a label.
+        """,
+    Title = "Update NetApp Files Backup",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false
+)]
 public sealed class BackupUpdateCommand(ILogger<BackupUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupUpdateOptions>()
 {
-    private const string CommandTitle = "Update NetApp Files Backup";
-
     private readonly ILogger<BackupUpdateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
-
-    public override string Id => "e7b3a1d5-9c4f-4e8a-b2d6-f1a5c3e7d9b4";
-
-    public override string Name => "update";
-
-    public override string Description =>
-        """
-        Updates an existing Azure NetApp Files backup in a specified backup vault under a NetApp account, and returns the updated backup details including name, location, resource group, provisioning state, volume resource ID, label, and backup type. Supports updating the backup label. Requires account name, backup vault name, backup name, resource group, location, and subscription. Optionally accepts a label.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
