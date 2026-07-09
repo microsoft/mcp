@@ -56,6 +56,14 @@ The spec tightens OAuth/OpenID behavior, especially around issuer validation and
 Practical impact:
 - Current auth flows need to be verified against the new validation rules.
 - External MCP client/server interop is more likely to fail if assumptions about issuer or application type are stale.
+- Four distinct behaviors must each be checked: `iss` validation (RFC 9207), `application_type` in Dynamic Client Registration (so desktop/CLI `localhost` redirects are not rejected), scope accumulation on step-up, and credential binding to the issuing authorization server. See Required Additions, Addition 2.
+
+### 6a. Standard JSON-RPC error codes
+The RC replaces MCP-custom error codes with standard JSON-RPC codes. A missing resource now returns `-32602` instead of the MCP-custom `-32002`.
+
+Practical impact:
+- Any code or test that matches on the legacy `-32002` value will break on the modern path.
+- The modern path must emit standard codes while legacy-protocol responses retain original semantics. See Required Additions, Addition 1.
 
 ### 7. Roots, sampling, and logging are deprecated
 These capabilities are not removed yet, but they are explicitly on the deprecation path.
@@ -243,6 +251,12 @@ Work items:
 3. Keep existing Azure telemetry enrichment, but make sure it remains compatible with the new request metadata conventions.
 4. Confirm that support logging remains a local troubleshooting feature and is not conflated with protocol logging capability.
 
+Status update:
+- Item 4 status: ✅ CONFIRMED COMPLIANT — support logging is strictly local (SupportLoggingFolder feature disables telemetry automatically); no remote data egress.
+- Item 1 progress: W3C trace context extraction from `_meta` implemented in McpRuntime.CaptureToolCallMeta(); trace context tags use spec-compliant names (w3c.traceparent, w3c.tracestate, w3c.baggage). Pending: verify downstream Azure SDK client tracing.
+- Item 2 status: Trace context tag names are spec-compliant; no legacy metadata key migration needed for trace context. Pending: audit for any non-spec-compliant custom keys in `_meta` handling.
+- Item 3 status: Azure telemetry enrichment is isolated from MCP request metadata; support logging auto-disables telemetry to prevent sensitive data egress. Pending: verify ApplicationInsights W3C header propagation.
+
 Acceptance criteria:
 - A request can be traced from host to MCP server and downstream Azure calls.
 - No trace metadata is lost during the protocol upgrade.
@@ -318,9 +332,9 @@ These items are important for production readiness on top of the beta migration 
 
 - Workstream B: items 4 and 5 (session-affinity package disposition and operator guidance cleanup).
 - Workstream C: items 1, 2, 4, and 5 (discovery and cache-surface alignment).
-- Workstream G: items 3 and 5 (outbound MCP-to-MCP auth review and documentation updates).
-- Workstream H: items 1 through 4 (trace and metadata hygiene).
-- Workstream I: item 6 (external MCP server interop regression coverage).
+- Workstream G: items 3 and 5 completed (outbound MCP-to-MCP auth review added OAuth validation and compliance checks to `RegistryServerProvider`; documentation updated in `Authentication.md` with external MCP server OAuth compliance section and MCP 2026-07-28 issuer/registration guidance).
+- Workstream H: items 1–4 in progress (W3C trace context extraction implemented with spec-compliant tag names; support logging confirmed as strictly local; pending downstream Azure SDK tracing verification and telemetry enrichment compatibility audit).
+- Workstream I: item 6 completed (external MCP server interop regression coverage now includes `ServerToolLoader` discovery exposure and proxy-routing fallback tests).
 
 ### Deprecated but Backward-Compatible in beta SDK
 These areas still work for compatibility, but are explicitly on the deprecation path and should not be expanded.
@@ -382,6 +396,145 @@ Workstreams in this phase:
 - Primary: Workstream F
 - Primary: deferred Workstream C item 3 (`ttlMs`/`cacheScope`)
 - Optional roadmap extension work: Tasks/MCP Apps capability adoption
+
+## Required Additions (Beta SDK Gap Closure)
+
+The following items were identified by cross-checking this proposal against the beta SDK announcement for the 2026-07-28 release candidate. They are required for a compliant beta migration and are not yet fully promoted to gate-level work items above.
+
+### Addition 1: Standard JSON-RPC error code migration (Required)
+The RC replaces MCP-custom error codes with standard JSON-RPC codes. Specifically, a missing resource now returns `-32602` (invalid params) instead of the MCP-custom `-32002`. Clients or tests that match on the literal legacy value will break on the modern path.
+
+Work items:
+1. Inventory all code and tests that emit or assert MCP-custom error codes (especially `-32002` for resource-not-found).
+2. Update the modern (`2026-07-28`) path to return standard JSON-RPC error codes (`-32602` for missing resource).
+3. Ensure any client-side or interop matching does not hard-code the legacy `-32002` value on the modern path.
+4. Preserve legacy error behavior only where the server is answering an older protocol revision.
+
+Acceptance criteria:
+- A resource-not-found response on the modern path returns `-32602`, verified by an explicit test.
+- No modern-path code or test asserts the legacy `-32002` value.
+- Legacy-protocol responses (when serving `2025-11-25` or earlier) retain their original error semantics under an interop test.
+
+Classification: Migration Gate (belongs in Phase 1 alongside Workstream A and I).
+
+Phase 1 verification (2026-07-08): Not applicable to Azure MCP Server at the application layer. Azure MCP exposes no MCP `resources/read` handlers (it is tool-only), so there is no server-authored resource-not-found path to convert. The C# SDK implements SEP-2164 as Complete and automatically selects `-32602` on the `2026-07-28` path versus `-32002` on legacy versions based on the negotiated protocol. No code change or gate test is required in this repository; the behavior is owned and covered by the SDK. Resolved — no action.
+
+### Addition 2: Explicit authorization sub-requirement coverage (Required)
+Workstream G covers issuer validation and registration at a high level, but the RC calls out four distinct authorization behaviors that must each be verified so none are silently missed.
+
+Work items:
+1. `iss` (issuer) validation per RFC 9207 on incoming authorized requests in HTTP mode.
+2. `application_type` handling in Dynamic Client Registration, so desktop/CLI clients are not defaulted to `"web"` and their `localhost` redirects are not rejected.
+3. Scope accumulation on step-up authorization (scopes accrue across step-up rather than being replaced).
+4. Credential binding to the issuing authorization server (tokens are bound to the authorization server that issued them).
+
+Acceptance criteria:
+- Each of the four behaviors above has a dedicated test or documented verification result.
+- Desktop/CLI client registration with a `localhost` redirect succeeds against an RC-compliant authorization server.
+- Step-up flows demonstrate accumulated (not replaced) scopes.
+- Issuer validation rejects a token whose `iss` does not match the expected authorization server.
+
+Classification: Migration Gate for items 1 and 2; Beta Hardening for items 3 and 4.
+
+Phase 1/2 verification (2026-07-08): Assessed against the actual Azure MCP auth implementation. The four sub-requirements are predominantly MCP client-side OAuth behaviors implemented inside the SDK's `ClientOAuthProvider`, which Azure MCP Server does not use. See the Workstream G Verification Findings section for the full breakdown and the reasons each item is N/A, SDK-owned, or already covered by a different mechanism.
+
+### Addition 3: Mixed-protocol negotiation tests on a single endpoint (Required)
+The beta serves both `2026-07-28` and `2025-11-25` from the same HTTP endpoint, with modern clients probing `server/discover` and falling back to `initialize` against older servers. This dual-path behavior needs explicit pass/fail coverage beyond the existing mode-parity tests in Workstream I.
+
+Work items:
+1. Add an HTTP-mode test that a modern client using `server/discover` (with `Mcp-Method`/`Mcp-Name` headers, no `Mcp-Session-Id`) is served correctly.
+2. Add an HTTP-mode test that a legacy client using the `initialize` handshake against the same endpoint still negotiates down to `2025-11-25` and completes a tool call.
+3. Assert the two paths are served from one endpoint without requiring session affinity.
+4. Add a negative test that a modern request with a header/body method mismatch is rejected.
+
+Acceptance criteria:
+- Modern `server/discover` and legacy `initialize` both succeed against the same endpoint in a single test run.
+- No path in the test depends on `Mcp-Session-Id` or sticky routing.
+- Header/body mismatch is rejected with a clear error.
+
+Classification: Migration Gate (extends Workstream I; belongs in Phase 1).
+
+## Phase 1 Verification Findings
+
+This section records the results of verifying the completed Phase 1 branch (`migrate-to-mcp-stateless-protocol`) against the C# SDK `2.0.0-preview.1` release notes. It supersedes earlier assumptions made before the SDK surface was inspected directly.
+
+### Elicitation is MRTR-correct as implemented (no fix required)
+Earlier review flagged a high-risk concern that calling `McpServer.ElicitAsync(...)` under `2026-07-28` would throw because SEP-2260 removes legacy server-to-client request methods. Direct inspection of `ModelContextProtocol.Core` `2.0.0-preview.1` shows this is not the case:
+
+- `McpServer.ElicitAsync` is the MRTR-integrated API. Its documented behavior routes the request through the originating POST response stream (`JsonRpcMessageContext.RelatedTransport`), which is open for the duration of the request, and automatically transitions task status to `InputRequired` while awaiting input.
+- The `InvalidOperationException` described by SEP-2260 applies to unsolicited server-to-client requests (outside an active client request), not to elicitation invoked from within a tool handler.
+
+The production consent path is already correct: `NamespaceToolLoader` and `CommandFactoryToolLoader` call `BaseToolLoader.HandleElicitationAsync`, which invokes `request.Server.ElicitAsync(...)` on the request-scoped server. `HandleElicitationAsync` also wraps the call in a fail-closed `try/catch` and rejects when the client does not support elicitation, satisfying Workstream D item 3.
+
+Test coverage is adequate at the unit level: accept, decline, and cancel action mapping and requested-schema forwarding are exercised by mocking `SendRequestAsync` (the transport method `ElicitAsync` calls internally). Conclusion: resolved — no code change required.
+
+### Residual note: `RequestElicitationAsync` helper is not on the production path
+`McpServerElicitationExtensions.RequestElicitationAsync` duplicates consent-schema logic but has no production callers (only tests). If it is ever wired up, it must be passed the request-scoped `McpServer` from `RequestContext` so the SDK can route elicitation through the active POST stream. This is a documentation/usage caution, not a defect.
+
+### Net Phase 1 status
+- Workstream A (SDK upgrade), B (HTTP routing headers), and I (test harness) required subsets: complete and building cleanly.
+- Workstream D (elicitation): complete and verified MRTR-correct.
+- Addition 1 (`-32602`): not applicable at this layer (SDK-owned; no MCP resources exposed).
+- No outstanding Phase 1 code gaps. Remaining Additions 2 and 3 concern Phase 1/2 auth and interop test coverage and are tracked separately.
+
+## Phase 2 Verification Findings
+
+This section records the results of verifying the Phase 2 branch work against the C# SDK `2.0.0-preview.1` release notes and the AspNetCore transport surface.
+
+### HTTP routing-header enforcement was non-conformant (fixed)
+The initial Phase 2 implementation added `ValidateMcpRoutingHeadersMiddleware` in `ServiceStartCommand` that required **both** `Mcp-Method` and `Mcp-Name` on **every** HTTP POST, unconditionally. Cross-checking against SEP-2243 and the SDK revealed two conformance defects:
+
+1. Over-enforcement of `Mcp-Name`. Per SEP-2243, `Mcp-Method` is required on all POSTs, but `Mcp-Name` is required only for methods that name a tool, resource, or prompt (`tools/call`, `resources/read`, `prompts/get`). Requiring it for `tools/list`, `server/discover`, `ping`, and notifications is incorrect.
+2. Missing protocol-version gate. The SDK documents that header validation "is only performed for protocol versions that include the HTTP Standardization feature." The middleware enforced headers regardless of `MCP-Protocol-Version`, which would reject legacy `2025-11-25` HTTP clients (including the `initialize` handshake) and break the dual-era interop guarantee.
+
+Fix applied: the middleware now (a) only enforces when the request declares `MCP-Protocol-Version: 2026-07-28`, (b) always requires `Mcp-Method` on those POSTs, and (c) requires `Mcp-Name` only for the named-method set. Legacy/absent versions are passed through untouched. This complements — rather than replaces — the SDK's own `StreamableHttpHandler.ValidateMcpHeaders`, which is retained as the authoritative header/body-agreement and `Mcp-Param-*` validator. An explicit guard is kept because SEP-2243 is still "Partial" in the preview SDK.
+
+Test corrections:
+- The former `Should_Reject_Request_Without_McpName_Header` test asserted the wrong behavior (it rejected `tools/list` without `Mcp-Name`). It was replaced by two tests: a named-method (`tools/call`) rejection and a non-named-method (`tools/list`) acceptance.
+- Added `Should_Accept_Legacy_Initialize_Without_Routing_Headers` to lock in backward-compatible interop: a `2025-11-25` `initialize` POST with no routing headers is not rejected by the guard.
+- Existing `Mcp-Method`-missing and header/body-mismatch rejection tests remain valid and green.
+
+### Trace context capture partly duplicates the SDK (acceptable, no action)
+Workstream H manually captures `traceparent`/`tracestate`/`baggage` from `_meta` as activity tags. Per SEP-414 the SDK already propagates W3C trace context via `DistributedContextPropagator` with real parent-context extraction. The manual capture adds string-tag enrichment (not span parentage) and is harmless; it is retained but noted as redundant with built-in behavior.
+
+### Cache metadata deferral rationale updated (SEP-2549)
+The Phase 2 note deferring `ttlMs`/`cacheScope` "until the SDK exposes it" is stale: the SDK now surfaces these as `TimeToLive` (`TimeSpan?`) and `CacheScope` via `ICacheableResult`. Deferring adoption to Phase 4 remains reasonable, but the stated blocker no longer applies — it is an optional optimization, not an SDK limitation.
+
+### Net Phase 2 status
+- Workstream B (HTTP routing headers, session-affinity disposition, operator guidance): complete and now spec-conformant after the middleware fix.
+- Workstream C (startup/discovery split, list-cache semantics): complete; `ttlMs`/`cacheScope` remains an optional Phase 4 item.
+- Workstream H (trace context): complete; noted as partially redundant with SDK propagation.
+
+## Workstream G Verification Findings (Authorization)
+
+This section records the results of assessing Addition 2 (authorization hardening) against the actual Azure MCP auth implementation and the C# SDK `2.0.0-preview.1` auth SEP status.
+
+### Azure MCP's two auth surfaces
+1. Incoming (Azure MCP as protected resource). Configured via `AddMicrosoftIdentityWebApiAot` (Microsoft.Identity.Web) in `ServiceStartCommand`. This validates the incoming JWT `iss`, `aud`, and signature against Azure AD metadata. The `McpAccess` authorization policy enforces delegated scope (`Mcp.Tools.ReadWrite`) or app permission (`Mcp.Tools.ReadWrite.All`) via `RequireScopeOrAppPermission`. OBO is wired through `AddTokenAcquisition`. A `.well-known/oauth-protected-resource` endpoint and a `WWW-Authenticate: Bearer ... resource_metadata=...` challenge are implemented.
+2. Outgoing to external MCP servers (Azure MCP as MCP client, registry-backed). `RegistryServerProvider` authenticates using Azure Identity bearer tokens via `AccessTokenHandler`. It deliberately does not set `HttpClientTransportOptions.OAuth`, so the SDK's `ClientOAuthProvider` OAuth-discovery flow is not engaged (Entra `resource`-parameter gap, csharp-sdk issue #939).
+
+### Why the four sub-requirements do not map to application-layer work
+The SDK release notes place all four behaviors inside `ClientOAuthProvider` (SEP-2350 Complete, SEP-2468/2352/837 Partial). Because Azure MCP does not use `ClientOAuthProvider` on either surface, they resolve as follows:
+
+- Item 1 — `iss` validation (SEP-2468, RFC 9207): The RC behavior is a client-side mix-up defense in `ClientOAuthProvider` and is not exercised. Incoming JWT issuer validation is nonetheless present and correct via Microsoft.Identity.Web. Net: incoming covered by Identity.Web; client-side SEP-2468 N/A (SDK-owned if ever adopted).
+- Item 2 — `application_type` in Dynamic Client Registration (SEP-837): Azure MCP Server does not perform Dynamic Client Registration. It is a resource server, and the registry client uses Azure Identity tokens rather than DCR. Net: N/A.
+- Item 3 — scope accumulation on step-up (SEP-2350): A client-side `ClientOAuthProvider` behavior that is not engaged. Net: N/A / SDK-owned.
+- Item 4 — credential binding to the issuing authorization server (SEP-2352): A client-side `ProtectedResourceMetadata` validation in `ClientOAuthProvider` that is not engaged. Net: N/A / SDK-owned.
+
+Conclusion: no Migration-Gate auth code work is required in this repository for Addition 2. The genuinely owned behaviors — incoming issuer/audience/scope validation and outgoing HTTPS/scope hygiene — are already implemented.
+
+### Minor defects found and fixed
+- `RegistryServerProvider.ValidateOAuthConfiguration` contained a dead, empty issuer-binding `if` branch whose comment implied an OAuth provider validates the issuer for registry servers. That is misleading because registry servers use Azure Identity tokens, not the OAuth-discovery flow. The dead branch was removed and replaced with an accurate note describing where issuer/audience validation actually happens.
+- `docs/Authentication.md` cited the OAuth `resource` parameter as "per RFC 5234" (RFC 5234 is ABNF). Corrected to RFC 8707 (Resource Indicators for OAuth 2.0).
+
+### Residual documentation note (no code impact)
+The "OAuth Configuration Requirements" table in `docs/Authentication.md` is written as requirements the external server must meet, not as claims about checks Azure MCP performs. That framing is acceptable, but readers should understand that for registry servers the Azure MCP client enforces only HTTPS and non-empty scopes; issuer/application-type validation is the responsibility of the external server's own authorization server.
+
+### Net Workstream G status
+- Incoming auth (issuer/audience/scope, OBO, protected-resource metadata): complete and correct.
+- Outgoing registry auth: uses Azure Identity tokens by design; SDK client-side OAuth SEPs are N/A.
+- Addition 2 items 1–4: N/A or SDK-owned at the application layer; no gate work required.
+- Two minor defects (dead code, RFC citation) fixed.
 
 ## Risks
 

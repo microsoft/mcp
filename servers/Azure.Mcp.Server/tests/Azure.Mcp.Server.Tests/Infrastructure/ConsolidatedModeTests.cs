@@ -556,9 +556,61 @@ public class ConsolidatedModeTests
     }
 
     [Fact]
-    public async Task ConsolidatedMode_HttpTransport_Should_Reject_Request_Without_McpName_Header()
+    public async Task ConsolidatedMode_HttpTransport_Should_Reject_NamedMethod_Without_McpName_Header()
     {
-        // Phase 2 hardening (Workstream B): Streamable HTTP routing requires Mcp-Name.
+        // Phase 2 hardening (Workstream B / SEP-2243): Mcp-Name is required only for methods
+        // that name a tool, resource, or prompt (tools/call, resources/read, prompts/get).
+        // A tools/call request without Mcp-Name must be rejected.
+        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
+        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+
+        Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}.");
+
+        var port = GetAvailablePort();
+        var processStartInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = azmcpPath,
+            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        processStartInfo.Environment["ASPNETCORE_URLS"] = $"http://127.0.0.1:{port}";
+
+        using var process = System.Diagnostics.Process.Start(processStartInfo);
+        Assert.NotNull(process);
+
+        try
+        {
+            using var client = new HttpClient();
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
+            {
+                Content = new StringContent("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"some-tool\",\"arguments\":{}}}", System.Text.Encoding.UTF8, "application/json")
+            };
+            request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
+            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
+            request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/call");
+            // Intentionally omit Mcp-Name for a named method
+
+            var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
+
+            Assert.True(
+                (int)response.StatusCode >= 400 && (int)response.StatusCode < 500,
+                $"Expected a 4xx rejection for missing Mcp-Name on tools/call but got {(int)response.StatusCode}.");
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                process.Kill();
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ConsolidatedMode_HttpTransport_Should_Accept_NonNamedMethod_Without_McpName_Header()
+    {
+        // Phase 2 hardening (Workstream B / SEP-2243): non-named methods (e.g. tools/list)
+        // require only Mcp-Method, not Mcp-Name. Omitting Mcp-Name must NOT be rejected.
         var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
         var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
 
@@ -587,13 +639,69 @@ public class ConsolidatedModeTests
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
             request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
-            // Intentionally omit Mcp-Name
+            // Intentionally omit Mcp-Name — valid for a non-named method
 
             var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
+            var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
-            Assert.True(
-                (int)response.StatusCode >= 400 && (int)response.StatusCode < 500,
-                $"Expected a 4xx rejection for missing Mcp-Name header but got {(int)response.StatusCode}.");
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Contains("\"tools\"", content, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                process.Kill();
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ConsolidatedMode_HttpTransport_Should_Accept_Legacy_Initialize_Without_Routing_Headers()
+    {
+        // Phase 2 hardening (Workstream B / SEP-2243): routing headers are required only when the
+        // client declares MCP-Protocol-Version: 2026-07-28. A legacy client performing the
+        // initialize handshake over HTTP (older/absent version) must NOT be rejected for missing
+        // Mcp-Method/Mcp-Name, preserving backward-compatible interop from a single endpoint.
+        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
+        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+
+        Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}.");
+
+        var port = GetAvailablePort();
+        var processStartInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = azmcpPath,
+            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        processStartInfo.Environment["ASPNETCORE_URLS"] = $"http://127.0.0.1:{port}";
+
+        using var process = System.Diagnostics.Process.Start(processStartInfo);
+        Assert.NotNull(process);
+
+        try
+        {
+            using var client = new HttpClient();
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
+            {
+                Content = new StringContent(
+                    "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-11-25\",\"capabilities\":{},\"clientInfo\":{\"name\":\"legacy-client\",\"version\":\"1.0\"}}}",
+                    System.Text.Encoding.UTF8,
+                    "application/json")
+            };
+            request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
+            // Legacy client: declares the older protocol version and sends no MCP routing headers.
+            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2025-11-25");
+
+            var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
+            var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+            // The header-routing guard must not reject the legacy handshake for missing routing headers.
+            // Assert specifically that our guard's rejection message is absent, independent of any
+            // SDK-level protocol negotiation outcome.
+            Assert.DoesNotContain("Missing required MCP routing header", content, StringComparison.OrdinalIgnoreCase);
         }
         finally
         {

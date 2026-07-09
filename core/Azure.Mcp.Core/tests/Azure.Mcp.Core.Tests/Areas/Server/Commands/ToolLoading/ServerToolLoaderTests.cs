@@ -138,6 +138,89 @@ public class ServerToolLoaderTests
     }
 
     [Fact]
+    public async Task ListToolsHandler_WithExternalServers_ExposesProxyRouterTools()
+    {
+        // Arrange
+        var providerA = Substitute.For<IMcpServerProvider>();
+        providerA.CreateMetadata().Returns(new McpServerMetadata
+        {
+            Id = "documentation",
+            Name = "documentation",
+            Description = "Docs server"
+        });
+
+        var providerB = Substitute.For<IMcpServerProvider>();
+        providerB.CreateMetadata().Returns(new McpServerMetadata
+        {
+            Id = "arm",
+            Name = "arm",
+            Description = "ARM server",
+            ToolPrefix = "arm_"
+        });
+
+        var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+        discoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
+            .Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>([providerA, providerB]));
+
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<ServerToolLoader>();
+        var toolLoader = new ServerToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.Equal(2, result.Tools.Count);
+
+        var toolNames = result.Tools.Select(t => t.Name).ToList();
+        Assert.Contains("documentation", toolNames);
+        Assert.Contains("arm", toolNames);
+
+        var documentationTool = result.Tools.Single(t => t.Name == "documentation");
+        Assert.Contains("hierarchical MCP command router", documentationTool.Description, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithExternalServerCommand_AttemptsProxyRoutingAndReturnsLearnResponse()
+    {
+        // Arrange
+        var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+        discoveryStrategy.GetOrCreateClientAsync("documentation", Arg.Any<McpClientOptions>(), TestContext.Current.CancellationToken)
+            .Returns((McpClient)null!);
+
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<ServerToolLoader>();
+        var toolLoader = new ServerToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+
+        var request = CreateCallToolRequest("documentation",
+            new Dictionary<string, JsonElement>
+            {
+                { "intent", JsonDocument.Parse("\"search docs\"").RootElement },
+                { "command", JsonDocument.Parse("\"microsoft_docs_search\"").RootElement },
+                { "parameters", JsonDocument.Parse("""
+                    {
+                        "question": "how to deploy azure mcp server"
+                    }
+                    """).RootElement }
+            });
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEqual(true, result.IsError);
+        var text = result.Content.OfType<TextContentBlock>().Single();
+        Assert.Contains("available command", text.Text, StringComparison.OrdinalIgnoreCase);
+
+        await discoveryStrategy.Received()
+            .GetOrCreateClientAsync("documentation", Arg.Any<McpClientOptions>(), TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
     public async Task GetChildToolList_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
     {
         // Arrange

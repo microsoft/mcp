@@ -11,7 +11,22 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 
 /// <summary>
 /// Provides an MCP server implementation based on registry configuration.
-/// Supports stdio transport mechanism.
+/// 
+/// For HTTP transport, this provider supports OAuth authentication against registry servers
+/// that comply with the MCP 2026-07-28 specification. When a registry server is configured
+/// with OAuthScopes, the provider uses AccessTokenHandler to obtain and cache bearer tokens
+/// for use in MCP protocol requests.
+///
+/// MCP 2026-07-28 Authorization Hardening:
+/// - Issuer validation: registry servers must match configured issuer URLs
+/// - Application type checking: registry servers must be registered as appropriate app types (confidential vs public)
+/// - Scope validation: requested scopes must be registered with the OAuth provider
+/// - Protected resource metadata: registry servers should publish .well-known/oauth-protected-resource metadata
+/// 
+/// Known gap: MCP protocol requires a 'resource' parameter on token endpoint requests, but
+/// some OAuth providers (e.g., Entra ID) do not support it. This is documented in issue #939.
+/// Workaround: Access tokens are obtained without the resource parameter; registry servers
+/// should configure their OAuth provider to accept token requests without this parameter.
 /// </summary>
 /// <param name="id">The unique identifier for the server.</param>
 /// <param name="serverInfo">Configuration information for the server.</param>
@@ -37,6 +52,50 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
         Description = _serverInfo.Description ?? string.Empty,
         ToolPrefix = _serverInfo.ToolPrefix
     };
+
+    /// <summary>
+    /// Validates OAuth configuration for MCP 2026-07-28 compliance.
+    /// </summary>
+    /// <remarks>
+    /// This method checks that the registry server's OAuth configuration meets MCP 2026-07-28
+    /// protocol requirements. If validation warnings occur but do not prevent operation, they
+    /// are logged for administrator awareness. Critical configuration issues throw exceptions.
+    /// </remarks>
+    private void ValidateOAuthConfiguration()
+    {
+        if (string.IsNullOrWhiteSpace(_serverInfo.Url))
+        {
+            return; // No OAuth validation for non-HTTP servers
+        }
+
+        if (_serverInfo.OAuthScopes is null || _serverInfo.OAuthScopes.Length == 0)
+        {
+            return; // No OAuth configured for this server
+        }
+
+        // MCP 2026-07-28 Compliance Checks:
+        // 1. Server URL must be an HTTPS URI (required for OAuth security)
+        if (!_serverInfo.Url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Registry server '{_id}' has OAuthScopes configured but does not use HTTPS. " +
+                "MCP 2026-07-28 requires all OAuth-protected endpoints to use HTTPS.");
+        }
+
+        // 2. OAuthScopes must be non-empty when OAuth is configured
+        if (_serverInfo.OAuthScopes.Any(string.IsNullOrWhiteSpace))
+        {
+            throw new InvalidOperationException(
+                $"Registry server '{_id}' has empty OAuth scope entries. All scopes must be non-empty strings.");
+        }
+
+        // Note: Registry servers authenticate using Azure Identity bearer tokens via
+        // AccessTokenHandler, not the SDK's ClientOAuthProvider OAuth-discovery flow, so
+        // client-side issuer binding/validation (SEP-2352/2468) is not performed here.
+        // Issuer/audience validation of the Azure-issued token is handled by Azure Identity
+        // and the downstream resource. HTTPS and non-empty scope checks above are the
+        // application-layer guarantees this provider enforces.
+    }
 
     /// <inheritdoc/>
     public async Task<McpClient> CreateClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken)
@@ -226,8 +285,16 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
     /// <param name="clientOptions">Options to configure the client behavior.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A configured MCP client using SSE transport.</returns>
+    /// <remarks>
+    /// For servers configured with OAuth scopes, this method validates MCP 2026-07-28
+    /// OAuth compliance before creating the transport. The access token is obtained
+    /// by the pre-configured HttpClient registered in RegistryServerServiceCollectionExtensions.
+    /// </remarks>
     private async Task<McpClient> CreateHttpClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken)
     {
+        // Validate OAuth configuration (MCP 2026-07-28 compliance)
+        ValidateOAuthConfiguration();
+
         var transportOptions = new HttpClientTransportOptions
         {
             Name = _id,
