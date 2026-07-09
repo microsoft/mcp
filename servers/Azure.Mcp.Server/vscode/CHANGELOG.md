@@ -1,6 +1,5 @@
 # Release History
 
-
 ## 2.0.5 (2026-07-09)
 ### Fixed
 
