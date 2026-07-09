@@ -140,9 +140,9 @@ public sealed class MockMcpClientBuilder
     {
         var tools = _tools.Values.Select(mockTool => mockTool.Tool).ToList();
 
-            // Serialize tools list using source-generated context, then wrap in a result envelope
-            var toolsNode = JsonSerializer.SerializeToNode(tools, ServerJsonContext.Default.IEnumerableTool);
-            var json = new System.Text.Json.Nodes.JsonObject { ["tools"] = toolsNode };
+        // Serialize tools list using source-generated context, then wrap in a result envelope
+        var toolsNode = JsonSerializer.SerializeToNode(tools, ServerJsonContext.Default.IEnumerableTool);
+        var json = new System.Text.Json.Nodes.JsonObject { ["tools"] = toolsNode };
 
         return Task.FromResult(new JsonRpcResponse
         {

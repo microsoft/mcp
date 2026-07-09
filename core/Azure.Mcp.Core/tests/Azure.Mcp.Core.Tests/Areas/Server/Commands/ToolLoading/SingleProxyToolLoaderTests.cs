@@ -427,11 +427,11 @@ public class SingleProxyToolLoaderTests
         };
 
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-            return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
-            {
-                Name = "azure",
-                Arguments = arguments
-            });
+        return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
+        {
+            Name = "azure",
+            Arguments = arguments
+        });
     }
 
     [Fact]

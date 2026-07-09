@@ -893,7 +893,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest()
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-            return new(mockServer, new() { Method = RequestMethods.ToolsList }, new ListToolsRequestParams());
+        return new(mockServer, new() { Method = RequestMethods.ToolsList }, new ListToolsRequestParams());
     }
 
     private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(
@@ -905,11 +905,11 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             kvp => JsonSerializer.SerializeToElement(kvp.Value));
 
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-            return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
-            {
-                Name = toolName,
-                Arguments = jsonArguments
-            });
+        return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
+        {
+            Name = toolName,
+            Arguments = jsonArguments
+        });
     }
 
     private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequestWithJsonElements(
@@ -917,11 +917,11 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         Dictionary<string, JsonElement> arguments)
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-            return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
-            {
-                Name = toolName,
-                Arguments = arguments
-            });
+        return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
+        {
+            Name = toolName,
+            Arguments = arguments
+        });
     }
 
     private static ModelContextProtocol.Client.McpClientOptions CallCreateClientOptions(
