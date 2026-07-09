@@ -13,6 +13,9 @@ internal sealed class BackupPolicyCreateOrUpdateContent
     [JsonPropertyName("location")]
     public string? Location { get; set; }
 
+    [JsonPropertyName("tags")]
+    public Dictionary<string, string>? Tags { get; set; }
+
     [JsonPropertyName("properties")]
     public BackupPolicyCreateProperties? Properties { get; set; }
 }
@@ -27,4 +30,7 @@ internal sealed class BackupPolicyCreateProperties
 
     [JsonPropertyName("monthlyBackupsToKeep")]
     public int? MonthlyBackupsToKeep { get; set; }
+
+    [JsonPropertyName("enabled")]
+    public bool? Enabled { get; set; }
 }

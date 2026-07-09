@@ -9,4 +9,7 @@ public class BackupPolicyGetOptions : BaseNetAppFilesOptions
 {
     [JsonPropertyName(NetAppFilesOptionDefinitions.BackupPolicyName)]
     public string? BackupPolicy { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.IdsName)]
+    public string[]? Ids { get; set; }
 }

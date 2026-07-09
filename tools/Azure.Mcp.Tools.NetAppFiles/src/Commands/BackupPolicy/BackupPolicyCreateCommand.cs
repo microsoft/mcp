@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Microsoft.Mcp.Core.Extensions;
@@ -21,7 +22,7 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.BackupPolicy;
     Name = "create",
     Description =
         """
-        Creates an Azure NetApp Files backup policy in a specified account and resource group, and returns the created backup policy details including name, location, resource group, provisioning state, and backup retention settings. Requires account name, backup policy name, resource group, location, and subscription.
+        Creates an Azure NetApp Files backup policy in a specified account and resource group, and returns the created backup policy details including name, location, resource group, provisioning state, and backup retention settings. Supports daily, weekly, and monthly backup retention counts, enabled state, and tags. Requires account name, backup policy name, resource group, location, and subscription.
         """,
     Title = "Create NetApp Files Backup Policy",
     Destructive = true,
@@ -47,6 +48,9 @@ public sealed class BackupPolicyCreateCommand(ILogger<BackupPolicyCreateCommand>
         command.Options.Add(NetAppFilesOptionDefinitions.DailyBackupsToKeep);
         command.Options.Add(NetAppFilesOptionDefinitions.WeeklyBackupsToKeep);
         command.Options.Add(NetAppFilesOptionDefinitions.MonthlyBackupsToKeep);
+        command.Options.Add(NetAppFilesOptionDefinitions.Enabled.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.Tags.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.NoWait.AsOptional());
     }
 
     protected override BackupPolicyCreateOptions BindOptions(ParseResult parseResult)
@@ -59,6 +63,9 @@ public sealed class BackupPolicyCreateCommand(ILogger<BackupPolicyCreateCommand>
         options.DailyBackupsToKeep = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.DailyBackupsToKeep.Name);
         options.WeeklyBackupsToKeep = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.WeeklyBackupsToKeep.Name);
         options.MonthlyBackupsToKeep = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.MonthlyBackupsToKeep.Name);
+        options.Enabled = parseResult.GetValueOrDefault<bool?>(NetAppFilesOptionDefinitions.Enabled.Name);
+        options.Tags = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Tags.Name);
+        options.NoWait = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.NoWait.Name);
         return options;
     }
 
@@ -73,6 +80,21 @@ public sealed class BackupPolicyCreateCommand(ILogger<BackupPolicyCreateCommand>
 
         try
         {
+            ValidateUnsupportedCreateArguments(options);
+
+            Dictionary<string, string>? tags = null;
+            if (!string.IsNullOrEmpty(options.Tags))
+            {
+                try
+                {
+                    tags = JsonSerializer.Deserialize(options.Tags, NetAppFilesJsonContext.Default.DictionaryStringString);
+                }
+                catch (JsonException ex)
+                {
+                    throw new ArgumentException($"Invalid tags JSON format: {ex.Message}", nameof(options.Tags));
+                }
+            }
+
             var backupPolicy = await _netAppFilesService.CreateBackupPolicy(
                 options.Account!,
                 options.BackupPolicy!,
@@ -82,6 +104,8 @@ public sealed class BackupPolicyCreateCommand(ILogger<BackupPolicyCreateCommand>
                 options.DailyBackupsToKeep,
                 options.WeeklyBackupsToKeep,
                 options.MonthlyBackupsToKeep,
+                options.Enabled,
+                tags,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -103,6 +127,7 @@ public sealed class BackupPolicyCreateCommand(ILogger<BackupPolicyCreateCommand>
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        ArgumentException argEx => argEx.Message,
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "A backup policy with this name already exists. Choose a different name.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
@@ -112,6 +137,14 @@ public sealed class BackupPolicyCreateCommand(ILogger<BackupPolicyCreateCommand>
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
+
+    private static void ValidateUnsupportedCreateArguments(BackupPolicyCreateOptions options)
+    {
+        if (options.NoWait)
+        {
+            throw new ArgumentException("The --no-wait argument is not supported by this command yet.");
+        }
+    }
 
     internal record BackupPolicyCreateCommandResult([property: JsonPropertyName("backupPolicy")] BackupPolicyCreateResult BackupPolicy);
 }

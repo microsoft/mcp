@@ -21,4 +21,28 @@ public class BackupPolicyUpdateOptions : BaseNetAppFilesOptions
 
     [JsonPropertyName(NetAppFilesOptionDefinitions.MonthlyBackupsToKeepName)]
     public int? MonthlyBackupsToKeep { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.EnabledName)]
+    public bool? Enabled { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.TagsName)]
+    public string? Tags { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.IdsName)]
+    public string[]? Ids { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.NoWaitName)]
+    public bool NoWait { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.AddName)]
+    public string[]? Add { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.SetName)]
+    public string[]? Set { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.RemoveName)]
+    public string[]? Remove { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.ForceStringName)]
+    public bool ForceString { get; set; }
 }

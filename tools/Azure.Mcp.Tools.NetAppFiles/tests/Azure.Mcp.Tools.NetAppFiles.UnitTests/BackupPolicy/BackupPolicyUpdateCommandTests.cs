@@ -52,6 +52,7 @@ public class BackupPolicyUpdateCommandTests
 
     [Theory]
     [InlineData("--account myanfaccount --backupPolicy mypolicy --resource-group myrg --location eastus --subscription sub123", true)]
+    [InlineData("--account myanfaccount --backupPolicy mypolicy --resource-group myrg --location eastus --subscription sub123 --enabled false", true)]
     [InlineData("--backupPolicy mypolicy --resource-group myrg --location eastus --subscription sub123", false)] // Missing account
     [InlineData("--account myanfaccount --resource-group myrg --location eastus --subscription sub123", false)] // Missing backupPolicy
     [InlineData("--account myanfaccount --backupPolicy mypolicy --location eastus --subscription sub123", false)] // Missing resource-group
@@ -82,6 +83,8 @@ public class BackupPolicyUpdateCommandTests
                 Arg.Any<int?>(),
                 Arg.Any<int?>(),
                 Arg.Any<int?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<Dictionary<string, string>?>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
@@ -132,6 +135,7 @@ public class BackupPolicyUpdateCommandTests
         _netAppFilesService.UpdateBackupPolicy(
             Arg.Is(account), Arg.Is(backupPolicy), Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(subscription),
             Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(),
+            Arg.Any<bool?>(), Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedPolicy));
 
@@ -191,6 +195,7 @@ public class BackupPolicyUpdateCommandTests
         _netAppFilesService.UpdateBackupPolicy(
             Arg.Is(account), Arg.Is(backupPolicy), Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(subscription),
             null, null, null,
+            null, null,
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedPolicy));
 
@@ -220,6 +225,7 @@ public class BackupPolicyUpdateCommandTests
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(),
+            Arg.Any<bool?>(), Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
@@ -249,6 +255,7 @@ public class BackupPolicyUpdateCommandTests
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(),
+            Arg.Any<bool?>(), Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Backup policy already exists"));
@@ -277,6 +284,7 @@ public class BackupPolicyUpdateCommandTests
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(),
+            Arg.Any<bool?>(), Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Backup policy not found"));
@@ -305,6 +313,7 @@ public class BackupPolicyUpdateCommandTests
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(),
+            Arg.Any<bool?>(), Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
@@ -333,6 +342,7 @@ public class BackupPolicyUpdateCommandTests
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(),
+            Arg.Any<bool?>(), Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<BackupPolicyCreateResult>(new Exception("Test error")));
@@ -373,6 +383,7 @@ public class BackupPolicyUpdateCommandTests
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(),
+            Arg.Any<bool?>(), Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedPolicy));
@@ -431,6 +442,7 @@ public class BackupPolicyUpdateCommandTests
         _netAppFilesService.UpdateBackupPolicy(
             account, backupPolicy, resourceGroup, location, subscription,
             5, 2, 1,
+            null, null,
             null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedPolicy);
 
@@ -449,6 +461,99 @@ public class BackupPolicyUpdateCommandTests
         await _netAppFilesService.Received(1).UpdateBackupPolicy(
             account, backupPolicy, resourceGroup, location, subscription,
             5, 2, 1,
+            null, null,
             null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CallsServiceWithEnabledAndTags()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var account = "myanfaccount";
+        var backupPolicy = "mypolicy";
+        var resourceGroup = "myrg";
+        var location = "eastus";
+        var subscription = "sub123";
+
+        var expectedPolicy = new BackupPolicyCreateResult(
+            Id: $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/backupPolicies/{backupPolicy}",
+            Name: $"{account}/{backupPolicy}",
+            Type: "Microsoft.NetApp/netAppAccounts/backupPolicies",
+            Location: location,
+            ResourceGroup: resourceGroup,
+            ProvisioningState: "Succeeded",
+            DailyBackupsToKeep: 5,
+            WeeklyBackupsToKeep: 2,
+            MonthlyBackupsToKeep: 1,
+            Enabled: false);
+
+        _netAppFilesService.UpdateBackupPolicy(
+            account, backupPolicy, resourceGroup, location, subscription,
+            5, 2, 1,
+            false, Arg.Any<Dictionary<string, string>?>(),
+            null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .Returns(expectedPolicy);
+
+        var args = _commandDefinition.Parse([
+            "--account", account, "--backupPolicy", backupPolicy,
+            "--resource-group", resourceGroup, "--location", location,
+            "--subscription", subscription, "--dailyBackupsToKeep", "5",
+            "--weeklyBackupsToKeep", "2", "--monthlyBackupsToKeep", "1",
+            "--enabled", "false", "--tags", "{\"env\":\"test\",\"owner\":\"anf\"}"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _netAppFilesService.Received(1).UpdateBackupPolicy(
+            account, backupPolicy, resourceGroup, location, subscription,
+            5, 2, 1,
+            false,
+            Arg.Is<Dictionary<string, string>?>(tags =>
+                tags != null &&
+                tags.Count == 2 &&
+                tags["env"] == "test" &&
+                tags["owner"] == "anf"),
+            null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("--ids /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/backupPolicies/mypolicy")]
+    [InlineData("--no-wait true")]
+    [InlineData("--add properties.enabled=true")]
+    [InlineData("--set properties.enabled=false")]
+    [InlineData("--remove properties.weeklyBackupsToKeep")]
+    [InlineData("--force-string true")]
+    public async Task ExecuteAsync_UnsupportedArguments_ReturnBadRequest(string unsupportedArg)
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+
+        var baseArgs = new List<string>
+        {
+            "--account", "myanfaccount",
+            "--backupPolicy", "mypolicy",
+            "--resource-group", "myrg",
+            "--location", "eastus",
+            "--subscription", "sub123"
+        };
+        baseArgs.AddRange(unsupportedArg.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+
+        var args = _commandDefinition.Parse(baseArgs.ToArray());
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("not supported", response.Message);
+        await _netAppFilesService.DidNotReceive().UpdateBackupPolicy(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(),
+            Arg.Any<bool?>(), Arg.Any<Dictionary<string, string>?>(),
+            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
     }
 }

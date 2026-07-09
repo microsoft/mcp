@@ -45,6 +45,8 @@ public interface INetAppFilesService
     Task<ResourceQueryResults<BackupPolicyInfo>> GetBackupPolicyDetails(
         string? account,
         string? backupPolicy,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -179,6 +181,8 @@ public interface INetAppFilesService
         int? dailyBackupsToKeep = null,
         int? weeklyBackupsToKeep = null,
         int? monthlyBackupsToKeep = null,
+        bool? enabled = null,
+        Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
@@ -192,6 +196,8 @@ public interface INetAppFilesService
         int? dailyBackupsToKeep = null,
         int? weeklyBackupsToKeep = null,
         int? monthlyBackupsToKeep = null,
+        bool? enabled = null,
+        Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

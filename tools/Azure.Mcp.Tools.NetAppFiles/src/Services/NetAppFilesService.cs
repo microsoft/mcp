@@ -275,6 +275,8 @@ public class NetAppFilesService(
     public async Task<ResourceQueryResults<BackupPolicyInfo>> GetBackupPolicyDetails(
         string? account,
         string? backupPolicy,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -295,6 +297,18 @@ public class NetAppFilesService(
         {
             filters.Add($"name endswith '/{EscapeKqlString(backupPolicy)}'");
         }
+        if (ids is { Count: > 0 })
+        {
+            var escapedIds = ids
+                .Where(static id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => $"'{EscapeKqlString(id)}'")
+                .ToList();
+
+            if (escapedIds.Count > 0)
+            {
+                filters.Add($"id in~ ({string.Join(", ", escapedIds)})");
+            }
+        }
 
         string? additionalFilter = filters.Count > 0 ? string.Join(" and ", filters) : null;
 
@@ -302,7 +316,7 @@ public class NetAppFilesService(
         {
             return await ExecuteResourceQueryAsync(
                 "Microsoft.NetApp/netAppAccounts/backupPolicies",
-                null,
+                resourceGroup,
                 subscription,
                 retryPolicy,
                 ConvertToBackupPolicyInfoModel,
@@ -1258,6 +1272,8 @@ public class NetAppFilesService(
         int? dailyBackupsToKeep = null,
         int? weeklyBackupsToKeep = null,
         int? monthlyBackupsToKeep = null,
+        bool? enabled = null,
+        Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -1284,11 +1300,13 @@ public class NetAppFilesService(
             var createContent = new BackupPolicyCreateOrUpdateContent
             {
                 Location = location,
+                Tags = tags,
                 Properties = new BackupPolicyCreateProperties
                 {
                     DailyBackupsToKeep = dailyBackupsToKeep,
                     WeeklyBackupsToKeep = weeklyBackupsToKeep,
-                    MonthlyBackupsToKeep = monthlyBackupsToKeep
+                    MonthlyBackupsToKeep = monthlyBackupsToKeep,
+                    Enabled = enabled
                 }
             };
 
@@ -1343,6 +1361,8 @@ public class NetAppFilesService(
         int? dailyBackupsToKeep = null,
         int? weeklyBackupsToKeep = null,
         int? monthlyBackupsToKeep = null,
+        bool? enabled = null,
+        Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -1369,11 +1389,13 @@ public class NetAppFilesService(
             var updateContent = new BackupPolicyCreateOrUpdateContent
             {
                 Location = location,
+                Tags = tags,
                 Properties = new BackupPolicyCreateProperties
                 {
                     DailyBackupsToKeep = dailyBackupsToKeep,
                     WeeklyBackupsToKeep = weeklyBackupsToKeep,
-                    MonthlyBackupsToKeep = monthlyBackupsToKeep
+                    MonthlyBackupsToKeep = monthlyBackupsToKeep,
+                    Enabled = enabled
                 }
             };
 

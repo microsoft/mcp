@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.BackupPolicy;
     Name = "get",
     Description =
         """
-        Retrieves detailed information about Azure NetApp Files backup policies, including policy name, location, resource group, provisioning state, daily/weekly/monthly backups to keep, volume backups count, and enabled state. If a specific backup policy name is not provided, the command will return details for all backup policies in a subscription. Optionally filter by account.
+        Retrieves detailed information about Azure NetApp Files backup policies, including policy name, location, resource group, provisioning state, daily/weekly/monthly backups to keep, volume backups count, and enabled state. If a specific backup policy name is not provided, the command will return details for all backup policies in a subscription. Optionally filter by account, resource group, or resource IDs.
         """,
     Title = "Get NetApp Files Backup Policy Details",
     Destructive = false,
@@ -40,6 +40,8 @@ public sealed class BackupPolicyGetCommand(ILogger<BackupPolicyGetCommand> logge
         base.RegisterOptions(command);
         command.Options.Add(NetAppFilesOptionDefinitions.Account.AsOptional());
         command.Options.Add(NetAppFilesOptionDefinitions.BackupPolicy.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
     }
 
     protected override BackupPolicyGetOptions BindOptions(ParseResult parseResult)
@@ -47,6 +49,8 @@ public sealed class BackupPolicyGetCommand(ILogger<BackupPolicyGetCommand> logge
         var options = base.BindOptions(parseResult);
         options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
         options.BackupPolicy = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.BackupPolicy.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
         return options;
     }
 
@@ -64,6 +68,8 @@ public sealed class BackupPolicyGetCommand(ILogger<BackupPolicyGetCommand> logge
             var backupPolicies = await _netAppFilesService.GetBackupPolicyDetails(
                 options.Account,
                 options.BackupPolicy,
+                options.ResourceGroup,
+                options.Ids,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,

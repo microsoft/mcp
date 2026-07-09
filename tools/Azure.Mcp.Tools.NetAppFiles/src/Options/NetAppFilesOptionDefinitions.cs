@@ -81,6 +81,7 @@ public static class NetAppFilesOptionDefinitions
     public const string DailyBackupsToKeepName = "dailyBackupsToKeep";
     public const string WeeklyBackupsToKeepName = "weeklyBackupsToKeep";
     public const string MonthlyBackupsToKeepName = "monthlyBackupsToKeep";
+    public const string EnabledName = "enabled";
     public const string VolumeResourceIdName = "volumeResourceId";
     public const string LabelName = "label";
     public const string SizeName = "size";
@@ -574,6 +575,12 @@ public static class NetAppFilesOptionDefinitions
     public static readonly Option<int?> MonthlyBackupsToKeep = new($"--{MonthlyBackupsToKeepName}")
     {
         Description = "The number of monthly backups to keep (e.g., 1).",
+        Required = false
+    };
+
+    public static readonly Option<bool?> Enabled = new($"--{EnabledName}")
+    {
+        Description = "Whether the backup policy is enabled.",
         Required = false
     };
 
