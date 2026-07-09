@@ -482,7 +482,6 @@ public class AccountCreateCommandTests
         var location = "eastus";
         var subscription = "sub123";
         var tagsJson = "{\"env\":\"prod\"}";
-        var tags = JsonSerializer.Deserialize<Dictionary<string, string>?>(tagsJson);
         var userAssignedIdentitiesJson = "{\"/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/u1\":{}}";
         var activeDirectoriesJson = "[{\"dns\":\"10.0.0.4\"}]";
 
@@ -543,7 +542,7 @@ public class AccountCreateCommandTests
             resourceGroup,
             location,
             subscription,
-            Arg.Is<Dictionary<string, string>?>(tags),
+            Arg.Is<Dictionary<string, string>?>(d => d != null && d.GetValueOrDefault("env") == "prod"),
             "cmkKey",
             "Microsoft.KeyVault",
             "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.KeyVault/vaults/kv1",

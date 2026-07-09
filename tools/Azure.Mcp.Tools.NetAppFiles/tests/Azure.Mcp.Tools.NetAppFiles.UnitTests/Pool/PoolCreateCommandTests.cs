@@ -427,7 +427,6 @@ public class PoolCreateCommandTests
         var subscription = "sub123";
         long sizeInBytes = 4398046511104;
         var tagsJson = "{\"env\":\"prod\"}";
-        var tags = JsonSerializer.Deserialize<Dictionary<string, string>?>(tagsJson);
 
         var expectedPool = new CapacityPoolCreateResult(
             Id: $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/capacityPools/{pool}",
@@ -479,7 +478,7 @@ public class PoolCreateCommandTests
             "Manual",
             true,
             Arg.Any<string>(),
-            Arg.Is<Dictionary<string, string>?>(tags),
+            Arg.Is<Dictionary<string, string>?>(d => d != null && d.GetValueOrDefault("env") == "prod"),
             null,
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());

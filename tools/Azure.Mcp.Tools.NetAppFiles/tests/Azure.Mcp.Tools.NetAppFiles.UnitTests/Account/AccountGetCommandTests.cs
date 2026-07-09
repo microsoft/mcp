@@ -328,10 +328,10 @@ public class AccountGetCommandTests
     {
         // Arrange
         TestEnvironment.ClearAzureSubscriptionId();
-        var subscription = "sub123";
+        var subscription = "00000000-0000-0000-0000-000000000000";
         var resourceGroup = "rg1";
-        var id1 = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.NetApp/netAppAccounts/account1";
-        var id2 = "/subscriptions/sub123/resourceGroups/rg2/providers/Microsoft.NetApp/netAppAccounts/account2";
+        var id1 = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg1/providers/Microsoft.NetApp/netAppAccounts/account1";
+        var id2 = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg2/providers/Microsoft.NetApp/netAppAccounts/account2";
 
         _netAppFilesService.GetAccountDetails(
             Arg.Any<string?>(),
@@ -346,13 +346,15 @@ public class AccountGetCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--ids", id1, id2
+            "--ids", id1,
+            "--ids", id2
         ]);
 
         // Act
-        await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         await _netAppFilesService.Received(1).GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             resourceGroup,

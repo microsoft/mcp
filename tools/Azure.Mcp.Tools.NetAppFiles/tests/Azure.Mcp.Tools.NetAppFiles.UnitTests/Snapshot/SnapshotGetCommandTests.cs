@@ -192,7 +192,6 @@ public class SnapshotGetCommandTests
         }
         else
         {
-            Console.WriteLine(response.Message);
             Assert.Contains("required", response.Message.ToLower());
         }
     }

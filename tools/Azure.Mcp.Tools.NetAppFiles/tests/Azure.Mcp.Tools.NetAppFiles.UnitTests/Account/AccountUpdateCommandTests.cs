@@ -16,9 +16,9 @@ using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using Xunit.v3;
-using Microsoft.Testing.Platform.TestHost;
-using System.Diagnostics;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Option;
+using Xunit.Sdk;
 
 namespace Azure.Mcp.Tools.NetAppFiles.UnitTests.Account;
 
@@ -97,6 +97,8 @@ public class AccountUpdateCommandTests
 
         var parseResult = _commandDefinition.Parse(args);
 
+        var hasSubscription = parseResult.GetValueOrDefault(OptionDefinitions.Common.Subscription);
+
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
@@ -109,7 +111,8 @@ public class AccountUpdateCommandTests
         }
         else
         {
-            Assert.Contains("--ids or both --account and --resource-group", response.Message.ToLower());
+            var expectedString = hasSubscription == null ? "--subscription" : "--ids or both --account and --resource-group";
+            Assert.Contains(expectedString, response.Message.ToLower());
         }
     }
 
