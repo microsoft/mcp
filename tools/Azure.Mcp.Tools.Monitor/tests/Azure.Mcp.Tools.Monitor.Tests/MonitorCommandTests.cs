@@ -35,6 +35,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     private string? _storageAccountName;
     private string? _appInsightsName;
     private string? _bingWebTestName;
+    private string? _healthModelName;
 
     public MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
         : base(output, fixture, liveServerFixture)
@@ -91,6 +92,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         _storageAccountName = $"{Settings.ResourceBaseName}mon";
         _appInsightsName = $"{Settings.ResourceBaseName}-ai";
         _bingWebTestName = $"{Settings.ResourceBaseName}-bing-test";
+        _healthModelName = $"{Settings.ResourceBaseName}-health";
 
         if (TestMode == TestMode.Playback)
         {
@@ -518,6 +520,42 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     //         // Don't fail the test if storage activity generation fails
     //     }
     // }
+
+    #region HealthModels Integration Tests
+
+    [Fact]
+    public async Task Should_Get_Entity_Health()
+    {
+        var result = await CallToolAsync(
+            "monitor_healthmodels_entity_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "health-model", _healthModelName },
+                { "entity", "root" }
+            });
+
+        Assert.NotNull(result);
+    }
+
+    [Theory]
+    [InlineData("--invalid-param")]
+    [InlineData("--subscription invalidSub")]
+    [InlineData("--subscription sub --resource-group rg")] // Missing required entity/health-model
+    public async Task Should_Return400_WithInvalidHealthModelInput(string args)
+    {
+        var result = await CallToolAsync(
+            "monitor_healthmodels_entity_get",
+            new()
+            {
+                { "args", args }
+            });
+
+        Assert.Equal(400, result?.GetProperty("status").GetInt32());
+    }
+
+    #endregion
 
     #region WebTests Integration Tests
 
