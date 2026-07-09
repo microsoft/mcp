@@ -31,7 +31,7 @@ public sealed class PoolUpdateCommand(ILogger<PoolUpdateCommand> logger, INetApp
 
     public override string Description =>
         """
-        Updates an existing Azure NetApp Files capacity pool in a specified account and resource group, and returns the updated pool details including name, location, resource group, provisioning state, service level, size, QoS type, cool access, and encryption type. Supports updating size, QoS type, cool access, and tags. Requires account name, pool name, resource group, location, and subscription.
+        Updates an existing Azure NetApp Files capacity pool in a specified account and resource group, and returns the updated pool details including name, location, resource group, provisioning state, service level, size, QoS type, cool access, and encryption type. Supports updating size (in TiB or bytes), service level, QoS type, custom throughput (MiB/s), cool access, and tags. Requires account name, pool name, resource group, location, and subscription.
         """;
 
     public override string Title => CommandTitle;
@@ -54,7 +54,10 @@ public sealed class PoolUpdateCommand(ILogger<PoolUpdateCommand> logger, INetApp
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(NetAppFilesOptionDefinitions.Location);
         command.Options.Add(NetAppFilesOptionDefinitions.Size.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.SizeInBytes);
+        command.Options.Add(NetAppFilesOptionDefinitions.ServiceLevel);
         command.Options.Add(NetAppFilesOptionDefinitions.QosType);
+        command.Options.Add(NetAppFilesOptionDefinitions.CustomThroughputMibps);
         command.Options.Add(NetAppFilesOptionDefinitions.CoolAccess);
         command.Options.Add(NetAppFilesOptionDefinitions.Tags.AsOptional());
     }
@@ -70,6 +73,9 @@ public sealed class PoolUpdateCommand(ILogger<PoolUpdateCommand> logger, INetApp
         options.Size = size != 0 ? size : null;
         options.QosType = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.QosType.Name);
         options.CoolAccess = parseResult.GetValueOrDefault<bool?>(NetAppFilesOptionDefinitions.CoolAccess.Name);
+        options.ServiceLevel = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.ServiceLevel.Name);
+        options.SizeInBytes = parseResult.GetValueOrDefault<long?>(NetAppFilesOptionDefinitions.SizeInBytes.Name);
+        options.CustomThroughputMibps = parseResult.GetValueOrDefault<long?>(NetAppFilesOptionDefinitions.CustomThroughputMibps.Name);
         options.Tags = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Tags.Name);
         return options;
     }
@@ -105,7 +111,10 @@ public sealed class PoolUpdateCommand(ILogger<PoolUpdateCommand> logger, INetApp
                 options.Location!,
                 options.Subscription!,
                 options.Size,
+                options.SizeInBytes,
+                options.ServiceLevel,
                 options.QosType,
+                options.CustomThroughputMibps,
                 options.CoolAccess,
                 tags,
                 options.Tenant,
@@ -119,8 +128,8 @@ public sealed class PoolUpdateCommand(ILogger<PoolUpdateCommand> logger, INetApp
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error updating NetApp Files capacity pool. Pool: {Pool}, Account: {Account}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Pool, options.Account, options.ResourceGroup, options);
+                "Error updating NetApp Files capacity pool. Pool: {Pool}, Account: {Account}, ResourceGroup: {ResourceGroup}",
+                options.Pool, options.Account, options.ResourceGroup);
             HandleException(context, ex);
         }
 

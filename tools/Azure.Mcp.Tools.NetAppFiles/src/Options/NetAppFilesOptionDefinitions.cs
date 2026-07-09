@@ -20,6 +20,64 @@ public static class NetAppFilesOptionDefinitions
     public const string UsageThresholdName = "usageThreshold";
     public const string ServiceLevelName = "serviceLevel";
     public const string ProtocolTypesName = "protocolTypes";
+    public const string SubnetName = "subnet";
+    public const string VnetName = "vnet";
+    public const string AcceptGrowCapacityPoolForShortTermCloneSplitName = "acceptGrowCapacityPoolForShortTermCloneSplit";
+    public const string AllowedClientsName = "allowedClients";
+    public const string AvsDataStoreName = "avsDataStore";
+    public const string BackupIdName = "backupId";
+    public const string BackupPolicyIdName = "backupPolicyId";
+    public const string BackupVaultIdName = "backupVaultId";
+    public const string CoolAccessRetrievalPolicyName = "coolAccessRetrievalPolicy";
+    public const string CoolAccessTieringPolicyName = "coolAccessTieringPolicy";
+    public const string CapacityPoolResourceIdName = "capacityPoolResourceId";
+    public const string ChownModeName = "chownMode";
+    public const string CifsName = "cifs";
+    public const string CoolAccessVolumeName = "coolAccessVolume";
+    public const string CoolnessPeriodName = "coolnessPeriod";
+    public const string DeleteBaseSnapshotName = "deleteBaseSnapshot";
+    public const string DesiredArpStateName = "desiredArpState";
+    public const string EnableSubvolumesName = "enableSubvolumes";
+    public const string EncryptionKeySourceName = "encryptionKeySource";
+    public const string ExportPolicyRulesName = "exportPolicyRules";
+    public const string ExternalHostNameName = "externalHostName";
+    public const string ExternalServerNameName = "externalServerName";
+    public const string ExternalVolumeNameName = "externalVolumeName";
+    public const string HasRootAccessName = "hasRootAccess";
+    public const string IsLargeVolumeName = "isLargeVolume";
+    public const string KerberosEnabledName = "kerberosEnabled";
+    public const string Kerberos5RName = "kerberos5R";
+    public const string Kerberos5RwName = "kerberos5Rw";
+    public const string Kerberos5IRName = "kerberos5IR";
+    public const string Kerberos5IRwName = "kerberos5IRw";
+    public const string Kerberos5PRName = "kerberos5PR";
+    public const string Kerberos5PRwName = "kerberos5PRw";
+    public const string KeyVaultPrivateEndpointResourceIdName = "keyVaultPrivateEndpointResourceId";
+    public const string LdapEnabledName = "ldapEnabled";
+    public const string NetworkFeaturesName = "networkFeatures";
+    public const string PlacementRulesName = "placementRules";
+    public const string PolicyEnforcedName = "policyEnforced";
+    public const string ProximityPlacementGroupName = "proximityPlacementGroup";
+    public const string RelocationRequestedName = "relocationRequested";
+    public const string RemoteVolumeResourceIdName = "remoteVolumeResourceId";
+    public const string RemoteVolumeRegionName = "remoteVolumeRegion";
+    public const string ReplicationScheduleName = "replicationSchedule";
+    public const string RuleIndexName = "ruleIndex";
+    public const string SecurityStyleName = "securityStyle";
+    public const string SmbAccessEnumerationName = "smbAccessEnumeration";
+    public const string SmbContinuouslyAvailableName = "smbContinuouslyAvailable";
+    public const string SmbEncryptionName = "smbEncryption";
+    public const string SmbNonBrowsableName = "smbNonBrowsable";
+    public const string SnapshotDirectoryVisibleName = "snapshotDirectoryVisible";
+    public const string SnapshotIdName = "snapshotId";
+    public const string SnapshotPolicyIdName = "snapshotPolicyId";
+    public const string ThroughputMibpsName = "throughputMibps";
+    public const string UnixPermissionsName = "unixPermissions";
+    public const string UnixReadOnlyName = "unixReadOnly";
+    public const string UnixReadWriteName = "unixReadWrite";
+    public const string VolumeSpecNameName = "volumeSpecName";
+    public const string VolumeTypeName = "volumeType";
+    public const string ZonesName = "zones";
     public const string DailyBackupsToKeepName = "dailyBackupsToKeep";
     public const string WeeklyBackupsToKeepName = "weeklyBackupsToKeep";
     public const string MonthlyBackupsToKeepName = "monthlyBackupsToKeep";
@@ -42,6 +100,26 @@ public static class NetAppFilesOptionDefinitions
     public const string ApplicationIdentifierName = "applicationIdentifier";
     public const string GroupDescriptionName = "groupDescription";
     public const string TagsName = "tags";
+    public const string IdsName = "ids";
+    public const string KeyNameName = "keyName";
+    public const string KeySourceName = "keySource";
+    public const string KeyVaultResourceIdName = "keyVaultResourceId";
+    public const string KeyVaultUriName = "keyVaultUri";
+    public const string FederatedClientIdName = "federatedClientId";
+    public const string UserAssignedIdentityName = "userAssignedIdentity";
+    public const string IdentityTypeName = "identityType";
+    public const string UserAssignedIdentitiesName = "userAssignedIdentities";
+    public const string ActiveDirectoriesName = "activeDirectories";
+    public const string NfsV4IdDomainName = "nfsV4IdDomain";
+    public const string NoWaitName = "no-wait";
+    public const string AddName = "add";
+    public const string SetName = "set";
+    public const string RemoveName = "remove";
+    public const string ForceStringName = "force-string";
+    public const string SizeInBytesName = "sizeInBytes";
+    public const string CustomThroughputMibpsName = "customThroughputMibps";
+    public const string AcquirePolicyTokenName = "acquirePolicyToken";
+    public const string ChangeReferenceName = "changeReference";
 
     public static readonly Option<string> Account = new($"--{AccountName}")
     {
@@ -133,6 +211,354 @@ public static class NetAppFilesOptionDefinitions
         Required = false
     };
 
+    public static readonly Option<string> Subnet = new($"--{SubnetName}")
+    {
+        Description = "Delegated subnet name used with --vnet when subnetId is not supplied.",
+        Required = false
+    };
+
+    public static readonly Option<string> Vnet = new($"--{VnetName}")
+    {
+        Description = "Virtual network name or ARM resource ID used with --subnet when subnetId is not supplied.",
+        Required = false
+    };
+
+    public static readonly Option<string> AcceptGrowCapacityPoolForShortTermCloneSplit = new($"--{AcceptGrowCapacityPoolForShortTermCloneSplitName}")
+    {
+        Description = "Accept or decline automatic parent pool grow for short-term clone split. Values: Accepted, Declined.",
+        Required = false
+    };
+
+    public static readonly Option<string> AllowedClients = new($"--{AllowedClientsName}")
+    {
+        Description = "Client ingress specification (backward-compatible export policy option).",
+        Required = false
+    };
+
+    public static readonly Option<string> AvsDataStore = new($"--{AvsDataStoreName}")
+    {
+        Description = "Specifies whether Azure VMware Solution datastore purpose is enabled. Values: Disabled, Enabled.",
+        Required = false
+    };
+
+    public static readonly Option<string> BackupId = new($"--{BackupIdName}")
+    {
+        Description = "Resource identifier of the backup to create the volume from.",
+        Required = false
+    };
+
+    public static readonly Option<string> BackupPolicyId = new($"--{BackupPolicyIdName}")
+    {
+        Description = "Backup policy resource ID.",
+        Required = false
+    };
+
+    public static readonly Option<string> BackupVaultId = new($"--{BackupVaultIdName}")
+    {
+        Description = "Backup vault resource ID.",
+        Required = false
+    };
+
+    public static readonly Option<string> CoolAccessRetrievalPolicy = new($"--{CoolAccessRetrievalPolicyName}")
+    {
+        Description = "Cool access retrieval policy. Values: Default, Never, OnRead.",
+        Required = false
+    };
+
+    public static readonly Option<string> CoolAccessTieringPolicy = new($"--{CoolAccessTieringPolicyName}")
+    {
+        Description = "Cool access tiering policy. Values: Auto, SnapshotOnly.",
+        Required = false
+    };
+
+    public static readonly Option<string> CapacityPoolResourceId = new($"--{CapacityPoolResourceIdName}")
+    {
+        Description = "Capacity pool resource ID, used for volume group scenarios.",
+        Required = false
+    };
+
+    public static readonly Option<string> ChownMode = new($"--{ChownModeName}")
+    {
+        Description = "Who can change file ownership. Values: Restricted, Unrestricted.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> Cifs = new($"--{CifsName}")
+    {
+        Description = "Backward-compatible CIFS export policy setting.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> CoolAccessVolume = new($"--{CoolAccessVolumeName}")
+    {
+        Description = "Specifies whether cool access tiering is enabled for the volume.",
+        Required = false
+    };
+
+    public static readonly Option<int?> CoolnessPeriod = new($"--{CoolnessPeriodName}")
+    {
+        Description = "Number of days after which cold blocks are tiered.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> DeleteBaseSnapshot = new($"--{DeleteBaseSnapshotName}")
+    {
+        Description = "If true, delete the base snapshot after clone volume creation.",
+        Required = false
+    };
+
+    public static readonly Option<string> DesiredArpState = new($"--{DesiredArpStateName}")
+    {
+        Description = "Desired Advanced Ransomware Protection state. Values: Disabled, Enabled.",
+        Required = false
+    };
+
+    public static readonly Option<string> EnableSubvolumes = new($"--{EnableSubvolumesName}")
+    {
+        Description = "Enable or disable subvolume operations. Values: Disabled, Enabled.",
+        Required = false
+    };
+
+    public static readonly Option<string> EncryptionKeySource = new($"--{EncryptionKeySourceName}")
+    {
+        Description = "Source of key used to encrypt volume data. Values: Microsoft.NetApp, Microsoft.KeyVault.",
+        Required = false
+    };
+
+    public static readonly Option<string> ExportPolicyRules = new($"--{ExportPolicyRulesName}")
+    {
+        Description = "Export policy rules JSON payload.",
+        Required = false
+    };
+
+    public static readonly Option<string> ExternalHostName = new($"--{ExternalHostNameName}")
+    {
+        Description = "External ONTAP host name for migration scenarios.",
+        Required = false
+    };
+
+    public static readonly Option<string> ExternalServerName = new($"--{ExternalServerNameName}")
+    {
+        Description = "External ONTAP server name for migration scenarios.",
+        Required = false
+    };
+
+    public static readonly Option<string> ExternalVolumeName = new($"--{ExternalVolumeNameName}")
+    {
+        Description = "External ONTAP volume name for migration scenarios.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> HasRootAccess = new($"--{HasRootAccessName}")
+    {
+        Description = "Backward-compatible export policy has-root-access flag.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> IsLargeVolume = new($"--{IsLargeVolumeName}")
+    {
+        Description = "Whether the volume is a large volume.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> KerberosEnabled = new($"--{KerberosEnabledName}")
+    {
+        Description = "Whether Kerberos is enabled.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> Kerberos5R = new($"--{Kerberos5RName}")
+    {
+        Description = "Backward-compatible Kerberos5 read-only flag.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> Kerberos5Rw = new($"--{Kerberos5RwName}")
+    {
+        Description = "Backward-compatible Kerberos5 read-write flag.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> Kerberos5IR = new($"--{Kerberos5IRName}")
+    {
+        Description = "Backward-compatible Kerberos5i read-only flag.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> Kerberos5IRw = new($"--{Kerberos5IRwName}")
+    {
+        Description = "Backward-compatible Kerberos5i read-write flag.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> Kerberos5PR = new($"--{Kerberos5PRName}")
+    {
+        Description = "Backward-compatible Kerberos5p read-only flag.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> Kerberos5PRw = new($"--{Kerberos5PRwName}")
+    {
+        Description = "Backward-compatible Kerberos5p read-write flag.",
+        Required = false
+    };
+
+    public static readonly Option<string> KeyVaultPrivateEndpointResourceId = new($"--{KeyVaultPrivateEndpointResourceIdName}")
+    {
+        Description = "Resource ID of Key Vault private endpoint used for CMK volumes.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> LdapEnabled = new($"--{LdapEnabledName}")
+    {
+        Description = "Whether LDAP is enabled for NFS volumes.",
+        Required = false
+    };
+
+    public static readonly Option<string> NetworkFeatures = new($"--{NetworkFeaturesName}")
+    {
+        Description = "Network features of the volume. Values: Basic, Standard.",
+        Required = false
+    };
+
+    public static readonly Option<string> PlacementRules = new($"--{PlacementRulesName}")
+    {
+        Description = "Application-specific placement rules JSON payload.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> PolicyEnforced = new($"--{PolicyEnforcedName}")
+    {
+        Description = "Whether backup policy enforcement is enabled.",
+        Required = false
+    };
+
+    public static readonly Option<string> ProximityPlacementGroup = new($"--{ProximityPlacementGroupName}")
+    {
+        Description = "Proximity placement group associated with the volume.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> RelocationRequested = new($"--{RelocationRequestedName}")
+    {
+        Description = "Whether relocation is requested for the volume.",
+        Required = false
+    };
+
+    public static readonly Option<string> RemoteVolumeResourceId = new($"--{RemoteVolumeResourceIdName}")
+    {
+        Description = "Resource ID of the remote volume for replication.",
+        Required = false
+    };
+
+    public static readonly Option<string> RemoteVolumeRegion = new($"--{RemoteVolumeRegionName}")
+    {
+        Description = "Remote region for the other end of replication.",
+        Required = false
+    };
+
+    public static readonly Option<string> ReplicationSchedule = new($"--{ReplicationScheduleName}")
+    {
+        Description = "Replication schedule. Values: _10minutely, hourly, daily.",
+        Required = false
+    };
+
+    public static readonly Option<int?> RuleIndex = new($"--{RuleIndexName}")
+    {
+        Description = "Backward-compatible export policy rule order index.",
+        Required = false
+    };
+
+    public static readonly Option<string> SecurityStyle = new($"--{SecurityStyleName}")
+    {
+        Description = "Security style of the volume. Values: unix, ntfs.",
+        Required = false
+    };
+
+    public static readonly Option<string> SmbAccessEnumeration = new($"--{SmbAccessEnumerationName}")
+    {
+        Description = "SMB access-based enumeration setting. Values: Disabled, Enabled.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> SmbContinuouslyAvailable = new($"--{SmbContinuouslyAvailableName}")
+    {
+        Description = "Whether SMB continuously available shares are enabled.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> SmbEncryption = new($"--{SmbEncryptionName}")
+    {
+        Description = "Whether SMB in-flight encryption is enabled.",
+        Required = false
+    };
+
+    public static readonly Option<string> SmbNonBrowsable = new($"--{SmbNonBrowsableName}")
+    {
+        Description = "SMB non-browsable setting. Values: Disabled, Enabled.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> SnapshotDirectoryVisible = new($"--{SnapshotDirectoryVisibleName}")
+    {
+        Description = "Whether .snapshot directory is visible on the volume.",
+        Required = false
+    };
+
+    public static readonly Option<string> SnapshotId = new($"--{SnapshotIdName}")
+    {
+        Description = "Resource identifier of the snapshot to create the volume from.",
+        Required = false
+    };
+
+    public static readonly Option<string> SnapshotPolicyId = new($"--{SnapshotPolicyIdName}")
+    {
+        Description = "Snapshot policy resource ID.",
+        Required = false
+    };
+
+    public static readonly Option<int?> ThroughputMibps = new($"--{ThroughputMibpsName}")
+    {
+        Description = "Throughput in MiB/s for manual QoS volumes.",
+        Required = false
+    };
+
+    public static readonly Option<string> UnixPermissions = new($"--{UnixPermissionsName}")
+    {
+        Description = "UNIX permissions in 4-digit octal format, for example 0755.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> UnixReadOnly = new($"--{UnixReadOnlyName}")
+    {
+        Description = "Backward-compatible UNIX read-only export policy flag.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> UnixReadWrite = new($"--{UnixReadWriteName}")
+    {
+        Description = "Backward-compatible UNIX read-write export policy flag.",
+        Required = false
+    };
+
+    public static readonly Option<string> VolumeSpecName = new($"--{VolumeSpecNameName}")
+    {
+        Description = "Application-specific volume spec name in a volume group.",
+        Required = false
+    };
+
+    public static readonly Option<string> VolumeType = new($"--{VolumeTypeName}")
+    {
+        Description = "Volume type, for example DataProtection or ShortTermClone.",
+        Required = false
+    };
+
+    public static readonly Option<string[]> Zones = new($"--{ZonesName}")
+    {
+        Description = "Availability zone list.",
+        Required = false
+    };
+
     public static readonly Option<int?> DailyBackupsToKeep = new($"--{DailyBackupsToKeepName}")
     {
         Description = "The number of daily backups to keep (e.g., 2).",
@@ -167,6 +593,18 @@ public static class NetAppFilesOptionDefinitions
     {
         Description = "Provisioned size of the pool in bytes. Must be a multiple of 4398046511104 (4 TiB). Minimum 4398046511104 bytes (4 TiB).",
         Required = true
+    };
+
+    public static readonly Option<long?> SizeInBytes = new($"--{SizeInBytesName}")
+    {
+        Description = "Provisioned size of the pool in bytes. Allowed values are in 1 TiB chunks (value must be a multiple of 1099511627776). Use either --size or --sizeInBytes, not both.",
+        Required = false
+    };
+
+    public static readonly Option<long?> CustomThroughputMibps = new($"--{CustomThroughputMibpsName}")
+    {
+        Description = "Maximum throughput in MiB/s for manual QoS pools with Flexible service level.",
+        Required = false
     };
 
     public static readonly Option<string> QosType = new($"--{QosTypeName}")
@@ -262,6 +700,114 @@ public static class NetAppFilesOptionDefinitions
     public static readonly Option<string> Tags = new($"--{TagsName}")
     {
         Description = "Tags for the account in JSON format (e.g., '{\"key1\":\"value1\",\"key2\":\"value2\"}').",
+        Required = false
+    };
+
+    public static readonly Option<string[]> Ids = new($"--{IdsName}")
+    {
+        Description = "One or more full Azure resource IDs for NetApp accounts.",
+        Required = false
+    };
+
+    public static readonly Option<string> KeyName = new($"--{KeyNameName}")
+    {
+        Description = "The name of the Key Vault key used for account encryption.",
+        Required = false
+    };
+
+    public static readonly Option<string> KeySource = new($"--{KeySourceName}")
+    {
+        Description = "The encryption key source. Valid values include Microsoft.NetApp and Microsoft.KeyVault.",
+        Required = false
+    };
+
+    public static readonly Option<string> KeyVaultResourceId = new($"--{KeyVaultResourceIdName}")
+    {
+        Description = "The Azure resource ID of the Key Vault used for account encryption.",
+        Required = false
+    };
+
+    public static readonly Option<string> KeyVaultUri = new($"--{KeyVaultUriName}")
+    {
+        Description = "The URI of the Key Vault used for account encryption.",
+        Required = false
+    };
+
+    public static readonly Option<string> FederatedClientId = new($"--{FederatedClientIdName}")
+    {
+        Description = "Client ID of the multi-tenant AAD application used for cross-tenant Key Vault access.",
+        Required = false
+    };
+
+    public static readonly Option<string> UserAssignedIdentity = new($"--{UserAssignedIdentityName}")
+    {
+        Description = "The ARM resource ID of the user-assigned identity for Key Vault authentication.",
+        Required = false
+    };
+
+    public static readonly Option<string> IdentityType = new($"--{IdentityTypeName}")
+    {
+        Description = "Managed identity type for the account. Valid values include None, SystemAssigned, and UserAssigned.",
+        Required = false
+    };
+
+    public static readonly Option<string> UserAssignedIdentities = new($"--{UserAssignedIdentitiesName}")
+    {
+        Description = "User-assigned identities in JSON format.",
+        Required = false
+    };
+
+    public static readonly Option<string> ActiveDirectories = new($"--{ActiveDirectoriesName}")
+    {
+        Description = "Active Directory settings in JSON format.",
+        Required = false
+    };
+
+    public static readonly Option<string> NfsV4IdDomain = new($"--{NfsV4IdDomainName}")
+    {
+        Description = "Domain for NFSv4 user ID mapping.",
+        Required = false
+    };
+
+    public static readonly Option<bool> NoWait = new($"--{NoWaitName}")
+    {
+        Description = "Do not wait for the long-running operation to finish.",
+        Required = false
+    };
+
+    public static readonly Option<string[]> Add = new($"--{AddName}")
+    {
+        Description = "Add an object to a list of objects by specifying a path and key-value pairs.",
+        Required = false
+    };
+
+    public static readonly Option<string[]> Set = new($"--{SetName}")
+    {
+        Description = "Update an object by specifying a property path and value.",
+        Required = false
+    };
+
+    public static readonly Option<string[]> Remove = new($"--{RemoveName}")
+    {
+        Description = "Remove a property or an element from a list.",
+        Required = false
+    };
+
+    public static readonly Option<bool> ForceString = new($"--{ForceStringName}")
+    {
+        Description = "Preserve string literals for generic update operations.",
+        Required = false
+    };
+
+    public static readonly Option<bool> AcquirePolicyToken = new($"--{AcquirePolicyTokenName}")
+    {
+        Description = "Acquire an Azure Policy token automatically for this resource operation.",
+        Required = false
+    };
+
+    public static readonly Option<string> ChangeReference = new($"--{ChangeReferenceName}")
+    {
+        Description = "Related change reference ID for this resource operation.",
         Required = false
     };
 }

@@ -29,6 +29,10 @@ internal sealed class CapacityPoolCreateProperties
     [JsonPropertyName("serviceLevel")]
     public string? ServiceLevel { get; set; }
 
+    [JsonPropertyName("customThroughputMibps")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public long? CustomThroughputMibps { get; set; }
+
     [JsonPropertyName("qosType")]
     public string? QosType { get; set; }
 

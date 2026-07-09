@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Microsoft.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.NetAppFiles.Models;
+using Azure.Mcp.Tools.NetAppFiles.Services.Models;
 
 
 namespace Azure.Mcp.Tools.NetAppFiles.Services;
@@ -12,6 +14,8 @@ public interface INetAppFilesService
 {
     Task<ResourceQueryResults<NetAppAccountInfo>> GetAccountDetails(
         string? account,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -20,6 +24,8 @@ public interface INetAppFilesService
     Task<ResourceQueryResults<CapacityPoolInfo>> GetPoolDetails(
         string? account,
         string? pool,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -29,6 +35,8 @@ public interface INetAppFilesService
         string? account,
         string? pool,
         string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -100,12 +108,8 @@ public interface INetAppFilesService
         string volume,
         string resourceGroup,
         string location,
-        string creationToken,
-        long usageThreshold,
-        string subnetId,
         string subscription,
-        string? serviceLevel = null,
-        List<string>? protocolTypes = null,
+        NetAppVolumeCreateParameters parameters,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
@@ -129,6 +133,17 @@ public interface INetAppFilesService
         string resourceGroup,
         string location,
         string subscription,
+        Dictionary<string, string>? tags = null,
+        string? keyName = null,
+        string? keySource = null,
+        string? keyVaultResourceId = null,
+        string? keyVaultUri = null,
+        string? federatedClientId = null,
+        string? userAssignedIdentity = null,
+        string? identityType = null,
+        JsonElement? userAssignedIdentities = null,
+        JsonElement? activeDirectories = null,
+        string? nfsV4IdDomain = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
@@ -136,9 +151,19 @@ public interface INetAppFilesService
     Task<NetAppAccountCreateResult> UpdateAccount(
         string account,
         string resourceGroup,
-        string location,
+        string? location,
         string subscription,
         Dictionary<string, string>? tags = null,
+        string? keyName = null,
+        string? keySource = null,
+        string? keyVaultResourceId = null,
+        string? keyVaultUri = null,
+        string? federatedClientId = null,
+        string? userAssignedIdentity = null,
+        string? identityType = null,
+        JsonElement? userAssignedIdentities = null,
+        JsonElement? activeDirectories = null,
+        string? nfsV4IdDomain = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
@@ -223,9 +248,11 @@ public interface INetAppFilesService
         long size,
         string subscription,
         string? serviceLevel = null,
+        long? customThroughputMibps = null,
         string? qosType = null,
         bool? coolAccess = null,
         string? encryptionType = null,
+        Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
@@ -237,7 +264,10 @@ public interface INetAppFilesService
         string location,
         string subscription,
         long? size = null,
+        long? sizeInBytes = null,
+        string? serviceLevel = null,
         string? qosType = null,
+        long? customThroughputMibps = null,
         bool? coolAccess = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,

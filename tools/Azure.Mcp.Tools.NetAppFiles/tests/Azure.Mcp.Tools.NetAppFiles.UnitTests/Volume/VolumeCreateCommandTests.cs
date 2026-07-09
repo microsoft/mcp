@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.NetAppFiles.Commands;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Services;
+using Azure.Mcp.Tools.NetAppFiles.Services.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
@@ -52,6 +53,7 @@ public class VolumeCreateCommandTests
 
     [Theory]
     [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --creationToken myvol --usageThreshold 107374182400 --subnetId /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", true)]
+    [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --creationToken myvol --usageThreshold 107374182400 --vnet myvnet --subnet mysubnet --subscription sub123", true)]
     [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --creationToken myvol --usageThreshold 107374182400 --subnetId /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123 --serviceLevel Premium", true)]
     [InlineData("--pool mypool --volume myvol --resource-group myrg --location eastus --creationToken myvol --usageThreshold 107374182400 --subnetId /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", false)] // Missing account
     [InlineData("--account myanfaccount --volume myvol --resource-group myrg --location eastus --creationToken myvol --usageThreshold 107374182400 --subnetId /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", false)] // Missing pool
@@ -82,11 +84,7 @@ public class VolumeCreateCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<long>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<List<string>>(),
+                Arg.Any<NetAppVolumeCreateParameters>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
@@ -141,9 +139,11 @@ public class VolumeCreateCommandTests
 
         _netAppFilesService.CreateVolume(
             Arg.Is(account), Arg.Is(pool), Arg.Is(volume),
-            Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(creationToken),
-            Arg.Is(usageThreshold), Arg.Is(subnetId), Arg.Is(subscription),
-            Arg.Any<string>(), Arg.Any<List<string>>(),
+            Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(subscription),
+            Arg.Is<NetAppVolumeCreateParameters>(p =>
+                p.CreationToken == creationToken &&
+                p.UsageThreshold == usageThreshold &&
+                p.SubnetId == subnetId),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVolume));
 
@@ -189,8 +189,7 @@ public class VolumeCreateCommandTests
         _netAppFilesService.CreateVolume(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<long>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<List<string>>(),
+            Arg.Any<NetAppVolumeCreateParameters>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -220,8 +219,7 @@ public class VolumeCreateCommandTests
         _netAppFilesService.CreateVolume(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<long>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<List<string>>(),
+            Arg.Any<NetAppVolumeCreateParameters>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Volume already exists"));
 
@@ -250,8 +248,7 @@ public class VolumeCreateCommandTests
         _netAppFilesService.CreateVolume(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<long>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<List<string>>(),
+            Arg.Any<NetAppVolumeCreateParameters>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Resource group not found"));
 
@@ -280,8 +277,7 @@ public class VolumeCreateCommandTests
         _netAppFilesService.CreateVolume(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<long>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<List<string>>(),
+            Arg.Any<NetAppVolumeCreateParameters>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
@@ -310,8 +306,7 @@ public class VolumeCreateCommandTests
         _netAppFilesService.CreateVolume(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<long>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<List<string>>(),
+            Arg.Any<NetAppVolumeCreateParameters>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<NetAppVolumeCreateResult>(new Exception("Test error")));
 
@@ -353,8 +348,7 @@ public class VolumeCreateCommandTests
         _netAppFilesService.CreateVolume(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<long>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<List<string>>(),
+            Arg.Any<NetAppVolumeCreateParameters>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVolume));
 
@@ -419,9 +413,12 @@ public class VolumeCreateCommandTests
             ProtocolTypes: ["NFSv3"]);
 
         _netAppFilesService.CreateVolume(
-            account, pool, volume, resourceGroup, location, creationToken,
-            usageThreshold, subnetId, subscription,
-            "Premium", Arg.Any<List<string>>(),
+            account, pool, volume, resourceGroup, location, subscription,
+            Arg.Is<NetAppVolumeCreateParameters>(p =>
+                p.CreationToken == creationToken &&
+                p.UsageThreshold == usageThreshold &&
+                p.SubnetId == subnetId &&
+                p.ServiceLevel == "Premium"),
             null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedVolume);
 
@@ -439,9 +436,54 @@ public class VolumeCreateCommandTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _netAppFilesService.Received(1).CreateVolume(
-            account, pool, volume, resourceGroup, location, creationToken,
-            usageThreshold, subnetId, subscription,
-            "Premium", Arg.Any<List<string>>(),
+            account, pool, volume, resourceGroup, location, subscription,
+            Arg.Is<NetAppVolumeCreateParameters>(p =>
+                p.CreationToken == creationToken &&
+                p.UsageThreshold == usageThreshold &&
+                p.SubnetId == subnetId &&
+                p.ServiceLevel == "Premium"),
             null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsNoWaitArgument()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--creationToken", "myvol", "--usageThreshold", "107374182400",
+            "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--subscription", "sub123", "--no-wait"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--no-wait", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsAcquirePolicyTokenArgument()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--creationToken", "myvol", "--usageThreshold", "107374182400",
+            "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--subscription", "sub123", "--acquirePolicyToken"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--acquirePolicyToken", response.Message);
     }
 }

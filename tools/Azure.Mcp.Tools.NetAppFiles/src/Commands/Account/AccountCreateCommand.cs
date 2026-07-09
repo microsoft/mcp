@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Microsoft.Mcp.Core.Extensions;
@@ -51,6 +52,17 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, I
         command.Options.Add(NetAppFilesOptionDefinitions.Account.AsRequired());
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(NetAppFilesOptionDefinitions.Location);
+        command.Options.Add(NetAppFilesOptionDefinitions.Tags.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.KeyName.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.KeySource.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.KeyVaultResourceId.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.KeyVaultUri.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.FederatedClientId.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.UserAssignedIdentity.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.IdentityType.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.UserAssignedIdentities.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.ActiveDirectories.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.NfsV4IdDomain.AsOptional());
     }
 
     protected override AccountCreateOptions BindOptions(ParseResult parseResult)
@@ -59,6 +71,17 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, I
         options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Location = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Location.Name);
+        options.Tags = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Tags.Name);
+        options.KeyName = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.KeyName.Name);
+        options.KeySource = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.KeySource.Name);
+        options.KeyVaultResourceId = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.KeyVaultResourceId.Name);
+        options.KeyVaultUri = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.KeyVaultUri.Name);
+        options.FederatedClientId = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.FederatedClientId.Name);
+        options.UserAssignedIdentity = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.UserAssignedIdentity.Name);
+        options.IdentityType = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.IdentityType.Name);
+        options.UserAssignedIdentities = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.UserAssignedIdentities.Name);
+        options.ActiveDirectories = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.ActiveDirectories.Name);
+        options.NfsV4IdDomain = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.NfsV4IdDomain.Name);
         return options;
     }
 
@@ -73,11 +96,38 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, I
 
         try
         {
+            Dictionary<string, string>? tags = null;
+            if (!string.IsNullOrEmpty(options.Tags))
+            {
+                try
+                {
+                    tags = JsonSerializer.Deserialize(options.Tags, NetAppFilesJsonContext.Default.DictionaryStringString);
+                }
+                catch (JsonException ex)
+                {
+                    throw new ArgumentException($"Invalid tags JSON format: {ex.Message}", nameof(options.Tags));
+                }
+            }
+
+            JsonElement? userAssignedIdentities = ParseJsonElementOption(options.UserAssignedIdentities, nameof(options.UserAssignedIdentities));
+            JsonElement? activeDirectories = ParseJsonElementOption(options.ActiveDirectories, nameof(options.ActiveDirectories));
+
             var account = await _netAppFilesService.CreateAccount(
                 options.Account!,
                 options.ResourceGroup!,
                 options.Location!,
                 options.Subscription!,
+                tags,
+                options.KeyName,
+                options.KeySource,
+                options.KeyVaultResourceId,
+                options.KeyVaultUri,
+                options.FederatedClientId,
+                options.UserAssignedIdentity,
+                options.IdentityType,
+                userAssignedIdentities,
+                activeDirectories,
+                options.NfsV4IdDomain,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -99,6 +149,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, I
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        ArgumentException argEx => argEx.Message,
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "An account with this name already exists. Choose a different name.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
@@ -108,6 +159,23 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, I
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
+
+    private static JsonElement? ParseJsonElementOption(string? value, string optionName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize(value, NetAppFilesJsonContext.Default.JsonElement);
+        }
+        catch (JsonException ex)
+        {
+            throw new ArgumentException($"Invalid JSON format for {optionName}: {ex.Message}", optionName, ex);
+        }
+    }
 
     internal record AccountCreateCommandResult([property: JsonPropertyName("account")] NetAppAccountCreateResult Account);
 }

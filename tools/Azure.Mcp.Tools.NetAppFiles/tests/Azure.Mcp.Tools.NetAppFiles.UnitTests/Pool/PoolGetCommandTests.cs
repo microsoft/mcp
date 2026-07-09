@@ -57,6 +57,8 @@ public class PoolGetCommandTests
         _netAppFilesService.GetPoolDetails(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -91,6 +93,8 @@ public class PoolGetCommandTests
         _netAppFilesService.GetPoolDetails(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -124,6 +128,8 @@ public class PoolGetCommandTests
         _netAppFilesService.GetPoolDetails(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             null,
             Arg.Any<RetryPolicyOptions>(),
@@ -154,6 +160,8 @@ public class PoolGetCommandTests
     [InlineData("--subscription sub123", true)]
     [InlineData("--subscription sub123 --account myanfaccount", true)]
     [InlineData("--subscription sub123 --account myanfaccount --pool mypool", true)]
+    [InlineData("--subscription sub123 --resource-group myrg", true)]
+    [InlineData("--subscription sub123 --ids /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myacc/capacityPools/mypool", true)]
     [InlineData("--account myanfaccount", false)] // Missing subscription
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -164,7 +172,7 @@ public class PoolGetCommandTests
                 false);
 
             _netAppFilesService.GetPoolDetails(
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(expectedPools));
         }
 
@@ -199,7 +207,7 @@ public class PoolGetCommandTests
             false);
 
         _netAppFilesService.GetPoolDetails(
-            Arg.Is(account), Arg.Is(pool), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(account), Arg.Is(pool), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedPools));
 
         var args = _commandDefinition.Parse(["--account", account, "--pool", pool, "--subscription", subscription]);
@@ -231,7 +239,7 @@ public class PoolGetCommandTests
         var subscription = "sub123";
 
         _netAppFilesService.GetPoolDetails(
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var parseResult = _commandDefinition.Parse(["--subscription", subscription]);
@@ -254,7 +262,7 @@ public class PoolGetCommandTests
         var pool = "nonexistentpool";
 
         _netAppFilesService.GetPoolDetails(
-            Arg.Any<string?>(), Arg.Is(pool), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Is(pool), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Pool not found"));
 
         var parseResult = _commandDefinition.Parse(["--pool", pool, "--subscription", subscription]);
@@ -275,7 +283,7 @@ public class PoolGetCommandTests
         var subscription = "sub123";
 
         _netAppFilesService.GetPoolDetails(
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         var parseResult = _commandDefinition.Parse(["--subscription", subscription]);
@@ -299,7 +307,7 @@ public class PoolGetCommandTests
             false);
 
         _netAppFilesService.GetPoolDetails(
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedPools));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);

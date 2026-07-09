@@ -9,4 +9,37 @@ public class AccountCreateOptions : BaseNetAppFilesOptions
 {
     [JsonPropertyName(NetAppFilesOptionDefinitions.LocationName)]
     public string? Location { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.TagsName)]
+    public string? Tags { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.KeyNameName)]
+    public string? KeyName { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.KeySourceName)]
+    public string? KeySource { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.KeyVaultResourceIdName)]
+    public string? KeyVaultResourceId { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.KeyVaultUriName)]
+    public string? KeyVaultUri { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.FederatedClientIdName)]
+    public string? FederatedClientId { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.UserAssignedIdentityName)]
+    public string? UserAssignedIdentity { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.IdentityTypeName)]
+    public string? IdentityType { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.UserAssignedIdentitiesName)]
+    public string? UserAssignedIdentities { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.ActiveDirectoriesName)]
+    public string? ActiveDirectories { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.NfsV4IdDomainName)]
+    public string? NfsV4IdDomain { get; set; }
 }

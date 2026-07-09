@@ -47,12 +47,16 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, INetApp
     {
         base.RegisterOptions(command);
         command.Options.Add(NetAppFilesOptionDefinitions.Account.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
     }
 
     protected override AccountGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
         return options;
     }
 
@@ -69,6 +73,8 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, INetApp
         {
             var accounts = await _netAppFilesService.GetAccountDetails(
                 options.Account,
+                options.ResourceGroup,
+                options.Ids,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,

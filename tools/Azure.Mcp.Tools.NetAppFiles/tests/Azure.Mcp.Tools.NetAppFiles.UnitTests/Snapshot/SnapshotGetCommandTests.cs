@@ -166,6 +166,7 @@ public class SnapshotGetCommandTests
     [InlineData("--account myanfaccount", false)] // Missing subscription
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
+        TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
             var expectedSnapshots = new ResourceQueryResults<SnapshotInfo>(
@@ -191,6 +192,7 @@ public class SnapshotGetCommandTests
         }
         else
         {
+            Console.WriteLine(response.Message);
             Assert.Contains("required", response.Message.ToLower());
         }
     }

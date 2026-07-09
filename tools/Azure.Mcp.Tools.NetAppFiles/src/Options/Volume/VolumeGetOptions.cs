@@ -12,4 +12,7 @@ public class VolumeGetOptions : BaseNetAppFilesOptions
 
     [JsonPropertyName(NetAppFilesOptionDefinitions.VolumeName)]
     public string? Volume { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.IdsName)]
+    public string[]? Ids { get; set; }
 }

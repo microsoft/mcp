@@ -28,7 +28,7 @@ public sealed class PoolGetCommand(ILogger<PoolGetCommand> logger, INetAppFilesS
 
     public override string Description =>
         """
-        Retrieves detailed information about Azure NetApp Files capacity pools, including pool name, location, resource group, provisioning state, service level, size, QoS type, cool access, and encryption type. If a specific pool name is not provided, the command will return details for all capacity pools in a subscription. Optionally filter by account.
+        Retrieves detailed information about Azure NetApp Files capacity pools, including pool name, location, resource group, provisioning state, service level, size, QoS type, cool access, and encryption type. If a specific pool name is not provided, the command will return details for all capacity pools in a subscription. Optionally filter by account, resource group, or resource IDs.
         """;
 
     public override string Title => CommandTitle;
@@ -48,6 +48,8 @@ public sealed class PoolGetCommand(ILogger<PoolGetCommand> logger, INetAppFilesS
         base.RegisterOptions(command);
         command.Options.Add(NetAppFilesOptionDefinitions.Account.AsOptional());
         command.Options.Add(NetAppFilesOptionDefinitions.Pool.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
     }
 
     protected override PoolGetOptions BindOptions(ParseResult parseResult)
@@ -55,6 +57,8 @@ public sealed class PoolGetCommand(ILogger<PoolGetCommand> logger, INetAppFilesS
         var options = base.BindOptions(parseResult);
         options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
         options.Pool = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Pool.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
         return options;
     }
 
@@ -72,6 +76,8 @@ public sealed class PoolGetCommand(ILogger<PoolGetCommand> logger, INetAppFilesS
             var pools = await _netAppFilesService.GetPoolDetails(
                 options.Account,
                 options.Pool,
+                options.ResourceGroup,
+                options.Ids,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,

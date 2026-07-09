@@ -56,6 +56,8 @@ public class AccountGetCommandTests
 
         _netAppFilesService.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -89,6 +91,8 @@ public class AccountGetCommandTests
 
         _netAppFilesService.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -121,6 +125,8 @@ public class AccountGetCommandTests
 
         _netAppFilesService.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             null,
             Arg.Any<RetryPolicyOptions>(),
@@ -154,6 +160,7 @@ public class AccountGetCommandTests
     [InlineData("--account myanfaccount", false)] // Missing subscription
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
+        TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
             var expectedAccount = new ResourceQueryResults<NetAppAccountInfo>(
@@ -161,7 +168,13 @@ public class AccountGetCommandTests
                 false);
 
             _netAppFilesService.GetAccountDetails(
-                Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<IReadOnlyList<string>?>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(expectedAccount));
         }
 
@@ -195,7 +208,13 @@ public class AccountGetCommandTests
             false);
 
         _netAppFilesService.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(account),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
+            Arg.Is(subscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedAccount));
 
         var args = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
@@ -228,7 +247,13 @@ public class AccountGetCommandTests
         var subscription = "sub123";
 
         _netAppFilesService.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(account),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
+            Arg.Is(subscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
@@ -251,7 +276,13 @@ public class AccountGetCommandTests
         var subscription = "sub123";
 
         _netAppFilesService.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(account),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
+            Arg.Is(subscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "NetApp Files account not found"));
 
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
@@ -273,7 +304,13 @@ public class AccountGetCommandTests
         var subscription = "sub123";
 
         _netAppFilesService.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(account),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
+            Arg.Is(subscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
@@ -284,5 +321,45 @@ public class AccountGetCommandTests
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsResourceGroupAndIdsFilters()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var subscription = "sub123";
+        var resourceGroup = "rg1";
+        var id1 = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.NetApp/netAppAccounts/account1";
+        var id2 = "/subscriptions/sub123/resourceGroups/rg2/providers/Microsoft.NetApp/netAppAccounts/account2";
+
+        _netAppFilesService.GetAccountDetails(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<NetAppAccountInfo>([], false));
+
+        var args = _commandDefinition.Parse([
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--ids", id1, id2
+        ]);
+
+        // Act
+        await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        await _netAppFilesService.Received(1).GetAccountDetails(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            resourceGroup,
+            Arg.Is<IReadOnlyList<string>?>(ids => ids != null && ids.Count == 2 && ids[0] == id1 && ids[1] == id2),
+            subscription,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 }

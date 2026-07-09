@@ -22,6 +22,15 @@ public class PoolUpdateOptions : BaseNetAppFilesOptions
     [JsonPropertyName(NetAppFilesOptionDefinitions.CoolAccessName)]
     public bool? CoolAccess { get; set; }
 
+    [JsonPropertyName(NetAppFilesOptionDefinitions.ServiceLevelName)]
+    public string? ServiceLevel { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.SizeInBytesName)]
+    public long? SizeInBytes { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.CustomThroughputMibpsName)]
+    public long? CustomThroughputMibps { get; set; }
+
     [JsonPropertyName(NetAppFilesOptionDefinitions.TagsName)]
     public string? Tags { get; set; }
 }

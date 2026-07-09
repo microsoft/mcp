@@ -54,6 +54,7 @@ public class PoolCreateCommandTests
     [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --size 4398046511104 --subscription sub123", true)]
     [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --size 4398046511104 --subscription sub123 --serviceLevel Premium", true)]
     [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --size 4398046511104 --subscription sub123 --qosType Auto", true)]
+    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --sizeInBytes 4398046511104 --subscription sub123", true)]
     [InlineData("--pool mypool --resource-group myrg --location eastus --size 4398046511104 --subscription sub123", false)] // Missing account
     [InlineData("--account myanfaccount --resource-group myrg --location eastus --size 4398046511104 --subscription sub123", false)] // Missing pool
     [InlineData("--account myanfaccount --pool mypool --location eastus --size 4398046511104 --subscription sub123", false)] // Missing resource-group
@@ -83,9 +84,11 @@ public class PoolCreateCommandTests
                 Arg.Any<long>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
+                Arg.Any<long?>(),
                 Arg.Any<string>(),
                 Arg.Any<bool?>(),
                 Arg.Any<string>(),
+                Arg.Any<Dictionary<string, string>?>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
@@ -138,8 +141,8 @@ public class PoolCreateCommandTests
         _netAppFilesService.CreatePool(
             Arg.Is(account), Arg.Is(pool),
             Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(size), Arg.Is(subscription),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<long?>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedPool));
 
         var args = _commandDefinition.Parse([
@@ -182,8 +185,8 @@ public class PoolCreateCommandTests
         _netAppFilesService.CreatePool(
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<long?>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
@@ -210,8 +213,8 @@ public class PoolCreateCommandTests
         _netAppFilesService.CreatePool(
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<long?>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Pool already exists"));
 
         var args = _commandDefinition.Parse([
@@ -237,8 +240,8 @@ public class PoolCreateCommandTests
         _netAppFilesService.CreatePool(
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<long?>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Resource group not found"));
 
         var args = _commandDefinition.Parse([
@@ -264,8 +267,8 @@ public class PoolCreateCommandTests
         _netAppFilesService.CreatePool(
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<long?>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         var args = _commandDefinition.Parse([
@@ -291,8 +294,8 @@ public class PoolCreateCommandTests
         _netAppFilesService.CreatePool(
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<long?>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<CapacityPoolCreateResult>(new Exception("Test error")));
 
         var args = _commandDefinition.Parse([
@@ -331,8 +334,8 @@ public class PoolCreateCommandTests
         _netAppFilesService.CreatePool(
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<long?>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedPool));
 
         var args = _commandDefinition.Parse([
@@ -390,8 +393,8 @@ public class PoolCreateCommandTests
 
         _netAppFilesService.CreatePool(
             account, pool, resourceGroup, location, size, subscription,
-            "Premium", Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
-            null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            "Premium", null, Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
+            null, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedPool);
 
         var args = _commandDefinition.Parse([
@@ -408,7 +411,123 @@ public class PoolCreateCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _netAppFilesService.Received(1).CreatePool(
             account, pool, resourceGroup, location, size, subscription,
-            "Premium", Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
-            null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+            "Premium", null, Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
+            null, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CallsServiceWithSizeInBytesTagsAndCustomThroughput()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var account = "myanfaccount";
+        var pool = "mypool";
+        var resourceGroup = "myrg";
+        var location = "eastus";
+        var subscription = "sub123";
+        long sizeInBytes = 4398046511104;
+        var tagsJson = "{\"env\":\"prod\"}";
+        var tags = JsonSerializer.Deserialize<Dictionary<string, string>?>(tagsJson);
+
+        var expectedPool = new CapacityPoolCreateResult(
+            Id: $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/capacityPools/{pool}",
+            Name: $"{account}/{pool}",
+            Type: "Microsoft.NetApp/netAppAccounts/capacityPools",
+            Location: location,
+            ResourceGroup: resourceGroup,
+            ProvisioningState: "Succeeded",
+            ServiceLevel: "Flexible",
+            Size: sizeInBytes,
+            QosType: "Manual",
+            CoolAccess: true,
+            EncryptionType: "Single");
+
+        _netAppFilesService.CreatePool(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<long?>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .Returns(expectedPool);
+
+        var args = _commandDefinition.Parse([
+            "--account", account,
+            "--pool", pool,
+            "--resource-group", resourceGroup,
+            "--location", location,
+            "--sizeInBytes", sizeInBytes.ToString(),
+            "--subscription", subscription,
+            "--serviceLevel", "Flexible",
+            "--qosType", "Manual",
+            "--coolAccess", "true",
+            "--customThroughputMibps", "256",
+            "--tags", tagsJson
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _netAppFilesService.Received(1).CreatePool(
+            account,
+            pool,
+            resourceGroup,
+            location,
+            sizeInBytes,
+            subscription,
+            "Flexible",
+            256,
+            "Manual",
+            true,
+            Arg.Any<string>(),
+            Arg.Is<Dictionary<string, string>?>(tags),
+            null,
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsBothSizeAndSizeInBytes()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount",
+            "--pool", "mypool",
+            "--resource-group", "myrg",
+            "--location", "eastus",
+            "--size", "4398046511104",
+            "--sizeInBytes", "4398046511104",
+            "--subscription", "sub123"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("either --size or --sizeInBytes", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsNoWaitArgument()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount",
+            "--pool", "mypool",
+            "--resource-group", "myrg",
+            "--location", "eastus",
+            "--size", "4398046511104",
+            "--subscription", "sub123",
+            "--no-wait"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--no-wait", response.Message);
     }
 }

@@ -16,6 +16,7 @@ using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
+using Xunit.Sdk;
 
 namespace Azure.Mcp.Tools.NetAppFiles.UnitTests.Account;
 
@@ -73,7 +74,18 @@ public class AccountCreateCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<string>(),
+                Arg.Any<Dictionary<string, string>?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<JsonElement?>(),
+                Arg.Any<JsonElement?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedAccount);
@@ -117,7 +129,19 @@ public class AccountCreateCommandTests
 
         _netAppFilesService.CreateAccount(
             Arg.Is(account), Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(subscription),
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<Dictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedAccount));
 
         var args = _commandDefinition.Parse([
@@ -153,7 +177,19 @@ public class AccountCreateCommandTests
 
         _netAppFilesService.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -179,7 +215,19 @@ public class AccountCreateCommandTests
         TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Account already exists"));
 
@@ -204,7 +252,19 @@ public class AccountCreateCommandTests
         TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Resource group not found"));
 
@@ -229,7 +289,19 @@ public class AccountCreateCommandTests
         TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
@@ -254,7 +326,19 @@ public class AccountCreateCommandTests
         TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<NetAppAccountCreateResult>(new Exception("Test error")));
 
@@ -287,7 +371,19 @@ public class AccountCreateCommandTests
 
         _netAppFilesService.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedAccount));
 
@@ -334,7 +430,19 @@ public class AccountCreateCommandTests
 
         _netAppFilesService.CreateAccount(
             account, resourceGroup, location, subscription,
-            null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedAccount);
 
         var args = _commandDefinition.Parse([
@@ -349,6 +457,105 @@ public class AccountCreateCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _netAppFilesService.Received(1).CreateAccount(
             account, resourceGroup, location, subscription,
-            null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CallsServiceWithCreateOptionalParameters()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var account = "myanfaccount";
+        var resourceGroup = "myrg";
+        var location = "eastus";
+        var subscription = "sub123";
+        var tagsJson = "{\"env\":\"prod\"}";
+        var tags = JsonSerializer.Deserialize<Dictionary<string, string>?>(tagsJson);
+        var userAssignedIdentitiesJson = "{\"/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/u1\":{}}";
+        var activeDirectoriesJson = "[{\"dns\":\"10.0.0.4\"}]";
+
+        var expectedAccount = new NetAppAccountCreateResult(
+            Id: $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}",
+            Name: account,
+            Type: "Microsoft.NetApp/netAppAccounts",
+            Location: location,
+            ResourceGroup: resourceGroup,
+            ProvisioningState: "Succeeded");
+
+        _netAppFilesService.CreateAccount(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<JsonElement?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedAccount);
+
+        var args = _commandDefinition.Parse([
+            "--account", account,
+            "--resource-group", resourceGroup,
+            "--location", location,
+            "--subscription", subscription,
+            "--tags", tagsJson,
+            "--keyName", "cmkKey",
+            "--keySource", "Microsoft.KeyVault",
+            "--keyVaultResourceId", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.KeyVault/vaults/kv1",
+            "--keyVaultUri", "https://kv1.vault.azure.net/",
+            "--federatedClientId", "fed-client-id",
+            "--userAssignedIdentity", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/u1",
+            "--identityType", "UserAssigned",
+            "--userAssignedIdentities", userAssignedIdentitiesJson,
+            "--activeDirectories", activeDirectoriesJson,
+            "--nfsV4IdDomain", "contoso.local"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _netAppFilesService.Received(1).CreateAccount(
+            account,
+            resourceGroup,
+            location,
+            subscription,
+            Arg.Is<Dictionary<string, string>?>(tags),
+            "cmkKey",
+            "Microsoft.KeyVault",
+            "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.KeyVault/vaults/kv1",
+            "https://kv1.vault.azure.net/",
+            "fed-client-id",
+            "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/u1",
+            "UserAssigned",
+            Arg.Is<JsonElement?>(value => value.HasValue && value.Value.ValueKind == JsonValueKind.Object),
+            Arg.Is<JsonElement?>(value => value.HasValue && value.Value.ValueKind == JsonValueKind.Array),
+            "contoso.local",
+            null,
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 }

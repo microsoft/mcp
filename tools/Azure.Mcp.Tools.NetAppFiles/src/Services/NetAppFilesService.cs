@@ -25,6 +25,8 @@ public class NetAppFilesService(
 
     public async Task<ResourceQueryResults<NetAppAccountInfo>> GetAccountDetails(
         string? account,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -32,16 +34,38 @@ public class NetAppFilesService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        if (string.IsNullOrEmpty(account))
+        var filters = new List<string>();
+        if (!string.IsNullOrEmpty(account))
+        {
+            filters.Add($"name =~ '{EscapeKqlString(account)}'");
+        }
+
+        if (ids is { Count: > 0 })
+        {
+            var escapedIds = ids
+                .Where(static id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => $"'{EscapeKqlString(id)}'")
+                .ToList();
+
+            if (escapedIds.Count > 0)
+            {
+                filters.Add($"id in~ ({string.Join(", ", escapedIds)})");
+            }
+        }
+
+        string? additionalFilter = filters.Count > 0 ? string.Join(" and ", filters) : null;
+
+        if (string.IsNullOrEmpty(account) || filters.Count > 1)
         {
             try
             {
                 return await ExecuteResourceQueryAsync(
                     "Microsoft.NetApp/netAppAccounts",
-                    null,
+                    resourceGroup,
                     subscription,
                     retryPolicy,
                     ConvertToAccountInfoModel,
+                    additionalFilter: additionalFilter,
                     cancellationToken: cancellationToken);
             }
             catch (Exception ex)
@@ -56,11 +80,11 @@ public class NetAppFilesService(
             {
                 var netAppAccount = await ExecuteSingleResourceQueryAsync(
                     "Microsoft.NetApp/netAppAccounts",
-                    resourceGroup: null,
+                    resourceGroup: resourceGroup,
                     subscription: subscription,
                     retryPolicy: retryPolicy,
                     converter: ConvertToAccountInfoModel,
-                    additionalFilter: $"name =~ '{EscapeKqlString(account)}'",
+                    additionalFilter: additionalFilter,
                     cancellationToken: cancellationToken);
 
                 if (netAppAccount == null)
@@ -81,6 +105,8 @@ public class NetAppFilesService(
     public async Task<ResourceQueryResults<CapacityPoolInfo>> GetPoolDetails(
         string? account,
         string? pool,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -101,6 +127,18 @@ public class NetAppFilesService(
         {
             filters.Add($"name endswith '/{EscapeKqlString(pool)}'");
         }
+        if (ids is { Count: > 0 })
+        {
+            var escapedIds = ids
+                .Where(static id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => $"'{EscapeKqlString(id)}'")
+                .ToList();
+
+            if (escapedIds.Count > 0)
+            {
+                filters.Add($"id in~ ({string.Join(", ", escapedIds)})");
+            }
+        }
 
         string? additionalFilter = filters.Count > 0 ? string.Join(" and ", filters) : null;
 
@@ -108,7 +146,7 @@ public class NetAppFilesService(
         {
             return await ExecuteResourceQueryAsync(
                 "Microsoft.NetApp/netAppAccounts/capacityPools",
-                null,
+                resourceGroup,
                 subscription,
                 retryPolicy,
                 ConvertToPoolInfoModel,
@@ -126,6 +164,8 @@ public class NetAppFilesService(
         string? account,
         string? pool,
         string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -146,6 +186,18 @@ public class NetAppFilesService(
         {
             filters.Add($"name endswith '/{EscapeKqlString(volume)}'");
         }
+        if (ids is { Count: > 0 })
+        {
+            var escapedIds = ids
+                .Where(static id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => $"'{EscapeKqlString(id)}'")
+                .ToList();
+
+            if (escapedIds.Count > 0)
+            {
+                filters.Add($"id in~ ({string.Join(", ", escapedIds)})");
+            }
+        }
 
         string? additionalFilter = filters.Count > 0 ? string.Join(" and ", filters) : null;
 
@@ -153,7 +205,7 @@ public class NetAppFilesService(
         {
             return await ExecuteResourceQueryAsync(
                 "Microsoft.NetApp/netAppAccounts/capacityPools/volumes",
-                null,
+                resourceGroup,
                 subscription,
                 retryPolicy,
                 ConvertToVolumeInfoModel,
@@ -667,24 +719,23 @@ public class NetAppFilesService(
         string volume,
         string resourceGroup,
         string location,
-        string creationToken,
-        long usageThreshold,
-        string subnetId,
         string subscription,
-        string? serviceLevel = null,
-        List<string>? protocolTypes = null,
+        NetAppVolumeCreateParameters parameters,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
+        var resolvedSubnetId = ResolveSubnetId(parameters, subscription, resourceGroup);
+
         ValidateRequiredParameters(
             (nameof(account), account),
             (nameof(pool), pool),
             (nameof(volume), volume),
             (nameof(resourceGroup), resourceGroup),
             (nameof(location), location),
-            (nameof(creationToken), creationToken),
-            (nameof(subnetId), subnetId),
+            (nameof(parameters.CreationToken), parameters.CreationToken),
+            (nameof(parameters.UsageThreshold), parameters.UsageThreshold.ToString()),
+            (nameof(resolvedSubnetId), resolvedSubnetId),
             (nameof(subscription), subscription));
 
         try
@@ -704,12 +755,69 @@ public class NetAppFilesService(
                 Location = location,
                 Properties = new NetAppVolumeCreateProperties
                 {
-                    CreationToken = creationToken,
-                    UsageThreshold = usageThreshold,
-                    SubnetId = subnetId,
-                    ServiceLevel = serviceLevel ?? "Premium",
-                    ProtocolTypes = protocolTypes ?? ["NFSv3"]
-                }
+                    CreationToken = parameters.CreationToken,
+                    UsageThreshold = parameters.UsageThreshold,
+                    SubnetId = resolvedSubnetId,
+                    ServiceLevel = parameters.ServiceLevel ?? "Premium",
+                    ProtocolTypes = parameters.ProtocolTypes ?? ["NFSv3"],
+                    AcceptGrowCapacityPoolForShortTermCloneSplit = parameters.AcceptGrowCapacityPoolForShortTermCloneSplit,
+                    AllowedClients = parameters.AllowedClients,
+                    AvsDataStore = parameters.AvsDataStore,
+                    BackupId = parameters.BackupId,
+                    BackupPolicyId = parameters.BackupPolicyId,
+                    BackupVaultId = parameters.BackupVaultId,
+                    CoolAccessRetrievalPolicy = parameters.CoolAccessRetrievalPolicy,
+                    CoolAccessTieringPolicy = parameters.CoolAccessTieringPolicy,
+                    CapacityPoolResourceId = parameters.CapacityPoolResourceId,
+                    ChownMode = parameters.ChownMode,
+                    Cifs = parameters.Cifs,
+                    CoolAccess = parameters.CoolAccess,
+                    CoolnessPeriod = parameters.CoolnessPeriod,
+                    DeleteBaseSnapshot = parameters.DeleteBaseSnapshot,
+                    DesiredArpState = parameters.DesiredArpState,
+                    EnableSubvolumes = parameters.EnableSubvolumes,
+                    EncryptionKeySource = parameters.EncryptionKeySource,
+                    ExportPolicyRules = parameters.ExportPolicyRules,
+                    ExternalHostName = parameters.ExternalHostName,
+                    ExternalServerName = parameters.ExternalServerName,
+                    ExternalVolumeName = parameters.ExternalVolumeName,
+                    HasRootAccess = parameters.HasRootAccess,
+                    IsLargeVolume = parameters.IsLargeVolume,
+                    KerberosEnabled = parameters.KerberosEnabled,
+                    Kerberos5ReadOnly = parameters.Kerberos5R,
+                    Kerberos5ReadWrite = parameters.Kerberos5Rw,
+                    Kerberos5iReadOnly = parameters.Kerberos5IR,
+                    Kerberos5iReadWrite = parameters.Kerberos5IRw,
+                    Kerberos5pReadOnly = parameters.Kerberos5PR,
+                    Kerberos5pReadWrite = parameters.Kerberos5PRw,
+                    KeyVaultPrivateEndpointResourceId = parameters.KeyVaultPrivateEndpointResourceId,
+                    LdapEnabled = parameters.LdapEnabled,
+                    NetworkFeatures = parameters.NetworkFeatures,
+                    PlacementRules = parameters.PlacementRules,
+                    PolicyEnforced = parameters.PolicyEnforced,
+                    ProximityPlacementGroup = parameters.ProximityPlacementGroup,
+                    RelocationRequested = parameters.RelocationRequested,
+                    RemoteVolumeResourceId = parameters.RemoteVolumeResourceId,
+                    RemoteVolumeRegion = parameters.RemoteVolumeRegion,
+                    ReplicationSchedule = parameters.ReplicationSchedule,
+                    RuleIndex = parameters.RuleIndex,
+                    SecurityStyle = parameters.SecurityStyle,
+                    SmbAccessBasedEnumeration = parameters.SmbAccessEnumeration,
+                    SmbContinuouslyAvailable = parameters.SmbContinuouslyAvailable,
+                    SmbEncryption = parameters.SmbEncryption,
+                    SmbNonBrowsable = parameters.SmbNonBrowsable,
+                    SnapshotDirectoryVisible = parameters.SnapshotDirectoryVisible,
+                    SnapshotId = parameters.SnapshotId,
+                    SnapshotPolicyId = parameters.SnapshotPolicyId,
+                    ThroughputMibps = parameters.ThroughputMibps,
+                    UnixPermissions = parameters.UnixPermissions,
+                    UnixReadOnly = parameters.UnixReadOnly,
+                    UnixReadWrite = parameters.UnixReadWrite,
+                    VolumeSpecName = parameters.VolumeSpecName,
+                    VolumeType = parameters.VolumeType
+                },
+                Tags = parameters.Tags,
+                Zones = parameters.Zones
             };
 
             var result = await CreateOrUpdateGenericResourceAsync(
@@ -754,6 +862,26 @@ public class NetAppFilesService(
             _logger.LogError("Error creating NetApp Files volume '{Volume}': {Message}", volume, ex.Message);
             throw;
         }
+    }
+
+    private static string? ResolveSubnetId(NetAppVolumeCreateParameters parameters, string subscription, string resourceGroup)
+    {
+        if (!string.IsNullOrWhiteSpace(parameters.SubnetId))
+        {
+            return parameters.SubnetId;
+        }
+
+        if (string.IsNullOrWhiteSpace(parameters.Vnet) || string.IsNullOrWhiteSpace(parameters.Subnet))
+        {
+            return null;
+        }
+
+        if (parameters.Vnet.StartsWith("/subscriptions/", StringComparison.OrdinalIgnoreCase))
+        {
+            return $"{parameters.Vnet}/subnets/{parameters.Subnet}";
+        }
+
+        return $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Network/virtualNetworks/{parameters.Vnet}/subnets/{parameters.Subnet}";
     }
 
     public async Task<NetAppVolumeCreateResult> UpdateVolume(
@@ -850,6 +978,17 @@ public class NetAppFilesService(
         string resourceGroup,
         string location,
         string subscription,
+        Dictionary<string, string>? tags = null,
+        string? keyName = null,
+        string? keySource = null,
+        string? keyVaultResourceId = null,
+        string? keyVaultUri = null,
+        string? federatedClientId = null,
+        string? userAssignedIdentity = null,
+        string? identityType = null,
+        JsonElement? userAssignedIdentities = null,
+        JsonElement? activeDirectories = null,
+        string? nfsV4IdDomain = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -872,10 +1011,58 @@ public class NetAppFilesService(
             var resourceId = new ResourceIdentifier(
                 $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}");
 
+            var hasKeyVaultProperties =
+                !string.IsNullOrEmpty(keyName) ||
+                !string.IsNullOrEmpty(keyVaultResourceId) ||
+                !string.IsNullOrEmpty(keyVaultUri);
+
+            var hasEncryptionIdentity =
+                !string.IsNullOrEmpty(federatedClientId) ||
+                !string.IsNullOrEmpty(userAssignedIdentity);
+
+            var hasEncryption =
+                !string.IsNullOrEmpty(keySource) ||
+                hasKeyVaultProperties ||
+                hasEncryptionIdentity;
+
+            var hasProperties =
+                activeDirectories.HasValue ||
+                !string.IsNullOrEmpty(nfsV4IdDomain) ||
+                hasEncryption;
+
+            var hasIdentity =
+                !string.IsNullOrEmpty(identityType) ||
+                userAssignedIdentities.HasValue;
+
             var createContent = new NetAppAccountCreateOrUpdateContent
             {
                 Location = location,
-                Properties = new NetAppAccountCreateProperties()
+                Tags = tags,
+                Properties = hasProperties ? new NetAppAccountCreateProperties
+                {
+                    ActiveDirectories = activeDirectories,
+                    NfsV4IdDomain = nfsV4IdDomain,
+                    Encryption = hasEncryption ? new NetAppAccountCreateEncryption
+                    {
+                        KeySource = keySource,
+                        KeyVaultProperties = hasKeyVaultProperties ? new NetAppAccountCreateKeyVaultProperties
+                        {
+                            KeyName = keyName,
+                            KeyVaultResourceId = keyVaultResourceId,
+                            KeyVaultUri = keyVaultUri
+                        } : null,
+                        Identity = hasEncryptionIdentity ? new NetAppAccountCreateEncryptionIdentity
+                        {
+                            FederatedClientId = federatedClientId,
+                            UserAssignedIdentity = userAssignedIdentity
+                        } : null
+                    } : null
+                } : new NetAppAccountCreateProperties(),
+                Identity = hasIdentity ? new NetAppAccountCreateIdentity
+                {
+                    Type = identityType,
+                    UserAssignedIdentities = userAssignedIdentities
+                } : null
             };
 
             var result = await CreateOrUpdateGenericResourceAsync(
@@ -915,9 +1102,19 @@ public class NetAppFilesService(
     public async Task<NetAppAccountCreateResult> UpdateAccount(
         string account,
         string resourceGroup,
-        string location,
+        string? location,
         string subscription,
         Dictionary<string, string>? tags = null,
+        string? keyName = null,
+        string? keySource = null,
+        string? keyVaultResourceId = null,
+        string? keyVaultUri = null,
+        string? federatedClientId = null,
+        string? userAssignedIdentity = null,
+        string? identityType = null,
+        JsonElement? userAssignedIdentities = null,
+        JsonElement? activeDirectories = null,
+        string? nfsV4IdDomain = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -925,7 +1122,6 @@ public class NetAppFilesService(
         ValidateRequiredParameters(
             (nameof(account), account),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(location), location),
             (nameof(subscription), subscription));
 
         try
@@ -940,11 +1136,69 @@ public class NetAppFilesService(
             var resourceId = new ResourceIdentifier(
                 $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}");
 
+            if (string.IsNullOrEmpty(location))
+            {
+                var existingResource = await GetGenericResourceAsync(armClient, resourceId, cancellationToken);
+                location = existingResource.Data.Location;
+            }
+
+            if (string.IsNullOrEmpty(location))
+            {
+                throw new InvalidOperationException("Unable to resolve account location for update. Specify --location explicitly.");
+            }
+
+            var hasKeyVaultProperties =
+                !string.IsNullOrEmpty(keyName) ||
+                !string.IsNullOrEmpty(keyVaultResourceId) ||
+                !string.IsNullOrEmpty(keyVaultUri);
+
+            var hasEncryptionIdentity =
+                !string.IsNullOrEmpty(federatedClientId) ||
+                !string.IsNullOrEmpty(userAssignedIdentity);
+
+            var hasEncryption =
+                !string.IsNullOrEmpty(keySource) ||
+                hasKeyVaultProperties ||
+                hasEncryptionIdentity;
+
+            var hasProperties =
+                activeDirectories.HasValue ||
+                !string.IsNullOrEmpty(nfsV4IdDomain) ||
+                hasEncryption;
+
+            var hasIdentity =
+                !string.IsNullOrEmpty(identityType) ||
+                userAssignedIdentities.HasValue;
+
             var updateContent = new NetAppAccountCreateOrUpdateContent
             {
                 Location = location,
-                Properties = new NetAppAccountCreateProperties(),
-                Tags = tags
+                Tags = tags,
+                Properties = hasProperties ? new NetAppAccountCreateProperties
+                {
+                    ActiveDirectories = activeDirectories,
+                    NfsV4IdDomain = nfsV4IdDomain,
+                    Encryption = hasEncryption ? new NetAppAccountCreateEncryption
+                    {
+                        KeySource = keySource,
+                        KeyVaultProperties = hasKeyVaultProperties ? new NetAppAccountCreateKeyVaultProperties
+                        {
+                            KeyName = keyName,
+                            KeyVaultResourceId = keyVaultResourceId,
+                            KeyVaultUri = keyVaultUri
+                        } : null,
+                        Identity = hasEncryptionIdentity ? new NetAppAccountCreateEncryptionIdentity
+                        {
+                            FederatedClientId = federatedClientId,
+                            UserAssignedIdentity = userAssignedIdentity
+                        } : null
+                    } : null
+                } : new NetAppAccountCreateProperties(),
+                Identity = hasIdentity ? new NetAppAccountCreateIdentity
+                {
+                    Type = identityType,
+                    UserAssignedIdentities = userAssignedIdentities
+                } : null
             };
 
             var result = await CreateOrUpdateGenericResourceAsync(
@@ -1468,9 +1722,11 @@ public class NetAppFilesService(
         long size,
         string subscription,
         string? serviceLevel = null,
+        long? customThroughputMibps = null,
         string? qosType = null,
         bool? coolAccess = null,
         string? encryptionType = null,
+        Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -1497,10 +1753,12 @@ public class NetAppFilesService(
             var createContent = new CapacityPoolCreateOrUpdateContent
             {
                 Location = location,
+                Tags = tags,
                 Properties = new CapacityPoolCreateProperties
                 {
                     Size = size,
                     ServiceLevel = serviceLevel ?? "Premium",
+                    CustomThroughputMibps = customThroughputMibps,
                     QosType = qosType,
                     CoolAccess = coolAccess,
                     EncryptionType = encryptionType
@@ -1558,7 +1816,10 @@ public class NetAppFilesService(
         string location,
         string subscription,
         long? size = null,
+        long? sizeInBytes = null,
+        string? serviceLevel = null,
         string? qosType = null,
+        long? customThroughputMibps = null,
         bool? coolAccess = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
@@ -1589,8 +1850,10 @@ public class NetAppFilesService(
                 Location = location,
                 Properties = new CapacityPoolCreateProperties
                 {
-                    Size = size,
+                    Size = size ?? sizeInBytes,
+                    ServiceLevel = serviceLevel,
                     QosType = qosType,
+                    CustomThroughputMibps = customThroughputMibps,
                     CoolAccess = coolAccess
                 },
                 Tags = tags

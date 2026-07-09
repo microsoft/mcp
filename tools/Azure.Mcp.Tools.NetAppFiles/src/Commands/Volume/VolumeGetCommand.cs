@@ -28,7 +28,7 @@ public sealed class VolumeGetCommand(ILogger<VolumeGetCommand> logger, INetAppFi
 
     public override string Description =>
         """
-        Retrieves detailed information about Azure NetApp Files volumes, including volume name, location, resource group, provisioning state, service level, quota (usage threshold), creation token, subnet, protocol types, and network features. If a specific volume name is not provided, the command will return details for all volumes in a subscription. Optionally filter by account and capacity pool.
+        Retrieves detailed information about Azure NetApp Files volumes, including volume name, location, resource group, provisioning state, service level, quota (usage threshold), creation token, subnet, protocol types, and network features. If a specific volume name is not provided, the command will return details for all volumes in a subscription. Optionally filter by account, capacity pool, resource group, or resource IDs.
         """;
 
     public override string Title => CommandTitle;
@@ -49,6 +49,8 @@ public sealed class VolumeGetCommand(ILogger<VolumeGetCommand> logger, INetAppFi
         command.Options.Add(NetAppFilesOptionDefinitions.Account.AsOptional());
         command.Options.Add(NetAppFilesOptionDefinitions.Pool.AsOptional());
         command.Options.Add(NetAppFilesOptionDefinitions.Volume.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
     }
 
     protected override VolumeGetOptions BindOptions(ParseResult parseResult)
@@ -57,6 +59,8 @@ public sealed class VolumeGetCommand(ILogger<VolumeGetCommand> logger, INetAppFi
         options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
         options.Pool = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Pool.Name);
         options.Volume = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Volume.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
         return options;
     }
 
@@ -69,12 +73,16 @@ public sealed class VolumeGetCommand(ILogger<VolumeGetCommand> logger, INetAppFi
 
         var options = BindOptions(parseResult);
 
+        Console.WriteLine(options);
+
         try
         {
             var volumes = await _netAppFilesService.GetVolumeDetails(
                 options.Account,
                 options.Pool,
                 options.Volume,
+                options.ResourceGroup,
+                options.Ids,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
