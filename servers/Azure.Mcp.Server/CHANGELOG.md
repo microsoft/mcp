@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.19 (Unreleased)
+## 3.0.0-beta.25 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,104 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 3.0.0-beta.24 (2026-07-08)
+
+### Bugs Fixed
+
+- Fixed an issue where the on-behalf-of token tenant comparison was case-sensitive, causing valid requests to be rejected when the configured tenant ID casing differed from the JWT 'tid' claim. [[#2907](https://github.com/microsoft/mcp/pull/2907)]
+
+## 3.0.0-beta.23 (2026-07-02)
+
+### Features Added
+
+- Added the `resilience` toolset (Azure Resilience Management) with read-only `get` commands for goals (templates, assignments, resources), usage plans and enrollments, and recovery plans (plans, resources, jobs). [[#2948](https://github.com/microsoft/mcp/pull/2948)]
+- Added support for AVM pattern modules (`avm-ptn-*`) in the Azure Terraform `avm` tools. The `azureterraform avm list` tool now returns both resource and pattern modules, each tagged with a `moduleType` field, and `avm versions`/`avm get` work for pattern modules as well as resource modules. [[#2946](https://github.com/microsoft/mcp/pull/2946)]
+
+### Breaking Changes
+
+- Removed unused parameters from Resource Health tools. [[#2952](https://github.com/microsoft/mcp/pull/2952)]
+
+## 3.0.0-beta.22 (2026-06-30)
+
+### Breaking Changes
+
+- Removed unused parameters from tools in the following namespaces:
+  - App Configuration [[#2871](https://github.com/microsoft/mcp/pull/2871)]
+  - App Service [[#2875](https://github.com/microsoft/mcp/pull/2875)]
+  - Authorization [[#2885](https://github.com/microsoft/mcp/pull/2885)]
+  - Azure Backup [[#2888](https://github.com/microsoft/mcp/pull/2888)]
+  - Cosmos DB [[#2935](https://github.com/microsoft/mcp/pull/2935)]
+  - Kusto [[#2922](https://github.com/microsoft/mcp/pull/2922)]
+  - Monitor [[#2940](https://github.com/microsoft/mcp/pull/2940)]
+  - SRE Agent [[#2937](https://github.com/microsoft/mcp/pull/2937)]
+  - Storage [[#2922](https://github.com/microsoft/mcp/pull/2922)]
+  - Virtual Desktop [[#2941](https://github.com/microsoft/mcp/pull/2941)]
+  - PostgreSQL [[#2942](https://github.com/microsoft/mcp/pull/2942)]
+  - Foundry Extensions [[#2949](https://github.com/microsoft/mcp/pull/2949)]
+  - Storage Sync [[#2950](https://github.com/microsoft/mcp/pull/2950)]
+- Parameters `--label` and `--label-filter` are now mutually exclusive in `appconfig kv get`. [[#2871](https://github.com/microsoft/mcp/pull/2871)]
+
+### Bugs Fixed
+
+- Fixed handling of nullable numeric options in Foundry Extensions tools. They were previously being ignored due to a type mismatch between the `System.CommandLine` Option definition type and the retrieval type. [[#2949](https://github.com/microsoft/mcp/pull/2949)]
+- Fixed missing `--tags` option in the `storagesync service create` tool. [[#2950](https://github.com/microsoft/mcp/pull/2950)]
+- `eventhubs namespace-get` now correctly supports subscription-wide listing when `--resource-group` is omitted, and treats a whitespace resource group as not provided for robust scope handling. [[#2961](https://github.com/microsoft/mcp/pull/2961)]
+- `foundryextensions resource-get` routing and terminology were clarified to improve namespace tool selection confidence, and validation now fails fast when `--resource-name` is provided without `--resource-group`. [[#2961](https://github.com/microsoft/mcp/pull/2961)]
+
+## 3.0.0-beta.21 (2026-06-23)
+
+### Features Added
+
+- Added `azmcp advisor recommendation summary` command to aggregate recommendations server-side grouped by `recommendation-type`, `category`, `impact`, or `resource-type`. `--group-by` is optional and defaults to `category` when omitted, surfacing the high-level themes (Cost, Security, Reliability, etc.). Returns the full per-bucket count and a true `TotalRecommendations` over the filtered population. Optional `--top` is a presentation cap on the number of displayed buckets (defaults to all); the `Unknown` bucket is always pushed to the tail and preserved across slicing so uncategorized items remain visible. Added optional `--category`, `--impact`, `--resource-type`, `--resource`, and `--search` filters to both `azmcp advisor recommendation list` and `azmcp advisor recommendation summary`; `--search` supports natural-language phrases like 'related to Microsoft Foundry'. Both commands now return only active recommendations (status 'New'), excluding dismissed and postponed ones. Also added `--top` to `azmcp advisor recommendation list`. [[#2732](https://github.com/microsoft/mcp/pull/2732)]
+- Added `azmcp advisor recommendation-type list` to list the catalog of Advisor recommendation types via the ARM Advisor metadata API. Each entry surfaces the recommendation's category, impact level, target resource type, and sub-category. Results are sorted by impact (High → Medium → Low). Supports optional filters `--resource-type`, `--impact`, and `--category`. Useful both for greenfield (empty environments) and brownfield (onboarding new resource types) scenarios. [[#2830](https://github.com/microsoft/mcp/pull/2830)]
+- Added an optional `--schema` parameter to `azmcp postgres list` for listing tables in non-public PostgreSQL schemas (defaults to `public`), and removed unused `--subscription`/`--resource-group` parameters from the PostgreSQL data-plane commands: `database query`, `table schema get`. [[#2864](https://github.com/microsoft/mcp/pull/2864)]
+
+### Breaking Changes
+
+- Removed auth mode from `aks_cluster_get` and `aks_nodepool_get` tools as they don't use that parameter. [[#2868](https://github.com/microsoft/mcp/pull/2868)]
+- Removed unused parameters from App Lens tools. [[#2872](https://github.com/microsoft/mcp/pull/2872)]
+
+### Bugs Fixed
+
+- Cap `azmcp postgres list` database and table results at 10,000 entries to prevent unbounded enumeration on large servers. When the results are truncated, the response includes a `resultsTruncated: true` flag. [[#2920](https://github.com/microsoft/mcp/pull/2920)]
+- Fixed the SQL `db get` and `elastic-pool list` tools returning resources from every server in the resource group, or a database from the wrong server, instead of only the requested server. Listing databases, listing elastic pools, and retrieving a single database by name are now scoped to the specified server. [[#2865](https://github.com/microsoft/mcp/pull/2865)]
+- Fixed Azure SQL tools failing with a cryptic ARM error when a subscription display name (instead of a subscription ID) was provided. The `sql server show`, `sql server list`, `sql server create`, and `sql db rename` operations now resolve the subscription through the subscription service. [[#2861](https://github.com/microsoft/mcp/pull/2861)]
+
+### Other Changes
+
+- Improved resource querying in Aks tools. [[#2852](https://github.com/microsoft/mcp/pull/2852)]
+- Clarified the `azmcp redis create` tool description to convey that provisioning is asynchronous and callers should poll `provisioningState` until it shows 'Succeeded' before connecting. [[#2863](https://github.com/microsoft/mcp/pull/2863)]
+
+## 3.0.0-beta.20 (2026-06-18)
+
+### Bugs Fixed
+
+- Changed the default HTTP status code for command validation failures (`CommandValidationException`) from 500 (Internal Server Error) to 400 (Bad Request). [[#2900](https://github.com/microsoft/mcp/pull/2900)]
+
+- Optimized `BaseAzureResourceService.ExecuteResourceQueryAsync` to reduce ARM calls from two to one in the success path. [[#2735](https://github.com/microsoft/mcp/pull/2735)]
+
+## 3.0.0-beta.19 (2026-06-16)
+
+### Breaking Changes
+
+- Removed unused parameters from Application Insights tools. [[#2874](https://github.com/microsoft/mcp/pull/2874)]
+
+### Bugs Fixed
+
+- Fixed several issues in the MySQL toolset: [[#2677](https://github.com/microsoft/mcp/pull/2677)]
+  - `azmcp mysql list` now works when `--resource-group` is omitted. It now lists all MySQL servers across the subscription using a single ARM API call, matching the behavior of the PostgreSQL toolset.
+  - `--user` is no longer required for ARM-only commands (`server config get`, `server param get`, `server param set`). It is now only required for commands that open a direct database connection (`database query`, `table schema get`).
+  - Resource-group and parameter not-found errors now return HTTP 404 instead of HTTP 500, enabling callers to distinguish missing resources from unexpected failures.
+  - The query safety validator's compiled regex is now initialized once at startup rather than on every call, improving performance and ensuring AOT compatibility.
+- Fixed PostgreSQL server configuration commands (`server config get`, `server param get`, `server param set`) to honor the `--tenant` and retry policy options when making ARM calls, enabling sovereign cloud authentication and configurable retries. [[#2862](https://github.com/microsoft/mcp/pull/2862)]
+- Added Azure OpenAI endpoint validation to the Cosmos DB vector search tool (`cosmos_database_container_item_vector-search`). [[#2895](https://github.com/microsoft/mcp/pull/2895)]
+- Fixed Redis `list` failing with a `NullReferenceException` when a cache has no Redis configuration (common for Basic/Standard tier caches), which previously caused all caches to be dropped from the response. Not-found errors (e.g. subscription or resource group not found) now return a 404 status instead of 500. [[#2886](https://github.com/microsoft/mcp/pull/2886)]
+- Fixed `azureterraform_azapi_get` returning `500 InternalServerError` for invalid resource type or API version inputs. The tool now returns `400 BadRequest` with an actionable message, enabling agents to auto-correct and retry with valid inputs. [[#2657](https://github.com/microsoft/mcp/pull/2657)]
+
+### Other Changes
+
+- Added documentation for KQL query validation restrictions (max 10,000 characters, tautology pattern rejection, management/control command rejection) for `azmcp kusto query`, `azmcp monitor resource log query`, and `azmcp monitor workspace log query`. [[#2814](https://github.com/microsoft/mcp/pull/2814)]
 
 ## 3.0.0-beta.18 (2026-06-12)
 

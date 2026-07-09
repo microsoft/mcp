@@ -26,7 +26,7 @@ public sealed class SampleCommand(
     ILogger<SampleCommand> logger,
     IKustoService kustoService,
     ISubscriptionResolver subscriptionResolver)
-    : BaseTableCommand<SampleOptions, SampleCommand.SampleCommandResult>(subscriptionResolver)
+    : BaseClusterCommand<SampleOptions, SampleCommand.SampleCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SampleOptions options, CancellationToken cancellationToken)
     {
@@ -46,7 +46,6 @@ public sealed class SampleCommand(
                     options.Database,
                     query,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
@@ -54,11 +53,10 @@ public sealed class SampleCommand(
             {
                 results = await kustoService.QueryItemsAsync(
                     options.Subscription!,
-                    options.ClusterName!,
+                    options.Cluster!,
                     options.Database,
                     query,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
@@ -67,7 +65,7 @@ public sealed class SampleCommand(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An exception occurred sampling table. Cluster: {Cluster}, Database: {Database}, Table: {Table}.", options.ClusterUri ?? options.ClusterName, options.Database, options.Table);
+            logger.LogError(ex, "An exception occurred sampling table. Cluster: {Cluster}, Database: {Database}, Table: {Table}.", options.ClusterUri ?? options.Cluster, options.Database, options.Table);
             HandleException(context, ex);
         }
         return context.Response;

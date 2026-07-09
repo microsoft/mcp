@@ -1,0 +1,41 @@
+{
+  "title": "Get downstream relations example",
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "itemId": "9b218778-e7a5-4d73-8187-f10824047715",
+    "beta": true
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "items": [
+          {
+            "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+            "type": "Report",
+            "displayName": "Q4 Sales Dashboard",
+            "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+          },
+          {
+            "id": "9b218778-e7a5-4d73-8187-f10824047715",
+            "type": "SemanticModel",
+            "displayName": "Sales Semantic Model",
+            "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+          }
+        ],
+        "relations": [
+          {
+            "itemId": "3546052c-ae64-4526-b1a8-52af7761426f",
+            "dependentOnItemId": "9b218778-e7a5-4d73-8187-f10824047715",
+            "relationType": "PushData"
+          }
+        ],
+        "workspaces": [
+          {
+            "id": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+            "displayName": "Finance Analytics Workspace"
+          }
+        ]
+      }
+    }
+  }
+}

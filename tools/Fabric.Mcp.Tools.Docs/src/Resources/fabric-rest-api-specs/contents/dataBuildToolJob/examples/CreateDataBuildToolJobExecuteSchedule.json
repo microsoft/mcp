@@ -1,0 +1,39 @@
+{
+    "parameters": {
+        "workspaceId": "4b218778-e7a5-4d73-8187-f10824047715",
+        "dataBuildToolJobId": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+        "createScheduleRequest": {
+            "enabled": true,
+            "configuration": {
+                "startDateTime": "2026-03-28T00:00:00",
+                "endDateTime": "2026-03-30T23:59:00",
+                "localTimeZoneId": "Central Standard Time",
+                "type": "Cron",
+                "interval": 10
+            }
+        }
+    },
+    "responses": {
+        "201": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/workspaces/4b218778-e7a5-4d73-8187-f10824047715/items/431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7/jobs/Execute/schedules/bbbbbbbb-1111-2222-3333-cccccccccccc"
+            },
+            "body": {
+                "id": "bbbbbbbb-1111-2222-3333-cccccccccccc",
+                "enabled": true,
+                "createdDateTime": "2024-05-28T05:35:20.5366667",
+                "configuration": {
+                    "startDateTime": "2026-03-28T00:00:00",
+                    "endDateTime": "2026-03-30T23:59:00",
+                    "localTimeZoneId": "Central Standard Time",
+                    "type": "Cron",
+                    "interval": 10
+                },
+                "owner": {
+                    "id": "33dd33dd-ee44-ff55-aa66-77bb77bb77bb",
+                    "type": "User"
+                }
+            }
+        }
+    }
+}

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.Cosmos.Models;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
@@ -58,6 +58,24 @@ public class CosmosServiceTests : IAsyncDisposable
     {
         await _service.DisposeAsync();
         GC.SuppressFinalize(this);
+    }
+
+    [Theory]
+    [InlineData("https://other-server.com/")]
+    [InlineData("https://aoai.openai.azure.com.other.com/")]
+    [InlineData("http://aoai.openai.azure.com/")]
+    [InlineData("https://attacker.com#.openai.azure.com")]
+    [InlineData("https://attacker.com#openai.azure.com")]
+    [InlineData("https://attacker.com/#.openai.azure.com")]
+    [InlineData("https://attacker.com?x=.openai.azure.com")]
+    public async Task GenerateEmbedding_RejectsUntrustedEndpoint(string endpoint)
+    {
+        var request = new EmbeddingRequest(endpoint, "my-deployment", null);
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.GenerateEmbedding("hello", request, cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Contains("Azure OpenAI endpoint", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

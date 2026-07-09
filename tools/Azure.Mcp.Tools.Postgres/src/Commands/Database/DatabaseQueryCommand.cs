@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Database;
 using Azure.Mcp.Tools.Postgres.Services;
 using Azure.Mcp.Tools.Postgres.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Database;
@@ -23,45 +21,25 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Database;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogger<DatabaseQueryCommand> logger) : BaseDatabaseCommand<DatabaseQueryOptions>(logger)
+public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogger<DatabaseQueryCommand> logger)
+    : AuthenticatedCommand<DatabaseQueryOptions, DatabaseQueryCommand.DatabaseQueryCommandResult>
 {
     private readonly IPostgresService _postgresService = postgresService;
+    private readonly ILogger<DatabaseQueryCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DatabaseQueryOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(PostgresOptionDefinitions.Query);
-    }
-
-    protected override DatabaseQueryOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Query.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             // Validate the query early to avoid sending unsafe SQL to the server.
             SqlQueryValidator.EnsureReadOnlySelect(options.Query);
             List<string> queryResult = await _postgresService.ExecuteQueryAsync(
-                options.Subscription!,
-                options.ResourceGroup!,
-                options.AuthType!,
-                options.User!,
+                options.AuthType,
+                options.User,
                 options.Password,
-                options.Server!,
-                options.Database!,
-                options.Query!,
+                options.Server,
+                options.Database,
+                options.Query,
                 cancellationToken);
             context.Response.Results = ResponseResult.Create(new(queryResult ?? []), PostgresJsonContext.Default.DatabaseQueryCommandResult);
         }
@@ -74,5 +52,5 @@ public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogg
         return context.Response;
     }
 
-    internal record DatabaseQueryCommandResult(List<string> QueryResult);
+    public sealed record DatabaseQueryCommandResult(List<string> QueryResult);
 }

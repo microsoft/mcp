@@ -151,7 +151,7 @@ public sealed class StorageSyncService(
         string resourceGroup,
         string storageSyncServiceName,
         string? incomingTrafficPolicy = null,
-        Dictionary<string, object>? tags = null,
+        Dictionary<string, string>? tags = null,
         string? identityType = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -180,7 +180,7 @@ public sealed class StorageSyncService(
         {
             foreach (var tag in tags)
             {
-                patch.Tags[tag.Key] = tag.Value?.ToString() ?? string.Empty;
+                patch.Tags[tag.Key] = tag.Value ?? string.Empty;
             }
         }
 

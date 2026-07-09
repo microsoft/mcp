@@ -9,8 +9,25 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | advisor_recommendation_list | List all recommendations in my subscription |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> |
+| advisor_recommendation_list | Show me high-impact Security recommendations in subscription <subscription> |
+| advisor_recommendation_list | List Cost recommendations for storage accounts in subscription <subscription> |
+| advisor_recommendation_list | Find Advisor recommendations mentioning "right-size" in subscription <subscription> |
+| advisor_recommendation_list | Show me the top 10 Advisor recommendations in subscription <subscription> |
+| advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations in subscription <subscription> |
+| advisor_recommendation_summary | Summarize Advisor recommendations in subscription <subscription> by category |
+| advisor_recommendation_summary | Show the top 10 most common Advisor recommendations in subscription <subscription> |
+| advisor_recommendation_summary | Group Advisor recommendations by impact in subscription <subscription> |
+| advisor_recommendation_summary | Which resource types have the most high-impact recommendations in subscription <subscription>? |
+| advisor_recommendation_summary | Summarize high-impact Security recommendations by resource-type in subscription <subscription> |
+| advisor_recommendation_summary | Group Cost recommendations for storage accounts by impact in subscription <subscription> |
+| advisor_recommendation_summary | Summarize Advisor recommendations mentioning "encryption" by category in subscription <subscription> |
 | advisor_recommendation_apply | Apply Advisor recommendations to this ARM template |
 | advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account |
+| advisor_recommendation-type_list | List the catalog of Advisor recommendation types available in my tenant |
+| advisor_recommendation-type_list | Before I deploy any virtual machines, what kinds of recommendations could Advisor produce for them? |
+| advisor_recommendation-type_list | What recommendation types does Advisor have for microsoft.sql/servers/databases, filtered to high impact? |
+| advisor_recommendation-type_list | Show me the catalog of cost recommendations Advisor can generate for storage accounts |
+| advisor_recommendation-type_list | My tenant is brand new and has no Advisor recommendations yet — what kinds of recommendations could Advisor make? |
 
 ## Azure AI Search
 
@@ -420,6 +437,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | postgres_list | Show me the PostgreSQL databases in server \<server> |
 | postgres_list | List all tables in the PostgreSQL database \<database> in server \<server> |
 | postgres_list | Show me the tables in the PostgreSQL database \<database> in server \<server> |
+| postgres_list | List all tables in the \<schema> schema of the PostgreSQL database \<database> in server \<server> |
 | postgres_database_query | Show me all items that contain the word \<search_term> in the PostgreSQL database \<database> in server \<server> |
 | postgres_server_config_get | Show me the configuration of PostgreSQL server \<server> |
 | postgres_server_param_get | Show me if the parameter my PostgreSQL server \<server> has replication enabled |
@@ -890,6 +908,30 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | redis_list | Show me my Redis caches |
 | redis_list | Get Redis clusters |
 
+## Azure Resilience Management
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| resilience_goal_assignment_get | List all resilience goal assignments in service group <service_group> |
+| resilience_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> |
+| resilience_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> |
+| resilience_goal_resource_get | Get the goal resource <resource_name> for goal assignment <goal_assignment_name> in service group <service_group> |
+| resilience_goal_template_get | List all resilience goal templates in service group <service_group> |
+| resilience_goal_template_get | Get the details of goal template <goal_template_name> in service group <service_group> |
+| resilience_recovery_job_get | List all recovery jobs of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_job_get | Get the details of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_job_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_job_resource_get | Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_plan_get | List all resilience recovery plans in service group <service_group> |
+| resilience_recovery_plan_get | Get the details of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_plan_resource_get | List all resources (members) of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_plan_resource_get | Get the recovery resource <resource_name> for recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_usageplan_enrollment_get | List all enrollments of usage plan <usage_plan_name> in resource group <resource_group_name> |
+| resilience_usageplan_enrollment_get | Get the details of usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> in resource group <resource_group_name> |
+| resilience_usageplan_get | List all resilience usage plans in my subscription |
+| resilience_usageplan_get | List all resilience usage plans in resource group <resource_group_name> |
+| resilience_usageplan_get | Get the details of usage plan <usage_plan_name> in resource group <resource_group_name> |
+
 ## Azure Resource Group
 
 | Tool Name | Test Prompt |
@@ -1163,10 +1205,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azureterraform_azapi_get | Get AzAPI Terraform provider documentation for Microsoft.Compute/virtualMachines with API version 2024-07-01 |
 | azureterraform_avm_list | List all available Azure Verified Modules |
 | azureterraform_avm_list | Show me the available AVM modules for Terraform |
+| azureterraform_avm_list | List the AVM pattern modules available for Terraform |
 | azureterraform_avm_versions | Show all versions of avm-res-network-virtualnetwork |
 | azureterraform_avm_versions | What versions are available for avm-res-storage-storageaccount? |
+| azureterraform_avm_versions | Show all versions of the avm-ptn-aiml-ai-foundry pattern module |
 | azureterraform_avm_get | Get the documentation for avm-res-storage-storageaccount version 0.1.0 |
 | azureterraform_avm_get | Get the documentation for the latest version of Azure Verified Module avm-res-network-virtualnetwork |
+| azureterraform_avm_get | Get the documentation for the avm-ptn-aiml-ai-foundry pattern module |
 | azureterraform_aztfexport_resource | Export the resource /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/Microsoft.Storage/storageAccounts/<account> to Terraform |
 | azureterraform_aztfexport_resource | Generate an aztfexport command to export a single Azure resource to Terraform |
 | azureterraform_aztfexport_resourcegroup | Export all resources in resource group my-rg to Terraform |

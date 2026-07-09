@@ -50,7 +50,7 @@
                     "readOnly": false
                 },
                 "folderId": {
-                    "description": "The folder ID. If not specified or null, the Apache Airflow is created with the workspace as its folder.",
+                    "description": "The folder ID. If not specified or null, the Apache Airflow job is created with the workspace as its folder.",
                     "type": "string",
                     "format": "uuid",
                     "readOnly": false
@@ -572,6 +572,20 @@
                 "triggerers": {
                     "description": "The triggerers status for the Airflow environment. When set to `Disabled`, triggerers do not run. When set to `Enabled`, triggerers resume running. Disabling triggerers does not delete any environment settings.",
                     "$ref": "#/definitions/TriggerersStatus"
+                }
+            }
+        },
+        "AirflowEnvironmentComputeRequest": {
+            "description": "The request payload for updating Apache Airflow environment compute configuration.",
+            "type": "object",
+            "required": [
+                "poolTemplateId"
+            ],
+            "properties": {
+                "poolTemplateId": {
+                    "description": "The pool template ID.",
+                    "type": "string",
+                    "format": "uuid"
                 }
             }
         },

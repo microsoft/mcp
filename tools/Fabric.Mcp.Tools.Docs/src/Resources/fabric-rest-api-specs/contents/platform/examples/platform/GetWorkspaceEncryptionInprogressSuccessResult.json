@@ -1,0 +1,39 @@
+{
+  "parameters": {
+    "workspaceId": "47482db6-4583-4672-86dd-999d0f8f4d7a"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "encryptionDetail": {
+          "keyIdentifier": "https://westus07112025-cmktest1.vault.azure.net/keys/test2k/",
+          "encryptionStatus": "EnableInProgress"
+        },
+        "previousEncryptionDetail": {
+          "keyIdentifier": "https://westus07112025-cmktest1.vault.azure.net/keys/key1/",
+          "encryptionStatus": "Active"
+        },
+        "workspaceEncryptionItemsDetails": [
+          {
+            "items": [
+              {
+                "displayName": "copyjob1",
+                "type": "CopyJob",
+                "id": "9d922047-55a9-4737-8ec0-f34a320100bc"
+              },
+              {
+                "displayName": "copyjob2",
+                "type": "CopyJob",
+                "id": "8d022047-55a9-4737-8ec0-f34a320100b7"
+              }
+            ],
+            "encryptionStatus": "EnableInProgress"
+          }
+        ]
+      },
+      "headers": {
+        "Retry-After": 900
+      }
+    }
+  }
+}

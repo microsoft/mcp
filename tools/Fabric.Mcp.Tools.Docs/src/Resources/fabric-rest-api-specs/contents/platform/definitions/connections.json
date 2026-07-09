@@ -9,7 +9,7 @@
         "ConnectivityType": {
             "type": "string",
             "description": "The connectivity type of the connection. Additional connectivity types may be added over time.",
-            "enum": ["ShareableCloud", "PersonalCloud", "OnPremisesGateway", "OnPremisesGatewayPersonal", "VirtualNetworkGateway", "Automatic", "None"],
+            "enum": ["ShareableCloud", "PersonalCloud", "OnPremisesGateway", "OnPremisesGatewayPersonal", "VirtualNetworkGateway", "StreamingVirtualNetworkGateway", "Automatic", "None"],
             "x-ms-enum": {     
                 "name": "ConnectivityType",
                 "modelAsString": true,
@@ -33,6 +33,10 @@
                     {
                         "value": "VirtualNetworkGateway",
                         "description": "The connection connects through a virtual network data gateway."
+                    },
+                    {
+                        "value": "StreamingVirtualNetworkGateway",
+                        "description": "The connection connects through a streaming virtual network data gateway."
                     },
                     {
                         "value": "Automatic",
@@ -874,6 +878,28 @@
                 }
             }
         },
+        "CreateStreamingVirtualNetworkGatewayConnectionRequest": {
+            "description": "Creates a connection that connects through a streaming virtual network data gateway.",
+            "required": ["gatewayId", "credentialDetails"],
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/CreateConnectionRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "StreamingVirtualNetworkGateway",
+            "properties": {
+                "gatewayId": {
+                    "type": "string",
+                    "description": "The object ID of the streaming virtual network gateway that the connection is created under.",
+                    "format": "uuid"
+                },
+                "credentialDetails": {
+                    "description": "The credential details of the connection.",
+                    "$ref": "#/definitions/CreateCredentialDetails"
+                }
+            }
+        },
         "CreateCloudConnectionRequest": {
             "required": ["credentialDetails"],
             "type": "object",
@@ -968,6 +994,26 @@
                 }
             }
         },
+        "UpdateStreamingVirtualNetworkGatewayConnectionRequest": {
+            "description": "Updates a connection that connects through a streaming virtual network data gateway.",
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UpdateConnectionRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "StreamingVirtualNetworkGateway",
+            "properties": {
+                "displayName": {
+                    "description": "The display name of the connection. Maximum length is 200 characters.",
+                    "type": "string"
+                },
+                "credentialDetails": {
+                    "description": "The credential details of the connection.",
+                    "$ref": "#/definitions/UpdateCredentialDetails"
+                }
+            }
+        },
         "UpdateShareableCloudConnectionRequest": {
             "type": "object",
             "allOf": [
@@ -1040,6 +1086,41 @@
                 "credentialDetails": {
                     "description": "The credential details of the connection.",
                     "$ref": "#/definitions/ListCredentialDetails"
+                },                
+                "connectionRecency": {
+                    "$ref": "#/definitions/ConnectionRecency",
+                    "description": "The recency details about the connection."
+                }
+            }
+        },
+        "ConnectionRecency": {
+            "type": "object",
+            "description": "Represents the recency details about the connection.",
+            "properties": {
+                "createdDateTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The timestamp when the connection was created in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
+                },
+                "lastBoundDateTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The timestamp when the connection was most recently bound to any item in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
+                },
+                "lastCredentialUsedDateTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The timestamp when the connection credentials were most recently used in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
+                },
+                "myLastBoundDateTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The timestamp when the connection was most recently bound to any item by the calling user in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
+                },
+                "myLastCredentialUsedDateTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The timestamp when the connection credentials were most recently used by the calling user in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
                 }
             }
         },
@@ -1129,6 +1210,23 @@
                 }
             },
             "x-ms-discriminator-value": "VirtualNetworkGateway"
+        },
+        "StreamingVirtualNetworkGatewayConnection": {
+            "type": "object",
+            "description": "A connection that connects through a streaming virtual network data gateway.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Connection"
+                }
+            ],
+            "properties": {
+                "gatewayId": {
+                    "description": "The gateway object ID of the connection.",
+                    "type": "string",
+                    "format": "uuid"
+                }
+            },
+            "x-ms-discriminator-value": "StreamingVirtualNetworkGateway"
         },
         "ListConnectionsResponse": {
             "required": ["value"],

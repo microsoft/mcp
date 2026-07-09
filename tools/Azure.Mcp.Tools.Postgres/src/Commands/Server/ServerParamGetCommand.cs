@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Postgres.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Postgres.Options.Server;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Server;
@@ -22,35 +22,17 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Server;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ServerParamGetCommand(IPostgresService postgresService, ILogger<ServerParamGetCommand> logger) : BaseServerCommand<ServerParamGetOptions>(logger)
+public sealed class ServerParamGetCommand(IPostgresService postgresService, ILogger<ServerParamGetCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ServerParamGetOptions, ServerParamGetCommand.ServerParamGetCommandResult>(subscriptionResolver)
 {
     private readonly IPostgresService _postgresService = postgresService;
+    private readonly ILogger<ServerParamGetCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ServerParamGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(PostgresOptionDefinitions.Param);
-    }
-
-    protected override ServerParamGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Param = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Param.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var parameterValue = await _postgresService.GetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, options.Tenant, options.RetryPolicy, cancellationToken);
+            var parameterValue = await _postgresService.GetServerParameterAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Param, options.Tenant, options.RetryPolicy, cancellationToken);
             context.Response.Results = parameterValue?.Length > 0 ?
                 ResponseResult.Create(new(parameterValue), PostgresJsonContext.Default.ServerParamGetCommandResult) :
                 null;
@@ -63,5 +45,5 @@ public sealed class ServerParamGetCommand(IPostgresService postgresService, ILog
         return context.Response;
     }
 
-    internal record ServerParamGetCommandResult(string ParameterValue);
+    public sealed record ServerParamGetCommandResult(string ParameterValue);
 }

@@ -6,6 +6,12 @@ After cloning and building the repo, check out the [GitHub project](https://gith
 >[!IMPORTANT]
 If you are contributing significant changes, or if the issue is already assigned to a specific milestone, please discuss with the assignee of the issue first before starting to work on the issue.
 
+> [!TIP]
+> **New contributor?** Use the onboarding agent for interactive help:
+> 1. Open GitHub Copilot Chat in VS Code (or VS Code Insiders)
+> 2. Type `@onboarding` followed by your question (e.g., `@onboarding how do I set up my dev environment?`)
+> 3. The agent will walk you through setup, first issues, adding commands, and more
+
 ## Table of Contents
 
 - [Contributing to Azure MCP](#contributing-to-azure-mcp)
@@ -162,10 +168,10 @@ Do not assume the Pull Request pipeline will always ingest a missing package aut
 
    ```txt
    Execute in Copilot Chat:
-   "create [namespace] [resource] [operation] command using #new-command.md as a reference"
+   "create [namespace] [resource] [operation] command using /skills/add-azure-mcp-tools as a reference"
    ```
 
-4. **Follow implementation guidelines** in [docs/new-command.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md)
+4. **Follow implementation guidelines** in [.github/skills/add-azure-mcp-tools/SKILL.md](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md)
 
 5. **Update documentation**:
    - Add the new command to [/servers/Azure.Mcp.Server/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
@@ -240,7 +246,7 @@ Requirements:
 
 To ensure the product code and unit tests can be cancelled quickly, contributors are required to write async methods (any returning `Task`, `ValueTask`, generic variants of those, etc.) to accept and invoke async methods with a `System.Threading.CancellationToken` parameter. The latter is enforced with the [CA2016 analyzer](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2016).
 
-Mocks created with `NSubstitute.Substitue.For<T>()` and have [methods set up](https://nsubstitute.github.io/help/set-return-value/#for-methods) should be passed `NSubstitute.Arg.Any<CancellationToken>()` for required `System.Threading.CancellationToken` parameters. The same should be used when [checking for received calls on a mocked object](https://nsubstitute.github.io/help/received-calls/index.html). If the product code is expected to do something interesting with a supplied `System.Threading.CancellationToken` parameter, such as linking with other `System.Threading.CancellationToken`s with [`System.Threading.CancellationTokenSource.CreateLinkedTokenSource`](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.createlinkedtokensource), then consider testing for that behavior.
+Mocks created with `NSubstitute.Substitute.For<T>()` and have [methods set up](https://nsubstitute.github.io/help/set-return-value/#for-methods) should be passed `NSubstitute.Arg.Any<CancellationToken>()` for required `System.Threading.CancellationToken` parameters. The same should be used when [checking for received calls on a mocked object](https://nsubstitute.github.io/help/received-calls/index.html). If the product code is expected to do something interesting with a supplied `System.Threading.CancellationToken` parameter, such as linking with other `System.Threading.CancellationToken`s with [`System.Threading.CancellationTokenSource.CreateLinkedTokenSource`](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.createlinkedtokensource), then consider testing for that behavior.
 
 Real product code under unit testing must be passed `Xunit.TestContext.Current.CancellationToken` when async methods are invoked. This is to ensure the tests can end to avoid possible issues with the parent process waiting indefinitely for the test runner executable to exit.
 
@@ -700,7 +706,7 @@ The Azure MCP Server implements the [Model Context Protocol specification](https
 
 ### Package README
 
-A single package README.md could be used to generate context specific content for different package types (npm, nuget, vsix) using html comment annotations to mark sections for removal or insertion whem processed with script at `.\eng\scripts\Process-PackageReadMe.ps1`
+A single package README.md could be used to generate context specific content for different package types (npm, nuget, vsix) using html comment annotations to mark sections for removal or insertion when processed with script at `.\eng\scripts\Process-PackageReadMe.ps1`
 
 Supported comment annotations:
 
@@ -738,11 +744,11 @@ To extract README.md for a specific package, run the `Extract-PackageSpecificRea
 
 ### Configuring External MCP Servers
 
-The Azure MCP Server supports connecting to external MCP servers through an embedded `registry.json` configuration file. This enables the server to act as a proxy, aggregating tools from multiple MCP servers into a single interface. The registry follows the same configuration schema as VS Code's `mcp.json`.
+The Azure MCP Server supports connecting to external MCP servers through an embedded `registry.json` configuration file. This enables the server to act as a proxy, aggregating tools from multiple MCP servers into a single interface.
 
 #### Registry Configuration
 
-External MCP servers are defined in the embedded resource file `core/Azure.Mcp.Core/src/Areas/Server/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following the standard MCP configuration format.
+External MCP servers are defined in the embedded resource file `servers/Azure.Mcp.Server/src/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following a format similar to the standard MCP configuration format.
 
 The registry structure follows this format:
 
@@ -753,7 +759,7 @@ The registry structure follows this format:
       "url": "https://learn.microsoft.com/api/mcp",
       "description": "Search official Microsoft/Azure documentation..."
     },
-    "another-server": {
+    "another-stdio-server": {
       "type": "stdio",
       "command": "path/to/executable",
       "args": ["arg1", "arg2"],
@@ -761,6 +767,13 @@ The registry structure follows this format:
         "ENV_VAR": "value"
       },
       "description": "Another MCP server using stdio transport"
+    },
+    "another-http-server": {
+      "url": "<server_endpoint>",
+      "title": "<server_title>",
+      "description": "Another MCP server that offers X, Y, Z features",
+      "toolPrefix": "uniqueprefix_",
+      "oauthScopes": ["Entra-client-ID/identifier-uri"]
     }
   }
 }
@@ -773,6 +786,20 @@ The registry structure follows this format:
 - Use the `url` property to specify the endpoint
 - Supports HTTP-based communication with automatic transport mode detection
 - Best for web-based MCP servers and remote endpoints
+- Use `title` as the dislay name for the namespace tool (optional)
+- Use `description` as the description of the namespace tool for the MCP server
+- Use `toolPrefix` to assign unique prefix to tools of the MCP server
+- If the MCP server requires authentication, use `oauthScopes` to specify the Entra client registration representing the MCP server
+
+When running in namespace mode, the registered MCP server will appear as a namespace tool like all the built-in namespaces, exposing the underlying tools via dynamic discovery. When running in all mode, the registered MCP server's tools will be listed along with all the built-in tools.
+
+For HTTP-transport external servers, Azure MCP supports unauthenticated endpoints and Entra ID-protected endpoints (via `oauthScopes`). The registered MCP server needs to have an Entra app registration that accepts authorization and token requests from common clients (e.g. Azure CLI and VS Code). Depending on how Azure MCP runs, there are several different authentication scenarios involving the external MCP server.
+
+- Azure MCP runs in stdio mode and uses a user principal. For example, a user starts Azure MCP in stdio mode and lets it use AzureCliCredential. The registered MCP server will receive user principal access tokens from Azure MCP.
+- Azure MCP runs in stdio mode and uses a service principal. For example, a user runs Azure MCP in stdio mode and lets it use EnvironmentCredential (for example, Managed Identity). The registered MCP server will receive service principal access tokens from Azure MCP.
+- Azure MCP runs in remote mode and uses On-Behalf-Of (OBO). For example, a user runs Azure MCP in HTTP mode and hosts it as a service. The user then uses some client to access this Azure MCP service. This Azure MCP service receives a user/service principal access token for itself, exchanges it for a new token for the registered MCP server, and accesses the registered MCP server using the new token. The registered MCP server will receive an OBO token from the Azure MCP service's configured Entra app registration.
+
+There are two kinds of user principals in Entra ID, personal users and organizational users. Each user can be a direct member of a tenant or a guest of a tenant. The configuration of the registered MCP server's Entra client registration may accidentally block access from some users. When adding a registered MCP server that requires authentication, make sure to test the Entra client registration to make sure the expected clients and users can successfully authorize and acquire access tokens for it. Also test the registered MCP server's implementation to make sure it can accept valid access tokens from all kinds of supported scenarios. If a commonly acceptable scenario is by design not supported, document these scenarios in the registered MCP server's entry in [README.md](https://github.com/microsoft/mcp/blob/main/README.md).
 
 **Stdio Transport:**
 
@@ -798,7 +825,7 @@ azmcp server start --mode namespace
 
 To add a new external MCP server to the registry:
 
-1. Edit `core/Azure.Mcp.Core/src/Areas/Server/Resources/registry.json`
+1. Edit `servers/Azure.Mcp.Server/src/Resources/registry.json`
 2. Add your server configuration under the `servers` object using VS Code's MCP configuration schema
 3. Use a unique identifier as the key
 4. Provide either a `url` for SSE transport or `type: "stdio"` with `command` for stdio transport
@@ -866,7 +893,7 @@ We're building this in the open.  Your feedback is much appreciated, and will he
 ### Additional Resources
 
 - [Azure MCP Documentation](https://github.com/microsoft/mcp/blob/main/README.md)
-- [Command Implementation Guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md)
+- [Command Implementation Guide](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md)
 - [VS Code Insiders Download](https://code.visualstudio.com/insiders/)
 - [GitHub Copilot Documentation](https://docs.github.com/en/copilot)
 

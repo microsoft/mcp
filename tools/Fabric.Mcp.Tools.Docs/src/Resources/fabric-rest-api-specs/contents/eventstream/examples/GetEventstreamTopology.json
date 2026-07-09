@@ -135,6 +135,30 @@
                         "status": "Running"
                     },
                     {
+                        "id": "b5c6d7e8-f9a0-4b1c-d2e3-f4a5b6c7d8e9",
+                        "name": "FabricAnomalyDetectionEventsSource",
+                        "type": "FabricAnomalyDetectionEvents",
+                        "properties": {
+                            "workspaceId": "9625b495-17b3-4d6c-aeea-a81ae76ba369",
+                            "itemId": "ee579458-85ea-4652-bd77-5c7d7c298b2a",
+                            "configurationId": "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f",
+                            "includedEventTypes": [
+                                "Microsoft.Fabric.AnomalyDetection.AnomalyDetected"
+                            ],
+                            "filters": [
+                                {
+                                    "operatorType": "StringIn",
+                                    "key": "data.severity",
+                                    "values": [
+                                        "High",
+                                        "Critical"
+                                    ]
+                                }
+                            ]
+                        },
+                        "status": "Running"
+                    },
+                    {
                         "id": "f9c8c1e2-1c5b-4c2a-8f3a-1a2b3c4d5e6f",
                         "name": "FabricJobEventsSource",
                         "type": "FabricJobEvents",
@@ -258,7 +282,25 @@
                             "consumerGroupName": "consumerGroupName",
                             "autoOffsetReset": "Latest",
                             "saslMechanism": "SCRAM-SHA-512",
-                            "securityProtocol": "SASL_SSL"
+                            "securityProtocol": "SASL_SSL",
+                            "tlsSettings": {
+                                "trustCACertificate": {
+                                    "certificate": {
+                                        "type": "KeyVault",
+                                        "azureKeyVaultResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myRG/providers/Microsoft.KeyVault/vaults/myVault",
+                                        "certificateName": "my-ca-cert"
+                                    },
+                                    "verifyHostname": true
+                                },
+                                "clientCertificate": {
+                                    "certificate": {
+                                        "type": "KeyVault",
+                                        "azureKeyVaultResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myRG/providers/Microsoft.KeyVault/vaults/myVault",
+                                        "certificateName": "my-client-cert"
+                                    },
+                                    "revocationMode": "CRL"
+                                }
+                            }
                         },
                         "status": "Running"
                     },
@@ -292,8 +334,17 @@
                         "type": "AzureSQLDBCDC",
                         "properties": {
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
-                            "tableName": "tableName",
-                            "decimalHandlingMode": "Precise"
+                            "tableName": "dbo.Orders",
+                            "decimalHandlingMode": "Precise",
+                            "snapshotMode": "InitialOnly",
+                            "excludedColumns": "dbo.Orders.secret_col,dbo.Orders.internal_col",
+                            "databaseApplicationIntent": "ReadOnly",
+                            "snapshotSelectStatementOverrides": [
+                                {
+                                    "tableName": "dbo.Orders",
+                                    "selectStatement": "SELECT * FROM dbo.Orders WHERE active = 1"
+                                }
+                            ]
                         },
                         "status": "Running"
                     },
@@ -303,8 +354,11 @@
                         "type": "AzureSQLMIDBCDC",
                         "properties": {
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
-                            "tableName": "tableName",
-                            "decimalHandlingMode": "Double"
+                            "tableName": "dbo.Products",
+                            "decimalHandlingMode": "Double",
+                            "snapshotMode": "Initial",
+                            "excludedColumns": "dbo.Products.internal_flag",
+                            "databaseApplicationIntent": "ReadWrite"
                         },
                         "status": "Running"
                     },
@@ -314,8 +368,9 @@
                         "type": "SQLServerOnVMDBCDC",
                         "properties": {
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
-                            "tableName": "tableName",
-                            "decimalHandlingMode": "String"
+                            "tableName": "dbo.Inventory",
+                            "decimalHandlingMode": "String",
+                            "snapshotMode": "NoData"
                         },
                         "status": "Running"
                     },
@@ -325,9 +380,11 @@
                         "type": "MySQLCDC",
                         "properties": {
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
-                            "tableName": "tableName",
-                            "serverId": 9,
+                            "tableName": "inventory.products",
+                            "serverId": 12345,
                             "port": 3306,
+                            "decimalHandlingMode": "Precise",
+                            "snapshotMode": "Initial",
                             "snapshotLockingMode": "Minimal"
                         },
                         "status": "Running"
@@ -338,11 +395,20 @@
                         "type": "PostgreSQLCDC",
                         "properties": {
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
-                            "tableName": "tableName",
-                            "slotName": "slotName",
+                            "tableName": "public.orders",
+                            "slotName": "my_slot",
                             "port": 5432,
+                            "decimalHandlingMode": "Double",
+                            "snapshotMode": "InitialOnly",
                             "publicationName": "my_publication",
-                            "publicationAutoCreateMode": "Filtered"
+                            "publicationAutoCreateMode": "AllTables",
+                            "heartbeatActionQuery": "INSERT INTO heartbeat (ts) VALUES (NOW())",
+                            "snapshotSelectStatementOverrides": [
+                                {
+                                    "tableName": "public.orders",
+                                    "selectStatement": "SELECT * FROM public.orders WHERE created_at >= '2025-01-01'"
+                                }
+                            ]
                         },
                         "status": "Running"
                     },
@@ -401,7 +467,17 @@
                         "properties": {
                             "dataConnectionId": "6950656c-9f6d-48e8-b7d1-6cf9eb7cca28",
                             "serverVersion": "V5",
-                            "topic": "mqttTopicName"
+                            "topic": "mqttTopicName",
+                            "tlsSettings": {
+                                "trustCACertificate": {
+                                    "certificate": {
+                                        "type": "KeyVault",
+                                        "azureKeyVaultResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myRG/providers/Microsoft.KeyVault/vaults/myVault",
+                                        "certificateName": "my-mqtt-ca-cert"
+                                    },
+                                    "verifyHostname": true
+                                }
+                            }
                         },
                         "status": "Running"
                     },

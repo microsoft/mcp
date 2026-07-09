@@ -4,16 +4,15 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.ResourceHealth.Options;
+using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Commands;
 
-public abstract class BaseResourceHealthCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
-    : SubscriptionCommand<T>
-    where T : BaseResourceHealthOptions, new()
+public abstract class BaseResourceHealthCommand<[DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<TOptions, TResult>(subscriptionResolver) where TOptions : class, ISubscriptionOption
 {
     protected override string GetErrorMessage(Exception ex) => ex switch
     {

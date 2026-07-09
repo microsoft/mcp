@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
-using Azure.Mcp.Tools.SreAgent.Options.Connectors;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
 
@@ -24,38 +23,29 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ConnectorsListCommand(ILogger<ConnectorsListCommand> logger, ISreAgentService sreAgentService)
-    : BaseSreAgentCommand<ConnectorsListOptions>
+public sealed class ConnectorsListCommand(ILogger<ConnectorsListCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<BaseSreAgentOptions, ConnectorsListCommand.ConnectorsListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ConnectorsListCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseSreAgentOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SreAgentOptionDefinitions.Agent.AsRequired());
-    }
-
-    protected override ConnectorsListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Agent = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Agent);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
         try
         {
-            var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(_sreAgentService, options, cancellationToken);
-            var connectors = await _sreAgentService.ListConnectorsAsync(options.Subscription!, resourceGroup, options.Agent!, options.Tenant, cancellationToken);
-            context.Response.Results = ResponseResult.Create(new ConnectorsListCommandResult(connectors), SreAgentJsonContext.Default.ConnectorsListCommandResult);
+            var resourceGroup = await SreAgentCommandHelpers.ResolveAgentResourceGroupAsync(
+                _sreAgentService,
+                options,
+                cancellationToken);
+
+            var connectors = await _sreAgentService.ListConnectorsAsync(
+                options.Subscription!,
+                resourceGroup,
+                options.Agent,
+                options.Tenant,
+                cancellationToken);
+
+            context.Response.Results = ResponseResult.Create(new(connectors), SreAgentJsonContext.Default.ConnectorsListCommandResult);
         }
         catch (Exception ex)
         {
@@ -66,6 +56,6 @@ public sealed class ConnectorsListCommand(ILogger<ConnectorsListCommand> logger,
         return context.Response;
     }
 
-    internal record ConnectorsListCommandResult(List<AgentConnector> Connectors);
+    public sealed record ConnectorsListCommandResult(List<AgentConnector> Connectors);
 }
 

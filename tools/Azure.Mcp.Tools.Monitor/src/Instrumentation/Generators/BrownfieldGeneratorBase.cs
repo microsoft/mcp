@@ -1,7 +1,10 @@
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 
 /// <summary>
 /// Shared base for Application Insights 2.x → 3.x brownfield generators.
@@ -48,13 +51,17 @@ public abstract class BrownfieldGeneratorBase : IGenerator
 
     /// <summary>Generate migration actions for framework-specific removed properties.</summary>
     protected abstract string AddServiceOptionsActions(
-        OnboardingSpecBuilder builder, ServiceOptionsFindings opts,
-        string entryPoint, string lastDependency);
+        OnboardingSpecBuilder builder,
+        ServiceOptionsFindings opts,
+        string entryPoint,
+        string lastDependency);
 
     /// <summary>Generate migration actions for framework-specific removed extension methods.</summary>
     protected abstract string AddRemovedMethodActions(
-        OnboardingSpecBuilder builder, ServiceOptionsFindings opts,
-        string entryPoint, string lastDependency);
+        OnboardingSpecBuilder builder,
+        ServiceOptionsFindings opts,
+        string entryPoint,
+        string lastDependency);
 
     // ── Shared implementation ───────────────────────────────────────────
 
