@@ -537,13 +537,14 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
     public async Task InvalidMode_FailsToStartServer()
     {
         // Act & Assert
-        // The 2.0 SDK surfaces an early transport failure (server process exits) as
-        // ClientTransportClosedException, which wraps the underlying IOException.
-        var ex = await Assert.ThrowsAsync<ClientTransportClosedException>(async () =>
+        // The 2.0 SDK surfaces an early transport failure (the server process exits before the
+        // connection completes) as ClientTransportClosedException. The wrapped InnerException is
+        // platform-dependent (an IOException on Windows, null on Linux), so only the outer type
+        // is asserted.
+        await Assert.ThrowsAsync<ClientTransportClosedException>(async () =>
         {
             await using var client = await CreateClientAsync("server", "start", "--mode", "invalid-mode");
         });
-        Assert.IsType<IOException>(ex.InnerException);
     }
 
     [LiveTestOnly]
