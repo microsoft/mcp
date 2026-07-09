@@ -1,5 +1,11 @@
 # Release History
 
+
+## 2.0.5 (2026-07-09)
+### Fixed
+
+- Remove restrictions on what kinds of web sites the AppLens tool can diagnose. [[#3002](https://github.com/microsoft/mcp/pull/3002)]
+
 ## 2.0.4 (2026-06-16)
 
 ### Changed

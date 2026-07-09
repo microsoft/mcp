@@ -2,15 +2,11 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.5 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
+## 2.0.5 (2026-07-09)
 
 ### Bugs Fixed
 
-### Other Changes
+- Remove restrictions on what kinds of web sites the AppLens tool can diagnose. [[#3002](https://github.com/microsoft/mcp/pull/3002)]
 
 ## 2.0.4 (2026-06-16)
 
