@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Added Claude Code installation instructions to the Azure MCP Server README, covering installation of the Azure plugin from Anthropic's official plugin marketplace."
