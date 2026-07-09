@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Microsoft.Mcp.Core.Extensions;
@@ -44,6 +45,10 @@ public sealed class BackupVaultCreateCommand(ILogger<BackupVaultCreateCommand> l
         command.Options.Add(NetAppFilesOptionDefinitions.BackupVault.AsRequired());
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(NetAppFilesOptionDefinitions.Location);
+        command.Options.Add(NetAppFilesOptionDefinitions.Tags.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.NoWait.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.AcquirePolicyToken.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.ChangeReference.AsOptional());
     }
 
     protected override BackupVaultCreateOptions BindOptions(ParseResult parseResult)
@@ -53,6 +58,10 @@ public sealed class BackupVaultCreateCommand(ILogger<BackupVaultCreateCommand> l
         options.BackupVault = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.BackupVault.Name);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Location = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Location.Name);
+        options.Tags = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Tags.Name);
+        options.NoWait = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.NoWait.Name);
+        options.AcquirePolicyToken = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.AcquirePolicyToken.Name);
+        options.ChangeReference = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.ChangeReference.Name);
         return options;
     }
 
@@ -67,12 +76,28 @@ public sealed class BackupVaultCreateCommand(ILogger<BackupVaultCreateCommand> l
 
         try
         {
+            ValidateUnsupportedCreateArguments(options);
+
+            Dictionary<string, string>? tags = null;
+            if (!string.IsNullOrEmpty(options.Tags))
+            {
+                try
+                {
+                    tags = JsonSerializer.Deserialize(options.Tags, NetAppFilesJsonContext.Default.DictionaryStringString);
+                }
+                catch (JsonException ex)
+                {
+                    throw new ArgumentException($"Invalid tags JSON format: {ex.Message}", nameof(options.Tags));
+                }
+            }
+
             var backupVault = await _netAppFilesService.CreateBackupVault(
                 options.Account!,
                 options.BackupVault!,
                 options.ResourceGroup!,
                 options.Location!,
                 options.Subscription!,
+                tags,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -94,6 +119,7 @@ public sealed class BackupVaultCreateCommand(ILogger<BackupVaultCreateCommand> l
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        ArgumentException argEx => argEx.Message,
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "A backup vault with this name already exists. Choose a different name.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
@@ -103,6 +129,24 @@ public sealed class BackupVaultCreateCommand(ILogger<BackupVaultCreateCommand> l
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
+
+    private static void ValidateUnsupportedCreateArguments(BackupVaultCreateOptions options)
+    {
+        if (options.NoWait)
+        {
+            throw new ArgumentException("The --no-wait argument is not supported by this command yet.");
+        }
+
+        if (options.AcquirePolicyToken)
+        {
+            throw new ArgumentException("The --acquirePolicyToken argument is not supported by this command yet.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.ChangeReference))
+        {
+            throw new ArgumentException("The --changeReference argument is not supported by this command yet.");
+        }
+    }
 
     internal record BackupVaultCreateCommandResult([property: JsonPropertyName("backupVault")] BackupVaultCreateResult BackupVault);
 }

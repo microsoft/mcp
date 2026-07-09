@@ -57,6 +57,8 @@ public class BackupVaultGetCommandTests
         _netAppFilesService.GetBackupVaultDetails(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -91,6 +93,8 @@ public class BackupVaultGetCommandTests
         _netAppFilesService.GetBackupVaultDetails(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -124,6 +128,8 @@ public class BackupVaultGetCommandTests
         _netAppFilesService.GetBackupVaultDetails(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             null,
             Arg.Any<RetryPolicyOptions>(),
@@ -152,6 +158,8 @@ public class BackupVaultGetCommandTests
 
     [Theory]
     [InlineData("--subscription sub123", true)]
+    [InlineData("--subscription sub123 --resource-group rg1", true)]
+    [InlineData("--subscription sub123 --ids /subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.NetApp/netAppAccounts/account1/backupVaults/vault1", true)]
     [InlineData("--subscription sub123 --account myanfaccount", true)]
     [InlineData("--subscription sub123 --account myanfaccount --backupVault myvault", true)]
     [InlineData("--account myanfaccount", false)] // Missing subscription
@@ -164,7 +172,7 @@ public class BackupVaultGetCommandTests
                 false);
 
             _netAppFilesService.GetBackupVaultDetails(
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(expectedVaults));
         }
 
@@ -199,7 +207,7 @@ public class BackupVaultGetCommandTests
             false);
 
         _netAppFilesService.GetBackupVaultDetails(
-            Arg.Is(account), Arg.Is(backupVault), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(account), Arg.Is(backupVault), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVaults));
 
         var args = _commandDefinition.Parse(["--account", account, "--backupVault", backupVault, "--subscription", subscription]);
@@ -231,7 +239,7 @@ public class BackupVaultGetCommandTests
         var subscription = "sub123";
 
         _netAppFilesService.GetBackupVaultDetails(
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var parseResult = _commandDefinition.Parse(["--subscription", subscription]);
@@ -254,7 +262,7 @@ public class BackupVaultGetCommandTests
         var backupVault = "nonexistentvault";
 
         _netAppFilesService.GetBackupVaultDetails(
-            Arg.Any<string?>(), Arg.Is(backupVault), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Is(backupVault), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Backup vault not found"));
 
         var parseResult = _commandDefinition.Parse(["--backupVault", backupVault, "--subscription", subscription]);
@@ -275,7 +283,7 @@ public class BackupVaultGetCommandTests
         var subscription = "sub123";
 
         _netAppFilesService.GetBackupVaultDetails(
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         var parseResult = _commandDefinition.Parse(["--subscription", subscription]);
@@ -299,7 +307,7 @@ public class BackupVaultGetCommandTests
             false);
 
         _netAppFilesService.GetBackupVaultDetails(
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVaults));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
@@ -320,5 +328,47 @@ public class BackupVaultGetCommandTests
         Assert.Equal("eastus", vaultInfo.Location);
         Assert.Equal("rg1", vaultInfo.ResourceGroup);
         Assert.Equal("Succeeded", vaultInfo.ProvisioningState);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PassesResourceGroupAndIdsToService()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var subscription = "sub123";
+        var resourceGroup = "rg1";
+        var ids = new[] { "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.NetApp/netAppAccounts/account1/backupVaults/vault1" };
+        var expectedVaults = new ResourceQueryResults<BackupVaultInfo>(
+            [new("account1/vault1", "eastus", "rg1", "Succeeded")],
+            false);
+
+        _netAppFilesService.GetBackupVaultDetails(
+            Arg.Is<string?>(v => v == null),
+            Arg.Is<string?>(v => v == null),
+            Arg.Is(resourceGroup),
+            Arg.Is<IReadOnlyList<string>?>(v => v != null && v.Count == 1 && v[0] == ids[0]),
+            Arg.Is(subscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(expectedVaults));
+
+        var parseResult = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--ids", ids[0]]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+
+        await _netAppFilesService.Received(1).GetBackupVaultDetails(
+            Arg.Is<string?>(v => v == null),
+            Arg.Is<string?>(v => v == null),
+            Arg.Is(resourceGroup),
+            Arg.Is<IReadOnlyList<string>?>(v => v != null && v.Count == 1 && v[0] == ids[0]),
+            Arg.Is(subscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 }

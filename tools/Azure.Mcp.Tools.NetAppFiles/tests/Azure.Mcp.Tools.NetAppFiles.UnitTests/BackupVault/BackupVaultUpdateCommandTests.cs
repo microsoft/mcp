@@ -437,4 +437,157 @@ public class BackupVaultUpdateCommandTests
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Invalid tags JSON format", response.Message);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsNoWaitArgument()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--subscription", "sub123", "--no-wait"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--no-wait", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsAcquirePolicyTokenArgument()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--subscription", "sub123", "--acquirePolicyToken"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--acquirePolicyToken", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsChangeReferenceArgument()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--subscription", "sub123", "--changeReference", "chg-123"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--changeReference", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsIdsArgument()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--subscription", "sub123",
+            "--ids", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/backupVaults/myvault"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--ids", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsAddArgument()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--subscription", "sub123", "--add", "properties.foo=bar"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--add", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsSetArgument()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--subscription", "sub123", "--set", "properties.foo=bar"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--set", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsRemoveArgument()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--subscription", "sub123", "--remove", "properties.foo"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--remove", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsForceStringArgument()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--subscription", "sub123", "--force-string"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--force-string", response.Message);
+    }
 }

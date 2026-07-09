@@ -9,4 +9,7 @@ public class BackupVaultGetOptions : BaseNetAppFilesOptions
 {
     [JsonPropertyName(NetAppFilesOptionDefinitions.BackupVaultName)]
     public string? BackupVault { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.IdsName)]
+    public string[]? Ids { get; set; }
 }

@@ -46,6 +46,14 @@ public sealed class BackupVaultUpdateCommand(ILogger<BackupVaultUpdateCommand> l
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(NetAppFilesOptionDefinitions.Location);
         command.Options.Add(NetAppFilesOptionDefinitions.Tags.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.NoWait.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.AcquirePolicyToken.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.ChangeReference.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.Add.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.Set.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.Remove.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.ForceString.AsOptional());
     }
 
     protected override BackupVaultUpdateOptions BindOptions(ParseResult parseResult)
@@ -56,6 +64,14 @@ public sealed class BackupVaultUpdateCommand(ILogger<BackupVaultUpdateCommand> l
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Location = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Location.Name);
         options.Tags = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Tags.Name);
+        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
+        options.NoWait = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.NoWait.Name);
+        options.AcquirePolicyToken = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.AcquirePolicyToken.Name);
+        options.ChangeReference = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.ChangeReference.Name);
+        options.Add = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Add.Name);
+        options.Set = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Set.Name);
+        options.Remove = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Remove.Name);
+        options.ForceString = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.ForceString.Name);
         return options;
     }
 
@@ -70,6 +86,8 @@ public sealed class BackupVaultUpdateCommand(ILogger<BackupVaultUpdateCommand> l
 
         try
         {
+            ValidateUnsupportedUpdateArguments(options);
+
             Dictionary<string, string>? tags = null;
             if (!string.IsNullOrEmpty(options.Tags))
             {
@@ -121,6 +139,49 @@ public sealed class BackupVaultUpdateCommand(ILogger<BackupVaultUpdateCommand> l
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
+
+    private static void ValidateUnsupportedUpdateArguments(BackupVaultUpdateOptions options)
+    {
+        if (options.Ids is { Length: > 0 })
+        {
+            throw new ArgumentException("The --ids argument is not supported by this command yet.");
+        }
+
+        if (options.NoWait)
+        {
+            throw new ArgumentException("The --no-wait argument is not supported by this command yet.");
+        }
+
+        if (options.AcquirePolicyToken)
+        {
+            throw new ArgumentException("The --acquirePolicyToken argument is not supported by this command yet.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.ChangeReference))
+        {
+            throw new ArgumentException("The --changeReference argument is not supported by this command yet.");
+        }
+
+        if (options.Add is { Length: > 0 })
+        {
+            throw new ArgumentException("The --add argument is not supported by this command yet.");
+        }
+
+        if (options.Set is { Length: > 0 })
+        {
+            throw new ArgumentException("The --set argument is not supported by this command yet.");
+        }
+
+        if (options.Remove is { Length: > 0 })
+        {
+            throw new ArgumentException("The --remove argument is not supported by this command yet.");
+        }
+
+        if (options.ForceString)
+        {
+            throw new ArgumentException("The --force-string argument is not supported by this command yet.");
+        }
+    }
 
     internal record BackupVaultUpdateCommandResult([property: JsonPropertyName("backupVault")] BackupVaultCreateResult BackupVault);
 }

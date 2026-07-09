@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.BackupVault;
     Name = "get",
     Description =
         """
-        Retrieves detailed information about Azure NetApp Files backup vaults, including vault name, location, resource group, and provisioning state. If a specific backup vault name is not provided, the command will return details for all backup vaults in a subscription. Optionally filter by account.
+        Retrieves detailed information about Azure NetApp Files backup vaults, including vault name, location, resource group, and provisioning state. If a specific backup vault name is not provided, the command will return details for all backup vaults in a subscription. Optionally filter by account, resource group, or resource IDs.
         """,
     Title = "Get NetApp Files Backup Vault Details",
     Destructive = false,
@@ -40,6 +40,8 @@ public sealed class BackupVaultGetCommand(ILogger<BackupVaultGetCommand> logger,
         base.RegisterOptions(command);
         command.Options.Add(NetAppFilesOptionDefinitions.Account.AsOptional());
         command.Options.Add(NetAppFilesOptionDefinitions.BackupVault.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
     }
 
     protected override BackupVaultGetOptions BindOptions(ParseResult parseResult)
@@ -47,6 +49,8 @@ public sealed class BackupVaultGetCommand(ILogger<BackupVaultGetCommand> logger,
         var options = base.BindOptions(parseResult);
         options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
         options.BackupVault = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.BackupVault.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
         return options;
     }
 
@@ -64,6 +68,8 @@ public sealed class BackupVaultGetCommand(ILogger<BackupVaultGetCommand> logger,
             var backupVaults = await _netAppFilesService.GetBackupVaultDetails(
                 options.Account,
                 options.BackupVault,
+                options.ResourceGroup,
+                options.Ids,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,

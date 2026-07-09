@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Collections.Generic;
 using System.Net;
 using System.Text.Json;
 using Microsoft.Mcp.Core.Options;
@@ -75,6 +76,7 @@ public class BackupVaultCreateCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
+                Arg.Any<Dictionary<string, string>?>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
@@ -120,6 +122,7 @@ public class BackupVaultCreateCommandTests
 
         _netAppFilesService.CreateBackupVault(
             Arg.Is(account), Arg.Is(backupVault), Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(subscription),
+            Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVault));
 
@@ -158,6 +161,7 @@ public class BackupVaultCreateCommandTests
         _netAppFilesService.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
@@ -186,6 +190,7 @@ public class BackupVaultCreateCommandTests
         _netAppFilesService.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Backup vault already exists"));
@@ -213,6 +218,7 @@ public class BackupVaultCreateCommandTests
         _netAppFilesService.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Account not found"));
@@ -240,6 +246,7 @@ public class BackupVaultCreateCommandTests
         _netAppFilesService.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
@@ -267,6 +274,7 @@ public class BackupVaultCreateCommandTests
         _netAppFilesService.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<BackupVaultCreateResult>(new Exception("Test error")));
@@ -302,6 +310,7 @@ public class BackupVaultCreateCommandTests
         _netAppFilesService.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVault));
@@ -351,7 +360,7 @@ public class BackupVaultCreateCommandTests
 
         _netAppFilesService.CreateBackupVault(
             account, backupVault, resourceGroup, location, subscription,
-            null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            null, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedVault);
 
         var args = _commandDefinition.Parse([
@@ -367,6 +376,138 @@ public class BackupVaultCreateCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _netAppFilesService.Received(1).CreateBackupVault(
             account, backupVault, resourceGroup, location, subscription,
-            null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+            null, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CallsServiceWithParsedTags()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var account = "myanfaccount";
+        var backupVault = "myvault";
+        var resourceGroup = "myrg";
+        var location = "eastus";
+        var subscription = "sub123";
+        var expectedVault = new BackupVaultCreateResult(
+            Id: $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/backupVaults/{backupVault}",
+            Name: $"{account}/{backupVault}",
+            Type: "Microsoft.NetApp/netAppAccounts/backupVaults",
+            Location: location,
+            ResourceGroup: resourceGroup,
+            ProvisioningState: "Succeeded");
+
+        _netAppFilesService.CreateBackupVault(
+            account,
+            backupVault,
+            resourceGroup,
+            location,
+            subscription,
+            Arg.Is<Dictionary<string, string>?>(d => d != null && d.GetValueOrDefault("env") == "prod"),
+            null,
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedVault);
+
+        var args = _commandDefinition.Parse([
+            "--account", account,
+            "--backupVault", backupVault,
+            "--resource-group", resourceGroup,
+            "--location", location,
+            "--subscription", subscription,
+            "--tags", "{\"env\":\"prod\"}"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _netAppFilesService.Received(1).CreateBackupVault(
+            account,
+            backupVault,
+            resourceGroup,
+            location,
+            subscription,
+            Arg.Is<Dictionary<string, string>?>(d => d != null && d.GetValueOrDefault("env") == "prod"),
+            null,
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesInvalidTagsJson()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--subscription", "sub123", "--tags", "invalid-json"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Invalid tags JSON format", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsNoWaitArgument()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--subscription", "sub123", "--no-wait"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--no-wait", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsAcquirePolicyTokenArgument()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--subscription", "sub123", "--acquirePolicyToken"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--acquirePolicyToken", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsChangeReferenceArgument()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--subscription", "sub123", "--changeReference", "chg-123"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--changeReference", response.Message);
     }
 }

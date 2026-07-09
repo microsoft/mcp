@@ -337,6 +337,8 @@ public class NetAppFilesService(
     public async Task<ResourceQueryResults<BackupVaultInfo>> GetBackupVaultDetails(
         string? account,
         string? backupVault,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -357,6 +359,18 @@ public class NetAppFilesService(
         {
             filters.Add($"name endswith '/{EscapeKqlString(backupVault)}'");
         }
+        if (ids is { Count: > 0 })
+        {
+            var escapedIds = ids
+                .Where(static id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => $"'{EscapeKqlString(id)}'")
+                .ToList();
+
+            if (escapedIds.Count > 0)
+            {
+                filters.Add($"id in~ ({string.Join(", ", escapedIds)})");
+            }
+        }
 
         string? additionalFilter = filters.Count > 0 ? string.Join(" and ", filters) : null;
 
@@ -364,7 +378,7 @@ public class NetAppFilesService(
         {
             return await ExecuteResourceQueryAsync(
                 "Microsoft.NetApp/netAppAccounts/backupVaults",
-                null,
+                resourceGroup,
                 subscription,
                 retryPolicy,
                 ConvertToBackupVaultInfoModel,
@@ -1580,6 +1594,7 @@ public class NetAppFilesService(
         string resourceGroup,
         string location,
         string subscription,
+        Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -1606,6 +1621,7 @@ public class NetAppFilesService(
             var createContent = new BackupVaultCreateOrUpdateContent
             {
                 Location = location,
+                Tags = tags,
                 Properties = new BackupVaultCreateProperties()
             };
 

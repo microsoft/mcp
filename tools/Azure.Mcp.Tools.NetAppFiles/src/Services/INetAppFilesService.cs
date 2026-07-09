@@ -53,6 +53,8 @@ public interface INetAppFilesService
     Task<ResourceQueryResults<BackupVaultInfo>> GetBackupVaultDetails(
         string? account,
         string? backupVault,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -225,6 +227,7 @@ public interface INetAppFilesService
         string resourceGroup,
         string location,
         string subscription,
+        Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
