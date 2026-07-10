@@ -24,7 +24,7 @@ public class ServerStartupTests
             UseShellExecute = false,
             RedirectStandardInput = false,
             RedirectStandardOutput = false,
-            RedirectStandardError = false,
+            RedirectStandardError = true,
             CreateNoWindow = true
         };
         processStartInfo.Environment["ASPNETCORE_URLS"] = $"http://127.0.0.1:{port}";
@@ -89,7 +89,7 @@ public class ServerStartupTests
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
-            RedirectStandardError = false,
+            RedirectStandardError = true,
             CreateNoWindow = true
         };
 
@@ -156,7 +156,7 @@ public class ServerStartupTests
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
-            RedirectStandardError = false,
+            RedirectStandardError = true,
             CreateNoWindow = true
         };
 
