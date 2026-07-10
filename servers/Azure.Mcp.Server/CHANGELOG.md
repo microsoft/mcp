@@ -2,15 +2,15 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.25 (Unreleased)
-
-### Features Added
+## 3.0.0-beta.25 (2026-07-10)
 
 ### Breaking Changes
 
-### Bugs Fixed
+- Replaced the broken `monitor healthmodels entity get` command with `monitor healthmodels list` and `monitor healthmodels get`. [[#2979](https://github.com/microsoft/mcp/pull/2979)]
 
 ### Other Changes
+
+- Added Claude Code installation instructions to the Azure MCP Server README, covering installation of the Azure plugin from Anthropic's official plugin marketplace. [[#3003](https://github.com/microsoft/mcp/pull/3003)]
 
 ## 3.0.0-beta.24 (2026-07-08)
 

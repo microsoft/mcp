@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Replaced the broken 'monitor healthmodels entity get' command with 'monitor healthmodels list' and 'monitor healthmodels get', using the Azure Health Models 2026-05-01-preview API (Microsoft.CloudHealth) via the Azure.ResourceManager.CloudHealth SDK."
