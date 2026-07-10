@@ -113,7 +113,19 @@ foreach ($serverInfo in $serversToTest) {
     # Try to get tools - some servers may not support 'tools list'
     Write-Host "Loading tools from $currentServerName"
     try {
-        $toolsJson = & $executablePath tools list 2>&1 | Out-String
+
+        # Example response from 'tools list --name-only' command:
+        # {
+        #   "status": 200,
+        #   "message": "Success",
+        #   "results": {
+        #     "names": [ 
+        #        "acr_registry_list",
+        #         "acr_registry_repository_list",
+        #     ]
+        #   }
+        # }
+        $toolsJson = & $executablePath tools list --name-only 2>&1 | Out-String
 
         if ($LASTEXITCODE -ne 0) {
             Write-Warning "$currentServerName 'tools list' command failed with exit code $LASTEXITCODE (may have no tools) - skipping"
@@ -123,7 +135,7 @@ foreach ($serverInfo in $serversToTest) {
         }
 
         if ([string]::IsNullOrWhiteSpace($toolsJson)) {
-            Write-Warning "No output received from '$currentServerName tools list' - skipping"
+            Write-Warning "No output received from '$currentServerName tools list --name-only' - skipping"
             $skippedServers++
             Write-Host ""
             continue
@@ -132,23 +144,29 @@ foreach ($serverInfo in $serversToTest) {
         $toolsResult = $toolsJson | ConvertFrom-Json
         $tools = $toolsResult.results
 
-        if ($null -eq $tools -or $tools.Count -eq 0) {
-            Write-Warning "No tools found in $currentServerName - skipping"
+        if ($null -eq $tools) {
+            Write-Warning "Server [$currentServerName] 'tools list' command did not return any tools - skipping"
             $skippedServers++
-            Write-Host ""
+            continue
+        } elseif ($null -eq $tools.names) {
+            Write-Warning "Server [$currentServerName] No 'names' property found in response - skipping. Response: `n$toolsJson`n"
+            $skippedServers++
+            continue
+        } elseif ($tools.names.Count -eq 0) {
+            Write-Warning "Server [$currentServerName] No tool names found - skipping"
+            $skippedServers++
             continue
         }
 
-        Write-Host "Loaded $($tools.Count) tools"
+        Write-Host "Loaded $($tools.names.Count) tools"
         $testedServers++
 
         # Validate tool name lengths
         $violations = @()
         $maxToolNameLength = 0
 
-        foreach ($tool in $tools) {
-            $toolName = $tool.command -replace ' ', '_'
-            $fullLength = $toolName.Length
+        foreach ($tool in $tools.names) {
+            $fullLength = $tool.Length
             
             if ($fullLength -gt $maxToolNameLength) {
                 $maxToolNameLength = $fullLength
@@ -157,8 +175,8 @@ foreach ($serverInfo in $serversToTest) {
             if ($fullLength -gt $MaxLength) {
                 $violations += [PSCustomObject]@{
                     Server = $currentServerName
-                    ToolName = $toolName
-                    Command = $tool.command
+                    ToolName = $tool
+                    Command = ""
                     Length = $fullLength
                     Excess = $fullLength - $MaxLength
                 }
@@ -168,7 +186,7 @@ foreach ($serverInfo in $serversToTest) {
         Write-Host "Longest tool name: $maxToolNameLength characters"
 
         if ($violations.Count -eq 0) {
-            Write-Host "All $($tools.Count) tool names are within the $MaxLength character limit!" -ForegroundColor Green
+            Write-Host "All $($tools.names.Count) tool names are within the $MaxLength character limit!" -ForegroundColor Green
         }
         else {
             Write-Host "Found $($violations.Count) violation(s):" -ForegroundColor Red
@@ -204,7 +222,6 @@ if ($overallViolations.Count -gt 0) {
     $overallViolations | Sort-Object -Property Length -Descending | ForEach-Object {
         Write-Host "  Server: $($_.Server)"
         Write-Host "  Tool: $($_.ToolName)"
-        Write-Host "  Command: $($_.Command)"
         Write-Host "  Length: $($_.Length) characters (exceeds by $($_.Excess))"
         Write-Host ""
     }
