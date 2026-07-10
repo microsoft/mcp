@@ -8,6 +8,11 @@ on:
   issues:
     types: [opened, reopened]
   workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue number to triage manually.
+        required: false
+        type: string
 
 # Skip the shared report-incomplete tracking issue that this workflow creates.
 if: github.event_name != 'issues' || !startsWith(github.event.issue.title, '[incomplete] Issue Triage Agent')
