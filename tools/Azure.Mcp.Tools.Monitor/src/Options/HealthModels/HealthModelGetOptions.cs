@@ -2,17 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
-using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
 
-namespace Azure.Mcp.Tools.Monitor.Options;
+namespace Azure.Mcp.Tools.Monitor.Options.HealthModels;
 
-public sealed class BaseMonitorHealthModelsOptions : ISubscriptionOption
+public sealed class HealthModelGetOptions : ISubscriptionOption
 {
-    [Option(Description = "The entity to get health for.")]
-    public required string Entity { get; set; }
-
-    [Option(Description = "The name of the health model for which to get the health.")]
+    [Option(Description = "The name of the health model to retrieve.")]
     public required string HealthModel { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
@@ -26,7 +22,4 @@ public sealed class BaseMonitorHealthModelsOptions : ISubscriptionOption
 
     [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
-
-    [Option(Description = OptionDescriptions.AuthMethod)]
-    public AuthMethod? AuthMethod { get; set; }
 }
