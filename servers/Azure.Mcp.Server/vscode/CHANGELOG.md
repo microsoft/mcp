@@ -1,5 +1,11 @@
 # Release History
 
+## 3.0.25 (2026-07-10) (pre-release)
+
+### Changed
+
+- **Breaking:** Replaced the broken `monitor healthmodels entity get` command with `monitor healthmodels list` and `monitor healthmodels get`. [[#2979](https://github.com/microsoft/mcp/pull/2979)]
+- Added Claude Code installation instructions to the Azure MCP Server README, covering installation of the Azure plugin from Anthropic's official plugin marketplace. [[#3003](https://github.com/microsoft/mcp/pull/3003)]
 
 ## 3.0.24 (2026-07-08) (pre-release)
 
