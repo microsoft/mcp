@@ -1,4 +1,4 @@
-#!/bin/env pwsh
+#!/usr/bin/env pwsh
 #Requires -Version 7
 
 <#
@@ -52,6 +52,11 @@ $subArgs = $Subscription ? @('--subscription', $Subscription) : @()
 
 # Nothing to do if the group is already gone.
 $exists = az group exists --name $ResourceGroup @subArgs 2>$null
+if ($LASTEXITCODE -ne 0) {
+    # Check for errors (user not logged in, invalid subscription, etc.)
+    Write-Warn "Failed to check if resource group '$ResourceGroup' exists. Verify 'az login' and subscription."
+    exit 1
+}
 if ($exists -ne 'true') {
     Write-Info "Resource group '$ResourceGroup' does not exist. Nothing to delete."
     return

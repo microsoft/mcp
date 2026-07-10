@@ -1,10 +1,10 @@
-#!/bin/env pwsh
+#!/usr/bin/env pwsh
 #Requires -Version 7
 
 <#
 .SYNOPSIS
 Provisions the Azure Event Hubs resources used by the vally "get Event Hub"
-evaluation (eventhubs/eval.yaml).
+evaluation (eventhub-get.eval.yaml and namespace-get.eval.yaml).
 
 .DESCRIPTION
 Creates - and is safe to re-run against - the resources that the eval prompts
