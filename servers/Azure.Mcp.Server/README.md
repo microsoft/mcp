@@ -1105,6 +1105,17 @@ Example prompts that generate Azure CLI commands:
 * "Get provisioning recommendations for my file share workload"
 * "Get usage data and metrics for my file share"
 
+### 💡 Azure Insights
+
+* "Generate insights from my current subscription"
+* "Summarize what's deployed across my Azure environment and highlight notable patterns"
+* "Analyze my tenant and give me insights about the overall infrastructure"
+* "What can you tell me about my existing Azure environment?"
+* "Analyze subscription <subscription_id> for architectural patterns"
+* "Analyze my Azure infrastructure and surface patterns to help me plan my next project"
+* "Generate insights about my Azure environment to help me plan a new data analytics platform"
+* "What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS?"
+
 ### 🔑 Azure Key Vault
 
 * "List all secrets in my key vault 'my-vault'"
@@ -1266,6 +1277,7 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - 📊 **Azure Event Grid** - Event routing and management
 - 📁 **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
+- 💡 **Azure Insights** - Derive infrastructure insights from Azure Resource Graph patterns
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
 - 📦 **Azure Load Testing** - Performance testing
