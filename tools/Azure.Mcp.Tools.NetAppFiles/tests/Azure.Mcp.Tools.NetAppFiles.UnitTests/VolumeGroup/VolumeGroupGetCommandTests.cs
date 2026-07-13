@@ -57,6 +57,8 @@ public class VolumeGroupGetCommandTests
         _netAppFilesService.GetVolumeGroupDetails(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -91,6 +93,8 @@ public class VolumeGroupGetCommandTests
         _netAppFilesService.GetVolumeGroupDetails(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -124,6 +128,8 @@ public class VolumeGroupGetCommandTests
         _netAppFilesService.GetVolumeGroupDetails(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             null,
             Arg.Any<RetryPolicyOptions>(),
@@ -165,7 +171,7 @@ public class VolumeGroupGetCommandTests
                 false);
 
             _netAppFilesService.GetVolumeGroupDetails(
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(expectedVolumeGroups));
         }
 
@@ -200,7 +206,7 @@ public class VolumeGroupGetCommandTests
             false);
 
         _netAppFilesService.GetVolumeGroupDetails(
-            Arg.Is(account), Arg.Is(volumeGroup), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(account), Arg.Is(volumeGroup), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVolumeGroups));
 
         var args = _commandDefinition.Parse(["--account", account, "--volumeGroup", volumeGroup, "--subscription", subscription]);
@@ -232,7 +238,7 @@ public class VolumeGroupGetCommandTests
         var subscription = "sub123";
 
         _netAppFilesService.GetVolumeGroupDetails(
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var parseResult = _commandDefinition.Parse(["--subscription", subscription]);
@@ -255,7 +261,7 @@ public class VolumeGroupGetCommandTests
         var volumeGroup = "nonexistentvg";
 
         _netAppFilesService.GetVolumeGroupDetails(
-            Arg.Any<string?>(), Arg.Is(volumeGroup), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Is(volumeGroup), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Volume group not found"));
 
         var parseResult = _commandDefinition.Parse(["--volumeGroup", volumeGroup, "--subscription", subscription]);
@@ -276,7 +282,7 @@ public class VolumeGroupGetCommandTests
         var subscription = "sub123";
 
         _netAppFilesService.GetVolumeGroupDetails(
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         var parseResult = _commandDefinition.Parse(["--subscription", subscription]);
@@ -300,7 +306,7 @@ public class VolumeGroupGetCommandTests
             false);
 
         _netAppFilesService.GetVolumeGroupDetails(
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVolumeGroups));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
@@ -324,5 +330,79 @@ public class VolumeGroupGetCommandTests
         Assert.Equal("SAP-HANA", vg.GroupMetaDataApplicationType);
         Assert.Equal("SH1", vg.GroupMetaDataApplicationIdentifier);
         Assert.Equal("Volume group for SAP HANA", vg.GroupMetaDataDescription);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PassesResourceGroupFilterToService()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var subscription = "sub123";
+        var resourceGroup = "rg1";
+
+        _netAppFilesService.GetVolumeGroupDetails(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<VolumeGroupInfo>([], false));
+
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _netAppFilesService.Received(1).GetVolumeGroupDetails(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Is(resourceGroup),
+            Arg.Any<IReadOnlyList<string>?>(),
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PassesIdsFilterToService()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var subscription = "sub123";
+        const string id1 = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.NetApp/netAppAccounts/account1/volumeGroups/vg1";
+
+        _netAppFilesService.GetVolumeGroupDetails(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<VolumeGroupInfo>([], false));
+
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--ids", id1]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _netAppFilesService.Received(1).GetVolumeGroupDetails(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Is<IReadOnlyList<string>?>(ids => ids != null && ids.Count == 1 && ids[0] == id1),
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 }

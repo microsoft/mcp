@@ -81,6 +81,7 @@ public class VolumeGroupCreateCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
+                Arg.Any<Dictionary<string, string>?>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
@@ -134,6 +135,7 @@ public class VolumeGroupCreateCommandTests
             Arg.Is(account), Arg.Is(volumeGroup), Arg.Is(resourceGroup),
             Arg.Is(location), Arg.Is(applicationType), Arg.Is(applicationIdentifier),
             Arg.Is(subscription), Arg.Is(groupDescription),
+            Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVolumeGroup));
 
@@ -177,6 +179,7 @@ public class VolumeGroupCreateCommandTests
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -206,6 +209,7 @@ public class VolumeGroupCreateCommandTests
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Volume group already exists"));
 
@@ -234,6 +238,7 @@ public class VolumeGroupCreateCommandTests
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Account not found"));
 
@@ -262,6 +267,7 @@ public class VolumeGroupCreateCommandTests
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
@@ -290,6 +296,7 @@ public class VolumeGroupCreateCommandTests
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<VolumeGroupCreateResult>(new Exception("Test error")));
 
@@ -329,6 +336,7 @@ public class VolumeGroupCreateCommandTests
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVolumeGroup));
 
@@ -366,5 +374,78 @@ public class VolumeGroupCreateCommandTests
         Assert.NotNull(deserialized);
         Assert.Equal(result.VolumeGroup.Name, deserialized.VolumeGroup.Name);
         Assert.Equal(result.VolumeGroup.GroupMetaDataApplicationType, deserialized.VolumeGroup.GroupMetaDataApplicationType);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PassesTagsToService_WhenProvided()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var expectedVolumeGroup = new VolumeGroupCreateResult(
+            Id: "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/volumeGroups/myvg",
+            Name: "myanfaccount/myvg",
+            Type: "Microsoft.NetApp/netAppAccounts/volumeGroups",
+            Location: "eastus",
+            ResourceGroup: "myrg",
+            ProvisioningState: "Succeeded",
+            GroupMetaDataApplicationType: "SAP-HANA",
+            GroupMetaDataApplicationIdentifier: "SH1",
+            GroupMetaDataDescription: "Volume group for SAP HANA");
+
+        _netAppFilesService.CreateVolumeGroup(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<Dictionary<string, string>?>(),
+            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .Returns(expectedVolumeGroup);
+
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount",
+            "--volumeGroup", "myvg",
+            "--resource-group", "myrg",
+            "--location", "eastus",
+            "--applicationType", "SAP-HANA",
+            "--applicationIdentifier", "SH1",
+            "--tags", "{\"env\":\"test\",\"owner\":\"team\"}",
+            "--subscription", "sub123"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _netAppFilesService.Received(1).CreateVolumeGroup(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is<Dictionary<string, string>?>(t => t != null && t.Count == 2 && t["env"] == "test" && t["owner"] == "team"),
+            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsBadRequest_ForUnsupportedCreateArguments()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount",
+            "--volumeGroup", "myvg",
+            "--resource-group", "myrg",
+            "--location", "eastus",
+            "--applicationType", "SAP-HANA",
+            "--applicationIdentifier", "SH1",
+            "--pool", "mypool",
+            "--subscription", "sub123"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("not supported", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

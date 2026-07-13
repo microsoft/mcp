@@ -125,6 +125,43 @@ public static class NetAppFilesOptionDefinitions
     public const string CustomThroughputMibpsName = "customThroughputMibps";
     public const string AcquirePolicyTokenName = "acquirePolicyToken";
     public const string ChangeReferenceName = "changeReference";
+    public const string BackupNfsv3Name = "backup-nfsv3";
+    public const string DataBackupReplSkdName = "data-backup-repl-skd";
+    public const string DataBackupSizeName = "data-backup-size";
+    public const string DataBackupSrcIdName = "data-backup-src-id";
+    public const string DataBackupThroughputName = "data-backup-throughput";
+    public const string DataReplSkdName = "data-repl-skd";
+    public const string DataSizeName = "data-size";
+    public const string DataSrcIdName = "data-src-id";
+    public const string DataThroughputName = "data-throughput";
+    public const string GpRulesName = "gp-rules";
+    public const string LogBackupSizeName = "log-backup-size";
+    public const string LogBackupSrcIdName = "log-backup-src-id";
+    public const string LogBackupThroughputName = "log-backup-throughput";
+    public const string LogBackupReplSkdName = "log-backup-repl-skd";
+    public const string LogSizeName = "log-size";
+    public const string LogThroughputName = "log-throughput";
+    public const string BinarySizeName = "binary-size";
+    public const string BinaryThroughputName = "binary-throughput";
+    public const string LogMirrorSizeName = "log-mirror-size";
+    public const string LogMirrorThroughputName = "log-mirror-throughput";
+    public const string VolumesName = "volumes";
+    public const string SharedReplSkdName = "shared-repl-skd";
+    public const string SharedSizeName = "shared-size";
+    public const string SharedSrcIdName = "shared-src-id";
+    public const string SharedThroughputName = "shared-throughput";
+    public const string DatabaseSizeName = "database-size";
+    public const string DatabaseThroughputName = "database-throughput";
+    public const string NumberOfVolumesName = "number-of-volumes";
+    public const string MemoryName = "memory";
+    public const string NumberOfHostsName = "number-of-hosts";
+    public const string AddSnapshotCapacityName = "add-snapshot-capacity";
+    public const string PrefixName = "prefix";
+    public const string SmbAccessName = "smb-access";
+    public const string SmbBrowsableName = "smb-browsable";
+    public const string StartHostIdName = "start-host-id";
+    public const string SystemRoleName = "system-role";
+    public const string GroupMetaDataName = "group-meta-data";
 
     public static readonly Option<string> Account = new($"--{AccountName}")
     {
@@ -843,6 +880,228 @@ public static class NetAppFilesOptionDefinitions
     public static readonly Option<string> ChangeReference = new($"--{ChangeReferenceName}")
     {
         Description = "Related change reference ID for this resource operation.",
+        Required = false
+    };
+
+    public static readonly Option<bool> BackupNfsv3 = new($"--{BackupNfsv3Name}")
+    {
+        Description = "Enable NFSv3 backup behavior for volume group creation scenarios.",
+        Required = false
+    };
+
+    public static readonly Option<string> DataBackupReplSkd = new($"--{DataBackupReplSkdName}")
+    {
+        Description = "Replication schedule for data backup volume.",
+        Required = false
+    };
+
+    public static readonly Option<int?> DataBackupSize = new($"--{DataBackupSizeName}")
+    {
+        Description = "Capacity in GiB for data backup volumes.",
+        Required = false
+    };
+
+    public static readonly Option<string> DataBackupSrcId = new($"--{DataBackupSrcIdName}")
+    {
+        Description = "Resource ID of the data backup source volume.",
+        Required = false
+    };
+
+    public static readonly Option<int?> DataBackupThroughput = new($"--{DataBackupThroughputName}")
+    {
+        Description = "Throughput in MiB/s for data backup volumes.",
+        Required = false
+    };
+
+    public static readonly Option<string> DataReplSkd = new($"--{DataReplSkdName}")
+    {
+        Description = "Replication schedule for data volume.",
+        Required = false
+    };
+
+    public static readonly Option<int?> DataSize = new($"--{DataSizeName}")
+    {
+        Description = "Capacity in GiB for data volumes.",
+        Required = false
+    };
+
+    public static readonly Option<string> DataSrcId = new($"--{DataSrcIdName}")
+    {
+        Description = "Resource ID of the data source volume.",
+        Required = false
+    };
+
+    public static readonly Option<int?> DataThroughput = new($"--{DataThroughputName}")
+    {
+        Description = "Throughput in MiB/s for data volumes.",
+        Required = false
+    };
+
+    public static readonly Option<string> GpRules = new($"--{GpRulesName}")
+    {
+        Description = "Application-specific placement rules for the volume group.",
+        Required = false
+    };
+
+    public static readonly Option<int?> LogBackupSize = new($"--{LogBackupSizeName}")
+    {
+        Description = "Capacity in GiB for log backup volumes.",
+        Required = false
+    };
+
+    public static readonly Option<string> LogBackupSrcId = new($"--{LogBackupSrcIdName}")
+    {
+        Description = "Resource ID of the log backup source volume.",
+        Required = false
+    };
+
+    public static readonly Option<int?> LogBackupThroughput = new($"--{LogBackupThroughputName}")
+    {
+        Description = "Throughput in MiB/s for log backup volumes.",
+        Required = false
+    };
+
+    public static readonly Option<string> LogBackupReplSkd = new($"--{LogBackupReplSkdName}")
+    {
+        Description = "Replication schedule for log backup volume.",
+        Required = false
+    };
+
+    public static readonly Option<int?> LogSize = new($"--{LogSizeName}")
+    {
+        Description = "Capacity in GiB for log volumes.",
+        Required = false
+    };
+
+    public static readonly Option<int?> LogThroughput = new($"--{LogThroughputName}")
+    {
+        Description = "Throughput in MiB/s for log volumes.",
+        Required = false
+    };
+
+    public static readonly Option<int?> BinarySize = new($"--{BinarySizeName}")
+    {
+        Description = "Capacity in GiB for binary volume.",
+        Required = false
+    };
+
+    public static readonly Option<int?> BinaryThroughput = new($"--{BinaryThroughputName}")
+    {
+        Description = "Throughput in MiB/s for binary volume.",
+        Required = false
+    };
+
+    public static readonly Option<int?> LogMirrorSize = new($"--{LogMirrorSizeName}")
+    {
+        Description = "Capacity in GiB for log mirror volume.",
+        Required = false
+    };
+
+    public static readonly Option<int?> LogMirrorThroughput = new($"--{LogMirrorThroughputName}")
+    {
+        Description = "Throughput in MiB/s for log mirror volume.",
+        Required = false
+    };
+
+    public static readonly Option<string> Volumes = new($"--{VolumesName}")
+    {
+        Description = "List of volumes from group.",
+        Required = false
+    };
+
+    public static readonly Option<string> SharedReplSkd = new($"--{SharedReplSkdName}")
+    {
+        Description = "Replication schedule for shared volume.",
+        Required = false
+    };
+
+    public static readonly Option<int?> SharedSize = new($"--{SharedSizeName}")
+    {
+        Description = "Capacity in GiB for shared volumes.",
+        Required = false
+    };
+
+    public static readonly Option<string> SharedSrcId = new($"--{SharedSrcIdName}")
+    {
+        Description = "Resource ID of the shared source volume.",
+        Required = false
+    };
+
+    public static readonly Option<int?> SharedThroughput = new($"--{SharedThroughputName}")
+    {
+        Description = "Throughput in MiB/s for shared volumes.",
+        Required = false
+    };
+
+    public static readonly Option<int?> DatabaseSize = new($"--{DatabaseSizeName}")
+    {
+        Description = "Oracle database size in TiB.",
+        Required = false
+    };
+
+    public static readonly Option<int?> DatabaseThroughput = new($"--{DatabaseThroughputName}")
+    {
+        Description = "Oracle database throughput in MiB/s.",
+        Required = false
+    };
+
+    public static readonly Option<int?> NumberOfVolumes = new($"--{NumberOfVolumesName}")
+    {
+        Description = "Total number of Oracle data volumes.",
+        Required = false
+    };
+
+    public static readonly Option<int?> Memory = new($"--{MemoryName}")
+    {
+        Description = "System memory in GiB for SAP HANA sizing.",
+        Required = false
+    };
+
+    public static readonly Option<int?> NumberOfHosts = new($"--{NumberOfHostsName}")
+    {
+        Description = "Total number of hosts in SAP HANA deployment.",
+        Required = false
+    };
+
+    public static readonly Option<int?> AddSnapshotCapacity = new($"--{AddSnapshotCapacityName}")
+    {
+        Description = "Additional snapshot capacity as percentage of RAM.",
+        Required = false
+    };
+
+    public static readonly Option<string> Prefix = new($"--{PrefixName}")
+    {
+        Description = "Prefix text for generated volume names.",
+        Required = false
+    };
+
+    public static readonly Option<string> SmbAccess = new($"--{SmbAccessName}")
+    {
+        Description = "SMB access-based enumeration setting.",
+        Required = false
+    };
+
+    public static readonly Option<string> SmbBrowsable = new($"--{SmbBrowsableName}")
+    {
+        Description = "SMB browsable setting.",
+        Required = false
+    };
+
+    public static readonly Option<int?> StartHostId = new($"--{StartHostIdName}")
+    {
+        Description = "Starting SAP HANA host ID.",
+        Required = false
+    };
+
+    public static readonly Option<string> SystemRole = new($"--{SystemRoleName}")
+    {
+        Description = "Role of the storage system (PRIMARY, HA, DR).",
+        Required = false
+    };
+
+    public static readonly Option<string> GroupMetaData = new($"--{GroupMetaDataName}")
+    {
+        Description = "Volume group details payload.",
         Required = false
     };
 }

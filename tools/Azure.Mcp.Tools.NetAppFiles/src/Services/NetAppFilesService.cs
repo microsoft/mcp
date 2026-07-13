@@ -713,6 +713,8 @@ public class NetAppFilesService(
     public async Task<ResourceQueryResults<VolumeGroupInfo>> GetVolumeGroupDetails(
         string? account,
         string? volumeGroup,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -733,6 +735,18 @@ public class NetAppFilesService(
         {
             filters.Add($"name endswith '/{EscapeKqlString(volumeGroup)}'");
         }
+        if (ids is { Count: > 0 })
+        {
+            var escapedIds = ids
+                .Where(static id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => $"'{EscapeKqlString(id)}'")
+                .ToList();
+
+            if (escapedIds.Count > 0)
+            {
+                filters.Add($"id in~ ({string.Join(", ", escapedIds)})");
+            }
+        }
 
         string? additionalFilter = filters.Count > 0 ? string.Join(" and ", filters) : null;
 
@@ -740,7 +754,7 @@ public class NetAppFilesService(
         {
             return await ExecuteResourceQueryAsync(
                 "Microsoft.NetApp/netAppAccounts/volumeGroups",
-                null,
+                resourceGroup,
                 subscription,
                 retryPolicy,
                 ConvertToVolumeGroupInfoModel,
@@ -2451,6 +2465,7 @@ public class NetAppFilesService(
         string applicationIdentifier,
         string subscription,
         string? groupDescription = null,
+        Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -2479,6 +2494,7 @@ public class NetAppFilesService(
             var createContent = new VolumeGroupCreateOrUpdateContent
             {
                 Location = location,
+                Tags = tags,
                 Properties = new VolumeGroupCreateProperties
                 {
                     GroupMetaData = new VolumeGroupCreateMetaData

@@ -18,4 +18,28 @@ public class VolumeGroupUpdateOptions : BaseNetAppFilesOptions
 
     [JsonPropertyName(NetAppFilesOptionDefinitions.TagsName)]
     public string? Tags { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.IdsName)]
+    public string[]? Ids { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.NoWaitName)]
+    public bool NoWait { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.AddName)]
+    public string[]? Add { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.SetName)]
+    public string[]? Set { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.RemoveName)]
+    public string[]? Remove { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.ForceStringName)]
+    public bool ForceString { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.GroupMetaDataName)]
+    public string? GroupMetaData { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.VolumesName)]
+    public string? Volumes { get; set; }
 }

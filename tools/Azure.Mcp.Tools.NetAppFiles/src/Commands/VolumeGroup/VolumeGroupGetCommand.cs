@@ -40,6 +40,8 @@ public sealed class VolumeGroupGetCommand(ILogger<VolumeGroupGetCommand> logger,
         base.RegisterOptions(command);
         command.Options.Add(NetAppFilesOptionDefinitions.Account.AsOptional());
         command.Options.Add(NetAppFilesOptionDefinitions.VolumeGroup.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
     }
 
     protected override VolumeGroupGetOptions BindOptions(ParseResult parseResult)
@@ -47,6 +49,8 @@ public sealed class VolumeGroupGetCommand(ILogger<VolumeGroupGetCommand> logger,
         var options = base.BindOptions(parseResult);
         options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
         options.VolumeGroup = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.VolumeGroup.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
         return options;
     }
 
@@ -64,6 +68,8 @@ public sealed class VolumeGroupGetCommand(ILogger<VolumeGroupGetCommand> logger,
             var volumeGroups = await _netAppFilesService.GetVolumeGroupDetails(
                 options.Account,
                 options.VolumeGroup,
+                options.ResourceGroup,
+                options.Ids,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,

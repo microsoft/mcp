@@ -53,6 +53,7 @@ public class VolumeGroupUpdateCommandTests
     [Theory]
     [InlineData("--account myanfaccount --volumeGroup myvg --resource-group myrg --location eastus --subscription sub123", true)]
     [InlineData("--account myanfaccount --volumeGroup myvg --resource-group myrg --location eastus --subscription sub123 --groupDescription UpdatedDescription", true)]
+    [InlineData("--ids /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/volumeGroups/myvg --location eastus --subscription sub123", true)]
     [InlineData("--volumeGroup myvg --resource-group myrg --location eastus --subscription sub123", false)] // Missing account
     [InlineData("--account myanfaccount --resource-group myrg --location eastus --subscription sub123", false)] // Missing volumeGroup
     [InlineData("--account myanfaccount --volumeGroup myvg --location eastus --subscription sub123", false)] // Missing resource-group
@@ -78,10 +79,10 @@ public class VolumeGroupUpdateCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<Dictionary<string, string>>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<string?>(),
+                Arg.Any<Dictionary<string, string>?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedVolumeGroup);
         }
@@ -100,7 +101,9 @@ public class VolumeGroupUpdateCommandTests
         }
         else
         {
-            Assert.Contains("required", response.Message.ToLower());
+            Assert.True(
+                response.Message.Contains("required", StringComparison.OrdinalIgnoreCase) ||
+                response.Message.Contains("either --ids", StringComparison.OrdinalIgnoreCase));
         }
     }
 
@@ -354,5 +357,71 @@ public class VolumeGroupUpdateCommandTests
 
         // Assert - if no exception, binding worked correctly
         Assert.NotNull(response);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ResolvesIdsAndCallsServiceWithResolvedArguments()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var id = "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/volumeGroups/myvg";
+
+        var expectedVolumeGroup = new VolumeGroupCreateResult(
+            Id: id,
+            Name: "myanfaccount/myvg",
+            Type: "Microsoft.NetApp/netAppAccounts/volumeGroups",
+            Location: "eastus",
+            ResourceGroup: "myrg",
+            ProvisioningState: "Succeeded",
+            GroupMetaDataApplicationType: "SAP-HANA",
+            GroupMetaDataApplicationIdentifier: "SH1",
+            GroupMetaDataDescription: null);
+
+        _netAppFilesService.UpdateVolumeGroup(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Any<Dictionary<string, string>?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(expectedVolumeGroup));
+
+        var args = _commandDefinition.Parse([
+            "--ids", id,
+            "--location", "eastus",
+            "--subscription", "sub123"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _netAppFilesService.Received(1).UpdateVolumeGroup(
+            Arg.Is("myanfaccount"), Arg.Is("myvg"), Arg.Is("myrg"),
+            Arg.Is("eastus"), Arg.Is("sub123"), Arg.Any<string?>(),
+            Arg.Any<Dictionary<string, string>?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("--no-wait")]
+    [InlineData("--add properties.groupMetaData={}")]
+    [InlineData("--set properties.groupMetaData.applicationIdentifier=SH2")]
+    [InlineData("--remove properties.groupMetaData")]
+    [InlineData("--force-string")]
+    [InlineData("--group-meta-data {\"applicationType\":\"SAP-HANA\"}")]
+    [InlineData("--volumes []")]
+    public async Task ExecuteAsync_ReturnsBadRequest_ForUnsupportedUpdateArguments(string unsupportedArg)
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+
+        var args = _commandDefinition.Parse($"--account myanfaccount --volumeGroup myvg --resource-group myrg --location eastus --subscription sub123 {unsupportedArg}");
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("not supported", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

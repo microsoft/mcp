@@ -105,6 +105,8 @@ public interface INetAppFilesService
     Task<ResourceQueryResults<VolumeGroupInfo>> GetVolumeGroupDetails(
         string? account,
         string? volumeGroup,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -370,6 +372,7 @@ public interface INetAppFilesService
         string applicationIdentifier,
         string subscription,
         string? groupDescription = null,
+        Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
