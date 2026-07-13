@@ -18,4 +18,13 @@ public class SnapshotCreateOptions : BaseNetAppFilesOptions
 
     [JsonPropertyName(NetAppFilesOptionDefinitions.LocationName)]
     public string? Location { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.NoWaitName)]
+    public bool NoWait { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.AcquirePolicyTokenName)]
+    public bool AcquirePolicyToken { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.ChangeReferenceName)]
+    public string? ChangeReference { get; set; }
 }

@@ -46,6 +46,9 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
         command.Options.Add(NetAppFilesOptionDefinitions.Snapshot.AsRequired());
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(NetAppFilesOptionDefinitions.Location);
+        command.Options.Add(NetAppFilesOptionDefinitions.NoWait.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.AcquirePolicyToken.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.ChangeReference.AsOptional());
     }
 
     protected override SnapshotCreateOptions BindOptions(ParseResult parseResult)
@@ -57,6 +60,9 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
         options.Snapshot = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Snapshot.Name);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Location = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Location.Name);
+        options.NoWait = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.NoWait.Name);
+        options.AcquirePolicyToken = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.AcquirePolicyToken.Name);
+        options.ChangeReference = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.ChangeReference.Name);
         return options;
     }
 
@@ -71,6 +77,8 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
 
         try
         {
+            ValidateUnsupportedCreateArguments(options);
+
             var snapshot = await _netAppFilesService.CreateSnapshot(
                 options.Account!,
                 options.Pool!,
@@ -100,6 +108,7 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        ArgumentException argEx => argEx.Message,
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "A snapshot with this name already exists. Choose a different name.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
@@ -109,6 +118,24 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
+
+    private static void ValidateUnsupportedCreateArguments(SnapshotCreateOptions options)
+    {
+        if (options.NoWait)
+        {
+            throw new ArgumentException("The --no-wait argument is not supported by this command yet.");
+        }
+
+        if (options.AcquirePolicyToken)
+        {
+            throw new ArgumentException("The --acquirePolicyToken argument is not supported by this command yet.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.ChangeReference))
+        {
+            throw new ArgumentException("The --changeReference argument is not supported by this command yet.");
+        }
+    }
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {

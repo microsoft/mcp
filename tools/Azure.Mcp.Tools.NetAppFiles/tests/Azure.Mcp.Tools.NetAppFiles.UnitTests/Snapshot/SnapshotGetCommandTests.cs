@@ -59,6 +59,8 @@ public class SnapshotGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -95,6 +97,8 @@ public class SnapshotGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -130,6 +134,8 @@ public class SnapshotGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             null,
             Arg.Any<RetryPolicyOptions>(),
@@ -162,6 +168,8 @@ public class SnapshotGetCommandTests
     [InlineData("--subscription sub123 --account myanfaccount --pool mypool", true)]
     [InlineData("--subscription sub123 --account myanfaccount --pool mypool --volume myvol", true)]
     [InlineData("--subscription sub123 --account myanfaccount --pool mypool --volume myvol --snapshot mysnap", true)]
+    [InlineData("--subscription sub123 --resource-group myrg", true)]
+    [InlineData("--subscription sub123 --ids /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvol/snapshots/mysnap", true)]
     [InlineData("--subscription sub123 --snapshot mysnap", true)] // Snapshot without account/pool/volume is valid
     [InlineData("--account myanfaccount", false)] // Missing subscription
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
@@ -174,7 +182,7 @@ public class SnapshotGetCommandTests
                 false);
 
             _netAppFilesService.GetSnapshotDetails(
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(expectedSnapshots));
         }
 
@@ -215,6 +223,8 @@ public class SnapshotGetCommandTests
             Arg.Is(pool),
             Arg.Is(volume),
             Arg.Is(snapshot),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -254,6 +264,8 @@ public class SnapshotGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -278,5 +290,51 @@ public class SnapshotGetCommandTests
         Assert.Equal("rg1", snapshotInfo.ResourceGroup);
         Assert.Equal("Succeeded", snapshotInfo.ProvisioningState);
         Assert.Equal("2025-01-15T10:30:00Z", snapshotInfo.Created);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PassesResourceGroupAndIds()
+    {
+        TestEnvironment.ClearAzureSubscriptionId();
+        var subscription = "sub123";
+        var resourceGroup = "myrg";
+        var snapshotId = "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvol/snapshots/mysnap";
+        var expectedSnapshots = new ResourceQueryResults<SnapshotInfo>(
+            [new("myanfaccount/mypool/myvol/mysnap", "eastus", resourceGroup, "Succeeded", "2025-01-15T10:30:00Z")],
+            false);
+
+        _netAppFilesService.GetSnapshotDetails(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Is(resourceGroup),
+            Arg.Is<IReadOnlyList<string>?>(ids => ids != null && ids.Count == 1 && ids[0] == snapshotId),
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(expectedSnapshots));
+
+        var args = _commandDefinition.Parse([
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--ids", snapshotId
+        ]);
+
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _netAppFilesService.Received(1).GetSnapshotDetails(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            resourceGroup,
+            Arg.Is<IReadOnlyList<string>?>(ids => ids != null && ids.Count == 1 && ids[0] == snapshotId),
+            subscription,
+            null,
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 }

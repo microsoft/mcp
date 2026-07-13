@@ -42,6 +42,8 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, INetA
         command.Options.Add(NetAppFilesOptionDefinitions.Pool.AsOptional());
         command.Options.Add(NetAppFilesOptionDefinitions.Volume.AsOptional());
         command.Options.Add(NetAppFilesOptionDefinitions.Snapshot.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
     }
 
     protected override SnapshotGetOptions BindOptions(ParseResult parseResult)
@@ -51,6 +53,8 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, INetA
         options.Pool = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Pool.Name);
         options.Volume = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Volume.Name);
         options.Snapshot = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Snapshot.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
         return options;
     }
 
@@ -70,6 +74,8 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, INetA
                 options.Pool,
                 options.Volume,
                 options.Snapshot,
+                options.ResourceGroup,
+                options.Ids,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,

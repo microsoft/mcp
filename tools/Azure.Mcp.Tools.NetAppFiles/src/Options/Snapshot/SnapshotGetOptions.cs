@@ -7,6 +7,9 @@ namespace Azure.Mcp.Tools.NetAppFiles.Options.Snapshot;
 
 public class SnapshotGetOptions : BaseNetAppFilesOptions
 {
+    [JsonPropertyName(NetAppFilesOptionDefinitions.IdsName)]
+    public string[]? Ids { get; set; }
+
     [JsonPropertyName(NetAppFilesOptionDefinitions.PoolName)]
     public string? Pool { get; set; }
 

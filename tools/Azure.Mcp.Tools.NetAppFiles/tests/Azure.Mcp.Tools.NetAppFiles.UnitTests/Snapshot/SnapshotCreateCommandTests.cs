@@ -103,6 +103,20 @@ public class SnapshotCreateCommandTests
         }
     }
 
+    [Theory]
+    [InlineData("--no-wait", "no-wait")]
+    [InlineData("--acquirePolicyToken", "acquirePolicyToken")]
+    [InlineData("--changeReference CR-123", "changeReference")]
+    public async Task ExecuteAsync_RejectsUnsupportedArguments(string extraArgs, string expectedArgument)
+    {
+        var parseResult = _commandDefinition.Parse($"--account myanfaccount --pool mypool --volume myvolume --snapshot mysnapshot --resource-group myrg --location eastus --subscription sub123 {extraArgs}");
+
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(expectedArgument, response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public async Task ExecuteAsync_CreatesSnapshot_Successfully()
     {

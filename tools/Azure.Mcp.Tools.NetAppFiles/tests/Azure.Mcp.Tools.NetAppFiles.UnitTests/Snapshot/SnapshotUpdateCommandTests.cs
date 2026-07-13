@@ -52,6 +52,7 @@ public class SnapshotUpdateCommandTests
 
     [Theory]
     [InlineData("--account myanfaccount --pool mypool --volume myvolume --snapshot mysnapshot --resource-group myrg --location eastus --subscription sub123", true)]
+    [InlineData("--account myanfaccount --pool mypool --volume myvolume --snapshot mysnapshot --resource-group myrg --subscription sub123", true)]
     [InlineData("--pool mypool --volume myvolume --snapshot mysnapshot --resource-group myrg --location eastus --subscription sub123", false)] // Missing account
     [InlineData("--account myanfaccount --volume myvolume --snapshot mysnapshot --resource-group myrg --location eastus --subscription sub123", false)] // Missing pool
     [InlineData("--account myanfaccount --pool mypool --snapshot mysnapshot --resource-group myrg --location eastus --subscription sub123", false)] // Missing volume
@@ -77,7 +78,7 @@ public class SnapshotUpdateCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<string>(),
+                Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
@@ -99,8 +100,29 @@ public class SnapshotUpdateCommandTests
         }
         else
         {
-            Assert.Contains("required", response.Message.ToLower());
+            Assert.True(
+                response.Message.Contains("required", StringComparison.OrdinalIgnoreCase) ||
+                response.Message.Contains("provided", StringComparison.OrdinalIgnoreCase),
+                $"Expected a validation message, got: {response.Message}");
         }
+    }
+
+    [Theory]
+    [InlineData("--no-wait", "no-wait")]
+    [InlineData("--acquirePolicyToken", "acquirePolicyToken")]
+    [InlineData("--changeReference CR-123", "changeReference")]
+    [InlineData("--add properties.foo=bar", "add")]
+    [InlineData("--set properties.foo=bar", "set")]
+    [InlineData("--remove properties.foo", "remove")]
+    [InlineData("--force-string", "force-string")]
+    public async Task ExecuteAsync_RejectsUnsupportedArguments(string extraArgs, string expectedArgument)
+    {
+        var parseResult = _commandDefinition.Parse($"--account myanfaccount --pool mypool --volume myvolume --snapshot mysnapshot --resource-group myrg --subscription sub123 {extraArgs}");
+
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(expectedArgument, response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -158,6 +180,17 @@ public class SnapshotUpdateCommandTests
     }
 
     [Fact]
+    public void BindOptions_AcceptsIds()
+    {
+        var args = _commandDefinition.Parse([
+            "--ids", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume/snapshots/mysnapshot",
+            "--subscription", "sub123"
+        ]);
+
+        Assert.Empty(args.Errors);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
@@ -173,7 +206,7 @@ public class SnapshotUpdateCommandTests
 
         _netAppFilesService.UpdateSnapshot(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
@@ -213,7 +246,7 @@ public class SnapshotUpdateCommandTests
 
         _netAppFilesService.UpdateSnapshot(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
@@ -243,7 +276,7 @@ public class SnapshotUpdateCommandTests
         TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.UpdateSnapshot(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
@@ -272,7 +305,7 @@ public class SnapshotUpdateCommandTests
         TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.UpdateSnapshot(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
@@ -301,7 +334,7 @@ public class SnapshotUpdateCommandTests
         TestEnvironment.ClearAzureSubscriptionId();
         _netAppFilesService.UpdateSnapshot(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())

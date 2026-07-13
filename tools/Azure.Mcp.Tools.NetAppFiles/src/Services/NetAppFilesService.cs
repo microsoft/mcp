@@ -490,6 +490,8 @@ public class NetAppFilesService(
         string? pool,
         string? volume,
         string? snapshot,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -514,6 +516,18 @@ public class NetAppFilesService(
         {
             filters.Add($"name endswith '/{EscapeKqlString(snapshot)}'");
         }
+        if (ids is { Count: > 0 })
+        {
+            var escapedIds = ids
+                .Where(static id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => $"'{EscapeKqlString(id)}'")
+                .ToList();
+
+            if (escapedIds.Count > 0)
+            {
+                filters.Add($"id in~ ({string.Join(", ", escapedIds)})");
+            }
+        }
 
         string? additionalFilter = filters.Count > 0 ? string.Join(" and ", filters) : null;
 
@@ -521,7 +535,7 @@ public class NetAppFilesService(
         {
             return await ExecuteResourceQueryAsync(
                 "Microsoft.NetApp/netAppAccounts/capacityPools/volumes/snapshots",
-                null,
+                resourceGroup,
                 subscription,
                 retryPolicy,
                 ConvertToSnapshotInfoModel,
@@ -2037,7 +2051,7 @@ public class NetAppFilesService(
         string volume,
         string snapshot,
         string resourceGroup,
-        string location,
+        string? location,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -2049,7 +2063,6 @@ public class NetAppFilesService(
             (nameof(volume), volume),
             (nameof(snapshot), snapshot),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(location), location),
             (nameof(subscription), subscription));
 
         try
@@ -2063,6 +2076,17 @@ public class NetAppFilesService(
 
             var resourceId = new ResourceIdentifier(
                 $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/capacityPools/{pool}/volumes/{volume}/snapshots/{snapshot}");
+
+            if (string.IsNullOrEmpty(location))
+            {
+                var existingResource = await GetGenericResourceAsync(armClient, resourceId, cancellationToken);
+                location = existingResource.Data.Location;
+            }
+
+            if (string.IsNullOrEmpty(location))
+            {
+                throw new InvalidOperationException("Unable to resolve snapshot location for update. Specify --location explicitly.");
+            }
 
             var updateContent = new SnapshotCreateOrUpdateContent
             {
