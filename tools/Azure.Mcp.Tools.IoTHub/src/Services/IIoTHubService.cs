@@ -47,4 +47,13 @@ public interface IIoTHubService
         string subscription,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<IoTHubUsageSnapshot> GetUsageSnapshot(
+        string name,
+        string resourceGroup,
+        string subscription,
+        string? startTime = null,
+        string? endTime = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

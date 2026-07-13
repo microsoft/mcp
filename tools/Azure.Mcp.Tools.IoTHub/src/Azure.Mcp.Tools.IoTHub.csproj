@@ -11,6 +11,7 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <PackageReference Include="Azure.Monitor.Query" />
     <PackageReference Include="Azure.ResourceManager" />
     <PackageReference Include="Azure.ResourceManager.IotHub" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />

@@ -26,6 +26,7 @@ public class IoTHubSetup : IAreaSetup
         services.AddSingleton<IoTHubUpdateCommand>();
         services.AddSingleton<IoTHubDeleteCommand>();
         services.AddSingleton<IoTHubKeysGetCommand>();
+        services.AddSingleton<IoTHubUsageShowCommand>();
 
         services.AddSingleton<IoTHubDeviceListCommand>();
         services.AddSingleton<IoTHubDeviceShowCommand>();
@@ -63,6 +64,9 @@ public class IoTHubSetup : IAreaSetup
         var keysGetCommand = serviceProvider.GetRequiredService<IoTHubKeysGetCommand>();
         hub.AddCommand(keysGetCommand.Name, keysGetCommand);
 
+        var usageShowCommand = serviceProvider.GetRequiredService<IoTHubUsageShowCommand>();
+        hub.AddCommand(usageShowCommand.Name, usageShowCommand);
+
         var device = new CommandGroup("device", "IoT Hub device registry operations.");
         iothub.AddSubGroup(device);
 
@@ -85,7 +89,7 @@ public class IoTHubSetup : IAreaSetup
         device.AddCommand(deviceStatisticsCommand.Name, deviceStatisticsCommand);
 
         var query = new CommandGroup("query", "IoT Hub query operations.");
-        iothub.AddSubGroup(query);
+        device.AddSubGroup(query);
 
         var queryRunCommand = serviceProvider.GetRequiredService<IoTHubQueryRunCommand>();
         query.AddCommand(queryRunCommand.Name, queryRunCommand);

@@ -16,6 +16,8 @@ public static class IoTHubOptionDefinitions
     public const string ContinuationTokenName = "continuation-token";
     public const string QueryName = "query";
     public const string PatchName = "patch";
+    public const string StartTimeName = "start-time";
+    public const string EndTimeName = "end-time";
     public static readonly Option<string> Name = new(
         $"--{NameName}"
     )
@@ -94,6 +96,26 @@ public static class IoTHubOptionDefinitions
     {
         Description = "The JSON patch document to update the device twin (e.g., {\"properties\":{\"desired\":{\"temperature\":72}}}).",
         Required = true
+    };
+
+    public static readonly Option<string> StartTime = new(
+        $"--{StartTimeName}"
+    )
+    {
+        Description = "The start time for the usage query as an absolute ISO 8601 timestamp. Include a timezone offset, e.g. 2026-07-07T00:00:00Z (UTC) or 2026-07-07T00:00:00-07:00. " +
+            "Resolve any relative expression (such as 'this morning', 'yesterday midnight', or 'last hour') in the user's local timezone first, then pass the absolute value; the query runs in UTC. " +
+            "A timestamp without an offset is treated as UTC. Defaults to 24 hours before the end time.",
+        Required = false
+    };
+
+    public static readonly Option<string> EndTime = new(
+        $"--{EndTimeName}"
+    )
+    {
+        Description = "The end time for the usage query as an absolute ISO 8601 timestamp. Include a timezone offset, e.g. 2026-07-08T00:00:00Z (UTC) or 2026-07-08T00:00:00-07:00. " +
+            "Resolve any relative expression (such as 'today', 'end of yesterday', or 'now') in the user's local timezone first, then pass the absolute value; the query runs in UTC. " +
+            "A timestamp without an offset is treated as UTC. Defaults to now.",
+        Required = false
     };
 
 }
