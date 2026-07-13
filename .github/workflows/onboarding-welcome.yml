@@ -11,8 +11,8 @@ on:
 
 permissions:
   issues: write
-
 jobs:
+  welcome:
     runs-on: ubuntu-latest
     concurrency:
       group: onboarding-welcome-${{ github.event.issue.number }}
