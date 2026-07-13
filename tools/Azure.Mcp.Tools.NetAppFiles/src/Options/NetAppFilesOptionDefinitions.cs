@@ -125,6 +125,10 @@ public static class NetAppFilesOptionDefinitions
     public const string CustomThroughputMibpsName = "customThroughputMibps";
     public const string AcquirePolicyTokenName = "acquirePolicyToken";
     public const string ChangeReferenceName = "changeReference";
+    public const string ExcludeName = "exclude";
+    public const string PeerIpAddressesName = "peerIpAddresses";
+    public const string SourceVolumeIdName = "sourceVolumeId";
+    public const string ForceBreakReplicationName = "force";
     public const string BackupNfsv3Name = "backup-nfsv3";
     public const string DataBackupReplSkdName = "data-backup-repl-skd";
     public const string DataBackupSizeName = "data-backup-size";
@@ -880,6 +884,30 @@ public static class NetAppFilesOptionDefinitions
     public static readonly Option<string> ChangeReference = new($"--{ChangeReferenceName}")
     {
         Description = "Related change reference ID for this resource operation.",
+        Required = false
+    };
+
+    public static readonly Option<string> Exclude = new($"--{ExcludeName}")
+    {
+        Description = "Exclude replication filter. Valid values: None, Deleted.",
+        Required = false
+    };
+
+    public static readonly Option<string[]> PeerIpAddresses = new($"--{PeerIpAddressesName}")
+    {
+        Description = "A list of IC-LIF IP addresses that can be used to connect to the external ONTAP cluster.",
+        Required = false
+    };
+
+    public static readonly Option<string> SourceVolumeId = new($"--{SourceVolumeIdName}")
+    {
+        Description = "The Azure resource ID of the source volume for the replication.",
+        Required = false
+    };
+
+    public static readonly Option<bool> ForceBreakReplication = new($"--{ForceBreakReplicationName}")
+    {
+        Description = "Force break the replication when it is currently transferring.",
         Required = false
     };
 

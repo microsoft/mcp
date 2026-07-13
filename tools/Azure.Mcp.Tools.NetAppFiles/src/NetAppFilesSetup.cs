@@ -6,7 +6,7 @@ using Azure.Mcp.Tools.NetAppFiles.Commands.Backup;
 using Azure.Mcp.Tools.NetAppFiles.Commands.BackupPolicy;
 using Azure.Mcp.Tools.NetAppFiles.Commands.BackupVault;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Pool;
-using Azure.Mcp.Tools.NetAppFiles.Commands.ReplicationStatus;
+using Azure.Mcp.Tools.NetAppFiles.Commands.Replication;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Snapshot;
 using Azure.Mcp.Tools.NetAppFiles.Commands.SnapshotPolicy;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
@@ -43,7 +43,19 @@ public class NetAppFilesSetup : IAreaSetup
         services.AddSingleton<PoolCreateCommand>();
         services.AddSingleton<PoolGetCommand>();
         services.AddSingleton<PoolUpdateCommand>();
-        services.AddSingleton<ReplicationStatusGetCommand>();
+        services.AddSingleton<ReplicationApproveCommand>();
+        services.AddSingleton<ReplicationAuthorizeExternalReplicationCommand>();
+        services.AddSingleton<ReplicationFinalizeExternalReplicationCommand>();
+        services.AddSingleton<ReplicationListCommand>();
+        services.AddSingleton<ReplicationPeerExternalClusterCommand>();
+        services.AddSingleton<ReplicationPerformReplicationTransferCommand>();
+        services.AddSingleton<ReplicationPopulateAvailabilityZoneCommand>();
+        services.AddSingleton<ReplicationReInitializeCommand>();
+        services.AddSingleton<ReplicationReestablishCommand>();
+        services.AddSingleton<ReplicationRemoveCommand>();
+        services.AddSingleton<ReplicationResumeCommand>();
+        services.AddSingleton<ReplicationStatusCommand>();
+        services.AddSingleton<ReplicationSuspendCommand>();
         services.AddSingleton<SnapshotCreateCommand>();
         services.AddSingleton<SnapshotGetCommand>();
         services.AddSingleton<SnapshotUpdateCommand>();
@@ -133,11 +145,22 @@ public class NetAppFilesSetup : IAreaSetup
         var poolUpdate = serviceProvider.GetRequiredService<PoolUpdateCommand>();
         pool.AddCommand(poolUpdate.Name, poolUpdate);
 
-        var replicationStatus = new CommandGroup("replicationstatus", "NetApp Files replication status operations - Commands for listing and getting replication status of NetApp Files volumes in your Azure subscription.");
-        netAppFiles.AddSubGroup(replicationStatus);
+        var replication = new CommandGroup("replication", "NetApp Files replication operations - Commands for managing Azure NetApp Files volume replications.");
+        netAppFiles.AddSubGroup(replication);
 
-        var replicationStatusGet = serviceProvider.GetRequiredService<ReplicationStatusGetCommand>();
-        replicationStatus.AddCommand(replicationStatusGet.Name, replicationStatusGet);
+        replication.AddCommand(serviceProvider.GetRequiredService<ReplicationApproveCommand>().Name, serviceProvider.GetRequiredService<ReplicationApproveCommand>());
+        replication.AddCommand(serviceProvider.GetRequiredService<ReplicationAuthorizeExternalReplicationCommand>().Name, serviceProvider.GetRequiredService<ReplicationAuthorizeExternalReplicationCommand>());
+        replication.AddCommand(serviceProvider.GetRequiredService<ReplicationFinalizeExternalReplicationCommand>().Name, serviceProvider.GetRequiredService<ReplicationFinalizeExternalReplicationCommand>());
+        replication.AddCommand(serviceProvider.GetRequiredService<ReplicationListCommand>().Name, serviceProvider.GetRequiredService<ReplicationListCommand>());
+        replication.AddCommand(serviceProvider.GetRequiredService<ReplicationPeerExternalClusterCommand>().Name, serviceProvider.GetRequiredService<ReplicationPeerExternalClusterCommand>());
+        replication.AddCommand(serviceProvider.GetRequiredService<ReplicationPerformReplicationTransferCommand>().Name, serviceProvider.GetRequiredService<ReplicationPerformReplicationTransferCommand>());
+        replication.AddCommand(serviceProvider.GetRequiredService<ReplicationPopulateAvailabilityZoneCommand>().Name, serviceProvider.GetRequiredService<ReplicationPopulateAvailabilityZoneCommand>());
+        replication.AddCommand(serviceProvider.GetRequiredService<ReplicationReInitializeCommand>().Name, serviceProvider.GetRequiredService<ReplicationReInitializeCommand>());
+        replication.AddCommand(serviceProvider.GetRequiredService<ReplicationReestablishCommand>().Name, serviceProvider.GetRequiredService<ReplicationReestablishCommand>());
+        replication.AddCommand(serviceProvider.GetRequiredService<ReplicationRemoveCommand>().Name, serviceProvider.GetRequiredService<ReplicationRemoveCommand>());
+        replication.AddCommand(serviceProvider.GetRequiredService<ReplicationResumeCommand>().Name, serviceProvider.GetRequiredService<ReplicationResumeCommand>());
+        replication.AddCommand(serviceProvider.GetRequiredService<ReplicationStatusCommand>().Name, serviceProvider.GetRequiredService<ReplicationStatusCommand>());
+        replication.AddCommand(serviceProvider.GetRequiredService<ReplicationSuspendCommand>().Name, serviceProvider.GetRequiredService<ReplicationSuspendCommand>());
 
         var snapshot = new CommandGroup("snapshot", "NetApp Files snapshot operations - Commands for listing and managing NetApp Files snapshots in your Azure subscription.");
         netAppFiles.AddSubGroup(snapshot);

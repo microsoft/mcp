@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Microsoft.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -21,6 +22,8 @@ public class NetAppFilesService(
     ILogger<NetAppFilesService> logger)
     : BaseAzureResourceService(subscriptionService, tenantService), INetAppFilesService
 {
+    private const string NetAppFilesApiVersion = "2026-01-01";
+
     private readonly ILogger<NetAppFilesService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<ResourceQueryResults<NetAppAccountInfo>> GetAccountDetails(
@@ -563,69 +566,281 @@ public class NetAppFilesService(
             Created: snapshotData.Properties?.Created);
     }
 
-    public async Task<ResourceQueryResults<ReplicationStatusInfo>> GetReplicationStatusDetails(
+    public async Task<ReplicationOperationResult> ApproveReplication(
         string? account,
         string? pool,
         string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
+        string subscription,
+        string remoteVolumeResourceId,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var target = ResolveVolumeTarget(account, pool, volume, resourceGroup, ids, subscription);
+        ValidateRequiredParameters((nameof(remoteVolumeResourceId), remoteVolumeResourceId));
+
+        await SendVolumeActionAsync(target, subscription, "authorizeReplication", CreateSingleStringPropertyBody("remoteVolumeResourceId", remoteVolumeResourceId), tenant, retryPolicy, cancellationToken);
+        return new ReplicationOperationResult("approve", target.ResourceId, "Replication approval completed.");
+    }
+
+    public async Task<SvmPeerCommandInfo> AuthorizeExternalReplication(
+        string? account,
+        string? pool,
+        string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(subscription), subscription));
+        var target = ResolveVolumeTarget(account, pool, volume, resourceGroup, ids, subscription);
+        var response = await SendVolumeActionAsync(target, subscription, "authorizeExternalReplication", null, tenant, retryPolicy, cancellationToken);
 
-        var filters = new List<string>
+        if (string.IsNullOrWhiteSpace(response.Content))
         {
-            "isnotnull(properties.dataProtection.replication)"
-        };
-        if (!string.IsNullOrEmpty(account))
-        {
-            filters.Add($"name startswith '{EscapeKqlString(account)}/'");
-        }
-        if (!string.IsNullOrEmpty(pool) && !string.IsNullOrEmpty(account))
-        {
-            filters.Add($"name startswith '{EscapeKqlString(account)}/{EscapeKqlString(pool)}/'");
-        }
-        if (!string.IsNullOrEmpty(volume))
-        {
-            filters.Add($"name endswith '/{EscapeKqlString(volume)}'");
+            return new SvmPeerCommandInfo(null);
         }
 
-        string additionalFilter = string.Join(" and ", filters);
-
-        try
-        {
-            return await ExecuteResourceQueryAsync(
-                "Microsoft.NetApp/netAppAccounts/capacityPools/volumes",
-                null,
-                subscription,
-                retryPolicy,
-                ConvertToReplicationStatusInfoModel,
-                additionalFilter: additionalFilter,
-                cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving NetApp Files replication status details. Subscription: {Subscription}", subscription);
-            throw;
-        }
+        using var document = JsonDocument.Parse(response.Content);
+        return new SvmPeerCommandInfo(GetNestedJsonString(document.RootElement, "properties", "svmPeeringCommand"));
     }
 
-    private static ReplicationStatusInfo ConvertToReplicationStatusInfoModel(JsonElement item)
+    public async Task<ReplicationOperationResult> FinalizeExternalReplication(
+        string? account,
+        string? pool,
+        string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        ReplicationStatusData? data = ReplicationStatusData.FromJson(item);
-        if (data == null)
-            throw new InvalidOperationException("Failed to parse NetApp volume replication status data");
+        var target = ResolveVolumeTarget(account, pool, volume, resourceGroup, ids, subscription);
+        await SendVolumeActionAsync(target, subscription, "finalizeExternalReplication", null, tenant, retryPolicy, cancellationToken);
+        return new ReplicationOperationResult("finalize-external-replication", target.ResourceId, "External replication finalized.");
+    }
 
-        return new ReplicationStatusInfo(
-            Name: data.ResourceName ?? "Unknown",
-            Location: data.Location,
-            ResourceGroup: data.ResourceGroup,
-            EndpointType: data.Properties?.DataProtection?.Replication?.EndpointType,
-            ReplicationSchedule: data.Properties?.DataProtection?.Replication?.ReplicationSchedule,
-            RemoteVolumeResourceId: data.Properties?.DataProtection?.Replication?.RemoteVolumeResourceId,
-            RemoteVolumeRegion: data.Properties?.DataProtection?.Replication?.RemoteVolumeRegion,
-            ReplicationId: data.Properties?.DataProtection?.Replication?.ReplicationId);
+    public async Task<ReplicationListResult> ListReplications(
+        string? account,
+        string? pool,
+        string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
+        string subscription,
+        string? exclude = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var target = ResolveVolumeTarget(account, pool, volume, resourceGroup, ids, subscription);
+        BinaryData? body = string.IsNullOrWhiteSpace(exclude) ? null : CreateSingleStringPropertyBody("exclude", exclude!);
+        var response = await SendVolumeActionAsync(target, subscription, "listReplications", body, tenant, retryPolicy, cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(response.Content))
+        {
+            return new ReplicationListResult([], null);
+        }
+
+        using var document = JsonDocument.Parse(response.Content);
+        var replications = new List<VolumeReplicationInfo>();
+        if (document.RootElement.TryGetProperty("value", out var valueElement) && valueElement.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in valueElement.EnumerateArray())
+            {
+                replications.Add(new VolumeReplicationInfo(
+                    EndpointType: GetJsonString(item, "endpointType"),
+                    MirrorState: GetJsonString(item, "mirrorState"),
+                    RemoteVolumeRegion: GetJsonString(item, "remoteVolumeRegion"),
+                    RemoteVolumeResourceId: GetJsonString(item, "remoteVolumeResourceId"),
+                    ReplicationCreationTime: GetJsonString(item, "replicationCreationTime"),
+                    ReplicationDeletionTime: GetJsonString(item, "replicationDeletionTime"),
+                    ReplicationId: GetJsonString(item, "replicationId"),
+                    ReplicationSchedule: GetJsonString(item, "replicationSchedule")));
+            }
+        }
+
+        return new ReplicationListResult(replications, GetJsonString(document.RootElement, "nextLink"));
+    }
+
+    public async Task<ClusterPeerCommandInfo> PeerExternalCluster(
+        string? account,
+        string? pool,
+        string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
+        string subscription,
+        IReadOnlyList<string> peerIpAddresses,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var target = ResolveVolumeTarget(account, pool, volume, resourceGroup, ids, subscription);
+        var response = await SendVolumeActionAsync(target, subscription, "peerExternalCluster", CreateStringArrayPropertyBody("peerIpAddresses", peerIpAddresses), tenant, retryPolicy, cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(response.Content))
+        {
+            return new ClusterPeerCommandInfo(null, null);
+        }
+
+        using var document = JsonDocument.Parse(response.Content);
+        return new ClusterPeerCommandInfo(
+            GetNestedJsonString(document.RootElement, "properties", "clusterPeeringCommand"),
+            GetNestedJsonString(document.RootElement, "properties", "passphrase"));
+    }
+
+    public async Task<ReplicationOperationResult> PerformReplicationTransfer(
+        string? account,
+        string? pool,
+        string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var target = ResolveVolumeTarget(account, pool, volume, resourceGroup, ids, subscription);
+        await SendVolumeActionAsync(target, subscription, "performReplicationTransfer", null, tenant, retryPolicy, cancellationToken);
+        return new ReplicationOperationResult("perform-replication-transfer", target.ResourceId, "Replication transfer performed.");
+    }
+
+    public async Task<NetAppVolumeCreateResult> PopulateAvailabilityZone(
+        string? account,
+        string? pool,
+        string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var target = ResolveVolumeTarget(account, pool, volume, resourceGroup, ids, subscription);
+        var response = await SendVolumeActionAsync(target, subscription, "populateAvailabilityZone", null, tenant, retryPolicy, cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(response.Content))
+        {
+            return new NetAppVolumeCreateResult(null, null, null, null, null, null, null, null, null, null, null);
+        }
+
+        using var document = JsonDocument.Parse(response.Content);
+        return ConvertVolumeResponseToCreateResult(document.RootElement, target.ResourceGroup);
+    }
+
+    public async Task<ReplicationOperationResult> ReInitializeReplication(
+        string? account,
+        string? pool,
+        string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var target = ResolveVolumeTarget(account, pool, volume, resourceGroup, ids, subscription);
+        await SendVolumeActionAsync(target, subscription, "reinitializeReplication", null, tenant, retryPolicy, cancellationToken);
+        return new ReplicationOperationResult("re-initialize", target.ResourceId, "Replication re-initialized.");
+    }
+
+    public async Task<ReplicationOperationResult> ReestablishReplication(
+        string? account,
+        string? pool,
+        string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
+        string subscription,
+        string sourceVolumeId,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var target = ResolveVolumeTarget(account, pool, volume, resourceGroup, ids, subscription);
+        await SendVolumeActionAsync(target, subscription, "reestablishReplication", CreateSingleStringPropertyBody("sourceVolumeId", sourceVolumeId), tenant, retryPolicy, cancellationToken);
+        return new ReplicationOperationResult("reestablish", target.ResourceId, "Replication re-established.");
+    }
+
+    public async Task<ReplicationOperationResult> RemoveReplication(
+        string? account,
+        string? pool,
+        string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var target = ResolveVolumeTarget(account, pool, volume, resourceGroup, ids, subscription);
+        await SendVolumeActionAsync(target, subscription, "deleteReplication", null, tenant, retryPolicy, cancellationToken);
+        return new ReplicationOperationResult("remove", target.ResourceId, "Replication removed.");
+    }
+
+    public async Task<ReplicationOperationResult> ResumeReplication(
+        string? account,
+        string? pool,
+        string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var target = ResolveVolumeTarget(account, pool, volume, resourceGroup, ids, subscription);
+        await SendVolumeActionAsync(target, subscription, "resyncReplication", null, tenant, retryPolicy, cancellationToken);
+        return new ReplicationOperationResult("resume", target.ResourceId, "Replication resumed.");
+    }
+
+    public async Task<VolumeReplicationStatus> GetReplicationStatus(
+        string? account,
+        string? pool,
+        string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var target = ResolveVolumeTarget(account, pool, volume, resourceGroup, ids, subscription);
+        string uri = BuildVolumeActionUri(target, subscription, "replicationStatus");
+        var response = await SendManagementRequestAsync(RequestMethod.Get, uri, null, tenant, retryPolicy, cancellationToken);
+        response = await AwaitManagementCompletionAsync(response, tenant, retryPolicy, cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(response.Content))
+        {
+            return new VolumeReplicationStatus(null, null, null, null, null);
+        }
+
+        using var document = JsonDocument.Parse(response.Content);
+        return new VolumeReplicationStatus(
+            ErrorMessage: GetJsonString(document.RootElement, "errorMessage"),
+            Healthy: GetJsonBoolean(document.RootElement, "healthy"),
+            MirrorState: GetJsonString(document.RootElement, "mirrorState"),
+            RelationshipStatus: GetJsonString(document.RootElement, "relationshipStatus"),
+            TotalProgress: GetJsonString(document.RootElement, "totalProgress"));
+    }
+
+    public async Task<ReplicationOperationResult> SuspendReplication(
+        string? account,
+        string? pool,
+        string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
+        string subscription,
+        bool forceBreakReplication,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var target = ResolveVolumeTarget(account, pool, volume, resourceGroup, ids, subscription);
+        await SendVolumeActionAsync(target, subscription, "breakReplication", CreateBooleanPropertyBody("forceBreakReplication", forceBreakReplication), tenant, retryPolicy, cancellationToken);
+        return new ReplicationOperationResult("suspend", target.ResourceId, "Replication suspended.");
     }
 
     public async Task<ResourceQueryResults<SnapshotPolicyInfo>> GetSnapshotPolicyDetails(
@@ -2681,4 +2896,253 @@ public class NetAppFilesService(
         if (!doc.RootElement.TryGetProperty(parentPropertyName, out var parent)) return null;
         return parent.TryGetProperty(childPropertyName, out var value) ? value.GetString() : null;
     }
+
+    private async Task<ManagementRequestResult> SendVolumeActionAsync(
+        ReplicationVolumeTarget target,
+        string subscription,
+        string action,
+        BinaryData? body,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        string uri = BuildVolumeActionUri(target, subscription, action);
+        var response = await SendManagementRequestAsync(RequestMethod.Post, uri, body, tenant, retryPolicy, cancellationToken);
+        return await AwaitManagementCompletionAsync(response, tenant, retryPolicy, cancellationToken);
+    }
+
+    private static string BuildVolumeActionUri(ReplicationVolumeTarget target, string subscription, string action)
+        => $"https://management.azure.com/subscriptions/{subscription}/resourceGroups/{target.ResourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{target.Account}/capacityPools/{target.Pool}/volumes/{target.Volume}/{action}?api-version={NetAppFilesApiVersion}";
+
+    private async Task<ManagementRequestResult> SendManagementRequestAsync(
+        RequestMethod method,
+        string requestUri,
+        BinaryData? body,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        var options = ConfigureRetryPolicy(AddDefaultPolicies(new ArmClientOptions()), retryPolicy);
+        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        options.Environment = TenantService.CloudConfiguration.ArmEnvironment;
+
+        var pipeline = HttpPipelineBuilder.Build(options);
+        var accessToken = await GetArmAccessTokenAsync(tenant, cancellationToken);
+
+        using var request = pipeline.CreateRequest();
+        request.Method = method;
+        request.Uri.Reset(new Uri(requestUri));
+        request.Headers.Add("Authorization", $"Bearer {accessToken.Token}");
+
+        if (body != null)
+        {
+            request.Headers.Add("Content-Type", "application/json");
+            request.Content = RequestContent.Create(body);
+        }
+
+        using var response = await pipeline.SendRequestAsync(request, cancellationToken);
+        var result = new ManagementRequestResult(
+            response.Status,
+            response.Content?.ToString(),
+            TryGetHeader(response, "Location"),
+            TryGetHeader(response, "Azure-AsyncOperation"),
+            TryGetRetryAfter(response),
+            response.ReasonPhrase);
+
+        EnsureSuccess(result);
+        return result;
+    }
+
+    private async Task<ManagementRequestResult> AwaitManagementCompletionAsync(
+        ManagementRequestResult initialResponse,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        if (initialResponse.Status != 202)
+        {
+            return initialResponse;
+        }
+
+        string? pollUri = initialResponse.AzureAsyncOperation ?? initialResponse.Location;
+        if (string.IsNullOrWhiteSpace(pollUri))
+        {
+            return initialResponse;
+        }
+
+        var current = initialResponse;
+        for (var attempt = 0; attempt < 60; attempt++)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(current.RetryAfter ?? 1), cancellationToken);
+            current = await SendManagementRequestAsync(RequestMethod.Get, pollUri, null, tenant, retryPolicy, cancellationToken);
+
+            if (current.Status == 202)
+            {
+                continue;
+            }
+
+            if (!string.IsNullOrWhiteSpace(current.Content))
+            {
+                using var document = JsonDocument.Parse(current.Content);
+                if (document.RootElement.TryGetProperty("status", out var statusElement))
+                {
+                    var operationStatus = statusElement.GetString();
+                    if (string.Equals(operationStatus, "InProgress", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(operationStatus, "Running", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    if (string.Equals(operationStatus, "Failed", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(operationStatus, "Canceled", StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new RequestFailedException(500, GetNestedJsonString(document.RootElement, "error", "message") ?? $"Operation {operationStatus}.");
+                    }
+
+                    if (string.Equals(operationStatus, "Succeeded", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(initialResponse.Location))
+                    {
+                        var finalResponse = await SendManagementRequestAsync(RequestMethod.Get, initialResponse.Location, null, tenant, retryPolicy, cancellationToken);
+                        if (finalResponse.Status != 202)
+                        {
+                            return finalResponse;
+                        }
+                    }
+                }
+            }
+
+            return current;
+        }
+
+        throw new TimeoutException("Timed out waiting for the replication operation to complete.");
+    }
+
+    private static void EnsureSuccess(ManagementRequestResult result)
+    {
+        if (result.Status is >= 200 and <= 299)
+        {
+            return;
+        }
+
+        throw new RequestFailedException(result.Status, ExtractErrorMessage(result.Content) ?? result.ReasonPhrase ?? "Azure management request failed.");
+    }
+
+    private static string? ExtractErrorMessage(string? content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(content);
+            return GetNestedJsonString(document.RootElement, "error", "message") ?? GetJsonString(document.RootElement, "message");
+        }
+        catch (JsonException)
+        {
+            return content;
+        }
+    }
+
+    private static string? TryGetHeader(Response response, string name)
+        => response.Headers.TryGetValue(name, out string? value) ? value : null;
+
+    private static int? TryGetRetryAfter(Response response)
+        => response.Headers.TryGetValue("Retry-After", out string? value) && int.TryParse(value, out int retryAfter)
+            ? retryAfter
+            : null;
+
+    private static string? GetJsonString(JsonElement element, string propertyName)
+        => element.TryGetProperty(propertyName, out var value) && value.ValueKind != JsonValueKind.Null ? value.GetString() : null;
+
+    private static bool? GetJsonBoolean(JsonElement element, string propertyName)
+        => element.TryGetProperty(propertyName, out var value) && value.ValueKind is JsonValueKind.True or JsonValueKind.False ? value.GetBoolean() : null;
+
+    private static string? GetNestedJsonString(JsonElement element, string objectName, string propertyName)
+        => element.TryGetProperty(objectName, out var nested) ? GetJsonString(nested, propertyName) : null;
+
+    private static ReplicationVolumeTarget ResolveVolumeTarget(
+        string? account,
+        string? pool,
+        string? volume,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
+        string subscription)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription));
+
+        if (ids is { Count: > 0 })
+        {
+            if (ids.Count != 1)
+            {
+                throw new ArgumentException("Provide exactly one --ids value for NetApp Files replication actions.");
+            }
+
+            var resourceIdentifier = new ResourceIdentifier(ids[0]);
+            if (!string.Equals(resourceIdentifier.ResourceType.ToString(), "Microsoft.NetApp/netAppAccounts/capacityPools/volumes", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("The --ids value must reference a NetApp Files volume resource.");
+            }
+
+            var resolvedPool = resourceIdentifier.Parent?.Name;
+            var resolvedAccount = resourceIdentifier.Parent?.Parent?.Name;
+            ValidateRequiredParameters(
+                (nameof(resolvedAccount), resolvedAccount),
+                (nameof(resolvedPool), resolvedPool),
+                (nameof(resourceIdentifier.Name), resourceIdentifier.Name),
+                (nameof(resourceIdentifier.ResourceGroupName), resourceIdentifier.ResourceGroupName));
+
+            return new ReplicationVolumeTarget(
+                resolvedAccount!,
+                resolvedPool!,
+                resourceIdentifier.Name,
+                resourceIdentifier.ResourceGroupName!,
+                resourceIdentifier.ToString());
+        }
+
+        ValidateRequiredParameters((nameof(account), account), (nameof(pool), pool), (nameof(volume), volume), (nameof(resourceGroup), resourceGroup));
+
+        return new ReplicationVolumeTarget(
+            account!,
+            pool!,
+            volume!,
+            resourceGroup!,
+            $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/capacityPools/{pool}/volumes/{volume}");
+    }
+
+    private static NetAppVolumeCreateResult ConvertVolumeResponseToCreateResult(JsonElement element, string resourceGroup)
+    {
+        var volumeData = NetAppVolumeData.FromJson(element) ?? throw new InvalidOperationException("Failed to parse NetApp volume response.");
+        return new NetAppVolumeCreateResult(
+            Id: volumeData.ResourceId,
+            Name: volumeData.ResourceName,
+            Type: volumeData.ResourceType,
+            Location: volumeData.Location,
+            ResourceGroup: resourceGroup,
+            ProvisioningState: volumeData.Properties?.ProvisioningState,
+            ServiceLevel: volumeData.Properties?.ServiceLevel,
+            UsageThreshold: volumeData.Properties?.UsageThreshold,
+            CreationToken: volumeData.Properties?.CreationToken,
+            SubnetId: volumeData.Properties?.SubnetId,
+            ProtocolTypes: volumeData.Properties?.ProtocolTypes);
+    }
+
+    private static BinaryData CreateSingleStringPropertyBody(string propertyName, string value)
+        => BinaryData.FromString($"{{\"{propertyName}\":{QuoteJsonString(value)}}}");
+
+    private static BinaryData CreateBooleanPropertyBody(string propertyName, bool value)
+        => BinaryData.FromString($"{{\"{propertyName}\":{(value ? "true" : "false")}}}");
+
+    private static BinaryData CreateStringArrayPropertyBody(string propertyName, IReadOnlyList<string> values)
+    {
+        var items = string.Join(",", values.Select(QuoteJsonString));
+        return BinaryData.FromString($"{{\"{propertyName}\":[{items}]}}");
+    }
+
+    private static string QuoteJsonString(string value)
+        => $"\"{value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal)}\"";
+
+    private sealed record ReplicationVolumeTarget(string Account, string Pool, string Volume, string ResourceGroup, string ResourceId);
+
+    private sealed record ManagementRequestResult(int Status, string? Content, string? Location, string? AzureAsyncOperation, int? RetryAfter, string? ReasonPhrase);
 }

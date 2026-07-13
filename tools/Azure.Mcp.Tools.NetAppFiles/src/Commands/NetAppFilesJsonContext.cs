@@ -8,7 +8,7 @@ using Azure.Mcp.Tools.NetAppFiles.Commands.Backup;
 using Azure.Mcp.Tools.NetAppFiles.Commands.BackupPolicy;
 using Azure.Mcp.Tools.NetAppFiles.Commands.BackupVault;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Pool;
-using Azure.Mcp.Tools.NetAppFiles.Commands.ReplicationStatus;
+using Azure.Mcp.Tools.NetAppFiles.Commands.Replication;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Snapshot;
 using Azure.Mcp.Tools.NetAppFiles.Commands.SnapshotPolicy;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
@@ -33,7 +33,10 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands;
 [JsonSerializable(typeof(PoolCreateCommand.PoolCreateCommandResult))]
 [JsonSerializable(typeof(PoolGetCommand.PoolGetCommandResult))]
 [JsonSerializable(typeof(PoolUpdateCommand.PoolUpdateCommandResult))]
-[JsonSerializable(typeof(ReplicationStatusGetCommand.ReplicationStatusGetCommandResult))]
+[JsonSerializable(typeof(ReplicationListResult))]
+[JsonSerializable(typeof(ReplicationOperationResult))]
+[JsonSerializable(typeof(SvmPeerCommandInfo))]
+[JsonSerializable(typeof(ClusterPeerCommandInfo))]
 [JsonSerializable(typeof(SnapshotCreateCommand.SnapshotCreateCommandResult))]
 [JsonSerializable(typeof(SnapshotGetCommand.SnapshotGetCommandResult))]
 [JsonSerializable(typeof(SnapshotUpdateCommand.SnapshotUpdateCommandResult))]
@@ -58,7 +61,8 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands;
 [JsonSerializable(typeof(CapacityPoolInfo))]
 [JsonSerializable(typeof(NetAppVolumeInfo))]
 [JsonSerializable(typeof(NetAppVolumeCreateResult))]
-[JsonSerializable(typeof(ReplicationStatusInfo))]
+[JsonSerializable(typeof(VolumeReplicationInfo))]
+[JsonSerializable(typeof(VolumeReplicationStatus))]
 [JsonSerializable(typeof(SnapshotCreateResult))]
 [JsonSerializable(typeof(SnapshotInfo))]
 [JsonSerializable(typeof(SnapshotPolicyInfo))]
@@ -75,7 +79,6 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands;
 [JsonSerializable(typeof(CapacityPoolData))]
 [JsonSerializable(typeof(NetAppVolumeData))]
 [JsonSerializable(typeof(NetAppVolumeCreateOrUpdateContent))]
-[JsonSerializable(typeof(ReplicationStatusData))]
 [JsonSerializable(typeof(SnapshotPolicyCreateOrUpdateContent))]
 [JsonSerializable(typeof(SnapshotCreateOrUpdateContent))]
 [JsonSerializable(typeof(SnapshotData))]

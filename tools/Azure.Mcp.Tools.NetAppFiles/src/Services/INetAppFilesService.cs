@@ -83,14 +83,19 @@ public interface INetAppFilesService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<ResourceQueryResults<ReplicationStatusInfo>> GetReplicationStatusDetails(
-        string? account,
-        string? pool,
-        string? volume,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+    Task<ReplicationOperationResult> ApproveReplication(string? account, string? pool, string? volume, string? resourceGroup, IReadOnlyList<string>? ids, string subscription, string remoteVolumeResourceId, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<SvmPeerCommandInfo> AuthorizeExternalReplication(string? account, string? pool, string? volume, string? resourceGroup, IReadOnlyList<string>? ids, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<ReplicationOperationResult> FinalizeExternalReplication(string? account, string? pool, string? volume, string? resourceGroup, IReadOnlyList<string>? ids, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<ReplicationListResult> ListReplications(string? account, string? pool, string? volume, string? resourceGroup, IReadOnlyList<string>? ids, string subscription, string? exclude = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<ClusterPeerCommandInfo> PeerExternalCluster(string? account, string? pool, string? volume, string? resourceGroup, IReadOnlyList<string>? ids, string subscription, IReadOnlyList<string> peerIpAddresses, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<ReplicationOperationResult> PerformReplicationTransfer(string? account, string? pool, string? volume, string? resourceGroup, IReadOnlyList<string>? ids, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<NetAppVolumeCreateResult> PopulateAvailabilityZone(string? account, string? pool, string? volume, string? resourceGroup, IReadOnlyList<string>? ids, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<ReplicationOperationResult> ReInitializeReplication(string? account, string? pool, string? volume, string? resourceGroup, IReadOnlyList<string>? ids, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<ReplicationOperationResult> ReestablishReplication(string? account, string? pool, string? volume, string? resourceGroup, IReadOnlyList<string>? ids, string subscription, string sourceVolumeId, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<ReplicationOperationResult> RemoveReplication(string? account, string? pool, string? volume, string? resourceGroup, IReadOnlyList<string>? ids, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<ReplicationOperationResult> ResumeReplication(string? account, string? pool, string? volume, string? resourceGroup, IReadOnlyList<string>? ids, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<VolumeReplicationStatus> GetReplicationStatus(string? account, string? pool, string? volume, string? resourceGroup, IReadOnlyList<string>? ids, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<ReplicationOperationResult> SuspendReplication(string? account, string? pool, string? volume, string? resourceGroup, IReadOnlyList<string>? ids, string subscription, bool forceBreakReplication, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
     Task<ResourceQueryResults<SnapshotPolicyInfo>> GetSnapshotPolicyDetails(
         string? account,
