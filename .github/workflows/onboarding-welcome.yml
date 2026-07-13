@@ -17,7 +17,6 @@ jobs:
     concurrency:
       group: onboarding-welcome-${{ github.event.issue.number }}
       cancel-in-progress: true
-    runs-on: ubuntu-latest
     # Run only for Azure MCP onboarding requests. The Azure MCP onboarding
     # template applies the labels: onboarding, needs-triage, Azure.Mcp.Server.
     # Other onboarding templates (e.g. the generic "New Microsoft MCP Server
