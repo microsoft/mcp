@@ -263,6 +263,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.LoadTesting/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.LoadTesting/tests/Azure.Mcp.Tools.LoadTesting.Tests/Azure.Mcp.Tools.LoadTesting.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ManagedCleanroom/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.ManagedCleanroom/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.ManagedCleanroom/src/Azure.Mcp.Tools.ManagedCleanroom.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ManagedCleanroom/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.ManagedCleanroom/tests/Azure.Mcp.Tools.ManagedCleanroom.Tests/Azure.Mcp.Tools.ManagedCleanroom.Tests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ManagedLustre/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ManagedLustre/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.ManagedLustre/src/Azure.Mcp.Tools.ManagedLustre.csproj" />

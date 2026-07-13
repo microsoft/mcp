@@ -5,6 +5,8 @@
   <ItemGroup>
     <PackageVersion Include="Apache.Arrow" Version="22.1.0" />
     <PackageVersion Include="Azure.Containers.ContainerRegistry" Version="1.2.0" />
+    <!-- Cleanroom SDKs are temporarily added as vendored NuGet packages until they are published. -->
+    <PackageVersion Include="Azure.Cleanroom.Analytics.Frontend.Client" Version="1.0.0-beta.1" />
     <PackageVersion Include="Azure.Communication.Sms" Version="1.0.2" />
     <PackageVersion Include="Azure.Communication.Email" Version="1.0.2" />
     <PackageVersion Include="Azure.AI.Projects" Version="1.0.0-beta.9" />
@@ -32,6 +34,8 @@
     <PackageVersion Include="Azure.ResourceManager.DesktopVirtualization" Version="1.3.2" />
     <PackageVersion Include="Azure.ResourceManager.DeviceRegistry" Version="1.1.0-beta.2" />
     <PackageVersion Include="Azure.ResourceManager.ContainerService" Version="1.2.5" />
+    <!-- Cleanroom SDKs are temporarily added as vendored NuGet packages until they are published. -->
+    <PackageVersion Include="Azure.ResourceManager.CleanRoom" Version="1.0.0-alpha.20260603.1" />
     <PackageVersion Include="Azure.ResourceManager.EventGrid" Version="1.2.0-beta.2" />
     <PackageVersion Include="Azure.ResourceManager.EventHubs" Version="1.2.1" />
     <PackageVersion Include="Azure.ResourceManager.CognitiveServices" Version="1.5.1" />

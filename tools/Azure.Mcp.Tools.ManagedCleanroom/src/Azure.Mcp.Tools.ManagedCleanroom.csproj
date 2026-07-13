@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsAotCompatible>true</IsAotCompatible>
+    <AzureSupportedClouds>AzureCloud</AzureSupportedClouds>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Cleanroom SDKs are temporarily vendored as NuGet packages until they are published. -->
+    <PackageReference Include="Azure.Cleanroom.Analytics.Frontend.Client" />
+    <PackageReference Include="Azure.Core" VersionOverride="1.57.0" />
+    <PackageReference Include="Azure.Identity" />
+    <PackageReference Include="Azure.ResourceManager.CleanRoom" />
+    <PackageReference Include="Azure.ResourceManager.Resources" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="ModelContextProtocol" />
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+</Project>
