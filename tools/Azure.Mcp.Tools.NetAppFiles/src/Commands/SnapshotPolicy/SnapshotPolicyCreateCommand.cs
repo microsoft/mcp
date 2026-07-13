@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Microsoft.Mcp.Core.Extensions;
@@ -50,9 +51,17 @@ public sealed class SnapshotPolicyCreateCommand(ILogger<SnapshotPolicyCreateComm
         command.Options.Add(NetAppFilesOptionDefinitions.DailyScheduleMinute);
         command.Options.Add(NetAppFilesOptionDefinitions.DailyScheduleSnapshotsToKeep);
         command.Options.Add(NetAppFilesOptionDefinitions.WeeklyScheduleDay);
+        command.Options.Add(NetAppFilesOptionDefinitions.WeeklyScheduleHour);
+        command.Options.Add(NetAppFilesOptionDefinitions.WeeklyScheduleMinute);
         command.Options.Add(NetAppFilesOptionDefinitions.WeeklyScheduleSnapshotsToKeep);
         command.Options.Add(NetAppFilesOptionDefinitions.MonthlyScheduleDaysOfMonth);
+        command.Options.Add(NetAppFilesOptionDefinitions.MonthlyScheduleHour);
+        command.Options.Add(NetAppFilesOptionDefinitions.MonthlyScheduleMinute);
         command.Options.Add(NetAppFilesOptionDefinitions.MonthlyScheduleSnapshotsToKeep);
+        command.Options.Add(NetAppFilesOptionDefinitions.Enabled.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.Tags.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.AcquirePolicyToken.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.ChangeReference.AsOptional());
     }
 
     protected override SnapshotPolicyCreateOptions BindOptions(ParseResult parseResult)
@@ -68,9 +77,17 @@ public sealed class SnapshotPolicyCreateCommand(ILogger<SnapshotPolicyCreateComm
         options.DailyScheduleMinute = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.DailyScheduleMinute.Name);
         options.DailyScheduleSnapshotsToKeep = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.DailyScheduleSnapshotsToKeep.Name);
         options.WeeklyScheduleDay = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.WeeklyScheduleDay.Name);
+        options.WeeklyScheduleHour = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.WeeklyScheduleHour.Name);
+        options.WeeklyScheduleMinute = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.WeeklyScheduleMinute.Name);
         options.WeeklyScheduleSnapshotsToKeep = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.WeeklyScheduleSnapshotsToKeep.Name);
         options.MonthlyScheduleDaysOfMonth = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.MonthlyScheduleDaysOfMonth.Name);
+        options.MonthlyScheduleHour = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.MonthlyScheduleHour.Name);
+        options.MonthlyScheduleMinute = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.MonthlyScheduleMinute.Name);
         options.MonthlyScheduleSnapshotsToKeep = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.MonthlyScheduleSnapshotsToKeep.Name);
+        options.Enabled = parseResult.GetValueOrDefault<bool?>(NetAppFilesOptionDefinitions.Enabled.Name);
+        options.Tags = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Tags.Name);
+        options.AcquirePolicyToken = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.AcquirePolicyToken.Name);
+        options.ChangeReference = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.ChangeReference.Name);
         return options;
     }
 
@@ -85,6 +102,21 @@ public sealed class SnapshotPolicyCreateCommand(ILogger<SnapshotPolicyCreateComm
 
         try
         {
+            ValidateUnsupportedCreateArguments(options);
+
+            Dictionary<string, string>? tags = null;
+            if (!string.IsNullOrEmpty(options.Tags))
+            {
+                try
+                {
+                    tags = JsonSerializer.Deserialize(options.Tags, NetAppFilesJsonContext.Default.DictionaryStringString);
+                }
+                catch (JsonException ex)
+                {
+                    throw new ArgumentException($"Invalid tags JSON format: {ex.Message}", nameof(options.Tags));
+                }
+            }
+
             var snapshotPolicy = await _netAppFilesService.CreateSnapshotPolicy(
                 options.Account!,
                 options.SnapshotPolicy!,
@@ -100,6 +132,12 @@ public sealed class SnapshotPolicyCreateCommand(ILogger<SnapshotPolicyCreateComm
                 options.WeeklyScheduleSnapshotsToKeep,
                 options.MonthlyScheduleDaysOfMonth,
                 options.MonthlyScheduleSnapshotsToKeep,
+                options.Enabled,
+                options.WeeklyScheduleHour,
+                options.WeeklyScheduleMinute,
+                options.MonthlyScheduleHour,
+                options.MonthlyScheduleMinute,
+                tags,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -121,6 +159,7 @@ public sealed class SnapshotPolicyCreateCommand(ILogger<SnapshotPolicyCreateComm
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        ArgumentException argEx => argEx.Message,
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "A snapshot policy with this name already exists. Choose a different name.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
@@ -130,6 +169,19 @@ public sealed class SnapshotPolicyCreateCommand(ILogger<SnapshotPolicyCreateComm
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
+
+    private static void ValidateUnsupportedCreateArguments(SnapshotPolicyCreateOptions options)
+    {
+        if (options.AcquirePolicyToken)
+        {
+            throw new ArgumentException("The --acquirePolicyToken argument is not supported by this command yet.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.ChangeReference))
+        {
+            throw new ArgumentException("The --changeReference argument is not supported by this command yet.");
+        }
+    }
 
     internal record SnapshotPolicyCreateCommandResult([property: JsonPropertyName("snapshotPolicy")] SnapshotPolicyCreateResult SnapshotPolicy);
 }

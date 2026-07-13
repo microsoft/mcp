@@ -94,8 +94,12 @@ public static class NetAppFilesOptionDefinitions
     public const string DailyScheduleMinuteName = "dailyScheduleMinute";
     public const string DailyScheduleSnapshotsToKeepName = "dailyScheduleSnapshotsToKeep";
     public const string WeeklyScheduleDayName = "weeklyScheduleDay";
+    public const string WeeklyScheduleHourName = "weeklyScheduleHour";
+    public const string WeeklyScheduleMinuteName = "weeklyScheduleMinute";
     public const string WeeklyScheduleSnapshotsToKeepName = "weeklyScheduleSnapshotsToKeep";
     public const string MonthlyScheduleDaysOfMonthName = "monthlyScheduleDaysOfMonth";
+    public const string MonthlyScheduleHourName = "monthlyScheduleHour";
+    public const string MonthlyScheduleMinuteName = "monthlyScheduleMinute";
     public const string MonthlyScheduleSnapshotsToKeepName = "monthlyScheduleSnapshotsToKeep";
     public const string ApplicationTypeName = "applicationType";
     public const string ApplicationIdentifierName = "applicationIdentifier";
@@ -668,6 +672,18 @@ public static class NetAppFilesOptionDefinitions
         Required = false
     };
 
+    public static readonly Option<int?> WeeklyScheduleHour = new($"--{WeeklyScheduleHourName}")
+    {
+        Description = "The hour of the day for the weekly snapshot schedule (0-23).",
+        Required = false
+    };
+
+    public static readonly Option<int?> WeeklyScheduleMinute = new($"--{WeeklyScheduleMinuteName}")
+    {
+        Description = "The minute of the hour for the weekly snapshot schedule (0-59).",
+        Required = false
+    };
+
     public static readonly Option<int?> WeeklyScheduleSnapshotsToKeep = new($"--{WeeklyScheduleSnapshotsToKeepName}")
     {
         Description = "The number of weekly snapshots to keep (e.g., 4).",
@@ -677,6 +693,18 @@ public static class NetAppFilesOptionDefinitions
     public static readonly Option<string> MonthlyScheduleDaysOfMonth = new($"--{MonthlyScheduleDaysOfMonthName}")
     {
         Description = "The days of the month for the monthly snapshot schedule (e.g., '1,15').",
+        Required = false
+    };
+
+    public static readonly Option<int?> MonthlyScheduleHour = new($"--{MonthlyScheduleHourName}")
+    {
+        Description = "The hour of the day for the monthly snapshot schedule (0-23).",
+        Required = false
+    };
+
+    public static readonly Option<int?> MonthlyScheduleMinute = new($"--{MonthlyScheduleMinuteName}")
+    {
+        Description = "The minute of the hour for the monthly snapshot schedule (0-59).",
         Required = false
     };
 

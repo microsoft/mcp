@@ -57,6 +57,8 @@ public class SnapshotPolicyGetCommandTests
         _netAppFilesService.GetSnapshotPolicyDetails(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -91,6 +93,8 @@ public class SnapshotPolicyGetCommandTests
         _netAppFilesService.GetSnapshotPolicyDetails(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -124,6 +128,8 @@ public class SnapshotPolicyGetCommandTests
         _netAppFilesService.GetSnapshotPolicyDetails(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             null,
             Arg.Any<RetryPolicyOptions>(),
@@ -154,6 +160,7 @@ public class SnapshotPolicyGetCommandTests
     [InlineData("--subscription sub123", true)]
     [InlineData("--subscription sub123 --account myanfaccount", true)]
     [InlineData("--subscription sub123 --account myanfaccount --snapshotPolicy mypolicy", true)]
+    [InlineData("--subscription sub123 --account-name myanfaccount --name mypolicy --resource-group myrg", true)]
     [InlineData("--account myanfaccount", false)] // Missing subscription
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -164,7 +171,7 @@ public class SnapshotPolicyGetCommandTests
                 false);
 
             _netAppFilesService.GetSnapshotPolicyDetails(
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(expectedPolicies));
         }
 
@@ -199,7 +206,7 @@ public class SnapshotPolicyGetCommandTests
             false);
 
         _netAppFilesService.GetSnapshotPolicyDetails(
-            Arg.Is(account), Arg.Is(snapshotPolicy), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(account), Arg.Is(snapshotPolicy), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedPolicies));
 
         var args = _commandDefinition.Parse(["--account", account, "--snapshotPolicy", snapshotPolicy, "--subscription", subscription]);
@@ -231,7 +238,7 @@ public class SnapshotPolicyGetCommandTests
         var subscription = "sub123";
 
         _netAppFilesService.GetSnapshotPolicyDetails(
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var parseResult = _commandDefinition.Parse(["--subscription", subscription]);
@@ -254,7 +261,7 @@ public class SnapshotPolicyGetCommandTests
         var snapshotPolicy = "nonexistentpolicy";
 
         _netAppFilesService.GetSnapshotPolicyDetails(
-            Arg.Any<string?>(), Arg.Is(snapshotPolicy), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Is(snapshotPolicy), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Snapshot policy not found"));
 
         var parseResult = _commandDefinition.Parse(["--snapshotPolicy", snapshotPolicy, "--subscription", subscription]);
@@ -275,7 +282,7 @@ public class SnapshotPolicyGetCommandTests
         var subscription = "sub123";
 
         _netAppFilesService.GetSnapshotPolicyDetails(
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         var parseResult = _commandDefinition.Parse(["--subscription", subscription]);
@@ -299,7 +306,7 @@ public class SnapshotPolicyGetCommandTests
             false);
 
         _netAppFilesService.GetSnapshotPolicyDetails(
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedPolicies));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
@@ -330,5 +337,97 @@ public class SnapshotPolicyGetCommandTests
         Assert.Equal(4, policyInfo.WeeklyScheduleSnapshotsToKeep);
         Assert.Equal("1,15", policyInfo.MonthlyScheduleDaysOfMonth);
         Assert.Equal(2, policyInfo.MonthlyScheduleSnapshotsToKeep);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PassesResourceGroupAndIdsFilters()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var account = "myanfaccount";
+        var snapshotPolicy = "mypolicy";
+        var resourceGroup = "myrg";
+        var subscription = "sub123";
+        var id = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/snapshotPolicies/{snapshotPolicy}";
+        var expectedPolicies = new ResourceQueryResults<SnapshotPolicyInfo>(
+            [new($"{account}/{snapshotPolicy}", "eastus", resourceGroup, "Succeeded", true, 0, 5, 12, 0, 5, "Monday", 4, "1,15", 2)],
+            false);
+
+        _netAppFilesService.GetSnapshotPolicyDetails(
+            Arg.Is(account),
+            Arg.Is(snapshotPolicy),
+            Arg.Is(resourceGroup),
+            Arg.Is<IReadOnlyList<string>?>(ids => ids != null && ids.Count == 1 && ids[0] == id),
+            Arg.Is(subscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(expectedPolicies));
+
+        var parseResult = _commandDefinition.Parse([
+            "--account", account,
+            "--snapshotPolicy", snapshotPolicy,
+            "--resource-group", resourceGroup,
+            "--ids", id,
+            "--subscription", subscription]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _netAppFilesService.Received(1).GetSnapshotPolicyDetails(
+            Arg.Is(account),
+            Arg.Is(snapshotPolicy),
+            Arg.Is(resourceGroup),
+            Arg.Is<IReadOnlyList<string>?>(ids => ids != null && ids.Count == 1 && ids[0] == id),
+            Arg.Is(subscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PassesAzureCliAliasParameters()
+    {
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+        var account = "myanfaccount";
+        var snapshotPolicy = "mypolicy";
+        var subscription = "sub123";
+        var expectedPolicies = new ResourceQueryResults<SnapshotPolicyInfo>(
+            [new($"{account}/{snapshotPolicy}", "eastus", "rg1", "Succeeded", true, 0, 5, 12, 0, 5, "Monday", 4, "1,15", 2)],
+            false);
+
+        _netAppFilesService.GetSnapshotPolicyDetails(
+            Arg.Is(account),
+            Arg.Is(snapshotPolicy),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
+            Arg.Is(subscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(expectedPolicies));
+
+        var parseResult = _commandDefinition.Parse([
+            "--account-name", account,
+            "--name", snapshotPolicy,
+            "--subscription", subscription]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _netAppFilesService.Received(1).GetSnapshotPolicyDetails(
+            Arg.Is(account),
+            Arg.Is(snapshotPolicy),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyList<string>?>(),
+            Arg.Is(subscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 }

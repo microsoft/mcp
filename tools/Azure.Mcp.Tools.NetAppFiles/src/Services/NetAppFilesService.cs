@@ -617,6 +617,8 @@ public class NetAppFilesService(
     public async Task<ResourceQueryResults<SnapshotPolicyInfo>> GetSnapshotPolicyDetails(
         string? account,
         string? snapshotPolicy,
+        string? resourceGroup,
+        IReadOnlyList<string>? ids,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -638,13 +640,26 @@ public class NetAppFilesService(
             filters.Add($"name endswith '/{EscapeKqlString(snapshotPolicy)}'");
         }
 
+        if (ids is { Count: > 0 })
+        {
+            var escapedIds = ids
+                .Where(static id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => $"'{EscapeKqlString(id)}'")
+                .ToList();
+
+            if (escapedIds.Count > 0)
+            {
+                filters.Add($"id in~ ({string.Join(", ", escapedIds)})");
+            }
+        }
+
         string? additionalFilter = filters.Count > 0 ? string.Join(" and ", filters) : null;
 
         try
         {
             return await ExecuteResourceQueryAsync(
                 "Microsoft.NetApp/netAppAccounts/snapshotPolicies",
-                null,
+                resourceGroup,
                 subscription,
                 retryPolicy,
                 ConvertToSnapshotPolicyInfoModel,
@@ -2106,6 +2121,12 @@ public class NetAppFilesService(
         int? weeklyScheduleSnapshotsToKeep = null,
         string? monthlyScheduleDaysOfMonth = null,
         int? monthlyScheduleSnapshotsToKeep = null,
+        bool? enabled = null,
+        int? weeklyScheduleHour = null,
+        int? weeklyScheduleMinute = null,
+        int? monthlyScheduleHour = null,
+        int? monthlyScheduleMinute = null,
+        Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -2131,7 +2152,7 @@ public class NetAppFilesService(
 
             var properties = new SnapshotPolicyCreateProperties
             {
-                Enabled = true
+                Enabled = enabled ?? true
             };
 
             if (hourlyScheduleMinute.HasValue || hourlyScheduleSnapshotsToKeep.HasValue)
@@ -2153,20 +2174,24 @@ public class NetAppFilesService(
                 };
             }
 
-            if (weeklyScheduleDay != null || weeklyScheduleSnapshotsToKeep.HasValue)
+            if (weeklyScheduleDay != null || weeklyScheduleSnapshotsToKeep.HasValue || weeklyScheduleHour.HasValue || weeklyScheduleMinute.HasValue)
             {
                 properties.WeeklySchedule = new WeeklyScheduleCreate
                 {
                     Day = weeklyScheduleDay,
+                    Hour = weeklyScheduleHour,
+                    Minute = weeklyScheduleMinute,
                     SnapshotsToKeep = weeklyScheduleSnapshotsToKeep
                 };
             }
 
-            if (monthlyScheduleDaysOfMonth != null || monthlyScheduleSnapshotsToKeep.HasValue)
+            if (monthlyScheduleDaysOfMonth != null || monthlyScheduleSnapshotsToKeep.HasValue || monthlyScheduleHour.HasValue || monthlyScheduleMinute.HasValue)
             {
                 properties.MonthlySchedule = new MonthlyScheduleCreate
                 {
                     DaysOfMonth = monthlyScheduleDaysOfMonth,
+                    Hour = monthlyScheduleHour,
+                    Minute = monthlyScheduleMinute,
                     SnapshotsToKeep = monthlyScheduleSnapshotsToKeep
                 };
             }
@@ -2174,6 +2199,7 @@ public class NetAppFilesService(
             var createContent = new SnapshotPolicyCreateOrUpdateContent
             {
                 Location = location,
+                Tags = tags,
                 Properties = properties
             };
 
@@ -2235,7 +2261,7 @@ public class NetAppFilesService(
         string account,
         string snapshotPolicy,
         string resourceGroup,
-        string location,
+        string? location,
         string subscription,
         int? hourlyScheduleMinute = null,
         int? hourlyScheduleSnapshotsToKeep = null,
@@ -2246,6 +2272,12 @@ public class NetAppFilesService(
         int? weeklyScheduleSnapshotsToKeep = null,
         string? monthlyScheduleDaysOfMonth = null,
         int? monthlyScheduleSnapshotsToKeep = null,
+        bool? enabled = null,
+        int? weeklyScheduleHour = null,
+        int? weeklyScheduleMinute = null,
+        int? monthlyScheduleHour = null,
+        int? monthlyScheduleMinute = null,
+        Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -2254,7 +2286,6 @@ public class NetAppFilesService(
             (nameof(account), account),
             (nameof(snapshotPolicy), snapshotPolicy),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(location), location),
             (nameof(subscription), subscription));
 
         try
@@ -2269,9 +2300,20 @@ public class NetAppFilesService(
             var resourceId = new ResourceIdentifier(
                 $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/snapshotPolicies/{snapshotPolicy}");
 
+            if (string.IsNullOrEmpty(location))
+            {
+                var existingResource = await GetGenericResourceAsync(armClient, resourceId, cancellationToken);
+                location = existingResource.Data.Location;
+            }
+
+            if (string.IsNullOrEmpty(location))
+            {
+                throw new InvalidOperationException("Unable to resolve snapshot policy location for update. Specify --location explicitly.");
+            }
+
             var properties = new SnapshotPolicyCreateProperties
             {
-                Enabled = true
+                Enabled = enabled
             };
 
             if (hourlyScheduleMinute.HasValue || hourlyScheduleSnapshotsToKeep.HasValue)
@@ -2293,20 +2335,24 @@ public class NetAppFilesService(
                 };
             }
 
-            if (weeklyScheduleDay != null || weeklyScheduleSnapshotsToKeep.HasValue)
+            if (weeklyScheduleDay != null || weeklyScheduleHour.HasValue || weeklyScheduleMinute.HasValue || weeklyScheduleSnapshotsToKeep.HasValue)
             {
                 properties.WeeklySchedule = new WeeklyScheduleCreate
                 {
                     Day = weeklyScheduleDay,
+                    Hour = weeklyScheduleHour,
+                    Minute = weeklyScheduleMinute,
                     SnapshotsToKeep = weeklyScheduleSnapshotsToKeep
                 };
             }
 
-            if (monthlyScheduleDaysOfMonth != null || monthlyScheduleSnapshotsToKeep.HasValue)
+            if (monthlyScheduleDaysOfMonth != null || monthlyScheduleHour.HasValue || monthlyScheduleMinute.HasValue || monthlyScheduleSnapshotsToKeep.HasValue)
             {
                 properties.MonthlySchedule = new MonthlyScheduleCreate
                 {
                     DaysOfMonth = monthlyScheduleDaysOfMonth,
+                    Hour = monthlyScheduleHour,
+                    Minute = monthlyScheduleMinute,
                     SnapshotsToKeep = monthlyScheduleSnapshotsToKeep
                 };
             }
@@ -2314,6 +2360,7 @@ public class NetAppFilesService(
             var updateContent = new SnapshotPolicyCreateOrUpdateContent
             {
                 Location = location,
+                Tags = tags,
                 Properties = properties
             };
 

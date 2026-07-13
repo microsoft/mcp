@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.SnapshotPolicy;
     Name = "get",
     Description =
         """
-        Retrieves detailed information about Azure NetApp Files snapshot policies, including policy name, location, resource group, provisioning state, enabled state, and schedule configuration (hourly, daily, weekly, monthly). If a specific snapshot policy name is not provided, the command will return details for all snapshot policies in a subscription. Optionally filter by account.
+        Retrieves detailed information about Azure NetApp Files snapshot policies, including policy name, location, resource group, provisioning state, enabled state, and schedule configuration (hourly, daily, weekly, monthly). If a specific snapshot policy name is not provided, the command will return details for all snapshot policies in a subscription. Optionally filter by account, resource group, or resource IDs.
         """,
     Title = "Get NetApp Files Snapshot Policy Details",
     Destructive = false,
@@ -31,6 +31,18 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.SnapshotPolicy;
 )]
 public sealed class SnapshotPolicyGetCommand(ILogger<SnapshotPolicyGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<SnapshotPolicyGetOptions>()
 {
+    private static readonly Option<string> AccountNameOption = new("--account-name")
+    {
+        Description = "Alias for --account (Azure CLI compatibility).",
+        Required = false
+    };
+
+    private static readonly Option<string> NameOption = new("--name")
+    {
+        Description = "Alias for --snapshotPolicy (Azure CLI compatibility).",
+        Required = false
+    };
+
     private readonly ILogger<SnapshotPolicyGetCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
@@ -40,13 +52,21 @@ public sealed class SnapshotPolicyGetCommand(ILogger<SnapshotPolicyGetCommand> l
         base.RegisterOptions(command);
         command.Options.Add(NetAppFilesOptionDefinitions.Account.AsOptional());
         command.Options.Add(NetAppFilesOptionDefinitions.SnapshotPolicy.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
+        command.Options.Add(AccountNameOption);
+        command.Options.Add(NameOption);
     }
 
     protected override SnapshotPolicyGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
-        options.SnapshotPolicy = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.SnapshotPolicy.Name);
+        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name)
+            ?? parseResult.GetValueOrDefault<string>(AccountNameOption.Name);
+        options.SnapshotPolicy = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.SnapshotPolicy.Name)
+            ?? parseResult.GetValueOrDefault<string>(NameOption.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
         return options;
     }
 
@@ -64,6 +84,8 @@ public sealed class SnapshotPolicyGetCommand(ILogger<SnapshotPolicyGetCommand> l
             var snapshotPolicies = await _netAppFilesService.GetSnapshotPolicyDetails(
                 options.Account,
                 options.SnapshotPolicy,
+                options.ResourceGroup,
+                options.Ids,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,

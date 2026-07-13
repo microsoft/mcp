@@ -13,6 +13,9 @@ internal sealed class SnapshotPolicyCreateOrUpdateContent
     [JsonPropertyName("location")]
     public string? Location { get; set; }
 
+    [JsonPropertyName("tags")]
+    public Dictionary<string, string>? Tags { get; set; }
+
     [JsonPropertyName("properties")]
     public SnapshotPolicyCreateProperties? Properties { get; set; }
 }
@@ -61,6 +64,12 @@ internal sealed class WeeklyScheduleCreate
     [JsonPropertyName("day")]
     public string? Day { get; set; }
 
+    [JsonPropertyName("hour")]
+    public int? Hour { get; set; }
+
+    [JsonPropertyName("minute")]
+    public int? Minute { get; set; }
+
     [JsonPropertyName("snapshotsToKeep")]
     public int? SnapshotsToKeep { get; set; }
 }
@@ -69,6 +78,12 @@ internal sealed class MonthlyScheduleCreate
 {
     [JsonPropertyName("daysOfMonth")]
     public string? DaysOfMonth { get; set; }
+
+    [JsonPropertyName("hour")]
+    public int? Hour { get; set; }
+
+    [JsonPropertyName("minute")]
+    public int? Minute { get; set; }
 
     [JsonPropertyName("snapshotsToKeep")]
     public int? SnapshotsToKeep { get; set; }

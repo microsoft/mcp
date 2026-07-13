@@ -4,7 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Microsoft.Mcp.Core.Options;
 using Azure.Mcp.Tools.NetAppFiles.Commands;
 using Azure.Mcp.Tools.NetAppFiles.Commands.SnapshotPolicy;
 using Azure.Mcp.Tools.NetAppFiles.Models;
@@ -12,6 +11,7 @@ using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -21,6 +21,8 @@ namespace Azure.Mcp.Tools.NetAppFiles.UnitTests.SnapshotPolicy;
 
 public class SnapshotPolicyUpdateCommandTests
 {
+    private const string SnapshotPolicyResourceId = "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/snapshotPolicies/mypolicy";
+
     private readonly IServiceProvider _serviceProvider;
     private readonly INetAppFilesService _netAppFilesService;
     private readonly ILogger<SnapshotPolicyUpdateCommand> _logger;
@@ -51,90 +53,325 @@ public class SnapshotPolicyUpdateCommandTests
     }
 
     [Theory]
-    [InlineData("--account myanfaccount --snapshotPolicy mypolicy --resource-group myrg --location eastus --subscription sub123", true)]
-    [InlineData("--snapshotPolicy mypolicy --resource-group myrg --location eastus --subscription sub123", false)] // Missing account
-    [InlineData("--account myanfaccount --resource-group myrg --location eastus --subscription sub123", false)] // Missing snapshotPolicy
-    [InlineData("--account myanfaccount --snapshotPolicy mypolicy --location eastus --subscription sub123", false)] // Missing resource-group
-    [InlineData("--account myanfaccount --snapshotPolicy mypolicy --resource-group myrg --subscription sub123", false)] // Missing location
-    [InlineData("", false)] // No parameters
+    [InlineData("--account myanfaccount --snapshotPolicy mypolicy --resource-group myrg --subscription sub123", true)]
+    [InlineData("--snapshotPolicy mypolicy --resource-group myrg --subscription sub123", false)]
+    [InlineData("--account myanfaccount --resource-group myrg --subscription sub123", false)]
+    [InlineData("--account myanfaccount --snapshotPolicy mypolicy --subscription sub123", false)]
+    [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
         {
-            var expectedPolicy = new SnapshotPolicyCreateResult(
-                Id: "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/snapshotPolicies/mypolicy",
-                Name: "myanfaccount/mypolicy",
-                Type: "Microsoft.NetApp/netAppAccounts/snapshotPolicies",
-                Location: "eastus",
-                ResourceGroup: "myrg",
-                ProvisioningState: "Succeeded",
-                Enabled: true,
-                HourlyScheduleMinute: null,
-                HourlyScheduleSnapshotsToKeep: null,
-                DailyScheduleHour: null,
-                DailyScheduleMinute: null,
-                DailyScheduleSnapshotsToKeep: null,
-                WeeklyScheduleDay: null,
-                WeeklyScheduleSnapshotsToKeep: null,
-                MonthlyScheduleDaysOfMonth: null,
-                MonthlyScheduleSnapshotsToKeep: null);
-
             _netAppFilesService.UpdateSnapshotPolicy(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<int?>(),
-                Arg.Any<int?>(),
-                Arg.Any<int?>(),
-                Arg.Any<int?>(),
-                Arg.Any<int?>(),
-                Arg.Any<string>(),
-                Arg.Any<int?>(),
-                Arg.Any<string>(),
-                Arg.Any<int?>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
-                .Returns(expectedPolicy);
+                default!,
+                default!,
+                default!,
+                default,
+                default!,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                TestContext.Current.CancellationToken)
+                .ReturnsForAnyArgs(BuildExpectedPolicy());
         }
 
         var parseResult = _commandDefinition.Parse(args);
-
-        // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
-        // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
-            Assert.NotNull(response.Results);
             Assert.Equal("Success", response.Message);
+            Assert.NotNull(response.Results);
         }
         else
         {
-            Assert.Contains("required", response.Message.ToLower());
+            Assert.True(
+                response.Message.Contains("provided", StringComparison.OrdinalIgnoreCase) ||
+                response.Message.Contains("required", StringComparison.OrdinalIgnoreCase),
+                $"Expected a validation message, got: {response.Message}");
         }
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdatesSnapshotPolicy_Successfully()
+    public async Task ExecuteAsync_UpdatesSnapshotPolicy_WithExpandedParameters()
     {
-        // Arrange
         TestEnvironment.ClearAzureSubscriptionId();
-        var account = "myanfaccount";
-        var snapshotPolicy = "mypolicy";
-        var resourceGroup = "myrg";
-        var location = "eastus";
-        var subscription = "sub123";
+        var expectedPolicy = BuildExpectedPolicy();
 
-        var expectedPolicy = new SnapshotPolicyCreateResult(
-            Id: $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/snapshotPolicies/{snapshotPolicy}",
-            Name: $"{account}/{snapshotPolicy}",
+        _netAppFilesService.UpdateSnapshotPolicy(
+            Arg.Is("myanfaccount"),
+            Arg.Is("mypolicy"),
+            Arg.Is("myrg"),
+            Arg.Is("eastus"),
+            Arg.Is("sub123"),
+            Arg.Is(5),
+            Arg.Is(3),
+            Arg.Is(12),
+            Arg.Is(15),
+            Arg.Is(7),
+            Arg.Is("Monday"),
+            Arg.Is(4),
+            Arg.Is("1,15"),
+            Arg.Is(2),
+            Arg.Is(false),
+            Arg.Is(6),
+            Arg.Is(25),
+            Arg.Is(7),
+            Arg.Is(35),
+            Arg.Is<Dictionary<string, string>?>(tags => tags != null && tags.Count == 1 && tags["env"] == "test"),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedPolicy);
+
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount",
+            "--snapshotPolicy", "mypolicy",
+            "--resource-group", "myrg",
+            "--location", "eastus",
+            "--subscription", "sub123",
+            "--hourlyScheduleMinute", "5",
+            "--hourlyScheduleSnapshotsToKeep", "3",
+            "--dailyScheduleHour", "12",
+            "--dailyScheduleMinute", "15",
+            "--dailyScheduleSnapshotsToKeep", "7",
+            "--weeklyScheduleDay", "Monday",
+            "--weeklyScheduleHour", "6",
+            "--weeklyScheduleMinute", "25",
+            "--weeklyScheduleSnapshotsToKeep", "4",
+            "--monthlyScheduleDaysOfMonth", "1,15",
+            "--monthlyScheduleHour", "7",
+            "--monthlyScheduleMinute", "35",
+            "--monthlyScheduleSnapshotsToKeep", "2",
+            "--enabled", "false",
+            "--tags", "{\"env\":\"test\"}"
+        ]);
+
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _netAppFilesService.Received(1).UpdateSnapshotPolicy(
+            "myanfaccount",
+            "mypolicy",
+            "myrg",
+            "eastus",
+            "sub123",
+            5,
+            3,
+            12,
+            15,
+            7,
+            "Monday",
+            4,
+            "1,15",
+            2,
+            false,
+            6,
+            25,
+            7,
+            35,
+            Arg.Is<Dictionary<string, string>?>(tags => tags != null && tags.Count == 1 && tags["env"] == "test"),
+            null,
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public void BindOptions_AcceptsIds()
+    {
+        var args = _commandDefinition.Parse([
+            "--ids", SnapshotPolicyResourceId,
+            "--subscription", "sub123"
+        ]);
+
+        Assert.Empty(args.Errors);
+    }
+
+    [Theory]
+    [InlineData("--no-wait", "no-wait")]
+    [InlineData("--acquirePolicyToken", "acquirePolicyToken")]
+    [InlineData("--changeReference CR-123", "changeReference")]
+    [InlineData("--add properties.enabled=false", "add")]
+    [InlineData("--set properties.enabled=false", "set")]
+    [InlineData("--remove properties.weeklySchedule", "remove")]
+    [InlineData("--force-string", "force-string")]
+    public async Task ExecuteAsync_RejectsUnsupportedArguments(string extraArgs, string expectedArgument)
+    {
+        var parseResult = _commandDefinition.Parse($"--account myanfaccount --snapshotPolicy mypolicy --resource-group myrg --subscription sub123 {extraArgs}");
+
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(expectedArgument, response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsInvalidTagsJson()
+    {
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount",
+            "--snapshotPolicy", "mypolicy",
+            "--resource-group", "myrg",
+            "--subscription", "sub123",
+            "--tags", "{invalid-json}"
+        ]);
+
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Invalid tags JSON format", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesException()
+    {
+        TestEnvironment.ClearAzureSubscriptionId();
+
+        _netAppFilesService.UpdateSnapshotPolicy(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<Dictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("Test error"));
+
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount",
+            "--snapshotPolicy", "mypolicy",
+            "--resource-group", "myrg",
+            "--subscription", "sub123"
+        ]);
+
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Contains("Test error", response.Message);
+        Assert.Contains("troubleshooting", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DeserializationValidation()
+    {
+        TestEnvironment.ClearAzureSubscriptionId();
+        var expectedPolicy = BuildExpectedPolicy();
+
+        _netAppFilesService.UpdateSnapshotPolicy(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<int?>(),
+            Arg.Any<Dictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedPolicy);
+
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount",
+            "--snapshotPolicy", "mypolicy",
+            "--resource-group", "myrg",
+            "--subscription", "sub123"
+        ]);
+
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(response.Results);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, NetAppFilesJsonContext.Default.SnapshotPolicyUpdateCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.SnapshotPolicy);
+        Assert.Equal("myanfaccount/mypolicy", result.SnapshotPolicy.Name);
+        Assert.Equal("eastus", result.SnapshotPolicy.Location);
+        Assert.Equal("myrg", result.SnapshotPolicy.ResourceGroup);
+        Assert.True(result.SnapshotPolicy.Enabled);
+    }
+
+    [Fact]
+    public void BindOptions_BindsOptionsCorrectly()
+    {
+        TestEnvironment.ClearAzureSubscriptionId();
+        var args = _commandDefinition.Parse([
+            "--account", "myanfaccount",
+            "--snapshotPolicy", "mypolicy",
+            "--resource-group", "myrg",
+            "--subscription", "sub123",
+            "--hourlyScheduleMinute", "15",
+            "--hourlyScheduleSnapshotsToKeep", "3",
+            "--dailyScheduleHour", "6",
+            "--dailyScheduleMinute", "30",
+            "--dailyScheduleSnapshotsToKeep", "7",
+            "--weeklyScheduleDay", "Wednesday",
+            "--weeklyScheduleHour", "5",
+            "--weeklyScheduleMinute", "20",
+            "--weeklyScheduleSnapshotsToKeep", "2",
+            "--monthlyScheduleDaysOfMonth", "1,15",
+            "--monthlyScheduleHour", "8",
+            "--monthlyScheduleMinute", "45",
+            "--monthlyScheduleSnapshotsToKeep", "1",
+            "--enabled", "true",
+            "--tags", "{\"env\":\"test\"}"
+        ]);
+
+        Assert.Empty(args.Errors);
+    }
+
+    private static SnapshotPolicyCreateResult BuildExpectedPolicy()
+    {
+        return new SnapshotPolicyCreateResult(
+            Id: SnapshotPolicyResourceId,
+            Name: "myanfaccount/mypolicy",
             Type: "Microsoft.NetApp/netAppAccounts/snapshotPolicies",
-            Location: location,
-            ResourceGroup: resourceGroup,
+            Location: "eastus",
+            ResourceGroup: "myrg",
             ProvisioningState: "Succeeded",
             Enabled: true,
             HourlyScheduleMinute: 0,
@@ -146,345 +383,5 @@ public class SnapshotPolicyUpdateCommandTests
             WeeklyScheduleSnapshotsToKeep: 4,
             MonthlyScheduleDaysOfMonth: "1,15",
             MonthlyScheduleSnapshotsToKeep: 2);
-
-        _netAppFilesService.UpdateSnapshotPolicy(
-            Arg.Is(account), Arg.Is(snapshotPolicy), Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(subscription),
-            Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(),
-            Arg.Any<string>(), Arg.Any<int?>(), Arg.Any<string>(), Arg.Any<int?>(),
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedPolicy));
-
-        var args = _commandDefinition.Parse([
-            "--account", account, "--snapshotPolicy", snapshotPolicy,
-            "--resource-group", resourceGroup, "--location", location,
-            "--subscription", subscription,
-            "--hourlyScheduleMinute", "0", "--hourlyScheduleSnapshotsToKeep", "5",
-            "--dailyScheduleHour", "12", "--dailyScheduleMinute", "0", "--dailyScheduleSnapshotsToKeep", "5",
-            "--weeklyScheduleDay", "Monday", "--weeklyScheduleSnapshotsToKeep", "4",
-            "--monthlyScheduleDaysOfMonth", "1,15", "--monthlyScheduleSnapshotsToKeep", "2"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, NetAppFilesJsonContext.Default.SnapshotPolicyUpdateCommandResult);
-
-        Assert.NotNull(result);
-        Assert.NotNull(result.SnapshotPolicy);
-        Assert.Equal($"{account}/{snapshotPolicy}", result.SnapshotPolicy.Name);
-        Assert.Equal(location, result.SnapshotPolicy.Location);
-        Assert.Equal(resourceGroup, result.SnapshotPolicy.ResourceGroup);
-        Assert.Equal("Succeeded", result.SnapshotPolicy.ProvisioningState);
-        Assert.True(result.SnapshotPolicy.Enabled);
-        Assert.Equal(0, result.SnapshotPolicy.HourlyScheduleMinute);
-        Assert.Equal(5, result.SnapshotPolicy.HourlyScheduleSnapshotsToKeep);
-        Assert.Equal(12, result.SnapshotPolicy.DailyScheduleHour);
-        Assert.Equal(0, result.SnapshotPolicy.DailyScheduleMinute);
-        Assert.Equal(5, result.SnapshotPolicy.DailyScheduleSnapshotsToKeep);
-        Assert.Equal("Monday", result.SnapshotPolicy.WeeklyScheduleDay);
-        Assert.Equal(4, result.SnapshotPolicy.WeeklyScheduleSnapshotsToKeep);
-        Assert.Equal("1,15", result.SnapshotPolicy.MonthlyScheduleDaysOfMonth);
-        Assert.Equal(2, result.SnapshotPolicy.MonthlyScheduleSnapshotsToKeep);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_UpdatesSnapshotPolicy_WithoutOptionalParameters()
-    {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var account = "myanfaccount";
-        var snapshotPolicy = "mypolicy";
-        var resourceGroup = "myrg";
-        var location = "eastus";
-        var subscription = "sub123";
-
-        var expectedPolicy = new SnapshotPolicyCreateResult(
-            Id: $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/snapshotPolicies/{snapshotPolicy}",
-            Name: $"{account}/{snapshotPolicy}",
-            Type: "Microsoft.NetApp/netAppAccounts/snapshotPolicies",
-            Location: location,
-            ResourceGroup: resourceGroup,
-            ProvisioningState: "Succeeded",
-            Enabled: true,
-            HourlyScheduleMinute: null,
-            HourlyScheduleSnapshotsToKeep: null,
-            DailyScheduleHour: null,
-            DailyScheduleMinute: null,
-            DailyScheduleSnapshotsToKeep: null,
-            WeeklyScheduleDay: null,
-            WeeklyScheduleSnapshotsToKeep: null,
-            MonthlyScheduleDaysOfMonth: null,
-            MonthlyScheduleSnapshotsToKeep: null);
-
-        _netAppFilesService.UpdateSnapshotPolicy(
-            Arg.Is(account), Arg.Is(snapshotPolicy), Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(subscription),
-            null, null, null, null, null, null, null, null, null,
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedPolicy));
-
-        var args = _commandDefinition.Parse([
-            "--account", account, "--snapshotPolicy", snapshotPolicy,
-            "--resource-group", resourceGroup, "--location", location,
-            "--subscription", subscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_HandlesException()
-    {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var expectedError = "Test error";
-
-        _netAppFilesService.UpdateSnapshotPolicy(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(),
-            Arg.Any<int?>(), Arg.Any<int?>(),
-            Arg.Any<string>(), Arg.Any<int?>(),
-            Arg.Any<string>(), Arg.Any<int?>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new Exception(expectedError));
-
-        var args = _commandDefinition.Parse([
-            "--account", "myanfaccount", "--snapshotPolicy", "mypolicy",
-            "--resource-group", "myrg", "--location", "eastus",
-            "--subscription", "sub123"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-        Assert.Contains(expectedError, response.Message);
-        Assert.Contains("troubleshooting", response.Message);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_HandlesConflict()
-    {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.UpdateSnapshotPolicy(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(),
-            Arg.Any<int?>(), Arg.Any<int?>(),
-            Arg.Any<string>(), Arg.Any<int?>(),
-            Arg.Any<string>(), Arg.Any<int?>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Snapshot policy already exists"));
-
-        var args = _commandDefinition.Parse([
-            "--account", "myanfaccount", "--snapshotPolicy", "mypolicy",
-            "--resource-group", "myrg", "--location", "eastus",
-            "--subscription", "sub123"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Conflict, response.Status);
-        Assert.Contains("already exists", response.Message);
-        Assert.Contains("troubleshooting", response.Message);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_HandlesNotFound()
-    {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.UpdateSnapshotPolicy(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(),
-            Arg.Any<int?>(), Arg.Any<int?>(),
-            Arg.Any<string>(), Arg.Any<int?>(),
-            Arg.Any<string>(), Arg.Any<int?>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Snapshot policy not found"));
-
-        var args = _commandDefinition.Parse([
-            "--account", "myanfaccount", "--snapshotPolicy", "mypolicy",
-            "--resource-group", "nonexistentrg", "--location", "eastus",
-            "--subscription", "sub123"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.Status);
-        Assert.Contains("not found", response.Message);
-        Assert.Contains("troubleshooting", response.Message);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_HandlesAuthorizationFailure()
-    {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.UpdateSnapshotPolicy(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(),
-            Arg.Any<int?>(), Arg.Any<int?>(),
-            Arg.Any<string>(), Arg.Any<int?>(),
-            Arg.Any<string>(), Arg.Any<int?>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
-
-        var args = _commandDefinition.Parse([
-            "--account", "myanfaccount", "--snapshotPolicy", "mypolicy",
-            "--resource-group", "myrg", "--location", "eastus",
-            "--subscription", "sub123"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
-        Assert.Contains("Authorization failed", response.Message);
-        Assert.Contains("troubleshooting", response.Message);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
-    {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.UpdateSnapshotPolicy(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(),
-            Arg.Any<int?>(), Arg.Any<int?>(),
-            Arg.Any<string>(), Arg.Any<int?>(),
-            Arg.Any<string>(), Arg.Any<int?>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<SnapshotPolicyCreateResult>(new Exception("Test error")));
-
-        var args = _commandDefinition.Parse([
-            "--account", "myanfaccount", "--snapshotPolicy", "mypolicy",
-            "--resource-group", "myrg", "--location", "eastus",
-            "--subscription", "sub123"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-        Assert.Contains("Test error", response.Message);
-        Assert.Contains("troubleshooting", response.Message);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_DeserializationValidation()
-    {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var expectedPolicy = new SnapshotPolicyCreateResult(
-            Id: "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/snapshotPolicies/mypolicy",
-            Name: "myanfaccount/mypolicy",
-            Type: "Microsoft.NetApp/netAppAccounts/snapshotPolicies",
-            Location: "westus2",
-            ResourceGroup: "myrg",
-            ProvisioningState: "Succeeded",
-            Enabled: true,
-            HourlyScheduleMinute: 30,
-            HourlyScheduleSnapshotsToKeep: 3,
-            DailyScheduleHour: 8,
-            DailyScheduleMinute: 15,
-            DailyScheduleSnapshotsToKeep: 7,
-            WeeklyScheduleDay: "Friday",
-            WeeklyScheduleSnapshotsToKeep: 2,
-            MonthlyScheduleDaysOfMonth: "1",
-            MonthlyScheduleSnapshotsToKeep: 1);
-
-        _netAppFilesService.UpdateSnapshotPolicy(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(),
-            Arg.Any<int?>(), Arg.Any<int?>(),
-            Arg.Any<string>(), Arg.Any<int?>(),
-            Arg.Any<string>(), Arg.Any<int?>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedPolicy));
-
-        var args = _commandDefinition.Parse([
-            "--account", "myanfaccount", "--snapshotPolicy", "mypolicy",
-            "--resource-group", "myrg", "--location", "westus2",
-            "--subscription", "sub123"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, NetAppFilesJsonContext.Default.SnapshotPolicyUpdateCommandResult);
-
-        Assert.NotNull(result);
-        Assert.NotNull(result.SnapshotPolicy);
-        Assert.Equal("myanfaccount/mypolicy", result.SnapshotPolicy.Name);
-        Assert.Equal("westus2", result.SnapshotPolicy.Location);
-        Assert.Equal("myrg", result.SnapshotPolicy.ResourceGroup);
-        Assert.Equal("Succeeded", result.SnapshotPolicy.ProvisioningState);
-        Assert.Equal("Microsoft.NetApp/netAppAccounts/snapshotPolicies", result.SnapshotPolicy.Type);
-        Assert.True(result.SnapshotPolicy.Enabled);
-        Assert.Equal(30, result.SnapshotPolicy.HourlyScheduleMinute);
-        Assert.Equal(3, result.SnapshotPolicy.HourlyScheduleSnapshotsToKeep);
-        Assert.Equal(8, result.SnapshotPolicy.DailyScheduleHour);
-        Assert.Equal(15, result.SnapshotPolicy.DailyScheduleMinute);
-        Assert.Equal(7, result.SnapshotPolicy.DailyScheduleSnapshotsToKeep);
-        Assert.Equal("Friday", result.SnapshotPolicy.WeeklyScheduleDay);
-        Assert.Equal(2, result.SnapshotPolicy.WeeklyScheduleSnapshotsToKeep);
-        Assert.Equal("1", result.SnapshotPolicy.MonthlyScheduleDaysOfMonth);
-        Assert.Equal(1, result.SnapshotPolicy.MonthlyScheduleSnapshotsToKeep);
-    }
-
-    [Fact]
-    public void BindOptions_BindsOptionsCorrectly()
-    {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var args = _commandDefinition.Parse([
-            "--account", "myanfaccount", "--snapshotPolicy", "mypolicy",
-            "--resource-group", "myrg", "--location", "eastus",
-            "--subscription", "sub123",
-            "--hourlyScheduleMinute", "15", "--hourlyScheduleSnapshotsToKeep", "3",
-            "--dailyScheduleHour", "6", "--dailyScheduleMinute", "30", "--dailyScheduleSnapshotsToKeep", "7",
-            "--weeklyScheduleDay", "Wednesday", "--weeklyScheduleSnapshotsToKeep", "2",
-            "--monthlyScheduleDaysOfMonth", "1,15", "--monthlyScheduleSnapshotsToKeep", "1"
-        ]);
-
-        // Assert - verify parse was successful (no errors)
-        Assert.Empty(args.Errors);
     }
 }

@@ -9,4 +9,7 @@ public class SnapshotPolicyGetOptions : BaseNetAppFilesOptions
 {
     [JsonPropertyName(NetAppFilesOptionDefinitions.SnapshotPolicyName)]
     public string? SnapshotPolicy { get; set; }
+
+    [JsonPropertyName(NetAppFilesOptionDefinitions.IdsName)]
+    public string[]? Ids { get; set; }
 }
