@@ -580,6 +580,7 @@
   "microsoft-foundry\\foundry-agent\\agent-optimizer\\references\\optimize-workflow.md",
   "microsoft-foundry\\foundry-agent\\agent-optimizer\\references\\python-patterns.md",
   "microsoft-foundry\\foundry-agent\\agent-optimizer\\references\\scaffold.md",
+  "microsoft-foundry\\foundry-agent\\cicd\\cicd.md",
   "microsoft-foundry\\foundry-agent\\create\\create-hosted.md",
   "microsoft-foundry\\foundry-agent\\create\\create-prompt.md",
   "microsoft-foundry\\foundry-agent\\create\\quick-start-hosted.md",
