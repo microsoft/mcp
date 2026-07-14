@@ -686,8 +686,7 @@ public class CommandFactoryToolLoaderTests
     {
         // Arrange
         // A fake command that advertises a source-generated result type. GetTool should surface that type as
-        // the tool's outputSchema. Using a fake (rather than a shipping tool) keeps the wiring contract stable
-        // even as real commands are migrated over time.
+        // the tool's outputSchema.
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
@@ -711,7 +710,7 @@ public class CommandFactoryToolLoaderTests
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
-        // A migrated command (ResultTypeInfo != null) must surface an MCP outputSchema whose root is an
+        // A migrated command (where ResultTypeInfo != null) must surface an MCP outputSchema whose root is an
         // object exposing the result record's own properties.
         var tool = result.Tools.FirstOrDefault(t => t.Name == "fake-output-get");
         Assert.NotNull(tool);
@@ -731,8 +730,8 @@ public class CommandFactoryToolLoaderTests
     public async Task ListToolsHandler_CommandWithoutResultTypeInfo_OmitsOutputSchema()
     {
         // Arrange
-        // A fake command that does not advertise a result type (ResultTypeInfo == null, the un-migrated
-        // default). GetTool should leave the tool's outputSchema unset so the command gracefully advertises
+        // A fake command that does not advertise a result type (ResultTypeInfo == null, the default value).
+        // GetTool should leave the tool's outputSchema unset so the command gracefully advertises
         // no structured output.
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
@@ -762,10 +761,10 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
-    public void TryBuildStructuredContent_ObjectResult_IsMirroredUnwrapped()
+    public void TryBuildStructuredContent_ObjectResult_IsUnwrapped()
     {
         // An object-root command result already satisfies MCP's "structuredContent must be an object" rule,
-        // so it is mirrored as-is: its own properties are surfaced directly rather than nested under a
+        // so it included as-is: its own properties are surfaced directly rather than nested under a
         // wrapper. This stays aligned with CreateOutputSchema, which leaves object roots unwrapped.
         var json = SerializeResponse(ResponseResult.Create(
             new OutputSchemaSampleResult("alpha", 3),
@@ -834,7 +833,7 @@ public class CommandFactoryToolLoaderTests
     [Fact]
     public void TryBuildStructuredContent_NullResultsProperty_ReturnsNull()
     {
-        // Defensive branch: even if a 'results' property is present but null, there is no payload to mirror.
+        // Even if a 'results' property is present but null, there is no payload to mirror.
         // The realistic serializer path omits null results, so this uses a hand-built response to exercise it.
         var structuredContent = CommandFactoryToolLoader.TryBuildStructuredContent("{\"results\":null}");
 

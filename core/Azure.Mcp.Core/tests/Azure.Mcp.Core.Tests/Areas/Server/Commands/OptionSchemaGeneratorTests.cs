@@ -191,7 +191,7 @@ public class OptionSchemaGeneratorTests
         var schema = OptionSchemaGenerator.CreateOutputSchema(OutputSchemaTestJsonContext.Default.OutputSchemaSampleResult);
 
         // An object-root result already satisfies MCP's "root must be an object" rule, so it is returned
-        // as-is: its own properties are exposed directly rather than nested under a synthetic wrapper.
+        // as-is: its own properties are exposed directly rather than nested under a wrapper.
         Assert.Equal("object", (string?)schema["type"]);
 
         var properties = Assert.IsType<JsonObject>(schema["properties"]);
@@ -232,7 +232,7 @@ public class OptionSchemaGeneratorTests
     }
 }
 
-// Shared sample result type + source-generated context used by the output-schema tests. Declaring them in
+// Shared sample result type + source-generated context used by the outputSchema tests. Declaring them in
 // the parent test namespace keeps the schema-shaping contract decoupled from any shipping tool while
 // remaining visible to the nested ToolLoading tests.
 internal sealed record OutputSchemaSampleResult(string Name, int Count);

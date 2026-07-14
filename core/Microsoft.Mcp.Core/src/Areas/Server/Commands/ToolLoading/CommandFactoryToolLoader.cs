@@ -213,8 +213,10 @@ public sealed class CommandFactoryToolLoader(
                 IsError = isError
             };
 
-            // When the command advertises an output schema, mirror its payload as structuredContent so
-            // clients can consume it against the schema. Wrapped identically to CreateOutputSchema.
+            // When the command advertises an output schema, set its payload as structuredContent so
+            // clients can consume it against the schema. Object payloads are used as-is;
+            // array or scalar payloads are wrapped under a single 'value' property to match the
+            // wrapping applied by OptionSchemaGenerator.CreateOutputSchema
             if (!isError && command.ResultTypeInfo != null)
             {
                 var structuredContent = TryBuildStructuredContent(jsonResponse);
