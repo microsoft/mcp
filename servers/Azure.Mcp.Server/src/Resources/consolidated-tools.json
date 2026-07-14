@@ -1326,7 +1326,7 @@
     },
     {
       "name": "get_azure_ai_resources_details",
-      "description": "Get details about Azure AI Search (formerly known as Azure Cognitive Search) resources. Use this tool to list or show all Azure AI Search / Cognitive Search services in a subscription; list, show, or get details of indexes (also called knowledge indexes) in a search service; list, show, or get details of knowledge sources in a search service (knowledge sources point to indexed data such as blob storage); list, show, or get details of knowledge bases in a search service (knowledge bases encapsulate retrieval and reasoning capabilities over knowledge sources); and query or search an Azure AI Search index for specific content.",
+      "description": "Get details about Azure AI Search (also known as Azure Cognitive Search) services, indexes, knowledge sources, and knowledge bases. List all Cognitive Search services in a subscription; list or get details of indexes (knowledge indexes) in a search service; list or get details of knowledge sources in a search service; list or get details of knowledge bases in a search service; or query an Azure AI Search index for specific content.",
       "toolMetadata": {
         "destructive": {
           "value": false,
