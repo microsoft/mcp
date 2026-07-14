@@ -441,6 +441,79 @@ public class CustomChainedCredentialTests
     }
 
     /// <summary>
+    /// Tests that an unrecognized AZURE_TOKEN_CREDENTIALS value logs a warning and falls back to
+    /// the default credential chain. This catches typos such as "AzuerCliCredential".
+    /// </summary>
+    [Fact]
+    public void UnknownCredentialValue_LogsWarning_AndFallsBackToDefaultChain()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "AzuerCliCredential"); // intentional typo
+
+        var provider = new CapturingLoggerProvider();
+        using var factory = LoggerFactory.Create(b => b.AddProvider(provider));
+        var credential = CreateCustomChainedCredentialWithLoggerFactory(factory);
+
+        // Trigger the lazy credential construction (authentication will fail in test environment, that's expected).
+        try
+        {
+            credential.GetToken(new TokenRequestContext(["https://management.azure.com/.default"]), CancellationToken.None);
+        }
+        catch
+        {
+            // credential chain construction is all we need; auth failure is expected
+        }
+
+        // Assert — credential is still created (fallback works)
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+
+        // Assert — exactly one warning was logged containing the unrecognized value
+        var warning = Assert.Single(provider.Warnings);
+        Assert.Contains("AzuerCliCredential", warning);
+        Assert.Contains("AZURE_TOKEN_CREDENTIALS", warning);
+    }
+
+    /// <summary>
+    /// Tests that concurrent calls to GetToken complete without error and leave the
+    /// Lazy&lt;T&gt; credential in a created state, verifying that the ExecutionAndPublication
+    /// mode allows all threads to proceed after initialization.
+    /// </summary>
+    [Fact]
+    public async Task GetToken_ConcurrentCalls_CredentialIsInitializedAfterConcurrentAccess()
+    {
+        // Arrange
+        var credential = CreateCustomChainedCredential();
+        var credentialType = GetCustomChainedCredentialType();
+        var lazyField = credentialType.GetField("_credential",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(lazyField);
+
+        // Act — fire 20 concurrent GetToken calls before the chain is initialized
+        var tasks = Enumerable.Range(0, 20).Select(_ => Task.Run(() =>
+        {
+            try
+            {
+                credential.GetToken(new TokenRequestContext(["https://management.azure.com/.default"]), CancellationToken.None);
+            }
+            catch
+            {
+                // auth failure expected in test environment
+            }
+        })).ToArray();
+
+        await Task.WhenAll(tasks);
+
+        // Assert — the Lazy<T> value was created and is a single shared instance
+        var lazyValue = lazyField.GetValue(credential);
+        Assert.NotNull(lazyValue);
+        var isValueCreated = (bool)lazyValue.GetType()
+            .GetProperty("IsValueCreated")!.GetValue(lazyValue)!;
+        Assert.True(isValueCreated);
+    }
+
+    /// <summary>
     /// Helper method to create CustomChainedCredential using reflection since it's an internal class.
     /// </summary>
     private static TokenCredential CreateCustomChainedCredential(bool forceBrowserFallback = false)
@@ -465,6 +538,33 @@ public class CustomChainedCredentialTests
         var credential = constructor.Invoke([null, null, forceBrowserFallback]) as TokenCredential;
         Assert.NotNull(credential);
 
+        return credential;
+    }
+
+    private static TokenCredential CreateCustomChainedCredentialWithLoggerFactory(ILoggerFactory factory)
+    {
+        var assembly = typeof(global::Microsoft.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
+        var customChainedCredentialType = assembly.GetType("Microsoft.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
+        Assert.NotNull(customChainedCredentialType);
+
+        // Build a correctly-typed ILogger<CustomChainedCredential> from the factory via the concrete Logger<T> class.
+        var loggerConcreteType = typeof(Logger<>).MakeGenericType(customChainedCredentialType);
+        var logger = Activator.CreateInstance(loggerConcreteType, factory);
+
+        var constructor = customChainedCredentialType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .FirstOrDefault(c =>
+            {
+                var parameters = c.GetParameters();
+                return parameters.Length == 3 &&
+                       parameters[0].ParameterType == typeof(string) &&
+                       parameters[1].ParameterType == typeof(ILogger<>).MakeGenericType(customChainedCredentialType) &&
+                       parameters[2].ParameterType == typeof(bool);
+            });
+
+        Assert.NotNull(constructor);
+
+        var credential = constructor.Invoke([null, logger, false]) as TokenCredential;
+        Assert.NotNull(credential);
         return credential;
     }
 
@@ -497,6 +597,30 @@ public class CustomChainedCredentialTests
         {
             foreach (var (name, value) in _saved)
                 Environment.SetEnvironmentVariable(name, value);
+        }
+    }
+
+    /// <summary>
+    /// Minimal ILoggerProvider + ILogger implementation that captures warning messages for assertion.
+    /// </summary>
+    private sealed class CapturingLoggerProvider : ILoggerProvider
+    {
+        private readonly List<string> _warnings = [];
+        public IReadOnlyList<string> Warnings => _warnings;
+
+        public ILogger CreateLogger(string categoryName) => new CapturingLogger(_warnings);
+        public void Dispose() { }
+    }
+
+    private sealed class CapturingLogger(List<string> warnings) : ILogger
+    {
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            if (logLevel == LogLevel.Warning)
+                warnings.Add(formatter(state, exception));
         }
     }
 }

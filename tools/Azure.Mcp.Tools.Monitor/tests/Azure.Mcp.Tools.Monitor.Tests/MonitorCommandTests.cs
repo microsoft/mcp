@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Services;
+using Azure.ResourceManager.CloudHealth.Models;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,6 +36,26 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     private string? _storageAccountName;
     private string? _appInsightsName;
     private string? _bingWebTestName;
+    private string? _healthModelParentName;
+    private string? _healthModelChildName;
+
+    private static readonly string[] s_validHealthStates =
+    [
+        EntityHealthState.Healthy.ToString(),
+        EntityHealthState.Degraded.ToString(),
+        EntityHealthState.Unhealthy.ToString(),
+        EntityHealthState.Unknown.ToString(),
+        EntityHealthState.Deleted.ToString(),
+    ];
+
+    private static readonly string[] s_sanitizedHeaders =
+    [
+        "x-ms-correlation-request-id",
+        "x-ms-operation-identifier",
+        "x-ms-routing-request-id",
+        "x-ms-served-by",
+        "X-MSEdge-Ref"
+    ];
 
     public MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
         : base(output, fixture, liveServerFixture)
@@ -73,11 +94,19 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     [
         ..base.BodyKeySanitizers,
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..resourceGroup")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..TimeZone")),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..id"){
             Regex = "resource[Gg]roups/([^?\\/]+)",
             Value = "Sanitized",
             GroupForReplace = "1"
         })
+    ];
+
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
+    [
+        .. base.HeaderRegexSanitizers,
+        .. s_sanitizedHeaders.Select(h => new HeaderRegexSanitizer(new HeaderRegexSanitizerBody(h)))
     ];
 
     public override CustomDefaultMatcher? TestMatcher => new CustomDefaultMatcher()
@@ -91,6 +120,8 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         _storageAccountName = $"{Settings.ResourceBaseName}mon";
         _appInsightsName = $"{Settings.ResourceBaseName}-ai";
         _bingWebTestName = $"{Settings.ResourceBaseName}-bing-test";
+        _healthModelParentName = $"{Settings.ResourceBaseName}-hm-a";
+        _healthModelChildName = $"{Settings.ResourceBaseName}-hm-b";
 
         if (TestMode == TestMode.Playback)
         {
@@ -710,6 +741,73 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
 
         Assert.True(webTest.TryGetProperty("kind", out var webTestKind));
         Assert.Equal("Standard", webTestKind.GetString());
+    }
+
+    #endregion
+
+    #region Health Models
+
+    [Fact]
+    public async Task Should_List_HealthModels()
+    {
+        var result = await CallToolAsync(
+            "monitor_healthmodels_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName }
+            });
+
+        Assert.NotNull(result);
+        Assert.Equal(JsonValueKind.Array, result.Value.ValueKind);
+
+        var models = result.Value.EnumerateArray().ToList();
+        Assert.NotEmpty(models);
+
+        Assert.All(models, model =>
+        {
+            var name = model.AssertProperty("name");
+            Assert.Equal(JsonValueKind.String, name.ValueKind);
+            Assert.False(string.IsNullOrEmpty(name.GetString()));
+
+            var provisioningState = model.AssertProperty("provisioningState");
+            Assert.Equal(JsonValueKind.String, provisioningState.ValueKind);
+            Assert.False(string.IsNullOrEmpty(provisioningState.GetString()));
+        });
+
+        var idSuffixes = models
+            .Select(m => m.AssertProperty("id").GetString()!.Split('/').Last())
+            .ToList();
+        Assert.Contains(_healthModelParentName, idSuffixes);
+        Assert.Contains(_healthModelChildName, idSuffixes);
+    }
+
+    [Theory]
+    [InlineData("a")]
+    [InlineData("b")]
+    public async Task Should_Get_HealthModel_WithValidHealthState(string suffix)
+    {
+        var healthModelName = $"{Settings.ResourceBaseName}-hm-{suffix}";
+
+        var result = await CallToolAsync(
+            "monitor_healthmodels_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "health-model", healthModelName }
+            });
+
+        var healthModel = result.AssertProperty("healthModel");
+        Assert.Equal(JsonValueKind.Object, healthModel.ValueKind);
+
+        Assert.EndsWith(healthModelName, healthModel.AssertProperty("id").GetString());
+        Assert.Equal(Settings.ResourceGroupName, healthModel.AssertProperty("resourceGroup").GetString());
+        Assert.False(string.IsNullOrEmpty(healthModel.AssertProperty("provisioningState").GetString()));
+
+        var healthState = healthModel.AssertProperty("healthState");
+        Assert.Equal(JsonValueKind.String, healthState.ValueKind);
+        Assert.Contains(healthState.GetString(), s_validHealthStates);
     }
 
     #endregion

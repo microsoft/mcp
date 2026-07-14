@@ -760,7 +760,7 @@
     "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/jobs/refreshMaterializedLakeViews/schedules": {
       "post": {
         "summary": "Create a new Refresh MaterializedLakeViews schedule for a lakehouse.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Required Delegated Scopes: \n\n(Lakehouse.Execute.All or Item.Execute.All) and (Lakehouse.ReadWrite.All or Item.ReadWrite.All)\n\n## Limitations \n- A lakehouse can create maximum 20 schedulers.\n- Materialized Lake View supports only one active refresh schedule per lineage.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Required Delegated Scopes: \n\n(Lakehouse.Execute.All or Item.Execute.All) and (Lakehouse.ReadWrite.All or Item.ReadWrite.All)\n\n## Limitations \n- A lakehouse can create maximum 20 schedulers.\n- Materialized Lake View supports only one active refresh schedule per lineage.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "BackgroundJobs"
         ],
@@ -1092,7 +1092,7 @@
     "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/jobs/refreshMaterializedLakeViews/instances": {
       "post": {
         "summary": "Run on-demand [Refresh MaterializedLakeViews](/fabric/data-engineering/materialized-lake-views/refresh-materialized-lake-view) job instance.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n> [!NOTE]\n> The URL for this API has been updated to include the job type as part of the path, replacing the previous use of a query parameter. For backward compatibility, invocations using the query parameter are still supported.\n\n## Required Delegated Scopes\n\nLakehouse.Execute.All or Item.Execute.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n> [!NOTE]\n> The URL for this API has been updated to include the job type as part of the path, replacing the previous use of a query parameter. For backward compatibility, invocations using the query parameter are still supported.\n\n## Required Delegated Scopes\n\nLakehouse.Execute.All or Item.Execute.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "BackgroundJobs"
         ],
@@ -1152,7 +1152,7 @@
     "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/jobs/refreshMaterializedLakeViews/schedules/{scheduleId}": {
       "patch": {
         "summary": "Update an existing Refresh MaterializedLakeViews schedule for a lakehouse.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Required Delegated Scopes: \n\n(Lakehouse.Execute.All or Item.Execute.All) and (Lakehouse.ReadWrite.All or Item.ReadWrite.All)\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Required Delegated Scopes: \n\n(Lakehouse.Execute.All or Item.Execute.All) and (Lakehouse.ReadWrite.All or Item.ReadWrite.All)\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "BackgroundJobs"
         ],
@@ -1233,7 +1233,7 @@
       },
       "delete": {
         "summary": "Delete an existing Refresh MaterializedLakeViews schedule for a lakehouse.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Required Delegated Scopes\n\nLakehouse.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Required Delegated Scopes\n\nLakehouse.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "BackgroundJobs"
         ],
@@ -1481,6 +1481,370 @@
         "x-ms-examples": {
           "Update a lakehouse public definition example": {
             "$ref": "./examples/UpdateLakehouseDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/mlvexecutiondefinitions": {
+      "post": {
+        "summary": "Creates a materialized lake views execution definition.",
+        "description": "## Permissions\n\nThe caller must have *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nLakehouse.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "MaterializedLakeViews"
+        ],
+        "operationId": "MaterializedLakeViews_CreateMlvExecutionDefinition",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "lakehouseId",
+            "description": "The lakehouse ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "createMLVExecutionDefinitionRequest",
+            "description": "Create materialized lake views execution definition request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CreateMaterializedLakeViewExecutionDefinitionRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully created the materialized lake views execution definition.\n\nResponse headers:\n\n* `Location` - The URL of the newly created materialized lake views execution definition.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/MaterializedLakeViewExecutionDefinition"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidRequest - Request parameters are invalid or not in a supported format\n\n* InsufficientPrivileges - The caller does not have sufficient permissions\n\n* ItemNotFound - Requested item ID not found\n\n* ConflictingRequest - A conflicting materialized lake views execution definition already exists",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create a materialized lake views execution definition example": {
+            "$ref": "./examples/CreateExecutionDefinition.json"
+          }
+        }
+      },
+      "get": {
+        "summary": "Returns a list of materialized lake views execution definitions for a lakehouse.",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nThe caller must have *viewer* or higher workspace role.\n\n## Required Delegated Scopes\n\nLakehouse.Read.All or Lakehouse.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "MaterializedLakeViews"
+        ],
+        "operationId": "MaterializedLakeViews_ListMlvExecutionDefinitions",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "lakehouseId",
+            "description": "The lakehouse ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/MaterializedLakeViewExecutionDefinitions"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientPrivileges - The caller does not have sufficient permissions\n\n* ItemNotFound - Requested item ID not found",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List materialized lake views execution definitions example": {
+            "$ref": "./examples/ListExecutionDefinitions.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/mlvexecutiondefinitions/{mlvExecutionDefinitionId}": {
+      "get": {
+        "summary": "Returns the specified materialized lake views execution definition.",
+        "description": "## Permissions\n\nThe caller must have *viewer* or higher workspace role.\n\n## Required Delegated Scopes\n\nLakehouse.Read.All or Lakehouse.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "MaterializedLakeViews"
+        ],
+        "operationId": "MaterializedLakeViews_GetMlvExecutionDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "lakehouseId",
+            "description": "The lakehouse ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "mlvExecutionDefinitionId",
+            "description": "The materialized lake views execution definition ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/MaterializedLakeViewExecutionDefinition"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientPrivileges - The caller does not have sufficient permissions\n\n* ItemNotFound - Requested item ID not found",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a materialized lake views execution definition example": {
+            "$ref": "./examples/GetExecutionDefinition.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates the specified materialized lake views execution definition.",
+        "description": "Only the fields provided in the request body are updated; omitted fields retain their existing values.\n\n## Permissions\n\nThe caller must have *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nLakehouse.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "MaterializedLakeViews"
+        ],
+        "operationId": "MaterializedLakeViews_UpdateMlvExecutionDefinition",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "lakehouseId",
+            "description": "The lakehouse ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "mlvExecutionDefinitionId",
+            "description": "The materialized lake views execution definition ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateMLVExecutionDefinitionRequest",
+            "description": "Update materialized lake views execution definition request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateMaterializedLakeViewExecutionDefinitionRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/MaterializedLakeViewExecutionDefinition"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidRequest - Request parameters are invalid or not in a supported format\n\n* InsufficientPrivileges - The caller does not have sufficient permissions\n\n* ItemNotFound - Requested item ID not found\n\n* ConflictingRequest - A conflicting update was detected",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a materialized lake views execution definition example": {
+            "$ref": "./examples/UpdateExecutionDefinition.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes the specified materialized lake views execution definition.",
+        "description": "## Permissions\n\nThe caller must have *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nLakehouse.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "MaterializedLakeViews"
+        ],
+        "operationId": "MaterializedLakeViews_DeleteMlvExecutionDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "lakehouseId",
+            "description": "The lakehouse ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "mlvExecutionDefinitionId",
+            "description": "The materialized lake views execution definition ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientPrivileges - The caller does not have sufficient permissions\n\n* ItemNotFound - Requested item ID not found",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete a materialized lake views execution definition example": {
+            "$ref": "./examples/DeleteExecutionDefinition.json"
           }
         }
       }

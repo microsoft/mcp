@@ -400,7 +400,8 @@
         "datadog_monitoredresources_list",
         "monitor_workspace_list",
         "monitor_activitylog_list",
-        "monitor_healthmodels_entity_get",
+        "monitor_healthmodels_list",
+        "monitor_healthmodels_get",
         "monitor_metrics_definitions",
         "monitor_metrics_query",
         "monitor_resource_log_query",
@@ -4405,6 +4406,39 @@
       "mappedToolList": [
         "sreagent_scheduledtasks_delete",
         "sreagent_threads_delete"
+      ]
+    },
+    {
+      "name": "derive_azure_infrastructure_insights",
+      "description": "Derive insights about an existing Azure environment by analyzing patterns in Azure Resource Graph data. Supports tenant-wide or single-subscription scope and an optional free-form query describing user intent to tailor the insights for downstream infrastructure planning. Requires the MCP client to support sampling.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only reads Azure Resource Graph data and does not modify any resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool handles sensitive data such as secrets, credentials, keys, or other confidential information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "insights_get"
       ]
     }
   ]
