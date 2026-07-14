@@ -21,6 +21,10 @@ permissions:
   contents: read
   pull-requests: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   eval-job:
     runs-on: ubuntu-latest
@@ -73,22 +77,23 @@ jobs:
           ./eng/scripts/Build-Code.ps1 -BuildInfoPath "${{ github.workspace }}/.work/build_info.json" -PlatformName $platformName
 
       - name: Create vally evaluations
-        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' --launch-profile "Demo"
-
-      - name: List evaluations
-        run: ls -R ${{ github.workspace }}/.work/evals/
+        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' -- --buildInfo '${{ github.workspace }}/.work/build_info.json'
 
       - name: Run vally
         run: |
-          $evalPaths = & ./eng/scripts/Get-EvalPaths.ps1
           $commandArg = ""
+
+          Write-Host "Getting eval paths from build_info.json"
+          $evalPaths = & ./eng/scripts/Get-EvalPaths.ps1
           $evalPaths | ForEach-Object { $commandArg += "--eval-spec '$($_)' " }
+
+          Write-Host "Getting eval paths from VallyEvaluator"
+          $(Get-ChildItem "${{ github.workspace }}/.work/evals/**/eval.yaml") | ForEach-Object { $commandArg += "--eval-spec '$($_.FullName)' " }
+
           $expression = "vally eval --work-dir '${{ github.workspace }}' $commandArg"
 
-          Write-Host "Calculated: $expression"
-          Write-Host "Server exists: $(Test-Path '.work/build/Azure.Mcp.Server/linux-x64/azmcp')"
-
-          vally eval --work-dir '${{ github.workspace }}' --eval-spec '.work/evals/appconfig/eval.yaml'
+          Write-Host "Running command: $expression"
+          Invoke-Expression $expression
         shell: pwsh
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
