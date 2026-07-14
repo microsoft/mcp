@@ -31,6 +31,77 @@ Before starting, determine:
 
 ---
 
+## Security Requirements
+
+> **Terminology note:** In this repo, _tool_ refers to the MCP-exposed capability and _command_ refers to the underlying C# command class implementation. Both terms appear in the codebase and docs.
+
+**All tool inputs are untrusted.** These requirements apply at every phase and are not optional.
+
+### Input Validation
+- Validate inputs against the **specific naming rules of the Azure resource** being targeted (length, allowed characters, casing). Do not apply a generic blocklist — Azure resource naming rules vary significantly by service.
+  - Example: Storage account names are 3–24 lowercase alphanumeric characters only.
+  - Example: Resource group names allow letters, digits, underscores, hyphens, and periods up to 90 characters.
+  - Reference: [Azure naming rules and restrictions](https://learn.microsoft.com/azure/azure-resource-manager/management/resource-name-rules)
+- Use `ValidateOptions` for semantic constraints beyond nullability (name length, format, mutual exclusivity, and allowed value sets). Only reject characters that are provably invalid for the specific resource type. This applies to both the new two-generic `SubscriptionCommand` pattern and the legacy one-generic pattern — see the `ValidateOptions` override guidance in [Phase 1d](#1d-command-class).
+- Prefer SDK/runtime validators and deterministic checks first (`Length`, explicit allowed-value sets, character/category checks).
+
+### Secure Logging
+- **Never log raw option objects** (`{@Options}`) — they may contain secrets, connection strings, or PII.
+- Log only individually named, known-safe parameters. For example: `options.Subscription`, `options.ResourceGroup`, `Name`.
+- Do not include sensitive field values in error messages returned to callers.
+- Strip or redact secret values before surfacing exception details.
+
+```csharp
+// ✅ Log only known-safe, individually named fields
+_logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}",
+    Name, options.Subscription, options.ResourceGroup);
+
+// ❌ Never log the whole options object — it may contain keys, connection strings, or PII
+_logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
+
+// ❌ Never surface raw exception bodies to callers — they may contain tokens or account metadata
+return $"Request failed: {requestFailedException.Message}"; // may include auth headers
+```
+
+### Safe Downstream Interactions
+- **Never concatenate user input directly without prior validation** into URLs, shell commands, resource identifiers, query strings, etc.
+- Use `EndpointValidator` from `Microsoft.Mcp.Core.Helpers` to guard all endpoint usage — choose the method that matches your scenario:
+  - **Azure service data-plane endpoint** (endpoint derived from a resource name, e.g. storage account, ACR, App Config): call `EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, TenantService.CloudConfiguration.ArmEnvironment)` before constructing the client. This enforces the correct per-cloud domain suffix (e.g. `.blob.core.windows.net` / `.blob.core.chinacloudapi.cn`) and HTTPS.
+  - **User-supplied URL to a known external service** (e.g. a GitHub URL the user provides): call `EndpointValidator.ValidateExternalUrl(url, allowedHosts)` with an explicit allowlist of permitted hosts.
+  - **User-supplied target URL with no known domain** (e.g. a load-test target the user controls): call `EndpointValidator.ValidatePublicTargetUrl(url)`, which enforces HTTPS/HTTP-only schemes, rejects private/reserved IP ranges, rejects reserved hostnames, and resolves DNS to catch hostnames that map to internal IPs.
+- For services that *construct* the endpoint internally (not from user input), use the cloud-type switch pattern (see [Phase 1c: Service Implementation](#1c-service-interface-and-implementation)) — `EndpointValidator` is not required in that case but `ValidateAzureServiceEndpoint` can be added as a defense-in-depth layer.
+- **Control-plane operations** (ARM resource creation, RBAC assignments, policy etc.) do not need `EndpointValidator` because they go through the typed Azure SDK ARM client. Construct ARM resource IDs using `ResourceIdentifier` or collection helpers — never by string-interpolating subscription/resource-group/resource-name directly into a raw ARM path.
+- For new commands and services, always pass `CancellationToken` as the final parameter to all async downstream calls and propagate it throughout — never substitute `CancellationToken.None` or `default` at call sites.
+- Fail closed: if tenant, subscription, or resource context is ambiguous, return an explicit validation error and require the caller to specify the value. Do not silently pick a default.
+
+### MCP-Specific Threat Patterns
+
+| Threat | Established mitigation in this project |
+|--------|----------------------------------------|
+| Input abuse (oversized/malformed names) | Override `ValidateOptions` with resource-specific length and format checks using deterministic validation first (length bounds, allowed-value sets, character/category checks). For query inputs, use a dedicated validator class — see `CosmosQueryValidator.EnsureReadOnlySelect` (`tools/Azure.Mcp.Tools.Cosmos/src/Validation/CosmosQueryValidator.cs`) as a reference for length cap, keyword blocking, and injection pattern detection. |
+| Injection into downstream systems | For user-supplied queries: use a validator class that enforces a single read-only statement, caps length, strips/blocks dangerous tokens, and detects tautology patterns. Do not interpolate user input into query strings directly — prefer parameterized APIs where available. For blob/resource URIs: call `EndpointValidator.ValidateAzureServiceEndpoint` before constructing any client (see `tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs` blob URI handling as a reference). |
+| Secret leakage via logs or error responses | Log only individually named, non-sensitive fields: `options.Subscription`, `options.ResourceGroup`, `Name`. Never use `{@Options}` or log connection strings, keys, or endpoint values. Override `GetErrorMessage` to return actionable but non-revealing messages — strip raw `RequestFailedException` bodies that may contain tokens or account metadata. |
+| Cross-tenant/resource confusion | `SubscriptionCommand` base class enforces that `--subscription` is always present and resolved via `ISubscriptionResolver` before `ExecuteAsync` is called. Pass `options.Tenant` to all service calls so `ITenantService` can validate tenant context per-request. Fail explicitly if tenant context is ambiguous — do not fall back silently. |
+| SSRF-like endpoint misuse | Use `EndpointValidator` from `Microsoft.Mcp.Core.Helpers`: `ValidateAzureServiceEndpoint(endpoint, serviceType, armEnvironment)` for Azure data-plane endpoints, `ValidateExternalUrl(url, allowedHosts)` for user-supplied URLs to known hosts, `ValidatePublicTargetUrl(url)` for arbitrary user-controlled targets (DNS-resolves and blocks private/reserved IPs). |
+
+### Using AI to Generate Tool Code
+
+When using an AI assistant (such as GitHub Copilot) to scaffold or generate command, service, or test code, include the following in every prompt:
+
+```
+Requirements:
+- Validate user-controlled inputs in `ValidateOptions` using resource-specific rules (naming rules, allowed values, length caps) where applicable; do not use one generic rule for all options.
+- Prefer SDK/runtime validators and deterministic checks for user input validation.
+- Log only individually named, known-safe parameters; never log option objects, credentials, keys, connection strings, or other secret-bearing fields.
+- For endpoint/URL inputs, use `EndpointValidator` methods appropriate to the scenario (`ValidateAzureServiceEndpoint`, `ValidateExternalUrl`, or `ValidatePublicTargetUrl`). Avoid direct interpolation of unvalidated input into URLs or downstream queries.
+- Add negative tests for relevant security cases introduced by the command (for example malformed names, invalid endpoint hosts, or unsafe query text) rather than a one-size-fits-all set of tests.
+- Keep error messages actionable but non-revealing: avoid exposing stack traces, raw backend payloads, or sensitive values to callers.
+```
+
+Review every AI-generated snippet for these properties before committing. Generated code that omits them must be corrected before the security gate in [Phase 7](#phase-7-pr-checklist) can be met.
+
+---
+
 ## Phase 0: New Toolset Setup (skip if adding to existing toolset)
 
 Create the toolset directory structure:
@@ -373,16 +444,43 @@ public sealed class {Resource}{Operation}Command(
 - Result record is `public` (for JSON serialization context visibility) and declared inside the command class
 - **DO NOT** log `{@Options}` — may expose sensitive information
 
-**Custom validation** (if needed beyond nullability checks):
+**Custom validation** (required for semantic and security constraints beyond nullability):
 ```csharp
 public override void ValidateOptions({Resource}{Operation}Options options, ValidationResult validationResult)
 {
     base.ValidateOptions(options, validationResult);  // checks --subscription
 
+    // Required-field check
     if (string.IsNullOrEmpty(options.MyRequiredField))
     {
         validationResult.Errors.Add("--my-required-field is required.");
     }
+
+    // Security: validate against the specific Azure resource's naming rules.
+    // Prefer deterministic checks first (length + character/category checks).
+    // Look up exact constraints at:
+    // https://learn.microsoft.com/azure/azure-resource-manager/management/resource-name-rules
+    //
+    // Example for a Storage account name (3–24 lowercase alphanumeric only):
+    if (options.Account is not null &&
+        !IsValidStorageAccountName(options.Account))
+    {
+        validationResult.Errors.Add("--account must be 3–24 lowercase alphanumeric characters (storage account naming rule).");
+    }
+}
+
+private static bool IsValidStorageAccountName(string value)
+{
+    if (value.Length is < 3 or > 24)
+        return false;
+
+    foreach (var ch in value)
+    {
+        if (!((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')))
+            return false;
+    }
+
+    return true;
 }
 ```
 
@@ -1066,6 +1164,16 @@ Before creating the PR, verify all of these:
 - [ ] No transport checks (`Environment.GetEnvironmentVariable("ASPNETCORE_URLS")`, `HttpContext`)
 - [ ] Error messages are context-aware (include OBO-specific guidance where applicable)
 - [ ] Uses `IAzureTokenCredentialProvider` for all authentication (not direct `DefaultAzureCredential`)
+
+### Security
+- [ ] `ValidateOptions` enforces format, length, and allowed-value constraints on all inputs — not only nullability
+- [ ] No raw option objects logged — only individually named, known-safe parameters (e.g., `options.Subscription`, `Name`)
+- [ ] No user input concatenated directly into URLs, resource identifiers, or command strings without prior allowlist validation
+- [ ] Data-plane endpoints validated with `EndpointValidator.ValidateAzureServiceEndpoint` (Azure services), `ValidateExternalUrl` (known external hosts), or `ValidatePublicTargetUrl` (arbitrary user-supplied targets) — never derived from raw user input without validation
+- [ ] Error messages are actionable but do not expose internal state, stack traces, or sensitive field values to callers
+- [ ] Sensitive fields (keys, secrets, connection strings) are not returned in standard list/get responses unless the command is explicitly marked `Secret = true`
+- [ ] Negative unit tests included for malformed, oversized, or hostile inputs
+- [ ] If AI was used to generate any code in this PR, the AI prompt included security requirements and the output was reviewed for compliance with the Security Requirements section
 
 ### Required Files Checklist
 
