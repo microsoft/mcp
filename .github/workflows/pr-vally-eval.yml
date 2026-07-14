@@ -10,16 +10,19 @@ on:
   workflow_dispatch:
     inputs:
       logLevel:
-        description: 'Log level'
+        description: 'Is Debug'
         required: false
-        default: 'warning'
-        type: choice
-        options: ['info', 'warning', 'debug']
+        default: false
+        type: boolean
 
 permissions:
   copilot-requests: write
   contents: read
   pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   eval-job:
@@ -28,6 +31,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7.0.0
+        with:
+          fetch-depth: 0
 
       - name: Install .NET SDK
         uses: actions/setup-dotnet@v5.4.0
@@ -38,17 +43,19 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           echo "BUILD_REASON=PullRequest" >> $GITHUB_ENV
+          echo "SYSTEM_PULLREQUEST_TARGETBRANCH=${{ github.base_ref }}" >> $GITHUB_ENV
+          echo "SYSTEM_PULLREQUEST_SOURCECOMMITID=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
 
       - name: Create build_info.json
         shell: pwsh
         run: |
           if ($env:BUILD_REASON -eq 'PullRequest') {
-            Write-Host "Run type: PR run"
+            Write-Host "Run type: PR run."
           }
           else {
             Write-Host "Run type: manual run"
           }
-          
+
           ./eng/scripts/New-BuildInfo.ps1 -ServerName Azure.Mcp.Server
 
       - name: Build server code
@@ -73,22 +80,16 @@ jobs:
           ./eng/scripts/Build-Code.ps1 -BuildInfoPath "${{ github.workspace }}/.work/build_info.json" -PlatformName $platformName
 
       - name: Create vally evaluations
-        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' --launch-profile "Demo"
-
-      - name: List evaluations
-        run: ls -R ${{ github.workspace }}/.work/evals/
+        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' -- --buildInfo '${{ github.workspace }}/.work/build_info.json'
 
       - name: Run vally
         run: |
-          $evalPaths = & ./eng/scripts/Get-EvalPaths.ps1
-          $commandArg = ""
-          $evalPaths | ForEach-Object { $commandArg += "--eval-spec '$($_)' " }
-          $expression = "vally eval --work-dir '${{ github.workspace }}' $commandArg"
+          $isDebug = '${{ github.event.inputs.logLevel }}' -eq 'true'
+          $buildInfo = '${{ github.workspace }}/.work/build_info.json'
+          $evalsDirectory = '${{ github.workspace }}/.work/evals'
+          $outputPath = '${{ github.workspace }}/.work/vally-results'
 
-          Write-Host "Calculated: $expression"
-          Write-Host "Server exists: $(Test-Path '.work/build/Azure.Mcp.Server/linux-x64/azmcp')"
-
-          vally eval --work-dir '${{ github.workspace }}' --eval-spec '.work/evals/appconfig/eval.yaml'
+          ./eng/scripts/Invoke-Vally.ps1 -BuildInfoPath $buildInfo -EvalsDirectory $evalsDirectory -OutputPath $outputPath -IsDebug:$isDebug
         shell: pwsh
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
@@ -98,5 +99,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: vally-results
-          path: ${{ github.workspace }}/vally-results
+          path: ${{ github.workspace }}/.work/vally-results
           if-no-files-found: warn
