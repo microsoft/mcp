@@ -4,9 +4,6 @@ namespace VallyEvaluator;
 
 public class RunConfiguration
 {
-    [ConfigurationKeyName("output")]
-    public string OutputDirectory { get; set; } = string.Empty;
-
     [ConfigurationKeyName("namespaces")]
     public string NamespacesValue { get; set; } = string.Empty;
 
@@ -17,4 +14,7 @@ public class RunConfiguration
 
     [ConfigurationKeyName("workingDirectory")]
     public string WorkingDirectory { get; set; } = string.Empty;
+
+    [ConfigurationKeyName("buildInfo")]
+    public string BuildInfo { get; set; } = string.Empty;
 }

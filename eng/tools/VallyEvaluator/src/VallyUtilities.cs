@@ -19,6 +19,9 @@ internal class VallyUtilities
 
     internal static readonly Dictionary<string, string> Replacements = new()
     {
+        { "<value>", "Test value" },
+        { "<app_config_store_name>", "appconfigstore"},
+        { "<app_config_key>", "appconfigkey"},
         { "<service-name>", "Azure Monitor" },
         { "<agent-name>", "Agent Tester" },
         { "<query>", "pricing information" },
