@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added `azmcp insights get` command to derive infrastructure insights from Azure Resource Graph aggregation combined with MCP sampling."
