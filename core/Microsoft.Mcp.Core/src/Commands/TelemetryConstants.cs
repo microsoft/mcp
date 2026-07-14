@@ -40,10 +40,6 @@ public class TagName
     public const string TraceParent = "w3c.traceparent";
     public const string TraceState = "w3c.tracestate";
     public const string Baggage = "w3c.baggage";
-    public const string ResolutionMethod = "resolution.method";
-    public const string SamplingAttempted = "sampling.attempted";
-    public const string SamplingSucceeded = "sampling.succeeded";
-    public const string ResolutionConfidence = "resolution.confidence";
 }
 
 public class ActivityName
