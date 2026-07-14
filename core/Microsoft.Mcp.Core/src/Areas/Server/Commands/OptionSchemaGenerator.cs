@@ -124,7 +124,7 @@ internal static class OptionSchemaGenerator
     {
         ArgumentNullException.ThrowIfNull(resultTypeInfo);
 
-        var schema = JsonSchemaExporter.GetJsonSchemaAsNode(resultTypeInfo, s_exporterOptions);
+        var schema = JsonSchemaExporter.GetJsonSchemaAsNode(resultTypeInfo, ExporterOptions);
 
         if (schema is JsonObject rootObject && IsObjectRoot(rootObject))
         {
