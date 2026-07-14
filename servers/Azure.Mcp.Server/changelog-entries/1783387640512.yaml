@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Unrecognized AZURE_TOKEN_CREDENTIALS values (e.g. typos) now log a warning listing valid values instead of silently falling back to the default credential chain."

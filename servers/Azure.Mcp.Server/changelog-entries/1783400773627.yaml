@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Fixed a thread-safety issue in CustomChainedCredential where concurrent calls to GetToken/GetTokenAsync before initialization could construct duplicate credential chains. The credential is now initialized via Lazy<T> (ExecutionAndPublication) to guarantee single initialization under concurrent access."
