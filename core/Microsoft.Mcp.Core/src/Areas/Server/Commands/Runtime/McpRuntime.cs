@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
@@ -144,29 +145,40 @@ public sealed class McpRuntime : IMcpRuntime
         }
     }
 
+    // W3C traceparent: version(2)-traceId(32)-parentId(16)-flags(2), all lowercase hex.
+    private static readonly Regex TraceParentFormat =
+        new(@"^[0-9a-f]{2}-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$", RegexOptions.Compiled);
+
+    // W3C tracestate is a comma-separated vendor list; cap at 512 chars per spec guidance.
+    private const int TraceStateMaxLength = 512;
+
     private static void CaptureToolCallMeta(Activity? activity, JsonObject? meta)
     {
         if (activity != null && meta != null)
         {
-            // Capture W3C trace context fields (Workstream H: observability and trace context)
+            // Capture W3C trace context fields (Workstream H: observability and trace context).
+            // Validate both fields against W3C formats before recording to prevent untrusted
+            // client input from injecting arbitrary data into distributed traces.
             var traceParentNode = meta["traceparent"];
             if (traceParentNode != null && traceParentNode.GetValueKind() == JsonValueKind.String)
             {
                 var traceParent = traceParentNode.GetValue<string>();
-                activity.AddTag(TagName.TraceParent, traceParent);
+                if (TraceParentFormat.IsMatch(traceParent))
+                {
+                    activity.AddTag(TagName.TraceParent, traceParent);
+                }
             }
             var traceStateNode = meta["tracestate"];
             if (traceStateNode != null && traceStateNode.GetValueKind() == JsonValueKind.String)
             {
                 var traceState = traceStateNode.GetValue<string>();
-                activity.AddTag(TagName.TraceState, traceState);
+                if (traceState.Length <= TraceStateMaxLength)
+                {
+                    activity.AddTag(TagName.TraceState, traceState);
+                }
             }
-            var baggageNode = meta["baggage"];
-            if (baggageNode != null && baggageNode.GetValueKind() == JsonValueKind.String)
-            {
-                var baggage = baggageNode.GetValue<string>();
-                activity.AddTag(TagName.Baggage, baggage);
-            }
+            // baggage is not recorded: it is an unbounded cross-service propagation bag and
+            // recording it verbatim would allow callers to write arbitrary data into telemetry.
 
             // Capture VS Code specific metadata
             var vsCodeConversationIdNode = meta["vscode.conversationId"];

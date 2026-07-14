@@ -39,7 +39,6 @@ public class TagName
     public const string Cloud = "Cloud";
     public const string TraceParent = "w3c.traceparent";
     public const string TraceState = "w3c.tracestate";
-    public const string Baggage = "w3c.baggage";
 }
 
 public class ActivityName
