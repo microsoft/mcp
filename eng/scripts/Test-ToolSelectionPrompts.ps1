@@ -1,3 +1,44 @@
+<#
+.SYNOPSIS
+Validates that tool names used in prompt documentation exist in built MCP servers.
+
+.DESCRIPTION
+Builds one or more servers, reads end-to-end prompt markdown, and compares documented
+tool names against the server's runtime tool list from `tools list --name-only`.
+
+For each server, this script:
+- Locates the prompts file (default: servers/<ServerName>/docs/e2eTestPrompts.md)
+- Parses markdown prompt rows into structured entries
+- Executes the built server binary to retrieve available tool names
+- Reports prompt entries that reference missing tools
+
+The script exits with code 0 when all checked prompts are valid, or 1 when any
+violations are found.
+
+.PARAMETER OutputPath
+Optional build output directory. Defaults to $RepoRoot/.work/build.
+
+.PARAMETER ServerName
+Optional server name to validate. If omitted, all servers from build metadata are validated.
+
+.PARAMETER PromptsFile
+Optional path to a markdown prompts file. If omitted, the server default prompts path is used.
+
+.OUTPUTS
+None. Writes validation results to standard output and exits with status code 0 or 1.
+
+.EXAMPLE
+./eng/scripts/Test-ToolSelectionPrompts.ps1
+Builds and validates all servers using each server's default prompts file.
+
+.EXAMPLE
+./eng/scripts/Test-ToolSelectionPrompts.ps1 -ServerName Azure.Mcp.Server
+Builds and validates only Azure.Mcp.Server with its default prompts file.
+
+.EXAMPLE
+./eng/scripts/Test-ToolSelectionPrompts.ps1 -ServerName Azure.Mcp.Server -PromptsFile ./servers/Azure.Mcp.Server/docs/e2eTestPrompts.md
+Validates Azure.Mcp.Server using the provided prompts file.
+#>
 [CmdletBinding()]
 param (
     # Common Parameters
