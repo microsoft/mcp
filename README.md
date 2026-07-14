@@ -80,7 +80,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **DESCRIPTION**: A Model Context Protocol (MCP) server for analyzing MSBuild binary logs (`.binlog` files). Exposes structured access to build errors, warnings, targets, tasks, and properties so AI agents can triage CI failures and answer build-diagnostic questions.
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
-- **INSTALL**: .NET global tool from the public `dnceng/dotnet-tools` Azure DevOps feed — `dotnet tool install --global Microsoft.AITools.BinlogMcp --prerelease --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json` ([package page](https://dev.azure.com/dnceng/public/_artifacts/feed/dotnet-tools/NuGet/Microsoft.AITools.BinlogMcp))
+- **INSTALL**: .NET global tool from [NuGet.org](https://www.nuget.org/packages/Microsoft.AITools.BinlogMcp) — `dotnet tool install --global Microsoft.AITools.BinlogMcp`
 
 ### <img height="18" width="18" src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" alt="GitHub Logo" /> GitHub
 - **REPOSITORY**: [github/github-mcp-server](https://github.com/github/github-mcp-server)
