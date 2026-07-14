@@ -2,7 +2,6 @@
 param (
     # Common Parameters
     [string]$OutputPath,
-    [Mandatory()]
     [string]$ServerName,
     [string]$PromptsFile
 )
@@ -73,6 +72,25 @@ function Read-PromptFile {
     return $prompts
 }
 
+function Get-PlatformName {
+    [string]$fullPlatform = ""
+
+    if ($IsWindows) {
+        $fullPlatform = "windows"
+    } elseif ($IsLinux) {
+        $fullPlatform = "linux"
+    } elseif ($IsMacOS) {
+        $fullPlatform = "macos"
+    } else {
+        throw "Unsupported platform"
+    }
+
+    $currentArch = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier.Split('-')[1]
+    $fullPlatform += "-$currentArch"
+
+    return $fullPlatform
+}
+
 # Start of script
 if (!$OutputPath) {
     $OutputPath = "$RepoRoot/.work/build"
@@ -82,13 +100,11 @@ if (!$OutputPath) {
 $buildInfoPath = "$RepoRoot/.work/build_info.json"
 $buildOutputPath = "$RepoRoot/.work/build"
 
-if (!$PromptsFile) {
-    $PromptsFile = Join-Path $RepoRoot "servers" $ServerName "docs" "e2eTestPrompts.md"
-}
 
-if (!(Test-Path $PromptsFile)) {
-    Write-Information "Prompts file not found: $PromptsFile - skipping prompt validation"
-    return
+if ($ServerName) {
+    Write-Host "Validating tool name length for $ServerName"
+} else {
+    Write-Host "Validating tool name length for all servers"
 }
 
 # Clean up previous build artifacts
@@ -105,11 +121,12 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-# Build the server
-& "$RepoRoot/eng/scripts/Build-Code.ps1" -ServerName $ServerName -OutputPath $buildOutputPath
+# Build the servers
+$platformName = Get-PlatformName
+& "$RepoRoot/eng/scripts/Build-Code.ps1" -BuildInfoPath $buildInfoPath -PlatformName $platformName
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "Failed to build $ServerName"
+    Write-Error "Failed to build servers."
     exit 1
 }
 
@@ -117,104 +134,126 @@ if ($LASTEXITCODE -ne 0) {
 $buildInfo = Get-Content $buildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 
 # Get servers to test
-$serverInfo = $buildInfo.servers | Where-Object { $_.name -eq $ServerName } | Select-Object -First 1
-if (-not $serverInfo) {
+$serversToTest = $buildInfo.servers
+if (-not $serversToTest -or $serversToTest.Count -eq 0) {
     Write-Error "No servers found in build_info.json"
     exit 1
 }
 
-$currentServerName = $serverInfo.name
-Write-Host "=================================================="
-Write-Host "Testing: $currentServerName"
-Write-Host "=================================================="
+Write-Host "Testing $($serversToTest.Count) server(s)"
+Write-Host ""
 
-# Get the executable name and find the built platform
-$executableName = $serverInfo.cliName + $(if ($IsWindows) { ".exe" } else { "" })
+[int]$violationsCount = 0
 
-# Find the first platform that was actually built
-$builtPlatform = $serverInfo.platforms | Where-Object { 
-    Test-Path "$buildOutputPath/$($_.artifactPath)" 
-} | Select-Object -First 1
+foreach ($serverInfo in $serversToTest) {
+    $currentServerName = $serverInfo.name
+    Write-Host "=================================================="
+    Write-Host "Testing: $currentServerName"
+    Write-Host "=================================================="
 
-if (-not $builtPlatform) {
-    Write-Warning "No built platform found for $currentServerName - aborting tool prompt validation"
-    exit 1
-}
+    $serverPromptsFile = $PromptsFile
+    if (!$serverPromptsFile) {
+        $serverPromptsFile = Join-Path $RepoRoot "servers" $currentServerName "docs" "e2eTestPrompts.md"
+    }
 
-$executablePath = "$buildOutputPath/$($builtPlatform.artifactPath)/$executableName"
+    if (!(Test-Path $serverPromptsFile)) {
+        Write-Host "Prompts file not found: $serverPromptsFile - skipping prompt validation"
+        continue
+    }
+    else {
+        Write-Host "Using prompts file: $serverPromptsFile"
+    }
 
-if (-not (Test-Path $executablePath)) {
-    Write-Error "Executable not found at $executablePath for $currentServerName"
-    exit 1
-}
+    # Get the executable name and find the built platform
+    $executableName = $serverInfo.cliName + $(if ($IsWindows) { ".exe" } else { "" })
 
-# Try to get tools - some servers may not support 'tools list'
-Write-Host "Loading tools from $currentServerName"
+    # Find the first platform that was actually built
+    $builtPlatform = $serverInfo.platforms | Where-Object { 
+        Test-Path "$buildOutputPath/$($_.artifactPath)" 
+    } | Select-Object -First 1
 
-# Example response from 'tools list --name-only' command:
-# {
-#   "status": 200,
-#   "message": "Success",
-#   "results": {
-#     "names": [ 
-#        "acr_registry_list",
-#         "acr_registry_repository_list",
-#     ]
-#   }
-# }
-$toolsJson = & $executablePath tools list --name-only 2>&1 | Out-String
+    if (-not $builtPlatform) {
+        Write-Warning "No built platform found for $currentServerName - skipping tool prompt validation"
+        continue
+    }
 
-if ($LASTEXITCODE -ne 0) {
-    Write-Warning "$currentServerName 'tools list' command failed with exit code $LASTEXITCODE (may have no tools) - skipping"
-    return
-}
+    $executablePath = "$buildOutputPath/$($builtPlatform.artifactPath)/$executableName"
 
-if ([string]::IsNullOrWhiteSpace($toolsJson)) {
-    Write-Warning "No output received from '$currentServerName tools list --name-only' - skipping"
-    $skippedServers++
-    return
-}
+    if (-not (Test-Path $executablePath)) {
+        Write-Error "Executable not found at $executablePath for $currentServerName"
+        exit 1
+    }
 
-$toolsResult = $toolsJson | ConvertFrom-Json
-$tools = $toolsResult.results
+    # Try to get tools - some servers may not support 'tools list'
+    Write-Host "Loading tools from $currentServerName"
 
-if ($null -eq $tools) {
-    Write-Warning "Server [$currentServerName] 'tools list' command did not return any tools - skipping"
-    return
-} elseif ($null -eq $tools.names) {
-    Write-Warning "Server [$currentServerName] No 'names' property found in response - skipping. Response: `n$toolsJson`n"
-    return
-} elseif ($tools.names.Count -eq 0) {
-    Write-Warning "Server [$currentServerName] No tool names found - skipping"
-    return
-}
+    # Example response from 'tools list --name-only' command:
+    # {
+    #   "status": 200,
+    #   "message": "Success",
+    #   "results": {
+    #     "names": [ 
+    #        "acr_registry_list",
+    #         "acr_registry_repository_list",
+    #     ]
+    #   }
+    # }
+    $toolsJson = & $executablePath tools list --name-only 2>&1 | Out-String
 
-Write-Host "Loaded $($tools.names.Count) tools"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning "$currentServerName 'tools list' command failed with exit code $LASTEXITCODE (may have no tools) - skipping"
+        continue
+    }
 
-if (Test-Path $PromptsFile) {
-    Write-Host "Using prompts file: $PromptsFile"
-} else {
-    Write-Warning "Prompts file not found: $PromptsFile - skipping prompt validation"
-    return
-}
+    if ([string]::IsNullOrWhiteSpace($toolsJson)) {
+        Write-Warning "No output received from '$currentServerName tools list --name-only' - skipping"
+        continue
+    }
 
-$allPrompts = Read-PromptFile -PromptsFile $PromptsFile
-$violations = [System.Collections.Generic.List[Prompt]]::new()
+    $toolsResult = $toolsJson | ConvertFrom-Json
+    $tools = $toolsResult.results
 
-foreach ($prompt in $allPrompts) {
-    if ($tools.names -notcontains $prompt.ToolName) {
-        $violations.Add($prompt)
+    if ($null -eq $tools) {
+        Write-Warning "Server [$currentServerName] 'tools list' command did not return any tools - skipping"
+        continue
+    } elseif ($null -eq $tools.names) {
+        Write-Warning "Server [$currentServerName] No 'names' property found in response - skipping. Response: `n$toolsJson`n"
+        continue
+    } elseif ($tools.names.Count -eq 0) {
+        Write-Warning "Server [$currentServerName] No tool names found - skipping"
+        continue
+    }
+
+    Write-Host "Loaded $($tools.names.Count) tools"
+
+    
+    $allPrompts = Read-PromptFile -PromptsFile $serverPromptsFile
+    $violations = [System.Collections.Generic.List[Prompt]]::new()
+
+    foreach ($prompt in $allPrompts) {
+        if ($tools.names -notcontains $prompt.ToolName) {
+            $violations.Add($prompt)
+        }
+    }
+
+    $violationsCount += $violations.Count
+
+    if ($violations.Count -eq 0) {
+        Write-Host "All prompts are valid for $currentServerName" -ForegroundColor Green
+    }
+    else {
+        Write-Host "Found $($violations.Count) violation(s).  The following prompts have tool names that do not exist:" -ForegroundColor Red
+        $violations | ForEach-Object {
+            Write-Host "[$($_.ToolArea)]`t$($_.ToolName):`t$($_.Prompt)" -ForegroundColor Red
+        }
     }
 }
 
-if ($violations.Count -eq 0) {
-    Write-Host "All E2E prompts are valid!" -ForegroundColor Green
+if ($violationsCount -eq 0) {
+    Write-Host "All tested servers passed validation!" -ForegroundColor Green
+    exit 0
 }
 else {
-    Write-Host "Found $($violations.Count) violation(s).  The following prompts have tool names that do not exist:" -ForegroundColor Red
-    $violations | ForEach-Object {
-        Write-Host "[$($_.ToolArea)]`t$($_.ToolName):`t$($_.Prompt)" -ForegroundColor Red
-    }
+    Write-Host "Validation failed - see violations above" -ForegroundColor Red
+    exit 1
 }
-
-Write-Host ""
