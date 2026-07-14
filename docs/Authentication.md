@@ -66,7 +66,7 @@ Regardless of which credential is used, the authenticated identity must have the
 When the Azure MCP Server is hosted remotely (for example, on Azure Container Apps) using HTTP transport, authentication operates in two layers:
 
 1. **Inbound authentication** — the client authenticates to the Azure MCP Server (protocol-hardened in MCP 2026-07-28)
-2. **Outbound authentication** — the Azure MCP Server authenticates to downstream Azure services and external MCP servers (subject to stricter issuer validation per MCP 2026-07-28)
+2. **Outbound authentication** — the Azure MCP Server authenticates to downstream Azure services and external MCP servers (see [External MCP Server OAuth Compliance](#external-mcp-server-oauth-compliance-mcp-2026-07-28) for registry server requirements under MCP 2026-07-28)
 
 ```mermaid
 sequenceDiagram
@@ -83,7 +83,7 @@ sequenceDiagram
 ```
 
 > [!NOTE]
-> **MCP 2026-07-28 changes:** Both inbound and outbound authentication now enforce stricter issuer validation and protocol compliance. See [External MCP Server OAuth Compliance](#external-mcp-server-oauth-compliance-mcp-2026-07-28) for details on external server requirements.
+> **MCP 2026-07-28 changes:** Inbound authentication validates JWT issuer, audience, and scope via Microsoft.Identity.Web. For registry-backed external MCP servers, HTTPS and non-empty scope entries are enforced by the server; issuer/audience validation of the outbound Azure Identity token is performed by the downstream resource. See [External MCP Server OAuth Compliance](#external-mcp-server-oauth-compliance-mcp-2026-07-28) for details.
 
 > [!TIP]
 > Want to get started quickly? The [`azd` templates](#deploy-with-azd-templates) below automate the entire setup illustrated above.
@@ -162,10 +162,11 @@ External MCP servers configured in the registry with `OAuthScopes` must meet the
 
 | Requirement | Details |
 |---|---|
-| **HTTPS endpoint** | All OAuth-protected registry servers must use HTTPS (`https://` scheme) |
-| **Issuer validation** | The server's identity must be resolvable and validated by the OAuth provider |
-| **Application type** | Registry servers must be registered as the correct OAuth application type (confidential vs public client) |
-| **Scope registration** | All scopes in `OAuthScopes` must be registered with the OAuth provider |
+| **HTTPS endpoint** | All OAuth-protected registry servers must use HTTPS (`https://` scheme) — enforced by the server |
+| **Non-empty scopes** | All scopes in `OAuthScopes` must be non-empty strings — enforced by the server |
+| **Issuer validation** | A deployment requirement: the server's issuer identity should be resolvable and validated by its OAuth provider. Azure Identity bearer tokens carry issuer/audience claims that the downstream resource validates; the Azure MCP registry client does not perform additional client-side issuer binding |
+| **Application type** | A deployment requirement: registry servers should be registered as the correct OAuth application type (confidential vs public client) with their OAuth provider |
+| **Scope registration** | A deployment requirement: all scopes in `OAuthScopes` should be registered with the OAuth provider |
 | **Protected resource metadata** | Recommended: Publish `.well-known/oauth-protected-resource` metadata per OAuth Protected Resources spec |
 
 ### Known Limitation: MCP Protocol Resource Parameter
