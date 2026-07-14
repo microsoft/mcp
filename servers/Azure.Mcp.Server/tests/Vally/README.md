@@ -18,8 +18,8 @@ namespace) and, within each area, by **tool**:
 tests/Vally/
 |-- Invoke-VallyEval.ps1              # Discovers, builds azmcp, provisions, runs, tears down
 |-- eventhubs/                        # An AREA (one subfolder per namespace)
-|   |-- eventhub-get.experiment.yaml      # <tool>.experiment.yaml - defines baseline+treatment variants (required)
-|   |-- eventhub-get.eval.yaml            # <tool>.eval.yaml        - the shared eval spec both variants run (required)
+|   |-- eventhub-get.experiment.yaml      # <tool>.experiment.yaml - defines baseline + server-mode variants (required)
+|   |-- eventhub-get.eval.yaml            # <tool>.eval.yaml        - the shared eval spec every variant runs (required)
 |   |-- New-EventHubsResources.ps1        # New-*Resources.ps1    - per-area provisioning (optional)
 |   |-- Remove-EventHubsResources.ps1     # Remove-*Resources.ps1 - per-area teardown     (optional)
 |-- README.md                         # This file
@@ -32,51 +32,61 @@ discovered **per area** and run once for all of that area's tools.
 
 The first area, `eventhubs/`, evaluates the **get Event Hub** tool
 (`eventhubs_eventhub_get`). Its `eventhub-get.experiment.yaml` runs the shared
-`eventhub-get.eval.yaml` as two variants that differ only in whether the Azure MCP
-server is present:
+`eventhub-get.eval.yaml` as three variants that differ only in whether (and how)
+the Azure MCP server is present:
 
-- **treatment**: the agent has the Azure MCP Event Hubs tools.
+- **namespace**: the agent has the Azure MCP Event Hubs tools, with the server
+  in its default `namespace` proxy mode (one tool per namespace).
+- **consolidated**: the same tools, but with the server in `consolidated` proxy
+  mode (related operations grouped into consolidated tools).
 - **baseline** (control): the *same* prompts and graders, but the experiment
   deletes `environment.mcpServers.azure`, so **no** Azure MCP server is connected.
 
-The two are identical except for the presence of the Azure MCP server, so the
-delta between them isolates the server's contribution - see
-[Treatment vs. baseline](#treatment-vs-baseline-control) below.
+`baseline` is the control; `namespace` and `consolidated` are the server
+**candidates**. Each candidate is identical to the baseline except for the
+presence (and mode) of the Azure MCP server, so the delta between a candidate and
+the baseline isolates the server's contribution in that mode - see
+[Server variants vs. baseline](#server-variants-vs-baseline-control) below.
 
 ## What the Event Hubs experiment checks
 
-Both variants send the same natural-language prompts (e.g. *"List all of the Event
-Hubs in my namespace..."*) and are graded identically by the same **outcome**
-grader - an [LLM `prompt` judge](https://microsoft.github.io/vally/reference/graders/)
+All three variants send the same natural-language prompts (e.g. *"List all of the
+Event Hubs in my namespace..."*) and are graded identically by the same
+**outcome** grader - an [LLM `prompt` judge](https://microsoft.github.io/vally/reference/graders/)
 that checks the agent **actually returned** the requested Event Hubs (real data
 from Azure, not a refusal, a deferral, or fabricated values).
 
 Grading is intentionally **outcome-only**: tool-selection assertions (e.g. a
 `tool-calls` grader asserting the agent invoked `eventhubs_eventhub_get`) are
 *not* used, because the baseline variant has no MCP tool to call, so such a grader
-could never be satisfied consistently across variants. Judging both variants on
+could never be satisfied consistently across variants. Judging every variant on
 the same outcome question is exactly what makes the comparison meaningful.
 
 Sign in with `az login` (and provision the resources below) so the agent can
 return real Event Hubs data - the shared outcome grader needs it.
 
-## Treatment vs. baseline (control)
+## Server variants vs. baseline (control)
 
 The experiment (`eventhub-get.experiment.yaml`) runs the shared eval spec
-(`eventhub-get.eval.yaml`) as two variants that differ only in whether the Azure
-MCP server is present:
+(`eventhub-get.eval.yaml`) as three variants that differ only in whether (and
+how) the Azure MCP server is present:
 
-- **treatment**: inherits the eval spec as-is, WITH the Azure MCP server.
+- **namespace**: inherits the eval spec as-is, WITH the Azure MCP server in its
+  default `namespace` proxy mode.
+- **consolidated**: WITH the Azure MCP server, but the variant overrides `--mode`
+  to `consolidated` so related operations are grouped into consolidated tools.
 - **baseline** (control): the experiment deletes `environment.mcpServers.azure`,
   so the agent runs with only its built-in tools.
 
-Because both variants come from the *same* eval spec, they share the exact same
+Because every variant comes from the *same* eval spec, they share the exact same
 prompts and the same outcome grader by construction, so their verdicts are
-directly comparable.
+directly comparable. `namespace` and `consolidated` are the server **candidates**;
+each is compared against the shared `baseline`.
 
 | Variant | Azure MCP server | Grading | Typical verdict |
 |:--------|:-----------------|:--------|:----------------|
-| treatment | yes (connected) | `prompt` (shared outcome) | **PASS** |
+| namespace | yes (`--mode namespace`) | `prompt` (shared outcome) | **PASS** |
+| consolidated | yes (`--mode consolidated`) | `prompt` (shared outcome) | **PASS** |
 | baseline (control) | no (deleted) | `prompt` (shared outcome) | **FAIL** (often) |
 
 The baseline is the *control*: without the Azure MCP server the agent has no
@@ -87,9 +97,9 @@ CLI (`az eventhubs ...`) via its built-in `powershell` tool and satisfy the
 outcome grader anyway (see [Interpreting effectiveness](#interpreting-effectiveness)
 below).
 
-Because both variants grade *outcome*, the agent needs real data to have any chance
-of passing; run `az login` (and provision the resources below) first so the
-comparison is honest - the treatment can return real Event Hubs while the baseline
+Because every variant grades *outcome*, the agent needs real data to have any
+chance of passing; run `az login` (and provision the resources below) first so the
+comparison is honest - the candidates can return real Event Hubs while the baseline
 still cannot.
 
 ## Prerequisites
@@ -100,8 +110,8 @@ still cannot.
 2. **.NET SDK** - required to build the `azmcp` server (see the repo root
    `global.json` for the pinned version).
 3. **Azure sign-in** - `az login`. Required to provision real Event Hubs (see
-   below) and for the treatment to return real data; the outcome-graded baseline
-   needs real data to be a fair test.
+   below) and for the server candidates to return real data; the outcome-graded
+   baseline needs real data to be a fair test.
 4. **Azure CLI** - `az` on your `PATH`, only needed if you use the provisioning
    scripts.
 
@@ -145,10 +155,10 @@ From this directory:
 The script builds `Azure.Mcp.Server`, prepends the freshly built `azmcp` to
 `PATH` (vally does not expand environment variables inside eval specs),
 **discovers every `<tool>.experiment.yaml` under every area subfolder**, and for
-each one provisions the area, runs the experiment (both the treatment and baseline
-variants), and tears the area down. It prints a per-tool comparison. Its exit code
-is non-zero if any *treatment* variant fails (baseline failures are expected).
-Useful switches:
+each one provisions the area, runs the experiment (the baseline plus every server
+candidate variant), and tears the area down. It prints a per-tool comparison. Its
+exit code is non-zero if any *candidate* variant fails (baseline failures are
+expected). Useful switches:
 
 ```powershell
 # Skip the build if azmcp is already built and on PATH
@@ -178,8 +188,8 @@ Useful switches:
 To run an experiment by hand (with `azmcp` already on `PATH`):
 
 ```powershell
-# Runs the shared eval spec as both variants (treatment + baseline) and writes each
-# under a timestamped subfolder of --output-dir.
+# Runs the shared eval spec as every variant (baseline + namespace + consolidated)
+# and writes each under a timestamped subfolder of --output-dir.
 vally experiment run ./eventhubs/eventhub-get.experiment.yaml --output-dir ./.vally-results/eventhubs/eventhub-get
 ```
 
@@ -188,7 +198,7 @@ vally experiment run ./eventhubs/eventhub-get.experiment.yaml --output-dir ./.va
 The runner writes each experiment's runs under `--output-dir` (default
 `./.vally-results`) in an `<area>/<tool>/` subdirectory. `vally experiment run`
 then creates a timestamped folder per run, with one subfolder per variant
-(`treatment` and `baseline`), each containing:
+(`baseline`, `namespace`, and `consolidated`), each containing:
 
 - `results.jsonl` - one JSON record per stimulus (a `trial-result`, plus a final
   `run-summary`). Each `trial-result` carries the verdict (`gradeResult.passed`)
@@ -198,15 +208,16 @@ then creates a timestamped folder per run, with one subfolder per variant
 
 ### Interpreting effectiveness
 
-The point of the treatment-vs-baseline pairing is to measure the Azure MCP
-server's *effectiveness*. After both runs complete, the script reads the newest
-`results.jsonl` from each side and compares them **per stimulus**:
+The point of the candidate-vs-baseline pairing is to measure the Azure MCP
+server's *effectiveness*. After the runs complete, the script reads the newest
+`results.jsonl` from the baseline and from each candidate (`namespace`,
+`consolidated`) and compares each candidate against the baseline **per stimulus**:
 
-| Baseline (no server) | Treatment (with server) | Category | Meaning |
+| Baseline (no server) | Candidate (with server) | Category | Meaning |
 |:---------------------|:------------------------|:---------|:--------|
 | FAIL | PASS | **VALUABLE** | The server enabled an outcome the agent could not achieve without it. |
 | PASS | FAIL | **REGRESSION** | The agent succeeded *without* the server but failed *with* it - the server hurt the outcome. |
-| PASS | PASS | **BOTH PASS** | The server was not required for the outcome. Efficiency decides: lower **tokens**, **turns**, and **wall time** are better; the script prints each metric and the treatment-vs-baseline delta. |
+| PASS | PASS | **BOTH PASS** | The server was not required for the outcome. Efficiency decides: lower **tokens**, **turns**, and **wall time** are better; the script prints each metric and the candidate-vs-baseline delta. |
 | FAIL | FAIL | **INCONCLUSIVE** | Neither achieved the outcome. |
 
 A **BOTH PASS** result is common and expected: the baseline agent can shell out to
@@ -215,8 +226,8 @@ without the MCP server. That is not a problem in itself - it just means this
 stimulus does not *require* the server, and the comparison falls through to
 efficiency (fewer tokens/turns/less wall-clock time is better).
 
-The process exit code is `0` when every *treatment* eval verdict passes, and `1`
-if any treatment eval fails, an effectiveness **REGRESSION** is detected, **or**
+The process exit code is `0` when every *candidate* eval verdict passes, and `1`
+if any candidate eval fails, an effectiveness **REGRESSION** is detected, **or**
 any area's provisioning fails. Baseline outcome failures on their own are expected
 and do not affect it, so the script is CI-friendly.
 
@@ -249,7 +260,7 @@ run per experiment from `--output-dir`:
 selects how many of the newest timestamped runs per tool to report (oldest-first,
 so iteration numbers read chronologically). The vally exit code isn't persisted in
 the artifacts, so report-only relies on the per-stimulus verdicts in each
-`results.jsonl`; the process still exits non-zero if a treatment stimulus failed
+`results.jsonl`; the process still exits non-zero if a candidate stimulus failed
 or an effectiveness **REGRESSION** is detected. This is handy for re-examining or
 debugging a prior run - it's exactly how the summary logic itself is validated.
 
@@ -266,9 +277,11 @@ No script changes are needed - the runner discovers new evals by convention:
    tool-selection graders to maintain.
 3. Add the experiment named **`<tool>.experiment.yaml`** (e.g.
    `eventhub-update.experiment.yaml`) - copy `eventhubs/eventhub-get.experiment.yaml`,
-   point its `evals:` at your new `.eval.yaml`, and keep the `baseline`/`treatment`
-   variants (the baseline deletes `environment.mcpServers.azure`). No separate
-   baseline eval file is needed - the variants are defined here.
+   point its `evals:` at your new `.eval.yaml`, and keep the `baseline`,
+   `namespace`, and `consolidated` variants (the baseline deletes
+   `environment.mcpServers.azure`; the `consolidated` variant overrides `--mode`,
+   so update its `--namespace` argument to match). No separate baseline eval file
+   is needed - the variants are defined here.
 4. For a new area needing Azure resources, add `New-*Resources.ps1` and
    `Remove-*Resources.ps1` to that area folder (see the Event Hubs pair as a
    template). They are discovered and run per area.

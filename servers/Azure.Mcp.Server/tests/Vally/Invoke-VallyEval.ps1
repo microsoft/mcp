@@ -19,11 +19,14 @@ This is a wrapper around the vally CLI (https://microsoft.github.io/vally) that:
      script afterwards (even when a run or provisioning fails), so resources are
      not leaked.
   4. For each discovered tool, runs its experiment (<tool>.experiment.yaml) via
-     `vally experiment run`. The experiment executes the shared eval spec as two
-     variants for comparison:
-       - treatment - WITH the Azure MCP server, and
-       - baseline  - WITHOUT the Azure MCP server.
-     The delta between them isolates the Azure MCP server's contribution.
+     `vally experiment run`. The experiment executes the shared eval spec as
+     several variants for comparison:
+       - namespace    - WITH the Azure MCP server in its default `namespace` mode,
+       - consolidated - WITH the Azure MCP server in `consolidated` mode, and
+       - baseline     - WITHOUT the Azure MCP server.
+     `baseline` is the control; `namespace` and `consolidated` are the server
+     CANDIDATES. The delta between each candidate and the baseline isolates the
+     Azure MCP server's contribution in that mode.
      Each experiment is run -Iterations time(s) (default 1); the results summary
      reports the outcome of every iteration.
 
@@ -43,11 +46,11 @@ to run a single experiment.
 Vally must be installed and on your PATH. See
 https://microsoft.github.io/vally/get-started/install/.
 
-Both variants are graded on the same task *outcome*, so their verdicts are
+All variants are graded on the same task *outcome*, so their verdicts are
 directly comparable; the baseline (no Azure MCP server) is EXPECTED TO FAIL when
-the tool is required. Provide a real subscription (via `az login`) so the
-treatment can return real data and the comparison is meaningful. The script's exit
-code is non-zero if any experiment fails to run or a treatment stimulus fails;
+the tool is required. Provide a real subscription (via `az login`) so each
+candidate can return real data and the comparison is meaningful. The script's exit
+code is non-zero if any experiment fails to run or a candidate stimulus fails;
 baseline failures are expected and do not affect it.
 
 Pass -ReportOnly (or -ReportFrom <dir>) to skip building, provisioning, and
@@ -61,16 +64,16 @@ of discovering them. Cannot be combined with -Area or -Tool.
 
 .PARAMETER Iterations
 Number of times to run each discovered experiment (default 1). Every iteration is
-a full `vally experiment run` (baseline + treatment) written to its own
-timestamped directory, and the results summary reports each iteration's outcome
+a full `vally experiment run` (baseline + every server candidate) written to its
+own timestamped directory, and the results summary reports each iteration's outcome
 plus an aggregate pass count. Useful for surfacing non-deterministic (flaky)
 results. Must be 1 or greater.
 
 .PARAMETER OutputDir
 Parent directory where vally writes its run artifacts. Each experiment's runs go
 to an '<area>/<tool>' subdirectory, under which `vally experiment run` creates a
-timestamped folder with one subfolder per variant (baseline, treatment). Defaults
-to ./.vally-results next to this script.
+timestamped folder with one subfolder per variant (baseline, namespace,
+consolidated). Defaults to ./.vally-results next to this script.
 
 .PARAMETER PreEvalScript
 Optional path to a provisioning script run BEFORE the evaluations (e.g.
@@ -140,7 +143,7 @@ summary from artifacts a previous run saved under -OutputDir (or -ReportFrom). T
 the newest timestamped run(s) per tool to report (default 1). Because the vally
 exit code is not persisted in the artifacts, the summary relies on the per-stimulus
 verdicts in each run's results.jsonl; the process still exits non-zero if a
-treatment stimulus failed or an effectiveness regression is detected.
+candidate stimulus failed or an effectiveness regression is detected.
 
 .PARAMETER ReportFrom
 Optional path to a results tree to report from (its '<area>/<tool>/<timestamp>'
@@ -267,8 +270,8 @@ if (-not $ReportOnly) {
 # 4. Run the experiment(s).
 #
 # `vally experiment run` executes the shared eval spec once per variant
-# (baseline + treatment) and writes each variant's results under a single
-# timestamped run directory it creates beneath --output-dir:
+# (baseline + every server candidate) and writes each variant's results under a
+# single timestamped run directory it creates beneath --output-dir:
 #
 #   <RunOutputDir>/<timestamp>/
 #     report.md                      # combined markdown report
@@ -336,15 +339,15 @@ function Format-Ms {
     return '{0:0.0}s' -f ($Ms / 1000.0)
 }
 
-# Formats a treatment-vs-baseline delta (lower is better) as e.g. "+12343 (+28%)"
-# or "-2.8s (-9%)". A negative value means the treatment used less - i.e. better.
+# Formats a candidate-vs-baseline delta (lower is better) as e.g. "+12343 (+28%)"
+# or "-2.8s (-9%)". A negative value means the candidate used less - i.e. better.
 function Format-Delta {
     param(
-        [Parameter(Mandatory)] [int] $Treatment,
+        [Parameter(Mandatory)] [int] $Candidate,
         [Parameter(Mandatory)] [int] $Baseline,
         [switch] $AsSeconds
     )
-    $delta = $Treatment - $Baseline
+    $delta = $Candidate - $Baseline
     $sign = ($delta -gt 0) ? '+' : ''
     $body = $AsSeconds ? ('{0}{1:0.0}s' -f $sign, ($delta / 1000.0)) : ('{0}{1}' -f $sign, $delta)
     if ($Baseline -ne 0) {
@@ -442,42 +445,43 @@ function Get-VallyStimulusResults {
     return $byStimulus
 }
 
-# Classifies a single stimulus by comparing the treatment (WITH the Azure MCP
-# server) against the baseline (WITHOUT it). This encodes the effectiveness
-# criteria: the server is VALUABLE when it enables an outcome the baseline could
-# not achieve; it is a REGRESSION when the baseline succeeds without it but the
-# treatment fails; when BOTH PASS the tool was not required for the outcome and
-# efficiency (tokens/turns/wall time, lower is better) decides; INCONCLUSIVE when
-# neither succeeds.
+# Classifies a single stimulus by comparing a candidate (WITH the Azure MCP
+# server, in a given mode) against the baseline (WITHOUT it). This encodes the
+# effectiveness criteria: the server is VALUABLE when it enables an outcome the
+# baseline could not achieve; it is a REGRESSION when the baseline succeeds
+# without it but the candidate fails; when BOTH PASS the tool was not required
+# for the outcome and efficiency (tokens/turns/wall time, lower is better)
+# decides; INCONCLUSIVE when neither succeeds.
 function Get-EffectivenessCategory {
-    param($Treatment, $Baseline)
+    param($Candidate, $Baseline)
 
-    if (-not $Treatment) { return 'NO DATA' }
-    if (-not $Baseline) { return $Treatment.Passed ? 'PASS (no baseline)' : 'FAIL (no baseline)' }
-    if ($Treatment.Passed -and -not $Baseline.Passed) { return 'VALUABLE' }
-    if (-not $Treatment.Passed -and $Baseline.Passed) { return 'REGRESSION' }
-    if (-not $Treatment.Passed -and -not $Baseline.Passed) { return 'INCONCLUSIVE' }
+    if (-not $Candidate) { return 'NO DATA' }
+    if (-not $Baseline) { return $Candidate.Passed ? 'PASS (no baseline)' : 'FAIL (no baseline)' }
+    if ($Candidate.Passed -and -not $Baseline.Passed) { return 'VALUABLE' }
+    if (-not $Candidate.Passed -and $Baseline.Passed) { return 'REGRESSION' }
+    if (-not $Candidate.Passed -and -not $Baseline.Passed) { return 'INCONCLUSIVE' }
     return 'BOTH PASS'
 }
 
-# When both treatment and baseline pass, decides which is more efficient using the
-# three lower-is-better metrics, returning a short human-readable judgment.
+# When both a candidate and the baseline pass, decides which is more efficient
+# using the three lower-is-better metrics, returning a short human-readable
+# judgment.
 function Get-EfficiencyJudgment {
-    param($Treatment, $Baseline)
+    param($Candidate, $Baseline)
 
     $wins = 0
     $losses = 0
     foreach ($pair in @(
-            , @($Treatment.TotalTokens, $Baseline.TotalTokens)
-            , @($Treatment.TurnCount, $Baseline.TurnCount)
-            , @($Treatment.WallTimeMs, $Baseline.WallTimeMs))) {
+            , @($Candidate.TotalTokens, $Baseline.TotalTokens)
+            , @($Candidate.TurnCount, $Baseline.TurnCount)
+            , @($Candidate.WallTimeMs, $Baseline.WallTimeMs))) {
         if ($pair[0] -lt $pair[1]) { $wins++ }
         elseif ($pair[0] -gt $pair[1]) { $losses++ }
     }
-    if ($wins -gt 0 -and $losses -eq 0) { return "treatment more efficient (better on $wins/3 metrics)" }
-    if ($losses -gt 0 -and $wins -eq 0) { return "treatment less efficient (worse on $losses/3 metrics)" }
+    if ($wins -gt 0 -and $losses -eq 0) { return "candidate more efficient (better on $wins/3 metrics)" }
+    if ($losses -gt 0 -and $wins -eq 0) { return "candidate less efficient (worse on $losses/3 metrics)" }
     if ($wins -eq 0 -and $losses -eq 0) { return 'equivalent efficiency' }
-    return "mixed (treatment better on $wins, worse on $losses)"
+    return "mixed (candidate better on $wins, worse on $losses)"
 }
 
 # Picks the console color that reflects an effectiveness category / judgment.
@@ -488,7 +492,7 @@ function Get-VerdictColor {
         'REGRESSION' { return 'Red' }
         'INCONCLUSIVE' { return 'Red' }
         'BOTH PASS' {
-            if ($Judgment -like 'treatment more efficient*' -or $Judgment -like 'equivalent*') { return 'Green' }
+            if ($Judgment -like 'candidate more efficient*' -or $Judgment -like 'equivalent*') { return 'Green' }
             return 'Yellow'
         }
         'PASS*' { return 'Green' }
@@ -497,33 +501,116 @@ function Get-VerdictColor {
     }
 }
 
-# Reports a single experiment iteration's treatment-vs-baseline comparison,
-# writing the per-stimulus effectiveness verdicts. Returns an object describing
-# whether the iteration should fail the overall run (the experiment failed to
-# produce results, a treatment stimulus failed, or an effectiveness REGRESSION
-# was detected) along with the treatment/baseline verdicts so callers can
-# aggregate outcomes across iterations.
+# Reports one candidate variant (WITH the Azure MCP server in a given mode)
+# against the shared baseline, writing the candidate's top-line verdict, any
+# failed-stimulus detail, and the per-stimulus effectiveness categories.
+# Returns whether the candidate should fail the run (a candidate stimulus
+# failed or an effectiveness REGRESSION was detected) and the candidate's
+# PASS/FAIL verdict.
+function Write-CandidateComparison {
+    param(
+        [Parameter(Mandatory)] [string] $CandidateName,
+        $CandidateStimuli,
+        $BaselineStimuli
+    )
+
+    $failure = $false
+
+    if (-not $CandidateStimuli) {
+        Write-Warn ("  [{0}] (no results.jsonl found - skipping effectiveness comparison)" -f $CandidateName)
+        return [pscustomobject]@{ Failure = $true; Verdict = 'NO DATA' }
+    }
+
+    # Top-line status: a candidate passes when every one of its stimuli passed.
+    $candidatePassed = @($CandidateStimuli.Values | Where-Object { -not $_.Passed }).Count -eq 0
+    $verdict = $candidatePassed ? 'PASS' : 'FAIL'
+    if (-not $candidatePassed) { $failure = $true }
+
+    Write-Info ("  [{0}] {1}" -f $CandidateName, $verdict)
+
+    if (-not $candidatePassed) {
+        $failedRecords = @($CandidateStimuli.Values | Where-Object { -not $_.Passed })
+        $failedStimuli = @($failedRecords | ForEach-Object { $_.Stimulus })
+        if ($failedStimuli.Count -gt 0) {
+            Write-Info ("    {0} failed stimuli: {1}" -f $CandidateName, ($failedStimuli -join ', '))
+            foreach ($failed in $failedRecords) {
+                $graderPart = ($failed.FailedGraders -and $failed.FailedGraders.Count -gt 0) ? ($failed.FailedGraders -join ', ') : 'unknown grader'
+                $evidencePart = $failed.FailureEvidence ? $failed.FailureEvidence : 'no grader evidence was emitted in results.jsonl'
+                Write-Info ("      - {0}: {1} - {2}" -f $failed.Stimulus, $graderPart, $evidencePart)
+            }
+        }
+    }
+
+    foreach ($stimulus in $CandidateStimuli.Keys) {
+        $c = $CandidateStimuli[$stimulus]
+        $b = $BaselineStimuli ? $BaselineStimuli[$stimulus] : $null
+        $category = Get-EffectivenessCategory -Candidate $c -Baseline $b
+
+        $detail = ''
+        $judgment = $null
+        if ($category -eq 'BOTH PASS') {
+            $judgment = Get-EfficiencyJudgment -Candidate $c -Baseline $b
+            $detail = " - $judgment; " +
+            ("tokens {0} vs {1} ({2}), turns {3} vs {4} ({5}), wall {6} vs {7} ({8})" -f `
+                $c.TotalTokens, $b.TotalTokens, (Format-Delta -Candidate $c.TotalTokens -Baseline $b.TotalTokens),
+            $c.TurnCount, $b.TurnCount, (Format-Delta -Candidate $c.TurnCount -Baseline $b.TurnCount),
+            (Format-Ms $c.WallTimeMs), (Format-Ms $b.WallTimeMs), (Format-Delta -Candidate $c.WallTimeMs -Baseline $b.WallTimeMs -AsSeconds))
+            # Both passing means the outcome did not require the server - surface it,
+            # but it does not fail the run.
+            if ($judgment -like 'candidate less efficient*' -or $judgment -like 'mixed*') {
+                $detail += ' [review: server did not improve efficiency]'
+            }
+        }
+        elseif ($category -eq 'VALUABLE') {
+            $detail = ' - the Azure MCP server enabled an outcome the baseline could not achieve'
+        }
+        elseif ($category -eq 'REGRESSION') {
+            $detail = ' - baseline succeeded WITHOUT the server but the candidate FAILED'
+            $failure = $true
+        }
+        elseif ($category -eq 'INCONCLUSIVE') {
+            $detail = ' - neither the candidate nor baseline achieved the outcome'
+        }
+
+        $color = Get-VerdictColor -Category $category -Judgment $judgment
+        Write-Host ("    - {0,-30} {1}{2}" -f $stimulus, $category, $detail) -ForegroundColor $color
+    }
+
+    return [pscustomobject]@{ Failure = $failure; Verdict = $verdict }
+}
+
+# Reports a single experiment iteration: the shared baseline verdict followed by
+# every candidate (server mode) variant compared against it. Returns an object
+# describing whether the iteration should fail the overall run (the experiment
+# failed to produce results, a candidate stimulus failed, or an effectiveness
+# REGRESSION was detected), the per-candidate verdicts, and the baseline verdict
+# so callers can aggregate outcomes across iterations.
 function Write-ExperimentIterationReport {
     param(
         [Parameter(Mandatory)] [string] $Name,
         $ExperimentExit,
-        [string] $TreatmentDir,
-        [string] $BaselineDir
+        [string] $BaselineDir,
+        [Parameter(Mandatory)] $CandidateDirs
     )
 
     $failure = $false
-    $treatmentVerdict = 'NO DATA'
-    $baselineVerdict = $null
+    $candidateVerdicts = [ordered]@{}
 
-    # Per-stimulus results for each variant from vally's machine-readable output.
-    $treatmentStimuli = Get-VallyStimulusResults -RunOutputDir $TreatmentDir
+    # Per-stimulus results for the baseline and each candidate variant from
+    # vally's machine-readable output.
     $baselineStimuli = $BaselineDir ? (Get-VallyStimulusResults -RunOutputDir $BaselineDir) : $null
+
+    $candidateStimuli = [ordered]@{}
+    foreach ($candidateName in $CandidateDirs.Keys) {
+        $candidateStimuli[$candidateName] = Get-VallyStimulusResults -RunOutputDir $CandidateDirs[$candidateName]
+    }
+    $anyCandidateResults = @($candidateStimuli.Values | Where-Object { $_ }).Count -gt 0
 
     # `vally experiment run` can return non-zero when one variant has grader
     # failures (for us, baseline failures are expected). Treat it as a hard run
     # failure only when no usable variant results were produced.
     if ($ExperimentExit -ne 0) {
-        if ($treatmentStimuli -or $baselineStimuli) {
+        if ($anyCandidateResults -or $baselineStimuli) {
             Write-Warn ("{0,-32} vally exit {1} (non-zero due to failed graders in one or more variants; see per-stimulus verdicts below)" -f $Name, $ExperimentExit)
         }
         else {
@@ -532,28 +619,22 @@ function Write-ExperimentIterationReport {
         }
     }
 
-    if (-not $treatmentStimuli) {
-        Write-Warn ("{0,-32} (no treatment results.jsonl found - skipping effectiveness comparison)" -f $Name)
+    if (-not $anyCandidateResults) {
+        Write-Warn ("{0,-32} (no candidate results.jsonl found - skipping effectiveness comparison)" -f $Name)
         return [pscustomobject]@{
-            Failure          = $true
-            TreatmentVerdict = $treatmentVerdict
-            BaselineVerdict  = $baselineVerdict
+            Failure           = $true
+            CandidateVerdicts = $candidateVerdicts
+            BaselineVerdict   = $null
         }
     }
 
-    # Top-line status: treatment/baseline pass = every stimulus in that variant passed.
-    $treatmentPassed = @($treatmentStimuli.Values | Where-Object { -not $_.Passed }).Count -eq 0
-    $treatmentVerdict = $treatmentPassed ? 'PASS' : 'FAIL'
-    if (-not $treatmentPassed) { $failure = $true }
-
-    if (-not $baselineStimuli) {
-        Write-Info ("{0,-32} treatment {1} (no baseline)" -f $Name, $treatmentVerdict)
-    }
-    else {
+    # The shared baseline verdict every candidate is compared against.
+    $baselineVerdict = $null
+    $baselinePassed = $true
+    if ($baselineStimuli) {
         $baselinePassed = @($baselineStimuli.Values | Where-Object { -not $_.Passed }).Count -eq 0
         $baselineVerdict = $baselinePassed ? 'PASS' : 'FAIL'
-        Write-Info ("{0,-32} treatment {1} | baseline {2}" -f $Name, $treatmentVerdict, $baselineVerdict)
-
+        Write-Info ("{0,-32} baseline {1}" -f $Name, $baselineVerdict)
         if (-not $baselinePassed) {
             $failedBaselineStimuli = @($baselineStimuli.Values | Where-Object { -not $_.Passed } | ForEach-Object { $_.Stimulus })
             if ($failedBaselineStimuli.Count -gt 0) {
@@ -561,60 +642,23 @@ function Write-ExperimentIterationReport {
             }
         }
     }
-
-    if (-not $treatmentPassed) {
-        $failedTreatmentRecords = @($treatmentStimuli.Values | Where-Object { -not $_.Passed })
-        $failedTreatmentStimuli = @($failedTreatmentRecords | ForEach-Object { $_.Stimulus })
-        if ($failedTreatmentStimuli.Count -gt 0) {
-            Write-Info ("  treatment failed stimuli: {0}" -f ($failedTreatmentStimuli -join ', '))
-            foreach ($failed in $failedTreatmentRecords) {
-                $graderPart = ($failed.FailedGraders -and $failed.FailedGraders.Count -gt 0) ? ($failed.FailedGraders -join ', ') : 'unknown grader'
-                $evidencePart = $failed.FailureEvidence ? $failed.FailureEvidence : 'no grader evidence was emitted in results.jsonl'
-                Write-Info ("    - {0}: {1} - {2}" -f $failed.Stimulus, $graderPart, $evidencePart)
-            }
-        }
+    else {
+        Write-Info ("{0,-32} (no baseline)" -f $Name)
     }
 
-    foreach ($stimulus in $treatmentStimuli.Keys) {
-        $t = $treatmentStimuli[$stimulus]
-        $b = $baselineStimuli ? $baselineStimuli[$stimulus] : $null
-        $category = Get-EffectivenessCategory -Treatment $t -Baseline $b
-
-        $detail = ''
-        if ($category -eq 'BOTH PASS') {
-            $judgment = Get-EfficiencyJudgment -Treatment $t -Baseline $b
-            $detail = " - $judgment; " +
-            ("tokens {0} vs {1} ({2}), turns {3} vs {4} ({5}), wall {6} vs {7} ({8})" -f `
-                $t.TotalTokens, $b.TotalTokens, (Format-Delta -Treatment $t.TotalTokens -Baseline $b.TotalTokens),
-            $t.TurnCount, $b.TurnCount, (Format-Delta -Treatment $t.TurnCount -Baseline $b.TurnCount),
-            (Format-Ms $t.WallTimeMs), (Format-Ms $b.WallTimeMs), (Format-Delta -Treatment $t.WallTimeMs -Baseline $b.WallTimeMs -AsSeconds))
-            # Both passing means the outcome did not require the server - surface it,
-            # but it does not fail the run.
-            if ($judgment -like 'treatment less efficient*' -or $judgment -like 'mixed*') {
-                $detail += ' [review: server did not improve efficiency]'
-            }
-        }
-        elseif ($category -eq 'VALUABLE') {
-            $detail = ' - the Azure MCP server enabled an outcome the baseline could not achieve'
-        }
-        elseif ($category -eq 'REGRESSION') {
-            $detail = ' - baseline succeeded WITHOUT the server but the treatment FAILED'
-            $failure = $true
-        }
-        elseif ($category -eq 'INCONCLUSIVE') {
-            $detail = ' - neither treatment nor baseline achieved the outcome'
-        }
-
-        $color = Get-VerdictColor -Category $category -Judgment $judgment
-        Write-Host ("  - {0,-30} {1}{2}" -f $stimulus, $category, $detail) -ForegroundColor $color
-        # Reset $judgment so it does not leak into the next stimulus' coloring.
-        $judgment = $null
+    foreach ($candidateName in $candidateStimuli.Keys) {
+        $outcome = Write-CandidateComparison `
+            -CandidateName $candidateName `
+            -CandidateStimuli $candidateStimuli[$candidateName] `
+            -BaselineStimuli $baselineStimuli
+        $candidateVerdicts[$candidateName] = $outcome.Verdict
+        if ($outcome.Failure) { $failure = $true }
     }
 
     return [pscustomobject]@{
-        Failure          = $failure
-        TreatmentVerdict = $treatmentVerdict
-        BaselineVerdict  = $baselineVerdict
+        Failure           = $failure
+        CandidateVerdicts = $candidateVerdicts
+        BaselineVerdict   = $baselineVerdict
     }
 }
 
@@ -680,10 +724,40 @@ function Resolve-AreaProvisioning {
     return [pscustomobject]@{ Pre = $pre; Post = $post }
 }
 
+# The variant subfolder name vally uses for the control (server-less) variant.
+$BaselineVariantName = 'baseline'
+
+# Splits a completed run's per-variant subfolders into the baseline (control) and
+# the candidate variants (every other subfolder - e.g. 'namespace',
+# 'consolidated'). `vally experiment run` writes one subfolder per variant named
+# after its `variants:` key. Candidate discovery is dynamic so new server-mode
+# variants added to an experiment spec are picked up without script changes.
+# Returns a null BaselineDir and an empty CandidateDirs map when the run
+# directory is missing.
+function Get-RunVariantDirs {
+    param([string] $RunDir)
+
+    $baselineDir = $null
+    $candidateDirs = [ordered]@{}
+
+    if ($RunDir -and (Test-Path -LiteralPath $RunDir)) {
+        $subdirs = Get-ChildItem -Path $RunDir -Directory -ErrorAction SilentlyContinue | Sort-Object Name
+        foreach ($d in $subdirs) {
+            if ($d.Name -ieq $BaselineVariantName) { $baselineDir = $d.FullName }
+            else { $candidateDirs[$d.Name] = $d.FullName }
+        }
+    }
+
+    return [pscustomobject]@{
+        BaselineDir   = $baselineDir
+        CandidateDirs = $candidateDirs
+    }
+}
+
 # Runs each discovered experiment -Iterations time(s), provisioning + tearing down
 # per area, and returns the list of per-experiment result descriptors the summary
 # consumes. Each descriptor carries Name, ProvisioningFailed, and an Iterations
-# list of { Iteration, ExperimentExit, TreatmentDir, BaselineDir }.
+# list of { Iteration, ExperimentExit, BaselineDir, CandidateDirs }.
 function Get-ExperimentResultsFromRuns {
     param([Parameter(Mandatory)] $Evals)
 
@@ -725,10 +799,10 @@ function Get-ExperimentResultsFromRuns {
                     $label = "$($eval.Area)/$($eval.Tool)"
                     $runRoot = Join-Path (Join-Path $OutputDir $eval.Area) $eval.Tool
 
-                    # Run the experiment -Iterations time(s). Each run produces both
-                    # variants (baseline + treatment) under its own timestamped
-                    # directory; record every iteration so the summary can report each
-                    # one's outcome.
+                    # Run the experiment -Iterations time(s). Each run produces every
+                    # variant (baseline + the server candidates) under its own
+                    # timestamped directory; record every iteration so the summary
+                    # can report each one's outcome.
                     $iterationResults = [System.Collections.Generic.List[object]]::new()
                     for ($i = 1; $i -le $Iterations; $i++) {
                         $iterationLabel = ($Iterations -gt 1) ? "$label (iteration $i/$Iterations)" : $label
@@ -738,17 +812,17 @@ function Get-ExperimentResultsFromRuns {
                             -ExperimentFile $eval.Experiment `
                             -RunOutputDir $runRoot
 
-                        # Each variant's results.jsonl lives in <run>/<variant>/. These
-                        # variant names must match the `variants:` keys in the experiment
-                        # spec (baseline + treatment).
-                        $treatmentDir = $run.RunDir ? (Join-Path $run.RunDir 'treatment') : $null
-                        $baselineDir = $run.RunDir ? (Join-Path $run.RunDir 'baseline') : $null
+                        # Each variant's results.jsonl lives in <run>/<variant>/. Split
+                        # the run's subfolders into the baseline (control) and the
+                        # candidate (server mode) variants; the candidate names match
+                        # the non-baseline `variants:` keys in the experiment spec.
+                        $variantDirs = Get-RunVariantDirs -RunDir $run.RunDir
 
                         $iterationResults.Add([pscustomobject]@{
                                 Iteration      = $i
                                 ExperimentExit = $run.Exit
-                                TreatmentDir   = $treatmentDir
-                                BaselineDir    = $baselineDir
+                                BaselineDir    = $variantDirs.BaselineDir
+                                CandidateDirs  = $variantDirs.CandidateDirs
                             })
                     }
 
@@ -780,10 +854,11 @@ function Get-ExperimentResultsFromRuns {
 # Reconstructs the same per-experiment result descriptors from artifacts a
 # previous run already saved under -OutputDir, WITHOUT building, provisioning, or
 # invoking vally. For each discovered experiment it takes the newest -Iterations
-# timestamped run directory(ies) under <OutputDir>/<area>/<tool>/ and points at
-# their treatment/baseline subfolders. The vally exit code is not persisted in the
-# artifacts, so ExperimentExit is reported as 0 and the summary relies on the
-# per-stimulus verdicts recorded in each run's results.jsonl.
+# timestamped run directory(ies) under <OutputDir>/<area>/<tool>/ and splits each
+# into its baseline and candidate (server mode) variant subfolders. The vally
+# exit code is not persisted in the artifacts, so ExperimentExit is reported as 0
+# and the summary relies on the per-stimulus verdicts recorded in each run's
+# results.jsonl.
 function Get-ExperimentResultsFromArtifacts {
     param([Parameter(Mandatory)] $Evals)
 
@@ -800,7 +875,7 @@ function Get-ExperimentResultsFromArtifacts {
 
         # vally names each run directory with a sortable UTC timestamp (e.g.
         # 2026-07-09T00-05-49-540Z). Match only those so stray non-run folders
-        # (e.g. a hand-run 'treatment'/'baseline') are ignored, then take the newest
+        # (e.g. a hand-run variant folder) are ignored, then take the newest
         # -Iterations of them - oldest-first so iteration numbers read chronologically.
         $timestampPattern = '^\d{4}-\d{2}-\d{2}T'
         $runDirs = @(Get-ChildItem -Path $runRoot -Directory -ErrorAction SilentlyContinue |
@@ -818,11 +893,12 @@ function Get-ExperimentResultsFromArtifacts {
         $i = 0
         foreach ($runDir in $runDirs) {
             $i++
+            $variantDirs = Get-RunVariantDirs -RunDir $runDir.FullName
             $iterationResults.Add([pscustomobject]@{
                     Iteration      = $i
                     ExperimentExit = 0
-                    TreatmentDir   = (Join-Path $runDir.FullName 'treatment')
-                    BaselineDir    = (Join-Path $runDir.FullName 'baseline')
+                    BaselineDir    = $variantDirs.BaselineDir
+                    CandidateDirs  = $variantDirs.CandidateDirs
                 })
         }
 
@@ -838,17 +914,17 @@ function Get-ExperimentResultsFromArtifacts {
 
 # Prints the effectiveness comparison for every gathered experiment result and
 # returns $true if any of them should fail the run. The goal is to measure the
-# Azure MCP server's effectiveness, per stimulus, by comparing the two experiment
-# variants - treatment (WITH the server) against baseline (WITHOUT it):
+# Azure MCP server's effectiveness, per stimulus, by comparing each candidate
+# (WITH the server, in a given mode) against the baseline (WITHOUT it):
 #
-#   * baseline FAIL + treatment PASS -> VALUABLE      (the server enabled the outcome)
-#   * baseline PASS + treatment FAIL -> REGRESSION    (the server hurt the outcome)
+#   * baseline FAIL + candidate PASS -> VALUABLE      (the server enabled the outcome)
+#   * baseline PASS + candidate FAIL -> REGRESSION    (the server hurt the outcome)
 #   * both PASS                      -> the tool was not required; efficiency decides,
 #                                        using tokens / turns / wall time (lower is better)
 #   * neither PASS                   -> INCONCLUSIVE
 #
 # A result fails the run only when the experiment itself failed to execute, a
-# treatment stimulus failed, or an effectiveness REGRESSION is detected. Baseline
+# candidate stimulus failed, or an effectiveness REGRESSION is detected. Baseline
 # outcome failures are expected and do not fail the run.
 function Write-ResultsSummary {
     param([Parameter(Mandatory)] $Results)
@@ -865,7 +941,8 @@ function Write-ResultsSummary {
 
         $iterations = @($r.Iterations)
         $iterationCount = $iterations.Count
-        $treatmentPassCount = 0
+        # Per-candidate pass counts across iterations (candidate name -> count).
+        $candidatePassCounts = [ordered]@{}
 
         foreach ($iteration in $iterations) {
             # When an experiment runs more than once, header each iteration so its
@@ -878,18 +955,24 @@ function Write-ResultsSummary {
             $outcome = Write-ExperimentIterationReport `
                 -Name $r.Name `
                 -ExperimentExit $iteration.ExperimentExit `
-                -TreatmentDir $iteration.TreatmentDir `
-                -BaselineDir $iteration.BaselineDir
+                -BaselineDir $iteration.BaselineDir `
+                -CandidateDirs $iteration.CandidateDirs
 
             if ($outcome.Failure) { $anyFailure = $true }
-            if ($outcome.TreatmentVerdict -eq 'PASS') { $treatmentPassCount++ }
+            foreach ($candidateName in $outcome.CandidateVerdicts.Keys) {
+                if (-not $candidatePassCounts.Contains($candidateName)) { $candidatePassCounts[$candidateName] = 0 }
+                if ($outcome.CandidateVerdicts[$candidateName] -eq 'PASS') { $candidatePassCounts[$candidateName]++ }
+            }
         }
 
-        # Aggregate the treatment outcomes across iterations so flaky results (some
-        # iterations pass, some fail) are visible at a glance.
+        # Aggregate each candidate's outcomes across iterations so flaky results
+        # (some iterations pass, some fail) are visible at a glance.
         if ($iterationCount -gt 1) {
-            $aggregateColor = ($treatmentPassCount -eq $iterationCount) ? 'Green' : (($treatmentPassCount -eq 0) ? 'Red' : 'Yellow')
-            Write-Host ("{0,-32} treatment passed {1}/{2} iteration(s)" -f $r.Name, $treatmentPassCount, $iterationCount) -ForegroundColor $aggregateColor
+            foreach ($candidateName in $candidatePassCounts.Keys) {
+                $passCount = $candidatePassCounts[$candidateName]
+                $aggregateColor = ($passCount -eq $iterationCount) ? 'Green' : (($passCount -eq 0) ? 'Red' : 'Yellow')
+                Write-Host ("{0,-32} {1} passed {2}/{3} iteration(s)" -f $r.Name, $candidateName, $passCount, $iterationCount) -ForegroundColor $aggregateColor
+            }
         }
     }
     Write-Info "Artifacts under: $OutputDir"
@@ -899,7 +982,8 @@ function Write-ResultsSummary {
 
 # --- Discover the experiments to run -----------------------------------------
 # An experiment (<tool>.experiment.yaml) runs a shared eval spec as a baseline
-# variant (no Azure MCP server) and a treatment variant (with it). Experiments
+# variant (no Azure MCP server) and one or more server candidate variants
+# (namespace + consolidated modes). Experiments
 # are grouped by their area (the immediate subdirectory of this script) so
 # provisioning runs once per area.
 if ($ExperimentSpec -and ($Area -or $Tool)) {
@@ -982,23 +1066,23 @@ else {
 
 # --- Report the comparison ---------------------------------------------------
 # The goal is to measure the Azure MCP server's effectiveness, per stimulus, by
-# comparing the two experiment variants - treatment (WITH the server) against
+# comparing each candidate (WITH the server, in a given mode) against the
 # baseline (WITHOUT it):
 #
-#   * baseline FAIL + treatment PASS -> VALUABLE      (the server enabled the outcome)
-#   * baseline PASS + treatment FAIL -> REGRESSION    (the server hurt the outcome)
+#   * baseline FAIL + candidate PASS -> VALUABLE      (the server enabled the outcome)
+#   * baseline PASS + candidate FAIL -> REGRESSION    (the server hurt the outcome)
 #   * both PASS                      -> the tool was not required; efficiency decides,
 #                                        using tokens / turns / wall time (lower is better)
 #   * neither PASS                   -> INCONCLUSIVE
 #
 # A run is only considered failed (non-zero exit) when the experiment itself
-# failed to execute, a treatment stimulus failed, or an effectiveness REGRESSION
+# failed to execute, a candidate stimulus failed, or an effectiveness REGRESSION
 # is detected. Baseline outcome failures are expected and do not fail the run.
 # Returns $true if any such failure was detected across all experiments.
 $anyFailure = Write-ResultsSummary -Results $results
 
-# Non-zero if any experiment failed to run, any treatment stimulus failed, any
+# Non-zero if any experiment failed to run, any candidate stimulus failed, any
 # area's provisioning failed, or an effectiveness regression (baseline PASS while
-# treatment FAIL) was detected; baseline outcome failures on their own are
+# a candidate FAILs) was detected; baseline outcome failures on their own are
 # expected and do not affect the exit code.
 exit ($anyFailure ? 1 : 0)

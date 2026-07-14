@@ -4,22 +4,24 @@
 # (eventhubs_namespace_get).
 #
 # This spec is the shared scenario for the namespace-get EXPERIMENT
-# (namespace-get.experiment.yaml), which runs it as two variants:
-#   * treatment - WITH the Azure MCP server (the `environment.mcpServers`
-#                 block below), and
-#   * baseline  - WITHOUT it (the baseline variant deletes
-#                 `environment.mcpServers.azure`).
-# The delta between the two variants isolates the Azure MCP server's
-# contribution.
+# (namespace-get.experiment.yaml), which runs it as three variants:
+#   * namespace    - WITH the Azure MCP server in its default `namespace`
+#                    proxy mode (the `environment.mcpServers` block below),
+#   * consolidated - WITH the Azure MCP server in `consolidated` proxy mode
+#                    (the variant overrides `--mode` to `consolidated`), and
+#   * baseline     - WITHOUT it (the baseline variant deletes
+#                    `environment.mcpServers.azure`).
+# The delta between each server variant (candidate) and the baseline
+# isolates the Azure MCP server's contribution in that mode.
 #
 # Because a vally experiment variant may only override `overrides` and
-# `environment` - never graders or stimuli - both variants are graded
+# `environment` - never graders or stimuli - all variants are graded
 # IDENTICALLY on task OUTCOME: an LLM `prompt` judge checks the agent
 # actually returned the requested Event Hubs namespaces. Tool-SELECTION
 # assertions are intentionally NOT graded here: the baseline has no MCP
 # tool to call, so a `tool-calls` grader could never be satisfied
 # consistently across variants. Outcome parity is exactly what makes the
-# baseline vs treatment comparison meaningful.
+# baseline vs server-variant comparisons meaningful.
 #
 # Run it with the helper script (builds azmcp, provisions, runs the
 # experiment, compares variants):
@@ -33,8 +35,9 @@
 name: eventhubs-namespace-get-eval
 description: >-
   Evaluates whether the agent retrieves the requested Azure Event Hubs
-  namespaces. Run as two variants (with/without the Azure MCP server) by
-  namespace-get.experiment.yaml to isolate the server's contribution.
+  namespaces. Run as three variants (namespace/consolidated server modes,
+  and a server-less baseline) by namespace-get.experiment.yaml to isolate
+  the server's contribution.
 version: "1.0"
 type: capability
 
@@ -47,9 +50,11 @@ defaults:
   executor: copilot-sdk
 
 environment:
-  # This is the TREATMENT environment. The baseline variant in
-  # namespace-get.experiment.yaml deletes `mcpServers.azure` so the agent
-  # runs without any Azure Event Hubs tool.
+  # This is the default server environment, inherited unchanged by the
+  # `namespace` variant. The `consolidated` variant overrides `--mode` to
+  # `consolidated`, and the baseline variant in namespace-get.experiment.yaml
+  # deletes `mcpServers.azure` so the agent runs without any Azure Event Hubs
+  # tool.
   mcpServers:
     azure:
       type: stdio
@@ -61,12 +66,12 @@ environment:
       args:
         - server
         - start
-        # Only load the Event Hubs area, and expose each command as its own tool
-        # (so eventhubs_namespace_get shows up as a discrete, selectable tool).
+        # Only load the Event Hubs area. `--mode namespace` is the server's
+        # default proxy mode; the consolidated variant overrides it.
         - --namespace
         - eventhubs
         - --mode
-        - all
+        - namespace
         # Non-interactive: never block waiting for user confirmation during a run.
         - --dangerously-disable-elicitation
       env:
