@@ -31,9 +31,9 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 /// </remarks>
 internal static class OptionSchemaGenerator
 {
-    private static readonly JsonSerializerOptions s_schemaOptions = CreateSchemaOptions();
+    private static readonly JsonSerializerOptions SchemaOptions = CreateSchemaOptions();
 
-    private static readonly JsonSchemaExporterOptions s_exporterOptions = new()
+    private static readonly JsonSchemaExporterOptions ExporterOptions = new()
     {
         TreatNullObliviousAsNonNullable = true,
     };
@@ -65,7 +65,7 @@ internal static class OptionSchemaGenerator
     {
         ArgumentNullException.ThrowIfNull(optionType);
 
-        var schema = JsonSchemaExporter.GetJsonSchemaAsNode(s_schemaOptions, optionType, s_exporterOptions);
+        var schema = JsonSchemaExporter.GetJsonSchemaAsNode(SchemaOptions, optionType, ExporterOptions);
 
         if (schema is JsonObject schemaObject && !string.IsNullOrWhiteSpace(description))
         {
