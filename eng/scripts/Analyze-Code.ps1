@@ -61,6 +61,15 @@ try {
         Write-Host "✅ Tool description evaluation did not detect any issues."
     }
 
+    # Run tool prompt validation
+    & "$PSScriptRoot/Test-ToolSelectionPrompts.ps1"
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "❌ E2E tool prompt validation failed."
+    } else {
+        Write-Host "✅ E2E tool prompt validation did not detect any issues."
+    }
+
     # Run tool name length validation
     $toolNameResult = & "$PSScriptRoot/Test-ToolNameLength.ps1"
 
