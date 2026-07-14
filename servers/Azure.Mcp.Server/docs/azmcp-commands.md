@@ -3656,11 +3656,31 @@ azmcp resilience goal template get --subscription <subscription> \
                                    --service-group <service-group> \
                                    [--name <name>]
 
+# Create or update a resilience goal template in a service group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience goal template create --subscription <subscription> \
+                                      --service-group <service-group> \
+                                      --goal-template <goal-template> \
+                                      --goal-type <goal-type> \
+                                      --require-high-availability <require-high-availability> \
+                                      --require-disaster-recovery <require-disaster-recovery> \
+                                      --regional-recovery-point-objective <regional-recovery-point-objective> \
+                                      --regional-recovery-time-objective <regional-recovery-time-objective>
+
 # Get a resilience goal assignment, or list all goal assignments in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience goal assignment get --subscription <subscription> \
                                      --service-group <service-group> \
                                      [--name <name>]
+
+# Create or update a resilience goal assignment in a service group that assigns a goal template
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience goal assignment create --subscription <subscription> \
+                                        --service-group <service-group> \
+                                        --goal-assignment <goal-assignment> \
+                                        --goal-template <goal-template> \
+                                        --goal-template-service-group <goal-template-service-group> \
+                                        --goal-assignment-type <goal-assignment-type>
 
 # Get a resource (member) of a goal assignment, or list all resources of the assignment (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -3675,12 +3695,27 @@ azmcp resilience usageplan get --subscription <subscription> \
                                [--resource-group <resource-group>] \
                                [--name <name>]
 
+# Create a resilience usage plan in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan create --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --usage-plan <usage-plan> \
+                                  --plan-type <plan-type>
+
 # Get a usage plan enrollment, or list all enrollments of a usage plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience usageplan enrollment get --subscription <subscription> \
                                           --resource-group <resource-group> \
                                           --usage-plan <usage-plan> \
                                           [--name <name>]
+
+# Create or update an enrollment under a resilience usage plan, associating it with a service group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan enrollment create --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --usage-plan <usage-plan> \
+                                             --enrollment <enrollment> \
+                                             --service-group <service-group>
 
 # Get a resilience recovery plan, or list all recovery plans in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

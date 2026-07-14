@@ -493,4 +493,111 @@ public sealed class ResilienceManagementService(
         using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content.ToMemory());
         return document.RootElement.Clone();
     }
+
+    public async Task<GoalTemplateInfo> CreateGoalTemplateAsync(string serviceGroup, string goalTemplate, GoalTemplateKind goalType, GoalRequirement requireHighAvailability, GoalRequirement requireDisasterRecovery, string regionalRecoveryPointObjective, string regionalRecoveryTimeObjective, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
+        GoalTemplateCollection goalTemplates = armClient.GetGoalTemplates(serviceGroupId);
+
+        var data = new GoalTemplateData
+        {
+            Properties = new GoalTemplateProperties(MapGoalType(goalType))
+            {
+                RequireHighAvailability = new RequirementSelected(requireHighAvailability.ToString()),
+                RequireDisasterRecovery = new RequirementSelected(requireDisasterRecovery.ToString()),
+                RegionalRecoveryPointObjective = regionalRecoveryPointObjective,
+                RegionalRecoveryTimeObjective = regionalRecoveryTimeObjective
+            }
+        };
+
+        ArmOperation<GoalTemplateResource> operation = await goalTemplates.CreateOrUpdateAsync(WaitUntil.Completed, goalTemplate, data, cancellationToken);
+
+        return MapGoalTemplate(operation.Value.Data);
+    }
+
+    private static ResilienceManagementGoalType MapGoalType(GoalTemplateKind goalType) => goalType switch
+    {
+        GoalTemplateKind.Resiliency => ResilienceManagementGoalType.Resiliency,
+        _ => throw new ArgumentOutOfRangeException(nameof(goalType), goalType, "Unsupported goal type.")
+    };
+
+    public async Task<UsagePlanInfo> CreateUsagePlanAsync(string resourceGroup, string usagePlan, UsagePlanKind planType, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+            ? subscription
+            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var resourceGroupId = new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}");
+        var resourceGroupResource = armClient.GetResourceGroupResource(resourceGroupId);
+        UsagePlanCollection usagePlans = resourceGroupResource.GetUsagePlans();
+
+        var usagePlanData = new UsagePlanData(new AzureLocation("global"))
+        {
+            Properties = new UsagePlanProperties
+            {
+                PlanType = planType switch
+                {
+                    UsagePlanKind.Standard => UsagePlanType.Standard,
+                    UsagePlanKind.Basic => UsagePlanType.Basic,
+                    _ => throw new ArgumentOutOfRangeException(nameof(planType), planType, "Unsupported plan type.")
+                }
+            }
+        };
+
+        ArmOperation<UsagePlanResource> operation = await usagePlans.CreateOrUpdateAsync(WaitUntil.Completed, usagePlan, usagePlanData, cancellationToken);
+
+        return MapUsagePlan(operation.Value.Data);
+    }
+
+    public async Task<UsagePlanEnrollmentInfo> CreateUsagePlanEnrollmentAsync(string resourceGroup, string usagePlan, string enrollment, string serviceGroup, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+            ? subscription
+            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var usagePlanId = new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.AzureResilienceManagement/usagePlans/{usagePlan}");
+        UsagePlanEnrollmentCollection enrollments = armClient.GetUsagePlanResource(usagePlanId).GetUsagePlanEnrollments();
+
+        var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
+        var enrollmentData = new UsagePlanEnrollmentData
+        {
+            Properties = new EnrollmentProperties(serviceGroupId)
+        };
+
+        ArmOperation<UsagePlanEnrollmentResource> operation = await enrollments.CreateOrUpdateAsync(WaitUntil.Completed, enrollment, enrollmentData, cancellationToken);
+
+        return MapUsagePlanEnrollment(operation.Value.Data);
+    }
+
+    public async Task<GoalAssignmentInfo> CreateGoalAssignmentAsync(string serviceGroup, string goalAssignment, string goalTemplate, string goalTemplateServiceGroup, GoalAssignmentKind goalAssignmentType, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
+        GoalAssignmentCollection goalAssignments = armClient.GetGoalAssignments(serviceGroupId);
+        ResourceIdentifier goalTemplateId = GoalTemplateResource.CreateResourceIdentifier(goalTemplateServiceGroup, goalTemplate);
+
+        var data = new GoalAssignmentData
+        {
+            Properties = new GoalAssignmentProperties(goalTemplateId: goalTemplateId, goalAssignmentType: MapGoalAssignmentType(goalAssignmentType))
+        };
+
+        // The create operation does not return the resource body, so fetch it after completion.
+        await goalAssignments.CreateOrUpdateAsync(WaitUntil.Completed, goalAssignment, data, cancellationToken);
+        GoalAssignmentResource resource = await goalAssignments.GetAsync(goalAssignment, cancellationToken);
+
+        return MapGoalAssignment(resource.Data);
+    }
+
+    private static GoalAssignmentType MapGoalAssignmentType(GoalAssignmentKind goalAssignmentType) => goalAssignmentType switch
+    {
+        GoalAssignmentKind.Resiliency => GoalAssignmentType.Resiliency,
+        _ => throw new ArgumentOutOfRangeException(nameof(goalAssignmentType), goalAssignmentType, "Unsupported goal assignment type.")
+    };
 }
