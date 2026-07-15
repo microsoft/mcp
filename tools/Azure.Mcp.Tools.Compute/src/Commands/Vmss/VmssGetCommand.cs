@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
@@ -89,7 +90,7 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(vmInstance), ComputeJsonContext.Default.VmssGetVmInstanceResult);
+                context.Response.Results = ResponseResult.Create(new(null, null, vmInstance), ComputeJsonContext.Default.VmssGetCommandResult);
             }
             // Scenario 2: Get specific VMSS
             else if (!string.IsNullOrEmpty(options.VmssName))
@@ -102,7 +103,7 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(vmss), ComputeJsonContext.Default.VmssGetSingleResult);
+                context.Response.Results = ResponseResult.Create(new(vmss, null, null), ComputeJsonContext.Default.VmssGetCommandResult);
             }
             // Scenario 3: List VMSS in resource group
             else
@@ -114,7 +115,7 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(vmssList ?? []), ComputeJsonContext.Default.VmssGetListResult);
+                context.Response.Results = ResponseResult.Create(new(null, vmssList ?? [], null), ComputeJsonContext.Default.VmssGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -138,7 +139,8 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmssGetSingleResult(VmssInfo Vmss);
-    internal record VmssGetListResult(List<VmssInfo> VmssList);
-    internal record VmssGetVmInstanceResult(VmssVmInfo VmInstance);
+    internal record VmssGetCommandResult(
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] VmssInfo? Vmss,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<VmssInfo>? VmssList,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] VmssVmInfo? VmInstance);
 }

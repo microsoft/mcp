@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
@@ -92,8 +93,8 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
                         cancellationToken);
 
                     context.Response.Results = ResponseResult.Create(
-                        new(vmWithInstanceView.VmInfo, vmWithInstanceView.InstanceView),
-                        ComputeJsonContext.Default.VmGetSingleResult);
+                        new(vmWithInstanceView.VmInfo, vmWithInstanceView.InstanceView, null),
+                        ComputeJsonContext.Default.VmGetCommandResult);
                 }
                 else
                 {
@@ -105,7 +106,7 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
                         options.RetryPolicy,
                         cancellationToken);
 
-                    context.Response.Results = ResponseResult.Create(new(vm, null), ComputeJsonContext.Default.VmGetSingleResult);
+                    context.Response.Results = ResponseResult.Create(new(vm, null, null), ComputeJsonContext.Default.VmGetCommandResult);
                 }
             }
             // Scenario 2: List VMs in resource group
@@ -118,7 +119,7 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(vms), ComputeJsonContext.Default.VmGetListResult);
+                context.Response.Results = ResponseResult.Create(new(null, null, vms), ComputeJsonContext.Default.VmGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -142,6 +143,8 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmGetSingleResult(VmInfo Vm, VmInstanceView? InstanceView);
-    internal record VmGetListResult(List<VmInfo> Vms);
+    internal record VmGetCommandResult(
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] VmInfo? Vm,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] VmInstanceView? InstanceView,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<VmInfo>? Vms);
 }
