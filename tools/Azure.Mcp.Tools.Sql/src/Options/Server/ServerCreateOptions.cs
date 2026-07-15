@@ -1,24 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Sql.Options.Server;
 
-public class ServerCreateOptions : BaseSqlOptions
+public sealed class ServerCreateOptions : BaseSqlOptions
 {
-    [JsonPropertyName(SqlOptionDefinitions.AdministratorLogin)]
-    public string? AdministratorLogin { get; set; }
+    [Option(Description = "The administrator login name for the SQL server.")]
+    public required string AdministratorLogin { get; set; }
 
-    [JsonPropertyName(SqlOptionDefinitions.AdministratorPassword)]
-    public string? AdministratorPassword { get; set; }
+    [Option(Description = "The administrator password for the SQL server.")]
+    public required string AdministratorPassword { get; set; }
 
-    [JsonPropertyName(SqlOptionDefinitions.Location)]
-    public string? Location { get; set; }
+    [Option(Description = "The Azure region location where the SQL server will be created.")]
+    public required string Location { get; set; }
 
-    [JsonPropertyName(SqlOptionDefinitions.Version)]
+    [Option(Description = "The version of SQL Server to create (e.g., '12.0').")]
     public string? Version { get; set; }
 
-    [JsonPropertyName(SqlOptionDefinitions.PublicNetworkAccess)]
+    [Option(Description = "Whether public network access is enabled for the SQL server ('Enabled' or 'Disabled'). Defaults to 'Disabled'.")]
     public string? PublicNetworkAccess { get; set; }
+
+    [Option(Description = SqlOptionDescriptions.Server)]
+    public required string Server { get; set; }
 }

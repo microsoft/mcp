@@ -2,17 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.Tests.Database;
 
-public class DatabaseDeleteCommandTests : CommandUnitTestsBase<DatabaseDeleteCommand, ISqlService>
+public class DatabaseDeleteCommandTests : SubscriptionCommandUnitTestsBase<DatabaseDeleteCommand, ISqlService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
