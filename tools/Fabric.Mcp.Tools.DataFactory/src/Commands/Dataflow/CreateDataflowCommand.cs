@@ -7,7 +7,6 @@ using global::DataFactory.MCP.Handlers.Dataflow;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
 
@@ -20,9 +19,8 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
     Idempotent = false,
     ReadOnly = false,
     OpenWorld = false)]
-public sealed class CreateDataflowCommand(
-    ILogger<CreateDataflowCommand> logger,
-    DataflowHandler handler) : AuthenticatedCommand<CreateDataflowOptions, CreateDataflowCommandResult>
+public sealed class CreateDataflowCommand(ILogger<CreateDataflowCommand> logger, DataflowHandler handler)
+    : AuthenticatedCommand<CreateDataflowOptions, CreateDataflowCommandResult>
 {
     private readonly ILogger<CreateDataflowCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly DataflowHandler _handler = handler ?? throw new ArgumentNullException(nameof(handler));
@@ -47,8 +45,7 @@ public sealed class CreateDataflowCommand(
                 FolderId = response.FolderId
             };
 
-            var commandResult = new CreateDataflowCommandResult(dataflow);
-            context.Response.Results = ResponseResult.Create(commandResult, DataFactoryJsonContext.Default.CreateDataflowCommandResult);
+            context.Response.Results = ResponseResult.Create(new(dataflow), DataFactoryJsonContext.Default.CreateDataflowCommandResult);
         }
         else
         {

@@ -5,7 +5,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.DataFactory.Options.Pipeline;
 
-public class RunPipelineOptions
+public sealed class RunPipelineOptions
 {
     [Option(Description = "The ID of the Microsoft Fabric workspace.")]
     public required string WorkspaceId { get; set; }
