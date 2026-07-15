@@ -25,9 +25,8 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false)]
-public sealed class BlobDeleteCommand(
-    ILogger<BlobDeleteCommand> logger,
-    IOneLakeService oneLakeService) : AuthenticatedCommand<BlobDeleteOptions, BlobDeleteCommand.BlobDeleteCommandResult>
+public sealed class BlobDeleteCommand(ILogger<BlobDeleteCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<BlobDeleteOptions, BlobDeleteCommand.BlobDeleteCommandResult>
 {
     private readonly ILogger<BlobDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -82,28 +81,22 @@ public sealed class BlobDeleteCommand(
     }
 
     public sealed record BlobDeleteCommandResult(BlobDeleteResult Result, string Message);
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
 }
 
 public sealed class BlobDeleteOptions
 {
-    [Option(Description = "The ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
     public string? WorkspaceId { get; set; }
 
-    [Option(Description = "The name or ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.Workspace)]
     public string? Workspace { get; set; }
 
-    [Option(Description = "The ID of the Fabric item.")]
+    [Option(Description = OneLakeOptionDescriptions.ItemId)]
     public string? ItemId { get; set; }
 
-    [Option(Description = "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').")]
+    [Option(Description = OneLakeOptionDescriptions.Item)]
     public string? Item { get; set; }
 
-    [Option(Description = "The path to the file in OneLake.")]
+    [Option(Description = OneLakeOptionDescriptions.FilePath)]
     public required string FilePath { get; set; }
 }

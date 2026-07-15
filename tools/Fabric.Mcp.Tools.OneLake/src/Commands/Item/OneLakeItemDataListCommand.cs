@@ -26,9 +26,8 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false)]
-public sealed class OneLakeItemDataListCommand(
-    ILogger<OneLakeItemDataListCommand> logger,
-    IOneLakeService oneLakeService) : AuthenticatedCommand<OneLakeItemDataListOptions, OneLakeItemDataListCommand.OneLakeItemDataListCommandResult>
+public sealed class OneLakeItemDataListCommand(ILogger<OneLakeItemDataListCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<OneLakeItemDataListOptions, OneLakeItemDataListCommand.OneLakeItemDataListCommandResult>
 {
     private readonly ILogger<OneLakeItemDataListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -56,8 +55,7 @@ public sealed class OneLakeItemDataListCommand(
                 continuationToken: options.ContinuationToken,
                 cancellationToken);
 
-            var result = new OneLakeItemDataListCommandResult { JsonResponse = jsonResponse };
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeItemDataListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(jsonResponse), OneLakeJsonContext.Default.OneLakeItemDataListCommandResult);
         }
         catch (Exception ex)
         {
@@ -86,23 +84,20 @@ public sealed class OneLakeItemDataListCommand(
         _ => base.GetStatusCode(ex)
     };
 
-    public sealed record OneLakeItemDataListCommandResult
-    {
-        public string? JsonResponse { get; init; }
-    }
+    public sealed record OneLakeItemDataListCommandResult(string? JsonResponse);
 }
 
 public sealed class OneLakeItemDataListOptions
 {
-    [Option(Description = "The ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
     public string? WorkspaceId { get; set; }
 
-    [Option(Description = "The name or ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.Workspace)]
     public string? Workspace { get; set; }
 
-    [Option(Description = "Whether to perform the operation recursively.")]
+    [Option(Description = OneLakeOptionDescriptions.Recursive)]
     public bool Recursive { get; set; }
 
-    [Option(Description = "Token for retrieving the next page of results.")]
+    [Option(Description = OneLakeOptionDescriptions.ContinuationToken)]
     public string? ContinuationToken { get; set; }
 }

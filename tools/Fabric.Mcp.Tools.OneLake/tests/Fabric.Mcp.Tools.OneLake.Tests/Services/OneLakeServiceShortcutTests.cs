@@ -52,7 +52,7 @@ public class OneLakeServiceShortcutTests
         using var httpClient = new HttpClient(handler);
         var service = new OneLakeService(httpClient, new FakeTokenCredential());
 
-        var result = await service.CreateShortcutAsync(WorkspaceId, ItemId, expectedShortcut, "CreateOrOverwrite");
+        var result = await service.CreateShortcutAsync(WorkspaceId, ItemId, expectedShortcut, ShortcutConflictPolicy.CreateOrOverwrite);
 
         Assert.NotNull(capturedRequest);
         Assert.Equal(HttpMethod.Post, capturedRequest!.Method);
