@@ -1,8 +1,48 @@
 #!/bin/env pwsh
 #Requires -Version 7
 
+<#
+.SYNOPSIS
+    Runs Vally evaluations against Azure MCP tool command specs.
+
+.DESCRIPTION
+    Collects eval.yaml specification files from test resource paths listed in the
+    `build_info.json` file, as well as from an optional evals directory, then
+    invokes the `vally eval` command against all discovered specifications.
+
+    Run New-BuildInfo.ps1 first to generate the required build info file before
+    calling this script.
+
+.PARAMETER WorkDirectory
+    The working directory passed to `vally`. Defaults to the repository root.
+
+.PARAMETER EvalsDirectory
+    Directory containing additional eval.yaml files to include. Defaults to
+    `<repo-root>/.work/evals`.
+
+.PARAMETER BuildInfoPath
+    Path to the build_info.json file produced by New-BuildInfo.ps1. Defaults to
+    `<repo-root>/.work/build_info.json`.
+
+.PARAMETER OutputPath
+    Optional path for Vally output. Currently passed through for future use.
+
+.PARAMETER IsDebug
+    When specified, adds `--verbose` to the `vally eval` invocation for
+    additional diagnostic output.
+
+.EXAMPLE
+    ./eng/scripts/Invoke-Vally.ps1
+
+    Runs Vally using default paths derived from the repository root.
+
+.EXAMPLE
+    ./eng/scripts/Invoke-Vally.ps1 -BuildInfoPath '.work/custom_build_info.json' -IsDebug
+
+    Runs Vally with a custom build info file and verbose output enabled.
+#>
+
 param(
-    # Common Parameters
     [string]$WorkDirectory,
     [string]$EvalsDirectory,
     [string]$BuildInfoPath,
