@@ -175,7 +175,7 @@ External MCP servers configured in the registry with `OAuthScopes` must meet the
 
 **Impact:** Access tokens are currently obtained **without** the resource parameter. This may result in overly-broad token scope.
 
-**Workaround:** Configure your OAuth provider to accept token requests from Azure MCP Server even without the `resource` parameter. This is a known limitation documented in [microsoft/modelcontextprotocol/csharp-sdk issue #939](https://github.com/microsoft/modelcontextprotocol/csharp-sdk).
+**Workaround:** Configure your OAuth provider to accept token requests from Azure MCP Server even without the `resource` parameter. This is a known limitation documented in [modelcontextprotocol/csharp-sdk issue #939](https://github.com/modelcontextprotocol/csharp-sdk/issues/939).
 
 **Recommended mitigation strategies:**
 1. Use narrow OAuth scopes that limit token usage to specific resources
