@@ -12,6 +12,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Added a server usage rule instructing agents to consult the troubleshooting guide (https://aka.ms/azmcp/troubleshooting) when an Azure MCP tool call fails, including retrying with the correct `tenant` and/or `subscription` parameter for authentication, authorization, tenant, or subscription context errors. [[#207](https://github.com/microsoft/mcp/issues/207)]
 ## 3.0.0-beta.26 (2026-07-14)
 
 ### Features Added
