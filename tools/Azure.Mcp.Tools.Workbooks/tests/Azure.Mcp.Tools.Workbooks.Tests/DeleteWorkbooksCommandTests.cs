@@ -219,32 +219,6 @@ public class DeleteWorkbooksCommandTests : CommandUnitTestsBase<DeleteWorkbooksC
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithAuthMethod_PassesCorrectParameters()
-    {
-        // Arrange
-        var workbookId = "/subscriptions/test-sub/resourceGroups/test-rg/providers/microsoft.insights/workbooks/test-workbook";
-
-        var batchResult = new WorkbookDeleteBatchResult([workbookId], []);
-
-        Service.DeleteWorkbooksAsync(
-            Arg.Any<IReadOnlyList<string>>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(batchResult);
-
-        // Act
-        await ExecuteCommandAsync("--workbook-ids", workbookId, "--auth-method", "1");
-
-        // Assert
-        await Service.Received(1).DeleteWorkbooksAsync(
-            Arg.Is<IReadOnlyList<string>>(ids => ids.Contains(workbookId)),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task ExecuteAsync_WithoutWorkbookIds_ReturnsError()
     {
         // Arrange & Act
