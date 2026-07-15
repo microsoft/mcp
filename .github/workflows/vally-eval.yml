@@ -5,7 +5,7 @@ description: |
 on:
   pull_request:
     paths:
-      - 'tools/**'
+      - 'tools/Azure.Mcp.*/**'
       - '.vally.yaml'
   workflow_dispatch:
     inputs:
@@ -14,6 +14,11 @@ on:
         required: false
         default: false
         type: boolean
+      numberOfRuns:
+        description: 'Number of runs'
+        required: false
+        default: 1
+        type: number
 
 permissions:
   copilot-requests: write
@@ -85,11 +90,18 @@ jobs:
       - name: Run vally
         run: |
           $isDebug = '${{ github.event.inputs.logLevel }}' -eq 'true'
+          $numberOfRuns = ${{ github.event.inputs.numberOfRuns }}
           $buildInfo = '${{ github.workspace }}/.work/build_info.json'
-          $evalsDirectory = '${{ github.workspace }}/.work/evals'
-          $outputPath = '${{ github.workspace }}/.work/vally-results'
 
-          ./eng/scripts/Invoke-Vally.ps1 -BuildInfoPath $buildInfo -EvalsDirectory $evalsDirectory -OutputPath $outputPath -IsDebug:$isDebug
+          $baseVallyDirectory = '${{ github.workspace }}/.work/vally'
+          $evalsDirectory = "$baseVallyDirectory/evals"
+          $outputPath = "$baseVallyDirectory/vally-results"
+
+          $workingDirectory = "${{ github.workspace }}"
+          
+          Copy-Item ./eng/tools/VallyEvaluator/src/Resources/eval.instructions.md "$workingDirectory/AGENTS.md" -Force
+
+          ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath $buildInfo -WorkDirectory $workingDirectory -EvalsDirectory $evalsDirectory -OutputPath $outputPath -NumberOfRuns $numberOfRuns -IsDebug:$isDebug
         shell: pwsh
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
@@ -99,5 +111,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: vally-results
-          path: ${{ github.workspace }}/.work/vally-results
+          path: ${{ github.workspace }}/.work/vally/vally-results
           if-no-files-found: warn

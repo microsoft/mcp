@@ -45,7 +45,7 @@ internal class Program
 
         try
         {
-            await RunEvaluationAsync(repoRoot, runConfig, buildInfo);
+            await CreateEvalsAsync(repoRoot, runConfig, buildInfo);
         }
         catch (Exception ex)
         {
@@ -91,7 +91,7 @@ internal class Program
         return results.ToList();
     }
 
-    private static async Task RunEvaluationAsync(string repoRoot, RunConfiguration configuration, BuildInfo? buildInfo = null)
+    private static async Task CreateEvalsAsync(string repoRoot, RunConfiguration configuration, BuildInfo? buildInfo = null)
     {
         string promptsPath = string.Empty;
         if (string.IsNullOrEmpty(configuration.PromptFilePath))
@@ -104,10 +104,11 @@ internal class Program
         }
 
         var promptDatastore = new PromptDatastore(promptsPath);
-        var vallyEvalDirectory = Path.Combine(configuration.WorkingDirectory, "evals");
+        var vallyEvalDirectory = Path.Combine(configuration.VallyBaseDirectory, "evals");
+
         Directory.CreateDirectory(vallyEvalDirectory);
 
-        HashSet<string> namespaces = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+        var namespaces = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
         if (buildInfo != null)
         {

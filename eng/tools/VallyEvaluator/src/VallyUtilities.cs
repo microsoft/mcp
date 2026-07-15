@@ -17,6 +17,12 @@ internal class VallyUtilities
             .WithNamingConvention(HyphenatedNamingConvention.Instance)
             .Build();
 
+    internal static readonly IDeserializer Deserializer =
+        new StaticDeserializerBuilder(new VallyYamlStaticContext())
+            .WithCaseInsensitivePropertyMatching()
+            .WithNamingConvention(HyphenatedNamingConvention.Instance)
+            .Build();
+
     internal static readonly Dictionary<string, string> Replacements = new()
     {
         { "<value>", "Test value" },
