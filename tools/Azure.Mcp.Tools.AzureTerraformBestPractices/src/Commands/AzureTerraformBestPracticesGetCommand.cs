@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Reflection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
@@ -25,9 +24,8 @@ namespace Azure.Mcp.Tools.AzureTerraformBestPractices.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraformBestPracticesGetCommand> logger) : BaseCommand<EmptyOptions>
+public sealed class AzureTerraformBestPracticesGetCommand() : BaseCommand<EmptyOptions, List<string>>
 {
-    private readonly ILogger<AzureTerraformBestPracticesGetCommand> _logger = logger;
     private static readonly string s_bestPracticesText = LoadBestPracticesText();
 
     private static string GetBestPracticesText() => s_bestPracticesText;
@@ -39,9 +37,7 @@ public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraform
         return EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
     }
 
-    protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
     {
         var bestPractices = GetBestPracticesText();
         context.Response.Status = HttpStatusCode.OK;
