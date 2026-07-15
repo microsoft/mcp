@@ -71,6 +71,35 @@ public class IoTHubGetCommandTests : SubscriptionCommandUnitTestsBase<IoTHubGetC
         }
     }
 
+    [Theory]
+    [InlineData("ab")]
+    [InlineData("hub-name-")]
+    [InlineData("hub!name")]
+    [InlineData("hub' OR 1=1")]
+    public async Task ExecuteAsync_RejectsInvalidIoTHubName(string invalidName)
+    {
+        // Ensure environment variable fallback does not interfere with validation tests
+        TestEnvironment.ClearAzureSubscriptionId();
+
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--name", invalidName);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--name must be 3-50 characters long", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsOversizedIoTHubName()
+    {
+        // Ensure environment variable fallback does not interfere with validation tests
+        TestEnvironment.ClearAzureSubscriptionId();
+
+        var invalidName = new string('a', 51);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--name", invalidName);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--name must be 3-50 characters long", response.Message);
+    }
+
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {

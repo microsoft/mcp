@@ -35,6 +35,21 @@ public sealed class IoTHubGetCommand(
     private readonly ILogger<IoTHubGetCommand> _logger = logger;
     private readonly IIoTHubService _service = service;
 
+    public override void ValidateOptions(IoTHubGetOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        if (options.Name is null)
+        {
+            return;
+        }
+
+        if (!IsValidIoTHubName(options.Name))
+        {
+            validationResult.Errors.Add("--name must be 3-50 characters long and contain only letters, numbers, or hyphens, and it cannot end with a hyphen.");
+        }
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
         IoTHubGetOptions options,
@@ -68,4 +83,25 @@ public sealed class IoTHubGetCommand(
     }
 
     public record IoTHubGetCommandResult(List<IoTHubDescription> IoTHubs, bool AreResultsTruncated);
+
+    private static bool IsValidIoTHubName(string value)
+    {
+        if (value.Length is < 3 or > 50 || value[^1] == '-')
+        {
+            return false;
+        }
+
+        foreach (var ch in value)
+        {
+            var isAlphaNumeric = (ch >= 'a' && ch <= 'z') ||
+                                 (ch >= 'A' && ch <= 'Z') ||
+                                 (ch >= '0' && ch <= '9');
+            if (!isAlphaNumeric && ch != '-')
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
