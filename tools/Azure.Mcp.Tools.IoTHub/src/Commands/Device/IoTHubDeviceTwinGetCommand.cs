@@ -17,7 +17,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
 
 public sealed class IoTHubDeviceTwinGetCommand(IIoTHubDeviceService service, ILogger<IoTHubDeviceTwinGetCommand> logger)
-    : SubscriptionCommand<IoTHubDeviceTwinGetOptions>
+    : BaseIoTHubCommand<IoTHubDeviceTwinGetOptions>
 {
     public override string Id => "iothub-device-twin-get";
     public override string Name => "get-twin";
@@ -31,7 +31,6 @@ public sealed class IoTHubDeviceTwinGetCommand(IIoTHubDeviceService service, ILo
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.Name.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.DeviceId.AsRequired());
     }
@@ -39,7 +38,6 @@ public sealed class IoTHubDeviceTwinGetCommand(IIoTHubDeviceService service, ILo
     protected override IoTHubDeviceTwinGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Name = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Name.Name);
         options.DeviceId = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.DeviceId.Name);
         return options;
@@ -75,4 +73,3 @@ public sealed class IoTHubDeviceTwinGetCommand(IIoTHubDeviceService service, ILo
         return context.Response;
     }
 }
- 

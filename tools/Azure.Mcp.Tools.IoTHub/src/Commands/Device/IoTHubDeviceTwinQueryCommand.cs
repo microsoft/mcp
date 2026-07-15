@@ -17,7 +17,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
 
 public sealed class IoTHubDeviceTwinQueryCommand(IIoTHubDeviceService service, ILogger<IoTHubDeviceTwinQueryCommand> logger)
-    : SubscriptionCommand<IoTHubDeviceTwinQueryOptions>
+    : BaseIoTHubCommand<IoTHubDeviceTwinQueryOptions>
 {
     public override string Id => "iothub-device-twin-query";
     public override string Name => "query-twins";
@@ -31,7 +31,6 @@ public sealed class IoTHubDeviceTwinQueryCommand(IIoTHubDeviceService service, I
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.Name.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.Query.AsRequired());
     }
@@ -39,7 +38,6 @@ public sealed class IoTHubDeviceTwinQueryCommand(IIoTHubDeviceService service, I
     protected override IoTHubDeviceTwinQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Name = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Name.Name);
         options.Query = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Query.Name);
         return options;

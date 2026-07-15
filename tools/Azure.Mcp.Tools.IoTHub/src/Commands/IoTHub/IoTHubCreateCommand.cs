@@ -18,7 +18,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.IoTHub.Commands.IoTHub;
 
 public sealed class IoTHubCreateCommand(IIoTHubService service, ILogger<IoTHubCreateCommand> logger)
-    : SubscriptionCommand<IoTHubCreateOptions>
+    : BaseIoTHubCommand<IoTHubCreateOptions>
 {
     public override string Id => "iothub-create";
     public override string Name => "create";
@@ -33,7 +33,6 @@ public sealed class IoTHubCreateCommand(IIoTHubService service, ILogger<IoTHubCr
     {
         base.RegisterOptions(command);
         command.Options.Add(IoTHubOptionDefinitions.Name.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.Location.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.Sku.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.Capacity.AsRequired());
@@ -43,12 +42,11 @@ public sealed class IoTHubCreateCommand(IIoTHubService service, ILogger<IoTHubCr
     {
         var options = base.BindOptions(parseResult);
         options.Name = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Name.Name);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Subscription = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription.Name);
         options.Location = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Location.Name);
         options.Sku = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Sku.Name);
         options.Capacity = parseResult.GetValueOrDefault<long>(IoTHubOptionDefinitions.Capacity.Name);
-        
+
         return options;
     }
 

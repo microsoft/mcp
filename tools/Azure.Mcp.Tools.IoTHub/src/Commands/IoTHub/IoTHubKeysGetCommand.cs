@@ -18,7 +18,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.IoTHub.Commands.IoTHub;
 
 public sealed class IoTHubKeysGetCommand(IIoTHubService service, ILogger<IoTHubKeysGetCommand> logger)
-    : SubscriptionCommand<IoTHubKeysGetOptions>
+    : BaseIoTHubCommand<IoTHubKeysGetOptions>
 {
     public override string Id => "iothub-keys-get";
     public override string Name => "keys";
@@ -33,14 +33,12 @@ public sealed class IoTHubKeysGetCommand(IIoTHubService service, ILogger<IoTHubK
     {
         base.RegisterOptions(command);
         command.Options.Add(IoTHubOptionDefinitions.Name.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
     }
 
     protected override IoTHubKeysGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Name = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Name.Name);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
 

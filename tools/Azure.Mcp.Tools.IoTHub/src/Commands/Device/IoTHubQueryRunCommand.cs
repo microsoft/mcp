@@ -20,7 +20,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.IoTHub.Commands.IoTHub;
 
 public sealed class IoTHubQueryRunCommand(IIoTHubDeviceService service, ILogger<IoTHubQueryRunCommand> logger)
-    : SubscriptionCommand<IoTHubQueryRunOptions>
+    : BaseIoTHubCommand<IoTHubQueryRunOptions>
 {
     public override string Id => "iothub-query-run";
     public override string Name => "run";
@@ -38,7 +38,6 @@ public sealed class IoTHubQueryRunCommand(IIoTHubDeviceService service, ILogger<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.Name.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.Query.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.QueryMaxCount.AsOptional());
@@ -48,7 +47,6 @@ public sealed class IoTHubQueryRunCommand(IIoTHubDeviceService service, ILogger<
     protected override IoTHubQueryRunOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Name = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Name.Name);
         options.Query = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Query.Name);
         var maxCount = parseResult.GetValueOrDefault<int?>(IoTHubOptionDefinitions.MaxCount.Name);

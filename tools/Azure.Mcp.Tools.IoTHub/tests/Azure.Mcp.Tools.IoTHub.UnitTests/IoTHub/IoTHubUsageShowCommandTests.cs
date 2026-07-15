@@ -56,7 +56,11 @@ public class IoTHubUsageShowCommandTests
             DailyMessageQuotaUsedByDay: null,
             TotalMessagesUsed: null,
             D2CMessageCount: 0,
-            ThrottlingErrors: 0);
+            ThrottlingErrors: 0,
+            PeakHourlyThrottlingErrors: 0,
+            Sku: "S1",
+            Units: 1,
+            RecommendedSku: null);
 
         _service.GetUsageSnapshot(
             name,
@@ -175,7 +179,7 @@ public class IoTHubUsageShowCommandTests
                 DateTimeOffset.Parse(endTime),
                 new IoTHubDeviceCountStats(0, 0, 0),
                 new IoTHubDeviceCountStats(1, 1, 1),
-                1, null, null, 0, 0));
+                1, null, null, 0, 0, 0, "S1", 1, null));
 
         var args = _commandDefinition.Parse([
             "--name", name,
@@ -200,5 +204,48 @@ public class IoTHubUsageShowCommandTests
             endTime,
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("F1", "S1")]
+    [InlineData("S1", "S2")]
+    [InlineData("S2", "S3")]
+    [InlineData("s2", "S3")] // case-insensitive
+    public void DetermineRecommendedSku_AboveThreshold_RecommendsNextTier(string sku, string expected)
+    {
+        Assert.Equal(expected, IoTHubService.DetermineRecommendedSku(1001, sku));
+    }
+
+    [Fact]
+    public void DetermineRecommendedSku_S3_NeverRecommends()
+    {
+        // S3 is the top Standard tier, so no upgrade is ever recommended.
+        Assert.Null(IoTHubService.DetermineRecommendedSku(50000, "S3"));
+    }
+
+    [Theory]
+    [InlineData(1000d)] // exactly at the threshold is not above it
+    [InlineData(0d)]
+    [InlineData(null)]
+    public void DetermineRecommendedSku_AtOrBelowThreshold_ReturnsNull(double? peak)
+    {
+        Assert.Null(IoTHubService.DetermineRecommendedSku(peak, "S1"));
+    }
+
+    [Fact]
+    public void DetermineRecommendedSku_SubHourBurstAboveThreshold_StillRecommends()
+    {
+        // A partial-hour bucket with more than 1000 throttling errors still triggers a recommendation.
+        Assert.Equal("S2", IoTHubService.DetermineRecommendedSku(1500, "S1"));
+    }
+
+    [Theory]
+    [InlineData("B1")]
+    [InlineData("B2")]
+    [InlineData("B3")]
+    public void DetermineRecommendedSku_BasicTier_ReturnsNull(string sku)
+    {
+        // Basic tiers have no defined single upgrade target here, so no recommendation is made.
+        Assert.Null(IoTHubService.DetermineRecommendedSku(5000, sku));
     }
 }

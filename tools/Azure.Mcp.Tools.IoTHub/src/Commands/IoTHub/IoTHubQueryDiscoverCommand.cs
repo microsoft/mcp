@@ -22,7 +22,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.IoTHub.Commands.IoTHub;
 
 public sealed class IoTHubQueryDiscoverCommand(IIoTHubDeviceService service, ILogger<IoTHubQueryDiscoverCommand> logger)
-    : SubscriptionCommand<IoTHubQueryDiscoverOptions>
+    : BaseIoTHubCommand<IoTHubQueryDiscoverOptions>
 {
     public override string Id => "iothub-query-discover";
     public override string Name => "discover";
@@ -44,7 +44,6 @@ public sealed class IoTHubQueryDiscoverCommand(IIoTHubDeviceService service, ILo
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.Name.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.QueryMaxCount.AsOptional());
     }
@@ -52,7 +51,6 @@ public sealed class IoTHubQueryDiscoverCommand(IIoTHubDeviceService service, ILo
     protected override IoTHubQueryDiscoverOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Name = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Name.Name);
         var maxCount = parseResult.GetValueOrDefault<int?>(IoTHubOptionDefinitions.MaxCount.Name);
         options.MaxCount = maxCount switch

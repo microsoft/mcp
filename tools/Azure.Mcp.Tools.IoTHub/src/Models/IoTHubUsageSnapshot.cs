@@ -16,4 +16,8 @@ public record IoTHubUsageSnapshot(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<IoTHubDailyMessageUsage>? DailyMessageQuotaUsedByDay,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? TotalMessagesUsed,
     double? D2CMessageCount,
-    double? ThrottlingErrors);
+    double? ThrottlingErrors,
+    double? PeakHourlyThrottlingErrors,
+    string Sku,
+    long Units,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RecommendedSku);

@@ -17,7 +17,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.IoTHub.Commands.IoTHub;
 
 public sealed class IoTHubDeleteCommand(IIoTHubService service, ILogger<IoTHubDeleteCommand> logger)
-    : SubscriptionCommand<IoTHubDeleteOptions>
+    : BaseIoTHubCommand<IoTHubDeleteOptions>
 {
     public override string Id => "iothub-delete";
     public override string Name => "delete";
@@ -32,14 +32,12 @@ public sealed class IoTHubDeleteCommand(IIoTHubService service, ILogger<IoTHubDe
     {
         base.RegisterOptions(command);
         command.Options.Add(IoTHubOptionDefinitions.Name.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
     }
 
     protected override IoTHubDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Name = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Name.Name);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
 

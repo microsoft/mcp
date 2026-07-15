@@ -19,7 +19,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
 
 public sealed class IoTHubDeviceTwinUpdateCommand(IIoTHubDeviceService service, ILogger<IoTHubDeviceTwinUpdateCommand> logger)
-    : SubscriptionCommand<IoTHubDeviceTwinUpdateOptions>
+    : BaseIoTHubCommand<IoTHubDeviceTwinUpdateOptions>
 {
     public override string Id => "iothub-device-twin-update";
     public override string Name => "update-twin";
@@ -33,7 +33,6 @@ public sealed class IoTHubDeviceTwinUpdateCommand(IIoTHubDeviceService service, 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.Name.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.DeviceId.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.Patch.AsRequired());
@@ -42,7 +41,6 @@ public sealed class IoTHubDeviceTwinUpdateCommand(IIoTHubDeviceService service, 
     protected override IoTHubDeviceTwinUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Name = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Name.Name);
         options.DeviceId = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.DeviceId.Name);
         options.Patch = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Patch.Name);

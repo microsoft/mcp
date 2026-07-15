@@ -18,7 +18,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
 
 public sealed class IoTHubDeviceStatisticsCommand(IIoTHubDeviceService service, ILogger<IoTHubDeviceStatisticsCommand> logger)
-    : SubscriptionCommand<IoTHubDeviceStatisticsOptions>
+    : BaseIoTHubCommand<IoTHubDeviceStatisticsOptions>
 {
     public override string Id => "iothub-device-stats";
     public override string Name => "stats";
@@ -35,14 +35,12 @@ public sealed class IoTHubDeviceStatisticsCommand(IIoTHubDeviceService service, 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.Name.AsRequired());
     }
 
     protected override IoTHubDeviceStatisticsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Name = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Name.Name);
         return options;
     }

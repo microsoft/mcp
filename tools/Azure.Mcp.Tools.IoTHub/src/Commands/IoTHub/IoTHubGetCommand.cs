@@ -18,7 +18,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.IoTHub.Commands.IoTHub;
 
 public sealed class IoTHubGetCommand(IIoTHubService service, ILogger<IoTHubGetCommand> logger)
-    : SubscriptionCommand<IoTHubGetOptions>
+    : BaseIoTHubCommand<IoTHubGetOptions>
 {
     public override string Id => "iothub-get";
     public override string Name => "get";
@@ -29,18 +29,18 @@ public sealed class IoTHubGetCommand(IIoTHubService service, ILogger<IoTHubGetCo
     private readonly IIoTHubService _service = service ?? throw new ArgumentNullException(nameof(service));
     private readonly ILogger<IoTHubGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+    protected override bool RequireResourceGroup => false;
+
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
         command.Options.Add(IoTHubOptionDefinitions.Name.AsOptional());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
     }
 
     protected override IoTHubGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Name = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Name.Name);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
 
