@@ -37,7 +37,8 @@ public class CommandContext
 
     /// <summary>
     /// Optional progress token from the client's request. When set, long-running commands can
-    /// emit MCP <c>notifications/progress</c> via <see cref="McpServer"/> to stream updates.
+    /// emit MCP <c>notifications/progress</c> via <see cref="McpServer"/> to stream updates and
+    /// reset client-side inactivity timeouts.
     /// </summary>
     public ProgressToken? ProgressToken { get; set; }
 

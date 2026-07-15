@@ -10,7 +10,6 @@
   "azure-deploy",
   "azure-diagnostics",
   "azure-enterprise-infra-planner",
-  "azure-hosted-copilot-sdk",
   "azure-kubernetes",
   "azure-kusto",
   "azure-messaging",

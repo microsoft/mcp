@@ -548,8 +548,13 @@
   "monitor_activitylog_list": [
     "List the activity logs of the last month for <resource_name>"
   ],
-  "monitor_healthmodels_entity_get": [
-    "Show me the health status of entity <entity_id> using the health model <health_model_name>"
+  "monitor_healthmodels_get": [
+    "Show me the health model <health_model_name> in resource group <resource_group>",
+    "Get the Azure Monitor health model named <health_model_name>"
+  ],
+  "monitor_healthmodels_list": [
+    "List the Azure Monitor health models in my subscription",
+    "What health models are in resource group <resource_group>?"
   ],
   "monitor_metrics_definitions": [
     "Get metric definitions for <resource_type> <resource_name> from the namespace",

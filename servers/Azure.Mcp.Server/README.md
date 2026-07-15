@@ -1,6 +1,9 @@
 <!--
 See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate this README.md for package specific output
 -->
+<!-- remove-section: start nuget;vsix;npm;pypi remove_managed_hosting_survey -->
+[![Help shape Azure MCP Server's Managed Remote Hosting — take our 1-minute survey](images/managed-hosting-survey-banner.png)](https://aka.ms/azmcp/managed-hosting-survey)
+<!-- remove-section: end remove_managed_hosting_survey -->
 # <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm;pypi {{ToolTitle}} -->
 <!-- remove-section: start nuget;vsix;npm;pypi remove_note_ga -->
 > [!NOTE]
@@ -27,6 +30,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [Visual Studio 2022](#visual-studio-2022)
         - [IntelliJ IDEA](#intellij-idea)
         - [Eclipse IDE](#eclipse-ide)
+        - [Claude Code](#claude-code)
         - [Manual Setup](#manual-setup)
     - [Package Manager](#package-manager)
         - [NuGet](#nuget)
@@ -151,6 +155,18 @@ From within Visual Studio 2022 install [GitHub Copilot for Azure (VS 2022)](http
 1. Install the [GitHub Copilot](https://marketplace.eclipse.org/content/github-copilot) plugin.
 1. Install the [Azure Toolkit for Eclipse](https://marketplace.eclipse.org/content/azure-toolkit-eclipse) plugin.
 
+### Claude Code
+
+The Azure plugin packages the Azure MCP Server along with Azure-related agents and skills, bringing Azure integration to Claude Code in one installation.
+
+1. Install [Claude Code](https://code.claude.com/).
+1. Install the Azure plugin from Anthropic's official plugin marketplace by running the following command in Claude Code:
+   ```
+   /plugin install azure@claude-plugins-official
+   ```
+
+For more information on discovering and installing plugins, see the [Claude Code plugins documentation](https://code.claude.com/docs/en/discover-plugins).
+
 ### Manual Setup
 Azure MCP Server can also be configured across other IDEs, CLIs, and MCP clients:
 
@@ -241,7 +257,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 | **VS Code** | `.vscode/mcp.json` (workspace)<br>`settings.json` (user) | [VS Code MCP Documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) |
 | **Visual Studio** | `.mcp.json` (solution/workspace) | [Visual Studio MCP Setup](https://learn.microsoft.com/visualstudio/ide/mcp-servers?view=vs-2022) |
 | **GitHub Copilot CLI** | `~/.copilot/mcp-config.json` | [Copilot CLI MCP Configuration](#github-copilot-cli-configuration) |
-| **Claude Code** | `~/.claude.json` or `.mcp.json` (project) | [Claude Code MCP Configuration](https://scottspence.com/posts/configuring-mcp-tools-in-claude-code) |
+| **Claude Code** | `~/.claude.json` or `.mcp.json` (project) | [Claude Code MCP Configuration](https://code.claude.com/docs/en/mcp-quickstart#add-a-local-server) |
 | **Eclipse IDE** | GitHub Copilot Chat -> Configure Tools -> MCP Servers  | [Eclipse MCP Documentation](https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/extend-copilot-chat-with-mcp#configuring-mcp-servers-in-eclipse) |
 | **IntelliJ IDEA** | Built-in MCP server (2025.2+)<br>Settings > Tools > MCP Server | [IntelliJ MCP Documentation](https://www.jetbrains.com/help/ai-assistant/mcp.html) |
 | **Cursor** | `~/.cursor/mcp.json` or `.cursor/mcp.json` | [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol) |
@@ -1089,6 +1105,17 @@ Example prompts that generate Azure CLI commands:
 * "Get provisioning recommendations for my file share workload"
 * "Get usage data and metrics for my file share"
 
+### 💡 Azure Insights
+
+* "Generate insights from my current subscription"
+* "Summarize what's deployed across my Azure environment and highlight notable patterns"
+* "Analyze my tenant and give me insights about the overall infrastructure"
+* "What can you tell me about my existing Azure environment?"
+* "Analyze subscription <subscription_id> for architectural patterns"
+* "Analyze my Azure infrastructure and surface patterns to help me plan my next project"
+* "Generate insights about my Azure environment to help me plan a new data analytics platform"
+* "What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS?"
+
 ### 🔑 Azure Key Vault
 
 * "List all secrets in my key vault 'my-vault'"
@@ -1116,6 +1143,8 @@ Example prompts that generate Azure CLI commands:
 ### 📊 Azure Monitor
 
 * "Query my Log Analytics workspace"
+* "List my Azure Monitor Health Models"
+* "Get details for my Azure Monitor Health Model 'my-health-model'"
 
 ### 🧭 Azure Monitor Instrumentation (under Azure Monitor)
 
@@ -1248,6 +1277,7 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - 📊 **Azure Event Grid** - Event routing and management
 - 📁 **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
+- 💡 **Azure Insights** - Derive infrastructure insights from Azure Resource Graph patterns
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
 - 📦 **Azure Load Testing** - Performance testing
@@ -1255,7 +1285,7 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
-- 📈 **Azure Monitor** - Logging, metrics, health monitoring, and instrumentation onboarding/migration workflow for local applications
+- 📈 **Azure Monitor** - Logging, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning
