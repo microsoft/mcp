@@ -1,14 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Knowledge;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
@@ -30,38 +27,17 @@ namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeBaseGetOptions>()
+public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> logger, ISearchService searchService)
+    : AuthenticatedCommand<KnowledgeBaseGetOptions, KnowledgeBaseGetCommand.KnowledgeBaseGetCommandResult>
 {
     private readonly ILogger<KnowledgeBaseGetCommand> _logger = logger;
     private readonly ISearchService _searchService = searchService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, KnowledgeBaseGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SearchOptionDefinitions.Service);
-        command.Options.Add(SearchOptionDefinitions.KnowledgeBase.AsOptional());
-    }
-
-    protected override KnowledgeBaseGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Service = parseResult.GetValueOrDefault<string>(SearchOptionDefinitions.Service.Name);
-        options.KnowledgeBase = parseResult.GetValueOrDefault<string>(SearchOptionDefinitions.KnowledgeBase.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var bases = await _searchService.ListKnowledgeBases(options.Service!, options.KnowledgeBase, options.RetryPolicy, cancellationToken);
+            var bases = await _searchService.ListKnowledgeBases(options.Service, options.KnowledgeBase, options.RetryPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(bases ?? []), SearchJsonContext.Default.KnowledgeBaseGetCommandResult);
         }
         catch (Exception ex)
@@ -73,5 +49,5 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
         return context.Response;
     }
 
-    internal sealed record KnowledgeBaseGetCommandResult(List<Models.KnowledgeBaseInfo> KnowledgeBases);
+    public sealed record KnowledgeBaseGetCommandResult(List<Models.KnowledgeBaseInfo> KnowledgeBases);
 }

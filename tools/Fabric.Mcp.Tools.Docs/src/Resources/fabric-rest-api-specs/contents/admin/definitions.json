@@ -68,6 +68,11 @@
               "$ref": "../common/definitions.json#/definitions/WorkspaceAppliedTag"
             },
             "readOnly": true
+          },
+          "encryption": {
+            "description": "The encryption details of the workspace.",
+            "$ref": "../platform/definitions/workspaceCmk.json#/definitions/Encryption",
+            "readOnly": true
           }
         }
       },

@@ -11,6 +11,9 @@
         "localTimeZoneId": "Central Standard Time",
         "type": "Cron",
         "interval": 10
+      },
+      "executionData": {
+        "mlvExecutionDefinitionId": "eeeeeeee-4444-5555-6666-ffffffffffff"
       }
     }
   },
@@ -29,6 +32,9 @@
           "localTimeZoneId": "Central Standard Time",
           "type": "Cron",
           "interval": 10
+        },
+        "executionData": {
+          "mlvExecutionDefinitionId": "eeeeeeee-4444-5555-6666-ffffffffffff"
         },
         "owner": {
           "id": "33dd33dd-ee44-ff55-aa66-77bb77bb77bb",
