@@ -122,7 +122,7 @@ public sealed class QuotaCommandTests(ITestOutputHelper output, TestProxyFixture
     [Fact]
     public async Task Should_check_regions_with_cognitive_services()
     {
-        // act
+        // act: check that regions are returned for CognitiveServices/accounts with gpt-4o + Standard SKU
         var result = await CallToolAsync(
             "quota_region_availability_list",
             new()
