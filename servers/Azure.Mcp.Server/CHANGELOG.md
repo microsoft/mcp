@@ -6,6 +6,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- `azmcp iothub hub usage show` now reports the worst single-hour D2C throttling count (`peakHourlyThrottlingErrors`) alongside the hub's `sku` and `units`, and when any hour exceeds 1000 throttling errors it returns a `recommendedSku` pointing to the next-higher tier (F1→S1, S1→S2, S2→S3) so the hub can be scaled up. No recommendation is made for S3 (the top tier).
 - Added `azmcp iothub device stats` to get device statistics for an IoT Hub identity registry, returning `disabledDeviceCount`, `enabledDeviceCount`, and `totalDeviceCount`.
 - Added `azmcp iothub query discover` to sample `SELECT * FROM devices` and return queryable device twin field paths grouped by device, tags, desired properties, and reported properties.
 - Added `azmcp iothub query compile` to turn structured IoT Hub query predicates into a validated query string and optional `maxCount` hint that can be passed to `azmcp iothub query run`. The new `--discovered-fields` option validates predicate fields against paths returned by `azmcp iothub query discover` before constructing the query.

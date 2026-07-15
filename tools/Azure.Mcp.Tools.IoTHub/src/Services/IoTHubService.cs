@@ -38,6 +38,10 @@ public class IoTHubService(
         "d2c.telemetry.ingress.sendThrottle",
     ];
 
+    // When any single hourly bucket of d2c.telemetry.ingress.sendThrottle exceeds this count, the hub
+    // is throttling heavily enough to recommend moving to a higher SKU tier.
+    private const double ThrottlingHourlyUpgradeThreshold = 1000;
+
     public async Task<List<IoTHubDescription>> GetIoTHub(
         string? name,
         string? resourceGroup,
@@ -186,6 +190,13 @@ public class IoTHubService(
         var subResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
         var subscriptionId = subResource.Id.SubscriptionId;
 
+        // Read the hub's SKU tier and unit count so the snapshot can flag when sustained
+        // throttling warrants moving to a higher tier.
+        var resourceGroupResource = await subResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
+        var hubResource = await resourceGroupResource.Value.GetIotHubDescriptionAsync(name, cancellationToken);
+        var sku = hubResource.Value.Data.Sku.Name.ToString();
+        var units = hubResource.Value.Data.Sku.Capacity ?? 0;
+
         var resourceId =
             $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}" +
             $"/providers/Microsoft.Devices/IotHubs/{name}";
@@ -211,6 +222,19 @@ public class IoTHubService(
         {
             TimeRange = new QueryTimeRange(resolvedStart, resolvedEnd),
             MetricNamespace = IoTHubMetricNamespace,
+            // Pin an explicit hourly granularity instead of letting Azure Monitor pick the default
+            // (which is the finest, PT1M). Reasons:
+            //  1. connectedDeviceCount is a time-averaged gauge, so its Maximum is
+            //     granularity-dependent. At PT1M, sub-minute connection churn inflates the reported
+            //     peak far above sustained concurrency (e.g. 15 during flapping vs. 2 actually
+            //     connected). Hourly buckets report the operationally meaningful peak.
+            //  2. dailyMessageQuotaUsed is a daily-resetting counter whose per-day usage is the
+            //     closing (last) sample of each UTC day. Hourly samples stay fine enough to see the
+            //     reset (which lags a little past 00:00 UTC) so the closing value is correct, while
+            //     not depending on the finest default staying stable.
+            //  3. PT1M over multi-week windows makes the 5-metric x 3-aggregation response exceed
+            //     Azure Monitor's 8 MB limit; PT1H is ~60x smaller and stays within it.
+            Granularity = TimeSpan.FromHours(1),
         };
         queryOptions.Aggregations.Add(MetricAggregationType.Maximum);
         queryOptions.Aggregations.Add(MetricAggregationType.Average);
@@ -226,6 +250,11 @@ public class IoTHubService(
 
         var (quotaSingle, quotaByDay, quotaTotal) = BuildQuotaUsage(metrics, "dailyMessageQuotaUsed", resolvedStart, resolvedEnd);
 
+        // Peak throttling is the worst single hourly bucket (each metric bucket is PT1H). A partial
+        // trailing bucket or a sub-hour window still counts, so a short but severe burst is caught.
+        var peakHourlyThrottling = MaxBucketTotal(metrics, "d2c.telemetry.ingress.sendThrottle");
+        var recommendedSku = DetermineRecommendedSku(peakHourlyThrottling, sku);
+
         return new IoTHubUsageSnapshot(
             HubName: name,
             SnapshotTime: DateTimeOffset.UtcNow,
@@ -237,7 +266,11 @@ public class IoTHubService(
             DailyMessageQuotaUsedByDay: quotaByDay,
             TotalMessagesUsed: quotaTotal,
             D2CMessageCount: SumTotal(metrics, "d2c.telemetry.ingress.success"),
-            ThrottlingErrors: SumTotal(metrics, "d2c.telemetry.ingress.sendThrottle"));
+            ThrottlingErrors: SumTotal(metrics, "d2c.telemetry.ingress.sendThrottle"),
+            PeakHourlyThrottlingErrors: peakHourlyThrottling,
+            Sku: sku,
+            Units: units,
+            RecommendedSku: recommendedSku);
     }
 
     private static DateTimeOffset? ParseTime(string? value, string parameterName)
@@ -304,6 +337,37 @@ public class IoTHubService(
 
         return values is { Count: > 0 } ? values.Sum() : null;
     }
+
+    private static double? MaxBucketTotal(IReadOnlyList<MetricResult> metrics, string metricName)
+    {
+        var totals = metrics
+            .FirstOrDefault(m => string.Equals(m.Name, metricName, StringComparison.OrdinalIgnoreCase))?
+            .TimeSeries
+            .SelectMany(ts => ts.Values)
+            .Where(v => v.Total.HasValue)
+            .Select(v => v.Total!.Value)
+            .ToList();
+
+        return totals is { Count: > 0 } ? totals.Max() : null;
+    }
+
+    /// <summary>
+    /// Recommends a higher IoT Hub SKU when the worst hourly throttling exceeds the threshold.
+    /// Returns null when throttling is within limits or the hub is already on the top tier (S3),
+    /// which has no upgrade target.
+    /// </summary>
+    internal static string? DetermineRecommendedSku(double? peakHourlyThrottling, string sku) =>
+        peakHourlyThrottling > ThrottlingHourlyUpgradeThreshold ? GetUpgradeSku(sku) : null;
+
+    // Maps a SKU tier to the next-higher tier to recommend. S3 is the top Standard tier, and tiers
+    // without a defined single upgrade path (e.g. Basic) return null so no recommendation is made.
+    private static string? GetUpgradeSku(string sku) => sku?.ToUpperInvariant() switch
+    {
+        "F1" => "S1",
+        "S1" => "S2",
+        "S2" => "S3",
+        _ => null,
+    };
 
     /// <summary>
     /// Resolves the daily message quota usage for the window.

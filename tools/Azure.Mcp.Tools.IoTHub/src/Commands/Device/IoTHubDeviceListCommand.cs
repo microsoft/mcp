@@ -18,7 +18,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
 
 public sealed class IoTHubDeviceListCommand(IIoTHubDeviceService service, ILogger<IoTHubDeviceListCommand> logger)
-    : SubscriptionCommand<IoTHubDeviceListOptions>
+    : BaseIoTHubCommand<IoTHubDeviceListOptions>
 {
     public override string Id => "iothub-device-list";
     public override string Name => "list";
@@ -41,7 +41,6 @@ public sealed class IoTHubDeviceListCommand(IIoTHubDeviceService service, ILogge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.Name.AsRequired());
         command.Options.Add(IoTHubOptionDefinitions.MaxCount.AsOptional());
     }
@@ -49,7 +48,6 @@ public sealed class IoTHubDeviceListCommand(IIoTHubDeviceService service, ILogge
     protected override IoTHubDeviceListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Name = parseResult.GetValueOrDefault<string>(IoTHubOptionDefinitions.Name.Name);
         var maxCount = parseResult.GetValueOrDefault<int?>(IoTHubOptionDefinitions.MaxCount.Name);
         options.MaxCount = maxCount switch
