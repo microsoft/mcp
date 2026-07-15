@@ -17,6 +17,7 @@ using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.KnowledgeBases;
 using Azure.Search.Documents.KnowledgeBases.Models;
 using Azure.Search.Documents.Models;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
@@ -213,7 +214,7 @@ public sealed partial class SearchService(
             var result = await searchClient.GetKnowledgeBaseAsync(knowledgeBaseName, cancellationToken: cancellationToken);
             if (result?.Value != null)
             {
-                if (result.Value.Name.Equals(knowledgeBaseName, StringComparison.OrdinalIgnoreCase))
+                if (result.Value.Name.Equals(knowledgeBaseName, StringComparisons.ResourceName))
                 {
                     bases.Add(new(result.Value.Name, result.Value.Description, [.. result.Value.KnowledgeSources.Select(ks => ks.Name)]));
                 }

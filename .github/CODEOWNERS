@@ -251,6 +251,12 @@
 # ServiceLabel: %tools-Grafana
 # ServiceOwners:                       @weng5e @xiangyan99
 
+# PRLabel: %tools-Insights
+/tools/Azure.Mcp.Tools.Insights/       @micha31r @arunrab @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Insights
+# ServiceOwners:                       @micha31r @arunrab
+
 # PRLabel: %tools-ISV
 /tools/Azure.Mcp.Tools.AzureIsv/       @agrimayadav @pachaturvedi @microsoft/azure-mcp
 
@@ -331,6 +337,12 @@
 
 # ServiceLabel: %tools-Redis
 # ServiceOwners:                        @carldc @philon-msft @xiangyan99
+
+# PRLabel: %tools-ResilienceManagement
+/tools/Azure.Mcp.Tools.ResilienceManagement/    @g2vinay @gautam714 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ResilienceManagement
+# ServiceOwners:                                @g2vinay @gautam714
 
 # PRLabel: %tools-ResourceHealth
 /tools/Azure.Mcp.Tools.ResourceHealth/     @shdesmu @microsoft/azure-mcp

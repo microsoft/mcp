@@ -504,7 +504,7 @@
     "/workspaces": {
       "get": {
         "summary": "Returns a list of workspaces.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination). A maximum of 10,000 records can be returned per request. With the continuous token provided in the response, you can get the next 10,000 records.\n\n## Permissions\n\nThe caller must be a Fabric administrator or authenticate using a service principal.\n\n## Required Delegated Scopes\n\nTenant.Read.All or Tenant.ReadWrite.All\n\n## Limitations\n\nMaximum 200 requests per hour.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination). A maximum of 10,000 records can be returned per request. With the continuation token provided in the response, you can get the next 10,000 records.\n\n## Permissions\n\nThe caller must be a Fabric administrator or authenticate using a service principal.\n\n## Required Delegated Scopes\n\nTenant.Read.All or Tenant.ReadWrite.All\n\n## Limitations\n\nMaximum 200 requests per hour.\n\nThe `encryptionStatus` filter is applied only when the `include` parameter contains `encryption`.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -552,6 +552,20 @@
             "description": "Continuation token. Used to get the next items in the list.",
             "type": "string",
             "required": false
+          },
+          {
+            "in": "query",
+            "name": "encryptionStatus",
+            "description": "Indicates the CMK encryption status of the workspace and is used to filter workspaces that match the specified status.",
+            "type": "string",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "include",
+            "description": "Specifies additional data to include for each workspace in the response. Supported values: `encryption`.",
+            "type": "string",
+            "required": false
           }
         ],
         "responses": {
@@ -587,6 +601,15 @@
           },
           "Get a list of workspaces using state query parameter example": {
             "$ref": "./examples/ListWorkspacesByState.json"
+          },
+          "List workspaces with encryption details": {
+            "$ref": "./examples/ListWorkspacesWithEncryption.json"
+          },
+          "List workspaces with active encryption status in a given capacity": {
+            "$ref": "./examples/ListWorkspacesWithEncryptionAndCapacity.json"
+          },
+          "List workspaces for a given capacity, ignoring the encryptionStatus filter.": {
+            "$ref": "./examples/ListWorkspacesWithoutEncryptionAndCapacity.json"
           }
         }
       }
@@ -1256,7 +1279,7 @@
           {
             "in": "query",
             "name": "nonEmptyOnly",
-            "description": "When true, only return domains that have at least one workspace containing an item. Default: false.",
+            "description": "When true, only return domains with workspaces assigned that contain one or more items the user has at least read access to. Default: false.",
             "type": "boolean",
             "required": false
           },
@@ -1381,7 +1404,7 @@
           {
             "in": "query",
             "name": "nonEmptyOnly",
-            "description": "When true, only return domains that have at least one workspace containing an item. Default: false.",
+            "description": "When true, only return domains with workspaces assigned that contain one or more items the user has at least read access to. Default: false.",
             "type": "boolean",
             "required": false
           },

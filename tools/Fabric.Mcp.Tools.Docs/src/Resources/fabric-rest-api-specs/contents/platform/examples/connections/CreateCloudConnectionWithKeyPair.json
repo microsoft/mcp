@@ -7,7 +7,7 @@
                 "type": "SQL",
                 "creationMethod": "SQL",
                 "parameters": [
-                    { 
+                    {
                         "dataType": "Text",
                         "name": "server",
                         "value": "contoso.database.windows.net"
@@ -39,7 +39,7 @@
                 "id": "eeec9a3a-6ef5-4e2b-bb6a-0060bd2f0172",
                 "displayName": "ContosoCloudConnection",
                 "connectivityType": "ShareableCloud",
-                "connectionDetails":{
+                "connectionDetails": {
                     "type": "SQL",
                     "path": "contoso.database.windows.net;snowflake-warehouse"
                 },
@@ -49,6 +49,9 @@
                     "singleSignOnType": "None",
                     "connectionEncryption": "NotEncrypted",
                     "skipTestConnection": false
+                },
+                "connectionRecency": {
+                    "createdDateTime": "2023-05-23T16:22:20Z"
                 }
             }
         }

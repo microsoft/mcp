@@ -1,7 +1,10 @@
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 
 /// <summary>
 /// Generator for Node.js PostgreSQL greenfield projects (no existing telemetry)
@@ -11,11 +14,10 @@ public class PostgresNodeJsGreenfieldGenerator : IGenerator
     public bool CanHandle(Analysis analysis)
     {
         var postgresProjects = analysis.Projects
-            .Where(p => p.AppType == AppType.PostgresNodeJs)
-            .ToList();
+            .Count(p => p.AppType == AppType.PostgresNodeJs);
 
         return analysis.Language == Language.NodeJs
-            && postgresProjects.Count == 1
+            && postgresProjects == 1
             && analysis.State == InstrumentationState.Greenfield;
     }
 

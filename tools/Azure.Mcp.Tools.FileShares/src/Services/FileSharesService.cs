@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.ResourceManager.FileShares;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FileShares.Services;
@@ -435,7 +436,7 @@ public sealed class FileSharesService(
 
         await foreach (var snapshotResource in snapshotCollection.WithCancellation(cancellationToken))
         {
-            if (snapshotResource.Data.Name.Equals(snapshotId, StringComparison.OrdinalIgnoreCase) ||
+            if (snapshotResource.Data.Name.Equals(snapshotId, StringComparisons.ResourceName) ||
                 snapshotResource.Data.Id.ToString().Equals(snapshotId, StringComparison.OrdinalIgnoreCase))
             {
                 return FileShareSnapshotInfo.FromResource(snapshotResource);

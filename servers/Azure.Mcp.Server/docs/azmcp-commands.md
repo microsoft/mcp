@@ -553,14 +553,17 @@ azmcp appconfig kv set --subscription <subscription> \
 
 ### Azure App Lens Operations
 
+> [!NOTE]
+> The `applens resource diagnose` command does not support `--auth-method` or any `--retry-*` options.
+
 ```bash
 # Diagnose resource using Azure App Lens
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp applens resource diagnose --subscription <subscription> \
-                                --resource-group <resource-group> \
-                                --question <question> \
-                                --resource-type <resource-type> \
-                                --resource <resource>
+azmcp applens resource diagnose --question <question> \
+                                --resource <resource> \
+                                [--subscription <subscription>] \
+                                [--resource-group <resource-group>] \
+                                [--resource-type <resource-type>]
 ```
 
 ### Azure Application Insights Operations
@@ -2080,6 +2083,9 @@ azmcp containerapps list --subscription <subscription> \
 
 ### Azure Container Registry (ACR) Operations
 
+> [!NOTE]
+> The `acr registry list` and `acr registry repository list` commands do not support `--auth-method`.
+
 ```bash
 # List Azure Container Registries in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2708,6 +2714,29 @@ azmcp functions template get --language <language> \
                              [--runtime-version <runtime-version>]
 ```
 
+### Azure Insights Operations
+
+```bash
+# Get architectural insights for a subscription or tenant based on existing resources (via Azure Resource Graph + MCP sampling)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp insights get [--scope <subscription|tenant>] \
+                   [--subscription <subscription>] \
+                   [--query <user-intent>] \
+                   [--nocache]
+
+# Example:
+# Get subscription-scoped insights with an user intent
+ azmcp insights get --scope subscription \
+                    --subscription <subscription> \
+                    --query "Prioritise cost and reliability patterns" \
+
+# Get tenant-scoped insights with an user intent; force data re-fetch
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp insights get --scope tenant \
+                   --query "Prioritise cost and reliability patterns" \
+                   --nocache
+```
+
 ### Azure Key Vault Operations
 
 #### Administration
@@ -2791,6 +2820,9 @@ azmcp keyvault secret get --subscription <subscription> \
 ```
 
 ### Azure Kubernetes Service (AKS) Operations
+
+> [!NOTE]
+> The `aks cluster get` and `aks nodepool get` commands do not support `--auth-method` (the `--retry-*` options are still supported).
 
 ```bash
 # Gets Azure Kubernetes Service (AKS) cluster details
@@ -3056,12 +3088,16 @@ azmcp monitor workspace log query --subscription <subscription> \
 #### Health Models
 
 ```bash
-# Get the health of an entity
+# List health models in a subscription (optionally scoped to a resource group)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor healthmodels entity get --subscription <subscription> \
-                                      --resource-group <resource-group> \
-                                      --health-model <health-model-name> \
-                                      --entity <entity-id>
+azmcp monitor healthmodels list --subscription <subscription> \
+                                [--resource-group <resource-group>]
+
+# Get (show) a single health model by name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor healthmodels get --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --health-model <health-model-name>
 ```
 
 #### Metrics
@@ -3609,6 +3645,70 @@ azmcp redis create --subscription <subscription> \
 # Lists all Redis resources
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp redis list --subscription <subscription>
+```
+
+### Azure Resilience Management Operations
+
+```bash
+# Get a resilience goal template, or list all goal templates in a service group (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience goal template get --subscription <subscription> \
+                                   --service-group <service-group> \
+                                   [--name <name>]
+
+# Get a resilience goal assignment, or list all goal assignments in a service group (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience goal assignment get --subscription <subscription> \
+                                     --service-group <service-group> \
+                                     [--name <name>]
+
+# Get a resource (member) of a goal assignment, or list all resources of the assignment (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience goal resource get --subscription <subscription> \
+                                   --service-group <service-group> \
+                                   --goal-assignment <goal-assignment> \
+                                   [--name <name>]
+
+# Get a resilience usage plan, or list usage plans (omit --name; omit --resource-group to list across the subscription)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan get --subscription <subscription> \
+                               [--resource-group <resource-group>] \
+                               [--name <name>]
+
+# Get a usage plan enrollment, or list all enrollments of a usage plan (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan enrollment get --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --usage-plan <usage-plan> \
+                                          [--name <name>]
+
+# Get a resilience recovery plan, or list all recovery plans in a service group (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recovery plan get --subscription <subscription> \
+                                   --service-group <service-group> \
+                                   [--name <name>]
+
+# Get a resource (member) of a recovery plan, or list all resources of the plan (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recovery plan resource get --subscription <subscription> \
+                                            --service-group <service-group> \
+                                            --recovery-plan <recovery-plan> \
+                                            [--name <name>]
+
+# Get a recovery job, or list all recovery jobs of a recovery plan (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recovery job get --subscription <subscription> \
+                                  --service-group <service-group> \
+                                  --recovery-plan <recovery-plan> \
+                                  [--name <name>]
+
+# Get a resource (target) of a recovery job, or list all resources of the job (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recovery job resource get --subscription <subscription> \
+                                           --service-group <service-group> \
+                                           --recovery-plan <recovery-plan> \
+                                           --recovery-job <recovery-job> \
+                                           [--name <name>]
 ```
 
 ### Azure Resource Group Operations
@@ -4450,7 +4550,7 @@ azmcp azureterraform azapi get --resource-type <resource-type> \
 #### Azure Verified Modules (AVM)
 
 ```bash
-# List all available Azure Verified Modules (AVM) for Terraform
+# List all available Azure Verified Modules (AVM) for Terraform (both resource and pattern modules)
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azureterraform avm list
 
