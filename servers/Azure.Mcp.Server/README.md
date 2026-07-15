@@ -1067,6 +1067,11 @@ Example prompts that generate Azure CLI commands:
 
 * "Show me all my Cosmos DB databases"
 * "List containers in my Cosmos DB database"
+* "Infer the schema of container 'items' in database 'mydb' for Cosmos DB account 'myaccount'"
+* "Show me the 15 most recent documents in container 'items' of database 'mydb' in Cosmos DB account 'myaccount'"
+* "Get the document with id '123' from container 'items' in database 'mydb' of Cosmos DB account 'myaccount'"
+* "Search documents in container 'items' from database 'mydb' where 'description' contains 'wireless headphones'"
+* "Find documents similar to 'noise cancelling earbuds' in container 'items' of database 'mydb' using vector property 'embedding'"
 
 ### 🧮 Azure Data Explorer
 
