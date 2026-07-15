@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsAotCompatible>true</IsAotCompatible>
+    <!--
+      MCP9005: Sampling APIs (CreateMessageRequestParams, SamplingMessage, McpServer.SampleAsync,
+      ClientCapabilities.Sampling) are deprecated as of MCP spec 2026-07-28. The Insights tool
+      intentionally uses sampling as its core feature. Migration to MRTR/elicitation is tracked
+      as Phase 3 work. Suppress the error-level diagnostic until that migration is complete.
+    -->
+    <NoWarn>$(NoWarn);MCP9005</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Azure.ResourceManager" />
+    <PackageReference Include="Azure.ResourceManager.ResourceGraph" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="ModelContextProtocol" />
+  </ItemGroup>
+</Project>

@@ -4,6 +4,8 @@
 using System.Diagnostics;
 using System.Net;
 using Microsoft.Extensions.DependencyInjection;
+using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Models.Command;
 
@@ -26,6 +28,18 @@ public class CommandContext
     /// Current telemetry context if there is one available.
     /// </summary>
     public Activity? Activity { get; }
+
+    /// <summary>
+    /// The MCP server handling the current tool call. Used by commands that need to send
+    /// progress notifications or invoke sampling (deprecated in MCP 2026-07-28).
+    /// </summary>
+    public McpServer? McpServer { get; init; }
+
+    /// <summary>
+    /// Optional progress token from the client's request. When set, long-running commands can
+    /// emit MCP <c>notifications/progress</c> via <see cref="McpServer"/> to stream updates.
+    /// </summary>
+    public ProgressToken? ProgressToken { get; set; }
 
     /// <summary>
     /// Creates a new command context
