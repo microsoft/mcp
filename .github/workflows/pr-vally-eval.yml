@@ -10,11 +10,10 @@ on:
   workflow_dispatch:
     inputs:
       logLevel:
-        description: 'Log level'
+        description: 'Is Debug'
         required: false
-        default: 'warning'
-        type: choice
-        options: ['info', 'warning', 'debug']
+        default: false
+        type: boolean
 
 permissions:
   copilot-requests: write
@@ -56,7 +55,7 @@ jobs:
           else {
             Write-Host "Run type: manual run"
           }
-          
+
           ./eng/scripts/New-BuildInfo.ps1 -ServerName Azure.Mcp.Server
 
       - name: Build server code
@@ -85,19 +84,12 @@ jobs:
 
       - name: Run vally
         run: |
-          $commandArg = ""
+          $isDebug = '${{ github.event.inputs.logLevel }}' -eq 'true'
+          $buildInfo = '${{ github.workspace }}/.work/build_info.json'
+          $evalsDirectory = '${{ github.workspace }}/.work/evals'
+          $outputPath = '${{ github.workspace }}/.work/vally-results'
 
-          Write-Host "Getting eval paths from build_info.json"
-          $evalPaths = & ./eng/scripts/Get-EvalPaths.ps1
-          $evalPaths | ForEach-Object { $commandArg += "--eval-spec '$($_)' " }
-
-          Write-Host "Getting eval paths from VallyEvaluator"
-          $(Get-ChildItem "${{ github.workspace }}/.work/evals/**/eval.yaml") | ForEach-Object { $commandArg += "--eval-spec '$($_.FullName)' " }
-
-          $expression = "vally eval --work-dir '${{ github.workspace }}' $commandArg"
-
-          Write-Host "Running command: $expression"
-          Invoke-Expression $expression
+          ./eng/scripts/Invoke-Vally.ps1 -BuildInfoPath $buildInfo -EvalsDirectory $evalsDirectory -OutputPath $outputPath -IsDebug:$isDebug
         shell: pwsh
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
@@ -107,5 +99,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: vally-results
-          path: ${{ github.workspace }}/vally-results
+          path: ${{ github.workspace }}/.work/vally-results
           if-no-files-found: warn
