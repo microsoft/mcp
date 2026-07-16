@@ -6,16 +6,13 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Options.Goals.Assignments;
 
-public class GoalAssignmentGetOptions : ISubscriptionOption
+public sealed class GoalAssignmentGetOptions
 {
-    [Option(Description = "The name of the service group.")]
+    [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
 
     [Option(Description = "The name of the goal assignment. Provide this argument to get the details of a particular goal assignment; omit it to list all goal assignments in the service group (id and name only).")]
     public string? Name { get; set; }
-
-    [Option(Description = OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
