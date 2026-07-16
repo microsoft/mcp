@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "azure.mcp": {
+      "version": "2.0.4",
+      "commands": [
+        "azmcp"
+      ],
+      "rollForward": false
+    }
+  }
+}

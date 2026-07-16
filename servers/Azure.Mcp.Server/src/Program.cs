@@ -34,7 +34,9 @@ internal class Program
             services.AddLogging(builder =>
             {
                 builder.ConfigureOpenTelemetryLogger();
-                builder.AddConsole();
+                // Send console logs to stderr so stdout carries only the command's JSON
+                // response. Keeps CLI output parseable and avoids corrupting stdio MCP output.
+                builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
                 builder.SetMinimumLevel(LogLevel.Information);
             });
 
@@ -97,6 +99,7 @@ internal class Program
             new Azure.Mcp.Tools.Foundry.FoundrySetup(),
             new Azure.Mcp.Tools.FunctionApp.FunctionAppSetup(),
             new Azure.Mcp.Tools.Grafana.GrafanaSetup(),
+            new Azure.Mcp.Tools.IoTHub.IoTHubSetup(),
             new Azure.Mcp.Tools.KeyVault.KeyVaultSetup(),
             new Azure.Mcp.Tools.Kusto.KustoSetup(),
             new Azure.Mcp.Tools.LoadTesting.LoadTestingSetup(),

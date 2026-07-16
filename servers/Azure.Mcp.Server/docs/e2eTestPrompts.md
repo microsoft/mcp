@@ -304,6 +304,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | functionapp_get | Show me my Azure function apps |
 | functionapp_get | What function apps do I have? |
 
+## Azure IoT Hub
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| iothub_device_list | List all devices in IoT Hub <iothub-name> |
+| iothub_device_list | Show me the devices in IoT Hub <iothub-name> in resource group <resource-group> |
+| iothub_device_list | List the first 10 devices in IoT Hub <iothub-name> |
+| iothub_device_list | What devices are registered in IoT Hub <iothub-name>? |
+
 ## Azure Key Vault
 
 | Tool Name | Test Prompt |

@@ -1,0 +1,16 @@
+{
+  "servers": {
+    "iris-local-mcp": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "servers/Azure.Mcp.Server/src/bin/Release/net9.0/azmcp.dll",
+        "server",
+        "start",
+        "--namespace",
+        "iothub"
+      ]
+    }
+  },
+  "inputs": []
+}

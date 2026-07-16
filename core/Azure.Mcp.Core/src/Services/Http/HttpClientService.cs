@@ -70,11 +70,11 @@ public sealed class HttpClientService : IHttpClientService, IDisposable
 #if DEBUG
         // If a TEST_PROXY_URL is configured, insert RecordingRedirectHandler as the last delegating handler
         var testProxyUrl = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
-        Console.WriteLine("Using test proxy URL: " + testProxyUrl);
         HttpMessageHandler pipeline = handler;
         if (!string.IsNullOrWhiteSpace(testProxyUrl) && Uri.TryCreate(testProxyUrl, UriKind.Absolute, out var proxyUri))
         {
-            Console.WriteLine("Inserting RecordingRedirectHandler for test proxy.");
+            // Write to stderr so stdout stays reserved for command/JSON-RPC output.
+            Console.Error.WriteLine("Inserting RecordingRedirectHandler for test proxy: " + testProxyUrl);
             // RecordingRedirectHandler should be the last delegating handler before the transport
             pipeline = new RecordingRedirectHandler(proxyUri)
             {

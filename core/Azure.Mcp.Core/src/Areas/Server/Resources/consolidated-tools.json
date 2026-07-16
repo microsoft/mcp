@@ -948,6 +948,39 @@
       ]
     },
     {
+      "name": "query_azure_iothub_devices",
+      "description": "List devices and retrieve device identity metadata from the Azure IoT Hub device registry.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only read operations without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_device_list"
+      ]
+    },
+    {
       "name": "import_azure_key_vault_certificates",
       "description": "Import external certificates into Azure Key Vault",
       "toolMetadata": {
