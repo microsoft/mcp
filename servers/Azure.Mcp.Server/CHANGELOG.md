@@ -2,15 +2,15 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.27 (Unreleased)
-
-### Features Added
+## 3.0.0-beta.27 (2026-07-16)
 
 ### Breaking Changes
 
-### Bugs Fixed
-
-### Other Changes
+- Removed unused parameters from Search tools. [[#2954](https://github.com/microsoft/mcp/pull/2954)]
+- Removed unused parameters from Sql tools. [[#2956](https://github.com/microsoft/mcp/pull/2956)]
+- Removed unused parameters from SignalR tools. [[#3061](https://github.com/microsoft/mcp/pull/3061)]
+- Removed unused paramters from Service Fabric tools. [[#3062](https://github.com/microsoft/mcp/pull/3062)]
+- Removed unused parameters from Service Bus tools. [[#3063](https://github.com/microsoft/mcp/pull/3063)]
 
 ## 3.0.0-beta.26 (2026-07-14)
 
