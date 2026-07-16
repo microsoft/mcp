@@ -28,7 +28,7 @@ public class CloudArchitectResponseObject
 /// <summary>
 /// Complete response for the cloud architect design command including both response object and design architecture text.
 /// </summary>
-public class CloudArchitectDesignResponse
+public class DesignCommandResult
 {
     public string DesignArchitecture { get; set; } = string.Empty;
 
