@@ -19,7 +19,7 @@ using ModelContextProtocol.Protocol;
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
-/// A tool loader that exposes Azure command groups as hierarchical namespace tools with direct in-process execution.
+/// A tool loader that exposes command groups as hierarchical namespace tools with direct in-process execution.
 /// Provides the same functionality as <see cref="ServerToolLoader"/> but without spawning child azmcp processes.
 /// Supports learn functionality for progressive discovery of commands within each namespace.
 /// </summary>
@@ -78,7 +78,7 @@ public sealed class NamespaceToolLoader(
             "properties": {
             "intent": {
                 "type": "string",
-                "description": "The intent of the azure operation to perform."
+                "description": "The intent of the operation to perform."
             },
             "command": {
                 "type": "string",
@@ -281,15 +281,15 @@ public sealed class NamespaceToolLoader(
         return new CallToolResult
         {
             Content =
-                [
-                    new TextContentBlock {
+            [
+                new TextContentBlock {
                     Text = """
-                        The "command" parameters are required when not learning
+                        The "command" parameter is required when not learning.
                         Run again with the "learn" argument to get a list of available tools and their parameters.
-                        To learn about a specific tool, use the "tool" argument with the name of the tool.
+                        To learn about a specific tool, use the "command" argument with the name of the tool.
                     """
                 }
-                ],
+            ],
             IsError = false
         };
     }
@@ -449,7 +449,9 @@ public sealed class NamespaceToolLoader(
 
             if (jsonResponse.Contains("Missing required options", StringComparison.OrdinalIgnoreCase))
             {
-                var childToolSpecJson = GetChildToolJson(request, namespaceName, command);
+                var childTool = GetChildToolList(request, namespaceName)
+                    .First(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase));
+                var childToolSpecJson = JsonSerializer.Serialize(new ToolCommandInfo(childTool), ServerJsonContext.Default.ToolCommandInfo);
 
                 _logger.LogWarning("Namespace {Namespace} command {Command} requires additional parameters.", namespaceName, command);
 
@@ -515,7 +517,8 @@ public sealed class NamespaceToolLoader(
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string namespaceName, CancellationToken cancellationToken)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
-        var toolsJson = GetChildToolListJson(request, namespaceName);
+        var learnTools = GetChildToolList(request, namespaceName).Select(t => new ToolCommandInfo(t));
+        var learnToolsJson = JsonSerializer.Serialize(learnTools, ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
         var learnResponse = new CallToolResult
         {
@@ -523,18 +526,18 @@ public sealed class NamespaceToolLoader(
             [
                 new TextContentBlock {
                     Text = $"""
-                        Here are the available command and their parameters for '{namespaceName}' tool.
+                        Here are the available commands and their parameters for '{namespaceName}' tool.
                         If you do not find a suitable command, run again with the "learn=true" to get a list of available commands and their parameters.
-                        Next, identify the command you want to execute and run again with the "command" and "parameters" arguments.
+                        Next, identify the command you want to execute and run again with the "command" and "parameters" arguments, respecting "required" parameters if present.
 
-                        {toolsJson}
+                        {learnToolsJson}
                         """
                 }
             ],
             IsError = false
         };
         var response = learnResponse;
-        if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
+        if (request.Server.ClientCapabilities?.Sampling != null && !string.IsNullOrWhiteSpace(intent))
         {
             var availableTools = GetChildToolList(request, namespaceName);
             (string? commandName, IDictionary<string, JsonElement> parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, namespaceName, availableTools, cancellationToken);
@@ -586,19 +589,6 @@ public sealed class NamespaceToolLoader(
         _cachedToolLists[namespaceName] = list;
 
         return list;
-    }
-
-    private string GetChildToolListJson(RequestContext<CallToolRequestParams> request, string namespaceName)
-    {
-        var listTools = GetChildToolList(request, namespaceName);
-        return JsonSerializer.Serialize(listTools, ServerJsonContext.Default.IEnumerableTool);
-    }
-
-    private string GetChildToolJson(RequestContext<CallToolRequestParams> request, string namespaceName, string commandName)
-    {
-        var tools = GetChildToolList(request, namespaceName);
-        var tool = tools.First(t => string.Equals(t.Name, commandName, StringComparison.OrdinalIgnoreCase));
-        return JsonSerializer.Serialize(tool, ServerJsonContext.Default.Tool);
     }
 
     /// <summary>
@@ -699,11 +689,6 @@ public sealed class NamespaceToolLoader(
         return flatParams;
     }
 
-    private static bool SupportsSampling(McpServer server)
-    {
-        return server?.ClientCapabilities?.Sampling != null;
-    }
-
     private static async Task NotifyProgressAsync(RequestContext<CallToolRequestParams> request, string message, CancellationToken cancellationToken)
     {
         var progressToken = request.Params?.ProgressToken;
@@ -731,7 +716,7 @@ public sealed class NamespaceToolLoader(
 
         JsonElement toolParams = GetParametersJsonElement(request);
         var toolParamsJson = toolParams.GetRawText();
-        var availableToolsJson = JsonSerializer.Serialize(availableTools, ServerJsonContext.Default.IEnumerableTool);
+        var availableToolsJson = JsonSerializer.Serialize(availableTools.Select(t => new ToolCommandInfo(t)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
         var samplingRequest = new CreateMessageRequestParams
         {
