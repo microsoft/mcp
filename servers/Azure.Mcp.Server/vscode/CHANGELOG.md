@@ -9,7 +9,7 @@
 - **Breaking:** Removed unused parameters from Search tools. [[#2954](https://github.com/microsoft/mcp/pull/2954)]
 - **Breaking:** Removed unused parameters from Sql tools. [[#2956](https://github.com/microsoft/mcp/pull/2956)]
 - **Breaking:** Removed unused parameters from SignalR tools. [[#3061](https://github.com/microsoft/mcp/pull/3061)]
-- **Breaking:** Removed unused paramters from Service Fabric tools. [[#3062](https://github.com/microsoft/mcp/pull/3062)]
+- **Breaking:** Removed unused parameters from Service Fabric tools. [[#3062](https://github.com/microsoft/mcp/pull/3062)]
 - **Breaking:** Removed unused parameters from Service Bus tools. [[#3063](https://github.com/microsoft/mcp/pull/3063)]
 
 ## 3.0.26 (2026-07-14) (pre-release)
