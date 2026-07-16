@@ -2,9 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Goals.Assignments;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -29,8 +26,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class GoalAssignmentGetCommand(ILogger<GoalAssignmentGetCommand> logger, IResilienceManagementService resilienceManagementService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<GoalAssignmentGetOptions, GoalAssignmentGetCommand.GoalAssignmentGetCommandResult>(subscriptionResolver)
+public sealed class GoalAssignmentGetCommand(ILogger<GoalAssignmentGetCommand> logger, IResilienceManagementService resilienceManagementService)
+    : AuthenticatedCommand<GoalAssignmentGetOptions, GoalAssignmentGetCommand.GoalAssignmentGetCommandResult>
 {
     private readonly ILogger<GoalAssignmentGetCommand> _logger = logger;
     private readonly IResilienceManagementService _resilienceManagementService = resilienceManagementService;
@@ -44,7 +41,6 @@ public sealed class GoalAssignmentGetCommand(ILogger<GoalAssignmentGetCommand> l
             {
                 var goalAssignments = await _resilienceManagementService.ListGoalAssignmentsAsync(
                     options.ServiceGroup,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -55,7 +51,6 @@ public sealed class GoalAssignmentGetCommand(ILogger<GoalAssignmentGetCommand> l
                 var goalAssignment = await _resilienceManagementService.GetGoalAssignmentAsync(
                     options.ServiceGroup,
                     options.Name,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -69,8 +64,8 @@ public sealed class GoalAssignmentGetCommand(ILogger<GoalAssignmentGetCommand> l
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting goal assignment(s). ServiceGroup: {ServiceGroup}, Name: {Name}, Subscription: {Subscription}.",
-                options.ServiceGroup, options.Name, options.Subscription);
+                "Error getting goal assignment(s). ServiceGroup: {ServiceGroup}, Name: {Name}.",
+                options.ServiceGroup, options.Name);
             HandleException(context, ex);
         }
 
@@ -88,5 +83,5 @@ public sealed class GoalAssignmentGetCommand(ILogger<GoalAssignmentGetCommand> l
         _ => base.GetErrorMessage(ex)
     };
 
-    public record GoalAssignmentGetCommandResult(List<ResourceSummary>? GoalAssignments = null, GoalAssignmentInfo? GoalAssignment = null);
+    public sealed record GoalAssignmentGetCommandResult(List<ResourceSummary>? GoalAssignments = null, GoalAssignmentInfo? GoalAssignment = null);
 }

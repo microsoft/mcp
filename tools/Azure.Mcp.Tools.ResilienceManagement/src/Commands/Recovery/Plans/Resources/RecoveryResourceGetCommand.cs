@@ -3,9 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Recovery.Plans.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -30,8 +27,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans.Resources
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RecoveryResourceGetCommand(ILogger<RecoveryResourceGetCommand> logger, IResilienceManagementService resilienceManagementService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<RecoveryResourceGetOptions, RecoveryResourceGetCommand.RecoveryResourceGetCommandResult>(subscriptionResolver)
+public sealed class RecoveryResourceGetCommand(ILogger<RecoveryResourceGetCommand> logger, IResilienceManagementService resilienceManagementService)
+    : AuthenticatedCommand<RecoveryResourceGetOptions, RecoveryResourceGetCommand.RecoveryResourceGetCommandResult>
 {
     private readonly ILogger<RecoveryResourceGetCommand> _logger = logger;
     private readonly IResilienceManagementService _resilienceManagementService = resilienceManagementService;
@@ -46,7 +43,6 @@ public sealed class RecoveryResourceGetCommand(ILogger<RecoveryResourceGetComman
                 var recoveryResources = await _resilienceManagementService.ListRecoveryResourcesAsync(
                     options.ServiceGroup,
                     options.RecoveryPlan,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -58,7 +54,6 @@ public sealed class RecoveryResourceGetCommand(ILogger<RecoveryResourceGetComman
                     options.ServiceGroup,
                     options.RecoveryPlan,
                     options.Name,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -72,8 +67,8 @@ public sealed class RecoveryResourceGetCommand(ILogger<RecoveryResourceGetComman
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting recovery resource(s). ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}, Name: {Name}, Subscription: {Subscription}.",
-                options.ServiceGroup, options.RecoveryPlan, options.Name, options.Subscription);
+                "Error getting recovery resource(s). ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}, Name: {Name}.",
+                options.ServiceGroup, options.RecoveryPlan, options.Name);
             HandleException(context, ex);
         }
 

@@ -30,8 +30,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logger, IResilienceManagementService resilienceManagementService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<RecoveryPlanGetOptions, RecoveryPlanGetCommand.RecoveryPlanGetCommandResult>(subscriptionResolver)
+public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logger, IResilienceManagementService resilienceManagementService)
+    : AuthenticatedCommand<RecoveryPlanGetOptions, RecoveryPlanGetCommand.RecoveryPlanGetCommandResult>
 {
     private readonly ILogger<RecoveryPlanGetCommand> _logger = logger;
     private readonly IResilienceManagementService _resilienceManagementService = resilienceManagementService;
@@ -45,7 +45,6 @@ public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logge
             {
                 var recoveryPlans = await _resilienceManagementService.ListRecoveryPlansAsync(
                     options.ServiceGroup,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -56,7 +55,6 @@ public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logge
                 var recoveryPlan = await _resilienceManagementService.GetRecoveryPlanAsync(
                     options.ServiceGroup,
                     options.Name,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -70,8 +68,8 @@ public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logge
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting recovery plan(s). ServiceGroup: {ServiceGroup}, Name: {Name}, Subscription: {Subscription}.",
-                options.ServiceGroup, options.Name, options.Subscription);
+                "Error getting recovery plan(s). ServiceGroup: {ServiceGroup}, Name: {Name}.",
+                options.ServiceGroup, options.Name);
             HandleException(context, ex);
         }
 
@@ -89,5 +87,5 @@ public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logge
         _ => base.GetErrorMessage(ex)
     };
 
-    public record RecoveryPlanGetCommandResult(List<ResourceSummary>? RecoveryPlans = null, JsonElement RecoveryPlan = default);
+    public sealed record RecoveryPlanGetCommandResult(List<ResourceSummary>? RecoveryPlans = null, JsonElement RecoveryPlan = default);
 }
