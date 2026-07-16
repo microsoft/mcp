@@ -133,8 +133,8 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
             }
 
             context.Response.Results = ResponseResult.Create(
-                new RecommendationSummaryResult(summary),
-                AdvisorJsonContext.Default.RecommendationSummaryResult);
+                new RecommendationSummaryCommandResult(summary),
+                AdvisorJsonContext.Default.RecommendationSummaryCommandResult);
         }
         catch (Exception ex)
         {
@@ -167,5 +167,5 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record RecommendationSummaryResult(Models.RecommendationSummary Summary);
+    internal record RecommendationSummaryCommandResult(Models.RecommendationSummary Summary);
 }

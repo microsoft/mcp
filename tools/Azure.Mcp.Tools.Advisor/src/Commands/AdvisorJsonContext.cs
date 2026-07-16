@@ -4,9 +4,10 @@ using Azure.Mcp.Tools.Advisor.Services.Models;
 
 namespace Azure.Mcp.Tools.Advisor.Commands;
 
-[JsonSerializable(typeof(RecommendationListCommand.RecommendationListResult))]
-[JsonSerializable(typeof(RecommendationTypeListCommand.RecommendationTypeListResult))]
-[JsonSerializable(typeof(RecommendationSummaryCommand.RecommendationSummaryResult))]
+[JsonSerializable(typeof(RecommendationListCommand.RecommendationListCommandResult))]
+[JsonSerializable(typeof(RecommendationTypeListCommand.RecommendationTypeListCommandResult))]
+[JsonSerializable(typeof(RecommendationSummaryCommand.RecommendationSummaryCommandResult))]
+[JsonSerializable(typeof(RecommendationApplyCommand.RecommendationApplyCommandResult))]
 [JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(RecommendationData))]
 [JsonSerializable(typeof(Models.Recommendation))]

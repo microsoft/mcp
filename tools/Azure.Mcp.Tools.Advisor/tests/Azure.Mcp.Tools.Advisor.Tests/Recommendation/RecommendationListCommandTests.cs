@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -83,7 +83,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListCommandResult);
 
         Assert.Equal(expectedRecommendations.Count, result.Recommendations.Count);
         Assert.Equal(expectedRecommendations[0].ResourceId, result.Recommendations[0].ResourceId);
@@ -117,7 +117,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListCommandResult);
 
         Assert.Empty(result.Recommendations);
     }
