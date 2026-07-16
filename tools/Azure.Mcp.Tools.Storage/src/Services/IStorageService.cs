@@ -56,7 +56,7 @@ public interface IStorageService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<BlobUploadResult> UploadBlob(
+    Task<BlobUploadCommandResult> UploadBlob(
         string account,
         string container,
         string blob,

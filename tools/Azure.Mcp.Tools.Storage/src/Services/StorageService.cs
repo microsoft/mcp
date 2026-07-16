@@ -371,7 +371,7 @@ public sealed class StorageService(
         return accessTier;
     }
 
-    public async Task<BlobUploadResult> UploadBlob(
+    public async Task<BlobUploadCommandResult> UploadBlob(
         string account,
         string container,
         string blob,

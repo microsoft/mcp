@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.Storage.Models;
 
-public sealed record BlobUploadResult(
+public sealed record BlobUploadCommandResult(
     [property: JsonPropertyName("blob")] string Blob,
     [property: JsonPropertyName("container")] string Container,
     [property: JsonPropertyName("uploadedFile")] string UploadedFile,
