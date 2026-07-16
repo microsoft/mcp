@@ -67,7 +67,7 @@ public sealed class FileShareGetProvisioningRecommendationCommand(ILogger<FileSh
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareProvisioningRecommendationResult);
+            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareGetProvisioningRecommendationCommandResult);
         }
         catch (Exception ex)
         {

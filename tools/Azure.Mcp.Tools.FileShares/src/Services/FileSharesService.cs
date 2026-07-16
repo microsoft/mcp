@@ -577,7 +577,7 @@ public sealed class FileSharesService(
         }
     }
 
-    public async Task<FileShareLimitsResult> GetLimitsAsync(
+    public async Task<FileShareGetLimitsCommandResult> GetLimitsAsync(
         string subscription,
         string location,
         string? tenant = null,
@@ -622,7 +622,7 @@ public sealed class FileSharesService(
         };
     }
 
-    public async Task<FileShareUsageDataResult> GetUsageDataAsync(
+    public async Task<FileShareGetUsageDataCommandResult> GetUsageDataAsync(
         string subscription,
         string location,
         string? tenant = null,
@@ -661,7 +661,7 @@ public sealed class FileSharesService(
         }
     }
 
-    public async Task<FileShareProvisioningRecommendationResult> GetProvisioningRecommendationAsync(
+    public async Task<FileShareGetProvisioningRecommendationCommandResult> GetProvisioningRecommendationAsync(
         string subscription,
         string location,
         int provisionedStorageGiB,

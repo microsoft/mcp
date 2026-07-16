@@ -6,7 +6,7 @@ namespace Azure.Mcp.Tools.FileShares.Models;
 /// <summary>
 /// Result containing file share usage data.
 /// </summary>
-public class FileShareUsageDataResult
+public class FileShareGetUsageDataCommandResult
 {
     public LiveSharesUsageData LiveShares { get; set; } = new();
 }
