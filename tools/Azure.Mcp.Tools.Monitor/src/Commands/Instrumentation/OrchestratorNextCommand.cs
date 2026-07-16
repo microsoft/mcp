@@ -45,7 +45,7 @@ public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> log
             var result = _orchestratorTool.Next(options.SessionId, options.CompletionNote);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorJsonContext.Default.String);
+            context.Response.Results = ResponseResult.Create(new OrchestratorNextCommandResult(result), MonitorJsonContext.Default.OrchestratorNextCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
@@ -56,4 +56,6 @@ public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> log
 
         return Task.FromResult(context.Response);
     }
+
+    internal record OrchestratorNextCommandResult(string Result);
 }

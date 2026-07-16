@@ -38,7 +38,7 @@ public sealed class SendEnhancementSelectCommand(ILogger<SendEnhancementSelectCo
             var result = SendEnhancementSelectTool.Send(options.SessionId, options.EnhancementKeys);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorJsonContext.Default.String);
+            context.Response.Results = ResponseResult.Create(new SendEnhancementSelectCommandResult(result), MonitorJsonContext.Default.SendEnhancementSelectCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
@@ -49,4 +49,6 @@ public sealed class SendEnhancementSelectCommand(ILogger<SendEnhancementSelectCo
 
         return Task.FromResult(context.Response);
     }
+
+    internal record SendEnhancementSelectCommandResult(string Result);
 }

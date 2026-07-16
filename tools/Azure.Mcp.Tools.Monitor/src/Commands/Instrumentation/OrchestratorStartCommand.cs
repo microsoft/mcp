@@ -34,7 +34,7 @@ public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> l
             var result = _orchestratorTool.Start(options.WorkspacePath);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorJsonContext.Default.String);
+            context.Response.Results = ResponseResult.Create(new OrchestratorStartCommandResult(result), MonitorJsonContext.Default.OrchestratorStartCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
@@ -45,4 +45,6 @@ public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> l
 
         return Task.FromResult(context.Response);
     }
+
+    internal record OrchestratorStartCommandResult(string Result);
 }
