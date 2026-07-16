@@ -50,7 +50,7 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
             softRestart, waitForCompletion, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
-        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.WebappChangeStateResult);
+        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.WebappChangeStateCommandResult);
         Assert.Equal(expected, result.StateChangeStatus);
     }
 

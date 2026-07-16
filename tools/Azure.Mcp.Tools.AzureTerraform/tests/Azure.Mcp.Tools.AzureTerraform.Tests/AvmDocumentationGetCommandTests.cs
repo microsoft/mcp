@@ -111,7 +111,7 @@ public class AvmDocumentationGetCommandTests : CommandUnitTestsBase<AvmDocumenta
             "--module-name", "avm-res-storage-storageaccount",
             "--module-version", "0.4.0");
 
-        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AvmDocumentationResult);
+        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AvmDocumentationGetCommandResult);
 
         Assert.Equal("avm-res-storage-storageaccount", result.ModuleName);
         Assert.Equal("0.4.0", result.ModuleVersion);

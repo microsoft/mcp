@@ -56,7 +56,7 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
         try
         {
             var result = await _service.AppendEntryAsync(options.LedgerName!, options.Content!, options.CollectionId, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, ConfidentialLedgerJsonContext.Default.AppendEntryResult);
+            context.Response.Results = ResponseResult.Create(result, ConfidentialLedgerJsonContext.Default.LedgerEntryAppendCommandResult);
         }
         catch (Exception ex)
         {

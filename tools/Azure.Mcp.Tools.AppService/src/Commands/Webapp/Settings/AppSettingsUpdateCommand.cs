@@ -32,7 +32,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
     Secret = false,
     LocalRequired = false)]
 public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> logger, IAppServiceService appServiceService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<AppSettingsUpdateOptions, AppSettingsUpdateCommand.AppSettingsUpdateResult>(subscriptionResolver)
+    : SubscriptionCommand<AppSettingsUpdateOptions, AppSettingsUpdateCommand.AppSettingsUpdateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<AppSettingsUpdateCommand> _logger = logger;
     private readonly IAppServiceService _appServiceService = appServiceService;
@@ -94,7 +94,7 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(updateResult), AppServiceJsonContext.Default.AppSettingsUpdateResult);
+            context.Response.Results = ResponseResult.Create(new(updateResult), AppServiceJsonContext.Default.AppSettingsUpdateCommandResult);
         }
         catch (Exception ex)
         {
@@ -106,5 +106,5 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
         return context.Response;
     }
 
-    public record AppSettingsUpdateResult(string UpdateStatus);
+    public record AppSettingsUpdateCommandResult(string UpdateStatus);
 }

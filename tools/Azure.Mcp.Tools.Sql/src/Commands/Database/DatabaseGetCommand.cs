@@ -72,7 +72,7 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
 
                 context.Response.Results = ResponseResult.Create(
                     new([database]),
-                    SqlJsonContext.Default.DatabaseGetListResult);
+                    SqlJsonContext.Default.DatabaseGetCommandResult);
             }
             else
             {
@@ -85,7 +85,7 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
 
                 context.Response.Results = ResponseResult.Create(
                     new(databases ?? []),
-                    SqlJsonContext.Default.DatabaseGetListResult);
+                    SqlJsonContext.Default.DatabaseGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -109,5 +109,5 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseGetListResult(List<SqlDatabase> Databases);
+    internal record DatabaseGetCommandResult(List<SqlDatabase> Databases);
 }

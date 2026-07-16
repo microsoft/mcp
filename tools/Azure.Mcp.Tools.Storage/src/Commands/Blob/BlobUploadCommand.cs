@@ -27,7 +27,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
     Secret = false,
     LocalRequired = true)]
 public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorageService storageService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<BlobUploadOptions, BlobUploadResult>(subscriptionResolver)
+    : SubscriptionCommand<BlobUploadOptions, BlobUploadCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<BlobUploadCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
@@ -46,7 +46,7 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorag
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(result, StorageJsonContext.Default.BlobUploadResult);
+            context.Response.Results = ResponseResult.Create(result, StorageJsonContext.Default.BlobUploadCommandResult);
 
             _logger.LogInformation("Successfully uploaded file {LocalFilePath} to blob {Blob} in container {Container}.",
                 options.LocalFilePath, options.Blob, options.Container);

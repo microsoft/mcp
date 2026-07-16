@@ -1,0 +1,9 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Fabric Docs tools now return object roots instead of bare values: get best practices returns `{ \"BestPractices\": [...] }` (previously a bare string array); get platform APIs and get workload APIs nest the payload under `{ \"PublicApi\": {...} }`; and get workload definition returns `{ \"Definition\": \"...\" }` (previously a bare string)."
+  - section: "Breaking Changes"
+    description: "OneLake shortcut tools now return an object root: shortcut get and the shortcut create commands (adlsgen2, amazons3, azureblob, dataverse, gcs, onedrive-sharepoint, onelake, s3compatible) return `{ \"shortcut\": {...} }`; shortcut list returns `{ \"shortcuts\": [...], \"continuationToken\": ..., \"continuationUri\": ... }` (previously the raw list response whose items were under a `value` field)."
+  - section: "Breaking Changes"
+    description: "OneLake data-access role tools now return an object root: role get and role create-or-update return `{ \"role\": {...} }`; role list returns `{ \"roles\": [...], \"continuationToken\": ..., \"continuationUri\": ... }` (previously the raw list response whose items were under a `value` field)."
+  - section: "Breaking Changes"
+    description: "`OneLake settings get` now returns `{ \"settings\": {...} }` instead of a bare settings object."

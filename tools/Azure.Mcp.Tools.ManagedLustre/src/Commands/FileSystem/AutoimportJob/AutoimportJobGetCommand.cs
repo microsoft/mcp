@@ -80,7 +80,7 @@ public sealed class AutoimportJobGetCommand(IManagedLustreService service, ILogg
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(result), ManagedLustreJsonContext.Default.AutoimportJobGetResult);
+                context.Response.Results = ResponseResult.Create(new(result, null), ManagedLustreJsonContext.Default.AutoimportJobGetCommandResult);
             }
             else
             {
@@ -93,7 +93,7 @@ public sealed class AutoimportJobGetCommand(IManagedLustreService service, ILogg
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(results ?? []), ManagedLustreJsonContext.Default.AutoimportJobListResult);
+                context.Response.Results = ResponseResult.Create(new(null, results ?? []), ManagedLustreJsonContext.Default.AutoimportJobGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -105,6 +105,5 @@ public sealed class AutoimportJobGetCommand(IManagedLustreService service, ILogg
         return context.Response;
     }
 
-    public record AutoimportJobGetResult(Models.AutoimportJob Job);
-    public record AutoimportJobListResult(List<Models.AutoimportJob> Jobs);
+    public record AutoimportJobGetCommandResult(Models.AutoimportJob? Job, List<Models.AutoimportJob>? Jobs);
 }

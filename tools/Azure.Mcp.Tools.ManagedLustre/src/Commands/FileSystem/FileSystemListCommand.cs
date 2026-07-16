@@ -58,7 +58,7 @@ public sealed class FileSystemListCommand(IManagedLustreService service, ILogger
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(fileSystems ?? []), ManagedLustreJsonContext.Default.FileSystemListResult);
+            context.Response.Results = ResponseResult.Create(new(fileSystems ?? []), ManagedLustreJsonContext.Default.FileSystemListCommandResult);
         }
         catch (Exception ex)
         {
@@ -71,5 +71,5 @@ public sealed class FileSystemListCommand(IManagedLustreService service, ILogger
         return context.Response;
     }
 
-    internal record FileSystemListResult(List<Models.LustreFileSystem> FileSystems);
+    internal record FileSystemListCommandResult(List<Models.LustreFileSystem> FileSystems);
 }

@@ -53,7 +53,7 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(results, MonitorJsonContext.Default.ListJsonNode);
+            context.Response.Results = ResponseResult.Create(new WorkspaceLogQueryCommandResult(results), MonitorJsonContext.Default.WorkspaceLogQueryCommandResult);
         }
         catch (Exception ex)
         {
@@ -63,4 +63,6 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
 
         return context.Response;
     }
+
+    internal record WorkspaceLogQueryCommandResult(List<JsonNode> Results);
 }

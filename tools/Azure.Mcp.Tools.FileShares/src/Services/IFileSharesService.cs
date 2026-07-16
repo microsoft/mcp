@@ -160,7 +160,7 @@ public interface IFileSharesService
 
     /// Get file share limits for a subscription and location.
     /// </summary>
-    Task<FileShareLimitsResult> GetLimitsAsync(
+    Task<FileShareGetLimitsCommandResult> GetLimitsAsync(
         string subscription,
         string location,
         string? tenant = null,
@@ -170,7 +170,7 @@ public interface IFileSharesService
     /// <summary>
     /// Get file share usage data for a subscription and location.
     /// </summary>
-    Task<FileShareUsageDataResult> GetUsageDataAsync(
+    Task<FileShareGetUsageDataCommandResult> GetUsageDataAsync(
         string subscription,
         string location,
         string? tenant = null,
@@ -180,7 +180,7 @@ public interface IFileSharesService
     /// <summary>
     /// Get provisioning recommendations for a file share based on desired storage size.
     /// </summary>
-    Task<FileShareProvisioningRecommendationResult> GetProvisioningRecommendationAsync(
+    Task<FileShareGetProvisioningRecommendationCommandResult> GetProvisioningRecommendationAsync(
         string subscription,
         string location,
         int provisionedStorageGiB,

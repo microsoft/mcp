@@ -56,7 +56,7 @@ public class SkuGetCommandTests : CommandUnitTestsBase<SkuGetCommand, IManagedLu
         var response = await ExecuteCommandAsync("--subscription", _knownSubscriptionId);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.SkuGetResult);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.SkuGetCommandResult);
 
         Assert.NotNull(result.Skus);
         Assert.Equal(2, result.Skus.Count);

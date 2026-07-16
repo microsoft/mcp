@@ -3,7 +3,7 @@
 
 namespace Azure.Mcp.Tools.AzureTerraform.Models;
 
-public sealed class AvmDocumentationResult
+public sealed class AvmDocumentationGetCommandResult
 {
     public string ModuleName { get; set; } = string.Empty;
     public string ModuleVersion { get; set; } = string.Empty;

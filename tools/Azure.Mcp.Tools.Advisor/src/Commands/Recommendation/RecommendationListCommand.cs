@@ -94,7 +94,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(recommendations?.Results ?? [], recommendations?.AreResultsTruncated ?? false),
-                AdvisorJsonContext.Default.RecommendationListResult);
+                AdvisorJsonContext.Default.RecommendationListCommandResult);
         }
         catch (Exception ex)
         {
@@ -125,5 +125,5 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record RecommendationListResult(List<Models.Recommendation> Recommendations, bool AreResultsTruncated);
+    internal record RecommendationListCommandResult(List<Models.Recommendation> Recommendations, bool AreResultsTruncated);
 }

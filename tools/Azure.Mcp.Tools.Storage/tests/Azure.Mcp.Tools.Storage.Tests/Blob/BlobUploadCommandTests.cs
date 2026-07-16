@@ -33,7 +33,7 @@ public class BlobUploadCommandTests : SubscriptionCommandUnitTestsBase<BlobUploa
         var container = "testcontainer";
         var blob = "testblob.txt";
         var localFilePath = "/tmp/file.txt";
-        var expectedResult = new BlobUploadResult(blob, container, localFilePath,
+        var expectedResult = new BlobUploadCommandResult(blob, container, localFilePath,
             DateTimeOffset.UtcNow, "\"etag\"", "md5hash");
 
         Service.UploadBlob(
@@ -56,7 +56,7 @@ public class BlobUploadCommandTests : SubscriptionCommandUnitTestsBase<BlobUploa
             "--local-file-path", localFilePath);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.BlobUploadResult);
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.BlobUploadCommandResult);
         Assert.Equal(blob, result.Blob);
         Assert.Equal(container, result.Container);
         Assert.Equal(localFilePath, result.UploadedFile);
@@ -105,7 +105,7 @@ public class BlobUploadCommandTests : SubscriptionCommandUnitTestsBase<BlobUploa
     {
         if (shouldSucceed)
         {
-            var expectedResult = new BlobUploadResult("b", "cont", "/f",
+            var expectedResult = new BlobUploadCommandResult("b", "cont", "/f",
                 DateTimeOffset.UtcNow, "\"etag\"", "md5hash");
 
             Service.UploadBlob(

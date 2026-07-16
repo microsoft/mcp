@@ -48,7 +48,7 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(result, MonitorJsonContext.Default.JsonNode);
+            context.Response.Results = ResponseResult.Create(new EntityGetHealthCommandResult(result), MonitorJsonContext.Default.EntityGetHealthCommandResult);
         }
         catch (Exception ex)
         {
@@ -73,4 +73,6 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
         ArgumentException argEx => $"Invalid argument: {argEx.Message}",
         _ => base.GetErrorMessage(ex)
     };
+
+    internal record EntityGetHealthCommandResult(JsonNode Health);
 }

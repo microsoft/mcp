@@ -77,7 +77,7 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
             var recommendationApplyRules = GetAdvisorRecommendationRules(resourceFileName);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create([recommendationApplyRules], AdvisorJsonContext.Default.ListString);
+            context.Response.Results = ResponseResult.Create(new RecommendationApplyCommandResult([recommendationApplyRules]), AdvisorJsonContext.Default.RecommendationApplyCommandResult);
             context.Response.Message = string.Empty;
 
             context.Activity?.AddTag("RecommendationRules_Resource", options.Resource);
@@ -129,4 +129,6 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
 
         return resources;
     }
+
+    internal record RecommendationApplyCommandResult(List<string> Rules);
 }

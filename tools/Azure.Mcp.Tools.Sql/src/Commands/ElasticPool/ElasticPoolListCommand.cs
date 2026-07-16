@@ -52,7 +52,7 @@ public sealed class ElasticPoolListCommand(ISqlService sqlService, ILogger<Elast
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(elasticPools ?? []), SqlJsonContext.Default.ElasticPoolListResult);
+            context.Response.Results = ResponseResult.Create(new(elasticPools ?? []), SqlJsonContext.Default.ElasticPoolListCommandResult);
         }
         catch (Exception ex)
         {
@@ -75,5 +75,5 @@ public sealed class ElasticPoolListCommand(ISqlService sqlService, ILogger<Elast
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record ElasticPoolListResult(List<SqlElasticPool> ElasticPools);
+    internal record ElasticPoolListCommandResult(List<SqlElasticPool> ElasticPools);
 }

@@ -86,7 +86,7 @@ public sealed class DataAccessRoleListCommand(
         {
 
             var result = await _oneLakeService.ListDataAccessRolesAsync(options.WorkspaceId!, options.ItemId!, options.ContinuationToken, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DataAccessRoleListResponse);
+            context.Response.Results = ResponseResult.Create(new DataAccessRoleListCommandResult(result.Value, result.ContinuationToken, result.ContinuationUri), OneLakeJsonContext.Default.DataAccessRoleListCommandResult);
         }
         catch (Exception ex)
         {
@@ -96,5 +96,7 @@ public sealed class DataAccessRoleListCommand(
 
         return context.Response;
     }
+
+    public record DataAccessRoleListCommandResult(List<DataAccessRole>? Roles, string? ContinuationToken, string? ContinuationUri);
 }
 

@@ -63,7 +63,7 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
 
             context.Response.Results = ResponseResult.Create(
                 result,
-                ConfidentialLedgerJsonContext.Default.LedgerEntryGetResult);
+                ConfidentialLedgerJsonContext.Default.LedgerEntryGetCommandResult);
         }
         catch (Exception ex)
         {

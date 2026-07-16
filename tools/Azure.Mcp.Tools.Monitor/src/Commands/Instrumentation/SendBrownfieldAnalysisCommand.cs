@@ -57,7 +57,7 @@ public sealed class SendBrownfieldAnalysisCommand(ILogger<SendBrownfieldAnalysis
                 findings.Logging);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorJsonContext.Default.String);
+            context.Response.Results = ResponseResult.Create(new SendBrownfieldAnalysisCommandResult(result), MonitorJsonContext.Default.SendBrownfieldAnalysisCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (JsonException ex)
@@ -74,4 +74,6 @@ public sealed class SendBrownfieldAnalysisCommand(ILogger<SendBrownfieldAnalysis
 
         return Task.FromResult(context.Response);
     }
+
+    internal record SendBrownfieldAnalysisCommandResult(string Result);
 }

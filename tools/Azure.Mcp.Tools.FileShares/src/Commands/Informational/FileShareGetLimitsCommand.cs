@@ -64,7 +64,7 @@ public sealed class FileShareGetLimitsCommand(ILogger<FileShareGetLimitsCommand>
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareLimitsResult);
+            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareGetLimitsCommandResult);
         }
         catch (Exception ex)
         {

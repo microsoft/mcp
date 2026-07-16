@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Server;
 using Azure.Mcp.Tools.Sql.Services;
@@ -72,7 +73,7 @@ public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCo
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create([server], SqlJsonContext.Default.ListSqlServer);
+                context.Response.Results = ResponseResult.Create(new ServerGetCommandResult([server]), SqlJsonContext.Default.ServerGetCommandResult);
             }
             else
             {
@@ -82,7 +83,7 @@ public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCo
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(servers ?? [], SqlJsonContext.Default.ListSqlServer);
+                context.Response.Results = ResponseResult.Create(new ServerGetCommandResult(servers ?? []), SqlJsonContext.Default.ServerGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -106,4 +107,5 @@ public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCo
         _ => base.GetErrorMessage(ex)
     };
 
+    internal record ServerGetCommandResult(List<SqlServer> Servers);
 }

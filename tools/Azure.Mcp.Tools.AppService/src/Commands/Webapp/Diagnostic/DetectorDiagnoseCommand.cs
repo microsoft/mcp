@@ -29,7 +29,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
     Secret = false,
     LocalRequired = false)]
 public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> logger, IAppServiceService appServiceService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<DetectorDiagnoseOptions, DetectorDiagnoseCommand.DetectorDiagnoseResult>(subscriptionResolver)
+    : SubscriptionCommand<DetectorDiagnoseOptions, DetectorDiagnoseCommand.DetectorDiagnoseCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<DetectorDiagnoseCommand> _logger = logger;
     private readonly IAppServiceService _appServiceService = appServiceService;
@@ -65,7 +65,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(diagnoses), AppServiceJsonContext.Default.DetectorDiagnoseResult);
+            context.Response.Results = ResponseResult.Create(new(diagnoses), AppServiceJsonContext.Default.DetectorDiagnoseCommandResult);
         }
         catch (Exception ex)
         {
@@ -77,5 +77,5 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
         return context.Response;
     }
 
-    public sealed record DetectorDiagnoseResult(DiagnosisResults Diagnoses);
+    public sealed record DetectorDiagnoseCommandResult(DiagnosisResults Diagnoses);
 }

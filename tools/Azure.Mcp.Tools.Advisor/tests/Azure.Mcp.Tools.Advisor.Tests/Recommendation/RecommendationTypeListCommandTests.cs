@@ -87,7 +87,7 @@ public class RecommendationTypeListCommandTests : CommandUnitTestsBase<Recommend
 
         var response = await ExecuteCommandAsync();
 
-        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationTypeListResult);
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationTypeListCommandResult);
 
         Assert.Equal(expected.Count, result.RecommendationTypes.Count);
         Assert.Equal(expected[0].Id, result.RecommendationTypes[0].Id);
@@ -119,7 +119,7 @@ public class RecommendationTypeListCommandTests : CommandUnitTestsBase<Recommend
 
         var response = await ExecuteCommandAsync();
 
-        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationTypeListResult);
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationTypeListCommandResult);
 
         Assert.Empty(result.RecommendationTypes);
     }

@@ -51,7 +51,7 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(results, MonitorJsonContext.Default.ListJsonNode);
+            context.Response.Results = ResponseResult.Create(new ResourceLogQueryCommandResult(results), MonitorJsonContext.Default.ResourceLogQueryCommandResult);
         }
         catch (Exception ex)
         {
@@ -61,4 +61,6 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
 
         return context.Response;
     }
+
+    internal record ResourceLogQueryCommandResult(List<JsonNode> Results);
 }

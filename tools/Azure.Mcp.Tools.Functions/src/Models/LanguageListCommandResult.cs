@@ -7,7 +7,7 @@ namespace Azure.Mcp.Tools.Functions.Models;
 /// Represents the result of the get languages list command,
 /// containing all supported languages with their details and global runtime metadata.
 /// </summary>
-public sealed class LanguageListResult
+public sealed class LanguageListCommandResult
 {
     public required string FunctionsRuntimeVersion { get; init; }
 

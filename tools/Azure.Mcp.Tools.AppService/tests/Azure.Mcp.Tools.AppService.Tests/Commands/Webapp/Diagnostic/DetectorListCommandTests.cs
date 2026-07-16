@@ -36,7 +36,7 @@ public class DetectorListCommandTests : SubscriptionCommandUnitTestsBase<Detecto
         await Service.Received(1).ListDetectorsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
 
-        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.DetectorListResult);
+        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.DetectorListCommandResult);
 
         Assert.Single(result.Detectors);
         Assert.Equal(expectedValue[0].Id, result.Detectors[0].Id);

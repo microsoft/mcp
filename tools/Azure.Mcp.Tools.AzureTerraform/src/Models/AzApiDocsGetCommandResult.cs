@@ -3,7 +3,7 @@
 
 namespace Azure.Mcp.Tools.AzureTerraform.Models;
 
-public sealed class AzApiDocsResult
+public sealed class AzApiDocsGetCommandResult
 {
     public string ResourceType { get; set; } = string.Empty;
     public string ApiVersion { get; set; } = string.Empty;

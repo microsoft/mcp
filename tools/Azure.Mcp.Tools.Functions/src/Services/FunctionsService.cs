@@ -67,7 +67,7 @@ public sealed class FunctionsService(
         - C#: Place files in the project root alongside the .csproj
         """;
 
-    public async Task<LanguageListResult> GetLanguageListAsync(CancellationToken cancellationToken = default)
+    public async Task<LanguageListCommandResult> GetLanguageListAsync(CancellationToken cancellationToken = default)
     {
         // Fetch manifest to get runtime versions
         var manifest = await _manifestService.FetchManifestAsync(cancellationToken);
@@ -85,7 +85,7 @@ public sealed class FunctionsService(
             });
         }
 
-        var result = new LanguageListResult
+        var result = new LanguageListCommandResult
         {
             FunctionsRuntimeVersion = _languageMetadata.FunctionsRuntimeVersion,
             ExtensionBundleVersion = _languageMetadata.ExtensionBundleVersion,
@@ -95,7 +95,7 @@ public sealed class FunctionsService(
         return result;
     }
 
-    public async Task<ProjectTemplateResult> GetProjectTemplateAsync(
+    public async Task<ProjectGetCommandResult> GetProjectTemplateAsync(
         string language,
         CancellationToken cancellationToken = default)
     {
@@ -111,7 +111,7 @@ public sealed class FunctionsService(
         var manifest = await _manifestService.FetchManifestAsync(cancellationToken);
         var languageInfo = _languageMetadata.GetLanguageInfo(normalizedLanguage, manifest.RuntimeVersions)!;
 
-        var result = new ProjectTemplateResult
+        var result = new ProjectGetCommandResult
         {
             Language = normalizedLanguage,
             InitInstructions = languageInfo.InitInstructions,

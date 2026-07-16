@@ -6,7 +6,7 @@ namespace Azure.Mcp.Tools.FileShares.Models;
 /// <summary>
 /// Result containing provisioning recommendations for a file share.
 /// </summary>
-public class FileShareProvisioningRecommendationResult
+public class FileShareGetProvisioningRecommendationCommandResult
 {
     public int ProvisionedIOPerSec { get; set; }
     public int ProvisionedThroughputMiBPerSec { get; set; }

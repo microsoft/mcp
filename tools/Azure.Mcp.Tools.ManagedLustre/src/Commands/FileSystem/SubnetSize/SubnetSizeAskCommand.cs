@@ -74,7 +74,7 @@ public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
-            context.Response.Results = ResponseResult.Create(new(result), ManagedLustreJsonContext.Default.FileSystemSubnetSizeResult);
+            context.Response.Results = ResponseResult.Create(new(result), ManagedLustreJsonContext.Default.FileSystemSubnetSizeCommandResult);
         }
         catch (Exception ex)
         {
@@ -84,5 +84,5 @@ public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<
         return context.Response;
     }
 
-    internal record FileSystemSubnetSizeResult(int NumberOfRequiredIPs);
+    internal record FileSystemSubnetSizeCommandResult(int NumberOfRequiredIPs);
 }

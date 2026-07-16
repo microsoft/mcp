@@ -7,7 +7,7 @@ using Fabric.Mcp.Tools.OneLake.Commands.File;
 namespace Fabric.Mcp.Tools.OneLake.Models;
 
 [JsonSerializable(typeof(BlobListCommand.BlobListCommandResult))]
-[JsonSerializable(typeof(PathListCommand.PathListResult))]
+[JsonSerializable(typeof(PathListCommand.PathListCommandResult))]
 [JsonSerializable(typeof(OneLakeFileInfo))]
 [JsonSerializable(typeof(FileSystemItem))]
 [JsonSerializable(typeof(List<OneLakeFileInfo>))]

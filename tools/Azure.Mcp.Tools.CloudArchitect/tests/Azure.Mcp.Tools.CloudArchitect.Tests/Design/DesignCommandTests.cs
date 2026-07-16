@@ -50,7 +50,7 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
         var response = await ExecuteCommandAsync(args);
 
         // Assert
-        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.DesignCommandResult);
 
         Assert.NotEmpty(responseObject.DesignArchitecture);
         Assert.NotNull(responseObject.ResponseObject);
@@ -72,7 +72,7 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
             "--confidence-score", "0.8");
 
         // Assert
-        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.DesignCommandResult);
 
         Assert.NotEmpty(responseObject.DesignArchitecture);
         Assert.NotNull(responseObject.ResponseObject);
@@ -92,7 +92,7 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
         var response = await ExecuteCommandAsync("--question", questionWithQuotes);
 
         // Assert
-        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.DesignCommandResult);
 
         Assert.NotEmpty(responseObject.DesignArchitecture);
         Assert.NotNull(responseObject.ResponseObject);
@@ -162,7 +162,7 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
         var response = await ExecuteCommandAsync("--question", "Test question");
 
         // Assert
-        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.DesignCommandResult);
 
         Assert.NotEmpty(responseObject.DesignArchitecture);
         // The embedded resource should contain Azure architecture guidance
@@ -180,7 +180,7 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
 
         // Assert
         // Verify the command executed successfully with state option
-        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.DesignCommandResult);
 
         Assert.NotEmpty(responseObject.DesignArchitecture);
         Assert.NotNull(responseObject.ResponseObject);
@@ -224,7 +224,7 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
         Assert.Equal(0.9, confidenceScoreValue);
 
         // Verify the response structure
-        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.DesignCommandResult);
 
         Assert.NotEmpty(responseObject.DesignArchitecture);
         Assert.NotNull(responseObject.ResponseObject);
@@ -420,7 +420,7 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
             "--confidence-score", "0.5");
 
         // Assert
-        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.DesignCommandResult);
 
         Assert.NotNull(responseObject.ResponseObject.State);
         Assert.Empty(responseObject.ResponseObject.State.ArchitectureComponents);
@@ -454,7 +454,7 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
         var response = await ExecuteCommandAsync("--state", "");
 
         // Assert
-        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.DesignCommandResult);
 
         Assert.NotNull(responseObject.ResponseObject.State);
         Assert.Empty(responseObject.ResponseObject.State.ArchitectureComponents);

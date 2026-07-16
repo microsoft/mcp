@@ -98,8 +98,8 @@ public sealed class RecommendationTypeListCommand(
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new RecommendationTypeListResult(recommendationTypes ?? []),
-                AdvisorJsonContext.Default.RecommendationTypeListResult);
+                new RecommendationTypeListCommandResult(recommendationTypes ?? []),
+                AdvisorJsonContext.Default.RecommendationTypeListCommandResult);
         }
         catch (Exception ex)
         {
@@ -128,5 +128,5 @@ public sealed class RecommendationTypeListCommand(
         _ => base.GetStatusCode(ex)
     };
 
-    internal record RecommendationTypeListResult(List<Models.RecommendationType> RecommendationTypes);
+    internal record RecommendationTypeListCommandResult(List<Models.RecommendationType> RecommendationTypes);
 }

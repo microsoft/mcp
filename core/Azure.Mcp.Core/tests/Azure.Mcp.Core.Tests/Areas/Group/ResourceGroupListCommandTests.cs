@@ -38,7 +38,7 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
         var result = await ExecuteCommandAsync("--subscription", subscriptionId);
 
         // Assert
-        var resultGroups = ValidateAndDeserializeResponse(result, GroupJsonContext.Default.Result);
+        var resultGroups = ValidateAndDeserializeResponse(result, GroupJsonContext.Default.GroupListCommandResult);
         Assert.Equal(2, resultGroups.Groups.Count);
 
         var first = resultGroups.Groups[0];
@@ -106,7 +106,7 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
         var result = await ExecuteCommandAsync("--subscription", subscriptionId);
 
         // Assert
-        var resultGroups = ValidateAndDeserializeResponse(result, GroupJsonContext.Default.Result);
+        var resultGroups = ValidateAndDeserializeResponse(result, GroupJsonContext.Default.GroupListCommandResult);
         Assert.Empty(resultGroups.Groups);
     }
 

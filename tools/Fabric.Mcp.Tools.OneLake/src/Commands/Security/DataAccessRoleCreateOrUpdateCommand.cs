@@ -149,7 +149,7 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(
                 result = await _oneLakeService.CreateOrUpdateDataAccessRoleAsync(options.WorkspaceId!, options.ItemId!, options.RoleDefinition!, cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DataAccessRole);
+            context.Response.Results = ResponseResult.Create(new DataAccessRoleCreateOrUpdateCommandResult(result), OneLakeJsonContext.Default.DataAccessRoleCreateOrUpdateCommandResult);
         }
         catch (Exception ex)
         {
@@ -225,5 +225,7 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(
 
         return System.Text.Json.JsonSerializer.Serialize(role, OneLakeJsonContext.Default.DataAccessRole);
     }
+
+    public record DataAccessRoleCreateOrUpdateCommandResult(DataAccessRole Role);
 }
 

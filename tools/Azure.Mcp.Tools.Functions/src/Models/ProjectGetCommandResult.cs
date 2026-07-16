@@ -7,7 +7,7 @@ namespace Azure.Mcp.Tools.Functions.Models;
 /// Represents the result of the get project template command,
 /// containing setup instructions and project structure overview.
 /// </summary>
-public sealed class ProjectTemplateResult
+public sealed class ProjectGetCommandResult
 {
     public required string Language { get; init; }
 

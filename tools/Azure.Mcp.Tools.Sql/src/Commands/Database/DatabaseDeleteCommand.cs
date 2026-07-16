@@ -45,7 +45,7 @@ public sealed class DatabaseDeleteCommand(ISqlService sqlService, ILogger<Databa
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(deleted, options.Database!), SqlJsonContext.Default.DatabaseDeleteResult);
+            context.Response.Results = ResponseResult.Create(new(deleted, options.Database!), SqlJsonContext.Default.DatabaseDeleteCommandResult);
         }
         catch (Exception ex)
         {
@@ -68,6 +68,6 @@ public sealed class DatabaseDeleteCommand(ISqlService sqlService, ILogger<Databa
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseDeleteResult(bool Deleted, string DatabaseName);
+    internal record DatabaseDeleteCommandResult(bool Deleted, string DatabaseName);
 }
 

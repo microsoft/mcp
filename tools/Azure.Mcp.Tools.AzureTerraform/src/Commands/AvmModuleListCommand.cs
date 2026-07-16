@@ -46,9 +46,9 @@ public sealed class AvmModuleListCommand(
         {
             var modules = await _avmDocsService.ListModulesAsync(cancellationToken).ConfigureAwait(false);
 
-            var result = new Models.AvmModuleListResult { Modules = modules };
+            var result = new Models.AvmModuleListCommandResult { Modules = modules };
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AvmModuleListResult);
+            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AvmModuleListCommandResult);
             context.Response.Message = string.Empty;
 
             context.Activity?.AddTag(AzureTerraformTelemetryTags.ToolArea, "avm");

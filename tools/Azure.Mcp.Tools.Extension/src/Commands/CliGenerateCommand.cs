@@ -76,7 +76,7 @@ public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliG
                 responseMessage.EnsureSuccessStatusCode();
 
                 var responseBody = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-                context.Response.Results = ResponseResult.Create(new(responseBody, cliType), ExtensionJsonContext.Default.CliGenerateResult);
+                context.Response.Results = ResponseResult.Create(new(responseBody, cliType), ExtensionJsonContext.Default.CliGenerateCommandResult);
             }
         }
         catch (Exception ex)

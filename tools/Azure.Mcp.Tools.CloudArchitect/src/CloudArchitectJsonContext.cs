@@ -7,7 +7,7 @@ using Azure.Mcp.Tools.CloudArchitect.Options;
 namespace Azure.Mcp.Tools.CloudArchitect;
 
 [JsonSerializable(typeof(CloudArchitectResponseObject))]
-[JsonSerializable(typeof(CloudArchitectDesignResponse))]
+[JsonSerializable(typeof(DesignCommandResult))]
 [JsonSerializable(typeof(ArchitectureDesignToolState))]
 [JsonSerializable(typeof(ArchitectureDesignTiers))]
 [JsonSerializable(typeof(ArchitectureDesignRequirements))]

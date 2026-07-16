@@ -139,14 +139,14 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : BaseCommand<A
                 State = options.State
             };
 
-            var result = new CloudArchitectDesignResponse
+            var result = new DesignCommandResult
             {
                 DesignArchitecture = designArchitecture,
                 ResponseObject = responseObject
             };
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
+            context.Response.Results = ResponseResult.Create(result, CloudArchitectJsonContext.Default.DesignCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)

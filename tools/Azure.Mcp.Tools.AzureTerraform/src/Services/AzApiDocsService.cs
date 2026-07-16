@@ -18,7 +18,7 @@ public sealed class AzApiDocsService : IAzApiDocsService
         return services.BuildServiceProvider();
     });
 
-    public AzApiDocsResult GetDocumentation(string resourceTypeName, string? apiVersion = null)
+    public AzApiDocsGetCommandResult GetDocumentation(string resourceTypeName, string? apiVersion = null)
     {
         var serviceProvider = s_schemaServiceProvider.Value;
         TypesDefinitionResult typesResult = SchemaGenerator.GetResourceTypeDefinitions(serviceProvider, resourceTypeName, apiVersion);
@@ -30,7 +30,7 @@ public sealed class AzApiDocsService : IAzApiDocsService
         string writableScopes = GetWritableScopes(typesResult);
         string hclSchema = FormatAsHcl(resourceTypeName, resolvedApiVersion, parentResourceType, writableScopes, complexTypes);
 
-        return new AzApiDocsResult
+        return new AzApiDocsGetCommandResult
         {
             ResourceType = resourceTypeName,
             ApiVersion = resolvedApiVersion,

@@ -7,7 +7,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Services;
 
 public interface IAzureRMDocsService
 {
-    Task<AzureRMDocsResult> GetDocumentationAsync(
+    Task<AzureRMDocsGetCommandResult> GetDocumentationAsync(
         string resourceTypeName,
         string docType = "resource",
         string? argumentName = null,

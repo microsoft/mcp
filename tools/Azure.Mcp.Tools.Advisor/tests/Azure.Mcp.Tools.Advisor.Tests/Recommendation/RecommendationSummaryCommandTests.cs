@@ -183,7 +183,7 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
 
         var response = await ExecuteCommandAsync("--subscription", "sub1", "--group-by", "category");
 
-        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationSummaryResult);
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationSummaryCommandResult);
 
         Assert.Equal("category", result.Summary.GroupBy);
         Assert.Equal(3, result.Summary.TotalRecommendations);
@@ -234,7 +234,7 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
             .Returns(summary);
 
         var response = await ExecuteCommandAsync("--subscription", "sub1", "--group-by", "category", "--top", "2");
-        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationSummaryResult);
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationSummaryCommandResult);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal(2, result.Summary.Groups.Count);
@@ -273,7 +273,7 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
             .Returns(summary);
 
         var response = await ExecuteCommandAsync("--subscription", "sub1", "--group-by", "resource-type", "--top", "5");
-        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationSummaryResult);
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationSummaryCommandResult);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         // 5 real buckets + Unknown appended at the tail = 6 entries.
@@ -306,7 +306,7 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
             .Returns(summary);
 
         var response = await ExecuteCommandAsync("--subscription", "sub1", "--group-by", "category", "--top", "100");
-        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationSummaryResult);
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationSummaryCommandResult);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal(2, result.Summary.Groups.Count);

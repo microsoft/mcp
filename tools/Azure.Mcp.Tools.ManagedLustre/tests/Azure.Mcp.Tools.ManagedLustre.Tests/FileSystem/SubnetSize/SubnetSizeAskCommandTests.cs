@@ -44,7 +44,7 @@ public class FileSystemSubnetSizeCommandTests : CommandUnitTestsBase<SubnetSizeA
             "--subscription", _knownSubscriptionId);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemSubnetSizeResult);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemSubnetSizeCommandResult);
         Assert.Equal(21, result.NumberOfRequiredIPs);
     }
 

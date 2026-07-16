@@ -243,7 +243,9 @@ public class CombinedWorkflowTests : IDisposable
             // Serialize the result to JSON and verify it contains an apiSpecification field
             var json = JsonSerializer.Serialize(apiResult.Results);
             using var doc = JsonDocument.Parse(json);
-            Assert.True(doc.RootElement.TryGetProperty("apiSpecification", out var apiSpecElement),
+            Assert.True(doc.RootElement.TryGetProperty("PublicApi", out var publicApiElement),
+                $"API result for workload '{workload}' should contain 'PublicApi'");
+            Assert.True(publicApiElement.TryGetProperty("apiSpecification", out var apiSpecElement),
                 $"API result for workload '{workload}' should contain 'apiSpecification'");
             var apiSpecJson = apiSpecElement.GetString();
             Assert.False(string.IsNullOrEmpty(apiSpecJson),

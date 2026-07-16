@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Models;
 
-public sealed class LedgerEntryGetResult
+public sealed class LedgerEntryGetCommandResult
 {
     [JsonPropertyName("ledgerName")]
     public string LedgerName { get; init; } = string.Empty;

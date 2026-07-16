@@ -49,7 +49,7 @@ public sealed class EntraAdminListCommand(ISqlService sqlService, ILogger<EntraA
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(administrators ?? []), SqlJsonContext.Default.EntraAdminListResult);
+            context.Response.Results = ResponseResult.Create(new(administrators ?? []), SqlJsonContext.Default.EntraAdminListCommandResult);
         }
         catch (Exception ex)
         {
@@ -72,5 +72,5 @@ public sealed class EntraAdminListCommand(ISqlService sqlService, ILogger<EntraA
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record EntraAdminListResult(List<SqlServerEntraAdministrator> Administrators);
+    internal record EntraAdminListCommandResult(List<SqlServerEntraAdministrator> Administrators);
 }

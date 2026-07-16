@@ -23,7 +23,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
     LocalRequired = false,
     Secret = false)]
 public sealed class GetBestPracticesCommand(IFabricPublicApiService service, ILogger<GetBestPracticesCommand> logger)
-    : AuthenticatedCommand<GetBestPracticesOptions, IEnumerable<string>>
+    : AuthenticatedCommand<GetBestPracticesOptions, GetBestPracticesCommand.GetBestPracticesCommandResult>
 {
     private readonly ILogger<GetBestPracticesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
@@ -34,7 +34,7 @@ public sealed class GetBestPracticesCommand(IFabricPublicApiService service, ILo
         {
             var bestPractices = _service.GetTopicBestPractices(options.Topic);
 
-            context.Response.Results = ResponseResult.Create(bestPractices, FabricJsonContext.Default.IEnumerableString);
+            context.Response.Results = ResponseResult.Create(new GetBestPracticesCommandResult(bestPractices), FabricJsonContext.Default.GetBestPracticesCommandResult);
         }
         catch (ArgumentException argEx)
         {
@@ -50,4 +50,6 @@ public sealed class GetBestPracticesCommand(IFabricPublicApiService service, ILo
 
         return Task.FromResult(context.Response);
     }
+
+    public record GetBestPracticesCommandResult(IEnumerable<string> BestPractices);
 }

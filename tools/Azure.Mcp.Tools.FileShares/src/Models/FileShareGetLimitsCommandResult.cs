@@ -6,7 +6,7 @@ namespace Azure.Mcp.Tools.FileShares.Models;
 /// <summary>
 /// Result containing file share limits and provisioning constants.
 /// </summary>
-public class FileShareLimitsResult
+public class FileShareGetLimitsCommandResult
 {
     public FileShareLimits Limits { get; set; } = new();
     public FileShareProvisioningConstants ProvisioningConstants { get; set; } = new();

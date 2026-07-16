@@ -35,7 +35,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         return RequestContent.Create(binary);
     }
 
-    public async Task<AppendEntryResult> AppendEntryAsync(string ledgerName, string entryData, string? collectionId = null, CancellationToken cancellationToken = default)
+    public async Task<LedgerEntryAppendCommandResult> AppendEntryAsync(string ledgerName, string entryData, string? collectionId = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(ledgerName), ledgerName),
@@ -60,7 +60,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         };
     }
 
-    public async Task<LedgerEntryGetResult> GetLedgerEntryAsync(string ledgerName, string transactionId, string? collectionId = null, CancellationToken cancellationToken = default)
+    public async Task<LedgerEntryGetCommandResult> GetLedgerEntryAsync(string ledgerName, string transactionId, string? collectionId = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(ledgerName), ledgerName),

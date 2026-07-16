@@ -52,7 +52,7 @@ public class WebappGetCommandTests : SubscriptionCommandUnitTestsBase<WebappGetC
         await Service.Received(1).GetWebAppsAsync(subscription, resourceGroup, appName, Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
 
-        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.WebappGetResult);
+        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.WebappGetCommandResult);
 
         Assert.Equal(JsonSerializer.Serialize(expectedWebappDetails), JsonSerializer.Serialize(result.Webapps));
     }

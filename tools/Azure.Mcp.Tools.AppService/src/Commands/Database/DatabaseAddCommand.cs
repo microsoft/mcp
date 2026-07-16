@@ -28,7 +28,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Database;
     Secret = false,
     LocalRequired = false)]
 public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger, IAppServiceService appServiceService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<DatabaseAddOptions, DatabaseAddCommand.DatabaseAddResult>(subscriptionResolver)
+    : SubscriptionCommand<DatabaseAddOptions, DatabaseAddCommand.DatabaseAddCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<DatabaseAddCommand> _logger = logger;
     private readonly IAppServiceService _appServiceService = appServiceService;
@@ -51,7 +51,7 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger, IAppS
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(connectionInfo), AppServiceJsonContext.Default.DatabaseAddResult);
+            context.Response.Results = ResponseResult.Create(new(connectionInfo), AppServiceJsonContext.Default.DatabaseAddCommandResult);
         }
         catch (Exception ex)
         {
@@ -62,5 +62,5 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger, IAppS
         return context.Response;
     }
 
-    public sealed record DatabaseAddResult(DatabaseConnectionInfo ConnectionInfo);
+    public sealed record DatabaseAddCommandResult(DatabaseConnectionInfo ConnectionInfo);
 }

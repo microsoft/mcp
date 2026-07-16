@@ -121,7 +121,7 @@ public class FileSystemUpdateCommandTests : CommandUnitTestsBase<FileSystemUpdat
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
-        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemUpdateResult);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemUpdateCommandResult);
         Assert.Equal(Name, result.FileSystem.Name);
     }
 

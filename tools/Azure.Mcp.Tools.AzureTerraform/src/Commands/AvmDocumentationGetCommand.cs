@@ -70,7 +70,7 @@ public sealed class AvmDocumentationGetCommand(
                 options.ModuleVersion!,
                 cancellationToken).ConfigureAwait(false);
 
-            var result = new Models.AvmDocumentationResult
+            var result = new Models.AvmDocumentationGetCommandResult
             {
                 ModuleName = options.ModuleName!,
                 ModuleVersion = options.ModuleVersion!,
@@ -78,7 +78,7 @@ public sealed class AvmDocumentationGetCommand(
             };
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AvmDocumentationResult);
+            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AvmDocumentationGetCommandResult);
             context.Response.Message = string.Empty;
 
             context.Activity

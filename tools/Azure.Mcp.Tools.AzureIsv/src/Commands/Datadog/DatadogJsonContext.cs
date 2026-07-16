@@ -5,6 +5,6 @@ using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
 
-[JsonSerializable(typeof(MonitoredResourcesListCommand.MonitoredResourcesListResult))]
+[JsonSerializable(typeof(MonitoredResourcesListCommand.MonitoredResourcesListCommandResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class DatadogJsonContext : JsonSerializerContext;

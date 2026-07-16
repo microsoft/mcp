@@ -75,7 +75,7 @@ public sealed class CliGenerateCommandTests : CommandUnitTestsBase<CliGenerateCo
         var response = await ExecuteCommandAsync("--intent", "mock_intent", "--cli-type", "az");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ExtensionJsonContext.Default.CliGenerateResult);
+        var result = ValidateAndDeserializeResponse(response, ExtensionJsonContext.Default.CliGenerateCommandResult);
 
         Assert.Equal("az", result.CliType);
         Assert.Equal("Command", result.Command);

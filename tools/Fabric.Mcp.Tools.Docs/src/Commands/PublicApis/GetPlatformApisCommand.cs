@@ -21,7 +21,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
     LocalRequired = false,
     Secret = false)]
 public sealed class GetPlatformApisCommand(IFabricPublicApiService service, ILogger<GetPlatformApisCommand> logger)
-    : AuthenticatedCommand<EmptyOptions, FabricWorkloadPublicApi>
+    : AuthenticatedCommand<EmptyOptions, GetPlatformApisCommand.GetPlatformApisCommandResult>
 {
     private readonly ILogger<GetPlatformApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
@@ -32,7 +32,7 @@ public sealed class GetPlatformApisCommand(IFabricPublicApiService service, ILog
         {
             var apis = await _service.GetWorkloadPublicApis("platform", cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
+            context.Response.Results = ResponseResult.Create(new GetPlatformApisCommandResult(apis), FabricJsonContext.Default.GetPlatformApisCommandResult);
         }
         catch (Exception ex)
         {
@@ -42,4 +42,6 @@ public sealed class GetPlatformApisCommand(IFabricPublicApiService service, ILog
 
         return context.Response;
     }
+
+    public record GetPlatformApisCommandResult(FabricWorkloadPublicApi PublicApi);
 }

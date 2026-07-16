@@ -101,8 +101,8 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionServic
                 response.Message = $"Report file '{xlsxReportFilePath}' and '{jsonReportFilePath}' were not found after azqr execution.";
                 return response;
             }
-            var resultObj = new AzqrReportResult(xlsxReportFilePath, jsonReportFilePath, result.Output);
-            response.Results = ResponseResult.Create(resultObj, ExtensionJsonContext.Default.AzqrReportResult);
+            var resultObj = new AzqrCommandResult(xlsxReportFilePath, jsonReportFilePath, result.Output);
+            response.Results = ResponseResult.Create(resultObj, ExtensionJsonContext.Default.AzqrCommandResult);
             response.Message = "azqr report generated successfully.";
             return response;
         }

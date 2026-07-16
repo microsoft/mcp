@@ -64,7 +64,7 @@ public sealed class FileShareGetUsageDataCommand(ILogger<FileShareGetUsageDataCo
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareUsageDataResult);
+            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareGetUsageDataCommandResult);
         }
         catch (Exception ex)
         {

@@ -192,7 +192,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "app", webappName }
             });
 
-        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.DeploymentGetResult);
+        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.DeploymentGetCommandResult);
         Assert.NotEmpty(getResult.Deployments);
         Assert.Contains(getResult.Deployments, d => d.Id == deploymentId);
     }
@@ -215,7 +215,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "deployment-id", deploymentId }
             });
 
-        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.DeploymentGetResult);
+        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.DeploymentGetCommandResult);
         Assert.Single(getResult.Deployments);
         Assert.Equal(deploymentId, getResult.Deployments[0].Id);
     }
@@ -241,7 +241,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "detector-id", "AvailabilityAndPerformanceWindows"}
             });
 
-        var detectorsResult = DeserializeResult(result, AppServiceJsonContext.Default.DetectorDiagnoseResult);
+        var detectorsResult = DeserializeResult(result, AppServiceJsonContext.Default.DetectorDiagnoseCommandResult);
         Assert.NotNull(detectorsResult.Diagnoses);
         Assert.NotEmpty(detectorsResult.Diagnoses.Datasets);
     }
@@ -268,7 +268,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "time-grain", "PT10M" }
             });
 
-        var detectorsResult = DeserializeResult(result, AppServiceJsonContext.Default.DetectorDiagnoseResult);
+        var detectorsResult = DeserializeResult(result, AppServiceJsonContext.Default.DetectorDiagnoseCommandResult);
         Assert.NotNull(detectorsResult.Diagnoses);
         Assert.NotEmpty(detectorsResult.Diagnoses.Datasets);
     }
@@ -293,7 +293,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "app", webappName }
             });
 
-        var detectorsResult = DeserializeResult(result, AppServiceJsonContext.Default.DetectorListResult);
+        var detectorsResult = DeserializeResult(result, AppServiceJsonContext.Default.DetectorListCommandResult);
         Assert.NotEmpty(detectorsResult.Detectors);
     }
 
@@ -317,7 +317,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "app", webappName }
             });
 
-        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsGetResult);
+        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsGetCommandResult);
         Assert.NotEmpty(getResult.AppSettings);
     }
 
@@ -345,7 +345,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "setting-update-type", "add" }
             });
 
-        var updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
+        var updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateCommandResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Application setting '{settingName}' added", updateResult.UpdateStatus);
     }
@@ -370,7 +370,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "setting-update-type", "add" }
             });
 
-        var updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
+        var updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateCommandResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Application setting '{settingName}' added", updateResult.UpdateStatus);
 
@@ -386,7 +386,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "setting-update-type", "add" }
             });
 
-        updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
+        updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateCommandResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Failed to add application setting '{settingName}'", updateResult.UpdateStatus);
     }
@@ -411,7 +411,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "setting-update-type", "set" }
             });
 
-        var updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
+        var updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateCommandResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Application setting '{settingName}' set", updateResult.UpdateStatus);
 
@@ -427,7 +427,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "setting-update-type", "set" }
             });
 
-        updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
+        updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateCommandResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Application setting '{settingName}' set", updateResult.UpdateStatus);
     }
@@ -452,7 +452,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "setting-update-type", "set" }
             });
 
-        var updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
+        var updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateCommandResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Application setting '{settingName}' set", updateResult.UpdateStatus);
 
@@ -467,7 +467,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "setting-update-type", "delete" }
             });
 
-        updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
+        updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateCommandResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Application setting '{settingName}' deleted", updateResult.UpdateStatus);
     }
@@ -491,7 +491,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "setting-update-type", "delete" }
             });
 
-        var updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateResult);
+        var updateResult = DeserializeResult(result, AppServiceJsonContext.Default.AppSettingsUpdateCommandResult);
         Assert.NotEmpty(updateResult.UpdateStatus);
         Assert.Contains($"Application setting '{settingName}' doesn't exist", updateResult.UpdateStatus);
     }
@@ -513,7 +513,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "subscription", Settings.SubscriptionId }
             });
 
-        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.WebappGetResult);
+        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.WebappGetCommandResult);
         Assert.NotEmpty(getResult.Webapps);
         Assert.True(getResult.Webapps.Any(detail => detail.Name == expectedWebappName), $"Expected to find web app with name '{expectedWebappName}' in the results.");
     }
@@ -533,7 +533,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "resource-group", resourceGroupName }
             });
 
-        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.WebappGetResult);
+        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.WebappGetCommandResult);
         Assert.NotEmpty(getResult.Webapps);
         Assert.True(getResult.Webapps.Any(detail => detail.Name == expectedWebappName), $"Expected to find web app with name '{expectedWebappName}' in the results.");
     }
@@ -555,7 +555,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "app", webappName }
             });
 
-        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.WebappGetResult);
+        var getResult = DeserializeResult(result, AppServiceJsonContext.Default.WebappGetCommandResult);
         Assert.Single(getResult.Webapps);
         Assert.True(getResult.Webapps.All(detail => detail.Name == expectedWebappName), $"Expected to find a single web app with name '{expectedWebappName}' in the results.");
     }

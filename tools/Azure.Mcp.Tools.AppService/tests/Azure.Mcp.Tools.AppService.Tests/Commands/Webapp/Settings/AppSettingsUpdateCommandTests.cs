@@ -55,7 +55,7 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
             settingUpdateType, settingValue, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
-        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.AppSettingsUpdateResult);
+        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.AppSettingsUpdateCommandResult);
 
         Assert.Equal(expectedValue, result.UpdateStatus);
     }

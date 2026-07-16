@@ -29,7 +29,7 @@ public class AzureRMDocsGetCommandTests : CommandUnitTestsBase<AzureRMDocsGetCom
     [Fact]
     public async Task ExecuteAsync_ValidResourceType_ReturnsDocumentation()
     {
-        var expectedResult = new AzureRMDocsResult
+        var expectedResult = new AzureRMDocsGetCommandResult
         {
             ResourceType = "azurerm_resource_group",
             DocumentationUrl = "https://example.com/docs",
@@ -93,7 +93,7 @@ public class AzureRMDocsGetCommandTests : CommandUnitTestsBase<AzureRMDocsGetCom
             null,
             null,
             Arg.Any<CancellationToken>())
-            .Returns(new AzureRMDocsResult { ResourceType = "azurerm_resource_group" });
+            .Returns(new AzureRMDocsGetCommandResult { ResourceType = "azurerm_resource_group" });
 
         var response = await ExecuteCommandAsync("--resource-type", "azurerm_resource_group", "--doc-type", "data-source");
 
@@ -115,7 +115,7 @@ public class AzureRMDocsGetCommandTests : CommandUnitTestsBase<AzureRMDocsGetCom
             "name",
             null,
             Arg.Any<CancellationToken>())
-            .Returns(new AzureRMDocsResult { ResourceType = "azurerm_resource_group" });
+            .Returns(new AzureRMDocsGetCommandResult { ResourceType = "azurerm_resource_group" });
 
         var response = await ExecuteCommandAsync("--resource-type", "azurerm_resource_group", "--argument", "name");
 
@@ -138,7 +138,7 @@ public class AzureRMDocsGetCommandTests : CommandUnitTestsBase<AzureRMDocsGetCom
         {
             Service.GetDocumentationAsync(
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
-                .Returns(new AzureRMDocsResult { ResourceType = "azurerm_resource_group" });
+                .Returns(new AzureRMDocsGetCommandResult { ResourceType = "azurerm_resource_group" });
         }
 
         var response = await ExecuteCommandAsync(args);
@@ -156,7 +156,7 @@ public class AzureRMDocsGetCommandTests : CommandUnitTestsBase<AzureRMDocsGetCom
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {
-        var expectedResult = new AzureRMDocsResult
+        var expectedResult = new AzureRMDocsGetCommandResult
         {
             ResourceType = "azurerm_resource_group",
             DocumentationUrl = "https://example.com/docs",
@@ -183,7 +183,7 @@ public class AzureRMDocsGetCommandTests : CommandUnitTestsBase<AzureRMDocsGetCom
 
         var response = await ExecuteCommandAsync("--resource-type", "azurerm_resource_group");
 
-        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AzureRMDocsResult);
+        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AzureRMDocsGetCommandResult);
 
         Assert.Equal("azurerm_resource_group", result.ResourceType);
         Assert.Equal("Manages a Resource Group.", result.Summary);

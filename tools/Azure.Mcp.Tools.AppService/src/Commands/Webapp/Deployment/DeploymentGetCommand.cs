@@ -30,7 +30,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Deployment;
     Secret = false,
     LocalRequired = false)]
 public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger, IAppServiceService appServiceService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<DeploymentGetOptions, DeploymentGetCommand.DeploymentGetResult>(subscriptionResolver)
+    : SubscriptionCommand<DeploymentGetOptions, DeploymentGetCommand.DeploymentGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<DeploymentGetCommand> _logger = logger;
     private readonly IAppServiceService _appServiceService = appServiceService;
@@ -50,7 +50,7 @@ public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger, I
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(deployments), AppServiceJsonContext.Default.DeploymentGetResult);
+            context.Response.Results = ResponseResult.Create(new(deployments), AppServiceJsonContext.Default.DeploymentGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -70,5 +70,5 @@ public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger, I
         return context.Response;
     }
 
-    public sealed record DeploymentGetResult(List<DeploymentDetails> Deployments);
+    public sealed record DeploymentGetCommandResult(List<DeploymentDetails> Deployments);
 }
