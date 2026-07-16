@@ -47,7 +47,7 @@ public class DeploymentGetCommandTests : SubscriptionCommandUnitTestsBase<Deploy
         await Service.Received(1).GetDeploymentsAsync("sub123", "rg1", "test-app", deploymentId,
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
 
-        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.DeploymentGetResult);
+        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.DeploymentGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(JsonSerializer.Serialize(expectedDeployments), JsonSerializer.Serialize(result.Deployments));

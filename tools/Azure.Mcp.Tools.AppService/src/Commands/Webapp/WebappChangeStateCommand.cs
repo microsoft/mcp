@@ -35,7 +35,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
     LocalRequired = false
 )]
 public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> logger, IAppServiceService appServiceService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<WebappChangeStateOptions, WebappChangeStateCommand.WebappChangeStateResult>(subscriptionResolver)
+    : SubscriptionCommand<WebappChangeStateOptions, WebappChangeStateCommand.WebappChangeStateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<WebappChangeStateCommand> _logger = logger;
 
@@ -99,7 +99,7 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(stateChange), AppServiceJsonContext.Default.WebappChangeStateResult);
+            context.Response.Results = ResponseResult.Create(new(stateChange), AppServiceJsonContext.Default.WebappChangeStateCommandResult);
         }
         catch (Exception ex)
         {
@@ -119,5 +119,5 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
         return context.Response;
     }
 
-    public sealed record WebappChangeStateResult(string StateChangeStatus);
+    public sealed record WebappChangeStateCommandResult(string StateChangeStatus);
 }

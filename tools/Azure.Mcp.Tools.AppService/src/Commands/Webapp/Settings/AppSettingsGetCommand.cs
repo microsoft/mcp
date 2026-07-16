@@ -26,7 +26,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
     Secret = true,
     LocalRequired = false)]
 public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger, IAppServiceService appServiceService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<BaseAppServiceOptions, AppSettingsGetCommand.AppSettingsGetResult>(subscriptionResolver)
+    : SubscriptionCommand<BaseAppServiceOptions, AppSettingsGetCommand.AppSettingsGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<AppSettingsGetCommand> _logger = logger;
     private readonly IAppServiceService _appServiceService = appServiceService;
@@ -45,7 +45,7 @@ public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(appSettings), AppServiceJsonContext.Default.AppSettingsGetResult);
+            context.Response.Results = ResponseResult.Create(new(appSettings), AppServiceJsonContext.Default.AppSettingsGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -57,5 +57,5 @@ public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger,
         return context.Response;
     }
 
-    public sealed record AppSettingsGetResult(IDictionary<string, string> AppSettings);
+    public sealed record AppSettingsGetCommandResult(IDictionary<string, string> AppSettings);
 }

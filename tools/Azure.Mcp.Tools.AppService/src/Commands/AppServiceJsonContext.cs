@@ -12,19 +12,19 @@ using Azure.ResourceManager.AppService.Models;
 
 namespace Azure.Mcp.Tools.AppService.Commands;
 
-[JsonSerializable(typeof(AppSettingsGetCommand.AppSettingsGetResult))]
-[JsonSerializable(typeof(AppSettingsUpdateCommand.AppSettingsUpdateResult))]
-[JsonSerializable(typeof(DatabaseAddCommand.DatabaseAddResult))]
+[JsonSerializable(typeof(AppSettingsGetCommand.AppSettingsGetCommandResult))]
+[JsonSerializable(typeof(AppSettingsUpdateCommand.AppSettingsUpdateCommandResult))]
+[JsonSerializable(typeof(DatabaseAddCommand.DatabaseAddCommandResult))]
 [JsonSerializable(typeof(DatabaseConnectionInfo))]
-[JsonSerializable(typeof(DeploymentGetCommand.DeploymentGetResult))]
-[JsonSerializable(typeof(DetectorDiagnoseCommand.DetectorDiagnoseResult))]
+[JsonSerializable(typeof(DeploymentGetCommand.DeploymentGetCommandResult))]
+[JsonSerializable(typeof(DetectorDiagnoseCommand.DetectorDiagnoseCommandResult))]
 [JsonSerializable(typeof(DetectorDetails))]
 [JsonSerializable(typeof(DetectorInfo))]
-[JsonSerializable(typeof(DetectorListCommand.DetectorListResult))]
+[JsonSerializable(typeof(DetectorListCommand.DetectorListCommandResult))]
 [JsonSerializable(typeof(DiagnosticDataset))]
 [JsonSerializable(typeof(DiagnosisResults))]
 [JsonSerializable(typeof(IList<DiagnosticDataset>))]
 [JsonSerializable(typeof(WebappDetails))]
-[JsonSerializable(typeof(WebappGetCommand.WebappGetResult))]
-[JsonSerializable(typeof(WebappChangeStateCommand.WebappChangeStateResult))]
+[JsonSerializable(typeof(WebappGetCommand.WebappGetCommandResult))]
+[JsonSerializable(typeof(WebappChangeStateCommand.WebappChangeStateCommandResult))]
 public partial class AppServiceJsonContext : JsonSerializerContext;
