@@ -73,7 +73,7 @@ public sealed class ImportJobCancelCommand(IManagedLustreService service, ILogge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(options.JobName!, cancelledJob.Properties?.AdminStatus ?? "Unknown"), ManagedLustreJsonContext.Default.ImportJobCancelResult);
+            context.Response.Results = ResponseResult.Create(new(options.JobName!, cancelledJob.Properties?.AdminStatus ?? "Unknown"), ManagedLustreJsonContext.Default.ImportJobCancelCommandResult);
         }
         catch (Exception ex)
         {
@@ -85,5 +85,5 @@ public sealed class ImportJobCancelCommand(IManagedLustreService service, ILogge
         return context.Response;
     }
 
-    internal record ImportJobCancelResult(string JobName, string Status);
+    internal record ImportJobCancelCommandResult(string JobName, string Status);
 }

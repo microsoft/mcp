@@ -52,7 +52,7 @@ public sealed class SkuGetCommand(IManagedLustreService service, ILogger<SkuGetC
             var options = BindOptions(parseResult);
             var skus = await _service.SkuGetInfoAsync(options.Subscription!, options.Tenant, options.Location, options.RetryPolicy, cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(skus ?? []), ManagedLustreJsonContext.Default.SkuGetResult);
+            context.Response.Results = ResponseResult.Create(new(skus ?? []), ManagedLustreJsonContext.Default.SkuGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -62,5 +62,5 @@ public sealed class SkuGetCommand(IManagedLustreService service, ILogger<SkuGetC
         return context.Response;
     }
 
-    internal record SkuGetResult(List<Models.ManagedLustreSkuInfo> Skus);
+    internal record SkuGetCommandResult(List<Models.ManagedLustreSkuInfo> Skus);
 }

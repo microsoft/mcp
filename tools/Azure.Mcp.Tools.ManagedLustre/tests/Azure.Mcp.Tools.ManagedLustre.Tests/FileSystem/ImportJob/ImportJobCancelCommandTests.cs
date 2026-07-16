@@ -52,7 +52,7 @@ public class ImportJobCancelCommandTests : CommandUnitTestsBase<ImportJobCancelC
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
-            var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobCancelResult);
+            var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobCancelCommandResult);
             Assert.Equal(JobName, result.JobName);
         }
         else
@@ -117,7 +117,7 @@ public class ImportJobCancelCommandTests : CommandUnitTestsBase<ImportJobCancelC
             "--job-name", JobName);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobCancelResult);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobCancelCommandResult);
         Assert.Equal(JobName, result.JobName);
     }
 }

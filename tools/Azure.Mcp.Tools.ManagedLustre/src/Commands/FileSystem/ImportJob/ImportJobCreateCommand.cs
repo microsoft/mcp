@@ -96,7 +96,7 @@ public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(job), ManagedLustreJsonContext.Default.ImportJobCreateResult);
+            context.Response.Results = ResponseResult.Create(new(job), ManagedLustreJsonContext.Default.ImportJobCreateCommandResult);
         }
         catch (Exception ex)
         {
@@ -108,5 +108,5 @@ public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogge
         return context.Response;
     }
 
-    internal record ImportJobCreateResult(string JobName);
+    internal record ImportJobCreateCommandResult(string JobName);
 }

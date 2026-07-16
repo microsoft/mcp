@@ -81,7 +81,7 @@ public sealed class SubnetSizeValidateCommand(IManagedLustreService service, ILo
                                 options.RetryPolicy,
                                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(subnetIsValid), ManagedLustreJsonContext.Default.FileSystemCheckSubnetResult);
+            context.Response.Results = ResponseResult.Create(new(subnetIsValid), ManagedLustreJsonContext.Default.FileSystemCheckSubnetCommandResult);
         }
         catch (Exception ex)
         {
@@ -91,5 +91,5 @@ public sealed class SubnetSizeValidateCommand(IManagedLustreService service, ILo
         return context.Response;
     }
 
-    internal record FileSystemCheckSubnetResult(bool Valid);
+    internal record FileSystemCheckSubnetCommandResult(bool Valid);
 }

@@ -86,7 +86,7 @@ public sealed class FileSystemUpdateCommand(IManagedLustreService service, ILogg
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(fs), ManagedLustreJsonContext.Default.FileSystemUpdateResult);
+            context.Response.Results = ResponseResult.Create(new(fs), ManagedLustreJsonContext.Default.FileSystemUpdateCommandResult);
         }
         catch (Exception ex)
         {
@@ -97,5 +97,5 @@ public sealed class FileSystemUpdateCommand(IManagedLustreService service, ILogg
         return context.Response;
     }
 
-    internal record FileSystemUpdateResult(Models.LustreFileSystem FileSystem);
+    internal record FileSystemUpdateCommandResult(Models.LustreFileSystem FileSystem);
 }

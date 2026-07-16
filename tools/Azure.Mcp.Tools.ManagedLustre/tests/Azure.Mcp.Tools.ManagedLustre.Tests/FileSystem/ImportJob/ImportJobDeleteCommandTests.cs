@@ -51,7 +51,7 @@ public class ImportJobDeleteCommandTests : CommandUnitTestsBase<ImportJobDeleteC
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
-            var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobDeleteResult);
+            var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobDeleteCommandResult);
             Assert.Equal(JobName, result.JobName);
         }
         else
@@ -114,7 +114,7 @@ public class ImportJobDeleteCommandTests : CommandUnitTestsBase<ImportJobDeleteC
             "--job-name", JobName);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobDeleteResult);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobDeleteCommandResult);
         Assert.Equal(JobName, result.JobName);
     }
 }

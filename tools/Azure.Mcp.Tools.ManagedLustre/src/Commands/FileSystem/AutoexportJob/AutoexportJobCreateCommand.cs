@@ -80,7 +80,7 @@ public sealed class AutoexportJobCreateCommand(IManagedLustreService service, IL
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(job), ManagedLustreJsonContext.Default.AutoexportJobCreateResult);
+            context.Response.Results = ResponseResult.Create(new(job), ManagedLustreJsonContext.Default.AutoexportJobCreateCommandResult);
         }
         catch (Exception ex)
         {
@@ -92,5 +92,5 @@ public sealed class AutoexportJobCreateCommand(IManagedLustreService service, IL
         return context.Response;
     }
 
-    internal record AutoexportJobCreateResult(string JobName);
+    internal record AutoexportJobCreateCommandResult(string JobName);
 }

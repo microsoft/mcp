@@ -48,7 +48,7 @@ public class FileSystemCheckSubnetCommandTests : CommandUnitTestsBase<SubnetSize
             "--subscription", _knownSubscriptionId);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemCheckSubnetResult);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemCheckSubnetCommandResult);
         Assert.True(result.Valid);
     }
 

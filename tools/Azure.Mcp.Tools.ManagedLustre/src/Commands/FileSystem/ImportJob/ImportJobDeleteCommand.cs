@@ -73,7 +73,7 @@ public sealed class ImportJobDeleteCommand(IManagedLustreService service, ILogge
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(options.JobName!), ManagedLustreJsonContext.Default.ImportJobDeleteResult);
+            context.Response.Results = ResponseResult.Create(new(options.JobName!), ManagedLustreJsonContext.Default.ImportJobDeleteCommandResult);
         }
         catch (Exception ex)
         {
@@ -85,5 +85,5 @@ public sealed class ImportJobDeleteCommand(IManagedLustreService service, ILogge
         return context.Response;
     }
 
-    internal record ImportJobDeleteResult(string JobName);
+    internal record ImportJobDeleteCommandResult(string JobName);
 }

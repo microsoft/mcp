@@ -85,7 +85,7 @@ public class FileSystemCreateCommandTests : CommandUnitTestsBase<FileSystemCreat
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
-            var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemCreateResult);
+            var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemCreateCommandResult);
             Assert.Equal(Name, result.FileSystem.Name);
         }
         else

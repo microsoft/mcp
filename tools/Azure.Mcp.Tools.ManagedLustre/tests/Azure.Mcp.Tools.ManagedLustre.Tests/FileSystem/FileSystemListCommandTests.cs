@@ -90,7 +90,7 @@ public class FileSystemListCommandTests : CommandUnitTestsBase<FileSystemListCom
         var response = await ExecuteCommandAsync("--subscription", _knownSubscriptionId);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemListResult);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemListCommandResult);
 
         Assert.NotNull(result.FileSystems);
         Assert.Equal(2, result.FileSystems.Count);
@@ -148,7 +148,7 @@ public class FileSystemListCommandTests : CommandUnitTestsBase<FileSystemListCom
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
-            var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemListResult);
+            var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemListCommandResult);
             Assert.NotNull(result.FileSystems);
             Assert.NotNull(result.FileSystems[0].Name);
             Assert.Equal("fs1", result.FileSystems[0].Name);
@@ -176,7 +176,7 @@ public class FileSystemListCommandTests : CommandUnitTestsBase<FileSystemListCom
         var response = await ExecuteCommandAsync("--subscription", _knownSubscriptionId);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemListResult);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemListCommandResult);
 
         Assert.Empty(result.FileSystems);
     }

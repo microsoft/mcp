@@ -75,7 +75,7 @@ public sealed class AutoexportJobDeleteCommand(IManagedLustreService service, IL
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(options.JobName!, "Deleted"), ManagedLustreJsonContext.Default.AutoexportJobDeleteResult);
+            context.Response.Results = ResponseResult.Create(new(options.JobName!, "Deleted"), ManagedLustreJsonContext.Default.AutoexportJobDeleteCommandResult);
         }
         catch (Exception ex)
         {
@@ -87,5 +87,5 @@ public sealed class AutoexportJobDeleteCommand(IManagedLustreService service, IL
         return context.Response;
     }
 
-    internal record AutoexportJobDeleteResult(string JobName, string Status);
+    internal record AutoexportJobDeleteCommandResult(string JobName, string Status);
 }

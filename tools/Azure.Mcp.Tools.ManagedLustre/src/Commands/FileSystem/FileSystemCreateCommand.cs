@@ -127,7 +127,7 @@ public sealed class FileSystemCreateCommand(IManagedLustreService service, ILogg
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(fs), ManagedLustreJsonContext.Default.FileSystemCreateResult);
+            context.Response.Results = ResponseResult.Create(new(fs), ManagedLustreJsonContext.Default.FileSystemCreateCommandResult);
         }
         catch (Exception ex)
         {
@@ -138,5 +138,5 @@ public sealed class FileSystemCreateCommand(IManagedLustreService service, ILogg
         return context.Response;
     }
 
-    internal record FileSystemCreateResult(Models.LustreFileSystem FileSystem);
+    internal record FileSystemCreateCommandResult(Models.LustreFileSystem FileSystem);
 }
