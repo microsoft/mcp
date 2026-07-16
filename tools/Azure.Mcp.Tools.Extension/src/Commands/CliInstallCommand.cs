@@ -70,7 +70,7 @@ public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliIns
             responseMessage.EnsureSuccessStatusCode();
 
             var responseBody = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-            context.Response.Results = ResponseResult.Create(new(responseBody, cliType), ExtensionJsonContext.Default.CliInstallResult);
+            context.Response.Results = ResponseResult.Create(new(responseBody, cliType), ExtensionJsonContext.Default.CliInstallCommandResult);
 
         }
         catch (Exception ex)

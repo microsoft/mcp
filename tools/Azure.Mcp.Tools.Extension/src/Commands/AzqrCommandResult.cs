@@ -5,8 +5,8 @@ using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
-// This file should only contain a single definition of AzqrReportResult
-public sealed record AzqrReportResult(
+// This file should only contain a single definition of AzqrCommandResult
+public sealed record AzqrCommandResult(
     [property: JsonPropertyName("xlsxReportPath")] string XlsxReportPath,
     [property: JsonPropertyName("jsonReportPath")] string JsonReportPath,
     [property: JsonPropertyName("stdout")] string Stdout

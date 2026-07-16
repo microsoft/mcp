@@ -68,7 +68,7 @@ public sealed class CliInstallCommandTests : CommandUnitTestsBase<CliInstallComm
         var response = await ExecuteCommandAsync("--cli-type", "az");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ExtensionJsonContext.Default.CliInstallResult);
+        var result = ValidateAndDeserializeResponse(response, ExtensionJsonContext.Default.CliInstallCommandResult);
 
         Assert.Equal("az", result.CliType);
         Assert.Equal("Instructions", result.InstallationInstructions);
