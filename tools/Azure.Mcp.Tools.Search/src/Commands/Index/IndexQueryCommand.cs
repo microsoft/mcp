@@ -65,7 +65,7 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearch
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(results, SearchJsonContext.Default.ListJsonElement);
+            context.Response.Results = ResponseResult.Create(new IndexQueryCommandResult(results), SearchJsonContext.Default.IndexQueryCommandResult);
         }
         catch (Exception ex)
         {
@@ -75,4 +75,6 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearch
 
         return context.Response;
     }
+
+    internal sealed record IndexQueryCommandResult(List<JsonElement> Results);
 }
