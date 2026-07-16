@@ -17,7 +17,7 @@ namespace ToolSelection.VectorDb;
 public record Entry(
     [property: VectorStoreKey] string Id,
     [property: VectorStoreData] object? Metadata,
-    // Dimensions match the Azure OpenAI text-embedding-3-large model used by EmbeddingService.
+    // Default output dimensions of the Azure OpenAI text-embedding-3-large model used by EmbeddingService.
     // The in-memory implementation does not enforce this value; it is metadata for real providers.
     [property: VectorStoreVector(3072, DistanceFunction = DistanceFunction.CosineSimilarity)] ReadOnlyMemory<float> Vector);
 
@@ -124,8 +124,6 @@ public sealed class VectorDB : VectorStore
             cancellationToken.ThrowIfCancellationRequested();
             yield return name;
         }
-
-        await Task.CompletedTask;
     }
 
     public override Task<bool> CollectionExistsAsync(string name, CancellationToken cancellationToken = default)
@@ -277,14 +275,26 @@ public sealed class InMemoryVectorStoreCollection : VectorStoreCollection<string
         _lock.EnterWriteLock();
         try
         {
-            int index = BinarySearch(record.Id);
-            if (index >= 0)
+            UpsertCore(record);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public override Task UpsertAsync(IEnumerable<Entry> records, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(records);
+
+        _lock.EnterWriteLock();
+        try
+        {
+            foreach (var record in records)
             {
-                _entries[index] = record;
-            }
-            else
-            {
-                _entries.Insert(~index, record);
+                UpsertCore(record);
             }
         }
         finally
@@ -295,13 +305,17 @@ public sealed class InMemoryVectorStoreCollection : VectorStoreCollection<string
         return Task.CompletedTask;
     }
 
-    public override async Task UpsertAsync(IEnumerable<Entry> records, CancellationToken cancellationToken = default)
+    // Assumes the write lock is already held.
+    private void UpsertCore(Entry record)
     {
-        ArgumentNullException.ThrowIfNull(records);
-
-        foreach (var record in records)
+        int index = BinarySearch(record.Id);
+        if (index >= 0)
         {
-            await UpsertAsync(record, cancellationToken);
+            _entries[index] = record;
+        }
+        else
+        {
+            _entries.Insert(~index, record);
         }
     }
 
@@ -335,7 +349,7 @@ public sealed class InMemoryVectorStoreCollection : VectorStoreCollection<string
 
         if (top <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(top), "The number of results to return must be greater than zero.");
+            throw new ArgumentOutOfRangeException(nameof(top), "The number of search results (top) must be greater than zero.");
         }
 
         var vector = ExtractVector(searchValue);
@@ -358,8 +372,6 @@ public sealed class InMemoryVectorStoreCollection : VectorStoreCollection<string
             cancellationToken.ThrowIfCancellationRequested();
             yield return result;
         }
-
-        await Task.CompletedTask;
     }
 
     private static ReadOnlyMemory<float> ExtractVector(object searchValue) => searchValue switch
