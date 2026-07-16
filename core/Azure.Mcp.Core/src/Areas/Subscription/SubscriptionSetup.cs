@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Areas.Subscription.Commands;
+using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Areas;
-using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Core.Areas.Subscription;
 
@@ -13,8 +12,6 @@ public class SubscriptionSetup : IAreaSetup
     public string Name => "subscription";
 
     public string Title => "Azure Subscriptions Management";
-
-    public CommandCategory Category => CommandCategory.SubscriptionManagement;
 
     public void ConfigureServices(IServiceCollection services)
     {
@@ -28,7 +25,8 @@ public class SubscriptionSetup : IAreaSetup
         var subscription = new CommandGroup(Name, "Azure subscription operations - Commands for listing and managing Azure subscriptions accessible to your account.", Title);
 
         // Register Subscription commands
-        subscription.AddCommand<SubscriptionListCommand>(serviceProvider);
+        var subscriptionListCommand = serviceProvider.GetRequiredService<SubscriptionListCommand>();
+        subscription.AddCommand(subscriptionListCommand.Name, subscriptionListCommand);
 
         return subscription;
     }
