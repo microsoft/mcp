@@ -48,7 +48,7 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger, IResource
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(groups ?? []), GroupJsonContext.Default.Result);
+            context.Response.Results = ResponseResult.Create(new(groups ?? []), GroupJsonContext.Default.GroupListCommandResult);
         }
         catch (Exception ex)
         {
@@ -59,5 +59,5 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger, IResource
         return context.Response;
     }
 
-    internal record class Result(List<ResourceGroupInfo> Groups);
+    internal record class GroupListCommandResult(List<ResourceGroupInfo> Groups);
 }
