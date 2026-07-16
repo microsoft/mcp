@@ -22,7 +22,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
     LocalRequired = false,
     Secret = false)]
 public sealed class GetExamplesCommand(IFabricPublicApiService service, ILogger<GetExamplesCommand> logger)
-    : AuthenticatedCommand<WorkloadCommandOptions, GetExamplesCommand.ExampleFileResult>
+    : AuthenticatedCommand<WorkloadCommandOptions, GetExamplesCommand.GetExamplesCommandResult>
 {
     private readonly ILogger<GetExamplesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
@@ -33,7 +33,7 @@ public sealed class GetExamplesCommand(IFabricPublicApiService service, ILogger<
         {
             var availableExamples = await _service.GetWorkloadExamplesAsync(options.WorkloadType, cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(availableExamples), FabricJsonContext.Default.ExampleFileResult);
+            context.Response.Results = ResponseResult.Create(new(availableExamples), FabricJsonContext.Default.GetExamplesCommandResult);
         }
         catch (Exception ex)
         {
@@ -44,5 +44,5 @@ public sealed class GetExamplesCommand(IFabricPublicApiService service, ILogger<
         return context.Response;
     }
 
-    public record ExampleFileResult(IDictionary<string, string> Examples);
+    public record GetExamplesCommandResult(IDictionary<string, string> Examples);
 }
