@@ -16,11 +16,11 @@ public class LedgerEntryAppendCommandTests : CommandUnitTestsBase<LedgerEntryApp
     public async Task Execute_Success_ReturnsResult()
     {
         Service.AppendEntryAsync("ledger1", "data", cancellationToken: Arg.Any<CancellationToken>())
-            .Returns(new AppendEntryResult { TransactionId = "tx1", State = "Committed" });
+            .Returns(new LedgerEntryAppendCommandResult { TransactionId = "tx1", State = "Committed" });
 
         var response = await ExecuteCommandAsync("--ledger", "ledger1", "--content", "data");
 
-        var result = ValidateAndDeserializeResponse(response, ConfidentialLedgerJsonContext.Default.AppendEntryResult);
+        var result = ValidateAndDeserializeResponse(response, ConfidentialLedgerJsonContext.Default.LedgerEntryAppendCommandResult);
         Assert.Equal("tx1", result.TransactionId);
     }
 }
