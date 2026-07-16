@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Authenticated commands now return a clear, actionable error message when Azure credentials are unavailable (`CredentialUnavailableException`), guiding users to run `az login` instead of surfacing a generic authentication failure.
+
 ### Other Changes
 
 ## 3.0.0-beta.26 (2026-07-14)
