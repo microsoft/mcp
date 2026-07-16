@@ -12,7 +12,7 @@ public sealed class AzureRMDocsService(IHttpClientFactory httpClientFactory) : I
     private const string BaseDataSourcesUrl =
         "https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/main/website/docs/d";
 
-    public async Task<AzureRMDocsResult> GetDocumentationAsync(
+    public async Task<AzureRMDocsGetCommandResult> GetDocumentationAsync(
         string resourceTypeName,
         string docType = "resource",
         string? argumentName = null,
@@ -54,7 +54,7 @@ public sealed class AzureRMDocsService(IHttpClientFactory httpClientFactory) : I
             }
             else
             {
-                return new AzureRMDocsResult
+                return new AzureRMDocsGetCommandResult
                 {
                     ResourceType = resourceTypeName,
                     DocumentationUrl = docUrl,
@@ -67,7 +67,7 @@ public sealed class AzureRMDocsService(IHttpClientFactory httpClientFactory) : I
 
         markdownContent ??= await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
-        var result = new AzureRMDocsResult
+        var result = new AzureRMDocsGetCommandResult
         {
             ResourceType = resourceTypeName,
             DocumentationUrl = docUrl,
@@ -101,7 +101,7 @@ public sealed class AzureRMDocsService(IHttpClientFactory httpClientFactory) : I
         return result;
     }
 
-    private static AzureRMDocsResult FilterToArgument(AzureRMDocsResult result, string argumentName)
+    private static AzureRMDocsGetCommandResult FilterToArgument(AzureRMDocsGetCommandResult result, string argumentName)
     {
         var matching = result.Arguments
             .Where(a => a.Name.Equals(argumentName, StringComparison.OrdinalIgnoreCase))
@@ -115,7 +115,7 @@ public sealed class AzureRMDocsService(IHttpClientFactory httpClientFactory) : I
         return result;
     }
 
-    private static AzureRMDocsResult FilterToAttribute(AzureRMDocsResult result, string attributeName)
+    private static AzureRMDocsGetCommandResult FilterToAttribute(AzureRMDocsGetCommandResult result, string attributeName)
     {
         var matching = result.Attributes
             .Where(a => a.Name.Equals(attributeName, StringComparison.OrdinalIgnoreCase))

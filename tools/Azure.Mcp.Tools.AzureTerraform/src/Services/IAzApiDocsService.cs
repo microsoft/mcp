@@ -7,5 +7,5 @@ namespace Azure.Mcp.Tools.AzureTerraform.Services;
 
 public interface IAzApiDocsService
 {
-    AzApiDocsResult GetDocumentation(string resourceTypeName, string? apiVersion = null);
+    AzApiDocsGetCommandResult GetDocumentation(string resourceTypeName, string? apiVersion = null);
 }

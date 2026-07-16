@@ -67,14 +67,14 @@ public sealed class AvmVersionListCommand(
                 options.ModuleName!,
                 cancellationToken).ConfigureAwait(false);
 
-            var result = new Models.AvmVersionListResult
+            var result = new Models.AvmVersionListCommandResult
             {
                 ModuleName = options.ModuleName!,
                 Versions = versions
             };
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AvmVersionListResult);
+            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AvmVersionListCommandResult);
             context.Response.Message = string.Empty;
 
             context.Activity

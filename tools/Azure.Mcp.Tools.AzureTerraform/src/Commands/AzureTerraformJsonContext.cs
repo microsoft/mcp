@@ -6,8 +6,8 @@ using Azure.Mcp.Tools.AzureTerraform.Models;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 
-[JsonSerializable(typeof(AzureRMDocsResult))]
-[JsonSerializable(typeof(AzApiDocsResult))]
+[JsonSerializable(typeof(AzureRMDocsGetCommandResult))]
+[JsonSerializable(typeof(AzApiDocsGetCommandResult))]
 [JsonSerializable(typeof(AzApiExample))]
 [JsonSerializable(typeof(List<AzApiExample>))]
 [JsonSerializable(typeof(List<ArgumentDetail>))]
@@ -15,9 +15,9 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 [JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(AvmModule))]
 [JsonSerializable(typeof(AvmVersion))]
-[JsonSerializable(typeof(AvmModuleListResult))]
-[JsonSerializable(typeof(AvmVersionListResult))]
-[JsonSerializable(typeof(AvmDocumentationResult))]
+[JsonSerializable(typeof(AvmModuleListCommandResult))]
+[JsonSerializable(typeof(AvmVersionListCommandResult))]
+[JsonSerializable(typeof(AvmDocumentationGetCommandResult))]
 [JsonSerializable(typeof(List<AvmModule>))]
 [JsonSerializable(typeof(List<AvmVersion>))]
 [JsonSerializable(typeof(AztfexportCommandResult))]

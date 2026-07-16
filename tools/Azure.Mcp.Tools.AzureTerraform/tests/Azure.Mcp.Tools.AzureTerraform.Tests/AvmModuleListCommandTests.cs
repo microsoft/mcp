@@ -57,7 +57,7 @@ public class AvmModuleListCommandTests : CommandUnitTestsBase<AvmModuleListComma
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AvmModuleListResult);
+        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AvmModuleListCommandResult);
         Assert.Equal(2, result.Modules.Count);
         Assert.Contains(result.Modules, m => m.ModuleType == "resource");
         Assert.Contains(result.Modules, m => m.ModuleType == "pattern");
@@ -115,7 +115,7 @@ public class AvmModuleListCommandTests : CommandUnitTestsBase<AvmModuleListComma
 
         var response = await ExecuteCommandAsync([]);
 
-        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AvmModuleListResult);
+        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AvmModuleListCommandResult);
 
         Assert.NotNull(result.Modules);
         Assert.Single(result.Modules);

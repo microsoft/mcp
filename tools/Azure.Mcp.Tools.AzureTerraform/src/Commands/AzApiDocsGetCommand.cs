@@ -88,7 +88,7 @@ public sealed class AzApiDocsGetCommand(
             }
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AzApiDocsResult);
+            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AzApiDocsGetCommandResult);
             context.Response.Message = string.Empty;
 
             context.Activity

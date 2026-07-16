@@ -3,7 +3,7 @@
 
 namespace Azure.Mcp.Tools.AzureTerraform.Models;
 
-public sealed class AzureRMDocsResult
+public sealed class AzureRMDocsGetCommandResult
 {
     public string ResourceType { get; set; } = string.Empty;
     public string DocumentationUrl { get; set; } = string.Empty;

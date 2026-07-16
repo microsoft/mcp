@@ -40,7 +40,7 @@ public class AzApiDocsGetCommandTests : CommandUnitTestsBase<AzApiDocsGetCommand
     [Fact]
     public async Task ExecuteAsync_ValidResourceType_ReturnsDocumentation()
     {
-        var expectedResult = new AzApiDocsResult
+        var expectedResult = new AzApiDocsGetCommandResult
         {
             ResourceType = "Microsoft.Compute/virtualMachines",
             ApiVersion = "2024-03-01",
@@ -65,7 +65,7 @@ public class AzApiDocsGetCommandTests : CommandUnitTestsBase<AzApiDocsGetCommand
     [Fact]
     public async Task ExecuteAsync_WithApiVersion_PassesApiVersion()
     {
-        var expectedResult = new AzApiDocsResult
+        var expectedResult = new AzApiDocsGetCommandResult
         {
             ResourceType = "Microsoft.Storage/storageAccounts",
             ApiVersion = "2023-01-01",
@@ -90,7 +90,7 @@ public class AzApiDocsGetCommandTests : CommandUnitTestsBase<AzApiDocsGetCommand
     [Fact]
     public async Task ExecuteAsync_WithExamples_IncludesExamples()
     {
-        var expectedResult = new AzApiDocsResult
+        var expectedResult = new AzApiDocsGetCommandResult
         {
             ResourceType = "Microsoft.Compute/virtualMachines",
             ApiVersion = "2024-03-01",
@@ -148,7 +148,7 @@ public class AzApiDocsGetCommandTests : CommandUnitTestsBase<AzApiDocsGetCommand
         if (shouldSucceed)
         {
             Service.GetDocumentation(Arg.Any<string>(), Arg.Any<string?>())
-                .Returns(new AzApiDocsResult { ResourceType = "Microsoft.Compute/virtualMachines", ApiVersion = "2024-03-01", Schema = "...", Summary = "..." });
+                .Returns(new AzApiDocsGetCommandResult { ResourceType = "Microsoft.Compute/virtualMachines", ApiVersion = "2024-03-01", Schema = "...", Summary = "..." });
             _examplesService.GetExamplesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
@@ -168,7 +168,7 @@ public class AzApiDocsGetCommandTests : CommandUnitTestsBase<AzApiDocsGetCommand
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {
-        var expectedResult = new AzApiDocsResult
+        var expectedResult = new AzApiDocsGetCommandResult
         {
             ResourceType = "Microsoft.Compute/virtualMachines",
             ApiVersion = "2024-03-01",
@@ -186,7 +186,7 @@ public class AzApiDocsGetCommandTests : CommandUnitTestsBase<AzApiDocsGetCommand
 
         var response = await ExecuteCommandAsync("--resource-type", "Microsoft.Compute/virtualMachines");
 
-        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AzApiDocsResult);
+        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AzApiDocsGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("Microsoft.Compute/virtualMachines", result.ResourceType);

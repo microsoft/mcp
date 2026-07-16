@@ -98,7 +98,7 @@ public class AvmVersionListCommandTests : CommandUnitTestsBase<AvmVersionListCom
 
         var response = await ExecuteCommandAsync("--module-name", "avm-res-storage-storageaccount");
 
-        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AvmVersionListResult);
+        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AvmVersionListCommandResult);
 
         Assert.Equal("avm-res-storage-storageaccount", result.ModuleName);
         Assert.NotNull(result.Versions);

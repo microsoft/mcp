@@ -77,7 +77,7 @@ public sealed class AzureRMDocsGetCommand(
                 cancellationToken).ConfigureAwait(false);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AzureRMDocsResult);
+            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AzureRMDocsGetCommandResult);
             context.Response.Message = string.Empty;
 
             context.Activity
