@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Messaging.ServiceBus.Administration;
 
-namespace Azure.Mcp.Tools.ServiceBus.Models.utilities;
+namespace Azure.Mcp.Tools.ServiceBus.Models.Utilities;
 
 public class EntityStatusConverter : JsonConverter<EntityStatus>
 {
