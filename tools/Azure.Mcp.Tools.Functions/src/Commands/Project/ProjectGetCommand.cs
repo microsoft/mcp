@@ -72,8 +72,8 @@ public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger, IFuncti
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(
-                [result],
-                FunctionsJsonContext.Default.ListProjectTemplateResult);
+                result,
+                FunctionsJsonContext.Default.ProjectGetCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)

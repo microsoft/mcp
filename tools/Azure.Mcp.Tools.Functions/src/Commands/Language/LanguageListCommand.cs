@@ -44,8 +44,8 @@ public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger, IFu
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(
-                [result],
-                FunctionsJsonContext.Default.ListLanguageListResult);
+                result,
+                FunctionsJsonContext.Default.LanguageListCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
