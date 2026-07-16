@@ -5,21 +5,14 @@ using System.Reflection;
 using System.Runtime.Versioning;
 using Azure.Core;
 using Azure.Core.Pipeline;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
-using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Core.Services.Azure;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
 public abstract class BaseAzureService
 {
-    private const int MaxAllowedRetries = 10;
-    private const double MaxAllowedNetworkTimeoutSeconds = 300;
-    private const double MaxAllowedDelaySeconds = 60;
-    private const double MinAllowedDelaySeconds = 0.1;
-    private static volatile bool s_retryLimitsDisabled = false;
     private static UserAgentPolicy s_sharedUserAgentPolicy;
     private static string? s_userAgent;
     private static volatile bool s_initialized = false;
@@ -31,7 +24,6 @@ public abstract class BaseAzureService
     private static readonly string s_framework;
     private static readonly string s_platform;
     private static readonly string s_defaultUserAgent;
-    private static readonly TimeSpan? s_defaultPollInterval = null;
 
     static BaseAzureService()
     {
@@ -43,13 +35,6 @@ public abstract class BaseAzureService
         // Initialize the default user agent policy without transport type
         s_defaultUserAgent = $"azmcp/{s_version} ({s_framework}; {s_platform})";
         s_sharedUserAgentPolicy = new UserAgentPolicy(s_defaultUserAgent);
-
-#if DEBUG
-        if (EnvironmentHelpers.IsPlaybackTesting())
-        {
-            s_defaultPollInterval = TimeSpan.Zero;
-        }
-#endif
     }
 
     /// <summary>
@@ -80,17 +65,6 @@ public abstract class BaseAzureService
             s_initialized = true;
         }
     }
-
-    /// <summary>
-    /// Disables upper bounds enforcement on retry policy values (delays, timeouts, max retries).
-    /// This method should be called once during application startup when the --dangerously-disable-retry-limits flag is set.
-    /// </summary>
-    public static void DisableRetryLimits() => s_retryLimitsDisabled = true;
-
-    /// <summary>
-    /// Resets the retry limits flag. For testing only.
-    /// </summary>
-    internal static void ResetRetryLimits() => s_retryLimitsDisabled = false;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BaseAzureService"/> class.
@@ -176,25 +150,12 @@ public abstract class BaseAzureService
 
         try
         {
-            return await TenantService.GetTokenCredentialAsync(tenantId, cancellationToken);
+            return await TenantService!.GetTokenCredentialAsync(tenantId, cancellationToken);
         }
         catch (Exception ex)
         {
             throw new Exception($"Failed to get credential: {ex.Message}", ex);
         }
-    }
-
-    /// <summary>
-    /// Gets an ARM access token for the given tenant using the ARM default scope.
-    /// </summary>
-    /// <param name="tenant">Optional tenant ID or name to authenticate against.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    protected async Task<AccessToken> GetArmAccessTokenAsync(string? tenant, CancellationToken cancellationToken)
-    {
-        var credential = await GetCredential(tenant, cancellationToken);
-        return await credential.GetTokenAsync(
-            new TokenRequestContext([TenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
-            cancellationToken);
     }
 
     protected static T AddDefaultPolicies<T>(T clientOptions) where T : ClientOptions
@@ -214,33 +175,25 @@ public abstract class BaseAzureService
     {
         if (retryPolicy != null)
         {
-            if (retryPolicy.DelaySeconds is { } delaySeconds)
+            if (retryPolicy.HasDelaySeconds)
             {
-                clientOptions.Retry.Delay = s_retryLimitsDisabled
-                    ? TimeSpan.FromSeconds(delaySeconds)
-                    : TimeSpan.FromSeconds(Math.Clamp(delaySeconds, MinAllowedDelaySeconds, MaxAllowedDelaySeconds));
+                clientOptions.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
             }
-            if (retryPolicy.MaxDelaySeconds is { } maxDelaySeconds)
+            if (retryPolicy.HasMaxDelaySeconds)
             {
-                clientOptions.Retry.MaxDelay = s_retryLimitsDisabled
-                    ? TimeSpan.FromSeconds(maxDelaySeconds)
-                    : TimeSpan.FromSeconds(Math.Clamp(maxDelaySeconds, MinAllowedDelaySeconds, MaxAllowedDelaySeconds));
+                clientOptions.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
             }
-            if (retryPolicy.MaxRetries is { } maxRetries)
+            if (retryPolicy.HasMaxRetries)
             {
-                clientOptions.Retry.MaxRetries = s_retryLimitsDisabled
-                    ? maxRetries
-                    : Math.Min(MaxAllowedRetries, maxRetries);
+                clientOptions.Retry.MaxRetries = retryPolicy.MaxRetries;
             }
-            if (retryPolicy.Mode is { } mode)
+            if (retryPolicy.HasMode)
             {
-                clientOptions.Retry.Mode = mode;
+                clientOptions.Retry.Mode = retryPolicy.Mode;
             }
-            if (retryPolicy.NetworkTimeoutSeconds is { } networkTimeoutSeconds)
+            if (retryPolicy.HasNetworkTimeoutSeconds)
             {
-                clientOptions.Retry.NetworkTimeout = s_retryLimitsDisabled
-                    ? TimeSpan.FromSeconds(networkTimeoutSeconds)
-                    : TimeSpan.FromSeconds(Math.Min(MaxAllowedNetworkTimeoutSeconds, networkTimeoutSeconds));
+                clientOptions.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
             }
         }
 
@@ -266,7 +219,6 @@ public abstract class BaseAzureService
             TokenCredential credential = await GetCredential(tenantId, cancellationToken);
             ArmClientOptions options = armClientOptions ?? new();
             options.Transport = new HttpClientTransport(TenantService.GetClient());
-            options.Environment = TenantService.CloudConfiguration.ArmEnvironment;
             ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
 
             ArmClient armClient = new(credential, defaultSubscriptionId: default, options);
@@ -294,61 +246,6 @@ public abstract class BaseAzureService
         {
             throw new ArgumentException(
                 $"Required parameter{(missingParams.Length > 1 ? "s are" : " is")} null or empty: {string.Join(", ", missingParams)}");
-        }
-    }
-
-    /// <summary>
-    /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes.
-    /// </summary>
-    /// <typeparam name="T">The return type.</typeparam>
-    /// <param name="operation">The long-running operation.</param>
-    /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
-    /// <returns>The response once the long-running operation completes.</returns>
-    protected static async Task WaitForLroCompletionAsync<T>(Operation<T> operation, CancellationToken cancellationToken = default) where T : notnull
-    {
-        ArgumentNullException.ThrowIfNull(operation);
-
-        if (s_defaultPollInterval.HasValue)
-        {
-            await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            await operation.WaitForCompletionAsync(cancellationToken);
-        }
-    }
-
-    /// <summary>
-    /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes.
-    /// </summary>
-    /// <param name="operation">The long-running operation.</param>
-    /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
-    /// <returns>The response once the long-running operation completes.</returns>
-    protected static async Task WaitForLroCompletionAsync(Operation operation, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(operation);
-
-        if (s_defaultPollInterval.HasValue)
-        {
-            await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            await operation.WaitForCompletionResponseAsync(cancellationToken);
-        }
-    }
-
-    private static async Task<Response> WaitForLroCompletionInternalAsync(Operation operation, CancellationToken cancellationToken)
-    {
-        while (true)
-        {
-            Response response = await operation.UpdateStatusAsync(cancellationToken);
-            if (operation.HasCompleted)
-            {
-                return operation.GetRawResponse();
-            }
-
-            await Task.Delay(s_defaultPollInterval!.Value, cancellationToken).ConfigureAwait(false);
         }
     }
 }

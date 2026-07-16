@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Models.Option;
-using Microsoft.Mcp.Core.Options;
+using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Commands.Subscription;
 
@@ -19,8 +18,8 @@ public abstract class SubscriptionCommand<
         command.Options.Add(OptionDefinitions.Common.Subscription);
         command.Validators.Add(commandResult =>
         {
-            // Command-level validation for presence: allow either --subscription,
-            // Azure CLI profile default, or AZURE_SUBSCRIPTION_ID env var.
+            // Command-level validation for presence: allow either --subscription or AZURE_SUBSCRIPTION_ID
+            // This mirrors the prior behavior that preferred the explicit option but fell back to env var.
             if (!CommandHelper.HasSubscriptionAvailable(commandResult))
             {
                 commandResult.AddError("Missing Required options: --subscription");

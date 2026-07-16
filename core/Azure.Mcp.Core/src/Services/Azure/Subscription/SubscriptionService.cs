@@ -1,33 +1,26 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.Resources;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Core.Services.Azure.Subscription;
 
-public class SubscriptionService(
-    ICacheService cacheService,
-    ITenantService tenantService,
-    ILogger<SubscriptionService> logger)
+public class SubscriptionService(ICacheService cacheService, ITenantService tenantService)
     : BaseAzureService(tenantService), ISubscriptionService
 {
-    private const int MaxSubscriptions = 10_000;
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-    private readonly ILogger<SubscriptionService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private const string CacheGroup = "subscription";
     private const string CacheKey = "subscriptions";
     private const string SubscriptionCacheKey = "subscription";
-    private static readonly TimeSpan s_cacheDuration = CacheDurations.Subscription;
+    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(12);
 
     public async Task<List<SubscriptionData>> GetSubscriptions(string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         // Try to get from cache first
-        var cacheKey = string.IsNullOrEmpty(tenant) ? CacheKey : CacheKeyBuilder.Build(CacheKey, tenant);
+        var cacheKey = string.IsNullOrEmpty(tenant) ? CacheKey : $"{CacheKey}_{tenant}";
         var cachedResults = await _cacheService.GetAsync<List<SubscriptionData>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
         if (cachedResults != null)
         {
@@ -42,11 +35,6 @@ public class SubscriptionService(
         await foreach (var subscription in subscriptions.WithCancellation(cancellationToken))
         {
             results.Add(subscription.Data);
-            if (results.Count >= MaxSubscriptions)
-            {
-                _logger.LogWarning("Reached maximum subscription limit of {MaxSubscriptions}. Some subscriptions may not be included in the results.", MaxSubscriptions);
-                break;
-            }
         }
 
         // Cache the results
@@ -64,8 +52,8 @@ public class SubscriptionService(
 
         // Use subscription ID for cache key
         var cacheKey = string.IsNullOrEmpty(tenant)
-            ? CacheKeyBuilder.Build(SubscriptionCacheKey, subscriptionId)
-            : CacheKeyBuilder.Build(SubscriptionCacheKey, subscriptionId, tenant);
+            ? $"{SubscriptionCacheKey}_{subscriptionId}"
+            : $"{SubscriptionCacheKey}_{subscriptionId}_{tenant}";
         var cachedSubscription = await _cacheService.GetAsync<SubscriptionResource>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
         if (cachedSubscription != null)
         {
@@ -76,7 +64,7 @@ public class SubscriptionService(
         var response = await armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscriptionId)).GetAsync(cancellationToken);
         if (response?.Value == null)
         {
-            throw new KeyNotFoundException($"Could not retrieve subscription {subscription}");
+            throw new Exception($"Could not retrieve subscription {subscription}");
         }
 
         // Cache the result using subscription ID
@@ -85,7 +73,6 @@ public class SubscriptionService(
         return response.Value;
     }
 
-    // TODO (alzimmer): Why does this method take tenant?
     public bool IsSubscriptionId(string subscription, string? tenant = null)
     {
         return Guid.TryParse(subscription, out _);
@@ -94,8 +81,8 @@ public class SubscriptionService(
     public async Task<string> GetSubscriptionIdByName(string subscriptionName, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
-        var subscription = subscriptions.FirstOrDefault(s => s.DisplayName.Equals(subscriptionName, StringComparisons.SubscriptionDisplayName)) ??
-            throw new KeyNotFoundException($"Could not find subscription with name {subscriptionName}");
+        var subscription = subscriptions.FirstOrDefault(s => s.DisplayName.Equals(subscriptionName, StringComparison.OrdinalIgnoreCase)) ??
+            throw new Exception($"Could not find subscription with name {subscriptionName}");
 
         return subscription.SubscriptionId;
     }
@@ -103,16 +90,10 @@ public class SubscriptionService(
     public async Task<string> GetSubscriptionNameById(string subscriptionId, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
-        var subscription = subscriptions.FirstOrDefault(s => s.SubscriptionId.Equals(subscriptionId, StringComparisons.SubscriptionId)) ??
-            throw new KeyNotFoundException($"Could not find subscription with ID {subscriptionId}");
+        var subscription = subscriptions.FirstOrDefault(s => s.SubscriptionId.Equals(subscriptionId, StringComparison.OrdinalIgnoreCase)) ??
+            throw new Exception($"Could not find subscription with ID {subscriptionId}");
 
         return subscription.DisplayName;
-    }
-
-    /// <inheritdoc/>
-    public string? GetDefaultSubscriptionId()
-    {
-        return CommandHelper.GetDefaultSubscription();
     }
 
     private async Task<string> GetSubscriptionId(string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)

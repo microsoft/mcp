@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.ResourceManager.Resources;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Core.Services.Azure.Tenant;
 
@@ -12,11 +12,6 @@ namespace Azure.Mcp.Core.Services.Azure.Tenant;
 /// </summary>
 public interface ITenantService
 {
-    /// <summary>
-    /// Gets the Azure cloud configuration for the current environment.
-    /// </summary>
-    IAzureCloudConfiguration CloudConfiguration { get; }
-
     /// <summary>
     /// Gets the list of all available Azure tenants.
     /// </summary>
