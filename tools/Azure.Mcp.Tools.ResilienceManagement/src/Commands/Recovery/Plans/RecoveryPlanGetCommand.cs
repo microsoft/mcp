@@ -3,9 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -30,8 +27,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logger, IResilienceManagementService resilienceManagementService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<RecoveryPlanGetOptions, RecoveryPlanGetCommand.RecoveryPlanGetCommandResult>(subscriptionResolver)
+public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logger, IResilienceManagementService resilienceManagementService)
+    : AuthenticatedCommand<RecoveryPlanGetOptions, RecoveryPlanGetCommand.RecoveryPlanGetCommandResult>
 {
     private readonly ILogger<RecoveryPlanGetCommand> _logger = logger;
     private readonly IResilienceManagementService _resilienceManagementService = resilienceManagementService;
@@ -45,7 +42,6 @@ public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logge
             {
                 var recoveryPlans = await _resilienceManagementService.ListRecoveryPlansAsync(
                     options.ServiceGroup,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -56,7 +52,6 @@ public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logge
                 var recoveryPlan = await _resilienceManagementService.GetRecoveryPlanAsync(
                     options.ServiceGroup,
                     options.Name,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -70,8 +65,8 @@ public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logge
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting recovery plan(s). ServiceGroup: {ServiceGroup}, Name: {Name}, Subscription: {Subscription}.",
-                options.ServiceGroup, options.Name, options.Subscription);
+                "Error getting recovery plan(s). ServiceGroup: {ServiceGroup}, Name: {Name}.",
+                options.ServiceGroup, options.Name);
             HandleException(context, ex);
         }
 
@@ -80,7 +75,7 @@ public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logge
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        KeyNotFoundException => "Recovery plan not found. Verify the recovery plan name, service group, subscription, and that you have access.",
+        KeyNotFoundException => "Recovery plan not found. Verify the recovery plan name, service group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed getting the recovery plan. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
@@ -89,5 +84,5 @@ public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logge
         _ => base.GetErrorMessage(ex)
     };
 
-    public record RecoveryPlanGetCommandResult(List<ResourceSummary>? RecoveryPlans = null, JsonElement RecoveryPlan = default);
+    public sealed record RecoveryPlanGetCommandResult(List<ResourceSummary>? RecoveryPlans = null, JsonElement RecoveryPlan = default);
 }

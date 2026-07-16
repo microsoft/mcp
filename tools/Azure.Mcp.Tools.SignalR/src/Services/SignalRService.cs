@@ -8,8 +8,6 @@ using Azure.Mcp.Tools.SignalR.Models;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.SignalR;
 using Azure.ResourceManager.SignalR.Models;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Identity;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Caching;
@@ -22,14 +20,12 @@ namespace Azure.Mcp.Tools.SignalR.Services;
 public sealed class SignalRService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ICacheService cacheService,
-    ILogger<SignalRService> logger) : BaseAzureService(tenantService), ISignalRService
+    ICacheService cacheService) : BaseAzureService(tenantService), ISignalRService
 {
     private readonly ISubscriptionService _subscriptionService =
         subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
 
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-    private readonly ILogger<SignalRService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private const string CacheGroup = "signalr";
     private static readonly TimeSpan s_cacheDuration = CacheDurations.ServiceData;
@@ -39,7 +35,6 @@ public sealed class SignalRService(
         string? resourceGroup,
         string? signalRName,
         string? tenant = null,
-        AuthMethod? authMethod = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
@@ -90,8 +85,8 @@ public sealed class SignalRService(
         {
             ValidateRequiredParameters((nameof(signalRName), signalRName), (nameof(resourceGroup), resourceGroup));
             var cacheKey = string.IsNullOrEmpty(tenant)
-                ? CacheKeyBuilder.Build(subscription, resourceGroup!, signalRName)
-                : CacheKeyBuilder.Build(subscription, tenant, resourceGroup!, signalRName);
+                ? CacheKeyBuilder.Build(subscription, resourceGroup, signalRName)
+                : CacheKeyBuilder.Build(subscription, tenant, resourceGroup, signalRName);
 
             var cachedResults = await _cacheService.GetAsync<List<Runtime>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)

@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Options.UsagePlans;
 
-public class UsagePlanGetOptions : ISubscriptionOption
+public sealed class UsagePlanGetOptions : ISubscriptionOption
 {
     [Option(Description = "The name of the resource group. If omitted (and no usage plan name is given), all usage plans in the subscription are listed (id and name only).")]
     public string? ResourceGroup { get; set; }

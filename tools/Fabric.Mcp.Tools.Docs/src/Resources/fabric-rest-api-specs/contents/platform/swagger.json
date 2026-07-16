@@ -7732,7 +7732,7 @@
     "/workspaces/{workspaceId}/managedPrivateEndpoints": {
       "get": {
         "summary": "Returns a list of managed private endpoints associated with the specified workspace.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "ManagedPrivateEndpoints"
         ],
@@ -7798,7 +7798,7 @@
       },
       "post": {
         "summary": "Creates a managed private endpoint in the specified workspace.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All.\n\n## Limitations \n- To create managed private endpoint the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All.\n\n## Limitations \n- To create managed private endpoint the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "ManagedPrivateEndpoints"
         ],
@@ -7871,7 +7871,7 @@
     "/workspaces/{workspaceId}/managedPrivateEndpoints/{managedPrivateEndpointId}": {
       "delete": {
         "summary": "Deletes the specified managed private endpoint.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "ManagedPrivateEndpoints"
         ],
@@ -7929,7 +7929,7 @@
       },
       "get": {
         "summary": "Gets the specified managed private endpoint.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\nThe caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\nThe caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "ManagedPrivateEndpoints"
         ],
@@ -8103,6 +8103,9 @@
           "Virtual network gateway example": {
             "$ref": "./examples/connections/CreateVirtualNetworkGatewayConnection.json"
           },
+          "Streaming virtual network gateway example": {
+            "$ref": "./examples/connections/CreateStreamingVirtualNetworkGatewayConnection.json"
+          },
           "Cloud example": {
             "$ref": "./examples/connections/CreateCloudConnection.json"
           },
@@ -8235,6 +8238,9 @@
           "Virtual network gateway example": {
             "$ref": "./examples/connections/UpdateVirtualNetworkGatewayConnection.json"
           },
+          "Streaming virtual network gateway example": {
+            "$ref": "./examples/connections/UpdateStreamingVirtualNetworkGatewayConnection.json"
+          },
           "Shareable cloud example": {
             "$ref": "./examples/connections/UpdateShareableCloudConnection.json"
           },
@@ -8297,7 +8303,7 @@
     "/connections/{connectionId}/testConnection": {
       "post": {
         "summary": "Tests the connection.",
-        "description": "Provides the status of the specified connection.\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\nPermission to read the connection, or admin permission for the gateway that hosts the connection.\n\n## Required Delegated Scopes \n\nConnection.Read.All or Connection.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "Provides the status of the specified connection.\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n[!NOTE]\n> Connections that route through a streaming virtual network gateway (`connectivityType` = `StreamingVirtualNetworkGateway`) are not supported.\n\n## Permissions\n\nPermission to read the connection, or admin permission for the gateway that hosts the connection.\n\n## Required Delegated Scopes \n\nConnection.Read.All or Connection.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Connections"
         ],
@@ -8556,6 +8562,9 @@
         "x-ms-examples": {
           "Virtual network gateway example": {
             "$ref": "./examples/gateways/CreateVirtualNetworkGateway.json"
+          },
+          "Streaming virtual network gateway example": {
+            "$ref": "./examples/gateways/CreateStreamingVirtualNetworkGateway.json"
           }
         }
       }
@@ -8679,6 +8688,9 @@
           },
           "Virtual network gateway example": {
             "$ref": "./examples/gateways/UpdateVirtualNetworkGateway.json"
+          },
+          "Streaming virtual network gateway example": {
+            "$ref": "./examples/gateways/UpdateStreamingVirtualNetworkGateway.json"
           }
         }
       },
@@ -8917,6 +8929,239 @@
         "x-ms-examples": {
           "Example": {
             "$ref": "./examples/gateways/DeleteGatewayMember.json"
+          }
+        }
+      }
+    },
+    "/gateways/{gatewayId}/checkStatus": {
+      "post": {
+        "summary": "Checks the status of the specified gateway.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\nThe caller must have permission for the gateway.\n\n## Required Delegated Scopes\n\nGateway.Read.All or Gateway.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Gateways"
+        ],
+        "operationId": "Gateways_CheckGatewayStatus",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "gatewayId",
+            "description": "The ID of the gateway.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/gateways.json#/definitions/GatewayStatusResponse"
+            }
+          },
+          "202": {
+            "description": "Request accepted, status check is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status. Can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID. Can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EntityNotFound - The requested resource could not be found.\n\n* InsufficientPermissionsToManageGateway - The caller has insufficient permissions to manage this gateway.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Virtual network gateway example": {
+            "$ref": "./examples/gateways/CheckGatewayStatusVnet.json"
+          },
+          "On premise data gateway example when gateway cluster is online but one of the gateway member encounters an error": {
+            "$ref": "./examples/gateways/CheckGatewayStatusOnPremise.json"
+          }
+        }
+      }
+    },
+    "/gateways/{gatewayId}/members/{gatewayMemberId}/checkStatus": {
+      "post": {
+        "summary": "Checks the status of the specified gateway member.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\nThe caller must have permission for the gateway.\n\n## Required Delegated Scopes\n\nGateway.Read.All or Gateway.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Gateways"
+        ],
+        "operationId": "Gateways_CheckGatewayMemberStatus",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "gatewayId",
+            "description": "The ID of the gateway.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "gatewayMemberId",
+            "description": "The ID of the gateway member.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/gateways.json#/definitions/GatewayStatusResponse"
+            }
+          },
+          "202": {
+            "description": "Request accepted, status check is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status. Can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID. Can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EntityNotFound - The requested resource could not be found.\n\n* InsufficientPermissionsToManageGateway - The caller has insufficient permissions to manage this gateway.\n\n* UnsupportedGatewayType - This operation is not supported for the vnet gateway type.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Online gateway member example": {
+            "$ref": "./examples/gateways/CheckGatewayMemberStatus.json"
+          },
+          "Offline gateway member example": {
+            "$ref": "./examples/gateways/CheckGatewayMemberStatusOffline.json"
+          }
+        }
+      }
+    },
+    "/gateways/{gatewayId}/restart": {
+      "post": {
+        "summary": "Restarts the specified gateway.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\nThe caller must have admin permission for the gateway.\n\n## Required Delegated Scopes\n\nGateway.ReadWrite.All\n\n## Limitations\n\nThis operation is only supported for vnet data gateway.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Gateways"
+        ],
+        "operationId": "Gateways_RestartGateway",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "gatewayId",
+            "description": "The ID of the gateway.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully restarted."
+          },
+          "202": {
+            "description": "Accepted. Gateway restart operation has been initiated.",
+            "headers": {
+              "Location": {
+                "description": "The URI to call to fetch status on the execution job.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID. Can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "Number of seconds to wait before next call to fetch the status."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EntityNotFound - The requested resource could not be found.\n\n* InsufficientPermissionsToManageGateway - The caller has insufficient permissions to manage this gateway.\n\n* UnsupportedGatewayType - This operation is not supported for on-premise data gateways.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Example": {
+            "$ref": "./examples/gateways/RestartGateway.json"
           }
         }
       }
@@ -9253,6 +9498,77 @@
         "x-ms-examples": {
           "Delete gateway role assignment example": {
             "$ref": "./examples/gateways/DeleteGatewayRoleAssignment.json"
+          }
+        }
+      }
+    },
+    "/gateways/{gatewayId}/shutdown": {
+      "post": {
+        "summary": "Shuts down the specified gateway.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\nThe caller must have admin permission for the gateway.\n\n## Required Delegated Scopes\n\nGateway.ReadWrite.All\n\n## Limitations\n\nThis operation is only supported for vnet data gateway.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Gateways"
+        ],
+        "operationId": "Gateways_ShutdownGateway",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "gatewayId",
+            "description": "The ID of the gateway.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully shutdown."
+          },
+          "202": {
+            "description": "Accepted. Gateway shutdown operation has been initiated.",
+            "headers": {
+              "Location": {
+                "description": "The URI to call to fetch status on the execution job.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID. Can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "Number of seconds to wait before next call to fetch the status."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EntityNotFound - The requested resource could not be found.\n\n* InsufficientPermissionsToManageGateway - The caller has insufficient permissions to manage this gateway.\n\n* UnsupportedGatewayType - This operation is not supported for on-premise data gateways.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Example": {
+            "$ref": "./examples/gateways/ShutdownGateway.json"
           }
         }
       }
@@ -10369,6 +10685,177 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/encryption": {
+      "get": {
+        "summary": "Gets the workspace Customer-Managed Key (CMK) encryption settings.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nReturns the CMK encryption settings and status for the specified workspace. \n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workspaces"
+        ],
+        "operationId": "Workspaces_GetWorkspaceEncryption",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully. If encryption is in progress, the response includes a `Retry-After` header.\n\n---\n**Headers:**\n\n**Retry-After** `integer` - Indicates the number of seconds after which the client can retry to get the encryption status.",
+            "schema": {
+              "$ref": "./definitions/workspaceCmk.json#/definitions/WorkspaceEncryptionDetail"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get workspace CMK encryption active example": {
+            "$ref": "./examples/platform/GetWorkspaceEncryptionSuccessResult.json"
+          },
+          "Get workspace CMK encryption in progress example": {
+            "$ref": "./examples/platform/GetWorkspaceEncryptionInprogressSuccessResult.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/encryption/assign": {
+      "post": {
+        "summary": "Assigns a Customer-Managed Key (CMK) to a workspace.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nEnables CMK encryption for the workspace or rotates the encryption key for the workspace. \n\n## Permissions\n\nThe caller must have an *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workspaces"
+        ],
+        "operationId": "Workspaces_AssignWorkspaceEncryption",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "assignWorkspaceEncryptionRequest",
+            "description": "Assign workspace encryption request payload.",
+            "schema": {
+              "$ref": "./definitions/workspaceCmk.json#/definitions/AssignWorkspaceEncryptionRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Assign workspace CMK encryption example": {
+            "$ref": "./examples/platform/AssignWorkspaceEncryption.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/encryption/reset": {
+      "post": {
+        "summary": "Resets the workspace encryption by removing the Customer-Managed Key (CMK) encryption configuration.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nAfter reset, the workspace data remains encrypted using Fabric's default Microsoft-managed keys. \n\n## Permissions\n\nThe caller must have an *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workspaces"
+        ],
+        "operationId": "Workspaces_ResetWorkspaceEncryption",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Reset workspace CMK encryption example": {
+            "$ref": "./examples/platform/ResetWorkspaceEncryption.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/networking/communicationPolicy/inbound/firewall": {
       "get": {
         "summary": "Returns the IP firewall rules for the workspace. This API is designed to help workspace administrators view the effective IP firewall rules. This feature is currently in preview.",
@@ -10482,11 +10969,149 @@
           }
         }
       }
+    },
+    "/workspaces/{workspaceId}/items/{itemId}/relations/downstream?beta=true": {
+      "get": {
+        "tags": [
+          "Items"
+        ],
+        "summary": "Gets downstream relations for an item.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\nReturns all items that are downstream of the specified item, including the relation edges and referenced workspaces.\n\n## Permissions\n\nThe caller must have *read* permissions for the item.\n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "Items_Get_Downstream_Relations_(beta)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "description": "The item ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/relations.json#/definitions/RelationsResponse"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InsufficientPrivileges - The caller does not have sufficient permissions to access the item.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get downstream relations example": {
+            "$ref": "./examples/platform/GetDownstreamRelations.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/items/{itemId}/relations/upstream?beta=true": {
+      "get": {
+        "tags": [
+          "Items"
+        ],
+        "summary": "Gets upstream relations for an item.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\nReturns all items that are upstream of the specified item, including the relation edges and referenced workspaces.\n\n## Permissions\n\nThe caller must have *read* permissions for the item.\n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "Items_Get_Upstream_Relations_(beta)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "description": "The item ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/relations.json#/definitions/RelationsResponse"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InsufficientPrivileges - The caller does not have sufficient permissions to access the item.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get upstream relations example": {
+            "$ref": "./examples/platform/GetUpstreamRelations.json"
+          }
+        }
+      }
     }
   },
   "responses": {},
   "security": [],
   "tags": []
 }
-
-

@@ -2,9 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Goals.Templates;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -30,8 +27,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Templates;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class GoalTemplateGetCommand(ILogger<GoalTemplateGetCommand> logger, IResilienceManagementService resilienceManagementService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<GoalTemplateGetOptions, GoalTemplateGetCommand.GoalTemplateGetCommandResult>(subscriptionResolver)
+public sealed class GoalTemplateGetCommand(ILogger<GoalTemplateGetCommand> logger, IResilienceManagementService resilienceManagementService)
+    : AuthenticatedCommand<GoalTemplateGetOptions, GoalTemplateGetCommand.GoalTemplateGetCommandResult>
 {
     private readonly ILogger<GoalTemplateGetCommand> _logger = logger;
     private readonly IResilienceManagementService _resilienceManagementService = resilienceManagementService;
@@ -45,7 +42,6 @@ public sealed class GoalTemplateGetCommand(ILogger<GoalTemplateGetCommand> logge
             {
                 var goalTemplates = await _resilienceManagementService.ListGoalTemplatesAsync(
                     options.ServiceGroup,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -56,7 +52,6 @@ public sealed class GoalTemplateGetCommand(ILogger<GoalTemplateGetCommand> logge
                 var goalTemplate = await _resilienceManagementService.GetGoalTemplateAsync(
                     options.ServiceGroup,
                     options.Name,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -70,8 +65,8 @@ public sealed class GoalTemplateGetCommand(ILogger<GoalTemplateGetCommand> logge
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting goal template(s). ServiceGroup: {ServiceGroup}, Name: {Name}, Subscription: {Subscription}.",
-                options.ServiceGroup, options.Name, options.Subscription);
+                "Error getting goal template(s). ServiceGroup: {ServiceGroup}, Name: {Name}.",
+                options.ServiceGroup, options.Name);
             HandleException(context, ex);
         }
 
@@ -80,7 +75,7 @@ public sealed class GoalTemplateGetCommand(ILogger<GoalTemplateGetCommand> logge
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        KeyNotFoundException => "Goal template not found. Verify the goal template name, service group, subscription, and that you have access.",
+        KeyNotFoundException => "Goal template not found. Verify the goal template name, service group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed getting the goal template. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
@@ -89,5 +84,5 @@ public sealed class GoalTemplateGetCommand(ILogger<GoalTemplateGetCommand> logge
         _ => base.GetErrorMessage(ex)
     };
 
-    public record GoalTemplateGetCommandResult(List<ResourceSummary>? GoalTemplates = null, GoalTemplateInfo? GoalTemplate = null);
+    public sealed record GoalTemplateGetCommandResult(List<ResourceSummary>? GoalTemplates = null, GoalTemplateInfo? GoalTemplate = null);
 }

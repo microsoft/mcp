@@ -13,7 +13,8 @@
                             "gatewayId": "4f8b5d6e-8e99-4817-8b9e-6b6a613be707",
                             "encryptedCredentials": "************************************"
                         },
-                        {   "gatewayId": "c6961028-1309-4183-9799-a0b0fa28a235",
+                        {
+                            "gatewayId": "c6961028-1309-4183-9799-a0b0fa28a235",
                             "encryptedCredentials": "************************************"
                         }
                     ]
@@ -28,7 +29,7 @@
                 "displayName": "ContosoSalesOnPremisesConnection",
                 "gatewayId": "4f8b5d6e-8e99-4817-8b9e-6b6a613be707",
                 "connectivityType": "OnPremisesGateway",
-                "connectionDetails":{
+                "connectionDetails": {
                     "type": "SQL",
                     "path": "contoso.database.windows.net;sales"
                 },
@@ -38,6 +39,13 @@
                     "singleSignOnType": "None",
                     "connectionEncryption": "NotEncrypted",
                     "skipTestConnection": false
+                },
+                "connectionRecency": {
+                    "createdDateTime": "2023-05-23T16:22:20Z",
+                    "lastBoundDateTime": "2023-05-26T16:22:20Z",
+                    "lastCredentialUsedDateTime": "2023-05-27T16:22:20Z",
+                    "myLastBoundDateTime": "2023-05-24T16:22:20Z",
+                    "myLastCredentialUsedDateTime": "2023-05-25T16:22:20Z"
                 }
             }
         }
