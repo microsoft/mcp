@@ -86,7 +86,7 @@ public sealed class ShortcutCreateDataverseCommand(
             };
 
             var result = await _oneLakeService.CreateShortcutAsync(options.WorkspaceId!, options.ItemId!, shortcut, options.ConflictPolicy, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeShortcut);
+            context.Response.Results = ResponseResult.Create(new ShortcutCreateDataverseCommandResult(result), OneLakeJsonContext.Default.ShortcutCreateDataverseCommandResult);
         }
         catch (Exception ex)
         {
@@ -96,4 +96,6 @@ public sealed class ShortcutCreateDataverseCommand(
 
         return context.Response;
     }
+
+    public record ShortcutCreateDataverseCommandResult(OneLakeShortcut Shortcut);
 }

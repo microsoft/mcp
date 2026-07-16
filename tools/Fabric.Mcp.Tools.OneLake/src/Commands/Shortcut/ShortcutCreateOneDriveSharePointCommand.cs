@@ -87,7 +87,7 @@ public sealed class ShortcutCreateOneDriveSharePointCommand(
             };
 
             var result = await _oneLakeService.CreateShortcutAsync(options.WorkspaceId!, options.ItemId!, shortcut, options.ConflictPolicy, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeShortcut);
+            context.Response.Results = ResponseResult.Create(new ShortcutCreateOneDriveSharePointCommandResult(result), OneLakeJsonContext.Default.ShortcutCreateOneDriveSharePointCommandResult);
         }
         catch (Exception ex)
         {
@@ -97,4 +97,6 @@ public sealed class ShortcutCreateOneDriveSharePointCommand(
 
         return context.Response;
     }
+
+    public record ShortcutCreateOneDriveSharePointCommandResult(OneLakeShortcut Shortcut);
 }

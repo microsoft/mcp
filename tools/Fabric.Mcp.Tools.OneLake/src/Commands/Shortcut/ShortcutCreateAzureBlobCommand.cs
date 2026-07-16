@@ -84,7 +84,7 @@ public sealed class ShortcutCreateAzureBlobCommand(
             };
 
             var result = await _oneLakeService.CreateShortcutAsync(options.WorkspaceId!, options.ItemId!, shortcut, options.ConflictPolicy, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeShortcut);
+            context.Response.Results = ResponseResult.Create(new ShortcutCreateAzureBlobCommandResult(result), OneLakeJsonContext.Default.ShortcutCreateAzureBlobCommandResult);
         }
         catch (Exception ex)
         {
@@ -94,4 +94,6 @@ public sealed class ShortcutCreateAzureBlobCommand(
 
         return context.Response;
     }
+
+    public record ShortcutCreateAzureBlobCommandResult(OneLakeShortcut Shortcut);
 }

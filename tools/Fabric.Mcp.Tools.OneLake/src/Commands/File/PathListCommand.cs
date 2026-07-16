@@ -32,7 +32,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     LocalRequired = false,
     Secret = false)]
 public sealed class PathListCommand(IOneLakeService service, ILogger<PathListCommand> logger)
-    : AuthenticatedCommand<PathListOptions, PathListCommand.PathListResult>
+    : AuthenticatedCommand<PathListOptions, PathListCommand.PathListCommandResult>
 {
     private readonly ILogger<PathListCommand> _logger = logger;
     private readonly IOneLakeService _service = service;
@@ -75,7 +75,7 @@ public sealed class PathListCommand(IOneLakeService service, ILogger<PathListCom
 
                 context.Response.Results = ResponseResult.Create(
                     new() { RawResponse = rawResponse },
-                    MinimalJsonContext.Default.PathListResult);
+                    MinimalJsonContext.Default.PathListCommandResult);
                 return context.Response;
             }
 
@@ -102,7 +102,7 @@ public sealed class PathListCommand(IOneLakeService service, ILogger<PathListCom
 
             context.Response.Results = ResponseResult.Create(
                 new(fileSystemItems),
-                MinimalJsonContext.Default.PathListResult);
+                MinimalJsonContext.Default.PathListCommandResult);
         }
         catch (Exception ex)
         {
@@ -114,17 +114,17 @@ public sealed class PathListCommand(IOneLakeService service, ILogger<PathListCom
         return context.Response;
     }
 
-    public record PathListResult
+    public record PathListCommandResult
     {
         public List<FileSystemItem>? Items { get; init; }
         public string? RawResponse { get; init; }
 
-        public PathListResult(List<FileSystemItem> items)
+        public PathListCommandResult(List<FileSystemItem> items)
         {
             Items = items;
         }
 
-        public PathListResult()
+        public PathListCommandResult()
         {
         }
     }

@@ -73,7 +73,7 @@ public sealed class ShortcutListCommand(
                     .ToList();
             }
 
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.ShortcutListResponse);
+            context.Response.Results = ResponseResult.Create(new ShortcutListCommandResult(result.Value, result.ContinuationToken, result.ContinuationUri), OneLakeJsonContext.Default.ShortcutListCommandResult);
         }
         catch (Exception ex)
         {
@@ -99,5 +99,7 @@ public sealed class ShortcutListCommand(
 
         return shortcut.Path.StartsWith("Tables/", StringComparison.OrdinalIgnoreCase);
     }
+
+    public record ShortcutListCommandResult(List<OneLakeShortcut>? Shortcuts, string? ContinuationToken, string? ContinuationUri);
 }
 

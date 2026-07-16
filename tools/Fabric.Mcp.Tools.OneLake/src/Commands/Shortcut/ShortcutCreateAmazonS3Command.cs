@@ -83,7 +83,7 @@ public sealed class ShortcutCreateAmazonS3Command(
             };
 
             var result = await _oneLakeService.CreateShortcutAsync(options.WorkspaceId!, options.ItemId!, shortcut, options.ConflictPolicy, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeShortcut);
+            context.Response.Results = ResponseResult.Create(new ShortcutCreateAmazonS3CommandResult(result), OneLakeJsonContext.Default.ShortcutCreateAmazonS3CommandResult);
         }
         catch (Exception ex)
         {
@@ -93,4 +93,6 @@ public sealed class ShortcutCreateAmazonS3Command(
 
         return context.Response;
     }
+
+    public record ShortcutCreateAmazonS3CommandResult(OneLakeShortcut Shortcut);
 }

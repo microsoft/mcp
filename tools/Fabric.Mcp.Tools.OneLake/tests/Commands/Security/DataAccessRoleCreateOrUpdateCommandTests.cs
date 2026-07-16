@@ -103,8 +103,8 @@ public class DataAccessRoleCreateOrUpdateCommandTests : CommandUnitTestsBase<Dat
             "--item-id", "item1",
             "--role-definition", ValidRoleJson);
 
-        var result = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.DataAccessRole);
-        Assert.Equal("TestRole", result.Name);
+        var result = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.DataAccessRoleCreateOrUpdateCommandResult);
+        Assert.Equal("TestRole", result.Role.Name);
         await Service.Received(1).CreateOrUpdateDataAccessRoleAsync("ws1", "item1", Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 

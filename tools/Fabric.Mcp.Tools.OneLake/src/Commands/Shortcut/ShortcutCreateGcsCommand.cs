@@ -84,7 +84,7 @@ public sealed class ShortcutCreateGcsCommand(
             };
 
             var result = await _oneLakeService.CreateShortcutAsync(options.WorkspaceId!, options.ItemId!, shortcut, options.ConflictPolicy, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeShortcut);
+            context.Response.Results = ResponseResult.Create(new ShortcutCreateGcsCommandResult(result), OneLakeJsonContext.Default.ShortcutCreateGcsCommandResult);
         }
         catch (Exception ex)
         {
@@ -94,4 +94,6 @@ public sealed class ShortcutCreateGcsCommand(
 
         return context.Response;
     }
+
+    public record ShortcutCreateGcsCommandResult(OneLakeShortcut Shortcut);
 }

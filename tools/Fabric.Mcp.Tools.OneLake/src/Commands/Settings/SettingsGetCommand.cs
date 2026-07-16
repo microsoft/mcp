@@ -75,7 +75,7 @@ public sealed class SettingsGetCommand(
         {
 
             var result = await _oneLakeService.GetSettingsAsync(options.WorkspaceId!, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeSettings);
+            context.Response.Results = ResponseResult.Create(new SettingsGetCommandResult(result), OneLakeJsonContext.Default.SettingsGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -85,5 +85,7 @@ public sealed class SettingsGetCommand(
 
         return context.Response;
     }
+
+    public record SettingsGetCommandResult(OneLakeSettings Settings);
 }
 

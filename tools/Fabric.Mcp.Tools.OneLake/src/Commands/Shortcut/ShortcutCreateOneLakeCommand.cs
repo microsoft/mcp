@@ -87,7 +87,7 @@ public sealed class ShortcutCreateOneLakeCommand(
             };
 
             var result = await _oneLakeService.CreateShortcutAsync(options.WorkspaceId!, options.ItemId!, shortcut, options.ConflictPolicy, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeShortcut);
+            context.Response.Results = ResponseResult.Create(new ShortcutCreateOneLakeCommandResult(result), OneLakeJsonContext.Default.ShortcutCreateOneLakeCommandResult);
         }
         catch (Exception ex)
         {
@@ -97,4 +97,6 @@ public sealed class ShortcutCreateOneLakeCommand(
 
         return context.Response;
     }
+
+    public record ShortcutCreateOneLakeCommandResult(OneLakeShortcut Shortcut);
 }
