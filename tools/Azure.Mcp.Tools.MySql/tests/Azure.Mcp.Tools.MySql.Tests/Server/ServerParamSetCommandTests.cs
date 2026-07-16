@@ -2,17 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Server;
 using Azure.Mcp.Tools.MySql.Services;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.MySql.Tests.Server;
 
-public class ServerParamSetCommandTests : CommandUnitTestsBase<ServerParamSetCommand, IMySqlService>
+public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<ServerParamSetCommand, IMySqlService>
 {
     [Fact]
     public async Task ExecuteAsync_SetsParameter_WhenSuccessful()
