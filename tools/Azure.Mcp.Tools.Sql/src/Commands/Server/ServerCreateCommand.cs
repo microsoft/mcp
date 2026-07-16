@@ -78,7 +78,7 @@ public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCr
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(server), SqlJsonContext.Default.ServerCreateResult);
+            context.Response.Results = ResponseResult.Create(new(server), SqlJsonContext.Default.ServerCreateCommandResult);
         }
         catch (Exception ex)
         {
@@ -111,5 +111,5 @@ public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCr
         _ => base.GetStatusCode(ex)
     };
 
-    internal record ServerCreateResult(SqlServer Server);
+    internal record ServerCreateCommandResult(SqlServer Server);
 }

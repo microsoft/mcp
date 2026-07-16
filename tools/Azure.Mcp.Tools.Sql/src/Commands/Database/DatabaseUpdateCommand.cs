@@ -88,7 +88,7 @@ public sealed class DatabaseUpdateCommand(ISqlService sqlService, ILogger<Databa
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseUpdateResult);
+            context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseUpdateCommandResult);
         }
         catch (Exception ex)
         {
@@ -113,5 +113,5 @@ public sealed class DatabaseUpdateCommand(ISqlService sqlService, ILogger<Databa
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseUpdateResult(SqlDatabase Database);
+    internal record DatabaseUpdateCommandResult(SqlDatabase Database);
 }

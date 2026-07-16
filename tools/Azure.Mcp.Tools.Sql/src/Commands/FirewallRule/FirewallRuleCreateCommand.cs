@@ -121,7 +121,7 @@ public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<Fi
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(firewallRule), SqlJsonContext.Default.FirewallRuleCreateResult);
+            context.Response.Results = ResponseResult.Create(new(firewallRule), SqlJsonContext.Default.FirewallRuleCreateCommandResult);
         }
         catch (Exception ex)
         {
@@ -154,5 +154,5 @@ public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<Fi
         _ => base.GetStatusCode(ex)
     };
 
-    internal record FirewallRuleCreateResult(SqlServerFirewallRule FirewallRule);
+    internal record FirewallRuleCreateCommandResult(SqlServerFirewallRule FirewallRule);
 }

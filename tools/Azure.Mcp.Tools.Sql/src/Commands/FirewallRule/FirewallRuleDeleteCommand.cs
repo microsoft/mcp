@@ -65,7 +65,7 @@ public sealed class FirewallRuleDeleteCommand(ISqlService sqlService, ILogger<Fi
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(deleted, options.FirewallRuleName!), SqlJsonContext.Default.FirewallRuleDeleteResult);
+            context.Response.Results = ResponseResult.Create(new(deleted, options.FirewallRuleName!), SqlJsonContext.Default.FirewallRuleDeleteCommandResult);
         }
         catch (Exception ex)
         {
@@ -96,5 +96,5 @@ public sealed class FirewallRuleDeleteCommand(ISqlService sqlService, ILogger<Fi
         _ => base.GetStatusCode(ex)
     };
 
-    internal record FirewallRuleDeleteResult(bool Deleted, string RuleName);
+    internal record FirewallRuleDeleteCommandResult(bool Deleted, string RuleName);
 }

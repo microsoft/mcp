@@ -66,7 +66,7 @@ public sealed class DatabaseRenameCommand(ISqlService sqlService, ILogger<Databa
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseRenameResult);
+            context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseRenameCommandResult);
         }
         catch (Exception ex)
         {
@@ -93,5 +93,5 @@ public sealed class DatabaseRenameCommand(ISqlService sqlService, ILogger<Databa
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseRenameResult(SqlDatabase Database);
+    internal record DatabaseRenameCommandResult(SqlDatabase Database);
 }

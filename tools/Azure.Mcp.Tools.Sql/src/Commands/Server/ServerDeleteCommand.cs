@@ -76,7 +76,7 @@ public sealed class ServerDeleteCommand(ISqlService sqlService, ILogger<ServerDe
 
             if (deleted)
             {
-                context.Response.Results = ResponseResult.Create(new($"SQL server '{options.Server}' was successfully deleted.", true), SqlJsonContext.Default.ServerDeleteResult);
+                context.Response.Results = ResponseResult.Create(new($"SQL server '{options.Server}' was successfully deleted.", true), SqlJsonContext.Default.ServerDeleteCommandResult);
             }
             else
             {
@@ -115,5 +115,5 @@ public sealed class ServerDeleteCommand(ISqlService sqlService, ILogger<ServerDe
         _ => base.GetStatusCode(ex)
     };
 
-    internal record ServerDeleteResult(string Message, bool Success);
+    internal record ServerDeleteCommandResult(string Message, bool Success);
 }

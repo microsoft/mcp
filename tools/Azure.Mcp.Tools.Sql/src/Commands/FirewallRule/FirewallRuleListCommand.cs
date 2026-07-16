@@ -49,7 +49,7 @@ public sealed class FirewallRuleListCommand(ISqlService sqlService, ILogger<Fire
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(firewallRules ?? []), SqlJsonContext.Default.FirewallRuleListResult);
+            context.Response.Results = ResponseResult.Create(new(firewallRules ?? []), SqlJsonContext.Default.FirewallRuleListCommandResult);
         }
         catch (Exception ex)
         {
@@ -72,5 +72,5 @@ public sealed class FirewallRuleListCommand(ISqlService sqlService, ILogger<Fire
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record FirewallRuleListResult(List<SqlServerFirewallRule> FirewallRules);
+    internal record FirewallRuleListCommandResult(List<SqlServerFirewallRule> FirewallRules);
 }

@@ -87,7 +87,7 @@ public sealed class DatabaseCreateCommand(ISqlService sqlService, ILogger<Databa
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseCreateResult);
+            context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseCreateCommandResult);
         }
         catch (Exception ex)
         {
@@ -114,5 +114,5 @@ public sealed class DatabaseCreateCommand(ISqlService sqlService, ILogger<Databa
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseCreateResult(SqlDatabase Database);
+    internal record DatabaseCreateCommandResult(SqlDatabase Database);
 }
