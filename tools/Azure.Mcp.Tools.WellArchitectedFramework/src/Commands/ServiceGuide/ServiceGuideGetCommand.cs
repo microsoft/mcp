@@ -66,7 +66,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             if (string.IsNullOrWhiteSpace(options.Service))
             {
                 var listResponse = GetServiceListResponse(supportedServicesBulletList);
-                context.Response.Results = ResponseResult.Create([listResponse], WellArchitectedFrameworkJsonContext.Default.ListString);
+                context.Response.Results = ResponseResult.Create(new ServiceGuideGetCommandResult([listResponse]), WellArchitectedFrameworkJsonContext.Default.ServiceGuideGetCommandResult);
             }
             else
             {
@@ -78,7 +78,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
                     ? GetGuidanceNotAvailable(serviceName, supportedServicesBulletList)
                     : GetGuidanceAvailable(serviceName, serviceGuideUrl);
 
-                context.Response.Results = ResponseResult.Create([guidance], WellArchitectedFrameworkJsonContext.Default.ListString);
+                context.Response.Results = ResponseResult.Create(new ServiceGuideGetCommandResult([guidance]), WellArchitectedFrameworkJsonContext.Default.ServiceGuideGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -142,4 +142,6 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
 
         return supportedServicesBulletList;
     }
+
+    internal record ServiceGuideGetCommandResult(List<string> Guidance);
 }

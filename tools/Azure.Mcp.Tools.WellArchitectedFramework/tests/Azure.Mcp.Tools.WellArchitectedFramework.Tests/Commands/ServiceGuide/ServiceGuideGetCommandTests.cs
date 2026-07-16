@@ -82,13 +82,13 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
         var response = await ExecuteCommandAsync("");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, WellArchitectedFrameworkJsonContext.Default.ListString);
+        var result = ValidateAndDeserializeResponse(response, WellArchitectedFrameworkJsonContext.Default.ServiceGuideGetCommandResult);
 
-        Assert.Single(result);
-        Assert.Contains("Azure Well-Architected Framework service guides are available for the following services:", result[0]);
-        Assert.Contains("To get guidance for a specific service, use this command with the --service <service-name> option", result[0]);
+        Assert.Single(result.Guidance);
+        Assert.Contains("Azure Well-Architected Framework service guides are available for the following services:", result.Guidance[0]);
+        Assert.Contains("To get guidance for a specific service, use this command with the --service <service-name> option", result.Guidance[0]);
         // Should contain at least some common service names
-        Assert.Contains("app-service", result[0]);
+        Assert.Contains("app-service", result.Guidance[0]);
     }
 
     [Theory]
@@ -102,14 +102,14 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
         var response = await ExecuteCommandAsync($"--service {serviceName}");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, WellArchitectedFrameworkJsonContext.Default.ListString);
+        var result = ValidateAndDeserializeResponse(response, WellArchitectedFrameworkJsonContext.Default.ServiceGuideGetCommandResult);
 
-        Assert.Single(result);
+        Assert.Single(result.Guidance);
         // Check for the key parts of the multi-line response
-        Assert.Contains($"For detailed Azure Well-Architected Framework guidance on", result[0]);
-        Assert.Contains("please refer to the markdown file at this URL:", result[0]);
+        Assert.Contains($"For detailed Azure Well-Architected Framework guidance on", result.Guidance[0]);
+        Assert.Contains("please refer to the markdown file at this URL:", result.Guidance[0]);
         var serviceGuideUrlPrefix = "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides";
-        Assert.Contains(serviceGuideUrlPrefix, result[0]);
+        Assert.Contains(serviceGuideUrlPrefix, result.Guidance[0]);
     }
 
     [Fact]
@@ -122,11 +122,11 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
         var response = await ExecuteCommandAsync("--service", serviceName);
 
         // Assert - Should return OK with placeholder guidance instead of error
-        var result = ValidateAndDeserializeResponse(response, WellArchitectedFrameworkJsonContext.Default.ListString);
+        var result = ValidateAndDeserializeResponse(response, WellArchitectedFrameworkJsonContext.Default.ServiceGuideGetCommandResult);
 
-        Assert.Single(result);
-        Assert.Contains($"Azure Well-Architected Framework guidance for '{serviceName}' service is not available.", result[0]);
-        Assert.Contains("For more information, visit: https://learn.microsoft.com/azure/well-architected/service-guides", result[0]);
+        Assert.Single(result.Guidance);
+        Assert.Contains($"Azure Well-Architected Framework guidance for '{serviceName}' service is not available.", result.Guidance[0]);
+        Assert.Contains("For more information, visit: https://learn.microsoft.com/azure/well-architected/service-guides", result.Guidance[0]);
     }
 
     [Theory]
@@ -157,15 +157,15 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
         var response = await ExecuteCommandAsync($"--service {serviceNameInput}");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, WellArchitectedFrameworkJsonContext.Default.ListString);
+        var result = ValidateAndDeserializeResponse(response, WellArchitectedFrameworkJsonContext.Default.ServiceGuideGetCommandResult);
 
-        Assert.Single(result);
+        Assert.Single(result.Guidance);
 
         // Should return guidance URL (not the "not available" message)
-        Assert.Contains("For detailed Azure Well-Architected Framework guidance on", result[0]);
-        Assert.Contains("please refer to the markdown file at this URL:", result[0]);
+        Assert.Contains("For detailed Azure Well-Architected Framework guidance on", result.Guidance[0]);
+        Assert.Contains("please refer to the markdown file at this URL:", result.Guidance[0]);
         // azure-sql-database.md should be present in the URL regardless of input variation
-        Assert.Contains("https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-sql-database.md", result[0]);
+        Assert.Contains("https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-sql-database.md", result.Guidance[0]);
     }
 
     /// <summary>

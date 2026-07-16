@@ -59,7 +59,7 @@ public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand>
         {
             var bestPractices = GetBestPracticesText();
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create([bestPractices], AzureBestPracticesJsonContext.Default.ListString);
+            context.Response.Results = ResponseResult.Create(new AIAppBestPracticesCommandResult([bestPractices]), AzureBestPracticesJsonContext.Default.AIAppBestPracticesCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
@@ -70,4 +70,6 @@ public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand>
 
         return Task.FromResult(context.Response);
     }
+
+    internal record AIAppBestPracticesCommandResult(List<string> BestPractices);
 }
