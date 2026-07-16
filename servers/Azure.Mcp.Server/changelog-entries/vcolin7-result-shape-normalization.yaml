@@ -1,0 +1,13 @@
+changes:
+  - section: "Breaking Changes"
+    description: "`azmcp advisor recommendation apply` now returns its rules under an object root `{ \"rules\": [...] }` instead of a bare JSON array."
+  - section: "Breaking Changes"
+    description: "The Azure best-practices tools now return their documents under an object root instead of a bare string array: `azmcp bestpractices get` (general and AI-app) and `azmcp azureterraform bestpractices get` return `{ \"bestPractices\": [...] }`, and `azmcp wellarchitected get` returns `{ \"guidance\": [...] }`."
+  - section: "Breaking Changes"
+    description: "`azmcp functions language list` and `azmcp functions project get` now return a single object instead of a single-element JSON array."
+  - section: "Breaking Changes"
+    description: "Monitor commands now return object roots instead of raw strings, arrays, or objects: the `monitor extension` orchestrator-next, orchestrator-start, send-enhancement-select, and send-brownfield-analysis commands return `{ \"result\": \"...\" }`; `monitor resource-log-query` and `monitor workspace-log-query` return `{ \"results\": [...] }`; and `monitor healthmodels entity get-health` returns `{ \"health\": {...} }`."
+  - section: "Breaking Changes"
+    description: "`azmcp search index query` now returns matching documents under an object root `{ \"results\": [...] }` instead of a bare JSON array."
+  - section: "Breaking Changes"
+    description: "`azmcp sql server get` now returns servers under an object root `{ \"servers\": [...] }` instead of a bare JSON array."
