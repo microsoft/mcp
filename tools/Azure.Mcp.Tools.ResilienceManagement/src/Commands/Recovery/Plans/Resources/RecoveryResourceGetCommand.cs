@@ -77,7 +77,7 @@ public sealed class RecoveryResourceGetCommand(ILogger<RecoveryResourceGetComman
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        KeyNotFoundException => "Recovery resource not found. Verify the recovery resource name, recovery plan, service group, subscription, and that you have access.",
+        KeyNotFoundException => "Recovery resource not found. Verify the recovery resource name, recovery plan, service group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed getting the recovery resource. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>

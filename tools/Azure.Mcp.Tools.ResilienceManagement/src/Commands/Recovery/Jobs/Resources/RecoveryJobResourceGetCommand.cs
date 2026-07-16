@@ -79,7 +79,7 @@ public sealed class RecoveryJobResourceGetCommand(ILogger<RecoveryJobResourceGet
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        KeyNotFoundException => "Recovery job resource not found. Verify the recovery job resource name, recovery job, recovery plan, service group, subscription, and that you have access.",
+        KeyNotFoundException => "Recovery job resource not found. Verify the recovery job resource name, recovery job, recovery plan, service group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed getting the recovery job resource. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>

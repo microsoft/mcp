@@ -77,7 +77,7 @@ public sealed class GoalResourceGetCommand(ILogger<GoalResourceGetCommand> logge
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        KeyNotFoundException => "Goal resource not found. Verify the goal resource name, goal assignment, service group, subscription, and that you have access.",
+        KeyNotFoundException => "Goal resource not found. Verify the goal resource name, goal assignment, service group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed getting the goal resource. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
