@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.ElasticPool;
 using Azure.Mcp.Tools.Sql.Services;
@@ -19,7 +21,6 @@ namespace Azure.Mcp.Tools.Sql.Commands.ElasticPool;
         Lists all SQL elastic pools in an Azure SQL Server with their SKU, capacity, state, and database limits.
         Use when you need to: view elastic pool inventory, check pool utilization, compare pool configurations,
         or find available pools for database placement.
-        Requires: subscription ID, resource group name, server name.
         Returns: JSON array of elastic pools with complete configuration details.
         Equivalent to 'az sql elastic-pool list'.
         """,
@@ -29,25 +30,19 @@ namespace Azure.Mcp.Tools.Sql.Commands.ElasticPool;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ElasticPoolListCommand(ISqlService sqlService, ILogger<ElasticPoolListCommand> logger)
-    : BaseElasticPoolCommand<ElasticPoolListOptions>(logger)
+public sealed class ElasticPoolListCommand(ISqlService sqlService, ILogger<ElasticPoolListCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ElasticPoolListOptions, ElasticPoolListCommand.ElasticPoolListResult>(subscriptionResolver)
 {
     private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<ElasticPoolListCommand> _logger = logger;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ElasticPoolListOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var elasticPools = await _sqlService.GetElasticPoolsAsync(
-                options.Server!,
-                options.ResourceGroup!,
+                options.Server,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.RetryPolicy,
                 cancellationToken);
@@ -75,5 +70,5 @@ public sealed class ElasticPoolListCommand(ISqlService sqlService, ILogger<Elast
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record ElasticPoolListResult(List<SqlElasticPool> ElasticPools);
+    public sealed record ElasticPoolListResult(List<SqlElasticPool> ElasticPools);
 }

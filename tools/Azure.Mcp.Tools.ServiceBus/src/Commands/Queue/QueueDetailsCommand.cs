@@ -3,13 +3,11 @@
 
 using System.Net;
 using Azure.Mcp.Tools.ServiceBus.Models;
-using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Queue;
 using Azure.Mcp.Tools.ServiceBus.Services;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
@@ -21,10 +19,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
     Description = """
         Get details about a Service Bus queue. Returns queue properties and runtime information. Properties returned include
         lock duration, max message size, queue size, creation date, status, current message counts, etc.
-
-        Required arguments:
-        - namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)
-        - queue: Queue name to get details and runtime information for.
         """,
     Destructive = false,
     Idempotent = true,
@@ -32,40 +26,19 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger, IServiceBusService serviceBusService) : GlobalCommand<BaseQueueOptions>
+public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger, IServiceBusService serviceBusService)
+    : AuthenticatedCommand<BaseQueueOptions, QueueDetailsCommand.QueueDetailsCommandResult>
 {
     private readonly ILogger<QueueDetailsCommand> _logger = logger;
     private readonly IServiceBusService _serviceBusService = serviceBusService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseQueueOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(ServiceBusOptionDefinitions.Namespace);
-        command.Options.Add(ServiceBusOptionDefinitions.Queue);
-    }
-
-    protected override BaseQueueOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Name = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Queue.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Namespace.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var details = await _serviceBusService.GetQueueDetails(
-                options.Namespace!,
-                options.Name!,
+                options.Namespace,
+                options.Queue,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -93,5 +66,6 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger, ISe
         ServiceBusException sbEx when sbEx.Reason == ServiceBusFailureReason.MessagingEntityNotFound => HttpStatusCode.NotFound,
         _ => base.GetStatusCode(ex)
     };
-    internal record QueueDetailsCommandResult(QueueDetails QueueDetails);
+
+    public sealed record QueueDetailsCommandResult(QueueDetails QueueDetails);
 }

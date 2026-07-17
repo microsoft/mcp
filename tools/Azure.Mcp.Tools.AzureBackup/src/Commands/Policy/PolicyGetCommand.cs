@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Policy;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 
@@ -33,33 +31,14 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<PolicyGetOptions>()
+public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<PolicyGetOptions, PolicyGetCommand.PolicyGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<PolicyGetCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PolicyGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.Policy.AsOptional());
-    }
-
-    protected override PolicyGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Policy = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Policy.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
         context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, string.IsNullOrEmpty(options.Policy) ? "list" : "single");
@@ -69,8 +48,8 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBac
             if (!string.IsNullOrEmpty(options.Policy))
             {
                 var policy = await _azureBackupService.GetPolicyAsync(
-                    options.Vault!,
-                    options.ResourceGroup!,
+                    options.Vault,
+                    options.ResourceGroup,
                     options.Subscription!,
                     options.Policy,
                     options.VaultType,
@@ -115,5 +94,5 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBac
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record PolicyGetCommandResult(List<BackupPolicyInfo> Policies);
+    public sealed record PolicyGetCommandResult(List<BackupPolicyInfo> Policies);
 }

@@ -1,6 +1,7 @@
-using System.Text.Json.Serialization;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Models;
+namespace Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 
 public record OnboardingSpec
 {

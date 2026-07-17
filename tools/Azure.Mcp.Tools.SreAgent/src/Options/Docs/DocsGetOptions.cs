@@ -5,7 +5,8 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.SreAgent.Options.Docs;
 
-public class DocsGetOptions : GlobalOptions
+public sealed class DocsGetOptions
 {
-    public string? Topic { get; set; }
+    [Option(Description = "Documentation topic.")]
+    public required string Topic { get; set; }
 }

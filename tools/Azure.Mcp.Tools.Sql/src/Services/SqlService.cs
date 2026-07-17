@@ -8,7 +8,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Sql.Models;
-using Azure.Mcp.Tools.Sql.Services.Models;
 using Azure.ResourceManager.Sql;
 using Azure.ResourceManager.Sql.Models;
 using Microsoft.Extensions.Logging;
@@ -16,7 +15,8 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Sql.Services;
 
-public class SqlService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<SqlService> logger) : BaseAzureResourceService(subscriptionService, tenantService), ISqlService
+public class SqlService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<SqlService> logger)
+    : BaseAzureResourceService(subscriptionService, tenantService), ISqlService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ILogger<SqlService> _logger = logger;
@@ -56,9 +56,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
-        var subscriptionResource = armClient.GetSubscriptionResource(
-            ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         return await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName, cancellationToken: cancellationToken);
     }
@@ -147,7 +145,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
 
-        var databaseData = new ResourceManager.Sql.SqlDatabaseData(sqlServerResource.Data.Location);
+        var databaseData = new SqlDatabaseData(sqlServerResource.Data.Location);
 
         // Configure SKU if provided
         if (!string.IsNullOrEmpty(skuName) || !string.IsNullOrEmpty(skuTier) || skuCapacity.HasValue)
@@ -264,7 +262,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             // Only preserve values that are explicitly provided or if SKU name isn't changing
             bool isSkuNameChanging = !string.IsNullOrEmpty(skuName) && skuName != databaseData.Sku?.Name;
 
-            var sku = new ResourceManager.Sql.Models.SqlSku(skuName ?? databaseData.Sku?.Name ?? "Basic")
+            var sku = new SqlSku(skuName ?? databaseData.Sku?.Name ?? "Basic")
             {
                 Tier = skuTier ?? (isSkuNameChanging ? null : databaseData.Sku?.Tier),
                 Capacity = skuCapacity ?? (isSkuNameChanging ? null : databaseData.Sku?.Capacity),
@@ -345,16 +343,19 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(subscription), subscription),
             (nameof(newDatabaseName), newDatabaseName));
 
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
+        var subscriptionId = subscriptionResource.Data.SubscriptionId;
+
         var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
 
         var currentDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
-            subscription,
+            subscriptionId,
             resourceGroup,
             serverName,
             databaseName);
 
         var targetDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
-            subscription,
+            subscriptionId,
             resourceGroup,
             serverName,
             newDatabaseName);
@@ -575,7 +576,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
 
-        var firewallRuleData = new ResourceManager.Sql.SqlFirewallRuleData()
+        var firewallRuleData = new SqlFirewallRuleData()
         {
             StartIPAddress = startIpAddress,
             EndIPAddress = endIpAddress
@@ -684,9 +685,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(administratorLogin), administratorLogin),
             (nameof(administratorPassword), administratorPassword));
 
-        // Use ARM client directly for create operations
-        var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
-        var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+        // Resolve the subscription (supports both subscription IDs and names) before navigating to the resource group
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
         var serverData = new SqlServerData(location)
@@ -782,8 +782,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
-        var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
 
         ResourceManager.Resources.ResourceGroupResource resourceGroupResource;
         try

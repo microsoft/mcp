@@ -1,39 +1,35 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.SreAgent.Options;
+using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options.Docs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
 
-[CommandMetadata(Id = "3e7977a8-786b-4db9-a3be-2194af3cdafb", Name = "get", Title = "Get SRE Agent Documentation", Description = "Return reference documentation for SRE Agent concepts.", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false)]
-public sealed class DocsGetCommand(ILogger<DocsGetCommand> logger) : GlobalCommand<DocsGetOptions>
+[CommandMetadata(
+    Id = "3e7977a8-786b-4db9-a3be-2194af3cdafb",
+    Name = "get",
+    Title = "Get SRE Agent Documentation",
+    Description = "Return reference documentation for SRE Agent concepts.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DocsGetCommand(ILogger<DocsGetCommand> logger)
+    : BaseCommand<DocsGetOptions, SreAgentTextResult>
 {
     private readonly ILogger<DocsGetCommand> _logger = logger;
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(SreAgentOptionDefinitions.Topic);
-    }
 
-    protected override DocsGetOptions BindOptions(ParseResult parseResult)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, DocsGetOptions options, CancellationToken cancellationToken)
     {
-        var o = base.BindOptions(parseResult);
-        o.Topic = parseResult.GetValueOrDefault(SreAgentOptionDefinitions.Topic);
-        return o;
-    }
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            return Task.FromResult(context.Response);
-        var o = BindOptions(parseResult);
         try
         {
-            SreAgentPortedCommandHelpers.SetTextResult(context.Response, Resolve(o.Topic!.ToLowerInvariant()));
+            SreAgentPortedCommandHelpers.SetTextResult(context.Response, Resolve(options.Topic.ToLowerInvariant()));
         }
         catch (Exception ex)
         {

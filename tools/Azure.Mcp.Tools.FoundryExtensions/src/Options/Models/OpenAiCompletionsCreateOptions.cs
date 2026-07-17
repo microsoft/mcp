@@ -1,25 +1,41 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 
-public class OpenAiCompletionsCreateOptions : SubscriptionOptions
+public sealed class OpenAiCompletionsCreateOptions : ISubscriptionOption
 {
-    [JsonPropertyName(FoundryExtensionsOptionDefinitions.DeploymentName)]
-    public string? DeploymentName { get; set; }
+    [Option(Description = FoundryExtensionsOptionDescriptions.Deployment)]
+    public required string Deployment { get; set; }
 
-    [JsonPropertyName(FoundryExtensionsOptionDefinitions.PromptText)]
-    public string? PromptText { get; set; }
+    [Option(Description = "The prompt text to send to the completion model.")]
+    public required string PromptText { get; set; }
 
-    [JsonPropertyName(FoundryExtensionsOptionDefinitions.MaxTokens)]
+    [Option(Description = FoundryExtensionsOptionDescriptions.MaxTokens)]
     public int? MaxTokens { get; set; }
 
-    [JsonPropertyName(FoundryExtensionsOptionDefinitions.Temperature)]
+    [Option(Description = FoundryExtensionsOptionDescriptions.Temperature)]
     public double? Temperature { get; set; }
 
-    [JsonPropertyName(FoundryExtensionsOptionDefinitions.ResourceName)]
-    public string? ResourceName { get; set; }
+    [Option(Description = FoundryExtensionsOptionDescriptions.ResourceName)]
+    public required string ResourceName { get; set; }
+
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public required string ResourceGroup { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
+
+    [Option(Description = OptionDescriptions.AuthMethod)]
+    public AuthMethod? AuthMethod { get; set; }
 }

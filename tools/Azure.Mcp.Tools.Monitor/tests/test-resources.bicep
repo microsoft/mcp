@@ -14,6 +14,8 @@ param tenantId string = '72f988bf-86f1-41af-91ab-2d7cd011db47'
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
+param healthModelsLocation string = 'swedencentral'
+
 resource workspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: baseName
   location: location
@@ -221,4 +223,15 @@ module webTestsModule 'test-resources.webtests.module.bicep' = {
   }
 }
 
+// Azure Monitor Health Models (Microsoft.CloudHealth)
+module healthModelsModule 'test-resources.healthmodels.module.bicep' = {
+  name: 'healthmodels-module'
+  params: {
+    baseName: baseName
+    location: healthModelsLocation
+  }
+}
+
+output healthModelParentName string = healthModelsModule.outputs.healthModelAName
+output healthModelChildName string = healthModelsModule.outputs.healthModelBName
 output storageAccountName string = storageAccount.name

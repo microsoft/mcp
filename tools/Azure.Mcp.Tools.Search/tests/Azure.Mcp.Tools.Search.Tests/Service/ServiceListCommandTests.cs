@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Commands.Service;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Search.Tests.Service;
 
-public class ServiceListCommandTests : CommandUnitTestsBase<ServiceListCommand, ISearchService>
+public class ServiceListCommandTests : SubscriptionCommandUnitTestsBase<ServiceListCommand, ISearchService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsServices_WhenServicesExist()

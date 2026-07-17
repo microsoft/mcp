@@ -16,8 +16,10 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     Name = "list",
     Title = "List AVM Modules",
     Description = """
-        Retrieves all available Azure Verified Modules (AVM) for Terraform.
-        Returns a list of modules with their name, description, source reference, and repository URL.
+        Retrieves all available Azure Verified Modules (AVM) for Terraform, including both
+        resource modules (avm-res-*) and pattern modules (avm-ptn-*).
+        Returns a list of modules with their name, description, source reference, repository URL,
+        and moduleType ('resource' or 'pattern').
         The source field can be used directly in Terraform module blocks.
         """,
     Destructive = false,

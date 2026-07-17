@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Postgres.Options.Server;
 
-public class ServerParamSetOptions : BasePostgresOptions
+public sealed class ServerParamSetOptions : BaseServerOptions
 {
-    [JsonPropertyName(PostgresOptionDefinitions.ParamName)]
-    public string? Param { get; set; }
+    [Option(Description = PostgresOptionDefinitions.ParamDescription)]
+    public required string Param { get; set; }
 
-    [JsonPropertyName(PostgresOptionDefinitions.ValueName)]
-    public string? Value { get; set; }
+    [Option(Description = "The value to set for the PostgreSQL parameter.")]
+    public required string Value { get; set; }
 }

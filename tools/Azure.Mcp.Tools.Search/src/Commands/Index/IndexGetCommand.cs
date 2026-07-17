@@ -2,14 +2,11 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Search.Models;
-using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Index;
 
@@ -28,39 +25,18 @@ namespace Azure.Mcp.Tools.Search.Commands.Index;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchService searchService) : GlobalCommand<IndexGetOptions>()
+public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchService searchService)
+    : AuthenticatedCommand<IndexGetOptions, IndexGetCommand.IndexGetCommandResult>
 {
     private readonly ILogger<IndexGetCommand> _logger = logger;
     private readonly ISearchService _searchService = searchService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, IndexGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SearchOptionDefinitions.Service);
-        command.Options.Add(SearchOptionDefinitions.Index.AsOptional());
-    }
-
-    protected override IndexGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Service = parseResult.GetValueOrDefault<string>(SearchOptionDefinitions.Service.Name);
-        options.Index = parseResult.GetValueOrDefault<string>(SearchOptionDefinitions.Index.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var indexes = await _searchService.GetIndexDetails(
-                options.Service!,
+                options.Service,
                 options.Index,
                 options.RetryPolicy,
                 cancellationToken);
@@ -76,5 +52,5 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchServ
         return context.Response;
     }
 
-    internal sealed record IndexGetCommandResult(List<IndexInfo> Indexes);
+    public sealed record IndexGetCommandResult(List<IndexInfo> Indexes);
 }

@@ -6,7 +6,6 @@ using System.Net;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
@@ -32,26 +31,6 @@ public sealed class CommandFactoryToolLoader(
         (options.Value.Namespace == null || options.Value.Namespace.Length == 0)
             ? commandFactory.AllCommands
             : commandFactory.GroupCommands(options.Value.Namespace);
-
-    public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
-
-    private static bool IsRawMcpToolInputOption(Option option)
-    {
-        if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        foreach (var alias in option.Aliases)
-        {
-            if (string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     /// <summary>
     /// Lists all tools available from the command factory.
@@ -177,7 +156,11 @@ public sealed class CommandFactoryToolLoader(
             }, command.Id);
         }
 
-        var commandContext = new CommandContext(_serviceProvider, activity);
+        var commandContext = new CommandContext(_serviceProvider, activity)
+        {
+            McpServer = request.Server,
+            ProgressToken = request.Params.ProgressToken
+        };
 
         // Check if this tool requires elicitation for sensitive or destructive operations
         var elicitationResult = await HandleElicitationAsync(
@@ -288,30 +271,15 @@ public sealed class CommandFactoryToolLoader(
             .Where(o => !CommandFactory.IsLearnOption(o))
             .ToList();
 
-        var schema = new ToolInputSchema();
-
-        if (options.Count > 0)
+        if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
         {
-            if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
-            {
-                var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? [];
-                tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
-                return tool;
-            }
-            else
-            {
-                foreach (var option in options)
-                {
-                    // Use the CreatePropertySchema method to properly handle array types with items
-                    var propName = NameNormalization.NormalizeOptionName(option.Name);
-                    schema.Properties.Add(propName, TypeToJsonTypeMapper.CreatePropertySchema(option.ValueType, option.Description));
-                }
-
-                schema.Required = [.. options.Where(p => p.Required).Select(p => NameNormalization.NormalizeOptionName(p.Name))];
-            }
+            var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? [];
+            tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
+            return tool;
         }
 
-        tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.ToolInputSchema);
+        var schema = OptionSchemaGenerator.CreateInputSchema(options);
+        tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.JsonObject);
 
         return tool;
     }

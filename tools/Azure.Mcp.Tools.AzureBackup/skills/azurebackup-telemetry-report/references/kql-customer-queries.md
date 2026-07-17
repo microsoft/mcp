@@ -8,6 +8,11 @@ All queries use the `getAzureMcpEvents_ToolCalls` function from the Azure MCP te
 
 Replace `{DAYS}` with the desired time range (e.g., `15` for 15 days).
 
+> **Note on field casing:** Lowercase bag access (e.g., `customDimensions.toolname`) works because
+> `getAzureMcpEvents_ToolCalls` normalizes keys. If queries return empty results, try PascalCase
+> variants (`customDimensions.ClientName`, `customDimensions.Version`). See the full note in
+> [`kql-queries.md`](https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.AzureBackup/skills/azurebackup-telemetry-report/references/kql-queries.md).
+
 > **Critical:** Always use `P360_CustomerName` instead of `CustomerName` in P360. The `CustomerName`
 > field contains generic tenant names (e.g., "Denis" for all Prometeia SpA subs). `P360_CustomerName`
 > has the actual company name.

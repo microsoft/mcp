@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Vault;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 
@@ -25,96 +23,62 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<VaultUpdateOptions>()
+public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<VaultUpdateOptions, VaultUpdateCommand.VaultUpdateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<VaultUpdateCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(VaultUpdateOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.Redundancy);
-        command.Options.Add(AzureBackupOptionDefinitions.SoftDelete);
-        command.Options.Add(AzureBackupOptionDefinitions.SoftDeleteRetentionDays);
-        command.Options.Add(AzureBackupOptionDefinitions.ImmutabilityState);
-        command.Options.Add(AzureBackupOptionDefinitions.IdentityType);
-        command.Options.Add(AzureBackupOptionDefinitions.Tags);
-        command.Validators.Add(commandResult =>
+        base.ValidateOptions(options, validationResult);
+
+        bool hasUpdate =
+            !string.IsNullOrEmpty(options.Redundancy) ||
+            !string.IsNullOrEmpty(options.SoftDelete) ||
+            !string.IsNullOrEmpty(options.SoftDeleteRetentionDays) ||
+            !string.IsNullOrEmpty(options.ImmutabilityState) ||
+            !string.IsNullOrEmpty(options.IdentityType) ||
+            !string.IsNullOrEmpty(options.Tags);
+
+        if (!hasUpdate)
         {
-            bool hasUpdate =
-                commandResult.HasOptionResult(AzureBackupOptionDefinitions.Redundancy.Name) ||
-                commandResult.HasOptionResult(AzureBackupOptionDefinitions.SoftDelete.Name) ||
-                commandResult.HasOptionResult(AzureBackupOptionDefinitions.SoftDeleteRetentionDays.Name) ||
-                commandResult.HasOptionResult(AzureBackupOptionDefinitions.ImmutabilityState.Name) ||
-                commandResult.HasOptionResult(AzureBackupOptionDefinitions.IdentityType.Name) ||
-                commandResult.HasOptionResult(AzureBackupOptionDefinitions.Tags.Name);
-
-            if (!hasUpdate)
-            {
-                commandResult.AddError(
-                    "At least one update option must be provided: --redundancy, --soft-delete, --soft-delete-retention-days, --immutability-state, --identity-type, or --tags.");
-            }
-
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.SoftDeleteRetentionDays.Name))
-            {
-                var retentionValue = commandResult.GetValue<string>(AzureBackupOptionDefinitions.SoftDeleteRetentionDays.Name);
-                if (!string.IsNullOrEmpty(retentionValue))
-                {
-                    if (!int.TryParse(retentionValue, out var retentionDays) || retentionDays < 14 || retentionDays > 180)
-                    {
-                        commandResult.AddError("--soft-delete-retention-days must be an integer between 14 and 180.");
-                    }
-                }
-            }
-
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.IdentityType.Name))
-            {
-                var identityValue = commandResult.GetValue<string>(AzureBackupOptionDefinitions.IdentityType.Name);
-                if (!string.IsNullOrEmpty(identityValue) &&
-                    !identityValue.Equals("SystemAssigned", StringComparison.OrdinalIgnoreCase) &&
-                    !identityValue.Equals("UserAssigned", StringComparison.OrdinalIgnoreCase) &&
-                    !identityValue.Equals("None", StringComparison.OrdinalIgnoreCase) &&
-                    !identityValue.Equals("SystemAssigned,UserAssigned", StringComparison.OrdinalIgnoreCase))
-                {
-                    commandResult.AddError("--identity-type must be 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', or 'None'.");
-                }
-            }
-        });
-    }
-
-    protected override VaultUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Redundancy = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Redundancy.Name);
-        options.SoftDeleteState = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.SoftDelete.Name);
-        options.SoftDeleteRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.SoftDeleteRetentionDays.Name);
-        options.ImmutabilityState = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ImmutabilityState.Name);
-        options.IdentityType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.IdentityType.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Tags.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add(
+                "At least one update option must be provided: --redundancy, --soft-delete, --soft-delete-retention-days, --immutability-state, --identity-type, or --tags.");
         }
 
-        var options = BindOptions(parseResult);
+        if (!string.IsNullOrEmpty(options.SoftDeleteRetentionDays))
+        {
+            if (!int.TryParse(options.SoftDeleteRetentionDays, out var retentionDays) || retentionDays < 14 || retentionDays > 180)
+            {
+                validationResult.Errors.Add("--soft-delete-retention-days must be an integer between 14 and 180.");
+            }
+        }
 
+        if (!string.IsNullOrEmpty(options.IdentityType) &&
+            !options.IdentityType.Equals("SystemAssigned", StringComparison.OrdinalIgnoreCase) &&
+            !options.IdentityType.Equals("UserAssigned", StringComparison.OrdinalIgnoreCase) &&
+            !options.IdentityType.Equals("None", StringComparison.OrdinalIgnoreCase) &&
+            !options.IdentityType.Equals("SystemAssigned,UserAssigned", StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add("--identity-type must be 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', or 'None'.");
+        }
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VaultUpdateOptions options, CancellationToken cancellationToken)
+    {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
         try
         {
             var result = await _azureBackupService.UpdateVaultAsync(
-                options.Vault!,
-                options.ResourceGroup!,
+                options.Vault,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.VaultType,
                 options.Redundancy,
-                options.SoftDeleteState,
+                options.SoftDelete,
                 options.SoftDeleteRetentionDays,
                 options.ImmutabilityState,
                 options.IdentityType,
@@ -150,5 +114,5 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VaultUpdateCommandResult(OperationResult Result);
+    public sealed record VaultUpdateCommandResult(OperationResult Result);
 }

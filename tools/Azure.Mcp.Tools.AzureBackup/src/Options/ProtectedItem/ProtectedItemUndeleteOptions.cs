@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.ProtectedItem;
 
-public class ProtectedItemUndeleteOptions : BaseAzureBackupOptions
+public sealed class ProtectedItemUndeleteOptions : BaseAzureBackupOptions
 {
-    [JsonPropertyName(AzureBackupOptionDefinitions.DatasourceIdName)]
-    public string? DatasourceId { get; set; }
+    [Option(Description = AzureBackupOptionDefinitions.DatasourceId)]
+    public required string DatasourceId { get; set; }
 
-    [JsonPropertyName(AzureBackupOptionDefinitions.ContainerName)]
+    [Option(Description = AzureBackupOptionDefinitions.Container)]
     public string? Container { get; set; }
 }
