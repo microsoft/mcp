@@ -113,16 +113,8 @@ function Get-KeywordsString($keywords) {
 }
 
 function Get-PythonCommand {
-    # Prefer the interpreter selected by UsePythonVersion in CI.
-    # On Microsoft-hosted agents, that is exposed as "python" and may differ from the system "python3".
-    try {
-        $null = & python --version 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            return "python"
-        }
-    } catch {}
-
-    # Fall back to python3 when the CI shim is unavailable.
+    # Try python3 first (common on Linux/macOS), but verify it works
+    # On Windows, "python3" may be a Store alias that doesn't work
     try {
         $null = & python3 --version 2>&1
         if ($LASTEXITCODE -eq 0) {
@@ -130,79 +122,15 @@ function Get-PythonCommand {
         }
     } catch {}
     
-    throw "Python is not installed or not in PATH. Please install Python 3.10+."
-}
-
-    function Get-RedactedUrl([string] $url) {
-        if ([string]::IsNullOrWhiteSpace($url)) {
-            return $null
-        }
-
-        try {
-            $uri = [System.Uri]$url
-            $builder = [System.UriBuilder]::new($uri)
-            if (-not [string]::IsNullOrWhiteSpace($uri.UserInfo)) {
-                $builder.UserName = '***'
-                $builder.Password = '***'
-            }
-
-            return $builder.Uri.AbsoluteUri
-        }
-        catch {
-            return '<unparseable>'
-        }
-    }
-
-    function Write-PipFeedDiagnostics {
-        $indexUrl = Get-RedactedUrl $env:PIP_INDEX_URL
-        $extraIndexUrl = Get-RedactedUrl $env:PIP_EXTRA_INDEX_URL
-
-        if ($indexUrl) {
-            Write-Host "  PIP_INDEX_URL: $indexUrl"
-        }
-        else {
-            Write-Host "  PIP_INDEX_URL: <not set>"
-        }
-
-        if ($extraIndexUrl) {
-            Write-Host "  PIP_EXTRA_INDEX_URL: $extraIndexUrl"
-        }
-        else {
-            Write-Host "  PIP_EXTRA_INDEX_URL: <not set>"
-        }
-    }
-
-function Install-BuildDependencies([string] $pythonCmd) {
-    # Log interpreter and pip details for easier CI troubleshooting.
-    Invoke-LoggedCommand "$pythonCmd --version"
-    Invoke-LoggedCommand "$pythonCmd -m pip --version"
-        Write-PipFeedDiagnostics
-        Invoke-LoggedCommand "$pythonCmd -m pip config list"
-
-    # This is diagnostic-only. Some environments block index queries.
+    # Fall back to python
     try {
-            Invoke-LoggedCommand "$pythonCmd -m pip index versions build -vvv"
-    }
-    catch {
-        Write-Warning "Unable to query available build versions via pip index; continuing with install attempts."
-    }
-
-    $installAttempts = @(
-        "build==1.2.2 wheel==0.45.1"
-    )
-
-    foreach ($requirements in $installAttempts) {
-        try {
-            Invoke-LoggedCommand "$pythonCmd -m pip install --quiet $requirements"
-            Write-Host "  Using Python build dependencies: $requirements"
-            return
+        $null = & python --version 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            return "python"
         }
-        catch {
-            Write-Warning "Failed to install Python build dependencies: $requirements"
-        }
-    }
-
-    throw "Unable to install Python build dependencies. Attempted: $($installAttempts -join '; ')."
+    } catch {}
+    
+    throw "Python is not installed or not in PATH. Please install Python 3.10+."
 }
 
 function BuildServerPackages([hashtable] $server, [bool] $native) {
@@ -355,8 +283,8 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         Push-Location $tempFolder
         try {
             $pythonCmd = Get-PythonCommand
-
-            Install-BuildDependencies $pythonCmd
+            
+            Invoke-LoggedCommand "$pythonCmd -m pip install --quiet build==1.2.2 wheel==0.45.1"
             
             # Build wheel only (no sdist for platform packages)
             # We use --wheel and then rename to set the correct platform tag
