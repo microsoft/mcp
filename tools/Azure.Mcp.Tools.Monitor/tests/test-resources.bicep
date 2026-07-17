@@ -223,7 +223,6 @@ module webTestsModule 'test-resources.webtests.module.bicep' = {
   }
 }
 
-<<<<<<< HEAD
 // Azure Monitor Health Models (Microsoft.CloudHealth)
 module healthModelsModule 'test-resources.healthmodels.module.bicep' = {
   name: 'healthmodels-module'
