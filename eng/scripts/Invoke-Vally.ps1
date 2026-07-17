@@ -25,7 +25,7 @@
     `<repo-root>/.work/build_info.json`.
 
 .PARAMETER OutputPath
-    Optional path for Vally output. Currently passed through for future use.
+    Optional path for Vally output. Defaults to `<repo-root>/.work/vally-results`.
 
 .PARAMETER IsDebug
     When specified, adds `--verbose` to the `vally eval` invocation for
@@ -63,6 +63,10 @@ if (!$EvalsDirectory) {
     $EvalsDirectory = "$RepoRoot/.work/evals"
 }
 
+if (!$OutputPath) {
+    $OutputPath = "$RepoRoot/.work/vally-results"
+}
+
 # build_info.json is initialized with all buildable platforms
 if (!$BuildInfoPath) {
     $BuildInfoPath = "$RepoRoot/.work/build_info.json"
@@ -94,11 +98,13 @@ $results | ForEach-Object { $commandArg += "--eval-spec '$($_)' " }
 Write-Host "Getting eval paths from VallyEvaluator"
 $(Get-ChildItem "$EvalsDirectory/**/eval.yaml") | ForEach-Object { $commandArg += "--eval-spec '$($_.FullName)' " }
 
-$expression = "vally eval --work-dir '$WorkDirectory' $commandArg"
+$expression = "vally eval --work-dir '$WorkDirectory' --output-dir '$OutputPath'"
 
 if ($IsDebug) {
     $expression += " --verbose"
 }
+
+$expression += " $commandArg"
 
 Write-Host "Running command: $expression"
 Invoke-Expression $expression

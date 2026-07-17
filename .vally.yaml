@@ -1,6 +1,6 @@
 paths:
-  evals: ["tools/Azure.Mcp.Tools.*/tests/", ".work/evals/**/"]
-  results: ".work/vally/results/"
+  evals: ["tools/Azure.Mcp.Tools.*/tests/", ".work/evals/*/"]
+  results: ".work/vally-results/"
 
 environments:
   development:
