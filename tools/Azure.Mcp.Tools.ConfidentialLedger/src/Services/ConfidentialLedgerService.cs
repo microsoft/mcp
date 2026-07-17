@@ -105,7 +105,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         }
 
         return new(
-            LedgerName:  ledgerName,
+            LedgerName: ledgerName,
             TransactionId: actualTransactionId ?? transactionId,
             Contents: contents ?? string.Empty);
     }
