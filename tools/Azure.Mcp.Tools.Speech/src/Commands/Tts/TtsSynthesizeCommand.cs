@@ -3,12 +3,10 @@
 
 using System.Net;
 using Azure.Mcp.Tools.Speech.Models;
-using Azure.Mcp.Tools.Speech.Options;
 using Azure.Mcp.Tools.Speech.Options.Tts;
 using Azure.Mcp.Tools.Speech.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Speech.Commands.Tts;
@@ -29,113 +27,75 @@ namespace Azure.Mcp.Tools.Speech.Commands.Tts;
     ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
-public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, ISpeechService speechService) : BaseSpeechCommand<TtsSynthesizeOptions>()
+public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, ISpeechService speechService)
+    : BaseSpeechCommand<TtsSynthesizeOptions, TtsSynthesizeCommand.TtsSynthesizeCommandResult>()
 {
-    internal record TtsSynthesizeCommandResult(SynthesisResult Result);
+    public sealed record TtsSynthesizeCommandResult(SynthesisResult Result);
 
-    private static readonly HashSet<string> SupportedExtensions = [".wav", ".mp3", ".ogg", ".raw"];
+    private static readonly HashSet<string> s_supportedExtensions = [".wav", ".mp3", ".ogg", ".raw"];
     private readonly ILogger<TtsSynthesizeCommand> _logger = logger;
     private readonly ISpeechService _speechService = speechService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(TtsSynthesizeOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
+        base.ValidateOptions(options, validationResult);
 
-        command.Options.Add(SpeechOptionDefinitions.Text);
-        command.Options.Add(SpeechOptionDefinitions.OutputAudio);
-        command.Options.Add(SpeechOptionDefinitions.Language);
-        command.Options.Add(SpeechOptionDefinitions.Voice);
-        command.Options.Add(SpeechOptionDefinitions.Format);
-        command.Options.Add(SpeechOptionDefinitions.EndpointId);
-
-        // Command-level validation
-        command.Validators.Add(commandResult =>
+        // Validate text is not empty
+        if (string.IsNullOrWhiteSpace(options.Text))
         {
-            var textValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Text.Name);
+            validationResult.Errors.Add("Text cannot be empty or whitespace.");
+        }
 
-            // Validate text is not empty
-            if (string.IsNullOrWhiteSpace(textValue))
+        // Validate output file path
+        if (string.IsNullOrWhiteSpace(options.OutputAudio))
+        {
+            validationResult.Errors.Add("Output file path cannot be empty.");
+        }
+        else
+        {
+            // Canonicalize and validate the output path (rejects UNC/device paths, traversal)
+            try
             {
-                commandResult.AddError("Text cannot be empty or whitespace.");
-            }
-
-            var fileValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.OutputAudio.Name);
-
-            // Validate output file path
-            if (string.IsNullOrWhiteSpace(fileValue))
-            {
-                commandResult.AddError("Output file path cannot be empty.");
-            }
-            else
-            {
-                // Canonicalize and validate the output path (rejects UNC/device paths, traversal)
-                string canonicalPath;
-                try
-                {
-                    canonicalPath = FilePathValidator.ValidateAndCanonicalize(fileValue!);
-                }
-                catch (ArgumentException ex)
-                {
-                    commandResult.AddError($"Invalid output file path: {ex.Message}");
-                    return;
-                }
-
+                var canonicalPath = FilePathValidator.ValidateAndCanonicalize(options.OutputAudio);
                 // Check if file already exists (don't allow overwriting)
                 if (File.Exists(canonicalPath))
                 {
-                    commandResult.AddError($"Output file already exists: {canonicalPath}. Please specify a different file path or delete the existing file.");
+                    validationResult.Errors.Add($"Output file already exists: {canonicalPath}. Please specify a different file path or delete the existing file.");
                 }
 
                 // Validate file extension
                 var extension = Path.GetExtension(canonicalPath).ToLowerInvariant();
 
-                if (!SupportedExtensions.Contains(extension))
+                if (!s_supportedExtensions.Contains(extension))
                 {
-                    commandResult.AddError($"Unsupported output file format: {extension}. Only {string.Join(", ", SupportedExtensions)} are supported.");
+                    validationResult.Errors.Add($"Unsupported output file format: {extension}. Only {string.Join(", ", s_supportedExtensions)} are supported.");
                 }
             }
-
-            // Validate language format if provided
-            var languageValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Language.Name);
-            if (!string.IsNullOrEmpty(languageValue))
+            catch (ArgumentException ex)
             {
-                // Basic validation: language should be in format like "en-US", "es-ES"
-                if (!System.Text.RegularExpressions.Regex.IsMatch(languageValue, @"^[a-z]{2}-[A-Z]{2}$"))
-                {
-                    commandResult.AddError($"Language must be in format 'xx-XX' (e.g., 'en-US', 'es-ES'). Got: {languageValue}");
-                }
+                validationResult.Errors.Add($"Invalid output file path: {ex.Message}");
             }
-        });
-    }
-
-    protected override TtsSynthesizeOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Text = parseResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Text.Name);
-        options.OutputAudio = parseResult.GetValueOrDefault<string>(SpeechOptionDefinitions.OutputAudio.Name);
-        options.Language = parseResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Language.Name);
-        options.Voice = parseResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Voice.Name);
-        options.Format = parseResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Format.Name);
-        options.EndpointId = parseResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.EndpointId.Name);
-
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
         }
 
-        var options = BindOptions(parseResult);
+        // Validate language format if provided
+        if (!string.IsNullOrEmpty(options.Language))
+        {
+            // Basic validation: language should be in format like "en-US", "es-ES"
+            if (!LanguageRegex().IsMatch(options.Language))
+            {
+                validationResult.Errors.Add($"Language must be in format 'xx-XX' (e.g., 'en-US', 'es-ES'). Got: {options.Language}");
+            }
+        }
+    }
 
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TtsSynthesizeOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             var result = await _speechService.SynthesizeSpeechToFile(
-                options.Endpoint!,
-                options.Text!,
-                options.OutputAudio!,
+                options.Endpoint,
+                options.Text,
+                options.OutputAudio,
                 options.Language,
                 options.Voice,
                 options.Format,
@@ -184,4 +144,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, I
         InvalidOperationException => HttpStatusCode.InternalServerError,
         _ => base.GetStatusCode(ex)
     };
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"^[a-z]{2}-[A-Z]{2}$")]
+    private static partial System.Text.RegularExpressions.Regex LanguageRegex();
 }
