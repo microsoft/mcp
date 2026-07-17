@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.EventHubs.Options;
+using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
@@ -34,57 +34,31 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<NamespaceGetOptions>
+public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEventHubsService service, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<NamespaceGetOptions, NamespaceGetCommand.NamespaceGetCommandResult>(subscriptionResolver)
 {
-
     private readonly IEventHubsService _service = service;
     private readonly ILogger<NamespaceGetCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(NamespaceGetOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
-        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption);
-        command.Validators.Add(commandResult =>
+        base.ValidateOptions(options, validationResult);
+
+        if (!string.IsNullOrEmpty(options.Namespace) && string.IsNullOrEmpty(options.ResourceGroup))
         {
-            var namespaceName = commandResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
-            var resourceGroup = commandResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-
-            if (!string.IsNullOrEmpty(namespaceName) && string.IsNullOrEmpty(resourceGroup))
-            {
-                commandResult.AddError("When specifying a namespace name, a resource group must also be provided.");
-            }
-        });
-    }
-
-    protected override NamespaceGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("When specifying a namespace name, a resource group must also be provided.");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, NamespaceGetOptions options, CancellationToken cancellationToken)
+    {
         try
         {
-            // Determine if this is a single namespace request or list request
-            bool isSingleNamespaceRequest = !string.IsNullOrEmpty(options.Namespace);
-
-            if (isSingleNamespaceRequest)
+            if (!string.IsNullOrEmpty(options.Namespace))
             {
                 // Get single namespace with detailed information
                 var namespaceDetails = await _service.GetNamespaceAsync(
-                    options.Namespace!,
+                    options.Namespace,
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
@@ -92,7 +66,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEv
                     cancellationToken);
 
                 context.Response.Results = namespaceDetails != null
-                    ? ResponseResult.Create(new(namespaceDetails), EventHubsJsonContext.Default.NamespaceGetCommandResult)
+                    ? ResponseResult.Create(new(namespaceDetails, null), EventHubsJsonContext.Default.NamespaceGetCommandResult)
                     : null;
             }
             else
@@ -104,7 +78,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEv
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(namespaces ?? []), EventHubsJsonContext.Default.NamespacesGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(null, namespaces ?? []), EventHubsJsonContext.Default.NamespaceGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -116,6 +90,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEv
         return context.Response;
     }
 
-    internal record NamespacesGetCommandResult(List<Models.Namespace> Namespaces);
-    internal record NamespaceGetCommandResult(Models.Namespace Namespace);
+    public sealed record NamespaceGetCommandResult(
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Models.Namespace? Namespace,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<Models.Namespace>? Namespaces);
 }

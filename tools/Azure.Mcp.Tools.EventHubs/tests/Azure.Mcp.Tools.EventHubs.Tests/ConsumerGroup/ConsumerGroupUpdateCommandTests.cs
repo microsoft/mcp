@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.Tests.ConsumerGroup;
 
-public class ConsumerGroupUpdateCommandTests : CommandUnitTestsBase<ConsumerGroupUpdateCommand, IEventHubsService>
+public class ConsumerGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<ConsumerGroupUpdateCommand, IEventHubsService>
 {
     [Theory]
     [InlineData("", false)]
