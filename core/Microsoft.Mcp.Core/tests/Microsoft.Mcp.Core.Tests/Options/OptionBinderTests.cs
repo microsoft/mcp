@@ -224,7 +224,7 @@ public sealed class OptionBinderTests
         Assert.True(tagsOption.AllowMultipleArgumentsPerToken);
 
         var nullableTagsOption = command.Options.Single(o => o.Name == "--nullable-tags");
-        Assert.Equal(ArgumentArity.ZeroOrMore, nullableTagsOption.Arity);
+        Assert.Equal(ArgumentArity.OneOrMore, nullableTagsOption.Arity);
         Assert.True(nullableTagsOption.AllowMultipleArgumentsPerToken);
     }
 

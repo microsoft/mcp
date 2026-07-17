@@ -1,18 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Workbooks.Options.Workbook;
 
-public class UpdateWorkbooksOptions : BaseWorkbooksOptions
+public sealed class UpdateWorkbooksOptions
 {
-    [JsonPropertyName(WorkbooksOptionDefinitions.WorkbookIdText)]
-    public string? WorkbookId { get; set; }
+    [Option(Description = "The Azure Resource ID of the workbook to retrieve.")]
+    public required string WorkbookId { get; set; }
 
-    [JsonPropertyName(WorkbooksOptionDefinitions.DisplayNameText)]
+    [Option(Description = WorkbooksOptionDescriptions.DisplayNameDescription)]
     public string? DisplayName { get; set; }
 
-    [JsonPropertyName(WorkbooksOptionDefinitions.SerializedContentText)]
+    [Option(Description = WorkbooksOptionDescriptions.SerializedContentDescription)]
     public string? SerializedContent { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
