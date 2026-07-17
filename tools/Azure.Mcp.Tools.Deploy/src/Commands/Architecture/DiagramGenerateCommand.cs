@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
 using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
@@ -9,7 +10,6 @@ using Azure.Mcp.Tools.Deploy.Options.Architecture;
 using Azure.Mcp.Tools.Deploy.Services.Templates;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Deploy.Commands.Architecture;
@@ -25,40 +25,32 @@ namespace Azure.Mcp.Tools.Deploy.Commands.Architecture;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logger) : BaseCommand<DiagramGenerateOptions>
+public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logger)
+    : BaseCommand<DiagramGenerateOptions, string>
 {
     private readonly ILogger<DiagramGenerateCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(DiagramGenerateOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption);
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+
+        try
         {
-            var rawMcpToolInput = result.GetValueOrDefault<string>(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption.Name);
-            if (string.IsNullOrWhiteSpace(rawMcpToolInput))
-            {
-                result.AddError("App topology cannot be null or empty.");
-            }
-        });
+            JsonSerializer.Deserialize(options.RawMcpToolInput, DeployJsonContext.Default.AppTopology);
+        }
+        catch
+        {
+            validationResult.Errors.Add($"--raw-mcp-tool-input must be valid JSON.");
+        }
     }
 
-    protected override DiagramGenerateOptions BindOptions(ParseResult parseResult)
-    {
-        return new()
-        {
-            RawMcpToolInput = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption.Name)
-        };
-    }
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DiagramGenerateOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            var options = BindOptions(parseResult);
             var rawMcpToolInput = options.RawMcpToolInput;
 
-            AppTopology appTopology = JsonSerializer.Deserialize(rawMcpToolInput!, DeployJsonContext.Default.AppTopology)
+            AppTopology appTopology = JsonSerializer.Deserialize(rawMcpToolInput, DeployJsonContext.Default.AppTopology)
                 ?? throw new ArgumentException("Failed to deserialize app topology.", nameof(rawMcpToolInput));
 
             context.Activity?
@@ -73,7 +65,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
                 _logger.LogWarning("No services detected in the app topology.");
                 context.Response.Status = HttpStatusCode.OK;
                 context.Response.Message = "No service detected.";
-                return Task.FromResult(context.Response);
+                return context.Response;
             }
 
             var chart = GenerateMermaidChart.GenerateChart(appTopology.WorkspaceFolder ?? "", appTopology);
@@ -109,7 +101,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
             HandleException(context, ex);
         }
 
-        return Task.FromResult(context.Response);
+        return context.Response;
     }
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
