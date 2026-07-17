@@ -467,7 +467,7 @@ public sealed class OptionBinderTests
         var parseResult = command.Parse("--color Invalid");
         var ex = Assert.Throws<CommandValidationException>(() => OptionBinder.BindOptions<EnumOptions>(parseResult));
 
-        Assert.Contains("Argument 'Invalid' not recognized. Must be one of:", ex.Message);
+        Assert.Contains("Invalid --color 'Invalid'. Must be one of:", ex.Message);
     }
 
     [Fact]
