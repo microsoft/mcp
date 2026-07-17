@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.KeyVault.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.KeyVault.Models;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 
@@ -24,87 +23,51 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<CertificateGetOptions>
+public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger, IKeyVaultService keyVaultService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<CertificateGetOptions, CertificateGetCommand.CertificateGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<CertificateGetCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CertificateGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(KeyVaultOptionDefinitions.VaultName);
-        command.Options.Add(KeyVaultOptionDefinitions.CertificateName.AsOptional());
-    }
-
-    protected override CertificateGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
-        options.CertificateName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.CertificateName.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            if (string.IsNullOrEmpty(options.CertificateName))
+            if (string.IsNullOrEmpty(options.Certificate))
             {
                 // List all certificates
                 var certificates = await _keyVaultService.ListCertificates(
-                    options.VaultName!,
+                    options.Vault,
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(Certificates: certificates ?? [], Certificate: null), KeyVaultJsonContext.Default.CertificateGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(certificates ?? [], null), KeyVaultJsonContext.Default.CertificateGetCommandResult);
             }
             else
             {
                 // Get specific certificate
                 var certificate = await _keyVaultService.GetCertificate(
-                    options.VaultName!,
-                    options.CertificateName,
+                    options.Vault,
+                    options.Certificate,
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
 
-                var certificateDetails = new CertificateDetails(
-                    certificate.Name,
-                    certificate.Id,
-                    certificate.KeyId,
-                    certificate.SecretId,
-                    Convert.ToBase64String(certificate.Cer),
-                    certificate.Properties.X509ThumbprintString,
-                    certificate.Properties.Enabled,
-                    certificate.Properties.NotBefore,
-                    certificate.Properties.ExpiresOn,
-                    certificate.Properties.CreatedOn,
-                    certificate.Properties.UpdatedOn,
-                    certificate.Policy.Subject,
-                    certificate.Policy.IssuerName);
-
-                context.Response.Results = ResponseResult.Create(new(Certificates: null, Certificate: certificateDetails), KeyVaultJsonContext.Default.CertificateGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(null, CertificateDetails.FromCertificate(certificate)), KeyVaultJsonContext.Default.CertificateGetCommandResult);
             }
         }
         catch (Exception ex)
         {
-            if (string.IsNullOrEmpty(options.CertificateName))
+            if (string.IsNullOrEmpty(options.Certificate))
             {
-                _logger.LogError(ex, "Error listing certificates from vault {VaultName}", options.VaultName);
+                _logger.LogError(ex, "Error listing certificates from vault {VaultName}", options.Vault);
             }
             else
             {
-                _logger.LogError(ex, "Error getting certificate {CertificateName} from vault {VaultName}", options.CertificateName, options.VaultName);
+                _logger.LogError(ex, "Error getting certificate {CertificateName} from vault {VaultName}", options.Certificate, options.Vault);
             }
             HandleException(context, ex);
         }
@@ -112,6 +75,5 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger,
         return context.Response;
     }
 
-    internal record CertificateDetails(string Name, Uri Id, Uri KeyId, Uri SecretId, string Cer, string Thumbprint, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn, string Subject, string IssuerName);
-    internal record CertificateGetCommandResult(List<string>? Certificates, CertificateDetails? Certificate);
+    public sealed record CertificateGetCommandResult(List<string>? Certificates, CertificateDetails? Certificate);
 }
