@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tools.FileShares.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
 using Azure.Mcp.Tools.FileShares.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
@@ -23,54 +24,15 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logger, IFileSharesService service)
-    : BaseFileSharesCommand<FileShareCreateOrUpdateOptions>(logger, service)
+public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<FileShareUpdateOptions, FileShareUpdateCommand.FileShareUpdateCommandResult>(subscriptionResolver)
 {
-
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileShareUpdateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.FileShare.Name.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.ProvisionedStorageGiB.AsOptional());
-        command.Options.Add(FileSharesOptionDefinitions.ProvisionedIOPerSec.AsOptional());
-        command.Options.Add(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.AsOptional());
-        command.Options.Add(FileSharesOptionDefinitions.PublicNetworkAccess.AsOptional());
-        command.Options.Add(FileSharesOptionDefinitions.NfsRootSquash.AsOptional());
-        command.Options.Add(FileSharesOptionDefinitions.NfsEncryptionInTransit.AsOptional());
-        command.Options.Add(FileSharesOptionDefinitions.AllowedSubnets.AsOptional());
-        command.Options.Add(FileSharesOptionDefinitions.Tags.AsOptional());
-    }
-
-    protected override FileShareCreateOrUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Name.Name);
-        options.ProvisionedStorageInGiB = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
-        options.ProvisionedIOPerSec = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedIOPerSec.Name);
-        options.ProvisionedThroughputMiBPerSec = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.Name);
-        options.PublicNetworkAccess = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PublicNetworkAccess.Name);
-        options.NfsRootSquash = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.NfsRootSquash.Name);
-        options.NfsEncryptionInTransit = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.NfsEncryptionInTransit.Name);
-        options.AllowedSubnets = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.AllowedSubnets.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Tags.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            _logger.LogInformation("Updating file share. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}",
-                options.Subscription, options.ResourceGroup, options.FileShareName);
+            logger.LogInformation("Updating file share. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}",
+                options.Subscription, options.ResourceGroup, options.Name);
 
             // Parse tags if provided
             Dictionary<string, string>? tags = null;
@@ -82,7 +44,7 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to parse tags JSON: {Tags}", options.Tags);
+                    logger.LogWarning(ex, "Failed to parse tags JSON: {Tags}", options.Tags);
                 }
             }
 
@@ -93,12 +55,12 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
                 allowedSubnets = options.AllowedSubnets.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             }
 
-            var fileShare = await _fileSharesService.PatchFileShareAsync(
+            var fileShare = await fileSharesService.PatchFileShareAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.FileShareName!,
+                options.ResourceGroup,
+                options.Name,
                 options.ProvisionedStorageInGiB,
-                options.ProvisionedIOPerSec,
+                options.ProvisionedIoPerSec,
                 options.ProvisionedThroughputMiBPerSec,
                 options.PublicNetworkAccess,
                 options.NfsRootSquash,
@@ -111,16 +73,16 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
 
             context.Response.Results = ResponseResult.Create(new(fileShare), FileSharesJsonContext.Default.FileShareUpdateCommandResult);
 
-            _logger.LogInformation("File share updated successfully. FileShare: {FileShareName}", options.FileShareName);
+            logger.LogInformation("File share updated successfully. FileShare: {FileShareName}", options.Name);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to update file share");
+            logger.LogError(ex, "Failed to update file share");
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record FileShareUpdateCommandResult(FileShareInfo FileShare);
+    public sealed record FileShareUpdateCommandResult(FileShareInfo FileShare);
 }
