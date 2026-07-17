@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Postgres.Commands;
 
@@ -22,67 +22,38 @@ namespace Azure.Mcp.Tools.Postgres.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class PostgresListCommand(IPostgresService postgresService, ILogger<PostgresListCommand> logger) : BasePostgresCommand<BasePostgresOptions>(logger)
+public sealed class PostgresListCommand(IPostgresService postgresService, ILogger<PostgresListCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<PostgresListOptions, PostgresListCommand.PostgresListCommandResult>(subscriptionResolver)
 {
     private readonly IPostgresService _postgresService = postgresService;
+    private readonly ILogger<PostgresListCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(PostgresListOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(PostgresOptionDefinitions.User.AsOptional());
-        command.Options.Add(PostgresOptionDefinitions.ServerOptional);
-        command.Options.Add(PostgresOptionDefinitions.DatabaseOptional);
-        command.Options.Add(PostgresOptionDefinitions.Schema);
-        command.Options.Add(PostgresOptionDefinitions.AuthType);
-        command.Options.Add(PostgresOptionDefinitions.Password);
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+
+        // Validate that --server is provided when --database is specified
+        if (!string.IsNullOrEmpty(options.Database) && string.IsNullOrEmpty(options.Server))
         {
-            // Validate that --server is provided when --database is specified
-            if (!string.IsNullOrEmpty(result.GetValueOrDefault<string>(PostgresOptionDefinitions.DatabaseOptional.Name)) &&
-                string.IsNullOrEmpty(result.GetValueOrDefault<string>(PostgresOptionDefinitions.ServerOptional.Name)))
-            {
-                result.AddError("The --server parameter is required when --database is specified.");
-            }
+            validationResult.Errors.Add("The --server parameter is required when --database is specified.");
+        }
 
-            // Validate that --user is provided when --server is specified
-            if (!string.IsNullOrEmpty(result.GetValueOrDefault<string>(PostgresOptionDefinitions.ServerOptional.Name)) &&
-                string.IsNullOrEmpty(result.GetValueOrDefault<string>(PostgresOptionDefinitions.User.Name)))
-            {
-                result.AddError("The --user parameter is required when --server is specified.");
-            }
-        });
+        // Validate that --user is provided when --server is specified
+        if (!string.IsNullOrEmpty(options.Server) && string.IsNullOrEmpty(options.User))
+        {
+            validationResult.Errors.Add("The --user parameter is required when --server is specified.");
+        }
     }
 
-    protected override BasePostgresOptions BindOptions(ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PostgresListOptions options, CancellationToken cancellationToken)
     {
-        var options = base.BindOptions(parseResult);
-        options.Server = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.ServerOptional.Name);
-        options.Database = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.DatabaseOptional.Name);
-        options.Schema = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Schema.Name);
-        options.AuthType = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.AuthType.Name);
-        options.Password = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Password.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        BasePostgresOptions? options = null;
-
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
-            options = BindOptions(parseResult);
-
             // Route based on provided parameters
             if (!string.IsNullOrEmpty(options.Database))
             {
                 // List tables in specified database
-                List<string> tables = await _postgresService.ListTablesAsync(
+                TableListResult tableResult = await _postgresService.ListTablesAsync(
                     options.AuthType!,
                     options.User!,
                     options.Password,
@@ -92,13 +63,13 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new(null, null, tables ?? []),
+                    new(null, null, tableResult.Tables ?? [], tableResult.IsTruncated ? true : null),
                     PostgresJsonContext.Default.PostgresListCommandResult);
             }
             else if (!string.IsNullOrEmpty(options.Server))
             {
                 // List databases on specified server
-                List<string> databases = await _postgresService.ListDatabasesAsync(
+                DatabaseListResult databaseResult = await _postgresService.ListDatabasesAsync(
                     options.AuthType!,
                     options.User!,
                     options.Password,
@@ -106,7 +77,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new(null, databases ?? [], null),
+                    new(null, databaseResult.Databases ?? [], null, databaseResult.IsTruncated ? true : null),
                     PostgresJsonContext.Default.PostgresListCommandResult);
             }
             else
@@ -131,5 +102,5 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
         return context.Response;
     }
 
-    public record PostgresListCommandResult(List<string>? Servers, List<string>? Databases, List<string>? Tables);
+    public sealed record PostgresListCommandResult(List<string>? Servers, List<string>? Databases, List<string>? Tables, bool? ResultsTruncated = null);
 }

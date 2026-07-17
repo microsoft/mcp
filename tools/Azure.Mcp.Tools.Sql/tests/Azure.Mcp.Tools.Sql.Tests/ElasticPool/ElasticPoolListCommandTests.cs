@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.ElasticPool;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.Tests.ElasticPool;
 
-public class ElasticPoolListCommandTests : CommandUnitTestsBase<ElasticPoolListCommand, ISqlService>
+public class ElasticPoolListCommandTests : SubscriptionCommandUnitTestsBase<ElasticPoolListCommand, ISqlService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()

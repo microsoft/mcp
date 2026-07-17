@@ -185,6 +185,7 @@ Describes the style of a model element.
 
 ```json
 {
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/graphIndex/definition/dataSources/1.1.0/schema.json",
   "dataSources": [
     {
       "name": "Customer_Table",
@@ -222,7 +223,7 @@ Describes the style of a model element.
 
 ```json
 {
-  "schemaVersion": "1.0.0",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/graphIndex/definition/graphDefinition/1.0.0/schema.json",
   "nodeTables": [
     {
       "id": "Customer_5b6cb156-c778-4fce-8606-f0f712c04818",
@@ -452,7 +453,7 @@ Describes the style of a model element.
 
 ```json
 {
-  "schemaVersion": "1.0.0",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/graphIndex/definition/graphType/1.0.0/schema.json",
   "nodeTypes": [
     {
       "alias": "Customer_nodeType",
@@ -632,7 +633,7 @@ Describes the style of a model element.
 
 ```json
 {
-  "schemaVersion": "1.0.0",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/graphIndex/definition/stylingConfiguration/1.0.0/schema.json",
   "modelLayout": {
     "positions": {
       "Customer_nodeType": {

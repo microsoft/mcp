@@ -16,37 +16,37 @@ public sealed class OptionBinderTests
 
     private sealed class StringOptions
     {
-        [Option]
+        [Option(Description = "The name of the item.")]
         public string? Name { get; set; }
-        [Option]
+        [Option(Description = "The description of the item.")]
         public string? Description { get; set; }
     }
 
     private sealed class IntOptions
     {
-        [Option]
+        [Option(Description = "The number of items.")]
         public int Count { get; set; }
-        [Option]
+        [Option(Description = "The maximum number of items.")]
         public int? Limit { get; set; }
     }
 
     private sealed class BoolOptions
     {
-        [Option]
+        [Option(Description = "Whether to display verbose output.")]
         public bool Verbose { get; set; }
-        [Option]
+        [Option(Description = "Whether to enable debug mode.")]
         public bool? Debug { get; set; }
     }
 
     private sealed class ArrayOptions
     {
-        [Option]
+        [Option(Description = "The tags associated with the item.")]
         public required string[] Tags { get; set; }
-        [Option]
+        [Option(Description = "The ports associated with the item.")]
         public required int[] Ports { get; set; }
-        [Option]
+        [Option(Description = "The tags associated with the item.")]
         public string[]? NullableTags { get; set; }
-        [Option]
+        [Option(Description = "The ports associated with the item.")]
         public int[]? NullablePorts { get; set; }
     }
 
@@ -59,98 +59,129 @@ public sealed class OptionBinderTests
 
     private sealed class EnumOptions
     {
-        [Option]
+        [Option(Description = "The color of the item.")]
         public Color Color { get; set; }
-        [Option]
+        [Option(Description = "The background color of the item.")]
         public Color? Background { get; set; }
     }
 
     private sealed class ArrayEnumOptions
     {
-        [Option]
+        [Option(Description = "The colors of the item.")]
         public required Color[] Colors { get; set; }
-        [Option]
+        [Option(Description = "The background colors of the item.")]
         public Color[]? Backgrounds { get; set; }
     }
 
     private sealed class GuidOptions
     {
-        [Option]
+        [Option(Description = "The ID of the item.")]
         public Guid Id { get; set; }
-        [Option]
+        [Option(Description = "The correlation ID of the item.")]
         public Guid? CorrelationId { get; set; }
     }
 
     private sealed class DateTimeOptions
     {
-        [Option]
+        [Option(Description = "The start date of the item.")]
         public DateTime StartDate { get; set; }
-        [Option]
+        [Option(Description = "The timestamp of the item.")]
         public DateTimeOffset? Timestamp { get; set; }
     }
 
     private sealed class DecimalOptions
     {
-        [Option]
+        [Option(Description = "The price of the item.")]
         public decimal Price { get; set; }
-        [Option]
+        [Option(Description = "The rate of the item.")]
         public double? Rate { get; set; }
     }
 
     private sealed class UnsupportedTypeOptions
     {
-        [Option]
+        [Option(Description = "The value of the item.")]
         public object[]? Value { get; set; }
     }
 
     private sealed class NetworkSettings
     {
-        [Option]
+        [Option(Description = "The host of the item.")]
         public string? Host { get; set; }
-        [Option]
+        [Option(Description = "The port of the item.")]
         public int? Port { get; set; }
     }
 
     private sealed class RequiredNetworkSettings
     {
-        [Option]
+        [Option(Description = "The name of the item.")]
         public required string Name { get; set; }
-        [Option]
+        [Option(Description = "The port of the item.")]
         public int? Port { get; set; }
     }
 
     private sealed class NestedOptional
     {
-        [Option]
+        [Option(Description = "The name of the item.")]
         public string? Name { get; set; }
-        [Option]
+        [OptionContainer]
         public NetworkSettings? Optional { get; set; }
-        [Option]
+        [OptionContainer]
         public required NetworkSettings Required { get; set; }
     }
 
     private sealed class NestedRequired
     {
-        [Option]
+        [Option(Description = "The name of the item.")]
         public string? Name { get; set; }
-        [Option]
+        [OptionContainer]
         public required RequiredNetworkSettings Required { get; set; }
     }
 
     private sealed class AliasedOptions
     {
-        [Option(Name = "name", Aliases = ["n", "nm"])]
+        [Option(Description = "The name of the item.", Name = "name", Aliases = ["n", "nm"])]
         public required string Name { get; set; }
-        [Option(Name = "address", Aliases = ["a", "addr"])]
+        [Option(Description = "The address of the item.", Name = "address", Aliases = ["a", "addr"])]
         public string? Address { get; set; }
     }
 
     private sealed class DefaultedOptions
     {
-        [Option(DefaultValue = "default")]
+        [Option(Description = "The default name.", DefaultValue = "default")]
         public string? Name { get; set; }
-        [Option(DefaultValue = 42)]
+        [Option(Description = "The default count.", DefaultValue = 42)]
         public int? Count { get; set; }
+    }
+
+    private sealed class EmptyOrWhiteSpaceOptions
+    {
+        [Option(Description = "The name of the item.")]
+        public required string Name { get; set; }
+        [Option(Description = "The description of the item.", AllowEmptyOrWhiteSpaceString = true)]
+        public required string Description { get; set; }
+        [Option(Description = "The tags of the item.")]
+        public required string[] Tags { get; set; }
+        [Option(Description = "The notes of the item.", AllowEmptyOrWhiteSpaceString = true)]
+        public required string[] Notes { get; set; }
+    }
+
+    private sealed class InvalidAttributesCombinationOptions
+    {
+        [Option(Description = "Invalid attribute combination.")]
+        [OptionContainer]
+        public NetworkSettings? Invalid { get; set; }
+    }
+
+    private sealed class InvalidOptionAttributeOptions
+    {
+        [Option(Description = "Invalid option attribute.")]
+        public NetworkSettings? Invalid { get; set; }
+    }
+
+    private sealed class InvalidOptionContainerAttributeOptions
+    {
+        [OptionContainer]
+        public string? Invalid { get; set; }
     }
 
     #endregion
@@ -234,6 +265,39 @@ public sealed class OptionBinderTests
             () => OptionBinder.RegisterOptions<UnsupportedTypeOptions>(command));
 
         Assert.Contains("non-scalar element type", ex.Message);
+    }
+
+    [Fact]
+    public void RegisterOptions_InvalidAttributes_Throws()
+    {
+        var command = new Command("test");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => OptionBinder.RegisterOptions<InvalidAttributesCombinationOptions>(command));
+
+        Assert.Contains("Properties can only be attributed with [Option] or [OptionContainer], not both.", ex.Message);
+    }
+
+    [Fact]
+    public void RegisterOptions_InvalidOptionAttribute_Throws()
+    {
+        var command = new Command("test");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => OptionBinder.RegisterOptions<InvalidOptionAttributeOptions>(command));
+
+        Assert.Contains("Complex properties cannot use [Option] attribute. Use [OptionContainer] instead.", ex.Message);
+    }
+
+    [Fact]
+    public void RegisterOptions_InvalidOptionContainerAttribute_Throws()
+    {
+        var command = new Command("test");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => OptionBinder.RegisterOptions<InvalidOptionContainerAttributeOptions>(command));
+
+        Assert.Contains("Non-complex properties cannot use [OptionContainer] attribute. Use [Option] instead.", ex.Message);
     }
 
     #endregion
@@ -392,6 +456,18 @@ public sealed class OptionBinderTests
         Assert.Contains(Color.Red, options.Colors);
 
         Assert.Null(options.Backgrounds);
+    }
+
+    [Fact]
+    public void BindOptions_InvalidEnumValue_Throws()
+    {
+        var command = new Command("test");
+        OptionBinder.RegisterOptions<EnumOptions>(command);
+
+        var parseResult = command.Parse("--color Invalid");
+        var ex = Assert.Throws<CommandValidationException>(() => OptionBinder.BindOptions<EnumOptions>(parseResult));
+
+        Assert.Contains("Argument 'Invalid' not recognized. Must be one of:", ex.Message);
     }
 
     [Fact]
@@ -608,6 +684,34 @@ public sealed class OptionBinderTests
         Assert.NotNull(options.Required);
         Assert.Equal("primary", options.Required.Name);
         Assert.Equal(5432, options.Required.Port);
+    }
+
+    [Fact]
+    public void BindOptions_EmptyOrWhiteSpace_Allowed()
+    {
+        var command = new Command("test");
+        OptionBinder.RegisterOptions<EmptyOrWhiteSpaceOptions>(command);
+
+        var parseResult = command.Parse("--name John --description \"   \" --tags updated --notes \"\"");
+        var options = OptionBinder.BindOptions<EmptyOrWhiteSpaceOptions>(parseResult);
+
+        Assert.Equal("   ", options.Description);
+        Assert.Single(options.Notes);
+        Assert.Equal("", options.Notes[0]);
+    }
+
+    [Theory]
+    [InlineData("--name \"   \" --description description --tags updated --notes notes")]
+    [InlineData("--name John --description description --tags \"\" --notes notes")]
+    public void BindOptions_EmptyOrWhiteSpace_Rejected(string args)
+    {
+        var command = new Command("test");
+        OptionBinder.RegisterOptions<EmptyOrWhiteSpaceOptions>(command);
+
+        var parseResult = command.Parse(args);
+        var exception = Assert.Throws<CommandValidationException>(() => OptionBinder.BindOptions<EmptyOrWhiteSpaceOptions>(parseResult));
+
+        Assert.Contains("require non-empty, non-whitespace values", exception.Message);
     }
 
     #endregion

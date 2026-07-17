@@ -8,22 +8,22 @@ namespace Azure.Mcp.Tools.Aks.Options.Nodepool;
 
 public class NodepoolGetOptions : ISubscriptionOption
 {
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.ResourceGroup)]
+    [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }
 
-    [Option(Name = "retry")]
+    [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 
-    [Option("AKS Cluster name.")]
+    [Option(Description = "AKS Cluster name.")]
     public required string Cluster { get; set; }
 
-    [Option("AKS node pool (agent pool) name.")]
+    [Option(Description = "AKS node pool (agent pool) name.")]
     public string? Nodepool { get; set; }
 }
 

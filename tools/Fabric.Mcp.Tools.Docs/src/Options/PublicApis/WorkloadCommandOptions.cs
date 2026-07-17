@@ -7,6 +7,6 @@ namespace Fabric.Mcp.Tools.Docs.Options.PublicApis;
 
 public class WorkloadCommandOptions
 {
-    [Option("The type of Microsoft Fabric workload.")]
+    [Option(Description = "The type of Microsoft Fabric workload.")]
     public required string WorkloadType { get; set; }
 }

@@ -60,5 +60,5 @@ public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logge
         return context.Response;
     }
 
-    public record KeyValueLockSetCommandResult(string Key, string? Label, bool Locked);
+    public sealed record KeyValueLockSetCommandResult(string Key, string? Label, bool Locked);
 }

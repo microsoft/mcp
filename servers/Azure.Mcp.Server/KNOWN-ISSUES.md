@@ -11,7 +11,6 @@ The following tools are not supported when the Azure MCP Server is running in HT
 
 | Namespace | Impacted Tools |
 |-----------|----------------|
-| monitor | `azmcp_monitor_healthmodels_entity_gethealth` |
 | communication | `azmcp_communication_sms_send`, `azmcp_communication_email_send` |
 | confidentialledger | `azmcp_confidentialledger_entries_append`, `azmcp_confidentialledger_entries_get` |
 

@@ -9,12 +9,20 @@
         "DataAgent": {
             "description": "A DataAgent object.",
             "type": "object",
-            "required": ["type"],
+            "required": [
+                "type"
+            ],
             "allOf": [
                 {
                     "$ref": "../common/definitions.json#/definitions/Item"
                 }
-            ]
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The DataAgent properties.",
+                    "$ref": "#/definitions/DataAgentProperties"
+                }
+            }
         },
         "DataAgents": {
             "description": "A list of data agents.",
@@ -35,9 +43,22 @@
                 }
             ]
         },
+        "DataAgentProperties": {
+            "description": "The DataAgent properties.",
+            "type": "object",
+            "properties": {
+                "publishedDescription": {
+                    "description": "The published description of the DataAgent. This description provides context when the agent appears in other experiences. It is set when the DataAgent is published and is not returned for an unpublished DataAgent.",
+                    "type": "string",
+                    "readOnly": true
+                }
+            }
+        },
         "CreateDataAgentRequest": {
             "description": "Create DataAgent request payload.",
-            "required": ["displayName"],
+            "required": [
+                "displayName"
+            ],
             "properties": {
                 "displayName": {
                     "description": "The DataAgent display name. The display name must follow naming rules according to item type.",
@@ -69,7 +90,9 @@
         },
         "UpdateDataAgentDefinitionRequest": {
             "description": "Update DataAgent public definition request payload.",
-            "required": ["definition"],
+            "required": [
+                "definition"
+            ],
             "properties": {
                 "definition": {
                     "$ref": "#/definitions/DataAgentPublicDefinition"
@@ -78,7 +101,9 @@
         },
         "DataAgentDefinitionResponse": {
             "description": "DataAgent public definition response.",
-            "required": ["definition"],
+            "required": [
+                "definition"
+            ],
             "properties": {
                 "definition": {
                     "$ref": "#/definitions/DataAgentPublicDefinition",
@@ -86,10 +111,12 @@
                 }
             }
         },
-        "DataAgentPublicDefinition" : {
+        "DataAgentPublicDefinition": {
             "description": "DataAgent public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/data-agent-definition) for more details on the structure of the DataAgent definition.",
             "type": "object",
-            "required": ["parts"],
+            "required": [
+                "parts"
+            ],
             "properties": {
                 "format": {
                     "description": "The format of the data agent definition.",
@@ -120,7 +147,7 @@
                     "type": "string",
                     "readOnly": false
                 },
-                "payloadType":{
+                "payloadType": {
                     "description": "The payload type.",
                     "$ref": "../common/definitions.json#/definitions/PayloadType",
                     "readOnly": false
@@ -140,6 +167,670 @@
                     "type": "string",
                     "readOnly": false
                 }
+            }
+        },
+        "DataAgentSettingsResponse": {
+            "description": "The DataAgent settings.",
+            "type": "object",
+            "properties": {
+                "aiInstructions": {
+                    "description": "Custom AI system prompt for the DataAgent.",
+                    "type": "string"
+                }
+            }
+        },
+        "UpdateDataAgentSettingsRequest": {
+            "description": "Update DataAgent settings request payload. Only provided fields are updated.",
+            "type": "object",
+            "properties": {
+                "aiInstructions": {
+                    "description": "Custom AI system prompt for the DataAgent.",
+                    "type": "string"
+                }
+            }
+        },
+        "DataAgentDatasources": {
+            "description": "A paginated list of DataAgent datasources.",
+            "type": "object",
+            "required": [
+                "value"
+            ],
+            "properties": {
+                "value": {
+                    "description": "A list of datasources.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataAgentDatasourceResponse"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "DataAgentDatasourceResponse": {
+            "description": "A DataAgent datasource.",
+            "type": "object",
+            "required": [
+                "id",
+                "type"
+            ],
+            "discriminator": "type",
+            "properties": {
+                "id": {
+                    "description": "The datasource ID.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "instructions": {
+                    "description": "Custom AI instructions specific to this datasource.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "The datasource type.",
+                    "$ref": "#/definitions/DatasourceType"
+                },
+                "displayName": {
+                    "description": "The display name of the datasource.",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The description of the datasource.",
+                    "type": "string"
+                }
+            }
+        },
+        "FabricItemDatasource": {
+            "type": "object",
+            "description": "A DataAgent datasource backed by a Fabric item.",
+            "required": [
+                "itemReference",
+                "fabricItemType"
+            ],
+            "properties": {
+                "itemReference": {
+                    "$ref": "../common/definitions.json#/definitions/ItemReference"
+                },
+                "fabricItemType": {
+                    "description": "The Fabric item type of the datasource.",
+                    "$ref": "#/definitions/DataAgentSupportedItemType"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/DataAgentDatasourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "FabricItem"
+        },
+        "LakehouseTablesDatasource": {
+            "type": "object",
+            "description": "A DataAgent datasource that uses a lakehouse in tables-only mode.",
+            "required": [
+                "lakehouseReference"
+            ],
+            "properties": {
+                "lakehouseReference": {
+                    "$ref": "../common/definitions.json#/definitions/ItemReference"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/DataAgentDatasourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "LakehouseTables"
+        },
+        "CreateDataAgentDatasourceRequest": {
+            "description": "Create DataAgent datasource request payload.",
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "description": "The datasource type to create.",
+                    "$ref": "#/definitions/DatasourceType"
+                },
+                "itemReference": {
+                    "$ref": "../common/definitions.json#/definitions/ItemReferenceById"
+                },
+                "lakehouseReference": {
+                    "$ref": "../common/definitions.json#/definitions/ItemReferenceById"
+                }
+            }
+        },
+        "UpdateDataAgentDatasourceRequest": {
+            "description": "Update DataAgent datasource request payload. Only provided fields are updated.",
+            "type": "object",
+            "properties": {
+                "instructions": {
+                    "description": "Custom AI instructions specific to this datasource.",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The description of the datasource.",
+                    "type": "string"
+                }
+            }
+        },
+        "DataSourceElement": {
+            "description": "A datasource schema element.",
+            "type": "object",
+            "required": [
+                "id",
+                "isSelected",
+                "displayName",
+                "type",
+                "hasSubElements"
+            ],
+            "properties": {
+                "id": {
+                    "description": "The element identifier. Use as rootId to drill deeper into the schema tree.",
+                    "type": "string"
+                },
+                "isSelected": {
+                    "description": "Whether this element is selected for use by the DataAgent.",
+                    "type": "boolean"
+                },
+                "displayName": {
+                    "description": "Human-readable name of the element.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "The type of schema element.",
+                    "$ref": "#/definitions/ElementType"
+                },
+                "dataType": {
+                    "description": "Data type for columns (e.g., int, string). Present only for column elements.",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "User-set description of the element.",
+                    "type": "string"
+                },
+                "hasSubElements": {
+                    "description": "Whether this element has children to drill into.",
+                    "type": "boolean"
+                },
+                "state": {
+                    "description": "Indicates if the element exists in the live schema.",
+                    "$ref": "#/definitions/ElementState"
+                },
+                "indexState": {
+                    "description": "Index state for lakehouse file directories.",
+                    "$ref": "#/definitions/IndexState"
+                },
+                "lastSyncDateTime": {
+                    "description": "The last time this element was synchronized from the datasource schema, as an ISO 8601 timestamp (e.g., 2025-06-15T10:30:00Z).",
+                    "type": "string"
+                }
+            }
+        },
+        "DataSourceElements": {
+            "description": "A paginated list of datasource schema elements.",
+            "type": "object",
+            "required": [
+                "value"
+            ],
+            "properties": {
+                "value": {
+                    "description": "A list of schema elements.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataSourceElement"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "UpdateDataSourceElementRequest": {
+            "description": "Update a datasource element request payload. Only provided fields are updated.",
+            "type": "object",
+            "properties": {
+                "isSelected": {
+                    "description": "Select or deselect the element. When deselected, the element configuration is preserved and restored when re-selected.",
+                    "type": "boolean"
+                },
+                "description": {
+                    "description": "Set a custom description for the element.",
+                    "type": "string"
+                }
+            }
+        },
+        "DataAgentFewshot": {
+            "description": "A DataAgent fewshot.",
+            "type": "object",
+            "required": [
+                "id",
+                "question",
+                "validationStatus"
+            ],
+            "properties": {
+                "id": {
+                    "description": "The fewshot ID.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "question": {
+                    "description": "Natural language question.",
+                    "type": "string"
+                },
+                "query": {
+                    "description": "The SQL/KQL query answer.",
+                    "type": "string"
+                },
+                "validationStatus": {
+                    "description": "The validation status of the fewshot.",
+                    "$ref": "#/definitions/FewshotValidationStatus"
+                }
+            }
+        },
+        "DataAgentFewshots": {
+            "description": "A paginated list of DataAgent fewshots.",
+            "type": "object",
+            "required": [
+                "value"
+            ],
+            "properties": {
+                "value": {
+                    "description": "A list of fewshots.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataAgentFewshot"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateDataAgentFewshotRequest": {
+            "description": "Create a DataAgent fewshot request payload.",
+            "type": "object",
+            "required": [
+                "question"
+            ],
+            "properties": {
+                "question": {
+                    "description": "Natural language question.",
+                    "type": "string"
+                },
+                "query": {
+                    "description": "The SQL/KQL query answer.",
+                    "type": "string"
+                }
+            }
+        },
+        "UpdateDataAgentFewshotRequest": {
+            "description": "Update a DataAgent fewshot request payload. Only provided fields are updated.",
+            "type": "object",
+            "properties": {
+                "question": {
+                    "description": "Natural language question.",
+                    "type": "string"
+                },
+                "query": {
+                    "description": "The SQL/KQL query answer.",
+                    "type": "string"
+                }
+            }
+        },
+        "PublishDataAgentRequest": {
+            "description": "Publish DataAgent request payload.",
+            "type": "object",
+            "properties": {
+                "publishedDescription": {
+                    "description": "A description shown when the agent appears in other experiences.",
+                    "type": "string"
+                }
+            }
+        },
+        "PublishDataAgentResponse": {
+            "description": "Publish DataAgent response.",
+            "type": "object",
+            "properties": {
+                "publishedDescription": {
+                    "description": "The publish description.",
+                    "type": "string"
+                }
+            }
+        },
+        "DatasourceType": {
+            "type": "string",
+            "description": "The datasource type. Additional DatasourceType types may be added over time.",
+            "enum": [
+                "FabricItem",
+                "LakehouseTables"
+            ],
+            "x-ms-enum": {
+                "name": "DatasourceType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "FabricItem",
+                        "description": "A datasource backed by a supported Fabric item."
+                    },
+                    {
+                        "value": "LakehouseTables",
+                        "description": "A datasource backed by a lakehouse in tables-only mode."
+                    }
+                ]
+            }
+        },
+        "DataAgentSupportedItemType": {
+            "type": "string",
+            "description": "The supported Fabric item type for a `FabricItem` datasource. Values use published Fabric item names. Additional DataAgentSupportedItemType types may be added over time.",
+            "enum": [
+                "Report",
+                "SemanticModel",
+                "Lakehouse",
+                "KQLDatabase",
+                "Warehouse",
+                "MirroredDatabase",
+                "MirroredAzureDatabricksCatalog",
+                "GraphModel",
+                "SQLDatabase",
+                "Ontology"
+            ],
+            "x-ms-enum": {
+                "name": "DataAgentSupportedItemType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Report",
+                        "description": "Power BI report."
+                    },
+                    {
+                        "value": "SemanticModel",
+                        "description": "Power BI semantic model."
+                    },
+                    {
+                        "value": "Lakehouse",
+                        "description": "A lakehouse."
+                    },
+                    {
+                        "value": "KQLDatabase",
+                        "description": "A KQL database."
+                    },
+                    {
+                        "value": "Warehouse",
+                        "description": "A warehouse."
+                    },
+                    {
+                        "value": "MirroredDatabase",
+                        "description": "A mirrored database."
+                    },
+                    {
+                        "value": "MirroredAzureDatabricksCatalog",
+                        "description": "A mirrored Azure Databricks catalog."
+                    },
+                    {
+                        "value": "GraphModel",
+                        "description": "A graph model."
+                    },
+                    {
+                        "value": "SQLDatabase",
+                        "description": "A SQL database."
+                    },
+                    {
+                        "value": "Ontology",
+                        "description": "An ontology."
+                    }
+                ]
+            }
+        },
+        "ElementType": {
+            "type": "string",
+            "description": "The public type of a datasource schema element. Additional ElementType types may be added over time.",
+            "enum": [
+                "Root",
+                "Files",
+                "Directory",
+                "Schemas",
+                "Tables",
+                "Views",
+                "Functions",
+                "ScalarFunctions",
+                "TableValuedFunctions",
+                "Shortcuts",
+                "MaterializedViews",
+                "Schema",
+                "Table",
+                "ExternalTable",
+                "MaterializedView",
+                "View",
+                "Column",
+                "Measure",
+                "Function",
+                "FunctionParameter",
+                "FunctionReturnValue",
+                "NodeType",
+                "EdgeType",
+                "Entity"
+            ],
+            "x-ms-enum": {
+                "name": "ElementType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Root",
+                        "description": "The root element of a datasource schema tree."
+                    },
+                    {
+                        "value": "Files",
+                        "description": "A files container element."
+                    },
+                    {
+                        "value": "Directory",
+                        "description": "A directory element."
+                    },
+                    {
+                        "value": "Schemas",
+                        "description": "A grouping container for schema elements."
+                    },
+                    {
+                        "value": "Tables",
+                        "description": "A grouping container for table elements."
+                    },
+                    {
+                        "value": "Views",
+                        "description": "A grouping container for view elements."
+                    },
+                    {
+                        "value": "Functions",
+                        "description": "A grouping container for function elements."
+                    },
+                    {
+                        "value": "ScalarFunctions",
+                        "description": "A grouping container for scalar function elements."
+                    },
+                    {
+                        "value": "TableValuedFunctions",
+                        "description": "A grouping container for table-valued function elements."
+                    },
+                    {
+                        "value": "Shortcuts",
+                        "description": "A grouping container for shortcut elements."
+                    },
+                    {
+                        "value": "MaterializedViews",
+                        "description": "A grouping container for materialized view elements."
+                    },
+                    {
+                        "value": "Schema",
+                        "description": "A schema element."
+                    },
+                    {
+                        "value": "Table",
+                        "description": "A table element."
+                    },
+                    {
+                        "value": "ExternalTable",
+                        "description": "An external table element."
+                    },
+                    {
+                        "value": "MaterializedView",
+                        "description": "A materialized view element."
+                    },
+                    {
+                        "value": "View",
+                        "description": "A view element."
+                    },
+                    {
+                        "value": "Column",
+                        "description": "A column element."
+                    },
+                    {
+                        "value": "Measure",
+                        "description": "A measure element."
+                    },
+                    {
+                        "value": "Function",
+                        "description": "A function element."
+                    },
+                    {
+                        "value": "FunctionParameter",
+                        "description": "A function parameter element."
+                    },
+                    {
+                        "value": "FunctionReturnValue",
+                        "description": "A function return value element."
+                    },
+                    {
+                        "value": "NodeType",
+                        "description": "A graph node type element."
+                    },
+                    {
+                        "value": "EdgeType",
+                        "description": "A graph edge type element."
+                    },
+                    {
+                        "value": "Entity",
+                        "description": "An ontology entity element."
+                    }
+                ]
+            }
+        },
+        "ElementState": {
+            "type": "string",
+            "description": "Indicates the current availability of the element in the datasource schema. Additional ElementState types may be added over time.",
+            "enum": [
+                "Available",
+                "NotAvailable",
+                "AccessDenied",
+                "AccessDeniedOap",
+                "DatasourceNotFound",
+                "SchemaUnavailable"
+            ],
+            "x-ms-enum": {
+                "name": "ElementState",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Available",
+                        "description": "The element is available in the datasource schema."
+                    },
+                    {
+                        "value": "NotAvailable",
+                        "description": "The element was previously configured but is no longer available in the datasource schema."
+                    },
+                    {
+                        "value": "AccessDenied",
+                        "description": "The datasource schema could not be read because access was denied."
+                    },
+                    {
+                        "value": "AccessDeniedOap",
+                        "description": "The datasource schema could not be read because access is blocked by an organizational access policy."
+                    },
+                    {
+                        "value": "DatasourceNotFound",
+                        "description": "The datasource could not be found."
+                    },
+                    {
+                        "value": "SchemaUnavailable",
+                        "description": "The datasource schema is currently unavailable."
+                    }
+                ]
+            }
+        },
+        "IndexState": {
+            "type": "string",
+            "description": "Index state for lakehouse file directories. Additional IndexState types may be added over time.",
+            "enum": [
+                "Indexed",
+                "Indexing",
+                "NotIndexed"
+            ],
+            "x-ms-enum": {
+                "name": "IndexState",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Indexed",
+                        "description": "Directory has been indexed for unstructured search."
+                    },
+                    {
+                        "value": "Indexing",
+                        "description": "Directory is currently being indexed."
+                    },
+                    {
+                        "value": "NotIndexed",
+                        "description": "Directory has not been indexed."
+                    }
+                ]
+            }
+        },
+        "FewshotValidationStatus": {
+            "description": "The validation status of a fewshot.",
+            "type": "object",
+            "required": [
+                "value"
+            ],
+            "properties": {
+                "value": {
+                    "description": "The validation result.",
+                    "$ref": "#/definitions/FewshotValidationStatusValue"
+                },
+                "reason": {
+                    "description": "The reason for the current validation status, when available.",
+                    "type": "string"
+                }
+            }
+        },
+        "FewshotValidationStatusValue": {
+            "type": "string",
+            "description": "The validation result for a fewshot. Additional FewshotValidationStatusValue types may be added over time.",
+            "enum": [
+                "Validating",
+                "Valid",
+                "Invalid"
+            ],
+            "x-ms-enum": {
+                "name": "FewshotValidationStatusValue",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Validating",
+                        "description": "Validation is currently in progress."
+                    },
+                    {
+                        "value": "Valid",
+                        "description": "Query has been validated successfully."
+                    },
+                    {
+                        "value": "Invalid",
+                        "description": "Query failed validation."
+                    }
+                ]
             }
         }
     }

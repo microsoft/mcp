@@ -3,19 +3,19 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.Account;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.Tests.Account;
 
-public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, IAppConfigService>
+public class AccountListCommandTests : SubscriptionCommandUnitTestsBase<AccountListCommand, IAppConfigService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsAccounts_WhenAccountsExist()

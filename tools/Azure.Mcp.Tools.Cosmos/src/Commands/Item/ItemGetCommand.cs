@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Cosmos.Options;
+using System.Text.Json;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Cosmos.Options.Item;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -23,43 +23,21 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ItemGetCommand(ILogger<ItemGetCommand> logger, ICosmosService cosmosService)
-    : BaseContainerCommand<ItemGetOptions>()
+public sealed class ItemGetCommand(ILogger<ItemGetCommand> logger, ICosmosService cosmosService, ISubscriptionResolver subscriptionResolver)
+    : BaseCosmosCommand<ItemGetOptions, ItemGetCommand.ItemGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ItemGetCommand> _logger = logger;
     private readonly ICosmosService _cosmosService = cosmosService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ItemGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(CosmosOptionDefinitions.ItemId);
-        command.Options.Add(CosmosOptionDefinitions.PartitionKey);
-    }
-
-    protected override ItemGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Id = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.ItemId.Name);
-        options.PartitionKey = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.PartitionKey.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var item = await _cosmosService.GetItem(
-                options.Account!,
-                options.Database!,
-                options.Container!,
-                options.Id!,
+                options.Account,
+                options.Database,
+                options.Container,
+                options.Id,
                 options.PartitionKey,
                 options.Subscription!,
                 options.AuthMethod ?? AuthMethod.Credential,
@@ -81,5 +59,5 @@ public sealed class ItemGetCommand(ILogger<ItemGetCommand> logger, ICosmosServic
         return context.Response;
     }
 
-    internal record ItemGetCommandResult(JsonElement? Item);
+    public sealed record ItemGetCommandResult(JsonElement? Item);
 }

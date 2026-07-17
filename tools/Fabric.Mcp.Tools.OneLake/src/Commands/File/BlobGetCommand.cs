@@ -151,21 +151,21 @@ public sealed class BlobGetCommand(
 
 public sealed class BlobGetOptions
 {
-    [Option("The ID of the Microsoft Fabric workspace.")]
+    [Option(Description = "The ID of the Microsoft Fabric workspace.")]
     public string? WorkspaceId { get; set; }
 
-    [Option("The name or ID of the Microsoft Fabric workspace.")]
+    [Option(Description = "The name or ID of the Microsoft Fabric workspace.")]
     public string? Workspace { get; set; }
 
-    [Option("The ID of the Fabric item.")]
+    [Option(Description = "The ID of the Fabric item.")]
     public string? ItemId { get; set; }
 
-    [Option("The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').")]
+    [Option(Description = "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').")]
     public string? Item { get; set; }
 
-    [Option("The path to the file in OneLake.")]
+    [Option(Description = "The path to the file in OneLake.")]
     public required string FilePath { get; set; }
 
-    [Option("Local path to save the downloaded content when running locally.")]
+    [Option(Description = "Local path to save the downloaded content when running locally.")]
     public string? DownloadFilePath { get; set; }
 }

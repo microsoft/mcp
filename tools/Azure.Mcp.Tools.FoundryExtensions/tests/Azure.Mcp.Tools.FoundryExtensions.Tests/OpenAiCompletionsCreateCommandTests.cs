@@ -1,19 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Tests;
 
-public class OpenAiCompletionsCreateCommandTests : CommandUnitTestsBase<OpenAiCompletionsCreateCommand, IFoundryExtensionsService>
+public class OpenAiCompletionsCreateCommandTests : SubscriptionCommandUnitTestsBase<OpenAiCompletionsCreateCommand, IFoundryExtensionsService>
 {
     [Fact]
     public async Task ExecuteAsync_CreatesCompletion_WhenValidOptionsProvided()

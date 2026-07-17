@@ -5,30 +5,17 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Architecture;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Tests.Helpers;
-using NSubstitute;
+using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SreAgent.Tests.Architecture;
 
-public class PlanCommandTests
+public class PlanCommandTests : CommandUnitTestsBase<PlanCommand, object>
 {
-    private readonly ILogger<PlanCommand> _logger;
-    private readonly PlanCommand _command;
-
-    public PlanCommandTests()
-    {
-        _logger = Substitute.For<ILogger<PlanCommand>>();
-        _command = new PlanCommand(_logger);
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var def = _command.GetCommand();
+        var def = Command.GetCommand();
         Assert.Equal("plan", def.Name);
         Assert.NotNull(def.Description);
         Assert.NotEmpty(def.Description);
@@ -37,7 +24,7 @@ public class PlanCommandTests
     [Fact]
     public void RegisterOptions_AddsExpectedOptions()
     {
-        var def = _command.GetCommand();
+        var def = Command.GetCommand();
         Assert.NotNull(def.Options);
         Assert.True(def.Options.Any(o => o.Name == "--requirements"), "Missing --requirements option");
         Assert.True(def.Options.Any(o => o.Name == "--trigger-type"), "Missing --trigger-type option");
@@ -51,12 +38,7 @@ public class PlanCommandTests
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        TestEnvironment.ClearAzureSubscriptionId();
-        var context = new CommandContext(new ServiceCollection().AddSingleton(_logger).BuildServiceProvider());
-        var commandDef = _command.GetCommand();
-        var parseResult = commandDef.Parse(args);
-
-        var response = await _command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync(args);
 
         if (shouldSucceed)
         {
@@ -71,17 +53,9 @@ public class PlanCommandTests
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {
-        TestEnvironment.ClearAzureSubscriptionId();
-        var context = new CommandContext(new ServiceCollection().AddSingleton(_logger).BuildServiceProvider());
-        var commandDef = _command.GetCommand();
-        var args = "--requirements \"create kusto telemetry dashboard\"";
-        var parseResult = commandDef.Parse(args);
+        var response = await ExecuteCommandAsync("--requirements \"create kusto telemetry dashboard\"");
 
-        var response = await _command.ExecuteAsync(context, parseResult, CancellationToken.None);
-
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-        var content = JsonSerializer.Deserialize(JsonSerializer.Serialize(response.Results), SreAgentJsonContext.Default.SreAgentTextResult)!.Message;
+        var content = ValidateAndDeserializeResponse(response, SreAgentJsonContext.Default.SreAgentTextResult).Message;
         Assert.Contains("Architecture Plan", content);
         Assert.Contains("Component Diagram", content);
         Assert.Contains("mermaid", content);
@@ -90,13 +64,7 @@ public class PlanCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesEmptyRequirements()
     {
-        TestEnvironment.ClearAzureSubscriptionId();
-        var context = new CommandContext(new ServiceCollection().AddSingleton(_logger).BuildServiceProvider());
-        var commandDef = _command.GetCommand();
-        var args = "--requirements \"\"";
-        var parseResult = commandDef.Parse(args);
-
-        var response = await _command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync("--requirements", "");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
@@ -104,13 +72,7 @@ public class PlanCommandTests
     [Fact]
     public async Task BindOptions_BindsOptionsCorrectly()
     {
-        TestEnvironment.ClearAzureSubscriptionId();
-        var context = new CommandContext(new ServiceCollection().AddSingleton(_logger).BuildServiceProvider());
-        var commandDef = _command.GetCommand();
-        var args = "--requirements \"create kusto telemetry dashboard\" --trigger-type scheduled --kusto-connector my-connector";
-        var parseResult = commandDef.Parse(args);
-
-        var response = await _command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync("--requirements \"create kusto telemetry dashboard\" --trigger-type scheduled --kusto-connector my-connector");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);

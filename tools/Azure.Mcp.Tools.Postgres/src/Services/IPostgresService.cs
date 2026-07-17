@@ -7,7 +7,7 @@ namespace Azure.Mcp.Tools.Postgres.Services;
 
 public interface IPostgresService
 {
-    Task<List<string>> ListDatabasesAsync(
+    Task<DatabaseListResult> ListDatabasesAsync(
         string authType,
         string user,
         string? password,
@@ -23,7 +23,7 @@ public interface IPostgresService
         string query,
         CancellationToken cancellationToken);
 
-    Task<List<string>> ListTablesAsync(
+    Task<TableListResult> ListTablesAsync(
         string authType,
         string user,
         string? password,

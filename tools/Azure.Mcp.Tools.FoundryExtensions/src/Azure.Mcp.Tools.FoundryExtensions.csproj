@@ -8,7 +8,7 @@
     <EmbeddedResource Include="**\Resources\*.json" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Azure.AI.Projects" />
@@ -18,7 +18,6 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
-    <PackageReference Include="System.CommandLine" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="**\Resources\**\*.md" />

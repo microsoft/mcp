@@ -1,7 +1,10 @@
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 
 /// <summary>
 /// Generator for Fastify greenfield projects (no existing telemetry)
@@ -12,11 +15,10 @@ public class FastifyGreenfieldGenerator : IGenerator
     {
         // Single Fastify project, greenfield
         var fastifyProjects = analysis.Projects
-            .Where(p => p.AppType == AppType.Fastify)
-            .ToList();
+            .Count(p => p.AppType == AppType.Fastify);
 
         return analysis.Language == Language.NodeJs
-            && fastifyProjects.Count == 1
+            && fastifyProjects == 1
             && analysis.State == InstrumentationState.Greenfield;
     }
 

@@ -44,9 +44,7 @@ public class PricingService : IPricingService
 
         var clientOptions = new AzureRetailPricesClientOptions(serviceVersion);
 
-        var client = new AzureRetailPricesClient(
-            GetPricingEndpoint(),
-            clientOptions);
+        var client = new AzureRetailPricesClient(GetPricingEndpoint(), clientOptions);
 
         var retailPrices = client.GetRetailPricesClient();
 

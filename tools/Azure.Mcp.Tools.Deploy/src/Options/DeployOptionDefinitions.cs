@@ -11,7 +11,7 @@ public static class DeployOptionDefinitions
 {
     public static class RawMcpToolInput
     {
-        public const string RawMcpToolInputName = CommandFactoryToolLoader.RawMcpToolInputOptionName;
+        public const string RawMcpToolInputName = BaseToolLoader.RawMcpToolInputOptionName;
 
         public static readonly Option<string> RawMcpToolInputOption = new(
             $"--{RawMcpToolInputName}"

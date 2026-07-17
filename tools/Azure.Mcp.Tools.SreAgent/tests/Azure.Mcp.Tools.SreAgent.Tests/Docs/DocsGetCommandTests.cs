@@ -2,16 +2,15 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Docs;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SreAgent.Tests.Docs;
 
-public class DocsGetCommandTests : CommandUnitTestsBase<DocsGetCommand, ISreAgentService>
+public class DocsGetCommandTests : SubscriptionCommandUnitTestsBase<DocsGetCommand, ISreAgentService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -38,8 +37,6 @@ public class DocsGetCommandTests : CommandUnitTestsBase<DocsGetCommand, ISreAgen
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        TestEnvironment.ClearAzureSubscriptionId();
-
         var response = await ExecuteCommandAsync(args);
 
         if (shouldSucceed)

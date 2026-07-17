@@ -31,7 +31,7 @@ public interface IServiceFabricService
         string clusterName,
         string nodeType,
         string[] nodes,
-        string updateType = "Default",
+        UpdateType updateType = UpdateType.Default,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

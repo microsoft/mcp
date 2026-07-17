@@ -584,6 +584,19 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | functions_template_get | Show me a Cosmos DB trigger with an output binding in Java |
 | functions_template_get | Generate a MCP Tool trigger in TypeScript for Node.js 22 |
 
+## Azure Insights
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| insights_get | Generate insights from my current subscription |
+| insights_get | Summarize what's deployed across my Azure environment and highlight notable patterns |
+| insights_get | Analyze my tenant and give me insights about the overall infrastructure |
+| insights_get | What can you tell me about my existing Azure environment? |
+| insights_get | Analyze subscription <subscription_id> for architectural patterns |
+| insights_get | Analyze my Azure infrastructure and surface patterns to help me plan my next project |
+| insights_get | Generate insights about my Azure environment to help me plan a new data analytics platform |
+| insights_get | What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS? |
+
 ## Azure Key Vault
 
 | Tool Name | Test Prompt |
@@ -768,7 +781,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | monitor_activitylog_list | List the activity logs of the last month for <resource_name> |
-| monitor_healthmodels_entity_get | Show me the health status of entity <entity_id> using the health model <health_model_name> |
+| monitor_healthmodels_get | Show me the health model <health_model_name> in resource group <resource_group> |
+| monitor_healthmodels_list | List the Azure Monitor health models in my subscription |
+| monitor_healthmodels_list | What health models are in resource group <resource_group>? |
 | monitor_instrumentation_get-learning-resource | Get the onboarding learning resource at path <resource_path> |
 | monitor_instrumentation_get-learning-resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> |
 | monitor_instrumentation_get-learning-resource | Get the content of the Azure Monitor learning resource file at path <resource_path> |
@@ -853,6 +868,30 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | redis_list | Show me the Redis resources in my subscription |
 | redis_list | Show me my Redis caches |
 | redis_list | Get Redis clusters |
+
+## Azure Resilience Management
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| resilience_goal_assignment_get | List all resilience goal assignments in service group <service_group> |
+| resilience_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> |
+| resilience_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> |
+| resilience_goal_resource_get | Get the goal resource <resource_name> for goal assignment <goal_assignment_name> in service group <service_group> |
+| resilience_goal_template_get | List all resilience goal templates in service group <service_group> |
+| resilience_goal_template_get | Get the details of goal template <goal_template_name> in service group <service_group> |
+| resilience_recovery_job_get | List all recovery jobs of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_job_get | Get the details of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_job_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_job_resource_get | Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_plan_get | List all resilience recovery plans in service group <service_group> |
+| resilience_recovery_plan_get | Get the details of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_plan_resource_get | List all resources (members) of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_plan_resource_get | Get the recovery resource <resource_name> for recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_usageplan_enrollment_get | List all enrollments of usage plan <usage_plan_name> in resource group <resource_group_name> |
+| resilience_usageplan_enrollment_get | Get the details of usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> in resource group <resource_group_name> |
+| resilience_usageplan_get | List all resilience usage plans in my subscription |
+| resilience_usageplan_get | List all resilience usage plans in resource group <resource_group_name> |
+| resilience_usageplan_get | Get the details of usage plan <usage_plan_name> in resource group <resource_group_name> |
 
 ## Azure Resource Group
 
@@ -1127,10 +1166,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azureterraform_azapi_get | Get AzAPI Terraform provider documentation for Microsoft.Compute/virtualMachines with API version 2024-07-01 |
 | azureterraform_avm_list | List all available Azure Verified Modules |
 | azureterraform_avm_list | Show me the available AVM modules for Terraform |
+| azureterraform_avm_list | List the AVM pattern modules available for Terraform |
 | azureterraform_avm_versions | Show all versions of avm-res-network-virtualnetwork |
 | azureterraform_avm_versions | What versions are available for avm-res-storage-storageaccount? |
+| azureterraform_avm_versions | Show all versions of the avm-ptn-aiml-ai-foundry pattern module |
 | azureterraform_avm_get | Get the documentation for avm-res-storage-storageaccount version 0.1.0 |
 | azureterraform_avm_get | Get the documentation for the latest version of Azure Verified Module avm-res-network-virtualnetwork |
+| azureterraform_avm_get | Get the documentation for the avm-ptn-aiml-ai-foundry pattern module |
 | azureterraform_aztfexport_resource | Export the resource /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/Microsoft.Storage/storageAccounts/<account> to Terraform |
 | azureterraform_aztfexport_resource | Generate an aztfexport command to export a single Azure resource to Terraform |
 | azureterraform_aztfexport_resourcegroup | Export all resources in resource group my-rg to Terraform |

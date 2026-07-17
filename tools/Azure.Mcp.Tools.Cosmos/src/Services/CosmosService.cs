@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Security;
+using System.Text.Json;
 using Azure.AI.OpenAI;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -78,7 +79,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         await foreach (var account in subscriptionResource.GetCosmosDBAccountsAsync(cancellationToken))
         {
             // Cosmos DB account names are case-insensitive in Azure, so compare accordingly.
-            if (account.Data.Name.Equals(accountName, StringComparison.OrdinalIgnoreCase))
+            if (account.Data.Name.Equals(accountName, StringComparisons.ResourceName))
             {
                 return account;
             }
