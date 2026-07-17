@@ -10,7 +10,6 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ResourceHealth.Models;
 using Azure.Mcp.Tools.ResourceHealth.Models.Internal;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Services;
@@ -18,14 +17,12 @@ namespace Azure.Mcp.Tools.ResourceHealth.Services;
 public class ResourceHealthService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    IHttpClientFactory httpClientFactory,
-    ILogger<ResourceHealthService> logger)
+    IHttpClientFactory httpClientFactory)
     : BaseAzureService(tenantService), IResourceHealthService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly ILogger<ResourceHealthService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private const string ResourceHealthApiVersion = "2025-05-01";
 

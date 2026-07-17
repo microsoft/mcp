@@ -2,13 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Queue;
 using Azure.Mcp.Tools.ServiceBus.Services;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
@@ -23,10 +21,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
         The peek operation returns active, locked, deferred, and scheduled messages in the queue.
 
         Returns message content, properties, and metadata.  Messages remain in the queue after peeking.
-
-        Required arguments:
-        - namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)
-        - queue: Queue name to peek messages from
         """,
     Destructive = false,
     Idempotent = true,
@@ -34,42 +28,19 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger, IServiceBusService serviceBusService) : GlobalCommand<QueuePeekOptions>
+public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger, IServiceBusService serviceBusService)
+    : AuthenticatedCommand<QueuePeekOptions, QueuePeekCommand.QueuePeekCommandResult>
 {
     private readonly ILogger<QueuePeekCommand> _logger = logger;
     private readonly IServiceBusService _serviceBusService = serviceBusService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, QueuePeekOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(ServiceBusOptionDefinitions.Namespace);
-        command.Options.Add(ServiceBusOptionDefinitions.Queue);
-        command.Options.Add(ServiceBusOptionDefinitions.MaxMessages);
-    }
-
-    protected override QueuePeekOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Name = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Queue.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Namespace.Name);
-        options.MaxMessages = parseResult.GetValueOrDefault<int>(ServiceBusOptionDefinitions.MaxMessages.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var messages = await _serviceBusService.PeekQueueMessages(
-                options.Namespace!,
-                options.Name!,
+                options.Namespace,
+                options.Queue,
                 options.MaxMessages ?? 1,
                 options.Tenant,
                 options.RetryPolicy,
@@ -99,5 +70,5 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger, IServiceB
         _ => base.GetStatusCode(ex)
     };
 
-    internal record QueuePeekCommandResult(List<ServiceBusReceivedMessage> Messages);
+    public sealed record QueuePeekCommandResult(List<ServiceBusReceivedMessage> Messages);
 }

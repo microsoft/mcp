@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.ResourceManager.EventGrid;
 using Azure.ResourceManager.EventGrid.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventGrid.Services;
@@ -374,7 +375,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
 
             await foreach (var topic in resourceGroupResource.Value.GetEventGridTopics().GetAllAsync(cancellationToken: cancellationToken))
             {
-                if (topic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                if (topic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
                 {
                     return topic;
                 }
@@ -385,7 +386,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             // Search in all resource groups
             await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync(cancellationToken: cancellationToken))
             {
-                if (topic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                if (topic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
                 {
                     return topic;
                 }
@@ -408,7 +409,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
 
             await foreach (var systemTopic in resourceGroupResource.Value.GetSystemTopics().GetAllAsync(cancellationToken: cancellationToken))
             {
-                if (systemTopic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                if (systemTopic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
                 {
                     return systemTopic;
                 }
@@ -419,7 +420,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             // Search in all resource groups
             await foreach (var systemTopic in subscriptionResource.GetSystemTopicsAsync(cancellationToken: cancellationToken))
             {
-                if (systemTopic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                if (systemTopic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
                 {
                     return systemTopic;
                 }

@@ -8,7 +8,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Sql.Models;
-using Azure.Mcp.Tools.Sql.Services.Models;
 using Azure.ResourceManager.Sql;
 using Azure.ResourceManager.Sql.Models;
 using Microsoft.Extensions.Logging;
@@ -16,7 +15,8 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Sql.Services;
 
-public class SqlService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<SqlService> logger) : BaseAzureResourceService(subscriptionService, tenantService), ISqlService
+public class SqlService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<SqlService> logger)
+    : BaseAzureResourceService(subscriptionService, tenantService), ISqlService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ILogger<SqlService> _logger = logger;
@@ -145,7 +145,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
 
-        var databaseData = new ResourceManager.Sql.SqlDatabaseData(sqlServerResource.Data.Location);
+        var databaseData = new SqlDatabaseData(sqlServerResource.Data.Location);
 
         // Configure SKU if provided
         if (!string.IsNullOrEmpty(skuName) || !string.IsNullOrEmpty(skuTier) || skuCapacity.HasValue)
@@ -262,7 +262,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             // Only preserve values that are explicitly provided or if SKU name isn't changing
             bool isSkuNameChanging = !string.IsNullOrEmpty(skuName) && skuName != databaseData.Sku?.Name;
 
-            var sku = new ResourceManager.Sql.Models.SqlSku(skuName ?? databaseData.Sku?.Name ?? "Basic")
+            var sku = new SqlSku(skuName ?? databaseData.Sku?.Name ?? "Basic")
             {
                 Tier = skuTier ?? (isSkuNameChanging ? null : databaseData.Sku?.Tier),
                 Capacity = skuCapacity ?? (isSkuNameChanging ? null : databaseData.Sku?.Capacity),
@@ -576,7 +576,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
 
-        var firewallRuleData = new ResourceManager.Sql.SqlFirewallRuleData()
+        var firewallRuleData = new SqlFirewallRuleData()
         {
             StartIPAddress = startIpAddress,
             EndIPAddress = endIpAddress

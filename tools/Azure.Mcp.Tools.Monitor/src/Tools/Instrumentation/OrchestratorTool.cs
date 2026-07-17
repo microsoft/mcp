@@ -2,35 +2,31 @@
 // Licensed under the MIT License.
 
 using System.Collections.Concurrent;
-using Azure.Mcp.Tools.Monitor.Generators;
-using Azure.Mcp.Tools.Monitor.Models;
-using Azure.Mcp.Tools.Monitor.Pipeline;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+using System.Text.Json;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Pipeline;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
 
-namespace Azure.Mcp.Tools.Monitor.Tools;
+namespace Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
 
-public class OrchestratorTool
+public class OrchestratorTool(WorkspaceAnalyzer analyzer)
 {
-    private readonly WorkspaceAnalyzer _analyzer;
-    internal static readonly ConcurrentDictionary<string, ExecutionSession> Sessions = new();
-    private static readonly TimeSpan SessionTimeout = TimeSpan.FromMinutes(30);
-
-    public OrchestratorTool(WorkspaceAnalyzer analyzer)
-    {
-        _analyzer = analyzer;
-    }
+    private readonly WorkspaceAnalyzer _analyzer = analyzer;
+    internal static readonly ConcurrentDictionary<string, ExecutionSession> s_sessions = new();
+    private static readonly TimeSpan s_sessionTimeout = TimeSpan.FromMinutes(30);
 
     private static void CleanupExpiredSessions()
     {
         var now = DateTime.UtcNow;
-        var expiredKeys = Sessions
-            .Where(kvp => now - kvp.Value.CreatedAt > SessionTimeout)
+        var expiredKeys = s_sessions
+            .Where(kvp => now - kvp.Value.CreatedAt > s_sessionTimeout)
             .Select(kvp => kvp.Key)
             .ToList();
 
         foreach (var key in expiredKeys)
         {
-            Sessions.TryRemove(key, out _);
+            s_sessions.TryRemove(key, out _);
         }
     }
 
@@ -116,7 +112,7 @@ public class OrchestratorTool
             Spec = spec,
             CreatedAt = DateTime.UtcNow
         };
-        Sessions[workspacePath] = session;
+        s_sessions[workspacePath] = session;
 
         var firstAction = spec.Actions[0];
         var primaryProject = spec.Analysis.Projects.FirstOrDefault();
@@ -138,7 +134,7 @@ public class OrchestratorTool
     {
         CleanupExpiredSessions();
 
-        if (!Sessions.TryGetValue(sessionId, out var session))
+        if (!s_sessions.TryGetValue(sessionId, out var session))
         {
             return Respond(new OrchestratorResponse
             {
@@ -175,7 +171,7 @@ public class OrchestratorTool
         var completedIndex = session.AdvanceIndex();
         if (completedIndex >= spec.Actions.Count)
         {
-            Sessions.TryRemove(sessionId, out _);
+            s_sessions.TryRemove(sessionId, out _);
 
             return Respond(new OrchestratorResponse
             {
@@ -193,7 +189,7 @@ public class OrchestratorTool
 
         if (nextIndex >= spec.Actions.Count)
         {
-            Sessions.TryRemove(sessionId, out _);
+            s_sessions.TryRemove(sessionId, out _);
 
             return Respond(new OrchestratorResponse
             {
@@ -230,7 +226,7 @@ public class OrchestratorTool
             Spec = null,
             CreatedAt = DateTime.UtcNow
         };
-        Sessions[workspacePath] = session;
+        s_sessions[workspacePath] = session;
 
         var primaryProject = analysis.Projects.FirstOrDefault();
         var appTypeDescription = primaryProject?.AppType.ToString() ?? "unknown";
@@ -257,7 +253,7 @@ public class OrchestratorTool
             Spec = spec,
             CreatedAt = DateTime.UtcNow
         };
-        Sessions[workspacePath] = session;
+        s_sessions[workspacePath] = session;
 
         var sdkLabel = spec.Analysis.ExistingInstrumentation?.Type == InstrumentationType.AzureMonitorDistro
             ? "Azure Monitor Distro"

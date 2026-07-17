@@ -425,7 +425,7 @@ public class VmUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmUpdateCom
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--tags");
+            "--tags", "");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).UpdateVmAsync(

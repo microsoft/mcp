@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Compute.Options.Disk;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Disk;
@@ -74,7 +75,7 @@ public sealed class DiskUpdateCommand(ILogger<DiskUpdateCommand> logger, IComput
                     cancellationToken);
 
                 var matchingDisks = disks
-                    .Where(d => string.Equals(d.Name, options.DiskName, StringComparison.OrdinalIgnoreCase))
+                    .Where(d => string.Equals(d.Name, options.DiskName, StringComparisons.ResourceName))
                     .ToList();
 
                 if (matchingDisks.Count == 0)

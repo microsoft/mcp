@@ -1,33 +1,39 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Sql.Options.Database;
 
-public class DatabaseUpdateOptions : BaseDatabaseOptions
+public sealed class DatabaseUpdateOptions : BaseSqlOptions
 {
-    [JsonPropertyName(SqlOptionDefinitions.SkuName)]
+    [Option(Description = SqlOptionDescriptions.SkuName)]
     public string? SkuName { get; set; }
 
-    [JsonPropertyName(SqlOptionDefinitions.SkuTier)]
+    [Option(Description = SqlOptionDescriptions.SkuTier)]
     public string? SkuTier { get; set; }
 
-    [JsonPropertyName(SqlOptionDefinitions.SkuCapacity)]
+    [Option(Description = SqlOptionDescriptions.SkuCapacity)]
     public int? SkuCapacity { get; set; }
 
-    [JsonPropertyName(SqlOptionDefinitions.Collation)]
+    [Option(Description = SqlOptionDescriptions.Collation)]
     public string? Collation { get; set; }
 
-    [JsonPropertyName(SqlOptionDefinitions.MaxSizeBytes)]
+    [Option(Description = SqlOptionDescriptions.MaxSizeBytes)]
     public long? MaxSizeBytes { get; set; }
 
-    [JsonPropertyName(SqlOptionDefinitions.ElasticPoolName)]
+    [Option(Description = SqlOptionDescriptions.ElasticPoolName)]
     public string? ElasticPoolName { get; set; }
 
-    [JsonPropertyName(SqlOptionDefinitions.ZoneRedundant)]
+    [Option(Description = SqlOptionDescriptions.ZoneRedundant)]
     public bool? ZoneRedundant { get; set; }
 
-    [JsonPropertyName(SqlOptionDefinitions.ReadScale)]
+    [Option(Description = SqlOptionDescriptions.ReadScale)]
     public string? ReadScale { get; set; }
+
+    [Option(Description = SqlOptionDescriptions.Database)]
+    public required string Database { get; set; }
+
+    [Option(Description = SqlOptionDescriptions.Server)]
+    public required string Server { get; set; }
 }

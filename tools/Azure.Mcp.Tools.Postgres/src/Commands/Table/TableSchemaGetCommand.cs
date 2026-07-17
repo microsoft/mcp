@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Table;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Table;
@@ -22,42 +20,24 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Table;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class TableSchemaGetCommand(IPostgresService postgresService, ILogger<TableSchemaGetCommand> logger) : BaseDatabaseCommand<TableSchemaGetOptions>(logger)
+public sealed class TableSchemaGetCommand(IPostgresService postgresService, ILogger<TableSchemaGetCommand> logger)
+    : AuthenticatedCommand<TableSchemaGetOptions, TableSchemaGetCommand.TableSchemaGetCommandResult>
 {
     private readonly IPostgresService _postgresService = postgresService;
+    private readonly ILogger<TableSchemaGetCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TableSchemaGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(PostgresOptionDefinitions.Table);
-    }
-
-    protected override TableSchemaGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Table = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Table.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
 
             List<string> schema = await _postgresService.GetTableSchemaAsync(
-                options.AuthType!,
-                options.User!,
+                options.AuthType,
+                options.User,
                 options.Password,
-                options.Server!,
-                options.Database!,
-                options.Table!,
+                options.Server,
+                options.Database,
+                options.Table,
                 cancellationToken);
             context.Response.Results = ResponseResult.Create(new(schema ?? []), PostgresJsonContext.Default.TableSchemaGetCommandResult);
         }
@@ -70,5 +50,5 @@ public sealed class TableSchemaGetCommand(IPostgresService postgresService, ILog
         return context.Response;
     }
 
-    internal record TableSchemaGetCommandResult(List<string> Schema);
+    public sealed record TableSchemaGetCommandResult(List<string> Schema);
 }

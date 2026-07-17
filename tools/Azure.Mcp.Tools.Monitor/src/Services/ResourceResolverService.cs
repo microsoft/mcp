@@ -5,6 +5,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
@@ -42,7 +43,7 @@ public class ResourceResolverService(ISubscriptionService subscriptionService, I
 
         // Get all resources matching the name
         var allMatchingResources = await subscriptionResource.GetGenericResourcesAsync(cancellationToken: cancellationToken)
-            .Where(r => r.Data.Name?.Equals(resourceName, StringComparison.OrdinalIgnoreCase) == true)
+            .Where(r => r.Data.Name?.Equals(resourceName, StringComparisons.ResourceName) == true)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (allMatchingResources.Count == 0)
@@ -57,7 +58,7 @@ public class ResourceResolverService(ISubscriptionService subscriptionService, I
         if (!string.IsNullOrEmpty(resourceGroup))
         {
             filteredResources = filteredResources.Where(r =>
-                r.Data.Id?.ResourceGroupName?.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase) == true);
+                r.Data.Id?.ResourceGroupName?.Equals(resourceGroup, StringComparisons.ResourceGroup) == true);
         }
 
         // Filter by resource type if provided

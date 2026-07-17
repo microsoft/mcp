@@ -242,6 +242,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.Grafana/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.Grafana/tests/Azure.Mcp.Tools.Grafana.Tests/Azure.Mcp.Tools.Grafana.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Insights/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Insights/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Insights/src/Azure.Mcp.Tools.Insights.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Insights/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Insights/tests/Azure.Mcp.Tools.Insights.UnitTests/Azure.Mcp.Tools.Insights.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.KeyVault/" />
   <Folder Name="/tools/Azure.Mcp.Tools.KeyVault/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.KeyVault/src/Azure.Mcp.Tools.KeyVault.csproj" />
@@ -325,6 +332,13 @@
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Redis/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.Redis/tests/Azure.Mcp.Tools.Redis.Tests/Azure.Mcp.Tools.Redis.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ResilienceManagement/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.ResilienceManagement/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.ResilienceManagement/src/Azure.Mcp.Tools.ResilienceManagement.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ResilienceManagement/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.ResilienceManagement/tests/Azure.Mcp.Tools.ResilienceManagement.Tests/Azure.Mcp.Tools.ResilienceManagement.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ResourceHealth/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ResourceHealth/src/">

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Core.Pipeline;
@@ -492,7 +493,7 @@ public class MonitorService(
         // Find the workspace
         var matchingWorkspace = workspaces.FirstOrDefault(w =>
             isId ? w.CustomerId.Equals(workspace, StringComparison.OrdinalIgnoreCase)
-                : w.Name.Equals(workspace, StringComparison.OrdinalIgnoreCase));
+                : w.Name.Equals(workspace, StringComparisons.ResourceName));
 
         if (matchingWorkspace == null)
         {

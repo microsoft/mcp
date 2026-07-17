@@ -2,20 +2,20 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.WebTests;
 
-public class WebTestsGetCommandTests : CommandUnitTestsBase<WebTestsGetCommand, IMonitorWebTestService>
+public class WebTestsGetCommandTests : SubscriptionCommandUnitTestsBase<WebTestsGetCommand, IMonitorWebTestService>
 {
     #region Constructor and Properties Tests
 
@@ -251,7 +251,7 @@ public class WebTestsGetCommandTests : CommandUnitTestsBase<WebTestsGetCommand, 
         var response = await ExecuteCommandAsync("--subscription", "sub1");
 
         // Assert
-        var results = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.WebTestsGetCommandListResult);
+        var results = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.WebTestsGetCommandResult);
 
         Assert.NotNull(results.WebTests);
         Assert.Equal(2, results.WebTests.Count);
@@ -280,7 +280,7 @@ public class WebTestsGetCommandTests : CommandUnitTestsBase<WebTestsGetCommand, 
         var response = await ExecuteCommandAsync("--subscription", "sub1", "--resource-group", "rg1");
 
         // Assert
-        var results = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.WebTestsGetCommandListResult);
+        var results = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.WebTestsGetCommandResult);
 
         Assert.NotNull(results.WebTests);
         Assert.Single(results.WebTests);

@@ -167,7 +167,7 @@ public class VmssUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmssUpdat
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--tags");
+            "--tags", "");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).UpdateVmssAsync(
