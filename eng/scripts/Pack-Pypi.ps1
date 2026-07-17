@@ -113,20 +113,20 @@ function Get-KeywordsString($keywords) {
 }
 
 function Get-PythonCommand {
-    # Try python3 first (common on Linux/macOS), but verify it works
-    # On Windows, "python3" may be a Store alias that doesn't work
-    try {
-        $null = & python3 --version 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            return "python3"
-        }
-    } catch {}
-    
-    # Fall back to python
+    # Prefer the interpreter selected by UsePythonVersion in CI.
+    # On Microsoft-hosted agents, that is exposed as "python" and may differ from the system "python3".
     try {
         $null = & python --version 2>&1
         if ($LASTEXITCODE -eq 0) {
             return "python"
+        }
+    } catch {}
+
+    # Fall back to python3 when the CI shim is unavailable.
+    try {
+        $null = & python3 --version 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            return "python3"
         }
     } catch {}
     
