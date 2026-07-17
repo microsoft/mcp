@@ -20,10 +20,13 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     private string DiskName => $"{Settings.ResourceBaseName}-disk";
 
     // VM size used by create tests. Standard_B2s (burstable) is not offered in some sovereign-cloud
-    // regions such as usgovvirginia. Standard_D2s_v3 is only offered zonally there, so a zoneless
-    // (regional) deployment fails with SkuNotAvailable. Standard_DS2_v2 has regional availability in
-    // usgovvirginia, so fall back to it there.
+    // regions, so fall back to a broadly-available general-purpose size there.
     private string VmSize => Settings.IsAzureUSGovernment ? "Standard_DS2_v2" : "Standard_B2s";
+
+    // Location used by create tests. The general-purpose SKUs above are only offered zonally in
+    // usgovvirginia, so a zoneless (regional) deployment there fails with SkuNotAvailable. Deploy the
+    // Azure US Government create tests to usgovarizona, where the SKU is available regionally.
+    private string VmLocation => Settings.IsAzureUSGovernment ? "usgovarizona" : Settings.GetLocationOrDefault("eastus2");
 
     // Disable default sanitizer additions to avoid conflicts (following SQL pattern)
     public override bool EnableDefaultSanitizerAdditions => false;
@@ -256,7 +259,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", createVmName },
                 { "vm-size", VmSize },
-                { "location", Settings.GetLocationOrDefault("eastus2") },
+                { "location", VmLocation },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
                 { "image", "Ubuntu2404" },
@@ -294,7 +297,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", createVmName },
                 { "vm-size", VmSize },
-                { "location", Settings.GetLocationOrDefault("eastus2") },
+                { "location", VmLocation },
                 { "admin-username", "azureuser" },
                 { "admin-password", "WinTestP@ss123!" },
                 { "image", "Win2022Datacenter" },
@@ -380,7 +383,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", createVmssName },
                 { "vm-size", VmSize },
-                { "location", Settings.GetLocationOrDefault("eastus2") },
+                { "location", VmLocation },
                 { "admin-username", "azureuser" },
                 { "admin-password", "WinTestP@ss789!" },
                 { "image", "Win2022Datacenter" },
@@ -416,7 +419,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", createVmssName },
                 { "vm-size", VmSize },
-                { "location", Settings.GetLocationOrDefault("eastus2") },
+                { "location", VmLocation },
                 { "admin-username", "azureuser" },
                 { "admin-password", "LinuxTestP@ss321!" },
                 { "image", "Ubuntu2404" },
@@ -500,7 +503,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", deleteVmName },
                 { "vm-size", VmSize },
-                { "location", Settings.GetLocationOrDefault("eastus2") },
+                { "location", VmLocation },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
                 { "image", "Ubuntu2404" },
@@ -543,7 +546,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", deleteVmssName },
                 { "vm-size", VmSize },
-                { "location", Settings.GetLocationOrDefault("eastus2") },
+                { "location", VmLocation },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
                 { "image", "Ubuntu2404" },

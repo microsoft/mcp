@@ -617,7 +617,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName },
                 { "policy", policyName },
                 { "workload-type", "AzureVM" },
-                { "schedule-time", "02:00" }
+                { "schedule-times", "02:00" }
             });
 
         // Update schedule time to 04:00
@@ -688,7 +688,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "workload-type", "SQL" }
+                { "workload-type", "SQL" },
+                { "daily-retention-days", "30" }
             });
 
         // Update both schedule time and retention on the Full sub-policy
@@ -1271,7 +1272,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "workload-type", "AzureDisk" }
+                { "workload-type", "AzureDisk" },
+                { "daily-retention-days", "7" }
             });
 
         var result = await CallToolAsync(
@@ -1551,6 +1553,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task GovernanceSoftDelete_RsvVault_ConfiguresSuccessfully()
     {
+        Assert.SkipWhen(Settings.IsAzureUSGovernment, "RSV soft-delete is not supported in the Azure US Government test region (the vault PATCH API rejects EnhancedSecurityState / SoftDeleteRetentionPeriodInDays).");
+
         // RSV soft-delete now uses Vault PATCH API with RecoveryServicesSoftDeleteSettings
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
 
@@ -1571,6 +1575,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task GovernanceSoftDelete_RsvVault_WithRetentionDays_ConfiguresSuccessfully()
     {
+        Assert.SkipWhen(Settings.IsAzureUSGovernment, "RSV soft-delete is not supported in the Azure US Government test region (the vault PATCH API rejects EnhancedSecurityState / SoftDeleteRetentionPeriodInDays).");
+
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
 
         var result = await CallToolAsync(
