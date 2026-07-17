@@ -17,3 +17,14 @@ environments:
         command: ".work/build/Azure.Mcp.Server/windows-x64/azmcp"
         args: ["server", "start"]
         timeout: "2m"
+
+suites:
+  basic:
+    description: "Basic set of MCP tools to run evals on."
+    evals:
+      - ".work/evals/appconfig/"
+      - ".work/evals/storage/"
+      - ".work/evals/keyvault/"
+      - "tools/Azure.Mcp.Tools.AppConfig/tests/"
+      - "tools/Azure.Mcp.Tools.KeyVault/tests/"
+      - "tools/Azure.Mcp.Tools.Storage/tests/"
