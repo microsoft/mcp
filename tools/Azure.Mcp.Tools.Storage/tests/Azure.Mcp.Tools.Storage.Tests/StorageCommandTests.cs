@@ -414,6 +414,7 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         // Arrange - Use a unique account name for testing
         var uniqueAccountName = RegisterOrRetrieveVariable("createdAccount", $"testacct{DateTime.UtcNow:MMddHHmmss}");
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var expectedLocation = Settings.GetLocationOrDefault("eastus");
 
         var result = await CallToolAsync(
             "storage_account_create",
@@ -422,7 +423,7 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "account", uniqueAccountName },
                 { "resource-group", resourceGroupName },
-                { "location", "eastus" },
+                { "location", expectedLocation },
                 { "sku", "Standard_LRS" },
                 { "kind", "StorageV2" }
             });
@@ -436,7 +437,8 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : uniqueAccountName, name);
 
         var location = account.GetProperty("location").GetString();
-        Assert.Equal("eastus", location);
+        // Compare normalized (Azure may return location with spaces or different casing)
+        Assert.Equal(expectedLocation.Replace(" ", string.Empty).ToLowerInvariant(), location?.Replace(" ", string.Empty).ToLowerInvariant());
 
         var kind = account.GetProperty("kind").GetString();
         Assert.Equal("StorageV2", kind);
