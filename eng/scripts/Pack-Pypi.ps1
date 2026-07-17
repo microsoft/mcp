@@ -133,14 +133,55 @@ function Get-PythonCommand {
     throw "Python is not installed or not in PATH. Please install Python 3.10+."
 }
 
+    function Get-RedactedUrl([string] $url) {
+        if ([string]::IsNullOrWhiteSpace($url)) {
+            return $null
+        }
+
+        try {
+            $uri = [System.Uri]$url
+            $builder = [System.UriBuilder]::new($uri)
+            if (-not [string]::IsNullOrWhiteSpace($uri.UserInfo)) {
+                $builder.UserName = '***'
+                $builder.Password = '***'
+            }
+
+            return $builder.Uri.AbsoluteUri
+        }
+        catch {
+            return '<unparseable>'
+        }
+    }
+
+    function Write-PipFeedDiagnostics {
+        $indexUrl = Get-RedactedUrl $env:PIP_INDEX_URL
+        $extraIndexUrl = Get-RedactedUrl $env:PIP_EXTRA_INDEX_URL
+
+        if ($indexUrl) {
+            Write-Host "  PIP_INDEX_URL: $indexUrl"
+        }
+        else {
+            Write-Host "  PIP_INDEX_URL: <not set>"
+        }
+
+        if ($extraIndexUrl) {
+            Write-Host "  PIP_EXTRA_INDEX_URL: $extraIndexUrl"
+        }
+        else {
+            Write-Host "  PIP_EXTRA_INDEX_URL: <not set>"
+        }
+    }
+
 function Install-BuildDependencies([string] $pythonCmd) {
     # Log interpreter and pip details for easier CI troubleshooting.
     Invoke-LoggedCommand "$pythonCmd --version"
     Invoke-LoggedCommand "$pythonCmd -m pip --version"
+        Write-PipFeedDiagnostics
+        Invoke-LoggedCommand "$pythonCmd -m pip config list"
 
     # This is diagnostic-only. Some environments block index queries.
     try {
-        Invoke-LoggedCommand "$pythonCmd -m pip index versions build"
+            Invoke-LoggedCommand "$pythonCmd -m pip index versions build -vvv"
     }
     catch {
         Write-Warning "Unable to query available build versions via pip index; continuing with install attempts."
