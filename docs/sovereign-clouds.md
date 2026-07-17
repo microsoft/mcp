@@ -83,6 +83,13 @@ azmcp server start
 
 ## Authentication Considerations
 
+> [!IMPORTANT]
+> **Remote/HTTP server deployments must keep `--cloud` and `AzureAd.Instance` aligned.**
+
+When the server runs in remote HTTP mode, inbound token validation and On-Behalf-Of token acquisition are configured by the `AzureAd` configuration section (see [Authentication](./Authentication.md#azuread-configuration)), while outbound Azure SDK calls and the ARM management endpoint are configured by the sovereign cloud configuration in this document. These are two independent settings and the server does **not** validate that they agree. It is the operator's responsibility to set both to the same cloud. A mismatch will not fail at startup — it surfaces later as token-audience errors, 401s from downstream Azure services, or calls being made against the wrong cloud's resource manager.
+
+For example, a server deployed to Azure China must set both `AzureAd__Instance=https://login.partner.microsoftonline.cn/` **and** `--cloud AzureChinaCloud` (or `AZURE_CLOUD=AzureChinaCloud`). Setting only one is a misconfiguration.
+
 ### Credential Chain
 
 The Azure MCP Server uses a chained credential approach that tries multiple authentication methods in order. All credentials in the chain will use the configured authority host:
@@ -178,6 +185,7 @@ If you encounter authentication failures:
 | "Authentication failed" | Not authenticated locally | Run `az login` or `Connect-AzAccount` with the correct cloud |
 | "Cannot connect to authority host" | Invalid authority host URL | Verify the URL is correct and accessible |
 | "Invalid tenant" | Wrong tenant for the cloud | Check your tenant ID matches the cloud environment |
+| 401 / `AADSTS500011` / audience mismatch from downstream Azure services in remote HTTP mode | `AzureAd.Instance` and `--cloud` point to different clouds | Set both to the same cloud (see the **Authentication Considerations** note above) |
 
 ### Verification
 
