@@ -3,7 +3,7 @@ parameters:
   type: object
 - name: PypiDevFeed
   type: string
-  default: '1es-mcp/1es-mcp-registry'
+  default: 'public/azure-sdk-for-python'
 
 jobs:
 - job: PackPyPI
