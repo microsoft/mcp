@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Extension.Models;
 using Azure.Mcp.Tools.Extension.Options;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
@@ -21,46 +21,25 @@ namespace Azure.Mcp.Tools.Extension.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliGenerateService cliGenerateService) : GlobalCommand<CliGenerateOptions>
+public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliGenerateService cliGenerateService)
+    : AuthenticatedCommand<CliGenerateOptions, CliGenerateResult>
 {
     private readonly ILogger<CliGenerateCommand> _logger = logger;
     private readonly ICliGenerateService _cliGenerateService = cliGenerateService;
-    private readonly string[] _allowedCliTypeValues = ["az"];
+    private static readonly string[] s_allowedCliTypeValues = ["az"];
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(CliGenerateOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(ExtensionOptionDefinitions.CliGenerate.Intent);
-        command.Options.Add(ExtensionOptionDefinitions.CliGenerate.CliType);
+        base.ValidateOptions(options, validationResult);
 
-        command.Validators.Add(result =>
+        if (!s_allowedCliTypeValues.Contains(options.CliType.ToLowerInvariant()))
         {
-            var cliType = result.GetValue(ExtensionOptionDefinitions.CliGenerate.CliType)?.ToLowerInvariant();
-            if (!_allowedCliTypeValues.Contains(cliType))
-            {
-                result.AddError($"Invalid CLI type: {cliType}. Supported values are: {string.Join(", ", _allowedCliTypeValues)}");
-            }
-        });
-    }
-
-    protected override CliGenerateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Intent = parseResult.GetValueOrDefault<string>(ExtensionOptionDefinitions.CliGenerate.Intent.Name);
-        options.CliType = parseResult.GetValueOrDefault<string>(ExtensionOptionDefinitions.CliGenerate.CliType.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add($"Invalid CLI type: {options.CliType}. Supported values are: {string.Join(", ", s_allowedCliTypeValues)}");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CliGenerateOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             var cliType = options.CliType?.ToLowerInvariant();
@@ -71,7 +50,7 @@ public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliG
             if (cliType == Constants.AzureCliType)
             {
                 using HttpResponseMessage responseMessage = await _cliGenerateService.GenerateAzureCLICommandAsync(
-                    options.Intent!,
+                    options.Intent,
                     cancellationToken);
                 responseMessage.EnsureSuccessStatusCode();
 

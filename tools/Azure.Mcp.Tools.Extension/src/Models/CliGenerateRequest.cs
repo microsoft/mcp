@@ -5,23 +5,9 @@ using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.Extension.Models;
 
-public sealed class AzureCliGenerateRequest
-{
-    [JsonPropertyName("question")]
-    public required string Question { get; set; }
+public sealed record AzureCliGenerateRequest(
+    string Question,
+    AzureCliCopilotHistory[] History,
+    [property: JsonPropertyName("enable_parameter_injection")] bool? EnableParameterInjection);
 
-    [JsonPropertyName("history")]
-    public required AzureCliCopilotHistory[] History { get; set; }
-
-    [JsonPropertyName("enable_parameter_injection")]
-    public bool? EnableParameterInjection { get; set; }
-}
-
-public sealed class AzureCliCopilotHistory
-{
-    [JsonPropertyName("content")]
-    public required string Content { get; set; }
-
-    [JsonPropertyName("role")]
-    public required string Role { get; set; }
-}
+public sealed record AzureCliCopilotHistory(string Content, string Role);
