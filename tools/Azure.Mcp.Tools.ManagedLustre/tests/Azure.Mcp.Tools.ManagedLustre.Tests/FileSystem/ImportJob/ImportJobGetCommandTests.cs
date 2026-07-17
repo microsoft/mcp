@@ -2,17 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Tests.FileSystem.ImportJob;
 
-public class ImportJobGetCommandTests : CommandUnitTestsBase<ImportJobGetCommand, IManagedLustreService>
+public class ImportJobGetCommandTests : SubscriptionCommandUnitTestsBase<ImportJobGetCommand, IManagedLustreService>
 {
     private const string Sub = "sub123";
     private const string Rg = "rg1";
@@ -53,6 +54,7 @@ public class ImportJobGetCommandTests : CommandUnitTestsBase<ImportJobGetCommand
         if (shouldSucceed)
         {
             var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobGetResult);
+            Assert.NotNull(result.Job);
             Assert.Equal(JobName, result.Job.Name);
         }
         else
@@ -155,7 +157,8 @@ public class ImportJobGetCommandTests : CommandUnitTestsBase<ImportJobGetCommand
         var response = await ExecuteCommandAsync("--subscription", Sub, "--resource-group", Rg, "--filesystem-name", Name);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobListResult);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobGetResult);
+        Assert.NotNull(result.Jobs);
         Assert.Single(result.Jobs);
         Assert.Equal(JobName, result.Jobs[0].Name);
     }
