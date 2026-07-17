@@ -133,6 +133,37 @@ function Get-PythonCommand {
     throw "Python is not installed or not in PATH. Please install Python 3.10+."
 }
 
+function Install-BuildDependencies([string] $pythonCmd) {
+    # Log interpreter and pip details for easier CI troubleshooting.
+    Invoke-LoggedCommand "$pythonCmd --version"
+    Invoke-LoggedCommand "$pythonCmd -m pip --version"
+
+    # This is diagnostic-only. Some environments block index queries.
+    try {
+        Invoke-LoggedCommand "$pythonCmd -m pip index versions build"
+    }
+    catch {
+        Write-Warning "Unable to query available build versions via pip index; continuing with install attempts."
+    }
+
+    $installAttempts = @(
+        "build==1.2.2 wheel==0.45.1"
+    )
+
+    foreach ($requirements in $installAttempts) {
+        try {
+            Invoke-LoggedCommand "$pythonCmd -m pip install --quiet $requirements"
+            Write-Host "  Using Python build dependencies: $requirements"
+            return
+        }
+        catch {
+            Write-Warning "Failed to install Python build dependencies: $requirements"
+        }
+    }
+
+    throw "Unable to install Python build dependencies. Attempted: $($installAttempts -join '; ')."
+}
+
 function BuildServerPackages([hashtable] $server, [bool] $native) {
     $serverDirectory = "$ArtifactsPath/$($server.artifactPath)"
 
@@ -283,8 +314,8 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         Push-Location $tempFolder
         try {
             $pythonCmd = Get-PythonCommand
-            
-            Invoke-LoggedCommand "$pythonCmd -m pip install --quiet build==1.2.2 wheel==0.45.1"
+
+            Install-BuildDependencies $pythonCmd
             
             # Build wheel only (no sdist for platform packages)
             # We use --wheel and then rename to set the correct platform tag
