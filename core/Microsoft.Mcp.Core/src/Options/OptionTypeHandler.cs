@@ -86,7 +86,7 @@ public sealed class OptionTypeHandler
                 {
                     if (!namesSet.Contains(token.Value))
                     {
-                        result.AddError($"Argument '{token.Value}' not recognized. Must be one of: {allowed}");
+                        result.AddError($"Invalid {option.Name} '{token.Value}'. Must be one of: {allowed}");
                     }
                 }
             });

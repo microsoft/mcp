@@ -375,7 +375,7 @@ public sealed class FunctionsServiceHttpTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, CancellationToken.None));
+            () => service.GetFunctionTemplateAsync(SupportedLanguages.Python, "HttpTrigger", null, TemplateOutput.New, CancellationToken.None));
 
         Assert.Contains("rate limit", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -398,7 +398,7 @@ public sealed class FunctionsServiceHttpTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, CancellationToken.None));
+            () => service.GetFunctionTemplateAsync(SupportedLanguages.Python, "HttpTrigger", null, TemplateOutput.New, CancellationToken.None));
 
         Assert.Contains("network", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -423,7 +423,7 @@ public sealed class FunctionsServiceHttpTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, CancellationToken.None));
+            () => service.GetFunctionTemplateAsync(SupportedLanguages.Python, "HttpTrigger", null, TemplateOutput.New, CancellationToken.None));
 
         Assert.Contains("empty", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
