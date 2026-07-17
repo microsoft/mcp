@@ -89,7 +89,7 @@ jobs:
           $evalsDirectory = '${{ github.workspace }}/.work/evals'
           $outputPath = '${{ github.workspace }}/.work/vally-results'
 
-          ./eng/scripts/Invoke-Vally.ps1 -BuildInfoPath $buildInfo -EvalsDirectory $evalsDirectory -OutputPath $outputPath -IsDebug:$isDebug
+          ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath $buildInfo -EvalsDirectory $evalsDirectory -OutputPath $outputPath -IsDebug:$isDebug
         shell: pwsh
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
