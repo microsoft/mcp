@@ -4,7 +4,6 @@
 using System.Net;
 using Azure.Mcp.Tools.WellArchitectedFramework.Commands;
 using Azure.Mcp.Tools.WellArchitectedFramework.Commands.ServiceGuide;
-using Azure.Mcp.Tools.WellArchitectedFramework.Options.ServiceGuide;
 using Azure.Mcp.Tools.WellArchitectedFramework.Services.ServiceGuide;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Tests.Client;
@@ -202,9 +201,7 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
             Assert.NotNull(response.Results);
 
             // Verify the service name was parsed correctly by checking the bound options
-            var options = typeof(ServiceGuideGetCommand)
-                .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.Invoke(Command, [args]) as ServiceGuideGetOptions;
+            var options = Command.BindOptions(args);
 
             Assert.NotNull(options);
             Assert.Equal(expectedServiceName, options.Service);
@@ -224,9 +221,7 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
         var args = CommandDefinition.Parse("");
 
         // Act
-        var options = typeof(ServiceGuideGetCommand)
-            .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.Invoke(Command, [args]) as ServiceGuideGetOptions;
+        var options = Command.BindOptions(args);
 
         // Assert
         Assert.NotNull(options);
@@ -241,9 +236,7 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
         var args = CommandDefinition.Parse($"--service {serviceName}");
 
         // Act
-        var options = typeof(ServiceGuideGetCommand)
-            .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.Invoke(Command, [args]) as ServiceGuideGetOptions;
+        var options = Command.BindOptions(args);
 
         // Assert
         Assert.NotNull(options);

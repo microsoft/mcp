@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.ServiceFabric.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ServiceFabric.Options.ManagedCluster;
 using Azure.Mcp.Tools.ServiceFabric.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
 
@@ -24,51 +23,23 @@ namespace Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterNodeTypeRestartCommand> logger, IServiceFabricService serviceFabricService)
-    : BaseServiceFabricCommand<ManagedClusterNodeTypeRestartOptions>
+public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterNodeTypeRestartCommand> logger, IServiceFabricService serviceFabricService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ManagedClusterNodeTypeRestartOptions, ManagedClusterNodeTypeRestartCommand.ManagedClusterNodeTypeRestartCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ManagedClusterNodeTypeRestartCommand> _logger = logger;
     private readonly IServiceFabricService _serviceFabricService = serviceFabricService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ManagedClusterNodeTypeRestartOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(ServiceFabricOptionDefinitions.Cluster.AsRequired());
-        command.Options.Add(ServiceFabricOptionDefinitions.NodeType.AsRequired());
-        command.Options.Add(ServiceFabricOptionDefinitions.Nodes.AsRequired());
-        command.Options.Add(ServiceFabricOptionDefinitions.UpdateType.AsOptional());
-    }
-
-    protected override ManagedClusterNodeTypeRestartOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.ClusterName = parseResult.GetValueOrDefault<string>(ServiceFabricOptionDefinitions.Cluster.Name);
-        options.NodeType = parseResult.GetValueOrDefault<string>(ServiceFabricOptionDefinitions.NodeType.Name);
-        options.Nodes = parseResult.GetValueOrDefault<string[]>(ServiceFabricOptionDefinitions.Nodes.Name);
-        options.UpdateType = parseResult.GetValueOrDefault<string>(ServiceFabricOptionDefinitions.UpdateType.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var response = await _serviceFabricService.RestartManagedClusterNodes(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.ClusterName!,
-                options.NodeType!,
-                options.Nodes!,
-                options.UpdateType ?? "Default",
+                options.ResourceGroup,
+                options.Cluster,
+                options.NodeType,
+                options.Nodes,
+                options.UpdateType ?? Models.UpdateType.Default,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -81,7 +52,7 @@ public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterN
         {
             _logger.LogError(ex,
                 "Error restarting Service Fabric managed cluster nodes. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Cluster: {Cluster}, NodeType: {NodeType}.",
-                options.Subscription, options.ResourceGroup, options.ClusterName, options.NodeType);
+                options.Subscription, options.ResourceGroup, options.Cluster, options.NodeType);
             HandleException(context, ex);
         }
 
@@ -98,11 +69,5 @@ public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterN
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        HttpRequestException httpEx when httpEx.StatusCode.HasValue => httpEx.StatusCode.Value,
-        _ => base.GetStatusCode(ex)
-    };
-
-    internal record ManagedClusterNodeTypeRestartCommandResult(Models.RestartNodeResponse Response);
+    public sealed record ManagedClusterNodeTypeRestartCommandResult(Models.RestartNodeResponse Response);
 }

@@ -16,15 +16,13 @@ namespace Azure.Mcp.Tools.Speech.Tests.Tts;
 public class TtsSynthesizeCommandTests : CommandUnitTestsBase<TtsSynthesizeCommand, ISpeechService>
 {
     private readonly string _knownEndpoint = "https://eastus.cognitiveservices.azure.com/";
-    private readonly string _knownSubscription = "sub123";
 
     [Theory]
-    [InlineData("", false, "Missing Required options: --endpoint, --text, --outputAudio")]
-    [InlineData("--subscription sub123", false, "Missing Required options: --endpoint, --text, --outputAudio")]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/", false, "Missing Required options: --text, --outputAudio")]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --text Hello", false, "Missing Required options: --outputAudio")]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --text Hello --outputAudio output.txt", false, "Unsupported output file format")]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --text Hello --outputAudio output.wav --language invalid", false, "Language must be in format 'xx-XX'")]
+    [InlineData("", false, "Missing Required options: --text, --outputAudio, --endpoint")]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/", false, "Missing Required options: --text, --outputAudio")]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/ --text Hello", false, "Missing Required options: --outputAudio")]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/ --text Hello --outputAudio output.txt", false, "Unsupported output file format")]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/ --text Hello --outputAudio output.wav --language invalid", false, "Language must be in format 'xx-XX'")]
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed, string expectedError)
     {
         var response = await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
@@ -72,7 +70,6 @@ public class TtsSynthesizeCommandTests : CommandUnitTestsBase<TtsSynthesizeComma
         {
             // Act
             var response = await ExecuteCommandAsync(
-                "--subscription", _knownSubscription,
                 "--endpoint", _knownEndpoint,
                 "--text", text,
                 "--outputAudio", outputFile);
@@ -129,7 +126,6 @@ public class TtsSynthesizeCommandTests : CommandUnitTestsBase<TtsSynthesizeComma
         {
             // Act
             var response = await ExecuteCommandAsync(
-                "--subscription", _knownSubscription,
                 "--endpoint", _knownEndpoint,
                 "--text", text,
                 "--outputAudio", outputFile,
@@ -185,7 +181,6 @@ public class TtsSynthesizeCommandTests : CommandUnitTestsBase<TtsSynthesizeComma
         {
             // Act
             var response = await ExecuteCommandAsync(
-                "--subscription", _knownSubscription,
                 "--endpoint", _knownEndpoint,
                 "--text", text,
                 "--outputAudio", outputFile);
@@ -227,7 +222,6 @@ public class TtsSynthesizeCommandTests : CommandUnitTestsBase<TtsSynthesizeComma
         {
             // Act
             var response = await ExecuteCommandAsync(
-                "--subscription", _knownSubscription,
                 "--endpoint", _knownEndpoint,
                 "--text", text,
                 "--outputAudio", outputFile);
@@ -251,7 +245,6 @@ public class TtsSynthesizeCommandTests : CommandUnitTestsBase<TtsSynthesizeComma
     public async Task ExecuteAsync_WithUncOutputPath_ShouldRejectPath(string outputPath, string expectedErrorFragment)
     {
         var response = await ExecuteCommandAsync(
-            "--subscription", _knownSubscription,
             "--endpoint", _knownEndpoint,
             "--text", "HelloWorld",
             "--outputAudio", outputPath);
@@ -265,7 +258,6 @@ public class TtsSynthesizeCommandTests : CommandUnitTestsBase<TtsSynthesizeComma
     {
         // A traversal path should be canonicalized; the command should not blindly pass it through.
         var response = await ExecuteCommandAsync(
-            "--subscription", _knownSubscription,
             "--endpoint", _knownEndpoint,
             "--text", "HelloWorld",
             "--outputAudio", "../../../tmp/evil.wav");
