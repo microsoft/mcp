@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.DeviceRegistry.Commands;
 
 namespace Azure.Mcp.Tools.DeviceRegistry.Services.Models;
@@ -13,16 +12,13 @@ namespace Azure.Mcp.Tools.DeviceRegistry.Services.Models;
 internal sealed class DeviceRegistryNamespaceData
 {
     /// <summary> The resource ID for the resource. </summary>
-    [JsonPropertyName("id")]
-    public string? ResourceId { get; set; }
+    public string? Id { get; set; }
 
     /// <summary> The type of the resource. </summary>
-    [JsonPropertyName("type")]
-    public string? ResourceType { get; set; }
+    public string? Type { get; set; }
 
     /// <summary> The name of the resource. </summary>
-    [JsonPropertyName("name")]
-    public string? ResourceName { get; set; }
+    public string? Name { get; set; }
 
     /// <summary> The location of the resource. </summary>
     public string? Location { get; set; }
@@ -33,8 +29,6 @@ internal sealed class DeviceRegistryNamespaceData
     /// <summary> Properties of the Device Registry Namespace. </summary>
     public DeviceRegistryNamespaceProperties? Properties { get; set; }
 
-    public static DeviceRegistryNamespaceData? FromJson(JsonElement source)
-    {
-        return JsonSerializer.Deserialize(source, DeviceRegistryJsonContext.Default.DeviceRegistryNamespaceData);
-    }
+    public static DeviceRegistryNamespaceData? FromJson(JsonElement source) =>
+        JsonSerializer.Deserialize(source, DeviceRegistryJsonContext.Default.DeviceRegistryNamespaceData);
 }
