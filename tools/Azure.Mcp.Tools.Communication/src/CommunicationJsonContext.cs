@@ -14,6 +14,4 @@ namespace Azure.Mcp.Tools.Communication;
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     GenerationMode = JsonSourceGenerationMode.Metadata)]
-internal partial class CommunicationJsonContext : JsonSerializerContext
-{
-}
+internal partial class CommunicationJsonContext : JsonSerializerContext;

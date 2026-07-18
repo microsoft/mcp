@@ -2,12 +2,10 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Communication.Models;
-using Azure.Mcp.Tools.Communication.Options;
 using Azure.Mcp.Tools.Communication.Options.Sms;
 using Azure.Mcp.Tools.Communication.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Communication.Commands.Sms;
@@ -26,49 +24,22 @@ namespace Azure.Mcp.Tools.Communication.Commands.Sms;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicationService communicationService) : BaseCommunicationCommand<SmsSendOptions>
+public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicationService communicationService)
+    : AuthenticatedCommand<SmsSendOptions, SmsSendCommandResult>
 {
     private readonly ILogger<SmsSendCommand> _logger = logger;
     private readonly ICommunicationService _communicationService = communicationService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SmsSendOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(CommunicationOptionDefinitions.From);
-        command.Options.Add(CommunicationOptionDefinitions.To);
-        command.Options.Add(CommunicationOptionDefinitions.Message);
-        command.Options.Add(CommunicationOptionDefinitions.EnableDeliveryReport);
-        command.Options.Add(CommunicationOptionDefinitions.Tag);
-    }
-
-    protected override SmsSendOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.From = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.From.Name);
-        options.To = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.To.Name);
-        options.Message = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Message.Name);
-        options.EnableDeliveryReport = parseResult.GetValueOrDefault<bool>(CommunicationOptionDefinitions.EnableDeliveryReport.Name);
-        options.Tag = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Tag.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             // Call service operation with required parameters
             var results = await _communicationService.SendSmsAsync(
-                options.Endpoint!,
-                options.From!,
-                options.To!,
-                options.Message!,
+                options.Endpoint,
+                options.From,
+                options.To,
+                options.Message,
                 options.EnableDeliveryReport,
                 options.Tag,
                 options.Tenant,
@@ -77,9 +48,7 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicatio
 
             // Set results
             context.Response.Results = results?.Count > 0 ?
-                ResponseResult.Create(
-                    new SmsSendCommandResult(results),
-                    CommunicationJsonContext.Default.SmsSendCommandResult) :
+                ResponseResult.Create(new(results), CommunicationJsonContext.Default.SmsSendCommandResult) :
                 null;
         }
         catch (Exception ex)
@@ -94,6 +63,4 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicatio
 
         return context.Response;
     }
-
-    // Result type moved to Models/SmsSendCommandResult.cs
 }
