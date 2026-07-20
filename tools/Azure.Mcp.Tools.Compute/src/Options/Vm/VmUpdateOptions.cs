@@ -21,7 +21,7 @@ public sealed class VmUpdateOptions : ISubscriptionOption
     public string? LicenseType { get; set; }
 
     [Option(Description = "Enable or disable boot diagnostics.")]
-    public bool? BootDiagnostics { get; set; }
+    public string? BootDiagnostics { get; set; }
 
     [Option(Description = "Base64-encoded user data for the VM (e.g., a cloud-init or shell script). The value must be Base64-encoded before passing; the ARM API requires this format.")]
     public string? UserData { get; set; }

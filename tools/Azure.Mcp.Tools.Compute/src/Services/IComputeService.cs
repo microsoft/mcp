@@ -141,7 +141,7 @@ public interface IComputeService
         string? vmSize = null,
         string? tags = null,
         string? licenseType = null,
-        bool? bootDiagnostics = null,
+        string? bootDiagnostics = null,
         string? userData = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,

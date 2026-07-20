@@ -1019,7 +1019,7 @@ public class ComputeService(
         string? vmSize = null,
         string? tags = null,
         string? licenseType = null,
-        bool? bootDiagnostics = null,
+        string? bootDiagnostics = null,
         string? userData = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -1055,7 +1055,11 @@ public class ComputeService(
 
         if (bootDiagnostics != null)
         {
-            patch.BootDiagnostics = new() { Enabled = bootDiagnostics };
+            patch.BootDiagnostics = new()
+            {
+                Enabled = bootDiagnostics.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+                    bootDiagnostics.Equals("enable", StringComparison.OrdinalIgnoreCase)
+            };
             needsUpdate = true;
         }
 
