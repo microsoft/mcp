@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Developer.LoadTesting;
@@ -198,7 +199,7 @@ public class LoadTestingService(
         string subscription,
         string testResourceName,
         string testId,
-        string? testRunId = null,
+        string testRunId,
         string? oldTestRunId = null,
         string? resourceGroup = null,
         string? tenant = null,
