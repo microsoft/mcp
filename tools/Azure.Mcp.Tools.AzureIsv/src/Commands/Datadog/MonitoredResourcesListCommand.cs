@@ -55,5 +55,5 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
         return context.Response;
     }
 
-    public sealed record MonitoredResourcesListResult(List<string> resources);
+    public sealed record MonitoredResourcesListResult(List<string> Resources);
 }
