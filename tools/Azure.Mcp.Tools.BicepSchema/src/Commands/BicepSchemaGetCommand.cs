@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands;
     Id = "553c003a-7cdf-4382-b833-94fe8bbb7386",
     Name = "get",
     Title = "Get Bicep Schema for a resource",
-    Description = "Provides the Bicep schema definition of any Azure resource type (latest service version). Use this to get the schema needed to write Bicep IaC (infrasturcture as code) for Azure resources such as AI models, storage accounts, databases, virtual machines, app services, key vaults, and more. Do not use this tool for resource deployment, deployment guidelines, or getting best practices.",
+    Description = "Provides the Bicep schema definition of any Azure resource type (latest service version). Use this to get the schema needed to write Bicep IaC (infrastructure as code) for Azure resources such as AI models, storage accounts, databases, virtual machines, app services, key vaults, and more. Do not use this tool for resource deployment, deployment guidelines, or getting best practices.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -34,7 +34,7 @@ public sealed class BicepSchemaGetCommand(ILogger<BicepSchemaGetCommand> logger)
         return serviceCollection.BuildServiceProvider();
     });
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BicepSchemaOptions options, CancellationToken cancellationToken)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, BicepSchemaOptions options, CancellationToken cancellationToken)
     {
         try
         {
@@ -60,7 +60,7 @@ public sealed class BicepSchemaGetCommand(ILogger<BicepSchemaGetCommand> logger)
             _logger.LogError(ex, "An exception occurred fetching Bicep schema.");
             HandleException(context, ex);
         }
-        return context.Response;
+        return Task.FromResult(context.Response);
 
     }
 
