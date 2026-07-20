@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.FileShares.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FileShares.Services;
