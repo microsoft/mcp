@@ -2,17 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
-using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.Sku;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Tests.FileSystem.Sku;
 
-public class SkuGetCommandTests : CommandUnitTestsBase<SkuGetCommand, IManagedLustreService>
+public class SkuGetCommandTests : SubscriptionCommandUnitTestsBase<SkuGetCommand, IManagedLustreService>
 {
     private readonly string _knownSubscriptionId = "sub123";
 
