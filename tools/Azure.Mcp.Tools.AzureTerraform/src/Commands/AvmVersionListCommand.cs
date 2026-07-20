@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Options;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -30,52 +29,25 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     LocalRequired = false)]
 public sealed class AvmVersionListCommand(
     ILogger<AvmVersionListCommand> logger,
-    IAvmDocsService avmDocsService) : BaseCommand<AvmVersionOptions>
+    IAvmDocsService avmDocsService) : BaseCommand<AvmVersionOptions, AvmVersionListResult>
 {
     private readonly ILogger<AvmVersionListCommand> _logger = logger;
     private readonly IAvmDocsService _avmDocsService = avmDocsService;
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureTerraformOptionDefinitions.AvmModuleName.AsRequired());
-    }
-
-    protected override AvmVersionOptions BindOptions(ParseResult parseResult)
-    {
-        return new AvmVersionOptions
-        {
-            ModuleName = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.AvmModuleName.Name)
-        };
-    }
-
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        AvmVersionOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var versions = await _avmDocsService.GetVersionsAsync(
-                options.ModuleName!,
+                options.ModuleName,
                 cancellationToken).ConfigureAwait(false);
 
-            var result = new Models.AvmVersionListResult
-            {
-                ModuleName = options.ModuleName!,
-                Versions = versions
-            };
-
-            context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AvmVersionListResult);
-            context.Response.Message = string.Empty;
+            context.Response.Results = ResponseResult.Create(
+                new(options.ModuleName, versions),
+                AzureTerraformJsonContext.Default.AvmVersionListResult);
 
             context.Activity
                 ?.AddTag(AzureTerraformTelemetryTags.ToolArea, "avm")
