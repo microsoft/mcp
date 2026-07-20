@@ -28,7 +28,7 @@ public sealed class PlatformLandingZoneService(
     private static readonly ConcurrentDictionary<string, PlatformLandingZoneParameters> s_parameterCache = new();
 
     /// <inheritdoc/>
-    public async Task<PlatformLandingZoneParameters> UpdateParametersAsync(
+    public Task<PlatformLandingZoneParameters> UpdateParametersAsync(
         PlatformLandingZoneContext context,
         string? regionType,
         string? fireWallType,
@@ -60,7 +60,7 @@ public sealed class PlatformLandingZoneService(
         };
 
         s_parameterCache[key] = parameters;
-        return parameters;
+        return Task.FromResult(parameters);
     }
 
     /// <inheritdoc/>

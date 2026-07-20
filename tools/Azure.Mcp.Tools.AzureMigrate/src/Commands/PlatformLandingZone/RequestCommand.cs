@@ -93,9 +93,7 @@ public sealed class RequestCommand(
                 options.ResourceGroup,
                 options.MigrateProjectName);
 
-            var action = options.Action?.ToLowerInvariant();
-
-            var result = action switch
+            var result = options.Action.ToLowerInvariant() switch
             {
                 "createmigrateproject" => await HandleCreateMigrateProjectActionAsync(_azureMigrateProjectHelper, options, cancellationToken),
                 "update" => await HandleUpdateActionAsync(_platformLandingZoneService, landingZoneContext, options, cancellationToken),

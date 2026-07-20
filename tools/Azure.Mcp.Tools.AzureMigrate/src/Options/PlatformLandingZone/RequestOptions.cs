@@ -14,7 +14,7 @@ public sealed class RequestOptions : ISubscriptionOption
     /// <summary>
     /// Gets or sets the action to perform (update, generate, download, status, check).
     /// </summary>
-    [Option(Description = "The action to perform: 'update' (set parameters), 'check' (check existing platform landing zone), 'generate' (generate platform landing zone), 'download' (get download instructions), 'status' (view parameter status).")]
+    [Option(Description = "The action to perform: 'update' (set parameters), 'check' (check existing platform landing zone), 'generate' (generate platform landing zone), 'download' (get download instructions), 'status' (view parameter status), 'createmigrateproject' (create new migration project).")]
     public required string Action { get; set; }
 
     /// <summary>
@@ -54,12 +54,6 @@ public sealed class RequestOptions : ISubscriptionOption
     public string? ConnectivitySubscriptionId { get; set; }
 
     /// <summary>
-    /// Gets or sets the security subscription ID (GUID format).
-    /// </summary>
-    [Option(Description = "The Azure subscription ID for security resources in Platform Landing Zone (GUID format).")]
-    public string? SecuritySubscriptionId { get; set; }
-
-    /// <summary>
     /// Gets or sets the comma-separated list of Azure regions.
     /// </summary>
     [Option(Description = "Comma-separated list of Azure regions for Platform Landing Zone (e.g., 'eastus,westus2').")]
@@ -88,12 +82,6 @@ public sealed class RequestOptions : ISubscriptionOption
     /// </summary>
     [Option(Description = "The Azure Migrate project name for Platform Landing Zone generation context.")]
     public required string MigrateProjectName { get; set; }
-
-    /// <summary>
-    /// Gets or sets the full resource ID of the Azure Migrate project.
-    /// </summary>
-    [Option(Description = "The full resource ID of the Azure Migrate project for Platform Landing Zone (alternative to subscription/resourceGroup/migrateProjectName).")]
-    public string? MigrateProjectResourceId { get; set; }
 
     /// <summary>
     /// Gets or sets the Azure region location for resource creation.
