@@ -2,15 +2,14 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 
@@ -71,86 +70,28 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
     ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
-public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLandingZoneService platformLandingZoneService, AzureMigrateProjectHelper azureMigrateProjectHelper)
-    : SubscriptionCommand<RequestOptions>()
+public sealed class RequestCommand(
+    ILogger<RequestCommand> logger,
+    IPlatformLandingZoneService platformLandingZoneService,
+    AzureMigrateProjectHelper azureMigrateProjectHelper,
+    ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<RequestOptions, RequestCommand.RequestCommandResult>(subscriptionResolver)
 {
     private readonly IPlatformLandingZoneService _platformLandingZoneService = platformLandingZoneService;
     private readonly AzureMigrateProjectHelper _azureMigrateProjectHelper = azureMigrateProjectHelper;
 
     /// <inheritdoc/>
-
-    /// <inheritdoc/>
-
-    /// <inheritdoc/>
-
-    /// <inheritdoc/>
-
-    /// <inheritdoc/>
-
-    /// <inheritdoc/>
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.Action);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.RegionType);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.FireWallType);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.NetworkArchitecture);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.IdentitySubscriptionId);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.ManagementSubscriptionId);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.ConnectivitySubscriptionId);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.SecuritySubscriptionId);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.Regions);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.EnvironmentName);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.VersionControlSystem);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.OrganizationName);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.MigrateProjectName);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.MigrateProjectResourceId);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.Location);
-    }
-
-    /// <inheritdoc/>
-    protected override RequestOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name)!;
-        options.Action = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.Action.Name)!;
-        options.RegionType = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.RegionType.Name);
-        options.FireWallType = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.FireWallType.Name);
-        options.NetworkArchitecture = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.NetworkArchitecture.Name);
-        options.IdentitySubscriptionId = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.IdentitySubscriptionId.Name);
-        options.ManagementSubscriptionId = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.ManagementSubscriptionId.Name);
-        options.ConnectivitySubscriptionId = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.ConnectivitySubscriptionId.Name);
-        options.SecuritySubscriptionId = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.SecuritySubscriptionId.Name);
-        options.Regions = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.Regions.Name);
-        options.EnvironmentName = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.EnvironmentName.Name);
-        options.VersionControlSystem = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.VersionControlSystem.Name);
-        options.OrganizationName = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.OrganizationName.Name);
-        options.MigrateProjectName = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.MigrateProjectName.Name)!;
-        options.MigrateProjectResourceId = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.MigrateProjectResourceId.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.Location.Name);
-        return options;
-    }
-
-    /// <inheritdoc/>
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        RequestOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var landingZoneContext = new PlatformLandingZoneContext(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.MigrateProjectName!);
+                options.ResourceGroup,
+                options.MigrateProjectName);
 
             var action = options.Action?.ToLowerInvariant();
 
@@ -161,7 +102,7 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
                 "check" => await HandleCheckActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
                 "generate" => await HandleGenerateActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
                 "download" => await HandleDownloadActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
-                "status" => HandleStatusAction(_platformLandingZoneService, landingZoneContext),
+                "status" => _platformLandingZoneService.GetParameterStatus(landingZoneContext),
                 _ => throw new ArgumentException($"Invalid action '{options.Action}'. Valid actions are: createmigrateproject, update, check, generate, download, status.")
             };
 
@@ -185,7 +126,7 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
         var updated = await service.UpdateParametersAsync(
             context,
             options.RegionType,
-            options.FireWallType,
+            options.FirewallType,
             options.NetworkArchitecture,
             options.IdentitySubscriptionId,
             options.ManagementSubscriptionId,
@@ -267,13 +208,6 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
         return $"Platform Landing zone downloaded successfully to: {filePath}. Extract the files to the root of the local workspace. To make changes to the platform landing zone, you can use the 'GetGuidance' command for guidance on modifying the configuration files. Delete the zip after extraction.";
     }
 
-    private static string HandleStatusAction(
-        IPlatformLandingZoneService service,
-        PlatformLandingZoneContext context)
-    {
-        return service.GetParameterStatus(context);
-    }
-
     private static async Task<string> HandleCreateMigrateProjectActionAsync(
         AzureMigrateProjectHelper azureMigrateProjectHelper,
         RequestOptions options,
@@ -285,12 +219,12 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
         }
 
         var result = await azureMigrateProjectHelper.CreateAzureMigrateProjectAsync(
-            options.MigrateProjectName!,
-            options.ResourceGroup!,
+            options.MigrateProjectName,
+            options.ResourceGroup,
             options.Location,
             options.Subscription!,
-            tenant: null,
-            retryPolicy: null,
+            options.Tenant,
+            options.RetryPolicy,
             cancellationToken);
 
         if (!result.HasData)
@@ -307,5 +241,5 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
     /// Result for the platform landing zone generate command.
     /// </summary>
     /// <param name="Message">The result message.</param>
-    internal sealed record RequestCommandResult(string Message);
+    public sealed record RequestCommandResult(string Message);
 }
