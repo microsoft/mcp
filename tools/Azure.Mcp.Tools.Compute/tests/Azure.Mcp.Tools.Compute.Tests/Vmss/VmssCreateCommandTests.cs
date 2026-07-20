@@ -117,22 +117,22 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
             Tags: new Dictionary<string, string> { { "env", "test" } });
 
         Service.CreateVmssAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
+            _knownVmssName,
+            _knownResourceGroup,
+            _knownSubscription,
+            _knownLocation,
+            _knownAdminUsername,
+            Arg.Any<string?>(),
+            Arg.Is("Ubuntu2404"),
+            Arg.Any<string?>(),
+            _knownSshKey,
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Is(3),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<int?>(),
+            Arg.Is(40),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -148,7 +148,8 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
             "--admin-username", _knownAdminUsername,
             "--image", "Ubuntu2404",
             "--ssh-public-key", _knownSshKey,
-            "--instance-count", "3");
+            "--instance-count", "3",
+            "--os-disk-size-gb", "40");
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssCreateCommandResult);
