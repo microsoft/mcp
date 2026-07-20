@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ManagedLustre.Options;
+using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 
@@ -29,39 +29,14 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ImportJobGetCommand(IManagedLustreService service, ILogger<ImportJobGetCommand> logger)
-    : BaseManagedLustreCommand<ImportJobGetOptions>(logger)
+public sealed class ImportJobGetCommand(IManagedLustreService service, ILogger<ImportJobGetCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ImportJobGetOptions, ImportJobGetCommand.ImportJobGetResult>(subscriptionResolver)
 {
-
     private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<ImportJobGetCommand> _logger = logger;
+    private readonly ILogger<ImportJobGetCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ImportJobGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(ManagedLustreOptionDefinitions.FileSystemNameOption.AsRequired());
-        command.Options.Add(ManagedLustreOptionDefinitions.OptionalJobNameOption);
-    }
-
-    protected override ImportJobGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileSystemName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.FileSystemNameOption.Name);
-        options.JobName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.OptionalJobNameOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
 
@@ -70,39 +45,40 @@ public sealed class ImportJobGetCommand(IManagedLustreService service, ILogger<I
                 // Get specific job
                 var result = await _service.GetImportJobAsync(
                     options.Subscription!,
-                    options.ResourceGroup!,
-                    options.FileSystemName!,
-                    options.JobName!,
+                    options.ResourceGroup,
+                    options.FilesystemName,
+                    options.JobName,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(result), ManagedLustreJsonContext.Default.ImportJobGetResult);
+                context.Response.Results = ResponseResult.Create(new(result, null), ManagedLustreJsonContext.Default.ImportJobGetResult);
             }
             else
             {
                 // List all jobs
                 var results = await _service.ListImportJobsAsync(
                     options.Subscription!,
-                    options.ResourceGroup!,
-                    options.FileSystemName!,
+                    options.ResourceGroup,
+                    options.FilesystemName,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(results), ManagedLustreJsonContext.Default.ImportJobListResult);
+                context.Response.Results = ResponseResult.Create(new(null, results), ManagedLustreJsonContext.Default.ImportJobGetResult);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting import job(s) for AMLFS filesystem {FileSystem}.",
-                options.FileSystemName);
+                options.FilesystemName);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    public record ImportJobGetResult(Models.ImportJob Job);
-    public record ImportJobListResult(List<Models.ImportJob> Jobs);
+    public sealed record ImportJobGetResult(
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Models.ImportJob? Job,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<Models.ImportJob>? Jobs);
 }

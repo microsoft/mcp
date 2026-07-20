@@ -1,10 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Options;
+
 namespace Azure.Mcp.Tools.KeyVault.Options.Key;
 
-public class KeyGetOptions : BaseKeyVaultOptions
+public sealed class KeyGetOptions : BaseKeyVaultOptions
 {
-    public string? KeyName { get; set; }
-    public bool IncludeManagedKeys { get; set; } = false;
+    [Option(Description = KeyVaultOptionDescriptions.Key)]
+    public string? Key { get; set; }
+
+    [Option(Description = "Whether or not to include managed keys in results.")]
+    public bool IncludeManaged { get; set; }
 }

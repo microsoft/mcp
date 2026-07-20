@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Admin;
 
@@ -23,36 +22,17 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Admin;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<BaseKeyVaultOptions>
+public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> logger, IKeyVaultService keyVaultService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<BaseKeyVaultOptions, AdminSettingsGetCommand.AdminSettingsGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<AdminSettingsGetCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseKeyVaultOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(KeyVaultOptionDefinitions.VaultName.AsRequired());
-    }
-
-    protected override BaseKeyVaultOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var settingsResult = await _keyVaultService.GetVaultSettings(options.VaultName!, options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken);
+            var settingsResult = await _keyVaultService.GetVaultSettings(options.Vault, options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken);
 
             // Convert settings to a dictionary of strings for easier serialization in case the service adds new settings in the future.
             Dictionary<string, string> settings = new(StringComparer.OrdinalIgnoreCase);
@@ -64,16 +44,16 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
                 }
             }
 
-            context.Response.Results = ResponseResult.Create(new(options.VaultName!, settings), KeyVaultJsonContext.Default.AdminSettingsGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new(options.Vault!, settings), KeyVaultJsonContext.Default.AdminSettingsGetCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting admin settings for vault {VaultName}", options.VaultName);
+            _logger.LogError(ex, "Error getting admin settings for vault {VaultName}", options.Vault);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record AdminSettingsGetCommandResult(string Name, Dictionary<string, string> Settings);
+    public sealed record AdminSettingsGetCommandResult(string Name, Dictionary<string, string> Settings);
 }
