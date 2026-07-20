@@ -8,6 +8,7 @@ using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Microsoft.Mcp.Tests.Helpers;
+using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Tests;
 

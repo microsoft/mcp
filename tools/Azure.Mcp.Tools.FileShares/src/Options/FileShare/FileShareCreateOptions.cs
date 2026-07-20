@@ -1,80 +1,109 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
+
 namespace Azure.Mcp.Tools.FileShares.Options.FileShare;
 
 /// <summary>
-/// Options for FileShareCreateOrUpdateCommand.
+/// Options for FileShareCreateCommand.
 /// </summary>
-public class FileShareCreateOrUpdateOptions : BaseFileSharesOptions
+public sealed class FileShareCreateOptions : ISubscriptionOption
 {
     /// <summary>
-    /// Gets or sets the name of the file share to create or update.
+    /// Gets or sets the name of the file share to create.
     /// </summary>
-    public string? FileShareName { get; set; }
+    [Option(Description = FileSharesOptionDescriptions.Name)]
+    public required string Name { get; set; }
 
     /// <summary>
     /// Gets or sets the location for the file share.
     /// </summary>
-    public string? Location { get; set; }
+    [Option(Description = FileSharesOptionDescriptions.Location)]
+    public required string Location { get; set; }
 
     /// <summary>
     /// Gets or sets the mount name of the file share as seen by the end user.
     /// </summary>
+    [Option(Description = "The mount name of the file share as seen by end users")]
     public string? MountName { get; set; }
 
     /// <summary>
     /// Gets or sets the storage media tier (e.g., "SSD").
     /// </summary>
+    [Option(Description = "The storage media tier (e.g., SSD)")]
     public string? MediaTier { get; set; }
 
     /// <summary>
     /// Gets or sets the redundancy level (e.g., "Local", "Zone").
     /// </summary>
+    [Option(Description = "The redundancy level (e.g., Local, Zone)")]
     public string? Redundancy { get; set; }
 
     /// <summary>
     /// Gets or sets the file sharing protocol (e.g., "NFS").
     /// </summary>
+    [Option(Description = "The file sharing protocol (e.g., NFS)")]
     public string? Protocol { get; set; }
 
     /// <summary>
     /// Gets or sets the provisioned storage size in GiB.
     /// </summary>
+    [Option(Name = "provisioned-storage-in-gib", Description = FileSharesOptionDescriptions.ProvisionedStorageGiB)]
     public int? ProvisionedStorageInGiB { get; set; }
 
     /// <summary>
     /// Gets or sets the provisioned IOPS.
     /// </summary>
-    public int? ProvisionedIOPerSec { get; set; }
+    [Option(Description = FileSharesOptionDescriptions.ProvisionedIOPerSec)]
+    public int? ProvisionedIoPerSec { get; set; }
 
     /// <summary>
     /// Gets or sets the provisioned throughput in MiB/sec.
     /// </summary>
+    [Option(Name = "provisioned-throughput-mib-per-sec", Description = FileSharesOptionDescriptions.ProvisionedThroughputMiBPerSec)]
     public int? ProvisionedThroughputMiBPerSec { get; set; }
 
     /// <summary>
     /// Gets or sets the public network access setting (e.g., "Enabled", "Disabled").
     /// </summary>
+    [Option(Description = FileSharesOptionDescriptions.PublicNetworkAccess)]
     public string? PublicNetworkAccess { get; set; }
 
     /// <summary>
     /// Gets or sets the NFS root squash setting (e.g., "NoRootSquash", "RootSquash", "AllSquash").
     /// </summary>
+    [Option(Description = FileSharesOptionDescriptions.NfsRootSquash)]
     public string? NfsRootSquash { get; set; }
 
     /// <summary>
     /// Gets or sets the NFS encryption in transit setting (e.g., "Enabled", "Disabled").
     /// </summary>
+    [Option(Description = FileSharesOptionDescriptions.NfsEncryptionInTransit)]
     public string? NfsEncryptionInTransit { get; set; }
 
     /// <summary>
     /// Gets or sets the allowed subnets for public access (comma-separated list).
     /// </summary>
+    [Option(Description = FileSharesOptionDescriptions.AllowedSubnets)]
     public string? AllowedSubnets { get; set; }
 
     /// <summary>
     /// Gets or sets the tags for the file share (JSON format).
     /// </summary>
+    [Option(Description = FileSharesOptionDescriptions.Tags)]
     public string? Tags { get; set; }
+
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public required string ResourceGroup { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

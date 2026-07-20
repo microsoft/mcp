@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.EventGrid.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Mcp.Tools.EventGrid.Options.Events;
 using Azure.Mcp.Tools.EventGrid.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Events;
 
@@ -27,61 +28,35 @@ namespace Azure.Mcp.Tools.EventGrid.Commands.Events;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> logger, IEventGridService eventGridService) : BaseEventGridCommand<EventsPublishOptions>
+public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> logger, IEventGridService eventGridService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<EventsPublishOptions, EventGridPublishCommand.EventGridPublishCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<EventGridPublishCommand> _logger = logger;
     private readonly IEventGridService _eventGridService = eventGridService;
 
     private static readonly string[] s_item = ["cloudevents", "eventgrid", "custom"];
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(EventsPublishOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
-        command.Options.Add(EventGridOptionDefinitions.TopicName);
-        command.Options.Add(EventGridOptionDefinitions.EventData);
-        command.Options.Add(EventGridOptionDefinitions.EventSchema);
-        command.Validators.Add(commandResult =>
-        {
-            var eventSchema = commandResult.GetValueOrDefault(EventGridOptionDefinitions.EventSchema);
-            if (!string.IsNullOrEmpty(eventSchema))
-            {
-                var normalizedSchema = eventSchema.Trim().ToLowerInvariant().Replace(" ", "");
-                if (!s_item.Contains(normalizedSchema))
-                {
-                    commandResult.AddError("Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom.");
-                }
-            }
-        });
-    }
+        base.ValidateOptions(options, validationResult);
 
-    protected override EventsPublishOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.TopicName = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.TopicName.Name);
-        options.EventData = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.EventData.Name);
-        options.EventSchema = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.EventSchema.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        if (!string.IsNullOrEmpty(options.Schema) &&
+            !s_item.Contains(options.Schema.Trim().ToLowerInvariant().Replace(" ", "")))
         {
-            return context.Response;
+            validationResult.Errors.Add("Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom.");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, EventsPublishOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             var result = await _eventGridService.PublishEventAsync(
                 options.Subscription!,
                 options.ResourceGroup,
-                options.TopicName!,
-                options.EventData!,
-                options.EventSchema,
+                options.Topic,
+                options.Data,
+                options.Schema,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -94,7 +69,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         {
             _logger.LogError(ex,
                 "Error publishing events to Event Grid topic. Subscription: {Subscription}, Topic: {TopicName}.",
-                options.Subscription, options.TopicName);
+                options.Subscription, options.Topic);
             HandleException(context, ex);
         }
 
@@ -120,5 +95,5 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         _ => base.GetStatusCode(ex)
     };
 
-    internal record EventGridPublishCommandResult(EventPublishResult Result);
+    public sealed record EventGridPublishCommandResult(EventPublishResult Result);
 }
