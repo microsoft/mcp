@@ -50,10 +50,9 @@ public sealed class DiskUpdateCommand(ILogger<DiskUpdateCommand> logger, IComput
             string.IsNullOrEmpty(options.EncryptionType) &&
             string.IsNullOrEmpty(options.DiskAccess) &&
             string.IsNullOrEmpty(options.Tier))
-            validationResult.Errors.Add("At least one update property must be provided "
-                + "(size-gb, sku, disk-iops-read-write, disk-mbps-read-write, max-shares, "
-                + "network-access-policy, enable-bursting, tags, disk-encryption-set, "
-                + "encryption-type, disk-access-id, or tier).");
+            validationResult.Errors.Add("At least one update property must be provided (size-gb, sku, " + 
+                "disk-iops-read-write, disk-mbps-read-write, max-shares, network-access-policy, enable-bursting, " +
+                "tags, disk-encryption-set, encryption-type, disk-access, or tier).");
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DiskUpdateOptions options, CancellationToken cancellationToken)

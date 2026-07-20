@@ -26,7 +26,7 @@ public sealed class VmssUpdateOptions : ISubscriptionOption
     [Option(Description = "Enable automatic OS image upgrades. Requires health probes or Application Health extension")]
     public bool? EnableAutoOsUpgrade { get; set; }
 
-    [Option(Description = "Enable or disable overprovisioning. When enabled, Azure provisions more VMs than requested and deletes extra VMs after deployment")]
+    [Option(Description = "Scale-in policy to determine which VMs to remove: 'Default', 'NewestVM', or 'OldestVM'")]
     public string? ScaleInPolicy { get; set; }
 
     [Option(Description = ComputeOptionDescriptions.TagsUpdate, AllowEmptyOrWhiteSpaceString = true)]
