@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
-using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 
@@ -26,35 +26,21 @@ namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand> logger, ILoadTestingService loadTestingService)
-    : BaseLoadTestingCommand<TestResourceCreateOptions>
+public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand> logger, ILoadTestingService loadTestingService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<TestResourceCreateOptions, TestResourceCreateCommand.TestResourceCreateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<TestResourceCreateCommand> _logger = logger;
     private readonly ILoadTestingService _loadTestingService = loadTestingService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TestResourceCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(LoadTestingOptionDefinitions.TestResource);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             // Call service operation(s)
             var results = await _loadTestingService.CreateOrUpdateLoadTestingResourceAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.TestResourceName!,
+                options.ResourceGroup,
+                options.TestResourceName,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -66,11 +52,13 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
         catch (Exception ex)
         {
             // Log error with context information
-            _logger.LogError(ex, "Error in {Operation}. Options: {Options}", Name, options);
+            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, TestResourceName: {TestResourceName}",
+                Name, options.Subscription, options.ResourceGroup, options.TestResourceName);
             // Let base class handle standard error processing
             HandleException(context, ex);
         }
         return context.Response;
     }
-    internal record TestResourceCreateCommandResult(TestResource LoadTest);
+
+    public sealed record TestResourceCreateCommandResult(TestResource LoadTest);
 }

@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventGrid.Tests.Topic;
 
-public class TopicListCommandTests : CommandUnitTestsBase<TopicListCommand, IEventGridService>
+public class TopicListCommandTests : SubscriptionCommandUnitTestsBase<TopicListCommand, IEventGridService>
 {
 
     [Fact]
