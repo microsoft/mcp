@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
-using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 
@@ -29,55 +28,21 @@ namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger, ILoadTestingService loadTestingService)
-    : BaseLoadTestingCommand<TestCreateOptions>
+public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger, ILoadTestingService loadTestingService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<TestCreateOptions, TestCreateCommand.TestCreateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<TestCreateCommand> _logger = logger;
     private readonly ILoadTestingService _loadTestingService = loadTestingService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TestCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(LoadTestingOptionDefinitions.TestResource.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(LoadTestingOptionDefinitions.Test);
-        command.Options.Add(LoadTestingOptionDefinitions.Description);
-        command.Options.Add(LoadTestingOptionDefinitions.DisplayName);
-        command.Options.Add(LoadTestingOptionDefinitions.Endpoint);
-        command.Options.Add(LoadTestingOptionDefinitions.VirtualUsers);
-        command.Options.Add(LoadTestingOptionDefinitions.Duration);
-        command.Options.Add(LoadTestingOptionDefinitions.RampUpTime);
-    }
-
-    protected override TestCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.TestId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Test.Name);
-        options.Description = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Description.Name);
-        options.DisplayName = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.DisplayName.Name);
-        options.Endpoint = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Endpoint.Name);
-        options.VirtualUsers = parseResult.GetValueOrDefault<int>(LoadTestingOptionDefinitions.VirtualUsers.Name);
-        options.Duration = parseResult.GetValueOrDefault<int>(LoadTestingOptionDefinitions.Duration.Name);
-        options.RampUpTime = parseResult.GetValueOrDefault<int>(LoadTestingOptionDefinitions.RampUpTime.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             // Call service operation(s)
             var results = await _loadTestingService.CreateTestAsync(
                 options.Subscription!,
-                options.TestResourceName!,
-                options.TestId!,
+                options.TestResourceName,
+                options.TestId,
                 options.ResourceGroup,
                 options.DisplayName,
                 options.Description,
@@ -97,11 +62,13 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger, ILoadTe
         catch (Exception ex)
         {
             // Log error with context information
-            _logger.LogError(ex, "Error in {Operation}. Options: {Options}", Name, options);
+            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, TestResourceName: {TestResourceName}, TestId: {TestId}",
+                Name, options.Subscription, options.TestResourceName, options.TestId);
             // Let base class handle standard error processing
             HandleException(context, ex);
         }
         return context.Response;
     }
-    internal record TestCreateCommandResult(Test Test);
+
+    public sealed record TestCreateCommandResult(Test Test);
 }
