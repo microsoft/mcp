@@ -85,7 +85,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
         catch (Exception ex)
         {
             // Log error with context information
-            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, TestResouceName: {TestResourceName}, TestId: {TestId}, TestrunId: {TestrunId}",
+            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, TestResourceName: {TestResourceName}, TestId: {TestId}, TestrunId: {TestrunId}",
                 Name, options.Subscription, options.TestResourceName, options.TestId, options.TestrunId);
             // Let base class handle standard error processing
             HandleException(context, ex);

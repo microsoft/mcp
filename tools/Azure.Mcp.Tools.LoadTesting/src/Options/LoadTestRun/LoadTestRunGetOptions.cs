@@ -21,7 +21,7 @@ public sealed class TestRunGetOptions : ISubscriptionOption
     public string? TestrunId { get; set; }
 
     /// <summary>
-    /// The ID of the load test resource. If provided (and TestRunId is not), returns all test runs for this test.
+    /// The ID of the load test resource. If provided (and --testrun-id is not), returns all test runs for this test.
     /// </summary>
     [Option(Description = LoadTestingOptionDescriptions.TestId)]
     public string? TestId { get; set; }

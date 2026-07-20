@@ -27,19 +27,19 @@ public sealed class TestCreateOptions : ISubscriptionOption
     public string? DisplayName { get; set; }
 
     /// <summary>
-    /// The display name of the load test.
+    /// The description of the load test.
     /// </summary>
     [Option(Description = LoadTestingOptionDescriptions.Description)]
     public string? Description { get; set; }
 
     /// <summary>
-    /// The display name of the load test.
+    /// The endpoint of the load test.
     /// </summary>
     [Option(Description = "The endpoint URL to be tested. This is the URL of the HTTP endpoint that will be subjected to load testing.")]
     public string? Endpoint { get; set; }
 
     /// <summary>
-    /// The display name of the load test.
+    /// The number of virtual users to simulate.
     /// </summary>
     [Option(Description = "Virtual users is a measure of load that is simulated to test the HTTP endpoint. Default is 50.")]
     public int? VirtualUsers { get; set; }
@@ -47,13 +47,13 @@ public sealed class TestCreateOptions : ISubscriptionOption
     /// <summary>
     /// The duration of the load test.
     /// </summary>
-    [Option(Description = "Number of minutes for which the load is simulated against the endpoint. Enter decimals for fractional minutes (e.g., 1.5 for 1 minute and 30 seconds). Default is 20 minutes.")]
+    [Option(Description = "Number of minutes for which the load is simulated against the endpoint. Default is 20 minutes.")]
     public int? Duration { get; set; }
 
     /// <summary>
     /// The ramp-up time for the load test.
     /// </summary>
-    [Option(Description = "Numer of minutes it takes for the system to ramp-up to the total load specified. Enter decimals for fractional minutes (e.g., 1.5 for 1 minute and 30 seconds). Default is 1 minute.")]
+    [Option(Description = "Number of minutes it takes for the system to ramp-up to the total load specified. Default is 1 minute.")]
     public int? RampUpTime { get; set; }
 
     [Option(Description = OptionDescriptions.ResourceGroup)]
