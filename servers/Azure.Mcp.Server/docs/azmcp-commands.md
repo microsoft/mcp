@@ -2362,7 +2362,7 @@ azmcp deploy app logs get --workspace-folder <workspace-folder> \
                           --azd-env-name <azd-env-name> \
                           [--limit <limit>]
 
-# Generate a mermaid architecture diagram for the application topology follow the schema defined in [DeployAppTopologySchema.cs](./tools/Azure.Mcp.Deploy/src/Schemas/DeployAppTopologySchema.cs)
+# Generate a mermaid architecture diagram for the application topology follow the schema defined in [DeployAppTopologySchema.cs](../../../tools/Azure.Mcp.Deploy/src/Schemas/DeployAppTopologySchema.cs)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy architecture diagram generate --raw-mcp-tool-input <app-topology>
 

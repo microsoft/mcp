@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using Azure.Mcp.Tools.Deploy.Models;
@@ -28,7 +27,7 @@ public sealed class GetCommand(ILogger<GetCommand> logger) : BaseCommand<GetOpti
 {
     private readonly ILogger<GetCommand> _logger = logger;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, GetOptions options, CancellationToken cancellationToken)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, GetOptions options, CancellationToken cancellationToken)
     {
         try
         {
@@ -52,13 +51,12 @@ public sealed class GetCommand(ILogger<GetCommand> logger) : BaseCommand<GetOpti
                 options.ResourceGroup);
 
             context.Response.Message = planTemplate;
-            context.Response.Status = HttpStatusCode.OK;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error generating deployment plan");
             HandleException(context, ex);
         }
-        return context.Response;
+        return Task.FromResult(context.Response);
     }
 }

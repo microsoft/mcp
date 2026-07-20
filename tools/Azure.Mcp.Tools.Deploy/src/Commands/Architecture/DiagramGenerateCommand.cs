@@ -44,7 +44,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
         }
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DiagramGenerateOptions options, CancellationToken cancellationToken)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, DiagramGenerateOptions options, CancellationToken cancellationToken)
     {
         try
         {
@@ -63,9 +63,8 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
             if (appTopology.Services.Length == 0)
             {
                 _logger.LogWarning("No services detected in the app topology.");
-                context.Response.Status = HttpStatusCode.OK;
                 context.Response.Message = "No service detected.";
-                return context.Response;
+                return Task.FromResult(context.Response);
             }
 
             var chart = GenerateMermaidChart.GenerateChart(appTopology.WorkspaceFolder ?? "", appTopology);
@@ -101,7 +100,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
             HandleException(context, ex);
         }
 
-        return context.Response;
+        return Task.FromResult(context.Response);
     }
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch

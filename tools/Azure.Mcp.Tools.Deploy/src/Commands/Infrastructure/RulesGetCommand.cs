@@ -25,7 +25,7 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger) : BaseComma
 {
     private readonly ILogger<RulesGetCommand> _logger = logger;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RulesGetOptions options, CancellationToken cancellationToken)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, RulesGetOptions options, CancellationToken cancellationToken)
     {
         try
         {
@@ -51,6 +51,6 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger) : BaseComma
             _logger.LogError(ex, "An exception occurred while retrieving IaC rules.");
             HandleException(context, ex);
         }
-        return context.Response;
+        return Task.FromResult(context.Response);
     }
 }

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Tools.Deploy.Options.Pipeline;
 using Azure.Mcp.Tools.Deploy.Services.Util;
 using Microsoft.Mcp.Core.Commands;
@@ -22,19 +21,16 @@ namespace Azure.Mcp.Tools.Deploy.Commands.Pipeline;
     LocalRequired = false)]
 public sealed class GuidanceGetCommand() : BaseCommand<GuidanceGetOptions, string>()
 {
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, GuidanceGetOptions options, CancellationToken cancellationToken)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, GuidanceGetOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            var result = PipelineGenerationUtil.GeneratePipelineGuidelines(options);
-
-            context.Response.Message = result;
-            context.Response.Status = HttpStatusCode.OK;
+            context.Response.Message = PipelineGenerationUtil.GeneratePipelineGuidelines(options);
         }
         catch (Exception ex)
         {
             HandleException(context, ex);
         }
-        return context.Response;
+        return Task.FromResult(context.Response);
     }
 }
