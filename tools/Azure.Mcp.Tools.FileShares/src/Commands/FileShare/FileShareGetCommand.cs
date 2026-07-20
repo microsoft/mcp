@@ -4,14 +4,11 @@
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Models;
-using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
 using Azure.Mcp.Tools.FileShares.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
