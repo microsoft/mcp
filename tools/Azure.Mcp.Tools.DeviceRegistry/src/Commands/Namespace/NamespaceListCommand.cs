@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.DeviceRegistry.Models;
 using Azure.Mcp.Tools.DeviceRegistry.Options.Namespace;
 using Azure.Mcp.Tools.DeviceRegistry.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.DeviceRegistry.Commands.Namespace;
 
@@ -28,37 +28,17 @@ namespace Azure.Mcp.Tools.DeviceRegistry.Commands.Namespace;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger, IDeviceRegistryService deviceRegistryService)
-    : BaseDeviceRegistryCommand<NamespaceListOptions>()
+public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger, IDeviceRegistryService deviceRegistryService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<NamespaceListOptions, NamespaceListCommand.NamespaceListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<NamespaceListCommand> _logger = logger;
     private readonly IDeviceRegistryService _deviceRegistryService = deviceRegistryService;
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-    }
-
-    protected override NamespaceListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        return options;
-    }
-
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        NamespaceListOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var namespaces = await _deviceRegistryService.ListNamespacesAsync(
@@ -94,13 +74,7 @@ public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger, I
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
-    internal record NamespaceListCommandResult(
+    public sealed record NamespaceListCommandResult(
         List<DeviceRegistryNamespaceInfo> Namespaces,
         bool AreResultsTruncated);
 }

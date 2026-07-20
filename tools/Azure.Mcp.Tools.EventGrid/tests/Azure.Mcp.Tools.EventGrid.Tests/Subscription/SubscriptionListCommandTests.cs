@@ -3,19 +3,19 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventGrid.Tests.Subscription;
 
-public class SubscriptionListCommandTests : CommandUnitTestsBase<SubscriptionListCommand, IEventGridService>
+public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<SubscriptionListCommand, IEventGridService>
 {
     private readonly ISubscriptionService _subscriptionService;
 
