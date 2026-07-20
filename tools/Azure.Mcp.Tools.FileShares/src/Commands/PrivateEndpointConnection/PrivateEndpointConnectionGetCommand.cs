@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.FileShares.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.PrivateEndpointConnection;
 using Azure.Mcp.Tools.FileShares.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
 
@@ -23,50 +24,25 @@ namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointConnectionGetCommand> logger, IFileSharesService service)
-    : BaseFileSharesCommand<PrivateEndpointConnectionGetOptions>(logger, service)
+public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointConnectionGetCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<PrivateEndpointConnectionGetOptions, PrivateEndpointConnectionGetCommand.PrivateEndpointConnectionGetCommandResult>(subscriptionResolver)
 {
-
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PrivateEndpointConnectionGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.PrivateEndpointConnection.FileShareName.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.PrivateEndpointConnection.ConnectionName.AsOptional());
-    }
-
-    protected override PrivateEndpointConnectionGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PrivateEndpointConnection.FileShareName.Name);
-        options.ConnectionName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PrivateEndpointConnection.ConnectionName.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             // If connection name is provided, get specific connection
             if (!string.IsNullOrEmpty(options.ConnectionName))
             {
-                _logger.LogInformation(
+                logger.LogInformation(
                     "Getting private endpoint connection. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShare: {FileShareName}, Connection: {ConnectionName}",
                     options.Subscription, options.ResourceGroup, options.FileShareName, options.ConnectionName);
 
-                var connection = await _fileSharesService.GetPrivateEndpointConnectionAsync(
+                var connection = await fileSharesService.GetPrivateEndpointConnectionAsync(
                     options.Subscription!,
-                    options.ResourceGroup!,
-                    options.FileShareName!,
-                    options.ConnectionName!,
+                    options.ResourceGroup,
+                    options.FileShareName,
+                    options.ConnectionName,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -74,19 +50,19 @@ public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointC
                 var singleResult = new PrivateEndpointConnectionGetCommandResult([connection]);
                 context.Response.Results = ResponseResult.Create(singleResult, FileSharesJsonContext.Default.PrivateEndpointConnectionGetCommandResult);
 
-                _logger.LogInformation("Successfully retrieved private endpoint connection. Connection: {ConnectionName}", options.ConnectionName);
+                logger.LogInformation("Successfully retrieved private endpoint connection. Connection: {ConnectionName}", options.ConnectionName);
             }
             else
             {
                 // List all connections
-                _logger.LogInformation(
+                logger.LogInformation(
                     "Listing private endpoint connections. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShare: {FileShareName}",
                     options.Subscription, options.ResourceGroup, options.FileShareName);
 
-                var connections = await _fileSharesService.ListPrivateEndpointConnectionsAsync(
+                var connections = await fileSharesService.ListPrivateEndpointConnectionsAsync(
                     options.Subscription!,
-                    options.ResourceGroup!,
-                    options.FileShareName!,
+                    options.ResourceGroup,
+                    options.FileShareName,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -94,17 +70,17 @@ public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointC
                 var result = new PrivateEndpointConnectionGetCommandResult(connections ?? []);
                 context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.PrivateEndpointConnectionGetCommandResult);
 
-                _logger.LogInformation("Successfully listed private endpoint connections. Count: {Count}", connections?.Count ?? 0);
+                logger.LogInformation("Successfully listed private endpoint connections. Count: {Count}", connections?.Count ?? 0);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get private endpoint connection(s)");
+            logger.LogError(ex, "Failed to get private endpoint connection(s)");
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record PrivateEndpointConnectionGetCommandResult([property: JsonPropertyName("connections")] List<PrivateEndpointConnectionInfo> Connections);
+    public sealed record PrivateEndpointConnectionGetCommandResult([property: JsonPropertyName("connections")] List<PrivateEndpointConnectionInfo> Connections);
 }
