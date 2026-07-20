@@ -1,27 +1,43 @@
-using System.Text.Json.Serialization;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 
-public sealed class FileSystemUpdateOptions : BaseManagedLustreOptions
+public sealed class FileSystemUpdateOptions : ISubscriptionOption
 {
-    [JsonPropertyName("name")]
-    public string? Name { get; set; }
+    [Option(Description = ManagedLustreOptionDescriptions.Name)]
+    public required string Name { get; set; }
 
-    [JsonPropertyName("maintenance-day")]
+    [Option(Description = ManagedLustreOptionDescriptions.MaintenanceDay)]
     public string? MaintenanceDay { get; set; }
 
-    [JsonPropertyName("maintenance-time")]
+    [Option(Description = ManagedLustreOptionDescriptions.MaintenanceTime)]
     public string? MaintenanceTime { get; set; }
 
-    [JsonPropertyName("root-squash-mode")]
+    [Option(Description = ManagedLustreOptionDescriptions.RootSquashMode)]
     public string? RootSquashMode { get; set; }
 
-    [JsonPropertyName("no-squash-nid-list")]
-    public string? NoSquashNidLists { get; set; }
+    [Option(Description = ManagedLustreOptionDescriptions.NoSquashNidLists)]
+    public string? NoSquashNidList { get; set; }
 
-    [JsonPropertyName("squash-uid")]
+    [Option(Description = ManagedLustreOptionDescriptions.SquashUid)]
     public long? SquashUid { get; set; }
 
-    [JsonPropertyName("squash-gid")]
+    [Option(Description = ManagedLustreOptionDescriptions.SquashGid)]
     public long? SquashGid { get; set; }
+
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public required string ResourceGroup { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

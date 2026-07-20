@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ManagedLustre.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 
@@ -36,53 +35,16 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class AutoimportJobCreateCommand(IManagedLustreService service, ILogger<AutoimportJobCreateCommand> logger)
-    : BaseManagedLustreCommand<AutoimportJobCreateOptions>(logger)
+public sealed class AutoimportJobCreateCommand(IManagedLustreService service, ILogger<AutoimportJobCreateCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<AutoimportJobCreateOptions, AutoimportJobCreateCommand.AutoimportJobCreateResult>(subscriptionResolver)
 {
-
     private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<AutoimportJobCreateCommand> _logger = logger;
+    private readonly ILogger<AutoimportJobCreateCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AutoimportJobCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(ManagedLustreOptionDefinitions.FileSystemNameOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.OptionalJobNameOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.ConflictResolutionModeOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.AutoimportPrefixesOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.AdminStatusOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.EnableDeletionsOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.MaximumErrorsOption);
-    }
-
-    protected override AutoimportJobCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileSystemName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.FileSystemNameOption.Name);
-        options.JobName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.OptionalJobNameOption.Name);
-        options.ConflictResolutionMode = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.ConflictResolutionModeOption.Name);
-        options.AutoimportPrefixes = parseResult.GetValueOrDefault<string[]>(ManagedLustreOptionDefinitions.AutoimportPrefixesOption.Name);
-        options.AdminStatus = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.AdminStatusOption.Name);
-        options.EnableDeletions = parseResult.GetValueOrDefault<bool?>(ManagedLustreOptionDefinitions.EnableDeletionsOption.Name);
-        options.MaximumErrors = parseResult.GetValueOrDefault<long?>(ManagedLustreOptionDefinitions.MaximumErrorsOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-
             // Log the prefixes for debugging
             if (options.AutoimportPrefixes != null && options.AutoimportPrefixes.Length > 0)
             {
@@ -95,8 +57,8 @@ public sealed class AutoimportJobCreateCommand(IManagedLustreService service, IL
 
             var job = await _service.CreateAutoimportJobAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.FileSystemName!,
+                options.ResourceGroup,
+                options.FilesystemName,
                 options.JobName,
                 options.ConflictResolutionMode,
                 options.AutoimportPrefixes,
@@ -112,12 +74,12 @@ public sealed class AutoimportJobCreateCommand(IManagedLustreService service, IL
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating autoimport job for AMLFS filesystem {FileSystem}.",
-                options.FileSystemName);
+                options.FilesystemName);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record AutoimportJobCreateResult(string JobName);
+    public sealed record AutoimportJobCreateResult(string JobName);
 }
