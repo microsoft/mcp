@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.KeyVault.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.KeyVault.Models;
 using Azure.Mcp.Tools.KeyVault.Options.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
@@ -23,67 +23,33 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<KeyCreateOptions>
+public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger, IKeyVaultService keyVaultService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<KeyCreateOptions, KeyDetails>(subscriptionResolver)
 {
     private readonly ILogger<KeyCreateCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, KeyCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(KeyVaultOptionDefinitions.VaultName);
-        command.Options.Add(KeyVaultOptionDefinitions.KeyName);
-        command.Options.Add(KeyVaultOptionDefinitions.KeyType);
-    }
-
-    protected override KeyCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
-        options.KeyName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.KeyName.Name);
-        options.KeyType = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.KeyType.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var key = await _keyVaultService.CreateKey(
-                options.VaultName!,
-                options.KeyName!,
-                options.KeyType!,
+                options.Vault,
+                options.Key,
+                options.KeyType,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(
-                    key.Name,
-                    key.KeyType.ToString(),
-                    key.Properties.Enabled,
-                    key.Properties.NotBefore,
-                    key.Properties.ExpiresOn,
-                    key.Properties.CreatedOn,
-                    key.Properties.UpdatedOn),
-                KeyVaultJsonContext.Default.KeyCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(KeyDetails.FromKey(key), KeyVaultJsonContext.Default.KeyDetails);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating key {KeyName} in vault {VaultName}", options.KeyName, options.VaultName);
+            _logger.LogError(ex, "Error creating key {Key} in vault {VaultName}", options.Key, options.Vault);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
-
-    internal record KeyCreateCommandResult(string Name, string KeyType, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn);
 }
