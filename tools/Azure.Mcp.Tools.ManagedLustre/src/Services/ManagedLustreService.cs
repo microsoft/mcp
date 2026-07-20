@@ -305,8 +305,10 @@ public sealed class ManagedLustreService(
             };
         }
     }
-    public async Task<int> GetRequiredAmlFSSubnetsSize(string subscription,
-    string sku, int size,
+    public async Task<int> GetRequiredAmlFSSubnetsSize(
+        string subscription,
+        string sku,
+        int size,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
