@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
@@ -59,50 +58,16 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
     Secret = false,
     LocalRequired = true)]
 public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlatformLandingZoneGuidanceService guidanceService)
-    : BaseAzureMigrateCommand<GetGuidanceOptions>()
+    : AuthenticatedCommand<GetGuidanceOptions, GetGuidanceCommand.GetGuidanceCommandResult>()
 {
     private readonly IPlatformLandingZoneGuidanceService _guidanceService = guidanceService;
 
     /// <inheritdoc/>
-
-    /// <inheritdoc/>
-
-    /// <inheritdoc/>
-
-    /// <inheritdoc/>
-
-    /// <inheritdoc/>
-
-    /// <inheritdoc/>
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.Scenario);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.PolicyName);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.ListPolicies);
-    }
-
-    /// <inheritdoc/>
-    protected override GetGuidanceOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Scenario = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.Scenario);
-        options.PolicyName = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.PolicyName);
-        options.ListPolicies = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.ListPolicies);
-        return options;
-    }
-
-    /// <inheritdoc/>
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        GetGuidanceOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            return context.Response;
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var response = new StringBuilder();
@@ -112,7 +77,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
 
             if (options.ListPolicies)
             {
-                Dictionary<string, List<string>> allPolicies = await _guidanceService.GetAllPoliciesAsync(cancellationToken);
+                var allPolicies = await _guidanceService.GetAllPoliciesAsync(cancellationToken);
                 response.AppendLine("\n--- All Policies by Archetype ---");
                 foreach (var (archetype, policies) in allPolicies.OrderBy(kv => kv.Key))
                 {
@@ -125,7 +90,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
             if (!string.IsNullOrWhiteSpace(options.PolicyName) &&
                 options.Scenario is "policy-enforcement" or "policy-assignment")
             {
-                List<PlatformLandingZoneGuidanceService.PolicyLocationResult> locations = await _guidanceService.SearchPoliciesAsync(options.PolicyName, cancellationToken);
+                var locations = await _guidanceService.SearchPoliciesAsync(options.PolicyName, cancellationToken);
                 if (locations.Count > 0)
                 {
                     response.AppendLine("\n--- Matching Policies ---");
@@ -153,5 +118,9 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
         return context.Response;
     }
 
-    internal record GetGuidanceCommandResult(string Guidance);
+    /// <summary>
+    /// Represents the result of the GetGuidanceCommand.
+    /// </summary>
+    /// <param name="Guidance">The guidance.</param>
+    public sealed record GetGuidanceCommandResult(string Guidance);
 }

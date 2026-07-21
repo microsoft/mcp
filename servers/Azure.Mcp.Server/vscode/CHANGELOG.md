@@ -2,6 +2,39 @@
 
 
 
+
+## 3.0.28 (2026-07-21) (pre-release)
+
+### Changed
+
+- **Breaking:** Removed unused parameters from Speech tools. [[#3060](https://github.com/microsoft/mcp/pull/3060)]
+- **Breaking:** Removed unused parameters from Workbooks tools. [[#3050](https://github.com/microsoft/mcp/pull/3050)]
+- **Breaking:** Removed unused parameters from Well Architected Framework tools. [[#3047](https://github.com/microsoft/mcp/pull/3047)]
+- **Breaking:** Removed unused parameters from Resilience Management tools. [[#3064](https://github.com/microsoft/mcp/pull/3064)]
+- **Breaking:** Removed unused parameters from Redis tools. [[#3065](https://github.com/microsoft/mcp/pull/3065)]
+- **Breaking:** Removed unused parameters from Pricing tools. [[#3067](https://github.com/microsoft/mcp/pull/3067)]
+- **Breaking:** Removed unused parameters from Policy tools. [[#3068](https://github.com/microsoft/mcp/pull/3068)]
+- **Breaking:** Removed unused parameters from MySql tools. [[#3069](https://github.com/microsoft/mcp/pull/3069)]
+- **Breaking:** Removed unused parameters from Marketplace tools. [[#3070](https://github.com/microsoft/mcp/pull/3070)]
+- **Breaking:** Removed unused parameters from Managed Lustre tools. [[#3078](https://github.com/microsoft/mcp/pull/3078)]
+- **Breaking:** Removed unused parameters from Load Testing tools. [[#3079](https://github.com/microsoft/mcp/pull/3079)]
+- **Breaking:** Removed unused parameters from Key Vault tools. [[#3080](https://github.com/microsoft/mcp/pull/3080)]
+- **Breaking:** Removed unused parameters from Grafana tools. [[#3081](https://github.com/microsoft/mcp/pull/3081)]
+- **Breaking:** Removed unused parameters from Function App tools. [[#3083](https://github.com/microsoft/mcp/pull/3083)]
+- **Breaking:** Removed unused parameters from Extension tools. [[#3085](https://github.com/microsoft/mcp/pull/3085)]
+- **Breaking:** Removed unused parameters from Event Hubs tools. [[#3086](https://github.com/microsoft/mcp/pull/3086)]
+- **Breaking:** Removed unused parameters from Event Grid tools. [[#3087](https://github.com/microsoft/mcp/pull/3087)]
+- **Breaking:** Removed unused parameters from Device Registry tools. [[#3088](https://github.com/microsoft/mcp/pull/3088)]
+- **Breaking:** Removed unused parameters from Deploy tools. [[#3090](https://github.com/microsoft/mcp/pull/3090)]
+- **Breaking:** Removed unused parameters from Container Apps tools. [[#3091](https://github.com/microsoft/mcp/pull/3091)]
+- **Breaking:** Removed unused parameters from Bicep Schema tools. [[#3100](https://github.com/microsoft/mcp/pull/3100)]
+- Migrated Function tools to new design. [[#3082](https://github.com/microsoft/mcp/pull/3082)]
+- Modernized MCP tool `inputSchema` generation to use `System.Text.Json.Schema.JsonSchemaExporter` instead of the previous reflection-based mapper. Emitted input schemas are now richer and more spec-accurate: object roots always include `additionalProperties: false`, `Guid` options use `format: "uuid"`, nullable value types are typed as `["<type>", "null"]`, and nested object/array options produce full nested schemas. [[#2995](https://github.com/microsoft/mcp/pull/2995)]
+
+### Fixed
+
+- Updated option binding to use more appropriate arity choices based on multi-value parameters (arrays), single-value parameters (anything but boolean flags), and flags (boolean flags). [[#3047](https://github.com/microsoft/mcp/pull/3047)]
+
 ## 3.0.27 (2026-07-16) (pre-release)
 
 ### Changed

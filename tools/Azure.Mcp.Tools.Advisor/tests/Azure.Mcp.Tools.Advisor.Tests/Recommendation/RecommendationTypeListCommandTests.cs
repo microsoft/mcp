@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Net.Http;
 using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Models;
