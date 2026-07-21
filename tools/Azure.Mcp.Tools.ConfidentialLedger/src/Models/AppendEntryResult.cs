@@ -5,13 +5,6 @@ using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Models;
 
-public sealed class AppendEntryRequest
-{
-    [JsonPropertyName("contents")] public string Contents { get; init; } = string.Empty;
-}
-
-public sealed class AppendEntryResult
-{
-    [JsonPropertyName("transactionId")] public string TransactionId { get; init; } = string.Empty;
-    [JsonPropertyName("state")] public string State { get; init; } = string.Empty; // e.g. Committed / Pending
-}
+public sealed record AppendEntryResult(
+    [property: JsonPropertyName("transactionId")] string TransactionId,
+    [property: JsonPropertyName("state")] string State); // e.g. Committed / Pending

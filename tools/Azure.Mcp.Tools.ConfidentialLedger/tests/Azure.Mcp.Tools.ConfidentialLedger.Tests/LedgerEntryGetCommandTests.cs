@@ -17,12 +17,10 @@ public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntr
     public async Task Execute_WithTransactionId_Success_ReturnsResult()
     {
         Service.GetLedgerEntryAsync("ledger1", "2.199", null, Arg.Any<CancellationToken>())
-            .Returns(new LedgerEntryGetResult
-            {
-                LedgerName = "ledger1",
-                TransactionId = "2.199",
-                Contents = "{\"hello\":\"world\"}"
-            });
+            .Returns(new LedgerEntryGetResult(
+                LedgerName: "ledger1",
+                TransactionId: "2.199",
+                Contents: "{\"hello\":\"world\"}"));
 
         var response = await ExecuteCommandAsync("--ledger", "ledger1", "--transaction-id", "2.199");
 
@@ -80,12 +78,10 @@ public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntr
     public async Task Execute_WithTransactionId_WithCollectionId_Success_ReturnsResult()
     {
         Service.GetLedgerEntryAsync("ledger1", "2.199", "my-collection", Arg.Any<CancellationToken>())
-            .Returns(new LedgerEntryGetResult
-            {
-                LedgerName = "ledger1",
-                TransactionId = "2.199",
-                Contents = "{\"hello\":\"world\"}"
-            });
+            .Returns(new LedgerEntryGetResult(
+                LedgerName: "ledger1",
+                TransactionId: "2.199",
+                Contents: "{\"hello\":\"world\"}"));
 
         var response = await ExecuteCommandAsync(
             "--ledger", "ledger1",
