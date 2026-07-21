@@ -8,7 +8,6 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Models;
-using Azure.Mcp.Tools.Advisor.Services.Models;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Microsoft.Extensions.Logging;
@@ -65,6 +64,7 @@ public class AdvisorService(
         RetryPolicyOptions? retryPolicy,
         RecommendationFilters? filters = null,
         int top = 50,
+        string? tenant = null,
         CancellationToken cancellationToken = default)
     {
         var additionalFilter = BuildAdditionalFilter(filters);
@@ -78,6 +78,7 @@ public class AdvisorService(
             tableName: "advisorresources",
             additionalFilter: additionalFilter,
             limit: top,
+            tenant: tenant,
             cancellationToken: cancellationToken);
     }
 
@@ -199,14 +200,15 @@ public class AdvisorService(
         RetryPolicyOptions? retryPolicy,
         string groupBy,
         RecommendationFilters? filters = null,
+        string? tenant = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
         ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
 
-        var subscriptionResource = await _advisorSubscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
+        var subscriptionResource = await _advisorSubscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var allTenants = await TenantService.GetTenants(cancellationToken);
-        var tenantResource = allTenants.FirstOrDefault(t => t.Data.TenantId == subscriptionResource!.Data.TenantId)
+        var tenantResource = allTenants.FirstOrDefault(t => t.Data.TenantId == subscriptionResource.Data.TenantId)
             ?? throw new InvalidOperationException($"No accessible tenant found for subscription '{subscription}'");
 
         if (!string.IsNullOrEmpty(resourceGroup))
@@ -247,10 +249,7 @@ public class AdvisorService(
 
         var totalRecommendations = allGroups.Sum(g => g.Count);
 
-        return new RecommendationSummary(
-            GroupBy: groupBy,
-            TotalRecommendations: totalRecommendations,
-            Groups: allGroups);
+        return new(groupBy, totalRecommendations, allGroups);
     }
 
     internal static string BuildSummarizeQuery(string groupBy, string? resourceGroup, RecommendationFilters? filters)
@@ -337,7 +336,7 @@ public class AdvisorService(
 
     internal static Recommendation ConvertToAdvisorRecommendationModel(JsonElement item)
     {
-        Models.RecommendationData? advisorRecommendation = Models.RecommendationData.FromJson(item)
+        var advisorRecommendation = Models.RecommendationData.FromJson(item)
             ?? throw new InvalidOperationException("Failed to parse Advisor recommendation data");
 
         var resourceId = advisorRecommendation.Properties?.ResourceMetadata?.ResourceId ?? "Unknown";
