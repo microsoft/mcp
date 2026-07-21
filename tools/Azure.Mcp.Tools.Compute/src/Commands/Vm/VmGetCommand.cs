@@ -2,14 +2,15 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Compute.Models;
-using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
 using Azure.Mcp.Tools.Compute.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
@@ -24,58 +25,31 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService computeService)
-    : BaseComputeCommand<VmGetOptions>(false)
+public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService computeService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<VmGetOptions, VmGetCommand.VmGetResult>(subscriptionResolver)
 {
     private readonly ILogger<VmGetCommand> _logger = logger;
     private readonly IComputeService _computeService = computeService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(VmGetOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
+        base.ValidateOptions(options, validationResult);
 
-        // Add optional vm-name
-        command.Options.Add(ComputeOptionDefinitions.VmName);
-
-        // Add optional instance-view
-        command.Options.Add(ComputeOptionDefinitions.InstanceView);
-        command.Validators.Add(commandResult =>
+        // Custom validation: If vm-name is specified, resource-group is required (can't get specific VM without resource-group)
+        if (!string.IsNullOrEmpty(options.VmName) && string.IsNullOrEmpty(options.ResourceGroup))
         {
-            var vmName = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
-            var instanceView = commandResult.GetValueOrDefault<bool>(ComputeOptionDefinitions.InstanceView.Name);
-            var resourceGroup = commandResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-
-            // Custom validation: If vm-name is specified, resource-group is required (can't get specific VM without resource-group)
-            if (!string.IsNullOrEmpty(vmName) && string.IsNullOrEmpty(resourceGroup))
-            {
-                commandResult.AddError("The --resource-group option is required when retrieving a specific VM with --vm-name.");
-            }
-
-            // Custom validation: If instance-view is specified, vm-name is required
-            if (instanceView && string.IsNullOrEmpty(vmName))
-            {
-                commandResult.AddError("The --instance-view option is only available when retrieving a specific VM with --vm-name.");
-            }
-        });
-    }
-
-    protected override VmGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VmName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
-        options.InstanceView = parseResult.GetValueOrDefault<bool>(ComputeOptionDefinitions.InstanceView.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("The --resource-group option is required when retrieving a specific VM with --vm-name.");
         }
 
-        var options = BindOptions(parseResult);
+        // Custom validation: If instance-view is specified, vm-name is required
+        if (options.InstanceView && string.IsNullOrEmpty(options.VmName))
+        {
+            validationResult.Errors.Add("The --instance-view option is only available when retrieving a specific VM with --vm-name.");
+        }
+    }
 
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VmGetOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             // Scenario 1: Get specific VM with optional instance view
@@ -92,8 +66,8 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
                         cancellationToken);
 
                     context.Response.Results = ResponseResult.Create(
-                        new(vmWithInstanceView.VmInfo, vmWithInstanceView.InstanceView),
-                        ComputeJsonContext.Default.VmGetSingleResult);
+                        new(vmWithInstanceView.VmInfo, vmWithInstanceView.InstanceView, null),
+                        ComputeJsonContext.Default.VmGetResult);
                 }
                 else
                 {
@@ -105,7 +79,7 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
                         options.RetryPolicy,
                         cancellationToken);
 
-                    context.Response.Results = ResponseResult.Create(new(vm, null), ComputeJsonContext.Default.VmGetSingleResult);
+                    context.Response.Results = ResponseResult.Create(new(vm, null, null), ComputeJsonContext.Default.VmGetResult);
                 }
             }
             // Scenario 2: List VMs in resource group
@@ -118,7 +92,7 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(vms), ComputeJsonContext.Default.VmGetListResult);
+                context.Response.Results = ResponseResult.Create(new(null, null, vms), ComputeJsonContext.Default.VmGetResult);
             }
         }
         catch (Exception ex)
@@ -142,6 +116,8 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmGetSingleResult(VmInfo Vm, VmInstanceView? InstanceView);
-    internal record VmGetListResult(List<VmInfo> Vms);
+    public sealed record VmGetResult(
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] VmInfo? Vm,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] VmInstanceView? InstanceView,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<VmInfo>? Vms);
 }

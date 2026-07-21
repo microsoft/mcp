@@ -56,8 +56,8 @@ public interface IOneLakeService
     // Shortcut Operations
     Task<ShortcutListResponse> ListShortcutsAsync(string workspaceId, string itemId, string? parentPath = null, string? continuationToken = null, CancellationToken cancellationToken = default);
     Task<OneLakeShortcut> GetShortcutAsync(string workspaceId, string itemId, string shortcutPath, string shortcutName, CancellationToken cancellationToken = default);
-    Task<BulkCreateShortcutResponse> CreateOrUpdateShortcutsAsync(string workspaceId, string itemId, string shortcutsJson, string? shortcutConflictPolicy = null, CancellationToken cancellationToken = default);
-    Task<OneLakeShortcut> CreateShortcutAsync(string workspaceId, string itemId, OneLakeShortcut shortcut, string? shortcutConflictPolicy = null, CancellationToken cancellationToken = default);
+    Task<BulkCreateShortcutResponse> CreateOrUpdateShortcutsAsync(string workspaceId, string itemId, string shortcutsJson, ShortcutConflictPolicy? shortcutConflictPolicy = null, CancellationToken cancellationToken = default);
+    Task<OneLakeShortcut> CreateShortcutAsync(string workspaceId, string itemId, OneLakeShortcut shortcut, ShortcutConflictPolicy? shortcutConflictPolicy = null, CancellationToken cancellationToken = default);
     Task DeleteShortcutAsync(string workspaceId, string itemId, string shortcutPath, string shortcutName, CancellationToken cancellationToken = default);
     Task ResetShortcutCacheAsync(string workspaceId, CancellationToken cancellationToken = default);
 

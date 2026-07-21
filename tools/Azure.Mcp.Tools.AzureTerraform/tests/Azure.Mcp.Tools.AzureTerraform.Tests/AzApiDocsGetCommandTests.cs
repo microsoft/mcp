@@ -100,12 +100,10 @@ public class AzApiDocsGetCommandTests : CommandUnitTestsBase<AzApiDocsGetCommand
 
         var examples = new List<AzApiExample>
         {
-            new()
-            {
-                Description = "Create a VM",
-                Content = "resource \"azapi_resource\" \"vm\" { ... }",
-                SourcePath = "settings/remarks/microsoft.compute/samples/vm.tf"
-            }
+            new(
+                Description: "Create a VM",
+                Content: "resource \"azapi_resource\" \"vm\" { ... }",
+                SourcePath: "settings/remarks/microsoft.compute/samples/vm.tf")
         };
 
         Service.GetDocumentation("Microsoft.Compute/virtualMachines", null)

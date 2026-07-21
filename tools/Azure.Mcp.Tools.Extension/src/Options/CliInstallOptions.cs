@@ -1,13 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Extension.Options;
 
-public class CliInstallOptions : GlobalOptions
+public sealed class CliInstallOptions
 {
-    [JsonPropertyName(ExtensionOptionDefinitions.CliInstall.CliTypeName)]
-    public string? CliType { get; set; }
+    [Option(Description = "The type of CLI tool to use. Supported values are 'az' for Azure CLI, 'azd' for Azure Developer CLI, and 'func' for Azure Functions Core Tools CLI.")]
+    public required string CliType { get; set; }
 }

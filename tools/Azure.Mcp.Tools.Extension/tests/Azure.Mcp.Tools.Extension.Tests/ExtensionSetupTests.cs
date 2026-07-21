@@ -28,6 +28,7 @@ public sealed class ExtensionSetupTests
         services.AddSingleton(Substitute.For<IDateTimeProvider>());
         services.AddSingleton(Substitute.For<IAzureTokenCredentialProvider>());
         services.AddSingleton(Substitute.For<IAzureCloudConfiguration>());
+        services.AddSingleton(Substitute.For<ISubscriptionResolver>());
 
         if (startOptions is not null)
         {

@@ -73,10 +73,7 @@ public class ImmutabilityPolicyModifyCommandTests : CommandUnitTestsBase<Immutab
         var response = await ExecuteCommandAsync(args);
 
         Assert.NotNull(response);
-        if (shouldSucceed)
-            Assert.Equal(HttpStatusCode.OK, response.Status);
-        else
-            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]

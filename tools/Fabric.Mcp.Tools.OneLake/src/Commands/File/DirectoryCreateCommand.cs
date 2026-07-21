@@ -26,9 +26,8 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false)]
-public sealed class DirectoryCreateCommand(
-    ILogger<DirectoryCreateCommand> logger,
-    IOneLakeService oneLakeService) : AuthenticatedCommand<DirectoryCreateOptions, DirectoryCreateCommand.DirectoryCreateCommandResult>
+public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<DirectoryCreateOptions, DirectoryCreateCommand.DirectoryCreateCommandResult>
 {
     private readonly ILogger<DirectoryCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -65,14 +64,12 @@ public sealed class DirectoryCreateCommand(
                 options.DirectoryPath,
                 cancellationToken);
 
-            var result = new DirectoryCreateCommandResult
-            {
-                WorkspaceId = options.WorkspaceId ?? options.Workspace ?? string.Empty,
-                ItemId = options.ItemId ?? options.Item ?? string.Empty,
-                DirectoryPath = options.DirectoryPath,
-                Success = true,
-                Message = $"Directory '{options.DirectoryPath}' created successfully"
-            };
+            var result = new DirectoryCreateCommandResult(
+                WorkspaceId: options.WorkspaceId ?? options.Workspace ?? string.Empty,
+                ItemId: options.ItemId ?? options.Item ?? string.Empty,
+                DirectoryPath: options.DirectoryPath,
+                Success: true,
+                Message: $"Directory '{options.DirectoryPath}' created successfully");
 
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DirectoryCreateCommandResult);
         }
@@ -86,48 +83,29 @@ public sealed class DirectoryCreateCommand(
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        ArgumentException argEx => $"Invalid argument: {argEx.Message}",
-        InvalidOperationException opEx => $"Operation failed: {opEx.Message}",
-        HttpRequestException httpEx => $"HTTP request failed: {httpEx.Message}",
-        _ => base.GetErrorMessage(ex)
-    };
+    protected override string GetErrorMessage(Exception ex) =>
+        OneLakeCommandValidators.GetErrorMessage(ex, base.GetErrorMessage);
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        InvalidOperationException => HttpStatusCode.InternalServerError,
-        HttpRequestException httpEx when httpEx.Message.Contains("404") => HttpStatusCode.NotFound,
-        HttpRequestException httpEx when httpEx.Message.Contains("403") => HttpStatusCode.Forbidden,
-        HttpRequestException httpEx when httpEx.Message.Contains("401") => HttpStatusCode.Unauthorized,
-        _ => base.GetStatusCode(ex)
-    };
+    protected override HttpStatusCode GetStatusCode(Exception ex) =>
+        OneLakeCommandValidators.GetStatusCode(ex, base.GetStatusCode);
 
-    public sealed record DirectoryCreateCommandResult
-    {
-        public string WorkspaceId { get; init; } = string.Empty;
-        public string ItemId { get; init; } = string.Empty;
-        public string DirectoryPath { get; init; } = string.Empty;
-        public bool Success { get; init; }
-        public string Message { get; init; } = string.Empty;
-    }
+    public sealed record DirectoryCreateCommandResult(string WorkspaceId, string ItemId, string DirectoryPath, bool Success, string Message);
 }
 
 public sealed class DirectoryCreateOptions
 {
-    [Option(Description = "The ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
     public string? WorkspaceId { get; set; }
 
-    [Option(Description = "The name or ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.Workspace)]
     public string? Workspace { get; set; }
 
-    [Option(Description = "The ID of the Fabric item.")]
+    [Option(Description = OneLakeOptionDescriptions.ItemId)]
     public string? ItemId { get; set; }
 
-    [Option(Description = "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').")]
+    [Option(Description = OneLakeOptionDescriptions.Item)]
     public string? Item { get; set; }
 
-    [Option(Description = "The path to the directory in OneLake.")]
+    [Option(Description = OneLakeOptionDescriptions.DirectoryPath)]
     public required string DirectoryPath { get; set; }
 }

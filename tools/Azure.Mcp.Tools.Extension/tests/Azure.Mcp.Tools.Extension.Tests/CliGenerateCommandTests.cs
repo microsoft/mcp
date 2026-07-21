@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Net;
-using System.Net.Http;
 using Azure.Core;
 using Azure.Mcp.Tools.Extension.Commands;
 using Azure.Mcp.Tools.Extension.Services;

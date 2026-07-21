@@ -6,8 +6,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
@@ -26,52 +25,20 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false)]
-public sealed class ShortcutCreateAzureBlobCommand(
-    ILogger<ShortcutCreateAzureBlobCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<ShortcutCreateOptions>()
+public sealed class ShortcutCreateAzureBlobCommand(ILogger<ShortcutCreateAzureBlobCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<ShortcutCreateAzureBlobOptions, OneLakeShortcut>()
 {
     private readonly ILogger<ShortcutCreateAzureBlobCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ShortcutCreateAzureBlobOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsRequired());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsRequired());
-        command.Options.Add(FabricOptionDefinitions.ShortcutPath.AsRequired());
-        command.Options.Add(FabricOptionDefinitions.ShortcutName.AsRequired());
-        command.Options.Add(FabricOptionDefinitions.ShortcutConflictPolicy.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.TargetLocation.AsRequired());
-        command.Options.Add(FabricOptionDefinitions.TargetSubpath.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.TargetConnectionId.AsRequired());
-    }
-
-    protected override ShortcutCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        options.Path = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ShortcutPath.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ShortcutName.Name);
-        options.ConflictPolicy = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ShortcutConflictPolicy.Name);
-        options.TargetLocation = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.TargetLocation.Name);
-        options.TargetSubpath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.TargetSubpath.Name);
-        options.TargetConnectionId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.TargetConnectionId.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            return context.Response;
-
-        var options = BindOptions(parseResult);
         try
         {
             var shortcut = new OneLakeShortcut
             {
-                Path = options.Path,
-                Name = options.Name,
+                Path = options.ShortcutPath,
+                Name = options.ShortcutName,
                 Target = new ShortcutTarget
                 {
                     AzureBlobStorage = new AzureBlobStorageShortcutTarget
@@ -83,7 +50,7 @@ public sealed class ShortcutCreateAzureBlobCommand(
                 }
             };
 
-            var result = await _oneLakeService.CreateShortcutAsync(options.WorkspaceId!, options.ItemId!, shortcut, options.ConflictPolicy, cancellationToken);
+            var result = await _oneLakeService.CreateShortcutAsync(options.WorkspaceId, options.ItemId, shortcut, options.ShortcutConflictPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeShortcut);
         }
         catch (Exception ex)
