@@ -1,3 +1,0 @@
-changes:
-  - section: "Breaking Changes"
-    description: "Removed unused parameters from Function App tools."
