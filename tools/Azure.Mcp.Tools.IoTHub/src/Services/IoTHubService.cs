@@ -8,19 +8,15 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.ResourceManager.IotHub;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.IoTHub.Services;
 
 public class IoTHubService(
     ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILogger<IoTHubService> logger)
+    ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IIoTHubService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
-    private readonly ILogger<IoTHubService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     public async Task<List<IoTHubDescription>> GetIoTHub(
         string? name,
         string? resourceGroup,
