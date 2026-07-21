@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ContainerApps.Options.ContainerApp;
 using Azure.Mcp.Tools.ContainerApps.Services;
 using Microsoft.Extensions.Logging;
@@ -24,20 +26,14 @@ namespace Azure.Mcp.Tools.ContainerApps.Commands.ContainerApp;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ContainerAppListCommand(ILogger<ContainerAppListCommand> logger, IContainerAppsService containerAppsService) : BaseContainerAppsCommand<ContainerAppListOptions>
+public sealed class ContainerAppListCommand(ILogger<ContainerAppListCommand> logger, IContainerAppsService containerAppsService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ContainerAppListOptions, ContainerAppListCommand.ContainerAppListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ContainerAppListCommand> _logger = logger;
     private readonly IContainerAppsService _containerAppsService = containerAppsService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ContainerAppListOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var containerApps = await _containerAppsService.ListContainerApps(
@@ -60,5 +56,5 @@ public sealed class ContainerAppListCommand(ILogger<ContainerAppListCommand> log
         return context.Response;
     }
 
-    internal record ContainerAppListCommandResult(List<Models.ContainerAppInfo> ContainerApps, bool AreResultsTruncated);
+    public sealed record ContainerAppListCommandResult(List<Models.ContainerAppInfo> ContainerApps, bool AreResultsTruncated);
 }
