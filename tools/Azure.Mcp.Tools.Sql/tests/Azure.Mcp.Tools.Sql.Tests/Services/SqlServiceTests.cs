@@ -250,10 +250,10 @@ public class SqlServiceTests
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
-    [Fact]
+    [Theory]
     [InlineData("Both")]
     [InlineData("invalid")]
-    public async Task CreateDatabaseAsync_WithInvalidReadScale_ThrowsValidationException()
+    public async Task CreateDatabaseAsync_WithInvalidReadScale_ThrowsValidationException(string readScale)
     {
         var exception = await Assert.ThrowsAsync<CommandValidationException>(
             () => _service.CreateDatabaseAsync(
