@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.EventHubs.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.EventHubs.Options.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 
@@ -29,54 +28,27 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<ConsumerGroupDeleteOptions>
+public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteCommand> logger, IEventHubsService service, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ConsumerGroupDeleteOptions, ConsumerGroupDeleteCommand.ConsumerGroupDeleteCommandResult>(subscriptionResolver)
 {
-
     private readonly IEventHubsService _service = service;
     private readonly ILogger<ConsumerGroupDeleteCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ConsumerGroupDeleteOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.EventHubOption.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.ConsumerGroupOption.AsRequired());
-    }
-
-    protected override ConsumerGroupDeleteOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
-        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubOption.Name);
-        options.ConsumerGroup = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.ConsumerGroupOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var deleted = await _service.DeleteConsumerGroupAsync(
-                options.ConsumerGroup!,
-                options.EventHub!,
-                options.Namespace!,
-                options.ResourceGroup!,
+                options.ConsumerGroup,
+                options.Eventhub,
+                options.Namespace,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(deleted, options.ConsumerGroup!, options.EventHub!, options.Namespace!, options.ResourceGroup!), EventHubsJsonContext.Default.ConsumerGroupDeleteCommandResult);
+            context.Response.Results = ResponseResult.Create(new(deleted, options.ConsumerGroup, options.Eventhub, options.Namespace, options.ResourceGroup), EventHubsJsonContext.Default.ConsumerGroupDeleteCommandResult);
         }
         catch (Exception ex)
         {
@@ -87,5 +59,5 @@ public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteComman
         return context.Response;
     }
 
-    internal record ConsumerGroupDeleteCommandResult(bool Deleted, string ConsumerGroupName, string EventHubName, string NamespaceName, string ResourceGroup);
+    public sealed record ConsumerGroupDeleteCommandResult(bool Deleted, string ConsumerGroupName, string EventHubName, string NamespaceName, string ResourceGroup);
 }
