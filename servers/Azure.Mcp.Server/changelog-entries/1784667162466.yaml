@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Migrated Cloud Architect tools to new tool design."
