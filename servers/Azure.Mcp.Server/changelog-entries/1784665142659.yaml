@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "`sql database create` and `sql database update` now return a validation error for unrecognized `--read-scale` values instead of silently ignoring them."

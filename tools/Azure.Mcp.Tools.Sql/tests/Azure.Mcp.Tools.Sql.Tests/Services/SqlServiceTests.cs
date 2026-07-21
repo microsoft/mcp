@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Sql.Services;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
@@ -223,6 +225,49 @@ public class SqlServiceTests
         }
 
         await _subscriptionService.DidNotReceive().GetSubscriptionIdByName(
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("Both")]
+    [InlineData("invalid")]
+    public async Task UpdateDatabaseAsync_WithInvalidReadScale_ThrowsValidationException(string readScale)
+    {
+        var exception = await Assert.ThrowsAsync<CommandValidationException>(
+            () => _service.UpdateDatabaseAsync(
+                ServerName,
+                DatabaseName,
+                ResourceGroup,
+                SubscriptionName,
+                readScale: readScale,
+                cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Contains(readScale, exception.Message);
+        Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
+
+        // Validation happens before any ARM/subscription resolution work.
+        await _subscriptionService.DidNotReceive().GetSubscription(
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    [InlineData("Both")]
+    [InlineData("invalid")]
+    public async Task CreateDatabaseAsync_WithInvalidReadScale_ThrowsValidationException()
+    {
+        var exception = await Assert.ThrowsAsync<CommandValidationException>(
+            () => _service.CreateDatabaseAsync(
+                ServerName,
+                DatabaseName,
+                ResourceGroup,
+                SubscriptionName,
+                readScale: readScale,
+                cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Contains(readScale, exception.Message);
+        Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
+
+        await _subscriptionService.DidNotReceive().GetSubscription(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 }
