@@ -2179,6 +2179,9 @@ azmcp cosmos database container item text-search --subscription <subscription> \
 # support custom dimensions like "text-embedding-3-small" or "text-embedding-3-large". Optionally pass
 # --properties-to-select to project specific fields; when omitted the full document is returned with the vector
 # property stripped so the embedding doesn't bloat the response. Requires a vector index on the vector property.
+# The --openai-endpoint must use HTTPS and point to a trusted Azure first-party domain (e.g. *.openai.azure.com,
+# *.cognitiveservices.azure.com, *.services.ai.azure.com, or their US Government / China sovereign cloud
+# equivalents); any other endpoint is rejected with a 400 Bad Request before the service is called.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos database container item vector-search --subscription <subscription> \
                                                    --account <account> \
@@ -2186,7 +2189,7 @@ azmcp cosmos database container item vector-search --subscription <subscription>
                                                    --container <container> \
                                                    --vector-property <vector-property> \
                                                    --search-text "free-form text" \
-                                                   --openai-endpoint <endpoint> \
+                                                   --openai-endpoint <azure-openai-endpoint> \
                                                    --embedding-deployment <deployment> \
                                                    [--properties-to-select <p1,p2,...>] \
                                                    [--count 10] \
