@@ -71,14 +71,12 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             var results = new List<SmsResult>();
             foreach (var result in response.Value)
             {
-                results.Add(new()
-                {
-                    MessageId = result.MessageId,
-                    To = result.To,
-                    Successful = result.Successful,
-                    HttpStatusCode = result.HttpStatusCode,
-                    ErrorMessage = result.ErrorMessage
-                });
+                results.Add(new(
+                    MessageId: result.MessageId,
+                    To: result.To,
+                    Successful: result.Successful,
+                    HttpStatusCode: result.HttpStatusCode,
+                    ErrorMessage: result.ErrorMessage));
 
                 _logger.LogInformation("SMS to {To}: Success={Success}, MessageId={MessageId}, Status={Status}",
                     result.To, result.Successful, result.MessageId, result.HttpStatusCode);
