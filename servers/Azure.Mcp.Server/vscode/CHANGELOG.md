@@ -3,12 +3,12 @@
 
 
 
-## 3.0.0-beta.28 (2026-07-21) (pre-release)
+## 3.0.28 (2026-07-21) (pre-release)
 
 ### Changed
 
 - **Breaking:** Removed unused parameters from Speech tools. [[#3060](https://github.com/microsoft/mcp/pull/3060)]
-- **Breaking:** Remove unused parameters from Workbooks tools. [[#3050](https://github.com/microsoft/mcp/pull/3050)]
+- **Breaking:** Removed unused parameters from Workbooks tools. [[#3050](https://github.com/microsoft/mcp/pull/3050)]
 - **Breaking:** Removed unused parameters from Well Architected Framework tools. [[#3047](https://github.com/microsoft/mcp/pull/3047)]
 - **Breaking:** Removed unused parameters from Resilience Management tools. [[#3064](https://github.com/microsoft/mcp/pull/3064)]
 - **Breaking:** Removed unused parameters from Redis tools. [[#3065](https://github.com/microsoft/mcp/pull/3065)]

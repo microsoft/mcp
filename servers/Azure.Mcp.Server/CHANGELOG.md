@@ -7,7 +7,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Breaking Changes
 
 - Removed unused parameters from Speech tools. [[#3060](https://github.com/microsoft/mcp/pull/3060)]
-- Remove unused parameters from Workbooks tools. [[#3050](https://github.com/microsoft/mcp/pull/3050)]
+- Removed unused parameters from Workbooks tools. [[#3050](https://github.com/microsoft/mcp/pull/3050)]
 - Removed unused parameters from Well Architected Framework tools. [[#3047](https://github.com/microsoft/mcp/pull/3047)]
 - Removed unused parameters from Resilience Management tools. [[#3064](https://github.com/microsoft/mcp/pull/3064)]
 - Removed unused parameters from Redis tools. [[#3065](https://github.com/microsoft/mcp/pull/3065)]
