@@ -290,6 +290,14 @@ public static class ComputeOptionDefinitions
         Required = false
     };
 
+    public const string PriorityName = "priority";
+
+    public static readonly Option<string> Priority = new($"--{PriorityName}")
+    {
+        Description = "VM priority: 'Regular' (default), 'Spot', or 'Low' (deprecated). Use 'Spot' for evictable Spot VMs at lower cost",
+        Required = false
+    };
+
     // VMSS-specific options
     public const string InstanceCountName = "instance-count";
     public const string UpgradePolicyName = "upgrade-policy";

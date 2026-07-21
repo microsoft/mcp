@@ -38,4 +38,6 @@ public class VmCreateOptions : BaseComputeOptions
     public string? OsDiskType { get; set; }
 
     public string? SourceAddressPrefix { get; set; }
+
+    public string? Priority { get; set; }
 }
