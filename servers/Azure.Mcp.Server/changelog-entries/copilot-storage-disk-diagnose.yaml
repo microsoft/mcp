@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the storage disk diagnose tool for Storage Intelligence disk performance and throttling analysis."
