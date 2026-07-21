@@ -1,12 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Search.Options.Knowledge;
 
-public class KnowledgeBaseGetOptions : BaseSearchOptions
+public sealed class KnowledgeBaseGetOptions
 {
-    [JsonPropertyName(SearchOptionDefinitions.KnowledgeBaseName)]
+    [Option(Description = SearchOptionDescriptions.KnowledgeBase)]
     public string? KnowledgeBase { get; set; }
+
+    [Option(Description = SearchOptionDescriptions.Service)]
+    public required string Service { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

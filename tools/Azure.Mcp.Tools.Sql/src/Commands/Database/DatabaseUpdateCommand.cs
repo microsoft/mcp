@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Models;
-using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Database;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
@@ -29,53 +29,20 @@ namespace Azure.Mcp.Tools.Sql.Commands.Database;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class DatabaseUpdateCommand(ISqlService sqlService, ILogger<DatabaseUpdateCommand> logger)
-    : BaseDatabaseCommand<DatabaseUpdateOptions>(logger)
+public sealed class DatabaseUpdateCommand(ISqlService sqlService, ILogger<DatabaseUpdateCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<DatabaseUpdateOptions, DatabaseUpdateCommand.DatabaseUpdateResult>(subscriptionResolver)
 {
     private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<DatabaseUpdateCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DatabaseUpdateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SqlOptionDefinitions.SkuNameOption);
-        command.Options.Add(SqlOptionDefinitions.SkuTierOption);
-        command.Options.Add(SqlOptionDefinitions.SkuCapacityOption);
-        command.Options.Add(SqlOptionDefinitions.CollationOption);
-        command.Options.Add(SqlOptionDefinitions.MaxSizeBytesOption);
-        command.Options.Add(SqlOptionDefinitions.ElasticPoolNameOption);
-        command.Options.Add(SqlOptionDefinitions.ZoneRedundantOption);
-        command.Options.Add(SqlOptionDefinitions.ReadScaleOption);
-    }
-
-    protected override DatabaseUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.SkuName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuNameOption.Name);
-        options.SkuTier = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuTierOption.Name);
-        options.SkuCapacity = parseResult.GetValueOrDefault<int?>(SqlOptionDefinitions.SkuCapacityOption.Name);
-        options.Collation = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.CollationOption.Name);
-        options.MaxSizeBytes = parseResult.GetValueOrDefault<long?>(SqlOptionDefinitions.MaxSizeBytesOption.Name);
-        options.ElasticPoolName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ElasticPoolNameOption.Name);
-        options.ZoneRedundant = parseResult.GetValueOrDefault<bool?>(SqlOptionDefinitions.ZoneRedundantOption.Name);
-        options.ReadScale = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ReadScaleOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var database = await _sqlService.UpdateDatabaseAsync(
-                options.Server!,
-                options.Database!,
-                options.ResourceGroup!,
+                options.Server,
+                options.Database,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.SkuName,
                 options.SkuTier,
@@ -113,5 +80,5 @@ public sealed class DatabaseUpdateCommand(ISqlService sqlService, ILogger<Databa
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseUpdateResult(SqlDatabase Database);
+    public sealed record DatabaseUpdateResult(SqlDatabase Database);
 }

@@ -2,12 +2,10 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Workbooks.Models;
-using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
@@ -32,45 +30,27 @@ namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logger, IWorkbooksService workbooksService) : GlobalCommand<DeleteWorkbookOptions>
+public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logger, IWorkbooksService workbooksService)
+    : AuthenticatedCommand<DeleteWorkbookOptions, DeleteWorkbooksCommand.DeleteWorkbooksCommandResult>
 {
     private readonly ILogger<DeleteWorkbooksCommand> _logger = logger;
     private readonly IWorkbooksService _workbooksService = workbooksService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(DeleteWorkbookOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(WorkbooksOptionDefinitions.WorkbookIds);
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+        if (options.WorkbookIds == null || options.WorkbookIds.Length == 0)
         {
-            var workbookIds = result.GetValueOrDefault<string[]>(WorkbooksOptionDefinitions.WorkbookIds.Name);
-            if (workbookIds == null || workbookIds.Length == 0)
-            {
-                result.AddError("At least one workbook ID is required");
-            }
-        });
-    }
-
-    protected override DeleteWorkbookOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.WorkbookIds = parseResult.GetValueOrDefault<string[]>(WorkbooksOptionDefinitions.WorkbookIds.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("At least one workbook ID is required");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DeleteWorkbookOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             var result = await _workbooksService.DeleteWorkbooksAsync(
-                options.WorkbookIds!,
+                options.WorkbookIds,
                 options.RetryPolicy,
                 options.Tenant,
                 cancellationToken);

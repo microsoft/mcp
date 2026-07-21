@@ -71,7 +71,7 @@ public sealed class OptionTypeHandler
         // For array/collection types, allow multiple values after a single option token
         // e.g., --modules RedisBloom RedisJSON instead of --modules RedisBloom --modules RedisJSON
         option.AllowMultipleArgumentsPerToken = isMulti;
-        option.Arity = GetArgumentArity(type, isNullable, isMulti);
+        option.Arity = GetArgumentArity(type, isMulti);
         option.Hidden = descriptor.Hidden;
 
         if (type.IsEnum)
@@ -86,7 +86,7 @@ public sealed class OptionTypeHandler
                 {
                     if (!namesSet.Contains(token.Value))
                     {
-                        result.AddError($"Argument '{token.Value}' not recognized. Must be one of: {allowed}");
+                        result.AddError($"Invalid {option.Name} '{token.Value}'. Must be one of: {allowed}");
                     }
                 }
             });
@@ -323,14 +323,16 @@ public sealed class OptionTypeHandler
         return (option, parseResult => parseResult.GetValueOrDefaultWithoutName(option));
     }
 
-    private static ArgumentArity GetArgumentArity(Type type, bool isNullable, bool isMulti)
+    private static ArgumentArity GetArgumentArity(Type type, bool isMulti)
     {
-        if (isMulti && isNullable)
-            return ArgumentArity.ZeroOrMore;
+        // Array arguments should have one or more values. Nullability is ignored as that controls whether the option
+        // needs to exist.
         if (isMulti)
             return ArgumentArity.OneOrMore;
-        if (isNullable)
-            return ArgumentArity.ZeroOrOne;
+
+        // Otherwise, determine arity based on the type being a boolean. booleans can be treated as a flag (--flag) or
+        // a passed value (--value false). Other types require exactly one value. Again, nullability is ignored as that
+        // controls whether the option needs to exist.
         return typeof(bool) == type ? ArgumentArity.ZeroOrOne : ArgumentArity.ExactlyOne;
     }
 
@@ -346,7 +348,7 @@ public sealed class OptionTypeHandler
 
         if (result.Tokens is not { Count: > 0 } || result.Tokens.Any(t => string.IsNullOrWhiteSpace(t.Value)))
         {
-            result.AddError("Option was configured to require non-empty, non-whitespace values but one or more empty or whitespace values were provided.");
+            result.AddError($"Option '{option.Name}' was configured to require non-empty, non-whitespace values but one or more empty or whitespace values were provided.");
         }
     }
 }

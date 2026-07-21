@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.EntraAdmin;
 using Azure.Mcp.Tools.Sql.Services;
@@ -16,9 +18,8 @@ namespace Azure.Mcp.Tools.Sql.Commands.EntraAdmin;
     Name = "list",
     Title = "List SQL Server Entra ID Administrators",
     Description = """
-        Gets a list of Microsoft Entra ID administrators for a SQL server. This command retrieves all
-        Entra ID administrators configured for the specified SQL server, including their display names, object IDs,
-        and tenant information. Returns an array of Entra ID administrator objects with their properties.
+        Gets a list of all Microsoft Entra ID administrators for a SQL server, including their display names,
+        object IDs, and tenant information. Returns an array of Entra ID administrator objects with their properties.
         """,
     Destructive = false,
     Idempotent = true,
@@ -26,25 +27,19 @@ namespace Azure.Mcp.Tools.Sql.Commands.EntraAdmin;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class EntraAdminListCommand(ISqlService sqlService, ILogger<EntraAdminListCommand> logger)
-    : BaseSqlCommand<EntraAdminListOptions>(logger)
+public sealed class EntraAdminListCommand(ISqlService sqlService, ILogger<EntraAdminListCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<EntraAdminListOptions, EntraAdminListCommand.EntraAdminListResult>(subscriptionResolver)
 {
     private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<EntraAdminListCommand> _logger = logger;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, EntraAdminListOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var administrators = await _sqlService.GetEntraAdministratorsAsync(
-                options.Server!,
-                options.ResourceGroup!,
+                options.Server,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.RetryPolicy,
                 cancellationToken);
@@ -72,5 +67,5 @@ public sealed class EntraAdminListCommand(ISqlService sqlService, ILogger<EntraA
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record EntraAdminListResult(List<SqlServerEntraAdministrator> Administrators);
+    public sealed record EntraAdminListResult(List<SqlServerEntraAdministrator> Administrators);
 }

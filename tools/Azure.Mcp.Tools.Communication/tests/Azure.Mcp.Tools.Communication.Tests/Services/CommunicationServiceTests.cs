@@ -29,7 +29,7 @@ public class CommunicationServiceTests
         string endpoint = string.Empty;
         string sender = "sender@example.com";
         string? senderName = string.Empty;
-        string[] to = new[] { "recipient@example.com" };
+        string[] to = ["recipient@example.com"];
         string subject = "Test Subject";
         string message = "Test Message";
 
