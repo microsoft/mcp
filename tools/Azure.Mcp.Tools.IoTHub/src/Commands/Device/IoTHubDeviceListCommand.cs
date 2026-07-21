@@ -4,17 +4,12 @@
 using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.IoTHub.Options;
 using Azure.Mcp.Tools.IoTHub.Options.Device;
 using Azure.Mcp.Tools.IoTHub.Services;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Option;
-
 namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
 
 public sealed class IoTHubDeviceListCommand(IIoTHubDeviceService service, ILogger<IoTHubDeviceListCommand> logger)
