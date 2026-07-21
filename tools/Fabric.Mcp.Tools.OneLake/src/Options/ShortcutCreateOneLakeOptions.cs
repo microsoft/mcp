@@ -33,5 +33,5 @@ public sealed class ShortcutCreateOneLakeOptions
     public required string TargetPath { get; set; }
 
     [Option(Description = OneLakeOptionDescriptions.TargetConnectionId)]
-    public required string TargetConnectionId { get; set; }
+    public string? TargetConnectionId { get; set; }
 }

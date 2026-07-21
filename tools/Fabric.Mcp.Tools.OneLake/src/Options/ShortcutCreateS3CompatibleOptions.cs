@@ -33,5 +33,5 @@ public sealed class ShortcutCreateS3CompatibleOptions
     public required string TargetConnectionId { get; set; }
 
     [Option(Description = "The bucket name for S3-compatible targets.")]
-    public string? TargetBucket { get; set; }
+    public required string TargetBucket { get; set; }
 }

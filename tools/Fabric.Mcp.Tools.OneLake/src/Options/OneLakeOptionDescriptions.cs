@@ -9,7 +9,7 @@ internal static class OneLakeOptionDescriptions
     internal const string Workspace = "The name or ID of the Microsoft Fabric workspace.";
     internal const string ItemId = "The ID of the Fabric item.";
     internal const string Item = "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').";
-    internal const string FilePath = "The path to the file in Onelake.";
+    internal const string FilePath = "The path to the file in OneLake.";
     internal const string DirectoryPath = "The path to the directory in OneLake.";
     internal const string Recursive = "Whether to perform the operation recursively.";
     internal const string DownloadFilePath = "Local path to save the downloaded content when running locally.";

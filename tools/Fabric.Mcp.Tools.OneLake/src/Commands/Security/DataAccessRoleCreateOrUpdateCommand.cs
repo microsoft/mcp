@@ -156,15 +156,15 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCr
                 .ToList();
         }
 
-        var actions = "Read";
+        var actions = new List<string>() { "Read" };
         if (!string.IsNullOrWhiteSpace(options.PermittedActions))
         {
-            actions = options.PermittedActions;
+            actions = options.PermittedActions.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
         }
 
         var permissions = new List<DecisionRuleScope>
         {
-            new() { AttributeName = "Action", AttributeValueIncludedIn = actions.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList() }
+            new() { AttributeName = "Action", AttributeValueIncludedIn = actions }
         };
 
         if (!string.IsNullOrWhiteSpace(options.PermittedPaths))

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
@@ -67,7 +66,6 @@ public sealed class BlobDeleteCommand(ILogger<BlobDeleteCommand> logger, IOneLak
                 result,
                 "Blob deleted successfully.");
 
-            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(commandResult, OneLakeJsonContext.Default.BlobDeleteCommandResult);
         }
         catch (Exception ex)

@@ -66,23 +66,11 @@ public sealed class OneLakeItemListDfsCommand(ILogger<OneLakeItemListDfsCommand>
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        ArgumentException argEx => $"Invalid argument: {argEx.Message}",
-        InvalidOperationException opEx => $"Operation failed: {opEx.Message}",
-        HttpRequestException httpEx => $"HTTP request failed: {httpEx.Message}",
-        _ => base.GetErrorMessage(ex)
-    };
+    protected override string GetErrorMessage(Exception ex) => 
+        OneLakeCommandValidators.GetErrorMessage(ex, base.GetErrorMessage);
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        InvalidOperationException => HttpStatusCode.InternalServerError,
-        HttpRequestException httpEx when httpEx.Message.Contains("404") => HttpStatusCode.NotFound,
-        HttpRequestException httpEx when httpEx.Message.Contains("403") => HttpStatusCode.Forbidden,
-        HttpRequestException httpEx when httpEx.Message.Contains("401") => HttpStatusCode.Unauthorized,
-        _ => base.GetStatusCode(ex)
-    };
+    protected override HttpStatusCode GetStatusCode(Exception ex) => 
+        OneLakeCommandValidators.GetStatusCode(ex, base.GetStatusCode);
 
     public sealed record OneLakeItemListDfsCommandResult(string? JsonResponse);
 }

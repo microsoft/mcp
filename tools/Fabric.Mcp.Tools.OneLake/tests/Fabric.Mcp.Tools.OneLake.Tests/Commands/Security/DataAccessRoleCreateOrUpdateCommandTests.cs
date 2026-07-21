@@ -60,9 +60,9 @@ public class DataAccessRoleCreateOrUpdateCommandTests : CommandUnitTestsBase<Dat
     private const string ValidRoleJson = "{\"name\":\"TestRole\",\"decisionRules\":[{\"effect\":\"Permit\",\"permission\":[{\"attributeName\":\"Action\",\"attributeValueIncludedIn\":[\"Read\"]},{\"attributeName\":\"Path\",\"attributeValueIncludedIn\":[\"*\"]}]}],\"members\":{\"fabricItemMembers\":[],\"microsoftEntraMembers\":[]}}";
 
     [Theory]
-    [InlineData("--workspace-id ws1 --item-id item1", true)]
+    [InlineData("--workspace-id 32c6efb2-ca3a-4598-83b0-8abe799830cd --item-id item1", true)]
     [InlineData("--item-id item1", false)]  // missing workspace
-    [InlineData("--workspace-id ws1", false)]  // missing item
+    [InlineData("--workspace-id 32c6efb2-ca3a-4598-83b0-8abe799830cd", false)]  // missing item
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -80,10 +80,7 @@ public class DataAccessRoleCreateOrUpdateCommandTests : CommandUnitTestsBase<Dat
         var response = await ExecuteCommandAsync(fullArgs);
 
         Assert.NotNull(response);
-        if (shouldSucceed)
-            Assert.Equal(HttpStatusCode.OK, response.Status);
-        else
-            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]
@@ -95,17 +92,17 @@ public class DataAccessRoleCreateOrUpdateCommandTests : CommandUnitTestsBase<Dat
             DecisionRules = [new DecisionRule { Effect = "Permit" }]
         };
 
-        Service.CreateOrUpdateDataAccessRoleAsync("ws1", "item1", Arg.Any<string>(), Arg.Any<CancellationToken>())
+        Service.CreateOrUpdateDataAccessRoleAsync("32c6efb2-ca3a-4598-83b0-8abe799830cd", "item1", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
-            "--workspace-id", "ws1",
+            "--workspace-id", "32c6efb2-ca3a-4598-83b0-8abe799830cd",
             "--item-id", "item1",
             "--role-definition", ValidRoleJson);
 
         var result = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.DataAccessRole);
         Assert.Equal("TestRole", result.Name);
-        await Service.Received(1).CreateOrUpdateDataAccessRoleAsync("ws1", "item1", Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).CreateOrUpdateDataAccessRoleAsync("32c6efb2-ca3a-4598-83b0-8abe799830cd", "item1", Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -115,7 +112,7 @@ public class DataAccessRoleCreateOrUpdateCommandTests : CommandUnitTestsBase<Dat
             .ThrowsAsync(new HttpRequestException("Bad request"));
 
         var response = await ExecuteCommandAsync(
-            "--workspace-id", "ws1",
+            "--workspace-id", "32c6efb2-ca3a-4598-83b0-8abe799830cd",
             "--item-id", "item1",
             "--role-definition", ValidRoleJson);
 

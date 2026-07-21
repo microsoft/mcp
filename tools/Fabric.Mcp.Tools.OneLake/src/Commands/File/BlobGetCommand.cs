@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using System.Text;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -122,13 +121,8 @@ public sealed class BlobGetCommand(
 
             var finalMessage = messageBuilder.ToString();
 
-            var commandResult = new BlobGetCommandResult(
-                result,
-                finalMessage);
-
-            context.Response.Status = HttpStatusCode.OK;
             context.Response.Message = finalMessage;
-            context.Response.Results = ResponseResult.Create(commandResult, OneLakeJsonContext.Default.BlobGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result, finalMessage), OneLakeJsonContext.Default.BlobGetCommandResult);
         }
         catch (Exception ex)
         {

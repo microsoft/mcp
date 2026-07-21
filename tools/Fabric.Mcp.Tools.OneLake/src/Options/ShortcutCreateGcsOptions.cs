@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Options;
 
-public sealed class ShortcutCreateGcrsOptions
+public sealed class ShortcutCreateGcsOptions
 {
     [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
     public required string WorkspaceId { get; set; }
@@ -27,7 +27,7 @@ public sealed class ShortcutCreateGcrsOptions
     public required string TargetLocation { get; set; }
 
     [Option(Description = OneLakeOptionDescriptions.TargetSubpath)]
-    public required string TargetSubpath { get; set; }
+    public string? TargetSubpath { get; set; }
 
     [Option(Description = OneLakeOptionDescriptions.TargetConnectionId)]
     public required string TargetConnectionId { get; set; }

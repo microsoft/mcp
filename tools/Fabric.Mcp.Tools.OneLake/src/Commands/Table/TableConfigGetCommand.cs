@@ -22,9 +22,8 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false)]
-public sealed class TableConfigGetCommand(
-    ILogger<TableConfigGetCommand> logger,
-    IOneLakeService oneLakeService) : AuthenticatedCommand<TableConfigGetOptions, TableConfigGetCommand.TableConfigGetCommandResult>
+public sealed class TableConfigGetCommand(ILogger<TableConfigGetCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<TableConfigGetOptions, TableConfigGetCommand.TableConfigGetCommandResult>
 {
     private readonly ILogger<TableConfigGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));

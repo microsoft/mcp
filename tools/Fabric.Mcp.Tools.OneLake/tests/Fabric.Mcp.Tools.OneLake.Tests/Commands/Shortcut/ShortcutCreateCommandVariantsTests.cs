@@ -7,7 +7,7 @@ using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Shortcut;
@@ -36,7 +36,7 @@ public class ShortcutCreateCommandVariantsTests
             Arg.Is<OneLakeShortcut>(shortcut =>
                 shortcut.Path == "Files/landing" &&
                 shortcut.Name == "shortcut1" &&
-                shortcut.Target.OneLake!.WorkspaceId == "target-ws" &&
+                shortcut.Target!.OneLake!.WorkspaceId == "target-ws" &&
                 shortcut.Target.OneLake.ItemId == "target-item" &&
                 shortcut.Target.OneLake.Path == "Files/data"),
             null,
@@ -63,7 +63,7 @@ public class ShortcutCreateCommandVariantsTests
             "ws1",
             "item1",
             Arg.Is<OneLakeShortcut>(shortcut =>
-                shortcut.Target.AdlsGen2!.Location == "https://account.dfs.core.windows.net/container" &&
+                shortcut.Target!.AdlsGen2!.Location == "https://account.dfs.core.windows.net/container" &&
                 shortcut.Target.AdlsGen2.Subpath == "/folder" &&
                 shortcut.Target.AdlsGen2.ConnectionId == "connection-1"),
             null,
@@ -90,7 +90,7 @@ public class ShortcutCreateCommandVariantsTests
             "ws1",
             "item1",
             Arg.Is<OneLakeShortcut>(shortcut =>
-                shortcut.Target.AmazonS3!.Location == "https://bucket.s3.us-west-2.amazonaws.com" &&
+                shortcut.Target!.AmazonS3!.Location == "https://bucket.s3.us-west-2.amazonaws.com" &&
                 shortcut.Target.AmazonS3.Subpath == "/folder" &&
                 shortcut.Target.AmazonS3.ConnectionId == "connection-1"),
             null,
@@ -117,7 +117,7 @@ public class ShortcutCreateCommandVariantsTests
             "ws1",
             "item1",
             Arg.Is<OneLakeShortcut>(shortcut =>
-                shortcut.Target.AzureBlobStorage!.Location == "https://account.blob.core.windows.net/container" &&
+                shortcut.Target!.AzureBlobStorage!.Location == "https://account.blob.core.windows.net/container" &&
                 shortcut.Target.AzureBlobStorage.Subpath == "/folder" &&
                 shortcut.Target.AzureBlobStorage.ConnectionId == "connection-1"),
             null,
@@ -144,7 +144,7 @@ public class ShortcutCreateCommandVariantsTests
             "ws1",
             "item1",
             Arg.Is<OneLakeShortcut>(shortcut =>
-                shortcut.Target.GoogleCloudStorage!.Location == "https://bucket.storage.googleapis.com" &&
+                shortcut.Target!.GoogleCloudStorage!.Location == "https://bucket.storage.googleapis.com" &&
                 shortcut.Target.GoogleCloudStorage.Subpath == "/folder" &&
                 shortcut.Target.GoogleCloudStorage.ConnectionId == "connection-1"),
             null,
@@ -172,7 +172,7 @@ public class ShortcutCreateCommandVariantsTests
             "ws1",
             "item1",
             Arg.Is<OneLakeShortcut>(shortcut =>
-                shortcut.Target.S3Compatible!.Location == "https://s3endpoint.contoso.com" &&
+                shortcut.Target!.S3Compatible!.Location == "https://s3endpoint.contoso.com" &&
                 shortcut.Target.S3Compatible.Subpath == "/folder" &&
                 shortcut.Target.S3Compatible.ConnectionId == "connection-1" &&
                 shortcut.Target.S3Compatible.Bucket == "bucket-1"),
@@ -201,7 +201,7 @@ public class ShortcutCreateCommandVariantsTests
             "ws1",
             "item1",
             Arg.Is<OneLakeShortcut>(shortcut =>
-                shortcut.Target.Dataverse!.EnvironmentDomain == "https://org.crm.dynamics.com" &&
+                shortcut.Target!.Dataverse!.EnvironmentDomain == "https://org.crm.dynamics.com" &&
                 shortcut.Target.Dataverse.ConnectionId == "connection-1" &&
                 shortcut.Target.Dataverse.DeltaLakeFolder == "Tables/account"),
             null,
@@ -229,7 +229,7 @@ public class ShortcutCreateCommandVariantsTests
             "ws1",
             "item1",
             Arg.Is<OneLakeShortcut>(shortcut =>
-                shortcut.Target.OneDriveSharePoint!.Location == "https://contoso.sharepoint.com/sites/site" &&
+                shortcut.Target!.OneDriveSharePoint!.Location == "https://contoso.sharepoint.com/sites/site" &&
                 shortcut.Target.OneDriveSharePoint.Subpath == "/Documents" &&
                 shortcut.Target.OneDriveSharePoint.ConnectionId == "connection-1" &&
                 shortcut.Target.OneDriveSharePoint.UpdateFabricItemSensitivity == true),
@@ -257,7 +257,7 @@ public class ShortcutCreateCommandVariantsTests
     private static IOneLakeService CreateShortcutService()
     {
         var service = Substitute.For<IOneLakeService>();
-        service.CreateShortcutAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<OneLakeShortcut>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+        service.CreateShortcutAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<OneLakeShortcut>(), Arg.Any<ShortcutConflictPolicy?>(), Arg.Any<CancellationToken>())
             .Returns(callInfo => callInfo.ArgAt<OneLakeShortcut>(2));
         return service;
     }

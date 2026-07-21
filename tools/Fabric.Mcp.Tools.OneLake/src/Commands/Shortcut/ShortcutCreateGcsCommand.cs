@@ -26,12 +26,12 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
     ReadOnly = false,
     Secret = false)]
 public sealed class ShortcutCreateGcsCommand(ILogger<ShortcutCreateGcsCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<ShortcutCreateGcrsOptions, OneLakeShortcut>()
+    : AuthenticatedCommand<ShortcutCreateGcsOptions, OneLakeShortcut>()
 {
     private readonly ILogger<ShortcutCreateGcsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ShortcutCreateGcrsOptions options, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ShortcutCreateGcsOptions options, CancellationToken cancellationToken)
     {
         try
         {

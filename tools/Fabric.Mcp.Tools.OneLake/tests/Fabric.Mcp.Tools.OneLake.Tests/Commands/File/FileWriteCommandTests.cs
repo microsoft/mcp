@@ -8,7 +8,7 @@ using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
-namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
+namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.File;
 
 public class FileWriteCommandTests : CommandUnitTestsBase<FileWriteCommand, IOneLakeService>
 {
