@@ -52,10 +52,14 @@ public sealed class CommandFactoryToolLoader(
             });
         }
 
+        // outputSchema only became part of the MCP specification in 2025-06-18, so only advertise it to
+        // clients that negotiated that protocol version or newer. Older clients get the legacy shape.
+        var supportsStructuredOutput = SupportsStructuredOutput(request.Server.NegotiatedProtocolVersion);
+
         var tools = visibleCommands
             .Where(kvp => !_options.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
             .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
-            .Select(kvp => GetTool(kvp.Key, kvp.Value))
+            .Select(kvp => GetTool(kvp.Key, kvp.Value, supportsStructuredOutput))
             .ToList();
 
         var listToolsResult = new ListToolsResult { Tools = tools };
@@ -218,10 +222,13 @@ public sealed class CommandFactoryToolLoader(
             };
 
             // When the command advertises an output schema, set its payload as structuredContent so
-            // clients can consume it against the schema. Object payloads are used as-is;
-            // array or scalar payloads are wrapped under a single 'value' property to match the
-            // wrapping applied by OptionSchemaGenerator.CreateOutputSchema
-            if (!isError && command.ResultTypeInfo != null)
+            // clients can consume it against the schema. Object payloads are used as-is; array or scalar
+            // payloads are wrapped under a single 'value' property to match the wrapping applied by
+            // OptionSchemaGenerator.CreateOutputSchema. structuredContent only became part of the MCP
+            // specification in 2025-06-18, so it is only emitted for clients that negotiated that protocol
+            // version or newer; older clients receive the same payload through the content block alone.
+            if (!isError && command.ResultTypeInfo != null
+                && SupportsStructuredOutput(request.Server.NegotiatedProtocolVersion))
             {
                 var structuredContent = TryBuildStructuredContent(jsonResponse);
                 if (structuredContent != null)
@@ -249,7 +256,7 @@ public sealed class CommandFactoryToolLoader(
     /// <param name="fullName">The full name of the command.</param>
     /// <param name="command">The command to convert.</param>
     /// <returns>An MCP tool definition.</returns>
-    private static Tool GetTool(string fullName, IBaseCommand command)
+    private static Tool GetTool(string fullName, IBaseCommand command, bool supportsStructuredOutput)
     {
         var underlyingCommand = command.GetCommand();
         var tool = new Tool
@@ -283,7 +290,7 @@ public sealed class CommandFactoryToolLoader(
         tool.Meta = meta;
 
         var resultTypeInfo = command.ResultTypeInfo;
-        if (resultTypeInfo != null)
+        if (supportsStructuredOutput && resultTypeInfo != null)
         {
             var outputSchema = OptionSchemaGenerator.CreateOutputSchema(resultTypeInfo);
             tool.OutputSchema = JsonSerializer.SerializeToElement(outputSchema, ServerJsonContext.Default.JsonObject);
@@ -305,6 +312,24 @@ public sealed class CommandFactoryToolLoader(
 
         return tool;
     }
+
+    /// <summary>
+    /// The first MCP protocol version that includes <c>outputSchema</c> and <c>structuredContent</c> in
+    /// the specification. Clients that negotiated an older version receive the legacy content-only shape.
+    /// </summary>
+    internal const string StructuredContentMinProtocolVersion = "2025-06-18";
+
+    /// <summary>
+    /// Determines whether a client that negotiated <paramref name="negotiatedProtocolVersion"/> can be sent
+    /// <c>outputSchema</c> and <c>structuredContent</c>. MCP protocol versions are zero-padded
+    /// <c>YYYY-MM-DD</c> strings, so an ordinal comparison matches chronological order. A null, empty, or
+    /// unrecognized value is treated as unsupported so the server falls back to the legacy shape.
+    /// </summary>
+    /// <remarks><see langword="internal"/> (rather than <see langword="private"/>) so the version gate can be
+    /// unit tested directly without exercising the full tool-loading pipeline.</remarks>
+    internal static bool SupportsStructuredOutput(string? negotiatedProtocolVersion) =>
+        !string.IsNullOrEmpty(negotiatedProtocolVersion)
+        && string.CompareOrdinal(negotiatedProtocolVersion, StructuredContentMinProtocolVersion) >= 0;
 
     /// <summary>
     /// Extracts the command result payload from a serialized <see cref="CommandResponse"/> and shapes it
