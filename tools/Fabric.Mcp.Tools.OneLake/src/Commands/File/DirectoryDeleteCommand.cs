@@ -22,9 +22,8 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false)]
-public sealed class DirectoryDeleteCommand(
-    ILogger<DirectoryDeleteCommand> logger,
-    IOneLakeService oneLakeService) : AuthenticatedCommand<DirectoryDeleteOptions, DirectoryDeleteCommand.DirectoryDeleteCommandResult>
+public sealed class DirectoryDeleteCommand(ILogger<DirectoryDeleteCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<DirectoryDeleteOptions, DirectoryDeleteCommand.DirectoryDeleteCommandResult>
 {
     private readonly ILogger<DirectoryDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -78,28 +77,26 @@ public sealed class DirectoryDeleteCommand(
         return context.Response;
     }
 
-    public sealed record DirectoryDeleteCommandResult(
-        string DirectoryPath,
-        string Message);
+    public sealed record DirectoryDeleteCommandResult(string DirectoryPath, string Message);
 }
 
 public sealed class DirectoryDeleteOptions
 {
-    [Option(Description = "The ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
     public string? WorkspaceId { get; set; }
 
-    [Option(Description = "The name or ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.Workspace)]
     public string? Workspace { get; set; }
 
-    [Option(Description = "The ID of the Fabric item.")]
+    [Option(Description = OneLakeOptionDescriptions.ItemId)]
     public string? ItemId { get; set; }
 
-    [Option(Description = "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').")]
+    [Option(Description = OneLakeOptionDescriptions.Item)]
     public string? Item { get; set; }
 
-    [Option(Description = "The path to the directory in OneLake.")]
+    [Option(Description = OneLakeOptionDescriptions.DirectoryPath)]
     public required string DirectoryPath { get; set; }
 
-    [Option(Description = "Whether to perform the operation recursively.")]
+    [Option(Description = OneLakeOptionDescriptions.Recursive)]
     public bool Recursive { get; set; }
 }

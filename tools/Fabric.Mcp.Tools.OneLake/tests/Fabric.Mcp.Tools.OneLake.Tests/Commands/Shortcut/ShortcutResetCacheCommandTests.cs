@@ -71,10 +71,7 @@ public class ShortcutResetCacheCommandTests : CommandUnitTestsBase<ShortcutReset
         var response = await ExecuteCommandAsync(args);
 
         Assert.NotNull(response);
-        if (shouldSucceed)
-            Assert.Equal(HttpStatusCode.OK, response.Status);
-        else
-            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]
@@ -106,8 +103,8 @@ public class ShortcutResetCacheCommandTests : CommandUnitTestsBase<ShortcutReset
     public void BindOptions_RequiresWorkspaceId()
     {
         var parseResult = CommandDefinition.Parse(string.Empty);
-        var isValid = Command.Validate(parseResult.CommandResult);
-        Assert.False(isValid.IsValid);
+        var exception = Assert.Throws<CommandValidationException>(() => Command.BindOptions(parseResult));
+        Assert.Contains("'--workspace-id' is required", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 }
 

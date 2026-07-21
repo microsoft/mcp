@@ -9,7 +9,7 @@ using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
-namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
+namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.File;
 
 public class BlobPutCommandTests : CommandUnitTestsBase<BlobPutCommand, IOneLakeService>
 {
@@ -102,7 +102,7 @@ public class BlobPutCommandTests : CommandUnitTestsBase<BlobPutCommand, IOneLake
 
         try
         {
-            await File.WriteAllTextAsync(tempFile, "{\"hello\":\"world\"}", TestContext.Current.CancellationToken);
+            await System.IO.File.WriteAllTextAsync(tempFile, "{\"hello\":\"world\"}", TestContext.Current.CancellationToken);
 
             Service.PutBlobAsync(
                 workspaceId,
@@ -138,9 +138,9 @@ public class BlobPutCommandTests : CommandUnitTestsBase<BlobPutCommand, IOneLake
         }
         finally
         {
-            if (File.Exists(tempFile))
+            if (System.IO.File.Exists(tempFile))
             {
-                File.Delete(tempFile);
+                System.IO.File.Delete(tempFile);
             }
         }
     }

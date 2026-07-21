@@ -12,7 +12,7 @@ using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
-namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
+namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.File;
 
 public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLakeService>
 {
@@ -208,9 +208,9 @@ public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLa
         }
         finally
         {
-            if (File.Exists(downloadPath))
+            if (System.IO.File.Exists(downloadPath))
             {
-                File.Delete(downloadPath);
+                System.IO.File.Delete(downloadPath);
             }
         }
     }

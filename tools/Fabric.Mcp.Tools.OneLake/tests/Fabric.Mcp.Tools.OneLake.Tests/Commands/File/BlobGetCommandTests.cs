@@ -14,7 +14,7 @@ using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
-namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
+namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.File;
 
 public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IOneLakeService>
 {
@@ -219,9 +219,9 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IOneLake
         }
         finally
         {
-            if (File.Exists(tempFilePath))
+            if (System.IO.File.Exists(tempFilePath))
             {
-                File.Delete(tempFilePath);
+                System.IO.File.Delete(tempFilePath);
             }
         }
     }

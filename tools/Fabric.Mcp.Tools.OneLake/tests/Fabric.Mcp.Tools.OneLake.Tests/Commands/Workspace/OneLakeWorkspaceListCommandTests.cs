@@ -5,7 +5,7 @@ using Fabric.Mcp.Tools.OneLake.Commands.Workspace;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
 
-namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
+namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Workspace;
 
 public class OneLakeWorkspaceListCommandTests : CommandUnitTestsBase<OneLakeWorkspaceListCommand, IOneLakeService>
 {

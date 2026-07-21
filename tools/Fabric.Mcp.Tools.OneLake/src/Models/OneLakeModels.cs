@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace Fabric.Mcp.Tools.OneLake.Models;
 
 // Core OneLake entities
-public class Workspace
+public sealed class Workspace
 {
     [JsonPropertyName("id")]
     public string Id { get; set; } = string.Empty;
@@ -33,13 +33,13 @@ public class Workspace
     public WorkspaceMetadata? Metadata { get; set; }
 }
 
-public class WorkspaceProperties
+public sealed class WorkspaceProperties
 {
     [JsonPropertyName("lastModified")]
     public DateTime? LastModified { get; set; }
 }
 
-public class WorkspaceMetadata
+public sealed class WorkspaceMetadata
 {
     [JsonPropertyName("regionalServiceEndpoint")]
     public string? RegionalServiceEndpoint { get; set; }
@@ -81,7 +81,7 @@ public class OneLakeItem
     public OneLakeItemMetadata? Metadata { get; set; }
 }
 
-public class OneLakeItemMetadata
+public sealed class OneLakeItemMetadata
 {
     [JsonPropertyName("artifactId")]
     public string? ArtifactId { get; set; }
@@ -96,7 +96,7 @@ public class OneLakeItemMetadata
     public string? BlobType { get; set; }
 }
 
-public class Lakehouse : OneLakeItem
+public sealed class Lakehouse : OneLakeItem
 {
     [JsonPropertyName("sqlAnalyticsEndpoint")]
     public OneLakeEndpoint? SqlAnalyticsEndpoint { get; set; }
@@ -115,7 +115,7 @@ public class Lakehouse : OneLakeItem
 }
 
 // File and directory information
-public class OneLakeFileInfo
+public sealed class OneLakeFileInfo
 {
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
@@ -182,8 +182,7 @@ public sealed record BlobGetResult(
     [property: JsonPropertyName("versionId")] string? VersionId,
     [property: JsonPropertyName("requestId")] string? RequestId,
     [property: JsonPropertyName("clientRequestId")] string? ClientRequestId,
-    [property: JsonPropertyName("rootActivityId")] string? RootActivityId
-)
+    [property: JsonPropertyName("rootActivityId")] string? RootActivityId)
 {
     [JsonPropertyName("contentFilePath")]
     public string? ContentFilePath { get; init; }
@@ -200,11 +199,10 @@ public sealed record BlobDeleteResult(
     [property: JsonPropertyName("versionId")] string? VersionId,
     [property: JsonPropertyName("requestId")] string? RequestId,
     [property: JsonPropertyName("clientRequestId")] string? ClientRequestId,
-    [property: JsonPropertyName("rootActivityId")] string? RootActivityId
-);
+    [property: JsonPropertyName("rootActivityId")] string? RootActivityId);
 
 // Request/response models
-public class CreateItemRequest
+public sealed class CreateItemRequest
 {
     [JsonPropertyName("displayName")]
     public string DisplayName { get; set; } = string.Empty;
@@ -219,7 +217,7 @@ public class CreateItemRequest
     public object? Definition { get; set; }
 }
 
-public class UpdateItemRequest
+public sealed class UpdateItemRequest
 {
     [JsonPropertyName("displayName")]
     public string? DisplayName { get; set; }
@@ -232,7 +230,7 @@ public class UpdateItemRequest
 }
 
 // Collection response models
-public class WorkspacesResponse
+public sealed class WorkspacesResponse
 {
     [JsonPropertyName("value")]
     public List<Workspace> Value { get; set; } = [];
@@ -241,7 +239,7 @@ public class WorkspacesResponse
     public string? ContinuationToken { get; set; }
 }
 
-public class ItemsResponse
+public sealed class ItemsResponse
 {
     [JsonPropertyName("value")]
     public List<OneLakeItem> Value { get; set; } = [];
@@ -250,7 +248,7 @@ public class ItemsResponse
     public string? ContinuationToken { get; set; }
 }
 
-public class LakehousesResponse
+public sealed class LakehousesResponse
 {
     [JsonPropertyName("value")]
     public List<Lakehouse> Value { get; set; } = [];
@@ -260,7 +258,7 @@ public class LakehousesResponse
 }
 
 // Endpoint and authentication models
-public class OneLakeEndpoint
+public sealed class OneLakeEndpoint
 {
     [JsonPropertyName("connectionString")]
     public string? ConnectionString { get; set; }
@@ -270,7 +268,7 @@ public class OneLakeEndpoint
 }
 
 // File system models for hierarchical directory views
-public class FileSystemItem
+public sealed class FileSystemItem
 {
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
@@ -397,7 +395,7 @@ public static class OneLakeEndpoints
     public static IEnumerable<string> GetAvailableEnvironments() => EnvironmentEndpoints.Keys;
 }
 
-public class OneLakeEnvironmentEndpoints
+public sealed class OneLakeEnvironmentEndpoints
 {
     public string OneLakeDataPlaneBaseUrl { get; set; } = string.Empty;
     public string OneLakeDataPlaneDfsBaseUrl { get; set; } = string.Empty;
