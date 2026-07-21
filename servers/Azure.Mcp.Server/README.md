@@ -1047,7 +1047,7 @@ Example prompts that generate Azure CLI commands:
 * "Delete virtual machine scale set 'my-vmss' in resource group 'my-resource-group'"
 * "Force delete VMSS 'my-vmss' in resource group 'my-rg' using force-deletion"
 
-###  📦 Azure Container Apps
+### �📦 Azure Container Apps
 
 * "List the container apps in my subscription"
 * "Show me the container apps in my 'my-resource-group' resource group"
@@ -1270,8 +1270,8 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📞 **Azure Communication Services** - SMS messaging and communication
--   **Azure Compute** - Virtual Machine, Virtual Machine Scale Set, and Disk management
--  🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
+- � **Azure Compute** - Virtual Machine, Virtual Machine Scale Set, and Disk management
+- �🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
