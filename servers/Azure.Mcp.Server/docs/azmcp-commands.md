@@ -2740,6 +2740,16 @@ azmcp insights get --scope tenant \
                    --nocache
 ```
 
+### Azure IoT Hub Operations
+
+```bash
+# Get IoT Hub details by hub name in a specific resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub hub get --subscription <subscription> \
+                     --resource-group <resource-group> \
+                     --hub-name <iot-hub-name>
+```                     
+
 ### Azure Key Vault Operations
 
 #### Administration
