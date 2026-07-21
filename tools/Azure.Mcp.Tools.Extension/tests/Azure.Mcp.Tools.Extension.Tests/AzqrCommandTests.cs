@@ -5,17 +5,17 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Extension.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Time;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Extension.Tests;
 
-public sealed class AzqrCommandTests : CommandUnitTestsBase<AzqrCommand, IExternalProcessService>
+public sealed class AzqrCommandTests : SubscriptionCommandUnitTestsBase<AzqrCommand, IExternalProcessService>
 {
     private readonly ISubscriptionService _subscriptionService;
     private readonly IDateTimeProvider _dateTimeProvider;
@@ -52,8 +52,8 @@ public sealed class AzqrCommandTests : CommandUnitTestsBase<AzqrCommand, IExtern
         var tempAzqrPath = Path.Combine(Path.GetTempPath(), tempAzqrName);
         File.WriteAllText(tempAzqrPath, string.Empty); // Empty file is enough for path check
 
-        // Set the private static _cachedAzqrPath field via reflection
-        var field = typeof(AzqrCommand).GetField("_cachedAzqrPath", BindingFlags.Static | BindingFlags.NonPublic);
+        // Set the private static s_cachedAzqrPath field via reflection
+        var field = typeof(AzqrCommand).GetField("s_cachedAzqrPath", BindingFlags.Static | BindingFlags.NonPublic);
         var originalAzqrPath = field?.GetValue(null);
         field?.SetValue(null, tempAzqrPath);
 

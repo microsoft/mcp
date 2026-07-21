@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Extension.Models;
 using Azure.Mcp.Tools.Extension.Options;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
@@ -21,47 +21,28 @@ namespace Azure.Mcp.Tools.Extension.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = true)]
-public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliInstallService cliInstallService) : GlobalCommand<CliInstallOptions>
+public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliInstallService cliInstallService)
+    : AuthenticatedCommand<CliInstallOptions, CliInstallResult>
 {
     private readonly ILogger<CliInstallCommand> _logger = logger;
     private readonly ICliInstallService _cliInstallService = cliInstallService;
-    private readonly string[] _allowedCliTypeValues = ["az", "azd", "func"];
+    private static readonly string[] s_allowedCliTypeValues = ["az", "azd", "func"];
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(CliInstallOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(ExtensionOptionDefinitions.CliInstall.CliType);
+        base.ValidateOptions(options, validationResult);
 
-        command.Validators.Add(result =>
+        if (!s_allowedCliTypeValues.Contains(options.CliType.ToLowerInvariant()))
         {
-            var cliType = result.GetValue(ExtensionOptionDefinitions.CliInstall.CliType)?.ToLowerInvariant();
-            if (!_allowedCliTypeValues.Contains(cliType))
-            {
-                result.AddError($"Invalid CLI type: {cliType}. Supported values are: {string.Join(", ", _allowedCliTypeValues)}");
-            }
-        });
-    }
-
-    protected override CliInstallOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.CliType = parseResult.GetValueOrDefault<string>(ExtensionOptionDefinitions.CliInstall.CliType.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add($"Invalid CLI type: {options.CliType}. Supported values are: {string.Join(", ", s_allowedCliTypeValues)}");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CliInstallOptions options, CancellationToken cancellationToken)
+    {
         try
         {
-            var cliType = options.CliType?.ToLowerInvariant()!;
+            var cliType = options.CliType.ToLowerInvariant();
 
             // Only log the cli type when we know for sure it doesn't have private data.
             context.Activity?.AddTag("cliType", cliType);
