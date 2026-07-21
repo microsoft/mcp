@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Authenticated commands now return a clear, actionable error message when Azure credentials are unavailable (CredentialUnavailableException), guiding users to run az login instead of surfacing a generic authentication failure."
