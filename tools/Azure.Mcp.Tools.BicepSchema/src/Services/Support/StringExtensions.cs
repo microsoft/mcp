@@ -9,19 +9,10 @@ public static class StringExtensions
     {
         return input.Contains(value, StringComparison.OrdinalIgnoreCase);
     }
-    public static bool StartsWithOrdinalInsensitively(this string original, string prefix)
-    {
-        return original.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
-    }
 
     public static IOrderedEnumerable<TSource> OrderByAscendingOrdinalInsensitively<TSource>(this IEnumerable<TSource> source, Func<TSource, string> keySelector)
     {
-        return source.OrderByAscending(keySelector, StringComparer.OrdinalIgnoreCase);
-    }
-
-    public static IOrderedEnumerable<TSource> OrderByAscending<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer)
-    {
-        return source.OrderBy(keySelector, comparer);
+        return source.OrderBy(keySelector, StringComparer.OrdinalIgnoreCase);
     }
 
     public static bool EqualsOrdinalInsensitively(this string source, string other)

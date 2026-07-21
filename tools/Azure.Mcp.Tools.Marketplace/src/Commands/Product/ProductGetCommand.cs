@@ -3,13 +3,12 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Marketplace.Models;
-using Azure.Mcp.Tools.Marketplace.Options;
 using Azure.Mcp.Tools.Marketplace.Options.Product;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
@@ -28,50 +27,19 @@ namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarketplaceService marketplaceService) : SubscriptionCommand<ProductGetOptions>
+public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarketplaceService marketplaceService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ProductGetOptions, ProductGetCommand.ProductGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ProductGetCommand> _logger = logger;
     private readonly IMarketplaceService _marketplaceService = marketplaceService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ProductGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(MarketplaceOptionDefinitions.ProductId);
-        command.Options.Add(MarketplaceOptionDefinitions.IncludeStopSoldPlans);
-        command.Options.Add(MarketplaceOptionDefinitions.Language);
-        command.Options.Add(MarketplaceOptionDefinitions.LookupOfferInTenantLevel);
-        command.Options.Add(MarketplaceOptionDefinitions.PlanId);
-        command.Options.Add(MarketplaceOptionDefinitions.SkuId);
-        command.Options.Add(MarketplaceOptionDefinitions.IncludeServiceInstructionTemplates);
-    }
-
-    protected override ProductGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ProductId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.ProductId.Name);
-        options.IncludeStopSoldPlans = parseResult.GetValueOrDefault<bool>(MarketplaceOptionDefinitions.IncludeStopSoldPlans.Name);
-        options.Language = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Language.Name);
-        options.LookupOfferInTenantLevel = parseResult.GetValueOrDefault<bool>(MarketplaceOptionDefinitions.LookupOfferInTenantLevel.Name);
-        options.PlanId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.PlanId.Name);
-        options.SkuId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.SkuId.Name);
-        options.IncludeServiceInstructionTemplates = parseResult.GetValueOrDefault<bool>(MarketplaceOptionDefinitions.IncludeServiceInstructionTemplates.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             // Call service operation with required parameters
             var result = await _marketplaceService.GetProduct(
-                options.ProductId!,
+                options.ProductId,
                 options.Subscription!,
                 options.IncludeStopSoldPlans,
                 options.Language,
@@ -112,13 +80,6 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarket
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        HttpRequestException httpEx => httpEx.StatusCode.GetValueOrDefault(HttpStatusCode.InternalServerError),
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
-
     // Strongly-typed result record
-    internal record ProductGetCommandResult(ProductDetails Product);
+    public sealed record ProductGetCommandResult(ProductDetails Product);
 }

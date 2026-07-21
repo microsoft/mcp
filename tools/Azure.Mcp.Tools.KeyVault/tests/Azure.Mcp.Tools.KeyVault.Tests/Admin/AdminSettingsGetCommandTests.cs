@@ -2,21 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Admin;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Administration;
-using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.Tests.Admin;
 
-public class AdminSettingsGetCommandTests : CommandUnitTestsBase<AdminSettingsGetCommand, IKeyVaultService>
+public class AdminSettingsGetCommandTests : SubscriptionCommandUnitTestsBase<AdminSettingsGetCommand, IKeyVaultService>
 {
     private const string KnownSubscriptionId = "knownSubscription";
     private const string KnownVaultName = "knownVaultName";
@@ -61,48 +59,29 @@ public class AdminSettingsGetCommandTests : CommandUnitTestsBase<AdminSettingsGe
     [Theory]
     [InlineData("--vault knownVaultName --subscription knownSubscription", true)]
     [InlineData("--subscription knownSubscription --vault knownVaultName", true)]
-    [InlineData("--vault knownVaultName", true)] // Subscription from env var
     [InlineData("--subscription knownSubscription", false, "Missing required vault")] // Missing required vault
     [InlineData("", false, "Missing both")] // Missing both
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, string expectedFailureReason = "")
     {
-        try
+        if (shouldSucceed)
         {
-            if (args.Contains("--vault") && !args.Contains("--subscription") && shouldSucceed)
-            {
-                // Provide subscription via environment variable
-                TestEnvironment.SetAzureSubscriptionId(KnownSubscriptionId);
-            }
-            else if (!args.Contains("--subscription"))
-            {
-                // Ensure failure when subscription missing and not expected to succeed
-                Assert.Null(EnvironmentHelpers.GetAzureSubscriptionId());
-            }
-
-            if (shouldSucceed)
-            {
-                // Service returns null result -> treated as empty settings
-                Service.GetVaultSettings(
-                    Arg.Any<string>(),
-                    Arg.Any<string>(),
-                    Arg.Any<string?>(),
-                    Arg.Any<RetryPolicyOptions?>(),
-                    Arg.Any<CancellationToken>())
-                    .Returns((GetSettingsResult)null!);
-            }
-
-            var response = await ExecuteCommandAsync(args);
-
-            Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
-            if (!shouldSucceed)
-            {
-                Assert.Contains("required", response.Message, StringComparison.OrdinalIgnoreCase);
-                Console.WriteLine($"Validation failed as expected: {expectedFailureReason}");
-            }
+            // Service returns null result -> treated as empty settings
+            Service.GetVaultSettings(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
+                .Returns((GetSettingsResult)null!);
         }
-        finally
+
+        var response = await ExecuteCommandAsync(args);
+
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+        if (!shouldSucceed)
         {
-            TestEnvironment.ClearAzureSubscriptionId();
+            Assert.Contains("required", response.Message, StringComparison.OrdinalIgnoreCase);
+            Console.WriteLine($"Validation failed as expected: {expectedFailureReason}");
         }
     }
 }

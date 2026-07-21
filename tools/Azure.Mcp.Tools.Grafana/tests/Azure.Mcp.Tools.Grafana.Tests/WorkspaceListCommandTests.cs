@@ -3,19 +3,19 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Grafana.Commands;
 using Azure.Mcp.Tools.Grafana.Commands.Workspace;
 using Azure.Mcp.Tools.Grafana.Models;
 using Azure.Mcp.Tools.Grafana.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Grafana.Tests;
 
-public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceListCommand, IGrafanaService>
+public sealed class WorkspaceListCommandTests : SubscriptionCommandUnitTestsBase<WorkspaceListCommand, IGrafanaService>
 {
     [Fact]
     public void Constructor_Should_Initialize_Command_Properly()

@@ -15,7 +15,7 @@ public class GuidanceGetCommandTests : CommandUnitTestsBase<GuidanceGetCommand, 
     public async Task Should_generate_pipeline()
     {
         // arrange & act
-        var result = await ExecuteCommandAsync("--subscription", "test-subscription-id");
+        var result = await ExecuteCommandAsync();
 
         // assert
         Assert.NotNull(result);
@@ -32,7 +32,6 @@ public class GuidanceGetCommandTests : CommandUnitTestsBase<GuidanceGetCommand, 
     {
         // arrange & act
         var result = await ExecuteCommandAsync(
-            "--subscription", "test-subscription-id",
             "--is-azd-project", "false",
             "--pipeline-platform", "github-actions",
             "--deploy-option", "deploy-only");
@@ -52,7 +51,6 @@ public class GuidanceGetCommandTests : CommandUnitTestsBase<GuidanceGetCommand, 
     {
         // arrange & act - not providing is-azd-project should default to false
         var result = await ExecuteCommandAsync(
-            "--subscription", "test-subscription-id",
             "--is-azd-project", "false",
             "--pipeline-platform", "azure-devops",
             "--deploy-option", "deploy-only");
@@ -72,7 +70,6 @@ public class GuidanceGetCommandTests : CommandUnitTestsBase<GuidanceGetCommand, 
     {
         // arrange & act
         var result = await ExecuteCommandAsync(
-            "--subscription", "test-subscription-id",
             "--is-azd-project", "false",
             "--deploy-option", "provision-and-deploy");
 

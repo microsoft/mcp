@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tools.FileShares.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.Snapshot;
 using Azure.Mcp.Tools.FileShares.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
@@ -23,41 +24,14 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger, IFileSharesService service)
-    : BaseFileSharesCommand<SnapshotUpdateOptions>(logger, service)
+public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<SnapshotUpdateOptions, SnapshotUpdateCommand.SnapshotUpdateCommandResult>(subscriptionResolver)
 {
-
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SnapshotUpdateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.Snapshot.FileShareName.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.Snapshot.SnapshotName.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.Snapshot.Metadata.AsOptional());
-    }
-
-    protected override SnapshotUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.FileShareName.Name);
-        options.SnapshotName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.SnapshotName.Name);
-        options.Metadata = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.Metadata.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            _logger.LogInformation("Updating snapshot. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}, SnapshotName: {SnapshotName}",
+            logger.LogInformation("Updating snapshot. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}, SnapshotName: {SnapshotName}",
                 options.Subscription, options.ResourceGroup, options.FileShareName, options.SnapshotName);
 
             // Parse metadata if provided
@@ -70,15 +44,15 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to parse metadata JSON: {Metadata}", options.Metadata);
+                    logger.LogWarning(ex, "Failed to parse metadata JSON: {Metadata}", options.Metadata);
                 }
             }
 
-            var snapshot = await _fileSharesService.PatchSnapshotAsync(
+            var snapshot = await fileSharesService.PatchSnapshotAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.FileShareName!,
-                options.SnapshotName!,
+                options.ResourceGroup,
+                options.FileShareName,
+                options.SnapshotName,
                 metadata,
                 options.Tenant,
                 options.RetryPolicy,
@@ -86,16 +60,16 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
 
             context.Response.Results = ResponseResult.Create(new(snapshot), FileSharesJsonContext.Default.SnapshotUpdateCommandResult);
 
-            _logger.LogInformation("Snapshot updated successfully. SnapshotName: {SnapshotName}", options.SnapshotName);
+            logger.LogInformation("Snapshot updated successfully. SnapshotName: {SnapshotName}", options.SnapshotName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to update snapshot");
+            logger.LogError(ex, "Failed to update snapshot");
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record SnapshotUpdateCommandResult(FileShareSnapshotInfo Snapshot);
+    public sealed record SnapshotUpdateCommandResult(FileShareSnapshotInfo Snapshot);
 }

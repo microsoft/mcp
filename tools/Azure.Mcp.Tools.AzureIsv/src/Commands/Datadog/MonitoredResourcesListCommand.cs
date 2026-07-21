@@ -2,14 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.AzureIsv.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureIsv.Options.Datadog;
 using Azure.Mcp.Tools.AzureIsv.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
 
@@ -29,41 +27,20 @@ namespace Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesListCommand> logger, IDatadogService datadogService) : SubscriptionCommand<MonitoredResourcesListOptions>
+public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesListCommand> logger, IDatadogService datadogService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<MonitoredResourcesListOptions, MonitoredResourcesListCommand.MonitoredResourcesListResult>(subscriptionResolver)
 {
     private readonly ILogger<MonitoredResourcesListCommand> _logger = logger;
     private readonly IDatadogService _datadogService = datadogService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, MonitoredResourcesListOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(DatadogOptionDefinitions.DatadogResourceName);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-    }
-
-    protected override MonitoredResourcesListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.DatadogResource = parseResult.GetValueOrDefault<string>(DatadogOptionDefinitions.DatadogResourceName.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var results = await _datadogService.ListMonitoredResources(
-                options.ResourceGroup!,
+                options.ResourceGroup,
                 options.Subscription!,
-                options.DatadogResource!,
+                options.DatadogResource,
                 cancellationToken);
             context.Response.Results = results?.Count > 0
                 ? ResponseResult.Create(new(results), DatadogJsonContext.Default.MonitoredResourcesListResult)
@@ -78,5 +55,5 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
         return context.Response;
     }
 
-    internal record MonitoredResourcesListResult(List<string> resources);
+    public sealed record MonitoredResourcesListResult(List<string> Resources);
 }

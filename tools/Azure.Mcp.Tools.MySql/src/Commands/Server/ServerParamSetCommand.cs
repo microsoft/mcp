@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.MySql.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.MySql.Options.Server;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Server;
@@ -22,37 +22,17 @@ namespace Azure.Mcp.Tools.MySql.Commands.Server;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger, IMySqlService mysqlService) : BaseServerCommand<ServerParamSetOptions>(logger)
+public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger, IMySqlService mysqlService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ServerParamSetOptions, ServerParamSetCommand.ServerParamSetCommandResult>(subscriptionResolver)
 {
     private readonly IMySqlService _mysqlService = mysqlService;
+    private readonly ILogger<ServerParamSetCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ServerParamSetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(MySqlOptionDefinitions.Param);
-        command.Options.Add(MySqlOptionDefinitions.Value);
-    }
-
-    protected override ServerParamSetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Param = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.Param.Name);
-        options.Value = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.Value.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var result = await _mysqlService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.Server!, options.Param!, options.Value!, cancellationToken);
+            var result = await _mysqlService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup, options.Server, options.Param, options.Value, cancellationToken);
             context.Response.Results = !string.IsNullOrEmpty(result) ?
                 ResponseResult.Create(new(options.Param!, result), MySqlJsonContext.Default.ServerParamSetCommandResult) :
                 null;
@@ -65,5 +45,5 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger,
         return context.Response;
     }
 
-    internal record ServerParamSetCommandResult(string Parameter, string Value);
+    public sealed record ServerParamSetCommandResult(string Parameter, string Value);
 }

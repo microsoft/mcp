@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.MySql.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.MySql.Options.Database;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Database;
@@ -22,35 +22,17 @@ namespace Azure.Mcp.Tools.MySql.Commands.Database;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger, IMySqlService mysqlService) : BaseDatabaseCommand<DatabaseQueryOptions>(logger)
+public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger, IMySqlService mysqlService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<DatabaseQueryOptions, DatabaseQueryCommand.DatabaseQueryCommandResult>(subscriptionResolver)
 {
     private readonly IMySqlService _mysqlService = mysqlService;
+    private readonly ILogger<DatabaseQueryCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DatabaseQueryOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(MySqlOptionDefinitions.Query);
-    }
-
-    protected override DatabaseQueryOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.Query.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var result = await _mysqlService.ExecuteQueryAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!, options.Query!, cancellationToken);
+            var result = await _mysqlService.ExecuteQueryAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Database, options.Query, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result ?? []), MySqlJsonContext.Default.DatabaseQueryCommandResult);
         }
         catch (Exception ex)
@@ -61,5 +43,5 @@ public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger, I
         return context.Response;
     }
 
-    public record DatabaseQueryCommandResult(List<string> Results);
+    public sealed record DatabaseQueryCommandResult(List<string> Results);
 }

@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.EventHubs.Options;
+using System.Text.Json;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
@@ -38,88 +38,39 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<NamespaceUpdateOptions>
+public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logger, IEventHubsService service, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<NamespaceUpdateOptions, NamespaceUpdateCommand.NamespaceUpdateCommandResult>(subscriptionResolver)
 {
-
     private readonly IEventHubsService _service = service;
     private readonly ILogger<NamespaceUpdateCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(NamespaceUpdateOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.LocationOption);
-        command.Options.Add(EventHubsOptionDefinitions.SkuNameOption);
-        command.Options.Add(EventHubsOptionDefinitions.SkuTierOption);
-        command.Options.Add(EventHubsOptionDefinitions.SkuCapacityOption);
-        command.Options.Add(EventHubsOptionDefinitions.IsAutoInflateEnabledOption);
-        command.Options.Add(EventHubsOptionDefinitions.MaximumThroughputUnitsOption);
-        command.Options.Add(EventHubsOptionDefinitions.KafkaEnabledOption);
-        command.Options.Add(EventHubsOptionDefinitions.ZoneRedundantOption);
-        command.Options.Add(EventHubsOptionDefinitions.TagsOption);
+        base.ValidateOptions(options, validationResult);
 
-        command.Validators.Add(commandResult =>
+        // Validate that at least one update property is provided (for update scenario)
+        if (string.IsNullOrEmpty(options.Location) &&
+            string.IsNullOrEmpty(options.SkuName) &&
+            string.IsNullOrEmpty(options.SkuTier) &&
+            !options.SkuCapacity.HasValue &&
+            !options.IsAutoInflateEnabled.HasValue &&
+            !options.MaximumThroughputUnits.HasValue &&
+            !options.KafkaEnabled.HasValue &&
+            !options.ZoneRedundant.HasValue &&
+            string.IsNullOrEmpty(options.Tags))
         {
-            // Validate that at least one update property is provided (for update scenario)
-            var location = commandResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.LocationOption.Name);
-            var skuName = commandResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.SkuNameOption.Name);
-            var skuTier = commandResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.SkuTierOption.Name);
-            var skuCapacity = commandResult.GetValueOrDefault<int?>(EventHubsOptionDefinitions.SkuCapacityOption.Name);
-            var isAutoInflateEnabled = commandResult.GetValueOrDefault<bool?>(EventHubsOptionDefinitions.IsAutoInflateEnabledOption.Name);
-            var maximumThroughputUnits = commandResult.GetValueOrDefault<int?>(EventHubsOptionDefinitions.MaximumThroughputUnitsOption.Name);
-            var kafkaEnabled = commandResult.GetValueOrDefault<bool?>(EventHubsOptionDefinitions.KafkaEnabledOption.Name);
-            var zoneRedundant = commandResult.GetValueOrDefault<bool?>(EventHubsOptionDefinitions.ZoneRedundantOption.Name);
-            var tags = commandResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.TagsOption.Name);
-
-            if (string.IsNullOrEmpty(location) &&
-                string.IsNullOrEmpty(skuName) &&
-                string.IsNullOrEmpty(skuTier) &&
-                !skuCapacity.HasValue &&
-                !isAutoInflateEnabled.HasValue &&
-                !maximumThroughputUnits.HasValue &&
-                !kafkaEnabled.HasValue &&
-                !zoneRedundant.HasValue &&
-                string.IsNullOrEmpty(tags))
-            {
-                commandResult.AddError("At least one update property must be provided (location, sku-name, sku-tier, sku-capacity, is-auto-inflate-enabled, maximum-throughput-units, kafka-enabled, zone-redundant, or tags).");
-            }
-
-            // Validate auto-inflate settings
-            if (isAutoInflateEnabled == true && !maximumThroughputUnits.HasValue)
-            {
-                commandResult.AddError("When enabling auto-inflate, maximum-throughput-units must be specified.");
-            }
-        });
-    }
-
-    protected override NamespaceUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.LocationOption.Name);
-        options.SkuName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.SkuNameOption.Name);
-        options.SkuTier = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.SkuTierOption.Name);
-        options.SkuCapacity = parseResult.GetValueOrDefault<int?>(EventHubsOptionDefinitions.SkuCapacityOption.Name);
-        options.IsAutoInflateEnabled = parseResult.GetValueOrDefault<bool?>(EventHubsOptionDefinitions.IsAutoInflateEnabledOption.Name);
-        options.MaximumThroughputUnits = parseResult.GetValueOrDefault<int?>(EventHubsOptionDefinitions.MaximumThroughputUnitsOption.Name);
-        options.KafkaEnabled = parseResult.GetValueOrDefault<bool?>(EventHubsOptionDefinitions.KafkaEnabledOption.Name);
-        options.ZoneRedundant = parseResult.GetValueOrDefault<bool?>(EventHubsOptionDefinitions.ZoneRedundantOption.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.TagsOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("At least one update property must be provided (location, sku-name, sku-tier, sku-capacity, is-auto-inflate-enabled, maximum-throughput-units, kafka-enabled, zone-redundant, or tags).");
         }
 
-        var options = BindOptions(parseResult);
+        // Validate auto-inflate settings
+        if (options.IsAutoInflateEnabled == true && !options.MaximumThroughputUnits.HasValue)
+        {
+            validationResult.Errors.Add("When enabling auto-inflate, maximum-throughput-units must be specified.");
+        }
+    }
 
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, NamespaceUpdateOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             // Parse tags if provided
@@ -137,8 +88,8 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
             }
 
             var updatedNamespace = await _service.CreateOrUpdateNamespaceAsync(
-                options.Namespace!,
-                options.ResourceGroup!,
+                options.Namespace,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.Location,
                 options.SkuName,
@@ -167,5 +118,5 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
         return context.Response;
     }
 
-    internal record NamespaceUpdateCommandResult(Models.Namespace Namespace);
+    public sealed record NamespaceUpdateCommandResult(Models.Namespace Namespace);
 }
