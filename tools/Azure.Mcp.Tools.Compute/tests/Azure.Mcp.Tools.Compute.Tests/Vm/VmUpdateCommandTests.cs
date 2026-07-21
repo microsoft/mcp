@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.Tests.Vm;
 
-public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, IComputeService>
+public class VmUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmUpdateCommand, IComputeService>
 {
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
@@ -333,10 +333,17 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
         // Assert - command passes the value through as-is; caller is responsible for Base64 encoding
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).UpdateVmAsync(
-            _knownVmName, _knownResourceGroup, _knownSubscription,
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), base64UserData, Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            _knownVmName,
+            _knownResourceGroup,
+            _knownSubscription,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            base64UserData,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -425,7 +432,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--tags");
+            "--tags", "");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).UpdateVmAsync(
