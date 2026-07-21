@@ -70,7 +70,7 @@ public static class DeploymentPlanTemplateUtil
         var fallbackIaCTypeDescription = "";
         if (string.IsNullOrEmpty(iacOptions) && (string.Equals(deployOption, DeployOption.ProvisionOnly, StringComparison.OrdinalIgnoreCase) || string.Equals(deployOption, DeployOption.ProvisionAndDeploy, StringComparison.OrdinalIgnoreCase)))
         {
-            iacOptions = targetAppService.ToLowerInvariant() == "aks" ? IacType.Terraform : IacType.Bicep;
+            iacOptions = targetAppService.Equals("aks", StringComparison.InvariantCultureIgnoreCase) ? IacType.Terraform : IacType.Bicep;
             fallbackIaCTypeDescription = $" Since the IaC option is not specified, we will use {iacOptions} as the IaC option based on the target app services.";
         }
 
@@ -83,9 +83,9 @@ public static class DeploymentPlanTemplateUtil
             goal = $"Provide a plan to provision Azure resources for the project with {provisioningTool.ToUpperInvariant()}{(string.IsNullOrEmpty(iacOptions) ? "" : " and " + iacOptions)}.{fallbackIaCTypeDescription}";
         }
 
-        var sampleMermaid = targetAppService.ToLowerInvariant() == "aks"
-        ? TemplateService.LoadTemplate("Plan/sample-aks-mermaid")
-        : TemplateService.LoadTemplate("Plan/sample-app-mermaid");
+        var sampleMermaid = targetAppService.Equals("aks", StringComparison.InvariantCultureIgnoreCase)
+            ? TemplateService.LoadTemplate("Plan/sample-aks-mermaid")
+            : TemplateService.LoadTemplate("Plan/sample-app-mermaid");
 
         return new DeploymentPlanTemplateParameters
         {
@@ -105,17 +105,14 @@ public static class DeploymentPlanTemplateUtil
     /// <summary>
     /// Gets the Azure compute host display name from the target app service.
     /// </summary>
-    private static string GetAzureComputeHost(string targetAppService)
+    private static string GetAzureComputeHost(string targetAppService) => targetAppService.ToLowerInvariant() switch
     {
-        return targetAppService.ToLowerInvariant() switch
-        {
-            "containerapp" => "Azure Container Apps",
-            "webapp" => "Azure Web App Service",
-            "functionapp" => "Azure Functions",
-            "aks" => "Azure Kubernetes Service",
-            _ => "Azure Container Apps"
-        };
-    }
+        "containerapp" => "Azure Container Apps",
+        "webapp" => "Azure Web App Service",
+        "functionapp" => "Azure Functions",
+        "aks" => "Azure Kubernetes Service",
+        _ => "Azure Container Apps"
+    };
 
     /// <summary>
     /// Generates execution steps based on the deployment parameters.
@@ -123,9 +120,9 @@ public static class DeploymentPlanTemplateUtil
     private static string GenerateExecutionSteps(DeploymentPlanTemplateParameters parameters)
     {
         var steps = new List<string>();
-        var isAks = parameters.TargetAppService.ToLowerInvariant() == "aks";
+        var isAks = parameters.TargetAppService.Equals("aks", StringComparison.InvariantCultureIgnoreCase);
 
-        if (parameters.ProvisioningTool.ToLowerInvariant() == "azd")
+        if (parameters.ProvisioningTool.Equals("azd", StringComparison.InvariantCultureIgnoreCase))
         {
             steps.AddRange(GenerateAzdSteps(parameters, isAks));
         }
@@ -146,7 +143,7 @@ public static class DeploymentPlanTemplateUtil
 
         var deployTitle = isAks ? "" : " And Deploy the Application";
         var checkLog = isAks ? "" : "6. Check the application log with tool `azd-app-log-get` to ensure the services are running.";
-        var iacRuleTool = parameters.IacType.ToLowerInvariant() == "bicep" ? "Then call tool #mcp_azure_mcp_azd with input command='infrastructure_generation' to get instructions for generating modular Bicep infrastructure templates following Azure security and operational best practices for azd projects." : "Get the IaC rules from the tool `iac-rules-get`.";
+        var iacRuleTool = parameters.IacType.Equals("bicep", StringComparison.InvariantCultureIgnoreCase) ? "Then call tool #mcp_azure_mcp_azd with input command='infrastructure_generation' to get instructions for generating modular Bicep infrastructure templates following Azure security and operational best practices for azd projects." : "Get the IaC rules from the tool `iac-rules-get`.";
         var azdStepReplacements = new Dictionary<string, string>
         {
             { "DeployTitle", deployTitle },
@@ -195,7 +192,7 @@ public static class DeploymentPlanTemplateUtil
         else
         {
             var cliDeploymentSteps = "";
-            if (parameters.TargetAppService.ToLowerInvariant() == "containerapp" && parameters.DeployOption != DeployOption.ProvisionOnly)
+            if (parameters.TargetAppService.Equals("containerapp", StringComparison.InvariantCultureIgnoreCase) && parameters.DeployOption != DeployOption.ProvisionOnly)
             {
                 steps.Add(TemplateService.LoadTemplate("Plan/containerization-steps"));
                 cliDeploymentSteps = "1. Create deploy script (build + push image to ACR, deploy to Azure Container App).\n2. Run the script and fix it until it works.";
@@ -236,14 +233,12 @@ public static class DeploymentPlanTemplateUtil
 
     }
 
-    private static string GenerateResourceInfo(DeploymentPlanTemplateParameters parameters)
-    {
-        return parameters.DeployOption == DeployOption.DeployOnly
+    private static string GenerateResourceInfo(DeploymentPlanTemplateParameters parameters) =>
+        parameters.DeployOption == DeployOption.DeployOnly
             ? TemplateService.LoadTemplate("Plan/existing-resource-info")
             : TemplateService.ProcessTemplate("Plan/provision-info", new Dictionary<string, string>
             {
                 { "ProjectName", parameters.ProjectName },
                 { "AzureComputeHost", parameters.AzureComputeHost }
             });
-    }
 }

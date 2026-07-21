@@ -13,6 +13,4 @@ namespace Azure.Mcp.Tools.DeviceRegistry.Commands;
 [JsonSerializable(typeof(DeviceRegistryNamespaceData))]
 [JsonSerializable(typeof(DeviceRegistryNamespaceProperties))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
-internal sealed partial class DeviceRegistryJsonContext : JsonSerializerContext
-{
-}
+internal sealed partial class DeviceRegistryJsonContext : JsonSerializerContext;

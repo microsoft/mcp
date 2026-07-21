@@ -2,16 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Services;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.MySql.Tests;
 
-public class MySqlListCommandTests : CommandUnitTestsBase<MySqlListCommand, IMySqlService>
+public class MySqlListCommandTests : SubscriptionCommandUnitTestsBase<MySqlListCommand, IMySqlService>
 {
     [Fact]
     public async Task ExecuteAsync_ListsServersInSubscription_WhenNoResourceGroupOrServerProvided()

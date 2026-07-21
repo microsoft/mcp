@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.FileShares.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
 using Azure.Mcp.Tools.FileShares.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
@@ -25,61 +25,43 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logger, IFileSharesService fileSharesService)
-    : BaseFileSharesCommand<FileShareDeleteOptions>(logger, fileSharesService)
+public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<FileShareDeleteOptions, FileShareDeleteCommand.FileShareDeleteCommandResult>(subscriptionResolver)
 {
-
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileShareDeleteOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.FileShare.Name.AsRequired());
-    }
-
-    protected override FileShareDeleteOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Name.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        var options = BindOptions(parseResult);
-
         try
         {
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Deleting file share {FileShareName} in resource group {ResourceGroup}, subscription {Subscription}",
-                options.FileShareName,
+                options.Name,
                 options.ResourceGroup,
                 options.Subscription);
 
-            await _fileSharesService.DeleteFileShareAsync(
+            await fileSharesService.DeleteFileShareAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.FileShareName!,
+                options.ResourceGroup,
+                options.Name,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new(true, options.FileShareName!),
+                new(true, options.Name!),
                 FileSharesJsonContext.Default.FileShareDeleteCommandResult);
 
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Successfully deleted file share {FileShareName}",
-                options.FileShareName);
+                options.Name);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting file share. FileShareName: {FileShareName}, ResourceGroup: {ResourceGroup}.", options.FileShareName, options.ResourceGroup);
+            logger.LogError(ex, "Error deleting file share. FileShareName: {FileShareName}, ResourceGroup: {ResourceGroup}.", options.Name, options.ResourceGroup);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record FileShareDeleteCommandResult(bool Deleted, string FileShareName);
+    public sealed record FileShareDeleteCommandResult(bool Deleted, string FileShareName);
 }

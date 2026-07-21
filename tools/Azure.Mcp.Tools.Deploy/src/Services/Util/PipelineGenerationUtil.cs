@@ -34,7 +34,7 @@ public static class PipelineGenerationUtil
         {
             prompt += "- When user wants to include provisioning, check if there are available infra files. If not, first run Get Iac(Infrastructure as Code) Rules to create infra-provisioning files.\n";
         }
-        if (options.IsAZDProject)
+        if (options.IsAzdProject)
         {
             prompt += "- AZD IaC check: if Bicep is using resource group scope, resource group should be created in advance.\n";
         }
@@ -56,7 +56,7 @@ public static class PipelineGenerationUtil
             prompt += "- Use Service Principal(app registration) with workflow identity federation to login to Azure in the pipeline.\n";
         }
 
-        if (options.IsAZDProject)
+        if (options.IsAzdProject)
         {
             prompt += "- Use 'azd deploy --no-prompt' to skip provisioning in CD pipeline.\n";
         }
@@ -110,7 +110,7 @@ public static class PipelineGenerationUtil
             prompt += "- Configure the Azure DevOps pipeline variables and service connections needed for the deployment pipeline.\n" +
                 "- Set up the ADO environment and set up deployment approvals and checks.\n";
         }
-        if (options.IsAZDProject)
+        if (options.IsAzdProject)
         {
             prompt += "- AZD IaC check: if Bicep is using resource group scope, AZURE_RESOURCE_GROUP variable should be set to the environment.\n";
         }
@@ -124,14 +124,14 @@ public static class PipelineGenerationUtil
     {
         var normalizedOptions = new GuidanceGetOptions
         {
-            IsAZDProject = options.IsAZDProject,
+            IsAzdProject = options.IsAzdProject,
             PipelinePlatform = options.PipelinePlatform ?? Models.PipelinePlatform.GitHubActions,
             DeployOption = options.DeployOption ?? Models.DeployOption.DeployOnly
         };
 
         return new PipelineTemplateParameters
         {
-            DeploymentTool = normalizedOptions.IsAZDProject ? "AZD" : "Azure CLI",
+            DeploymentTool = normalizedOptions.IsAzdProject ? "AZD" : "Azure CLI",
             PipelinePlatform = normalizedOptions.PipelinePlatform,
             PrerequisiteChecksPrompt = GeneratePrerequisiteChecksPrompt(normalizedOptions),
             PipelineFilePrompt = GeneratePipelineFilePrompts(normalizedOptions),

@@ -2,26 +2,24 @@
 // Licensed under the MIT License.
 
 using System.Text.RegularExpressions;
-using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.ResourceManager.MySql.FlexibleServers;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using MySqlConnector;
 
 namespace Azure.Mcp.Tools.MySql.Services;
 
-public sealed class MySqlService(IResourceGroupService resourceGroupService, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<MySqlService> logger) : BaseAzureService(tenantService), IMySqlService
+public sealed class MySqlService(IResourceGroupService resourceGroupService, ISubscriptionService subscriptionService, ITenantService tenantService)
+    : BaseAzureService(tenantService), IMySqlService
 {
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-    private readonly ILogger<MySqlService> _logger = logger;
 
     // Maximum number of rows to return to prevent DoS attacks and performance issues
     private const int MaxRowCount = 10_000;

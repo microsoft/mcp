@@ -86,6 +86,28 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     }
 
     /// <summary>
+    /// The name of the option used to pass raw MCP tool input directly to a command.
+    /// </summary>
+    public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
+
+    /// <summary>
+    /// Determines whether the specified option is the raw MCP tool input option,
+    /// matching against the option name and any aliases.
+    /// </summary>
+    /// <param name="option">The option to inspect.</param>
+    /// <returns><c>true</c> if the option represents raw MCP tool input; otherwise, <c>false</c>.</returns>
+    internal static bool IsRawMcpToolInputOption(Option option)
+    {
+        if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return option.Aliases.Any(alias =>
+            string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
     /// Disposes resources owned by this tool loader with double disposal protection.
     /// </summary>
     public async ValueTask DisposeAsync()

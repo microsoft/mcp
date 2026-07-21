@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.Deploy.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Deploy.Options.App;
 using Azure.Mcp.Tools.Deploy.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Deploy.Commands.App;
@@ -23,44 +22,22 @@ namespace Azure.Mcp.Tools.Deploy.Commands.App;
     ReadOnly = true,
     Secret = false,
     LocalRequired = true)]
-public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger, IDeployService deployService) : SubscriptionCommand<LogsGetOptions>()
+public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger, IDeployService deployService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<LogsGetOptions, string>(subscriptionResolver)
 {
     private readonly ILogger<LogsGetCommand> _logger = logger;
     private readonly IDeployService _deployService = deployService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, LogsGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(DeployOptionDefinitions.AzdAppLogOptions.WorkspaceFolder);
-        command.Options.Add(DeployOptionDefinitions.AzdAppLogOptions.AzdEnvName);
-        command.Options.Add(DeployOptionDefinitions.AzdAppLogOptions.Limit);
-    }
-
-    protected override LogsGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.WorkspaceFolder = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.AzdAppLogOptions.WorkspaceFolder.Name)!;
-        options.AzdEnvName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.AzdAppLogOptions.AzdEnvName.Name)!;
-        options.Limit = parseResult.GetValueOrDefault<int>(DeployOptionDefinitions.AzdAppLogOptions.Limit.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var result = await _deployService.GetAzdResourceLogsAsync(
-                options.WorkspaceFolder!,
-                options.AzdEnvName!,
+                options.WorkspaceFolder,
+                options.AzdEnvName,
                 options.Subscription!,
-                options.Limit, cancellationToken);
+                options.Limit,
+                cancellationToken);
 
             context.Response.Message = result;
         }
@@ -72,5 +49,4 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger, IDeployServic
 
         return context.Response;
     }
-
 }

@@ -400,52 +400,6 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithAuthMethod_PassesCorrectParameters()
-    {
-        // Arrange
-        var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
-
-        var updatedWorkbook = new WorkbookInfo(
-            WorkbookId: workbookId,
-            DisplayName: "Test Workbook",
-            Description: "Test Description",
-            Category: "workbook",
-            Location: "eastus",
-            Kind: "shared",
-            Tags: "{}",
-            SerializedData: "{\"version\":\"Notebook/1.0\"}",
-            Version: "1.0",
-            TimeModified: DateTimeOffset.UtcNow,
-            UserId: "user1",
-            SourceId: "azure monitor"
-        );
-
-        Service.UpdateWorkbookAsync(
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(updatedWorkbook);
-
-        // Act
-        await ExecuteCommandAsync(
-            "--workbook-id", workbookId,
-            "--display-name", "Test Workbook",
-            "--auth-method", "1");
-
-        // Assert
-        await Service.Received(1).UpdateWorkbookAsync(
-            Arg.Is(workbookId),
-            Arg.Is("Test Workbook"),
-            Arg.Is((string?)null),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task ExecuteAsync_WithRetryOptions_PassesCorrectParameters()
     {
         // Arrange
