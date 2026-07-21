@@ -18,7 +18,6 @@ namespace Azure.Mcp.Tools.IoTHub.Services;
 
 public class IoTHubDeviceService(
     IIoTHubService ioTHubService,
-    IAzureTokenCredentialProvider credentialProvider,
     IHttpClientService httpClientService,
     ITenantService tenantService,
     ICacheService cacheService,
@@ -26,9 +25,7 @@ public class IoTHubDeviceService(
     : BaseAzureService(tenantService), IIoTHubDeviceService
 {
     private readonly IIoTHubService _ioTHubService = ioTHubService ?? throw new ArgumentNullException(nameof(ioTHubService));
-    private readonly IAzureTokenCredentialProvider _credentialProvider = credentialProvider ?? throw new ArgumentNullException(nameof(credentialProvider));
     private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<IoTHubDeviceService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
