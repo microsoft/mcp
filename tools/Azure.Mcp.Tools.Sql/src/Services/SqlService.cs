@@ -11,8 +11,9 @@ using Azure.Mcp.Tools.Sql.Models;
 using Azure.ResourceManager.Sql;
 using Azure.ResourceManager.Sql.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Options;
+using DatabaseReadScaleOption = Azure.Mcp.Tools.Sql.Options.Database.DatabaseReadScale;
+using SdkDatabaseReadScale = Azure.ResourceManager.Sql.Models.DatabaseReadScale;
 
 namespace Azure.Mcp.Tools.Sql.Services;
 
@@ -134,7 +135,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         long? maxSizeBytes = null,
         string? elasticPoolName = null,
         bool? zoneRedundant = null,
-        string? readScale = null,
+        DatabaseReadScaleOption? readScale = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
@@ -144,7 +145,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(subscription), subscription),
             (nameof(databaseName), databaseName));
 
-        var createReadScaleValue = ParseReadScale(readScale);
         var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
         var databaseData = new SqlDatabaseData(sqlServerResource.Data.Location);
 
@@ -187,9 +187,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         }
 
         // Configure read scale if provided
-        if (createReadScaleValue.HasValue)
+        if (readScale.HasValue)
         {
-            databaseData.ReadScale = createReadScaleValue.Value;
+            databaseData.ReadScale = ToSdkReadScale(readScale.Value);
         }
 
         var operation = await sqlServerResource.GetSqlDatabases().CreateOrUpdateAsync(
@@ -239,7 +239,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         long? maxSizeBytes = null,
         string? elasticPoolName = null,
         bool? zoneRedundant = null,
-        string? readScale = null,
+        DatabaseReadScaleOption? readScale = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
@@ -249,7 +249,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(subscription), subscription),
             (nameof(databaseName), databaseName));
 
-        var updateReadScaleValue = ParseReadScale(readScale);
         var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
         var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
         var databaseData = databaseResource.Value.Data;
@@ -291,9 +290,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             databaseData.IsZoneRedundant = zoneRedundant.Value;
         }
 
-        if (updateReadScaleValue.HasValue)
+        if (readScale.HasValue)
         {
-            databaseData.ReadScale = updateReadScaleValue.Value;
+            databaseData.ReadScale = ToSdkReadScale(readScale.Value);
         }
 
         var operation = await sqlServerResource.GetSqlDatabases().CreateOrUpdateAsync(
@@ -313,28 +312,12 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         return ConvertToSqlDatabaseModel(updatedDatabase);
     }
 
-    /// <summary>
-    /// Parses and validates the optional read scale value.
-    /// </summary>
-    /// <param name="readScale">The read scale value provided by the caller. May be null or empty.</param>
-    /// <returns>The parsed <see cref="DatabaseReadScale"/> value, or <c>null</c> when no value was provided.</returns>
-    /// <exception cref="CommandValidationException">Thrown when the provided value does not match a known read scale value.</exception>
-    private static DatabaseReadScale? ParseReadScale(string? readScale)
+    private static SdkDatabaseReadScale ToSdkReadScale(DatabaseReadScaleOption readScale) => readScale switch
     {
-        if (string.IsNullOrEmpty(readScale))
-        {
-            return null;
-        }
-
-        if (!Enum.TryParse<DatabaseReadScale>(readScale, true, out var readScaleEnum))
-        {
-            throw new CommandValidationException(
-                $"Invalid readScale value '{readScale}'. Valid values (case-insensitive): {string.Join(", ", Enum.GetNames<DatabaseReadScale>())}",
-                HttpStatusCode.BadRequest);
-        }
-
-        return readScaleEnum;
-    }
+        DatabaseReadScaleOption.Enabled => SdkDatabaseReadScale.Enabled,
+        DatabaseReadScaleOption.Disabled => SdkDatabaseReadScale.Disabled,
+        _ => throw new ArgumentOutOfRangeException(nameof(readScale), readScale, null)
+    };
 
     /// <summary>
     /// Renames an existing SQL database to a new name.
