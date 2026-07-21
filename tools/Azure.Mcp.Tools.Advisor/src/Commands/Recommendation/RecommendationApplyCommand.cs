@@ -34,9 +34,13 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
     {
         base.ValidateOptions(options, validationResult);
 
-        if (!s_availableResources.Value.Contains(options.Resource))
+        if (options.Resource != null)
         {
-            validationResult.Errors.Add($"Invalid resource '{options.Resource}'. Available resources: {string.Join(", ", s_availableResources.Value.OrderBy(r => r))}");
+            var normalized = options.Resource.Trim();
+            if (!s_availableResources.Value.Contains(normalized))
+            {
+                validationResult.Errors.Add($"Invalid resource '{options.Resource}'. Available resources: {string.Join(", ", s_availableResources.Value.OrderBy(r => r))}");
+            }
         }
     }
 
