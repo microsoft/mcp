@@ -8,8 +8,7 @@ namespace Microsoft.Mcp.Core.Commands;
 public static class TrimAnnotations
 {
     public const DynamicallyAccessedMemberTypes CommandAnnotations =
-    DynamicallyAccessedMemberTypes.PublicParameterlessConstructor
-    |
-        DynamicallyAccessedMemberTypes.PublicProperties
-        | DynamicallyAccessedMemberTypes.NonPublicProperties;
+        DynamicallyAccessedMemberTypes.PublicParameterlessConstructor |
+        DynamicallyAccessedMemberTypes.PublicProperties |
+        DynamicallyAccessedMemberTypes.NonPublicProperties;
 }

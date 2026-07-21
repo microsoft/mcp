@@ -21,7 +21,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 {
     private readonly ServiceProvider _serviceProvider;
     private readonly ICommandFactory _commandFactory;
-    private readonly IOptions<ServiceStartOptions> _options;
+    private readonly IOptions<ServerStartOptions> _options;
     private readonly ILogger<NamespaceToolLoader> _logger;
 
     public NamespaceToolLoaderTests()
@@ -29,7 +29,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         _serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
             ?? throw new InvalidOperationException("Failed to create service provider");
         _commandFactory = CommandFactoryHelpers.CreateCommandFactory(_serviceProvider);
-        _options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+        _options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
         _logger = NullLogger<NamespaceToolLoader>.Instance;
     }
 
@@ -121,7 +121,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         await using var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
             ?? throw new InvalidOperationException("Failed to create service provider");
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
         {
             Namespace = ["storage", "keyvault"]
         });
@@ -157,7 +157,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         commandFactory.RootGroup.Returns(rootGroup);
 
         var serviceProvider = Substitute.For<IServiceProvider>();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
         {
             ReadOnly = true
         });
@@ -192,7 +192,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         commandFactory.RootGroup.Returns(rootGroup);
 
         var serviceProvider = Substitute.For<IServiceProvider>();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
         {
             Transport = TransportTypes.Http
         });
@@ -684,7 +684,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             .Returns(new Dictionary<string, IBaseCommand> { ["write-cmd"] = writeCmd });
 
         var serviceProvider = Substitute.For<IServiceProvider>();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { ReadOnly = true });
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { ReadOnly = true });
         var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
 
         var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
@@ -726,7 +726,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             .Returns(new Dictionary<string, IBaseCommand> { ["read-cmd"] = readCmd });
 
         var serviceProvider = Substitute.For<IServiceProvider>();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { ReadOnly = true });
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { ReadOnly = true });
         var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
 
         var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
@@ -768,7 +768,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             .Returns(new Dictionary<string, IBaseCommand> { ["local-cmd"] = localCmd });
 
         var serviceProvider = Substitute.For<IServiceProvider>();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { Transport = TransportTypes.Http });
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { Transport = TransportTypes.Http });
         var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
 
         var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
@@ -810,7 +810,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             .Returns(new Dictionary<string, IBaseCommand> { ["remote-cmd"] = remoteCmd });
 
         var serviceProvider = Substitute.For<IServiceProvider>();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { Transport = TransportTypes.Http });
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { Transport = TransportTypes.Http });
         var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
 
         var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
@@ -834,7 +834,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         await using var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
             ?? throw new InvalidOperationException("Failed to create service provider");
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
         {
             ReadOnly = true
         });
@@ -855,7 +855,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task GetChildToolList_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
     {
         // Arrange
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
         {
             Transport = TransportTypes.Http
         });

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.CommandLine.Help;
 using System.CommandLine.Parsing;
 using System.Diagnostics;
@@ -8,6 +9,7 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
@@ -343,7 +345,7 @@ public class CommandFactory : ICommandFactory
                     response.Results = ResponseResult.Create([], JsonSourceGenerationContext.Default.ListString);
                 }
 
-                var isServiceStartCommand = implementation is ServiceStartCommand;
+                var isServiceStartCommand = implementation is ServerStartCommand;
                 if (!isServiceStartCommand)
                 {
                     Console.WriteLine(JsonSerializer.Serialize(response, _srcGenWithOptions.CommandResponse));

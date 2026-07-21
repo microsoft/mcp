@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Tools.Options;
 using Microsoft.Mcp.Core.Commands;
@@ -27,7 +28,8 @@ namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCommand<ToolsListOptions>
+public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
+    : BaseCommand<ToolsListOptions>
 {
 
     protected override void RegisterOptions(Command command)
@@ -89,7 +91,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                     if (subgroup is not null)
                     {
                         List<CommandInfo> foundCommands = [];
-                        searchCommandInCommandGroup("", subgroup, foundCommands);
+                        SearchCommandInCommandGroup("", subgroup, foundCommands);
                         namespaceCommands.AddRange(foundCommands);
                     }
                 }
@@ -187,8 +189,8 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         };
     }
 
-    public record ToolNamesResult(List<string> Names);
-    private void searchCommandInCommandGroup(string commandPrefix, CommandGroup searchedGroup, List<CommandInfo> foundCommands)
+    public sealed record ToolNamesResult(List<string> Names);
+    private static void SearchCommandInCommandGroup(string commandPrefix, CommandGroup searchedGroup, List<CommandInfo> foundCommands)
     {
         var commands = CommandFactory.GetVisibleCommands(searchedGroup.Commands).Select(kvp =>
         {
@@ -204,7 +206,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         foundCommands.AddRange(commands);
         foreach (CommandGroup nextLevelSubGroup in searchedGroup.SubGroup)
         {
-            searchCommandInCommandGroup($"{commandPrefix}{searchedGroup.Name} ", nextLevelSubGroup, foundCommands);
+            SearchCommandInCommandGroup($"{commandPrefix}{searchedGroup.Name} ", nextLevelSubGroup, foundCommands);
         }
     }
 }

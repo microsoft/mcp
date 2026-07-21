@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using Azure;

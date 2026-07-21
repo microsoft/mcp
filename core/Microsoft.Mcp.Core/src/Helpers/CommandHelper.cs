@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.CommandLine.Parsing;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;

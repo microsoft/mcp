@@ -14,7 +14,4 @@ namespace Microsoft.Mcp.Core.Models;
 [JsonSerializable(typeof(ToolMetadata))]
 [JsonSerializable(typeof(ToolsListCommand.ToolNamesResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-public sealed partial class ModelsJsonContext : JsonSerializerContext
-{
-    // This class is intentionally left empty. It is used for source generation of JSON serialization.
-}
+public sealed partial class ModelsJsonContext : JsonSerializerContext;

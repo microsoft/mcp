@@ -24,11 +24,11 @@ public class ComputeService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
     ILogger<ComputeService> logger,
-    IOptions<ServiceStartOptions> serviceStartOptions)
+    IOptions<ServerStartOptions> serviceStartOptions)
     : BaseAzureResourceService(subscriptionService, tenantService), IComputeService
 {
     private readonly ILogger<ComputeService> _logger = logger;
-    private readonly IOptions<ServiceStartOptions> _serviceStartOptions = serviceStartOptions;
+    private readonly IOptions<ServerStartOptions> _serviceStartOptions = serviceStartOptions;
 
     // Default VM size (D-series v5, approximately 2 vCPU and 8 GB RAM)
     private const string DefaultVmSize = "Standard_D2s_v5";

@@ -31,7 +31,7 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
     /// <param name="logger">Optional logger for diagnostics.</param>
     public AzureCloudConfiguration(
         IConfiguration configuration,
-        IOptions<ServiceStartOptions>? serviceStartOptions = null,
+        IOptions<ServerStartOptions>? serviceStartOptions = null,
         ILogger<AzureCloudConfiguration>? logger = null)
     {
         // Try to get cloud configuration from various sources in priority order:

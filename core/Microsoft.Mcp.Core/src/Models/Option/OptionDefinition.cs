@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.Text.Json.Serialization;
 
 namespace Microsoft.Mcp.Core.Models.Option;

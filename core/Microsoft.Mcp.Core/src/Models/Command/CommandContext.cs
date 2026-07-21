@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Models.Command;
 

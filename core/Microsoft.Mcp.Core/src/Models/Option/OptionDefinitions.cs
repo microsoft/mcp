@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using Azure.Core;
 
 namespace Microsoft.Mcp.Core.Models.Option;

@@ -19,6 +19,8 @@ public sealed class SubscriptionResolver : ISubscriptionResolver
         return subscription;
     }
 
+    public string? GetDefaultSubscriptionId() => CommandHelper.GetDefaultSubscription();
+
     public bool HasSubscriptionAvailable(CommandResult commandResult) =>
         CommandHelper.HasSubscriptionAvailable(commandResult);
 }

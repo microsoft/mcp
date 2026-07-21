@@ -61,7 +61,7 @@ public class ServiceCollectionExtensionsSerializedTests
     public void InitializeConfigurationAndOptions_HttpTransport()
     {
         // Assert
-        var serviceStartOptions = new ServiceStartOptions
+        var serviceStartOptions = new ServerStartOptions
         {
             Transport = TransportTypes.Http,
         };
@@ -117,9 +117,9 @@ public class ServiceCollectionExtensionsSerializedTests
     public void InitializeConfigurationAndOptions_WithSupportLoggingFolder_DisablesTelemetry()
     {
         // Arrange
-        var serviceStartOptions = new ServiceStartOptions
+        var serviceStartOptions = new ServerStartOptions
         {
-            SupportLoggingFolder = "/tmp/logs"
+            DangerouslyWriteSupportLogsToDir = "/tmp/logs"
         };
         var services = SetupBaseServices().AddSingleton(Options.Create(serviceStartOptions));
 
@@ -141,9 +141,9 @@ public class ServiceCollectionExtensionsSerializedTests
     public void InitializeConfigurationAndOptions_WithSupportLoggingFolderAndEnvVarTrue_StillDisablesTelemetry()
     {
         // Arrange
-        var serviceStartOptions = new ServiceStartOptions
+        var serviceStartOptions = new ServerStartOptions
         {
-            SupportLoggingFolder = "/tmp/logs"
+            DangerouslyWriteSupportLogsToDir = "/tmp/logs"
         };
         var services = SetupBaseServices().AddSingleton(Options.Create(serviceStartOptions));
 
@@ -167,9 +167,9 @@ public class ServiceCollectionExtensionsSerializedTests
     public void InitializeConfigurationAndOptions_WithEmptyOrWhitespaceSupportLoggingFolder_EnablesTelemetry(string? folderPath)
     {
         // Arrange
-        var serviceStartOptions = new ServiceStartOptions
+        var serviceStartOptions = new ServerStartOptions
         {
-            SupportLoggingFolder = folderPath
+            DangerouslyWriteSupportLogsToDir = folderPath
         };
         var services = SetupBaseServices().AddSingleton(Options.Create(serviceStartOptions));
 

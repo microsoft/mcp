@@ -30,8 +30,8 @@ public class McpRuntimeTests
         return services.BuildServiceProvider();
     }
 
-    private static IOptions<ServiceStartOptions> CreateOptions(ServiceStartOptions? options = null) =>
-        Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
+    private static IOptions<ServerStartOptions> CreateOptions(ServerStartOptions? options = null) =>
+        Microsoft.Extensions.Options.Options.Create(options ?? new ServerStartOptions());
 
     private static McpServer CreateMockServer() => Substitute.For<McpServer>();
 
@@ -146,7 +146,7 @@ public class McpRuntimeTests
         var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var mockTelemetry = CreateMockTelemetryService();
-        var options = CreateOptions(new ServiceStartOptions
+        var options = CreateOptions(new ServerStartOptions
         {
             ReadOnly = true,
             Namespace = ["storage", "keyvault"]
@@ -391,12 +391,12 @@ public class McpRuntimeTests
         var mockToolLoader = Substitute.For<IToolLoader>();
 
         // Test with ReadOnly = false and no services
-        var options1 = CreateOptions(new ServiceStartOptions { ReadOnly = false });
+        var options1 = CreateOptions(new ServerStartOptions { ReadOnly = false });
         var runtime1 = new McpRuntime(mockToolLoader, options1, CreateMockTelemetryService(), logger);
         Assert.NotNull(runtime1);
 
         // Test with ReadOnly = null and multiple services
-        var options2 = CreateOptions(new ServiceStartOptions
+        var options2 = CreateOptions(new ServerStartOptions
         {
             ReadOnly = null,
             Namespace = ["storage", "keyvault", "monitor"]
@@ -405,7 +405,7 @@ public class McpRuntimeTests
         Assert.NotNull(runtime2);
 
         // Test with empty service array
-        var options3 = CreateOptions(new ServiceStartOptions
+        var options3 = CreateOptions(new ServerStartOptions
         {
             ReadOnly = true,
             Namespace = []
@@ -509,7 +509,7 @@ public class McpRuntimeTests
         var serviceProvider = CreateServiceProvider();
         var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
-        var options = CreateOptions(new ServiceStartOptions { Namespace = null });
+        var options = CreateOptions(new ServerStartOptions { Namespace = null });
 
         // Act
         var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);

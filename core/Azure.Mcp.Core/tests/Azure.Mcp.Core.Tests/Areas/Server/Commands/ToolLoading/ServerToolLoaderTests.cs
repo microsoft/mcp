@@ -60,7 +60,7 @@ public class ServerToolLoaderTests
         // Arrange - use real RegistryDiscoveryStrategy since ServerToolLoader depends on it
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+        var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var discoveryLogger = loggerFactory.CreateLogger<RegistryDiscoveryStrategy>();
         var discoveryStrategy = RegistryDiscoveryStrategyHelper.CreateStrategy(serviceStartOptions.Value, discoveryLogger);
@@ -114,7 +114,7 @@ public class ServerToolLoaderTests
         // Arrange - use real RegistryDiscoveryStrategy
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+        var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var discoveryLogger = loggerFactory.CreateLogger<RegistryDiscoveryStrategy>();
         var discoveryStrategy = RegistryDiscoveryStrategyHelper.CreateStrategy(serviceStartOptions.Value, discoveryLogger);

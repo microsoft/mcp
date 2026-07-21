@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Buffers;
+using System.CommandLine;
 using System.Text;
+using System.Text.Json;
 using Microsoft.Mcp.Core.Helpers;
 
 namespace Microsoft.Mcp.Core.Commands;

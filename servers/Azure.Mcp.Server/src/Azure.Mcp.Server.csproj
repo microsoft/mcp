@@ -77,12 +77,11 @@
 
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" />
-    <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="..\docs\azmcp-commands.md" />
     <None Include="..\docs\e2eTestPrompts.md" />
-    <None Include="..\..\..\.github\skills\add-azure-mcp-tools\SKILL.md" />
+    <None Include="$(RepoRoot).github\skills\add-azure-mcp-tools\SKILL.md" />
   </ItemGroup>
 </Project>

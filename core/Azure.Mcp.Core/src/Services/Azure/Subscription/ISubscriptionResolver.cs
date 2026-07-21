@@ -18,6 +18,13 @@ public interface ISubscriptionResolver
     string? ResolveSubscription(string? subscription);
 
     /// <summary>
+    /// Gets the default subscription from the Azure CLI profile (~/.azure/azureProfile.json),
+    /// falling back to the AZURE_SUBSCRIPTION_ID environment variable.
+    /// The CLI profile read is cached for the lifetime of the process to avoid redundant file I/O.
+    /// </summary>
+    string? GetDefaultSubscriptionId();
+
+    /// <summary>
     /// Checks if a subscription is available from the command option, Azure CLI profile,
     /// or AZURE_SUBSCRIPTION_ID environment variable.
     /// </summary>

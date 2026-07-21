@@ -4,9 +4,9 @@
 using System.CommandLine;
 using Azure.Mcp.Core.Areas.Group.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using Xunit;
 
@@ -18,9 +18,9 @@ public class CommandHelperTests
     public void GetSubscription_EmptySubscriptionParameter_ReturnsEnvironmentValue()
     {
         // Arrange
-        TestEnvironment.SetAzureSubscriptionId("env-subs");
-        var subscription = CommandHelper.GetDefaultSubscription();
-        var parseResult = GetParseResult(["--subscription", ""]);
+        var subscription = "env-subs";
+        Environment.SetEnvironmentVariable(EnvironmentHelpers.AzureSubscriptionIdEnvironmentVariable, subscription);
+        var parseResult = GetParseResult("--subscription", "");
 
         // Act
         var actual = CommandHelper.GetSubscription(parseResult);
@@ -33,9 +33,9 @@ public class CommandHelperTests
     public void GetSubscription_MissingSubscriptionParameter_ReturnsEnvironmentValue()
     {
         // Arrange
-        TestEnvironment.SetAzureSubscriptionId("env-subs");
-        var subscription = CommandHelper.GetDefaultSubscription();
-        var parseResult = GetParseResult([]);
+        var subscription = "env-subs";
+        Environment.SetEnvironmentVariable(EnvironmentHelpers.AzureSubscriptionIdEnvironmentVariable, subscription);
+        var parseResult = GetParseResult();
 
         // Act
         var actual = CommandHelper.GetSubscription(parseResult);
@@ -48,38 +48,39 @@ public class CommandHelperTests
     public void GetSubscription_ValidSubscriptionParameter_ReturnsParameterValue()
     {
         // Arrange
-        TestEnvironment.SetAzureSubscriptionId("env-subs");
-        var parseResult = GetParseResult(["--subscription", "param-subs"]);
+        var subscription = "param-subs";
+        Environment.SetEnvironmentVariable(EnvironmentHelpers.AzureSubscriptionIdEnvironmentVariable, "env-subs");
+        var parseResult = GetParseResult("--subscription", subscription);
 
         // Act
         var actual = CommandHelper.GetSubscription(parseResult);
 
         // Assert
-        Assert.Equal("param-subs", actual);
+        Assert.Equal(subscription, actual);
     }
 
     [Fact]
     public void GetSubscription_ParameterValueContainingSubscription_ReturnsParameterValue()
     {
         // Arrange
-        TestEnvironment.SetAzureSubscriptionId("env-subs");
-        var subscription = CommandHelper.GetDefaultSubscription();
-        var parseResult = GetParseResult(["--subscription", "Azure subscription 1"]);
+        var subscription = "Azure subscription 1";
+        Environment.SetEnvironmentVariable(EnvironmentHelpers.AzureSubscriptionIdEnvironmentVariable, "env-subs");
+        var parseResult = GetParseResult("--subscription", subscription);
 
         // Act
         var actual = CommandHelper.GetSubscription(parseResult);
 
         // Assert
-        Assert.Equal("Azure subscription 1", actual);
+        Assert.Equal(subscription, actual);
     }
 
     [Fact]
     public void GetSubscription_ParameterValueMatchingKnownPlaceholder_ReturnsEnvironmentValue()
     {
         // Arrange
-        TestEnvironment.SetAzureSubscriptionId("env-subs");
-        var subscription = CommandHelper.GetDefaultSubscription();
-        var parseResult = GetParseResult(["--subscription", "<subscription_id>"]);
+        var subscription = "env-subs";
+        Environment.SetEnvironmentVariable(EnvironmentHelpers.AzureSubscriptionIdEnvironmentVariable, subscription);
+        var parseResult = GetParseResult("--subscription", "<subscription_id>");
 
         // Act
         var actual = CommandHelper.GetSubscription(parseResult);
@@ -92,7 +93,7 @@ public class CommandHelperTests
     public void GetSubscription_NoEnvironmentVariableParameterValueMatchingKnownPlaceholder_ReturnsParameterValue()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
+        Environment.SetEnvironmentVariable(EnvironmentHelpers.AzureSubscriptionIdEnvironmentVariable, null);
         var subscription = CommandHelper.GetProfileSubscription();
         var parseResult = GetParseResult(["--subscription", "<subscription_id>"]);
 
@@ -114,7 +115,7 @@ public class CommandHelperTests
 
     private static ParseResult GetParseResult(params string[] args)
     {
-        var command = new GroupListCommand(NullLogger<GroupListCommand>.Instance, Substitute.For<IResourceGroupService>());
+        var command = new GroupListCommand(NullLogger<GroupListCommand>.Instance, Substitute.For<IResourceGroupService>(), Substitute.For<ISubscriptionResolver>());
         var commandDefinition = command.GetCommand();
         return commandDefinition.Parse(args);
     }

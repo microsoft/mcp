@@ -191,7 +191,7 @@ public class ToolLoaderTelemetryTests : IDisposable
 
     private IMcpRuntime CreateRuntime(IToolLoader toolLoader)
     {
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
         var telemetry = Substitute.For<ITelemetryService>();
         telemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>()).Returns(_activity);
         var logger = Substitute.For<ILogger<McpRuntime>>();

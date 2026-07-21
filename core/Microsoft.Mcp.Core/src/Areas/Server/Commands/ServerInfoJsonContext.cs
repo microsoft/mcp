@@ -5,8 +5,6 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
-[JsonSerializable(typeof(ServiceInfoCommand.ServiceInfoCommandResult))]
+[JsonSerializable(typeof(ServerInfoCommand.ServiceInfoCommandResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class ServiceInfoJsonContext : JsonSerializerContext
-{
-}
+internal partial class ServerInfoJsonContext : JsonSerializerContext;

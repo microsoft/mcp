@@ -4,6 +4,7 @@
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Net;
+using System.Text.Json;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -48,15 +49,15 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
     Description = "Starts Azure MCP Server.",
     Destructive = false,
     ReadOnly = true)]
-public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
+public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
 {
-    private static readonly string[] StdioHostBuilderArgs =
+    private static readonly string[] s_stdioHostBuilderArgs =
     [
         $"--contentRoot={AppContext.BaseDirectory}",
         "--hostBuilder:reloadConfigOnChange=false"
     ];
 
-    private static readonly WebApplicationOptions HttpWebApplicationOptions = new()
+    internal static readonly WebApplicationOptions s_httpWebApplicationOptions = new()
     {
         ContentRootPath = AppContext.BaseDirectory
     };
@@ -65,58 +66,46 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
     public static Func<IServiceProvider, Task> InitializeServicesAsync { get; set; } = _ => Task.CompletedTask;
 
-    /// <summary>
-    /// Registers command options for the service start command.
-    /// </summary>
-    /// <param name="command">The command to register options with.</param>
-    protected override void RegisterOptions(Command command)
+    public override void PostBindOptions(ServerStartOptions options)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(ServiceOptionDefinitions.Transport);
-        command.Options.Add(ServiceOptionDefinitions.Namespace);
-        command.Options.Add(ServiceOptionDefinitions.Mode);
-        command.Options.Add(ServiceOptionDefinitions.Tool);
-        command.Options.Add(ServiceOptionDefinitions.ReadOnly);
-        command.Options.Add(ServiceOptionDefinitions.Debug);
-        command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
-        command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableElicitation);
-        command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
-        command.Options.Add(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir);
-        command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableRetryLimits);
-        command.Options.Add(ServiceOptionDefinitions.Cloud);
-        command.Options.Add(ServiceOptionDefinitions.DisableCaching);
-        command.Validators.Add(commandResult =>
+        base.PostBindOptions(options);
+
+        // When --tool options are provided automatically change the mode to "all"
+        if (options.Tool != null && options.Tool.Length > 0)
         {
-            string transport = ResolveTransport(commandResult);
-            bool httpIncomingAuthDisabled = commandResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
-            ValidateMode(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode), commandResult);
-            ValidateTransportConfiguration(transport, httpIncomingAuthDisabled, commandResult);
-            ValidateNamespaceAndToolMutualExclusion(
-                commandResult.GetValueOrDefault(ServiceOptionDefinitions.Namespace),
-                commandResult.GetValueOrDefault(ServiceOptionDefinitions.Tool),
-                commandResult);
-            ValidateOutgoingAuthStrategy(commandResult);
-            ValidateSupportLoggingFolder(commandResult);
-        });
+            options.Mode = ModeTypes.All;
+        }
+
+        options.OutgoingAuthStrategy = ResolveAuthStrategy(options);
+    }
+
+    public override void ValidateOptions(ServerStartOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        ValidateMode(options.Mode, validationResult);
+        ValidateTransportConfiguration(options, validationResult);
+        ValidateNamespaceAndToolMutualExclusion(options, validationResult);
+        ValidateOutgoingAuthStrategy(options, validationResult);
+        ValidateSupportLoggingFolder(options, validationResult);
     }
 
     /// <summary>
     /// Validates that the support logging folder path is valid when specified.
     /// </summary>
-    /// <param name="commandResult">Command result to update on failure.</param>
-    private static void ValidateSupportLoggingFolder(CommandResult commandResult)
+    /// <param name="options">The bound ServerStartOptions.</param>
+    /// <param name="validationResult">Validation result to update on failure.</param>
+    private static void ValidateSupportLoggingFolder(ServerStartOptions options, ValidationResult validationResult)
     {
-        string? folderPath = commandResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir);
-
-        if (folderPath is null)
+        if (options.DangerouslyWriteSupportLogsToDir is null)
         {
             return; // Option not specified, nothing to validate
         }
 
         // Validate the folder path is not empty or whitespace
-        if (string.IsNullOrWhiteSpace(folderPath))
+        if (string.IsNullOrWhiteSpace(options.DangerouslyWriteSupportLogsToDir))
         {
-            commandResult.AddError("The --dangerously-write-support-logs-to-dir option requires a valid folder path.");
+            validationResult.Errors.Add("The --dangerously-write-support-logs-to-dir option requires a valid folder path.");
             return;
         }
 
@@ -124,66 +113,22 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         try
         {
             // GetFullPath will throw for invalid path characters and other path format issues
-            _ = Path.GetFullPath(folderPath);
+            _ = Path.GetFullPath(options.DangerouslyWriteSupportLogsToDir);
         }
         catch (Exception ex) when (ex is ArgumentException or PathTooLongException or NotSupportedException)
         {
-            commandResult.AddError($"The --dangerously-write-support-logs-to-dir option contains an invalid folder path '{folderPath}': {ex.Message}");
+            validationResult.Errors.Add($"The --dangerously-write-support-logs-to-dir option contains an invalid folder path '{options.DangerouslyWriteSupportLogsToDir}': {ex.Message}");
         }
-    }
-
-    /// <summary>
-    /// Binds the parsed command line arguments to the ServiceStartOptions object.
-    /// </summary>
-    /// <param name="parseResult">The parsed command line arguments.</param>
-    /// <returns>A configured ServiceStartOptions instance.</returns>
-    protected override ServiceStartOptions BindOptions(ParseResult parseResult)
-    {
-        var mode = parseResult.GetValueOrDefault(ServiceOptionDefinitions.Mode);
-        var tools = parseResult.GetValueOrDefault(ServiceOptionDefinitions.Tool);
-
-        // When --tool switch is used, automatically change the mode to "all"
-        if (tools != null && tools.Length > 0)
-        {
-            mode = ModeTypes.All;
-        }
-
-        var outgoingAuthStrategy = ResolveAuthStrategy(parseResult);
-
-        var options = new ServiceStartOptions
-        {
-            Transport = ResolveTransport(parseResult),
-            Namespace = parseResult.GetValueOrDefault(ServiceOptionDefinitions.Namespace),
-            Mode = mode,
-            Tool = tools,
-            ReadOnly = parseResult.GetValueOrDefault(ServiceOptionDefinitions.ReadOnly),
-            Debug = parseResult.GetValueOrDefault(ServiceOptionDefinitions.Debug),
-            DangerouslyDisableHttpIncomingAuth = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth),
-            DangerouslyDisableElicitation = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyDisableElicitation),
-            OutgoingAuthStrategy = outgoingAuthStrategy,
-            SupportLoggingFolder = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir),
-            DangerouslyDisableRetryLimits = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyDisableRetryLimits),
-            Cloud = parseResult.GetValueOrDefault(ServiceOptionDefinitions.Cloud),
-            DisableCaching = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DisableCaching)
-        };
-        return options;
     }
 
     /// <summary>
     /// Executes the service start command, creating and starting the MCP server.
     /// </summary>
     /// <param name="context">The command execution context.</param>
-    /// <param name="parseResult">The parsed command options.</param>
+    /// <param name="options">The parsed command options.</param>
     /// <returns>A command response indicating the result of the operation.</returns>
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ServerStartOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             using var tracerProvider = AddIncomingAndOutgoingHttpSpans(options);
@@ -208,7 +153,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
     }
 
-    internal static void LogStartTelemetry(ITelemetryService telemetryService, ServiceStartOptions options)
+    internal static void LogStartTelemetry(ITelemetryService telemetryService, ServerStartOptions options)
     {
         using var activity = telemetryService.StartActivity(ActivityName.ServerStarted);
 
@@ -238,9 +183,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// </summary>
     /// <param name="logging">The logging builder to configure.</param>
     /// <param name="options">The server configuration options.</param>
-    private static void ConfigureSupportLogging(ILoggingBuilder logging, ServiceStartOptions options)
+    private static void ConfigureSupportLogging(ILoggingBuilder logging, ServerStartOptions options)
     {
-        if (options.SupportLoggingFolder is null)
+        if (options.DangerouslyWriteSupportLogsToDir is null)
         {
             return;
         }
@@ -249,15 +194,15 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         logging.SetMinimumLevel(LogLevel.Debug);
 
         // Add file logging to the specified folder
-        logging.AddSupportFileLogging(options.SupportLoggingFolder);
+        logging.AddSupportFileLogging(options.DangerouslyWriteSupportLogsToDir);
     }
 
     /// <summary>
     /// Validates if the provided mode is a valid mode type.
     /// </summary>
     /// <param name="mode">The mode to validate.</param>
-    /// <param name="commandResult">Command result to update on failure.</param>
-    private static void ValidateMode(string? mode, CommandResult commandResult)
+    /// <param name="validationResult">Validation result to update on failure.</param>
+    private static void ValidateMode(string? mode, ValidationResult validationResult)
     {
         if (mode == ModeTypes.SingleToolProxy ||
             mode == ModeTypes.NamespaceProxy ||
@@ -267,7 +212,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             return; // Success
         }
 
-        commandResult.AddError($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}, {ModeTypes.ConsolidatedProxy}.");
+        validationResult.Errors.Add($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}, {ModeTypes.ConsolidatedProxy}.");
     }
 
     /// <summary>
@@ -275,66 +220,61 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// Verifies that HTTP transport is only used when available (ENABLE_HTTP), and that --dangerously-disable-http-incoming-auth
     /// is only specified with HTTP transport.
     /// </summary>
-    /// <param name="transport">The transport to validate.</param>
-    /// <param name="httpIncomingAuthDisabled">Whether HTTP incoming authentication is disabled.</param>
-    /// <param name="commandResult">Command result to update on failure.</param>
-    private static void ValidateTransportConfiguration(string transport, bool httpIncomingAuthDisabled, CommandResult commandResult)
+    /// <param name="options">The bound ServerStartOptions.</param>
+    /// <param name="validationResult">Validation result to update on failure.</param>
+    private static void ValidateTransportConfiguration(ServerStartOptions options, ValidationResult validationResult)
     {
-        if (transport == TransportTypes.StdIo)
+        if (options.Transport == TransportTypes.StdIo)
         {
-            if (httpIncomingAuthDisabled)
+            if (options.DangerouslyDisableHttpIncomingAuth)
             {
-                commandResult.AddError($"The --dangerously-disable-http-incoming-auth option cannot be used with the {TransportTypes.StdIo} transport. To use this option, specify {TransportTypes.Http} transport with --transport http.");
+                validationResult.Errors.Add($"The --dangerously-disable-http-incoming-auth option cannot be used with the {TransportTypes.StdIo} transport. To use this option, specify {TransportTypes.Http} transport with --transport http.");
             }
             return;
         }
 
-        if (transport == TransportTypes.Http)
+        if (options.Transport == TransportTypes.Http)
         {
 #if ENABLE_HTTP
             return;
 #else
-            commandResult.AddError($"{TransportTypes.Http} transport is only supported in the Docker image distribution of Azure MCP Server. Please use the Docker image or switch to {TransportTypes.StdIo} transport.");
+            validationResult.Errors.Add($"{TransportTypes.Http} transport is only supported in the Docker image distribution of Azure MCP Server. Please use the Docker image or switch to {TransportTypes.StdIo} transport.");
             return;
 #endif
         }
 
-        commandResult.AddError($"Invalid transport '{transport}'. Valid transports are: {TransportTypes.StdIo}, {TransportTypes.Http}.");
+        validationResult.Errors.Add($"Invalid transport '{options.Transport}'. Valid transports are: {TransportTypes.StdIo}, {TransportTypes.Http}.");
     }
 
     /// <summary>
     /// Validates that --namespace and --tool options are not used together.
     /// </summary>
-    /// <param name="namespaces">The namespace values.</param>
-    /// <param name="tools">The tool values.</param>
-    /// <param name="commandResult">Command result to update on failure.</param>
-    private static void ValidateNamespaceAndToolMutualExclusion(string[]? namespaces, string[]? tools, CommandResult commandResult)
+    /// <param name="options">The bound ServerStartOptions.</param>
+    /// <param name="validationResult">Validation result to update on failure.</param>
+    private static void ValidateNamespaceAndToolMutualExclusion(ServerStartOptions options, ValidationResult validationResult)
     {
-        bool hasNamespace = namespaces != null && namespaces.Length > 0;
-        bool hasTool = tools != null && tools.Length > 0;
+        bool hasNamespace = options.Namespace != null && options.Namespace.Length > 0;
+        bool hasTool = options.Tool != null && options.Tool.Length > 0;
 
         if (hasNamespace && hasTool)
         {
-            commandResult.AddError("The --namespace and --tool options cannot be used together. Please specify either --namespace to filter by service namespace or --tool to filter by specific tool names, but not both.");
+            validationResult.Errors.Add("The --namespace and --tool options cannot be used together. Please specify either --namespace to filter by service namespace or --tool to filter by specific tool names, but not both.");
         }
     }
 
     /// <summary>
     /// Validates that the outgoing authentication strategy is compatible with the hosting mode.
     /// </summary>
-    /// <param name="commandResult">Command result to update on failure.</param>
-    private static void ValidateOutgoingAuthStrategy(CommandResult commandResult)
+    /// <param name="options">The bound ServerStartOptions.</param>
+    /// <param name="validationResult">Validation result to update on failure.</param>
+    private static void ValidateOutgoingAuthStrategy(ServerStartOptions options, ValidationResult validationResult)
     {
-        var outgoingAuthStrategy = commandResult.GetValueOrDefault(ServiceOptionDefinitions.OutgoingAuthStrategy);
-        if (outgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
+        if (options.OutgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
         {
 #if ENABLE_HTTP
-            string transport = ResolveTransport(commandResult);
-            bool httpIncomingAuthDisabled = commandResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
-
-            if (transport != TransportTypes.Http || httpIncomingAuthDisabled)
+            if (options.Transport != TransportTypes.Http || options.DangerouslyDisableHttpIncomingAuth)
             {
-                commandResult.AddError($"The {OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy requires the server to run in authenticated HTTP mode (--transport http without --{ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuthName}).");
+                validationResult.Errors.Add($"The {OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy requires the server to run in authenticated HTTP mode (--transport http without --dangerously-disable-http-incoming-auth).");
             }
             return;
 #else
@@ -358,7 +298,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         ArgumentException argEx when argEx.Message.Contains("--namespace and --tool options cannot be used together") =>
             "Configuration error: The --namespace and --tool options are mutually exclusive. Use either one or the other to filter available tools.",
         ArgumentException argEx when argEx.Message.Contains($"{OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy") =>
-            $"Configuration error: The {OutgoingAuthStrategy.UseOnBehalfOf} authentication strategy requires the server to run in authenticated HTTP mode (--transport http without --{ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuthName}).",
+            $"Configuration error: The {OutgoingAuthStrategy.UseOnBehalfOf} authentication strategy requires the server to run in authenticated HTTP mode (--transport http without --dangerously-disable-http-incoming-auth).",
         InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --dangerously-disable-http-incoming-auth") =>
             "Configuration error to disable incoming HTTP authentication. Ensure proper authentication is configured with Managed Identity or Workload Identity.",
         _ => base.GetErrorMessage(ex)
@@ -369,7 +309,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// </summary>
     /// <param name="serverOptions">The server configuration options.</param>
     /// <returns>An IHost instance configured for the MCP server.</returns>
-    private IHost CreateHost(ServiceStartOptions serverOptions)
+    private IHost CreateHost(ServerStartOptions serverOptions)
     {
         // Inform the credential chain which transport is active so that interactive credentials
         // that require a user-facing terminal (e.g. DeviceCodeCredential) can refuse to activate.
@@ -401,9 +341,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// </summary>
     /// <param name="serverOptions">The server configuration options.</param>
     /// <returns>An IHost instance configured for STDIO transport.</returns>
-    private IHost CreateStdioHost(ServiceStartOptions serverOptions)
+    internal static IHost CreateStdioHost(ServerStartOptions serverOptions)
     {
-        return Host.CreateDefaultBuilder(StdioHostBuilderArgs)
+        return Host.CreateDefaultBuilder(s_stdioHostBuilderArgs)
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
@@ -451,9 +391,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// </summary>
     /// <param name="serverOptions">The server configuration options.</param>
     /// <returns>An IHost instance configured for HTTP transport.</returns>
-    private IHost CreateHttpHost(ServiceStartOptions serverOptions)
+    private IHost CreateHttpHost(ServerStartOptions serverOptions)
     {
-        WebApplicationBuilder builder = WebApplication.CreateBuilder(HttpWebApplicationOptions);
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(s_httpWebApplicationOptions);
 
         // Read once at host setup time — this env var is process-wide and effectively static,
         // so there is no need to re-read it on every incoming request.
@@ -643,9 +583,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// </summary>
     /// <param name="serverOptions">The server configuration options.</param>
     /// <returns>An IHost instance configured for HTTP transport.</returns>
-    private IHost CreateIncomingAuthDisabledHttpHost(ServiceStartOptions serverOptions)
+    private IHost CreateIncomingAuthDisabledHttpHost(ServerStartOptions serverOptions)
     {
-        WebApplicationBuilder builder = WebApplication.CreateBuilder(HttpWebApplicationOptions);
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(s_httpWebApplicationOptions);
 
         InitializeListingUrls(builder, serverOptions);
 
@@ -742,7 +682,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <param name="services">The service collection to configure.</param>
     /// <param name="environment">The web host environment.</param>
     /// <param name="serverOptions">The server configuration options.</param>
-    private static void ConfigureCors(IServiceCollection services, IWebHostEnvironment environment, ServiceStartOptions serverOptions)
+    internal static void ConfigureCors(IServiceCollection services, IWebHostEnvironment environment, ServerStartOptions serverOptions)
     {
         // Check if running in development environment
         bool isDevelopment = environment.IsDevelopment();
@@ -795,7 +735,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// </summary>
     /// <param name="services">The service collection to configure.</param>
     /// <param name="options">The server configuration options.</param>
-    private static void ConfigureMcpServer(IServiceCollection services, ServiceStartOptions options)
+    private static void ConfigureMcpServer(IServiceCollection services, ServerStartOptions options)
     {
         services.AddAzureMcpServer(options);
     }
@@ -803,7 +743,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <summary>
     /// Initializes the URL for ASP.NET Core to bind to.
     /// </summary>
-    private static void InitializeListingUrls(WebApplicationBuilder builder, ServiceStartOptions options)
+    private static void InitializeListingUrls(WebApplicationBuilder builder, ServerStartOptions options)
     {
         if (!options.DangerouslyDisableHttpIncomingAuth)
         {
@@ -852,21 +792,18 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     }
 
     /// <summary>
-    /// Resolves the service mode and outgoing authentication strategy based on parsed command line options, applying appropriate defaults.
+    /// Resolves the service mode and outgoing authentication strategy based on bound ServerStartOptions, applying appropriate defaults.
     /// </summary>
-    /// <param name="parseResult">The parsed command line arguments.</param>
-    /// <returns>A tuple containing whether to run as remote HTTP service and the outgoing auth strategy.</returns>
-    private static OutgoingAuthStrategy ResolveAuthStrategy(ParseResult parseResult)
+    /// <param name="options">The bound ServerStartOptions.</param>
+    /// <returns>The resolved OutgoingAuthStrategy.</returns>
+    private static OutgoingAuthStrategy ResolveAuthStrategy(ServerStartOptions options)
     {
 #if ENABLE_HTTP
-        var outgoingAuthStrategy = parseResult.GetValueOrDefault(ServiceOptionDefinitions.OutgoingAuthStrategy);
-        if (outgoingAuthStrategy == OutgoingAuthStrategy.NotSet)
+        if (options.OutgoingAuthStrategy == OutgoingAuthStrategy.NotSet)
         {
-            string transport = ResolveTransport(parseResult);
-            if (transport == TransportTypes.Http)
+            if (options.Transport == TransportTypes.Http)
             {
-                bool httpIncomingAuthDisabled = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
-                return httpIncomingAuthDisabled
+                return options.DangerouslyDisableHttpIncomingAuth
                     ? OutgoingAuthStrategy.UseHostingEnvironmentIdentity
                     : OutgoingAuthStrategy.UseOnBehalfOf;
             }
@@ -875,27 +812,11 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 return OutgoingAuthStrategy.UseHostingEnvironmentIdentity;
             }
         }
-        return outgoingAuthStrategy;
+        return options.OutgoingAuthStrategy;
 #else
         return OutgoingAuthStrategy.UseHostingEnvironmentIdentity;
 #endif
     }
-
-    /// <summary>
-    /// Resolves the transport type from parsed command line arguments, defaulting to STDIO if not specified.
-    /// </summary>
-    /// <param name="parseResult">The parsed command line arguments.</param>
-    /// <returns>The transport type string (stdio or http).</returns>
-    private static string ResolveTransport(ParseResult parseResult)
-        => parseResult.GetValueOrDefault(ServiceOptionDefinitions.Transport) ?? TransportTypes.StdIo;
-
-    /// <summary>
-    /// Resolves the transport type from command result, defaulting to STDIO if not specified.
-    /// </summary>
-    /// <param name="commandResult">The command result to extract transport from.</param>
-    /// <returns>The transport type string (stdio or http).</returns>
-    private static string ResolveTransport(CommandResult commandResult)
-        => commandResult.GetValueOrDefault(ServiceOptionDefinitions.Transport) ?? TransportTypes.StdIo;
 
     private static WebApplication UseHttpsRedirectionIfEnabled(WebApplication app)
     {
@@ -937,7 +858,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// the AZURE_MCP_COLLECT_TELEMETRY environment variable to allow users to disable telemetry collection if desired. Note that this is 
     /// in addition to the telemetry configured in <see cref="OpenTelemetryExtensions"/>.
     /// </remarks>
-    private static TracerProvider? AddIncomingAndOutgoingHttpSpans(ServiceStartOptions options)
+    private static TracerProvider? AddIncomingAndOutgoingHttpSpans(ServerStartOptions options)
     {
         if (options.Transport != TransportTypes.Http)
         {
@@ -947,7 +868,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // Disable telemetry when support logging is enabled to prevent sensitive data from being sent
         // to telemetry endpoints. Support logging captures debug-level information that may contain
         // sensitive data, so we disable all telemetry as a safety measure.
-        if (!string.IsNullOrWhiteSpace(options.SupportLoggingFolder))
+        if (!string.IsNullOrWhiteSpace(options.DangerouslyWriteSupportLogsToDir))
         {
             return null;
         }

@@ -13,11 +13,13 @@ namespace Azure.Mcp.Core.Services.Azure.Subscription;
 public class SubscriptionService(
     ICacheService cacheService,
     ITenantService tenantService,
+    ISubscriptionResolver subscriptionResolver,
     ILogger<SubscriptionService> logger)
     : BaseAzureService(tenantService), ISubscriptionService
 {
     private const int MaxSubscriptions = 10_000;
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly ISubscriptionResolver _subscriptionResolver = subscriptionResolver ?? throw new ArgumentNullException(nameof(subscriptionResolver));
     private readonly ILogger<SubscriptionService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private const string CacheGroup = "subscription";
     private const string CacheKey = "subscriptions";
@@ -110,10 +112,7 @@ public class SubscriptionService(
     }
 
     /// <inheritdoc/>
-    public string? GetDefaultSubscriptionId()
-    {
-        return CommandHelper.GetDefaultSubscription();
-    }
+    public string? GetDefaultSubscriptionId() => _subscriptionResolver.GetDefaultSubscriptionId();
 
     private async Task<string> GetSubscriptionId(string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {

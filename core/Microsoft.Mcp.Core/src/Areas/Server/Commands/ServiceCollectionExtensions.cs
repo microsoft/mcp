@@ -17,6 +17,7 @@ using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
@@ -38,7 +39,7 @@ public static partial class ServiceCollectionExtensions
     /// <param name="services">The service collection to add services to.</param>
     /// <param name="serviceStartOptions">The options for configuring the server.</param>
     /// <returns>The service collection with MCP server services added.</returns>
-    public static IServiceCollection AddAzureMcpServer(this IServiceCollection services, ServiceStartOptions serviceStartOptions)
+    public static IServiceCollection AddAzureMcpServer(this IServiceCollection services, ServerStartOptions serviceStartOptions)
     {
         // Register HTTP client services
         services.AddHttpClientServices();
@@ -189,7 +190,7 @@ public static partial class ServiceCollectionExtensions
                     // NamespaceToolLoader enables direct in-process execution for consolidated tools
                     new NamespaceToolLoader(
                         consolidatedCommandFactory,
-                        sp.GetRequiredService<IOptions<ServiceStartOptions>>(),
+                        sp.GetRequiredService<IOptions<ServerStartOptions>>(),
                         sp,
                         loggerFactory.CreateLogger<NamespaceToolLoader>(),
                         false
@@ -261,7 +262,7 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton(GetConfiguration());
 
         services.AddOptions<McpServerConfiguration>()
-            .Configure<IConfiguration, IOptions<ServiceStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
+            .Configure<IConfiguration, IOptions<ServerStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
             {
                 // Use a scoped IConfiguration for loading server settings.
                 var scopedConfiguration = GetConfiguration(assembly);
@@ -302,7 +303,7 @@ public static partial class ServiceCollectionExtensions
                 // Disable telemetry when support logging is enabled to prevent sensitive data from being sent
                 // to telemetry endpoints. Support logging captures debug-level information that may contain
                 // sensitive data, so we disable all telemetry as a safety measure.
-                if (!string.IsNullOrWhiteSpace(serviceStartOptions.Value.SupportLoggingFolder))
+                if (!string.IsNullOrWhiteSpace(serviceStartOptions.Value.DangerouslyWriteSupportLogsToDir))
                 {
                     options.IsTelemetryEnabled = false;
                     return;

@@ -33,9 +33,9 @@ public class SingleProxyToolLoaderTests
         });
     }
 
-    private static RegistryDiscoveryStrategy CreateStrategy(ServiceStartOptions options, ILogger<RegistryDiscoveryStrategy> logger)
+    private static RegistryDiscoveryStrategy CreateStrategy(ServerStartOptions options, ILogger<RegistryDiscoveryStrategy> logger)
     {
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServerStartOptions());
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
         var registryRoot = RegistryServerHelper.GetRegistryRoot(typeof(Azure.Mcp.Server.Program).Assembly, "Azure.Mcp.Server.Resources.registry.json");
         return new RegistryDiscoveryStrategy(serviceOptions, logger, httpClientFactory, registryRoot!);
@@ -49,7 +49,7 @@ public class SingleProxyToolLoaderTests
 
         if (useRealDiscovery)
         {
-            var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+            var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
             var commandGroupLogger = serviceProvider.GetRequiredService<ILogger<CommandGroupDiscoveryStrategy>>();
             var commandGroupDiscoveryStrategy = new CommandGroupDiscoveryStrategy(
                 CommandFactoryHelpers.CreateCommandFactory(serviceProvider),
