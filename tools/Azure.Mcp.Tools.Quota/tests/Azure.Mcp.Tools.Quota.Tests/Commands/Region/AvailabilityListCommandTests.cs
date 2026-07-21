@@ -146,6 +146,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
+        Assert.Contains("Option '--resource-types' was configured to require non-empty, non-whitespace", result.Message, StringComparison.OrdinalIgnoreCase);
 
         // Verify the service was not called
         await Service.DidNotReceive().GetAvailableRegionsForResourceTypesAsync(
