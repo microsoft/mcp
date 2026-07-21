@@ -3,9 +3,4 @@
 
 namespace Azure.Mcp.Tools.AzureTerraform.Models;
 
-public sealed class AzApiExample
-{
-    public string Description { get; set; } = string.Empty;
-    public string Content { get; set; } = string.Empty;
-    public string SourcePath { get; set; } = string.Empty;
-}
+public sealed record AzApiExample(string Description, string Content, string SourcePath);

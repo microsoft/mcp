@@ -224,7 +224,7 @@ internal static partial class AzureRMDocsParser
     {
         var attributes = new List<AttributeDetail>
         {
-            new() { Name = "id", Description = "The ID of the resource." }
+            new("id", "The ID of the resource.")
         };
 
         string[] lines = markdownContent.Split('\n');
@@ -260,7 +260,7 @@ internal static partial class AzureRMDocsParser
 
                 if (!attributes.Exists(a => a.Name == attrName))
                 {
-                    attributes.Add(new AttributeDetail { Name = attrName, Description = description });
+                    attributes.Add(new(attrName, description));
                 }
 
                 if (line.Contains("block", StringComparison.OrdinalIgnoreCase))
@@ -279,7 +279,7 @@ internal static partial class AzureRMDocsParser
 
                 if (!attributes.Exists(a => a.Name == fullName))
                 {
-                    attributes.Add(new AttributeDetail { Name = fullName, Description = $"(Block attribute) {nestedDesc}" });
+                    attributes.Add(new(fullName, $"(Block attribute) {nestedDesc}"));
                 }
             }
         }
