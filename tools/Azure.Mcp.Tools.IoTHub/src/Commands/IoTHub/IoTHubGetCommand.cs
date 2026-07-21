@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.IoTHub.Models;
@@ -17,8 +18,8 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.IoTHub;
     Name = "get",
     Title = "Get IoT Hub",
     Description = """
-        Get IoT Hub details or list IoT Hubs in a subscription. Optionally filter by resource group and IoT Hub name.
-        Returns each IoT Hub with id, name, location, resourceGroup, subscriptionId, sku, capacity, state, and hostName.
+        Get IoT Hub details by name in a resource group of a subscription.
+        Returns the IoT Hub with id, name, location, resourceGroup, subscriptionId, sku, capacity, state, and hostName.
         """,
     Destructive = false,
     Idempotent = true,
@@ -39,14 +40,9 @@ public sealed class IoTHubGetCommand(
     {
         base.ValidateOptions(options, validationResult);
 
-        if (options.Name is null)
+        if (!IsValidIoTHubName(options.HubName))
         {
-            return;
-        }
-
-        if (!IsValidIoTHubName(options.Name))
-        {
-            validationResult.Errors.Add("--name must be 3-50 characters long and contain only letters, numbers, or hyphens, and it cannot end with a hyphen.");
+            validationResult.Errors.Add("--hub-name must be 3-50 characters long and contain only letters, numbers, or hyphens, and it cannot end with a hyphen.");
         }
     }
 
@@ -57,8 +53,8 @@ public sealed class IoTHubGetCommand(
     {
         try
         {
-            var results = await _service.GetIoTHub(
-                options.Name,
+            var iotHub = await _service.GetIoTHub(
+                options.HubName,
                 options.ResourceGroup,
                 options.Subscription!,
                 options.Tenant,
@@ -66,23 +62,23 @@ public sealed class IoTHubGetCommand(
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new(results?.Results ?? [], results?.AreResultsTruncated ?? false),
+                new IoTHubGetCommandResult(iotHub, AreResultsTruncated: false),
                 IoTHubJsonContext.Default.IoTHubGetCommandResult);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting IoT Hub(s). Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Name: {Name}.",
-                options.Subscription,
+                "Error getting IoT Hub '{HubName}' in resource group '{ResourceGroup}' and subscription '{Subscription}'.",
+                options.HubName,
                 options.ResourceGroup,
-                options.Name);
+                options.Subscription);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    public record IoTHubGetCommandResult(List<IoTHubDescription> IoTHubs, bool AreResultsTruncated);
+    public record IoTHubGetCommandResult(IoTHubDescription IoTHub, bool AreResultsTruncated);
 
     private static bool IsValidIoTHubName(string value)
     {

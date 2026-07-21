@@ -7,8 +7,9 @@ using Azure.Mcp.Tools.IoTHub.Models;
 
 namespace Azure.Mcp.Tools.IoTHub.Commands;
 
-[JsonSerializable(typeof(IoTHubGetCommand.IoTHubGetCommandResult))]
 [JsonSerializable(typeof(IoTHubDescription))]
+[JsonSerializable(typeof(IoTHubGetCommand.IoTHubGetCommandResult))]
+[JsonSerializable(typeof(IoTHubProperties))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]

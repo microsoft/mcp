@@ -9,10 +9,10 @@ namespace Azure.Mcp.Tools.IoTHub.Options.IoTHub;
 public class IoTHubGetOptions : ISubscriptionOption
 {
     [Option(Description = "The name of the IoT Hub.")]
-    public string? Name { get; set; }
+    public required string HubName { get; set; }
 
     [Option(Description = OptionDescriptions.ResourceGroup)]
-    public string? ResourceGroup { get; set; }
+    public required string ResourceGroup { get; set; }
 
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }

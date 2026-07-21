@@ -2128,11 +2128,11 @@
     },
     {
       "name": "get_azure_iot_hub",
-      "description": "Get details about Azure IoT Hubs.",
+      "description": "Get details about an Azure IoT Hub.",
       "toolMetadata": {
         "destructive": {
           "value": false,
-          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+          "description": "This tool only retrieves information about an Azure IoT Hub without deleting or modifying existing resources."
         },
         "idempotent": {
           "value": true,

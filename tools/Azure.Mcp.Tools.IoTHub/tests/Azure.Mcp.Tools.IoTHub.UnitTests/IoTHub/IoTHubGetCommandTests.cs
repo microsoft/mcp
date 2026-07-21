@@ -29,9 +29,9 @@ public class IoTHubGetCommandTests : SubscriptionCommandUnitTestsBase<IoTHubGetC
     }
 
     [Theory]
-    [InlineData("--subscription sub123", true)]
-    [InlineData("--subscription sub123 --resource-group rg1 --name hub1", true)]
-    [InlineData("", false)]
+    [InlineData("--subscription sub123 --hub-name hub1", false)]
+    [InlineData("--subscription sub123 --resource-group rg1 --hub-name hub1", true)]
+    [InlineData("--subscription sub123", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Ensure environment variable fallback does not interfere with validation tests
@@ -40,26 +40,23 @@ public class IoTHubGetCommandTests : SubscriptionCommandUnitTestsBase<IoTHubGetC
         if (shouldSucceed)
         {
             Service.GetIoTHub(
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new ResourceQueryResults<IoTHubDescription>(
-                [
-                    new(
-                        Id: "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Devices/IotHubs/hub1",
-                        Name: "hub1",
-                        Location: "eastus",
+                .Returns(new IoTHubDescription(
+                    Id: "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Devices/IotHubs/hub1",
+                    Name: "hub1",
+                    Location: "eastus",
                         ResourceGroup: "rg1",
                         SubscriptionId: "sub123",
                         Sku: "S1",
                         Capacity: 1,
                         State: "Active",
                         HostName: "hub1.azure-devices.net")
-                ],
-                false));
+                );
         }
 
         var response = await ExecuteCommandAsync(args);
@@ -81,10 +78,10 @@ public class IoTHubGetCommandTests : SubscriptionCommandUnitTestsBase<IoTHubGetC
         // Ensure environment variable fallback does not interfere with validation tests
         TestEnvironment.ClearAzureSubscriptionId();
 
-        var response = await ExecuteCommandAsync("--subscription", "sub123", "--name", invalidName);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--hub-name", invalidName);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("--name must be 3-50 characters long", response.Message);
+        Assert.Contains("--hub-name must be 3-50 characters long", response.Message);
     }
 
     [Fact]
@@ -94,28 +91,38 @@ public class IoTHubGetCommandTests : SubscriptionCommandUnitTestsBase<IoTHubGetC
         TestEnvironment.ClearAzureSubscriptionId();
 
         var invalidName = new string('a', 51);
-        var response = await ExecuteCommandAsync("--subscription", "sub123", "--name", invalidName);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--hub-name", invalidName);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("--name must be 3-50 characters long", response.Message);
+        Assert.Contains("--hub-name must be 3-50 characters long", response.Message);
     }
 
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {
         Service.GetIoTHub(
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new ResourceQueryResults<IoTHubDescription>([], false));
+            .Returns(new IoTHubDescription(
+                Id: "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Devices/IotHubs/hub1",
+                Name: "hub1",
+                Location: "eastus",
+                ResourceGroup: "rg1",
+                SubscriptionId: "sub123",
+                Sku: "S1",
+                Capacity: 1,
+                State: "Active",
+                HostName: "hub1.azure-devices.net")
+            );
 
-        var response = await ExecuteCommandAsync("--subscription", "sub123");
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1");
 
         var result = ValidateAndDeserializeResponse(response, IoTHubJsonContext.Default.IoTHubGetCommandResult);
-        Assert.Empty(result.IoTHubs);
+        Assert.NotNull(result.IoTHub);
         Assert.False(result.AreResultsTruncated);
     }
 
@@ -123,15 +130,15 @@ public class IoTHubGetCommandTests : SubscriptionCommandUnitTestsBase<IoTHubGetC
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         Service.GetIoTHub(
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var response = await ExecuteCommandAsync("--subscription", "sub123");
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1");
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
@@ -142,15 +149,15 @@ public class IoTHubGetCommandTests : SubscriptionCommandUnitTestsBase<IoTHubGetC
     public async Task ExecuteAsync_HandlesNotFound()
     {
         Service.GetIoTHub(
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Resource not found"));
 
-        var response = await ExecuteCommandAsync("--subscription", "sub123");
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1");
 
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("Resource not found", response.Message);

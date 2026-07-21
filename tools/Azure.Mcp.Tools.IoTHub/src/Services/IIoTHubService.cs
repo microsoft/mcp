@@ -9,9 +9,9 @@ namespace Azure.Mcp.Tools.IoTHub.Services;
 
 public interface IIoTHubService
 {
-    Task<ResourceQueryResults<IoTHubDescription>> GetIoTHub(
-        string? name,
-        string? resourceGroup,
+    Task<IoTHubDescription> GetIoTHub(
+        string hubName,
+        string resourceGroup,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,

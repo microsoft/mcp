@@ -4,4 +4,3 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Azure.Mcp.Tools.IoTHub.UnitTests")]
-[assembly: InternalsVisibleTo("Azure.Mcp.Tools.IoTHub.LiveTests")]

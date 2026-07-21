@@ -1,102 +1,72 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
+using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Models;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Resources;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.IoTHub.Services;
 
 public class IoTHubService(
     ISubscriptionService subscriptionService,
-    ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IIoTHubService
+    ITenantService tenantService,
+    ILogger<IoTHubService> logger)
+    : BaseAzureService(tenantService), IIoTHubService
 {
-    public async Task<ResourceQueryResults<IoTHubDescription>> GetIoTHub(
-        string? name,
-        string? resourceGroup,
+    private readonly ISubscriptionService _subscriptionService = subscriptionService;
+    private readonly ILogger<IoTHubService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+    public async Task<IoTHubDescription> GetIoTHub(
+        string hubName,
+        string resourceGroup,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(subscription), subscription));
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(hubName), hubName));
 
-        string? additionalFilter = null;
-        if (!string.IsNullOrEmpty(name))
+        try
         {
-            var escapedName = name.Replace("'", "''", StringComparison.Ordinal);
-            additionalFilter = $"name =~ '{escapedName}'";
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+            var iotHubResourceId = new ResourceIdentifier(
+                $"/subscriptions/{subscriptionResource.Data.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Devices/IotHubs/{hubName}");
+            var hub = await armClient.GetGenericResource(iotHubResourceId).GetAsync(cancellationToken);
+
+            return ConvertToIoTHubDescription(hub.Value.Data);
         }
-
-        var result = await ExecuteResourceQueryAsync(
-            "Microsoft.Devices/IotHubs",
-            resourceGroup,
-            subscription,
-            retryPolicy,
-            ConvertToIoTHubDescription,
-            additionalFilter: additionalFilter,
-            cancellationToken: cancellationToken,
-            tenant: tenant);
-
-        return result;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving IoT Hub '{HubName}' in resource group '{ResourceGroup}' and subscription '{Subscription}'", hubName, resourceGroup, subscription);
+            throw;
+        }
     }
 
-    private static IoTHubDescription ConvertToIoTHubDescription(JsonElement element)
+    private static IoTHubDescription ConvertToIoTHubDescription(GenericResourceData hub)
     {
-        var id = element.TryGetProperty("id", out var idProperty)
-            ? idProperty.GetString() ?? string.Empty
-            : string.Empty;
-        var hubName = element.TryGetProperty("name", out var nameProperty)
-            ? nameProperty.GetString() ?? string.Empty
-            : string.Empty;
-        var location = element.TryGetProperty("location", out var locationProperty)
-            ? locationProperty.GetString() ?? string.Empty
-            : string.Empty;
-        var resourceGroup = element.TryGetProperty("resourceGroup", out var resourceGroupProperty)
-            ? resourceGroupProperty.GetString() ?? string.Empty
-            : string.Empty;
-        var subscriptionId = element.TryGetProperty("subscriptionId", out var subscriptionIdProperty)
-            ? subscriptionIdProperty.GetString() ?? string.Empty
-            : string.Empty;
-
-        string skuName = string.Empty;
-        long capacity = 0;
-        if (element.TryGetProperty("sku", out var sku))
-        {
-            skuName = sku.TryGetProperty("name", out var skuNameProperty)
-                ? skuNameProperty.GetString() ?? string.Empty
-                : string.Empty;
-            capacity = sku.TryGetProperty("capacity", out var capacityProperty)
-                ? capacityProperty.GetInt64()
-                : 0;
-        }
-
-        string state = "Unknown";
-        string hostName = string.Empty;
-        if (element.TryGetProperty("properties", out var properties))
-        {
-            state = properties.TryGetProperty("state", out var stateProperty)
-                ? stateProperty.GetString() ?? "Unknown"
-                : "Unknown";
-            hostName = properties.TryGetProperty("hostName", out var hostNameProperty)
-                ? hostNameProperty.GetString() ?? string.Empty
-                : string.Empty;
-        }
+        var properties = hub.Properties?.ToObjectFromJson(IoTHubJsonContext.Default.IoTHubProperties);
 
         return new IoTHubDescription(
-            id,
-            hubName,
-            location,
-            resourceGroup,
-            subscriptionId,
-            skuName,
-            capacity,
-            state,
-            hostName
+            hub.Id.ToString(),
+            hub.Name,
+            hub.Location.ToString(),
+            hub.Id?.ResourceGroupName ?? string.Empty,
+            hub.Id?.SubscriptionId ?? string.Empty,
+            hub.Sku?.Name ?? string.Empty,
+            hub.Sku?.Capacity ?? 0,
+            properties?.State ?? string.Empty,
+            properties?.HostName ?? string.Empty
         );
     }
 }

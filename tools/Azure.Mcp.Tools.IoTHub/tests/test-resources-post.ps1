@@ -1,6 +1,3 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
 param(
     [string] $TenantId,
     [string] $TestApplicationId,
