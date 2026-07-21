@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Marketplace.Commands.Product;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -14,7 +14,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Marketplace.Tests.Product;
 
-public class ProductGetCommandTests : CommandUnitTestsBase<ProductGetCommand, IMarketplaceService>
+public class ProductGetCommandTests : SubscriptionCommandUnitTestsBase<ProductGetCommand, IMarketplaceService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()

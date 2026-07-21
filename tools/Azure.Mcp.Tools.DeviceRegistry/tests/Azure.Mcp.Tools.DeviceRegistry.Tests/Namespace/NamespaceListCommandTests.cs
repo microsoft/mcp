@@ -3,19 +3,19 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.DeviceRegistry.Commands;
 using Azure.Mcp.Tools.DeviceRegistry.Commands.Namespace;
 using Azure.Mcp.Tools.DeviceRegistry.Models;
 using Azure.Mcp.Tools.DeviceRegistry.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.DeviceRegistry.Tests.Namespace;
 
-public class NamespaceListCommandTests : CommandUnitTestsBase<NamespaceListCommand, IDeviceRegistryService>
+public class NamespaceListCommandTests : SubscriptionCommandUnitTestsBase<NamespaceListCommand, IDeviceRegistryService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsNamespaces_WhenSubscriptionProvided()

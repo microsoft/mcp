@@ -1,4 +1,6 @@
-using Azure.Monitor.Query;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using Azure.Monitor.Query.Logs;
 using Azure.ResourceManager;
 using YamlDotNet.Core;

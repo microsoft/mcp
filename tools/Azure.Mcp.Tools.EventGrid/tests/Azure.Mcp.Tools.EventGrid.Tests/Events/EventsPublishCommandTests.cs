@@ -3,19 +3,19 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Events;
 using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventGrid.Tests.Events;
 
-public class EventsPublishCommandTests : CommandUnitTestsBase<EventGridPublishCommand, IEventGridService>
+public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventGridPublishCommand, IEventGridService>
 {
     [Fact]
     public void Command_Properties_AreCorrect()

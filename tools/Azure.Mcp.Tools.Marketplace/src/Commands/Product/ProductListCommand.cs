@@ -3,13 +3,12 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Marketplace.Models;
-using Azure.Mcp.Tools.Marketplace.Options;
 using Azure.Mcp.Tools.Marketplace.Options.Product;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
@@ -25,48 +24,14 @@ namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMarketplaceService marketplaceService) : SubscriptionCommand<ProductListOptions>
+public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMarketplaceService marketplaceService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ProductListOptions, ProductListCommand.ProductListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ProductListCommand> _logger = logger;
     private readonly IMarketplaceService _marketplaceService = marketplaceService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ProductListOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-
-        // Add marketplace-specific options
-        var options = command.Options;
-        options.Add(MarketplaceOptionDefinitions.Language);
-        options.Add(MarketplaceOptionDefinitions.Search);
-        options.Add(MarketplaceOptionDefinitions.Filter);
-        options.Add(MarketplaceOptionDefinitions.OrderBy);
-        options.Add(MarketplaceOptionDefinitions.Select);
-        options.Add(MarketplaceOptionDefinitions.NextCursor);
-        options.Add(MarketplaceOptionDefinitions.Expand);
-    }
-
-    protected override ProductListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Language = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Language.Name);
-        options.Search = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Search.Name);
-        options.Filter = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Filter.Name);
-        options.OrderBy = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.OrderBy.Name);
-        options.Select = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Select.Name);
-        options.NextCursor = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.NextCursor.Name);
-        options.Expand = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Expand.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             // Call service operation with required parameters
@@ -112,13 +77,6 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMark
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        HttpRequestException httpEx => httpEx.StatusCode.GetValueOrDefault(HttpStatusCode.InternalServerError),
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
-
     // Strongly-typed result record
-    internal record ProductListCommandResult(List<ProductSummary> Products, string? NextCursor);
+    public sealed record ProductListCommandResult(List<ProductSummary> Products, string? NextCursor);
 }
