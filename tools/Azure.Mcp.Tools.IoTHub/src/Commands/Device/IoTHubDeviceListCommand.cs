@@ -17,11 +17,8 @@ public sealed class IoTHubDeviceListCommand(IIoTHubDeviceService service, ILogge
 {
     public override string Id => "iothub-device-list";
     public override string Name => "list";
-    public override string Description => "List devices in an IoT Hub device registry. Returns each device identity metadata without authentication keys. " +
-    "This is the preferred command for listing devices, including when the user asks for a small, specific number of devices (e.g. 'list 2 devices'); set --max-count to the requested number. " +
-    "Use --max-count to set the page size (default 100, maximum 100). Values greater than 100 are capped at 100, so one call returns at most 100 devices. " +
-    "For natural-language user requests to list all devices, the rest of the devices, more than 100 devices, or any large device set, use the 'iothub query run' command (MCP tool iothub_query_run) with a compact projection instead of this list command, but still return only one page and do not loop for additional pages. " +
-    "For normal list/show responses, present a compact summary with deviceId, status, connectionState, and any user-requested tags or fields. Do not include full raw JSON unless the user explicitly asks for raw device identity metadata. " +
+public override string Description => "List devices in an IoT Hub device registry. Returns device identity metadata without authentication keys. " +
+    "Use --max-count to limit results (default 100, maximum 100). Values greater than 100 are capped at 100; if more devices exist, truncated=true is set. " +
     "Hub names/IDs are case-sensitive and must match exactly.";
     public override string Title => "List IoT Hub Devices";
     public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, LocalRequired = false, Secret = false };
