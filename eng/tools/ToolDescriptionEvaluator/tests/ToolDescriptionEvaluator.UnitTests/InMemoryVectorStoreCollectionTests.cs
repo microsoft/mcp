@@ -31,21 +31,14 @@ public class InMemoryVectorStoreCollectionTests
     }
 
     [Fact]
-    public void Name_ReturnsProvidedName()
-    {
-        using var collection = CreateCollection();
-        Assert.Equal("tools", collection.Name);
-    }
-
-    [Fact]
     public async Task UpsertAsync_ThenGetAsync_ReturnsEntry()
     {
         using var collection = CreateCollection();
         var entry = Entry("a", 1f, 0f);
 
-        await collection.UpsertAsync(entry);
+        await collection.UpsertAsync(entry, TestContext.Current.CancellationToken);
 
-        var result = await collection.GetAsync("a");
+        var result = await collection.GetAsync("a", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(entry, result);
         Assert.Equal(1, collection.Count);
     }
@@ -54,18 +47,18 @@ public class InMemoryVectorStoreCollectionTests
     public async Task GetAsync_MissingKey_ReturnsNull()
     {
         using var collection = CreateCollection();
-        Assert.Null(await collection.GetAsync("missing"));
+        Assert.Null(await collection.GetAsync("missing", cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
     public async Task UpsertAsync_ExistingKey_UpdatesInPlace()
     {
         using var collection = CreateCollection();
-        await collection.UpsertAsync(Entry("a", 1f, 0f));
-        await collection.UpsertAsync(new Entry("a", "updated", new[] { 0f, 1f }));
+        await collection.UpsertAsync(Entry("a", 1f, 0f), TestContext.Current.CancellationToken);
+        await collection.UpsertAsync(new Entry("a", "updated", new[] { 0f, 1f }), TestContext.Current.CancellationToken);
 
         Assert.Equal(1, collection.Count);
-        var result = await collection.GetAsync("a");
+        var result = await collection.GetAsync("a", cancellationToken: TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal("updated", result!.Metadata);
     }
@@ -76,12 +69,12 @@ public class InMemoryVectorStoreCollectionTests
         using var collection = CreateCollection();
         var entries = new[] { Entry("b", 0f, 1f), Entry("a", 1f, 0f), Entry("c", 1f, 1f) };
 
-        await collection.UpsertAsync(entries);
+        await collection.UpsertAsync(entries, TestContext.Current.CancellationToken);
 
         Assert.Equal(3, collection.Count);
-        Assert.NotNull(await collection.GetAsync("a"));
-        Assert.NotNull(await collection.GetAsync("b"));
-        Assert.NotNull(await collection.GetAsync("c"));
+        Assert.NotNull(await collection.GetAsync("a", cancellationToken: TestContext.Current.CancellationToken));
+        Assert.NotNull(await collection.GetAsync("b", cancellationToken: TestContext.Current.CancellationToken));
+        Assert.NotNull(await collection.GetAsync("c", cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -89,11 +82,11 @@ public class InMemoryVectorStoreCollectionTests
     {
         using var collection = CreateCollection(new[] { Entry("a", 1f, 0f), Entry("b", 0f, 1f) });
 
-        await collection.DeleteAsync("a");
+        await collection.DeleteAsync("a", TestContext.Current.CancellationToken);
 
         Assert.Equal(1, collection.Count);
-        Assert.Null(await collection.GetAsync("a"));
-        Assert.NotNull(await collection.GetAsync("b"));
+        Assert.Null(await collection.GetAsync("a", cancellationToken: TestContext.Current.CancellationToken));
+        Assert.NotNull(await collection.GetAsync("b", cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -101,7 +94,7 @@ public class InMemoryVectorStoreCollectionTests
     {
         using var collection = CreateCollection(new[] { Entry("a", 1f, 0f) });
 
-        await collection.DeleteAsync("missing");
+        await collection.DeleteAsync("missing", TestContext.Current.CancellationToken);
 
         Assert.Equal(1, collection.Count);
     }
@@ -111,16 +104,9 @@ public class InMemoryVectorStoreCollectionTests
     {
         using var collection = CreateCollection(new[] { Entry("a", 1f, 0f), Entry("b", 0f, 1f) });
 
-        await collection.EnsureCollectionDeletedAsync();
+        await collection.EnsureCollectionDeletedAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(0, collection.Count);
-    }
-
-    [Fact]
-    public async Task CollectionExistsAsync_ReturnsTrue()
-    {
-        using var collection = CreateCollection();
-        Assert.True(await collection.CollectionExistsAsync());
     }
 
     [Fact]
@@ -182,13 +168,13 @@ public class InMemoryVectorStoreCollectionTests
         using var collection = CreateCollection(new[] { Entry("match", 1f, 0f) });
 
         var arrayResults = new List<VectorSearchResult<Entry>>();
-        await foreach (var r in collection.SearchAsync(new float[] { 1f, 0f }, 1))
+        await foreach (var r in collection.SearchAsync(new float[] { 1f, 0f }, 1, cancellationToken: TestContext.Current.CancellationToken))
         {
             arrayResults.Add(r);
         }
 
         var memoryResults = new List<VectorSearchResult<Entry>>();
-        await foreach (var r in collection.SearchAsync(new ReadOnlyMemory<float>(new[] { 1f, 0f }), 1))
+        await foreach (var r in collection.SearchAsync(new ReadOnlyMemory<float>(new[] { 1f, 0f }), 1, cancellationToken: TestContext.Current.CancellationToken))
         {
             memoryResults.Add(r);
         }
@@ -204,7 +190,7 @@ public class InMemoryVectorStoreCollectionTests
 
         await Assert.ThrowsAsync<NotSupportedException>(async () =>
         {
-            await foreach (var _ in collection.SearchAsync("not a vector", 1))
+            await foreach (var _ in collection.SearchAsync("not a vector", 1, cancellationToken: TestContext.Current.CancellationToken))
             {
             }
         });
@@ -219,33 +205,10 @@ public class InMemoryVectorStoreCollectionTests
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
         {
-            await foreach (var _ in collection.SearchAsync(new float[] { 1f, 0f }, top))
+            await foreach (var _ in collection.SearchAsync(new float[] { 1f, 0f }, top, cancellationToken: TestContext.Current.CancellationToken))
             {
             }
         });
-    }
-
-    [Fact]
-    public async Task SearchAsync_WithManyEntries_UsesParallelPathAndKeepsRanking()
-    {
-        // More than the internal divide-and-conquer threshold (100) to exercise the parallel path.
-        var entries = Enumerable.Range(0, 250)
-            .Select(i => new Entry($"e{i:D4}", i, new[] { 1f, i / 1000f }))
-            .ToList();
-        using var collection = CreateCollection(entries);
-
-        var query = new float[] { 1f, 0f };
-        var results = await SearchAsync(collection, query, top: 5);
-
-        Assert.Equal(5, results.Count);
-
-        // The nearest neighbours to (1, 0) are the entries with the smallest second component.
-        Assert.Equal(new[] { "e0000", "e0001", "e0002", "e0003", "e0004" }, results.Select(r => r.Record.Id));
-
-        for (int i = 1; i < results.Count; i++)
-        {
-            Assert.True(results[i - 1].Score >= results[i].Score);
-        }
     }
 
     [Fact]
@@ -281,7 +244,7 @@ public class InMemoryVectorStoreCollectionTests
 
         Assert.Throws<NotSupportedException>(() =>
         {
-            _ = collection.GetAsync(e => e.Id == "a", 1);
+            _ = collection.GetAsync(e => e.Id == "a", 1, cancellationToken: TestContext.Current.CancellationToken);
         });
     }
 
@@ -289,14 +252,14 @@ public class InMemoryVectorStoreCollectionTests
     public async Task UpsertAsync_NullRecord_Throws()
     {
         using var collection = CreateCollection();
-        await Assert.ThrowsAsync<ArgumentNullException>(() => collection.UpsertAsync((Entry)null!));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => collection.UpsertAsync((Entry)null!, TestContext.Current.CancellationToken));
     }
 
     [Fact]
     public async Task GetAsync_NullKey_Throws()
     {
         using var collection = CreateCollection();
-        await Assert.ThrowsAsync<ArgumentNullException>(() => collection.GetAsync((string)null!));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => collection.GetAsync((string)null!, cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]

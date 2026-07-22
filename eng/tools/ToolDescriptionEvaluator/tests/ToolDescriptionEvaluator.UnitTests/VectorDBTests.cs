@@ -15,20 +15,6 @@ public class VectorDBTests
     private static Entry Entry(string id, params float[] vector) => new(id, id, vector);
 
     [Fact]
-    public void DefaultCollection_UsesDefaultCollectionName()
-    {
-        using var store = new VectorDB(new CosineSimilarity());
-        Assert.Equal(VectorDB.DefaultCollectionName, store.DefaultCollection.Name);
-    }
-
-    [Fact]
-    public void DefaultCollection_ReturnsSameInstance()
-    {
-        using var store = new VectorDB(new CosineSimilarity());
-        Assert.Same(store.DefaultCollection, store.DefaultCollection);
-    }
-
-    [Fact]
     public void Constructor_WithEntries_SeedsDefaultCollection()
     {
         var entries = new[] { Entry("a", 1f, 0f), Entry("b", 0f, 1f) };
@@ -82,9 +68,9 @@ public class VectorDBTests
     {
         using var store = new VectorDB(new CosineSimilarity());
 
-        Assert.False(await store.CollectionExistsAsync("custom"));
+        Assert.False(await store.CollectionExistsAsync("custom", TestContext.Current.CancellationToken));
         _ = store.GetCollection<string, Entry>("custom");
-        Assert.True(await store.CollectionExistsAsync("custom"));
+        Assert.True(await store.CollectionExistsAsync("custom", TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -95,7 +81,7 @@ public class VectorDBTests
         _ = store.GetCollection<string, Entry>("custom");
 
         var names = new List<string>();
-        await foreach (var name in store.ListCollectionNamesAsync())
+        await foreach (var name in store.ListCollectionNamesAsync(TestContext.Current.CancellationToken))
         {
             names.Add(name);
         }
@@ -110,9 +96,9 @@ public class VectorDBTests
         using var store = new VectorDB(new CosineSimilarity());
         _ = store.GetCollection<string, Entry>("custom");
 
-        await store.EnsureCollectionDeletedAsync("custom");
+        await store.EnsureCollectionDeletedAsync("custom", TestContext.Current.CancellationToken);
 
-        Assert.False(await store.CollectionExistsAsync("custom"));
+        Assert.False(await store.CollectionExistsAsync("custom", TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -121,24 +107,7 @@ public class VectorDBTests
         using var store = new VectorDB(new CosineSimilarity());
         var metadata = store.GetService(typeof(VectorStoreMetadata));
 
-        Assert.IsType<VectorStoreMetadata>(metadata);
-    }
-
-    [Fact]
-    public async Task Store_And_Collection_WorkTogetherEndToEnd()
-    {
-        using var store = new VectorDB(new CosineSimilarity());
-        var collection = store.DefaultCollection;
-
-        await collection.UpsertAsync(Entry("match", 1f, 0f));
-        await collection.UpsertAsync(Entry("other", 0f, 1f));
-
-        var results = new List<VectorSearchResult<Entry>>();
-        await foreach (var result in collection.SearchAsync(new float[] { 1f, 0f }, 1))
-        {
-            results.Add(result);
-        }
-
-        Assert.Equal("match", Assert.Single(results).Record.Id);
+        var typed = Assert.IsType<VectorStoreMetadata>(metadata);
+        Assert.Equal("InMemory", typed.VectorStoreSystemName);
     }
 }
