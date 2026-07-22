@@ -1,11 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
-
 namespace Microsoft.Mcp.Core.Helpers;
 
 public static class CommandHelper
@@ -47,29 +42,6 @@ public static class CommandHelper
         "default_sub",
         "default_subscription",
     };
-
-    /// <summary>
-    /// Checks if a subscription is available from the command option, Azure CLI profile, or AZURE_SUBSCRIPTION_ID environment variable.
-    /// </summary>
-    /// <param name="commandResult">The command result to check for the subscription option.</param>
-    /// <returns>True if a subscription is available, false otherwise.</returns>
-    public static bool HasSubscriptionAvailable(CommandResult commandResult)
-    {
-        if (commandResult.HasOptionResult(OptionDefinitions.Common.Subscription))
-        {
-            return true;
-        }
-
-        return !string.IsNullOrEmpty(GetDefaultSubscription());
-    }
-
-    public static string? GetSubscription(ParseResult parseResult)
-    {
-        // Get subscription from command line option or fallback to default subscription
-        var subscriptionValue = parseResult.GetValueOrDefault(OptionDefinitions.Common.Subscription);
-
-        return GetSubscription(subscriptionValue);
-    }
 
     public static string? GetSubscription(string? subscriptionValue)
     {

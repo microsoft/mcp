@@ -112,7 +112,7 @@ public class ServiceStartCommandTests
         var command = _command.GetCommand();
 
         // Assert
-        var hasDangerouslyDisableElicitationOption = command.Options.Any(o => o.Name == "--dngerously-disable-elicitation");
+        var hasDangerouslyDisableElicitationOption = command.Options.Any(o => o.Name == "--dangerously-disable-elicitation");
         Assert.True(hasDangerouslyDisableElicitationOption, "DangerouslyDisableElicitation option should be registered");
     }
 
@@ -135,7 +135,7 @@ public class ServiceStartCommandTests
     public void ToolOption_ParsesCorrectly(params string[]? expectedTool)
     {
         // Arrange & Act
-        var options = BindOptionsWithTool(expectedTool ?? null);
+        var options = BindOptions(CreateArgsWithTool(expectedTool ?? null));
 
         // Assert
         if (expectedTool == null)
@@ -160,7 +160,7 @@ public class ServiceStartCommandTests
     public async Task ExecuteAsync_InvalidTransport_ReturnsValidationError(string invalidTransport)
     {
         // Arrange & Act
-        var response = await ExecuteAsync(BindOptionsWithTransport(invalidTransport));
+        var response = await ExecuteAsync(CreateArgsWithTransport(invalidTransport));
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -175,7 +175,7 @@ public class ServiceStartCommandTests
     public async Task ExecuteAsync_InvalidMode_ReturnsValidationError(string invalidMode)
     {
         // Arrange & Act
-        var response = await ExecuteAsync(BindOptionsWithMode(invalidMode));
+        var response = await ExecuteAsync(CreateArgsWithMode(invalidMode));
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -191,7 +191,7 @@ public class ServiceStartCommandTests
     public async Task ExecuteAsync_ValidMode_DoesNotReturnValidationError(string? validMode)
     {
         // Arrange & Act
-        var response = await ExecuteAsync(BindOptionsWithMode(validMode));
+        var response = await ExecuteAsync(CreateArgsWithMode(validMode));
 
         // Assert - Should not fail validation, though may fail later due to server startup
         if (response.Status == HttpStatusCode.BadRequest && response.Message?.Contains("Invalid mode") == true)
@@ -230,7 +230,7 @@ public class ServiceStartCommandTests
     {
         // Arrange & Act
         var expectedTool = "azmcp_group_list";
-        var options = BindOptionsWithTool([expectedTool]);
+        var options = BindOptions(CreateArgsWithTool([expectedTool]));
 
         // Assert
         Assert.NotNull(options.Tool);
@@ -279,7 +279,7 @@ public class ServiceStartCommandTests
     public void DangerouslyWriteSupportLogsToDirOption_ParsesCorrectly(string? expectedFolder)
     {
         // Arrange & Act
-        var options = BindOptionsWithSupportLogging(expectedFolder);
+        var options = BindOptions(CreateArgsWithSupportLogging(expectedFolder));
 
         // Assert
         Assert.Equal(expectedFolder, options.DangerouslyWriteSupportLogsToDir);
@@ -290,7 +290,7 @@ public class ServiceStartCommandTests
     {
         // Arrange & Act
         var logFolder = "/tmp/mcp-support-logs";
-        var options = BindOptionsWithSupportLogging(logFolder);
+        var options = BindOptions(CreateArgsWithSupportLogging(logFolder));
 
         // Assert
         Assert.Equal(logFolder, options.DangerouslyWriteSupportLogsToDir);
@@ -300,7 +300,7 @@ public class ServiceStartCommandTests
     public void BindOptions_WithoutSupportLoggingFolder_ReturnsCorrectlyConfiguredOptions()
     {
         // Act
-        var options = BindOptionsWithSupportLogging(null);
+        var options = BindOptions(CreateArgsWithSupportLogging(null));
 
         // Assert
         Assert.Null(options.DangerouslyWriteSupportLogsToDir);
@@ -321,7 +321,7 @@ public class ServiceStartCommandTests
     public void Validate_WithValidOptions_ReturnsValidResult()
     {
         // Arrange & Act
-        var result = ValidateOptions(BindOptionsWithTransport("stdio"));
+        var result = ValidateOptions(CreateArgsWithTransport("stdio"));
 
         // Assert
         Assert.True(result.IsValid);
@@ -332,7 +332,7 @@ public class ServiceStartCommandTests
     public void Validate_WithInvalidTransport_ReturnsInvalidResult()
     {
         // Arrange & Act
-        var result = ValidateOptions(BindOptionsWithTransport("invalid"));
+        var result = ValidateOptions(CreateArgsWithTransport("invalid"));
 
         // Assert
         Assert.False(result.IsValid);
@@ -343,7 +343,7 @@ public class ServiceStartCommandTests
     public void Validate_WithInvalidMode_ReturnsInvalidResult()
     {
         // Arrange & Act
-        var result = ValidateOptions(BindOptionsWithMode("invalid"));
+        var result = ValidateOptions(CreateArgsWithMode("invalid"));
 
         // Assert
         Assert.False(result.IsValid);
@@ -354,7 +354,7 @@ public class ServiceStartCommandTests
     public void Validate_WithNamespaceAndTool_ReturnsInvalidResult()
     {
         // Arrange & Act
-        var result = ValidateOptions(BindOptionsWithNamespaceAndTool());
+        var result = ValidateOptions(CreateArgsWithNamespaceAndTool());
 
         // Assert
         Assert.False(result.IsValid);
@@ -365,7 +365,7 @@ public class ServiceStartCommandTests
     public void Validate_WithSupportLoggingFolderWhitespace_ReturnsInvalidResult()
     {
         // Arrange & Act
-        var result = ValidateOptions(BindOptionsWithSupportLogging("   "));
+        var result = ValidateOptions(CreateArgsWithSupportLogging("   "));
 
         // Assert
         Assert.False(result.IsValid);
@@ -376,7 +376,7 @@ public class ServiceStartCommandTests
     public void Validate_WithValidSupportLoggingFolder_ReturnsValidResult()
     {
         // Arrange & Act
-        var result = ValidateOptions(BindOptionsWithSupportLogging("/tmp/mcp-support-logs"));
+        var result = ValidateOptions(CreateArgsWithSupportLogging("/tmp/mcp-support-logs"));
 
         // Assert
         Assert.True(result.IsValid);
@@ -387,7 +387,7 @@ public class ServiceStartCommandTests
     public void Validate_WithoutSupportLoggingFolder_ReturnsValidResult()
     {
         // Arrange & Act
-        var result = ValidateOptions(BindOptionsWithSupportLogging(null));
+        var result = ValidateOptions(CreateArgsWithSupportLogging(null));
 
         // Assert
         Assert.True(result.IsValid);
@@ -398,7 +398,7 @@ public class ServiceStartCommandTests
     public async Task ExecuteAsync_WithSupportLoggingFolderWhitespace_ReturnsValidationError()
     {
         // Arrange & Act
-        var response = await ExecuteAsync(BindOptionsWithSupportLogging("   "));
+        var response = await ExecuteAsync(CreateArgsWithSupportLogging("   "));
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -409,7 +409,7 @@ public class ServiceStartCommandTests
     public async Task ExecuteAsync_WithNamespaceAndTool_ReturnsValidationError()
     {
         // Arrange & Act
-        var response = await ExecuteAsync(BindOptionsWithNamespaceAndTool());
+        var response = await ExecuteAsync(CreateArgsWithNamespaceAndTool());
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -494,7 +494,7 @@ public class ServiceStartCommandTests
         // Arrange, Act, & Assert - Check that ArgumentException is not thrown for valid transport
         try
         {
-            await ExecuteAsync(BindOptionsWithTransport("stdio"));
+            await ExecuteAsync(CreateArgsWithTransport("stdio"));
         }
         catch (ArgumentException ex) when (ex.Message.Contains("transport"))
         {
@@ -513,7 +513,7 @@ public class ServiceStartCommandTests
         // Arrange, Act, & Assert - Check that ArgumentException is not thrown when transport is omitted
         try
         {
-            await ExecuteAsync(BindOptions("--mode", "all", "--read-only"));
+            await ExecuteAsync("--mode", "all", "--read-only");
         }
         catch (ArgumentException ex) when (ex.Message.Contains("transport"))
         {
@@ -668,10 +668,9 @@ public class ServiceStartCommandTests
         Assert.Equal(Path.GetFullPath(AppContext.BaseDirectory), Path.GetFullPath(options.ContentRootPath!));
     }
 
-    private ServerStartOptions BindOptionsWithTransport(string transport) =>
-        BindOptions("--transport", transport, "--mode", "all", "--read-only");
+    private static string[] CreateArgsWithTransport(string transport) => ["--transport", transport, "--mode", "all", "--read-only"];
 
-    private ServerStartOptions BindOptionsWithMode(string? mode)
+    private static List<string> CreateArgsWithMode(string? mode)
     {
         var args = new List<string>
         {
@@ -685,10 +684,10 @@ public class ServiceStartCommandTests
             args.Add(mode);
         }
 
-        return BindOptions(args);
+        return args;
     }
 
-    private ServerStartOptions BindOptionsWithTool(string[]? tools)
+    private static List<string> CreateArgsWithTool(string[]? tools)
     {
         var args = new List<string>
         {
@@ -704,10 +703,10 @@ public class ServiceStartCommandTests
             }
         }
 
-        return BindOptions(args);
+        return args;
     }
 
-    private ServerStartOptions BindOptionsWithSupportLogging(string? folderPath)
+    private static List<string> CreateArgsWithSupportLogging(string? folderPath)
     {
         var args = new List<string>
         {
@@ -720,27 +719,32 @@ public class ServiceStartCommandTests
             args.Add(folderPath);
         }
 
-        return BindOptions(args);
+        return args;
     }
 
-    private ServerStartOptions BindOptionsWithNamespaceAndTool() =>
-        BindOptions("--transport", "stdio", "--namespace", "storage", "--tool", "azmcp_storage_account_get");
+    private static string[] CreateArgsWithNamespaceAndTool() =>
+        ["--transport", "stdio", "--namespace", "storage", "--tool", "azmcp_storage_account_get"];
 
     private ServerStartOptions BindOptions(params string[] args) => _command.BindOptions(_command.GetCommand().Parse(args));
 
     private ServerStartOptions BindOptions(List<string> args) => _command.BindOptions(_command.GetCommand().Parse(args));
 
-    private ValidationResult ValidateOptions(ServerStartOptions options)
+    private ValidationResult ValidateOptions(params string[] args) => ValidateOptions(args.ToList());
+
+    private ValidationResult ValidateOptions(List<string> args)
     {
         var validationResult = new ValidationResult();
-        _command.ValidateOptions(options, validationResult);
+        _command.ValidateOptions(BindOptions(args), validationResult);
         return validationResult;
     }
 
-    private async Task<CommandResponse> ExecuteAsync(ServerStartOptions options)
+    private async Task<CommandResponse> ExecuteAsync(params string[] args) => await ExecuteAsync(args.ToList());
+
+    private async Task<CommandResponse> ExecuteAsync(List<string> args)
     {
         var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
-        return await _command.ExecuteAsync(context, options, TestContext.Current.CancellationToken);
+        // Need to use IBaseCommand here for ExecuteAsync as it handles binding and validating the args.
+        return await ((IBaseCommand)_command).ExecuteAsync(context, _command.GetCommand().Parse(args), TestContext.Current.CancellationToken);
     }
 
     private string GetErrorMessage(Exception exception)

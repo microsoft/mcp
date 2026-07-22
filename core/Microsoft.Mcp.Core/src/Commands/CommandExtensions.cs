@@ -133,10 +133,7 @@ public static class CommandExtensions
     /// </summary>
     /// <param name="option">The option to check</param>
     /// <returns>True if the option expects a collection type, false otherwise</returns>
-    private static bool IsArrayOption(Option option)
-    {
-        return CollectionTypeHelper.IsArrayType(option.ValueType);
-    }
+    private static bool IsArrayOption(Option option) => CollectionTypeHelper.IsArrayType(option.ValueType);
 
     private static string GetOptionToken(Option option)
     {
@@ -153,16 +150,13 @@ public static class CommandExtensions
     /// </summary>
     /// <param name="element">The JsonElement to convert</param>
     /// <returns>String representation of the element, or null if conversion fails</returns>
-    private static string? ConvertJsonElementToString(JsonElement element)
+    private static string? ConvertJsonElementToString(JsonElement element) => element.ValueKind switch
     {
-        return element.ValueKind switch
-        {
-            JsonValueKind.True => "true",
-            JsonValueKind.False => "false",
-            JsonValueKind.Number => element.GetRawText(),
-            JsonValueKind.String => element.GetString(),
-            JsonValueKind.Array => string.Join(" ", element.EnumerateArray().Select(e => e.GetString() ?? string.Empty)),
-            _ => element.GetRawText()
-        };
-    }
+        JsonValueKind.True => "true",
+        JsonValueKind.False => "false",
+        JsonValueKind.Number => element.GetRawText(),
+        JsonValueKind.String => element.GetString(),
+        JsonValueKind.Array => string.Join(" ", element.EnumerateArray().Select(e => e.GetString() ?? string.Empty)),
+        _ => element.GetRawText()
+    };
 }

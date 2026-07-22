@@ -28,7 +28,7 @@ namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
     LocalRequired = false,
     Secret = false)]
 public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
-    : BaseCommand<ToolsListOptions, List<CommandInfo>>
+    : BaseCommand<ToolsListOptions, ToolsListCommand.ToolsListResult>
 {
     private static readonly HashSet<string> s_ignored = new(StringComparer.OrdinalIgnoreCase) { "server", "tools" };
     private static readonly HashSet<string> s_surfaced = new(StringComparer.OrdinalIgnoreCase) { "extension" };
@@ -80,12 +80,11 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
                 if (options.NameOnly)
                 {
                     var namespaceNames = namespaceCommands.Select(nc => nc.Command).ToList();
-                    var result = new ToolsListResult(namespaceNames);
-                    context.Response.Results = ResponseResult.Create(result, ModelsJsonContext.Default.ToolNamesResult);
+                    context.Response.Results = ResponseResult.Create(new(null, namespaceNames), ModelsJsonContext.Default.ToolsListResult);
                     return context.Response;
                 }
 
-                context.Response.Results = ResponseResult.Create(namespaceCommands, ModelsJsonContext.Default.ListCommandInfo);
+                context.Response.Results = ResponseResult.Create(new(namespaceCommands, null), ModelsJsonContext.Default.ToolsListResult);
                 return context.Response;
             }
 
@@ -102,8 +101,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
 
                 var toolNames = allToolNames.OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToList();
 
-                var result = new ToolsListResult(toolNames);
-                context.Response.Results = ResponseResult.Create(result, ModelsJsonContext.Default.ToolNamesResult);
+                context.Response.Results = ResponseResult.Create(new(null, toolNames), ModelsJsonContext.Default.ToolsListResult);
                 return context.Response;
             }
 
@@ -118,7 +116,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
 
             var tools = allTools.ToList();
 
-            context.Response.Results = ResponseResult.Create(tools, ModelsJsonContext.Default.ListCommandInfo);
+            context.Response.Results = ResponseResult.Create(new(tools, null), ModelsJsonContext.Default.ToolsListResult);
             return context.Response;
         }
         catch (Exception ex)
@@ -168,7 +166,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
     }
 
     public sealed record ToolsListResult(
-        List<CommandInfo>? Commands,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<CommandInfo>? Commands,
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<string>? Names);
 
     private static void SearchCommandInCommandGroup(string commandPrefix, CommandGroup searchedGroup, List<CommandInfo> foundCommands)

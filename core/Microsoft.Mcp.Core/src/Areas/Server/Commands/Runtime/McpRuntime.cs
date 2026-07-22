@@ -84,10 +84,8 @@ public sealed class McpRuntime : IMcpRuntime
 
         activity?.AddTag(TagName.ToolName, request.Params.Name);
 
-        var normalizedSubscriptionName = NameNormalization.NormalizeOptionName(OptionDefinitions.Common.Subscription.Name);
-
         var subscriptionArgument = request.Params?.Arguments?
-            .Where(kvp => string.Equals(kvp.Key, normalizedSubscriptionName, StringComparison.OrdinalIgnoreCase))
+            .Where(kvp => string.Equals(kvp.Key, "subscription", StringComparison.OrdinalIgnoreCase))
             .Select(kvp => kvp.Value)
             .FirstOrDefault();
         if (subscriptionArgument != null

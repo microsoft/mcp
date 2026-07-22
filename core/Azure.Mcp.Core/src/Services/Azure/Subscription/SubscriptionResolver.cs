@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Core.Services.Azure.Subscription;
@@ -20,7 +19,4 @@ public sealed class SubscriptionResolver : ISubscriptionResolver
     }
 
     public string? GetDefaultSubscriptionId() => CommandHelper.GetDefaultSubscription();
-
-    public bool HasSubscriptionAvailable(CommandResult commandResult) =>
-        CommandHelper.HasSubscriptionAvailable(commandResult);
 }

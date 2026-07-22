@@ -321,7 +321,7 @@ public sealed class OptionTypeHandler
         {
             option.Validators.Add(emptyOrWhiteSpaceValidator);
         }
-        return (option, parseResult => parseResult.GetValueOrDefaultWithoutName(option));
+        return (option, parseResult => parseResult.GetValueOrDefault(option));
     }
 
     private static ArgumentArity GetArgumentArity(Type type, bool isMulti)
