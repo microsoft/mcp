@@ -60,7 +60,7 @@ public sealed class McpRuntime : IMcpRuntime
     /// <returns>A result containing the output of the tool invocation.</returns>
     public async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
-        using var activity = _telemetry.StartActivity(ActivityName.ToolExecuted, request.Server.ClientInfo);
+        using var activity = _telemetry.StartActivity(ActivityName.ToolExecuted, request.Server.ClientInfo, request.Params);
         CaptureToolCallMeta(activity, request.Params?.Meta);
 
         if (request.Params == null)
@@ -154,6 +154,13 @@ public sealed class McpRuntime : IMcpRuntime
 
     private static void CaptureToolCallMeta(Activity? activity, JsonObject? meta)
     {
+        TestHook_CaptureToolCallMeta(activity, meta);
+    }
+
+    // Internal for testing: exposes the W3C trace context extraction logic to unit tests
+    // without requiring a full McpRuntime instance.
+    internal static void TestHook_CaptureToolCallMeta(Activity? activity, JsonObject? meta)
+    {
         if (activity != null && meta != null)
         {
             // Capture W3C trace context fields (Workstream H: observability and trace context).
@@ -202,7 +209,7 @@ public sealed class McpRuntime : IMcpRuntime
     /// <returns>A result containing the list of available tools.</returns>
     public async ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
-        using var activity = _telemetry.StartActivity(ActivityName.ListToolsHandler, request.Server.ClientInfo);
+        using var activity = _telemetry.StartActivity(ActivityName.ListToolsHandler, request.Server.ClientInfo, request.Params);
         CaptureToolCallMeta(activity, request.Params?.Meta);
 
         try

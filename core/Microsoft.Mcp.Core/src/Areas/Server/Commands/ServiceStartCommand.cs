@@ -753,10 +753,23 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
     private static async Task ValidateMcpRoutingHeadersMiddleware(HttpContext context, Func<Task> next)
     {
+        // Why this middleware exists alongside the SDK's own ValidateMcpHeaders:
+        //
+        // The SDK (StreamableHttpHandler.ValidateMcpHeaders) validates Mcp-Method and Mcp-Name
+        // *after* the JSON body has been parsed — its signature takes a JsonRpcMessage parameter.
+        // Validating at that point means the server has already buffered the entire request body
+        // before it can reject an invalid request. For large payloads this wastes memory and CPU,
+        // and at the Kestrel default 30 MB body limit it causes an unhandled BadHttpRequestException
+        // that aborts the connection instead of returning a clean JSON-RPC 2.0 error.
+        //
+        // This middleware validates headers first — before any body is read — so that a missing
+        // Mcp-Method or Mcp-Name is rejected immediately with a well-formed HTTP 400 + JSON-RPC
+        // error envelope, regardless of payload size. The SDK then performs its own validation
+        // for requests that pass this check, but for a well-formed request it is a no-op.
+        //
         // SEP-2243 routing headers are only required when the client declares the
         // 2026-07-28 protocol version. Legacy clients (missing header or an older
         // version) must not be rejected, preserving backward-compatible interop.
-        // This guard complements the SDK's own version-aware header validation.
         if (HttpMethods.IsPost(context.Request.Method)
             && IsStatelessHttpProtocolRequest(context.Request))
         {
