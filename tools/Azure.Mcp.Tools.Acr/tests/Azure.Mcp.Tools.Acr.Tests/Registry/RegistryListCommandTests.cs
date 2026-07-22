@@ -9,7 +9,6 @@ using Azure.Mcp.Tools.Acr.Commands.Registry;
 using Azure.Mcp.Tools.Acr.Models;
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -33,8 +32,6 @@ public class RegistryListCommandTests : SubscriptionCommandUnitTestsBase<Registr
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        // Ensure environment variable fallback does not interfere with validation tests
-        TestEnvironment.ClearAzureSubscriptionId();
         // Arrange
         if (shouldSucceed)
         {

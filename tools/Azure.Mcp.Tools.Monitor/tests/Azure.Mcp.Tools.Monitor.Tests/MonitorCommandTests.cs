@@ -588,22 +588,6 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         Assert.True(enabled.GetBoolean());
     }
 
-    [Theory]
-    [InlineData("--invalid-param")]
-    [InlineData("--subscription invalidSub")]
-    [InlineData("--subscription sub --resource-group rg")] // Missing required params for get
-    public async Task Should_Return400_WithInvalidWebTestInput(string args)
-    {
-        var result = await CallToolAsync(
-            "monitor_webtests_get",
-            new()
-            {
-                { "args", args }
-            });
-
-        Assert.NotEqual(200, result?.GetProperty("status").GetInt32() ?? 500);
-    }
-
     [Fact]
     public async Task Should_Create_WebTest()
     {

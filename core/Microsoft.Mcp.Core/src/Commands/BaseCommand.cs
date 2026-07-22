@@ -199,7 +199,4 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
     }
 }
 
-public record ExceptionResult(
-    string Message,
-    string? StackTrace,
-    string Type);
+

@@ -5,7 +5,7 @@ namespace Microsoft.Mcp.Core.Commands;
 
 /// <summary>
 /// Declares command metadata (Id, Name, Description, Title) and tool behavioral hints
-/// directly on a command class. <see cref="BaseCommand{TOptions}"/> reads this attribute
+/// directly on a command class. <see cref="BaseCommand{TOptions, TResult}"/> reads this attribute
 /// via reflection in its constructor, eliminating the need for override properties.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]

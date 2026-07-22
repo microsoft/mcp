@@ -122,7 +122,15 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         if (ex is CommandValidationException cve)
         {
             response.Status = cve.StatusCode;
-            response.Message = cve.Message;
+            // If specific missing options are provided, format a consistent message
+            if (cve.MissingOptions is { Count: > 0 })
+            {
+                response.Message = $"{MissingRequiredOptionsPrefix}{string.Join(", ", cve.MissingOptions)}";
+            }
+            else
+            {
+                response.Message = cve.Message;
+            }
 
             // Include the command validation exception message as it should be safe. Requires custom validators to
             // exclude any sensitive information from their error messages.
@@ -227,3 +235,5 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         }
     }
 }
+
+public record ExceptionResult(string Message, string? StackTrace, string Type);
