@@ -8,9 +8,11 @@ Write-Host "Setting up IoT Hub test devices..."
 $iotHubName = $DeploymentOutputs['IOTHUB_NAME']
 Write-Host "IoT Hub Name: $iotHubName"
 
+# Ensure Azure IoT CLI extension is installed for `az iot` commands
+try { az extension show --name azure-iot | Out-Null } catch { az extension add --name azure-iot | Out-Null }
+
 # Create test devices for device registry tests
 $testDevices = @('test-device-1', 'test-device-2', 'test-device-3')
-
 foreach ($deviceId in $testDevices) {
     try {
         # Create device identity
