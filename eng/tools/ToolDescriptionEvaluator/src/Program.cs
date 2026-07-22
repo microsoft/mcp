@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.VectorData;
 using ToolSelection.Models;
@@ -25,6 +26,8 @@ class Program
 
     static async Task Main(string[] args)
     {
+        Console.OutputEncoding = Encoding.UTF8;
+
         var stopwatchTotal = Stopwatch.StartNew();
 
         // Check if we're in CI mode (skip if credentials are missing)
@@ -548,19 +551,33 @@ class Program
         var fileName = isDll ? "dotnet" : cliArtifact.FullName;
         var arguments = isDll ? $"{cliArtifact.FullName} tools list" : "tools list";
 
-        var process = new Process
+        var startInfo = new ProcessStartInfo
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = fileName,
-                Arguments = arguments,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            }
+            FileName = fileName,
+            Arguments = arguments,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
+            CreateNoWindow = true
         };
 
+        if (OperatingSystem.IsWindows())
+        {
+            startInfo.FileName = Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe";
+            startInfo.Environment["MCP_SERVER_FILE"] = fileName;
+            startInfo.Arguments = isDll
+                ? "/d /s /c \"chcp 65001 >nul & call \"\"%MCP_SERVER_FILE%\"\" \"\"%MCP_SERVER_DLL%\"\" tools list\""
+                : "/d /s /c \"chcp 65001 >nul & call \"\"%MCP_SERVER_FILE%\"\" tools list\"";
+
+            if (isDll)
+            {
+                startInfo.Environment["MCP_SERVER_DLL"] = cliArtifact.FullName;
+            }
+        }
+
+        using var process = new Process { StartInfo = startInfo };
         process.Start();
 
         var output = await process.StandardOutput.ReadToEndAsync();
