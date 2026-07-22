@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Tools.Options;
@@ -165,9 +166,41 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
         };
     }
 
+    [JsonConverter(typeof(ToolsListResultConverter))]
     public sealed record ToolsListResult(
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<CommandInfo>? Commands,
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<string>? Names);
+
+    public sealed class ToolsListResultConverter : JsonConverter<ToolsListResult>
+    {
+        public override ToolsListResult? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            // Can't deserialize an object without knowing its type.
+            throw new NotSupportedException();
+        }
+
+        public override void Write(Utf8JsonWriter writer, ToolsListResult? value, JsonSerializerOptions options)
+        {
+            if (value is not null)
+            {
+                if (value.Commands is not null)
+                {
+                    JsonSerializer.Serialize(writer, value.Commands, ModelsJsonContext.Default.ListCommandInfo);
+                }
+                else if (value.Names is not null)
+                {
+                    writer.WriteStartObject();
+                    writer.WriteStartArray("names");
+                    foreach (var name in value.Names)
+                    {
+                        writer.WriteStringValue(name);
+                    }
+                    writer.WriteEndArray();
+                    writer.WriteEndObject();
+                }
+            }
+        }
+    }
 
     private static void SearchCommandInCommandGroup(string commandPrefix, CommandGroup searchedGroup, List<CommandInfo> foundCommands)
     {

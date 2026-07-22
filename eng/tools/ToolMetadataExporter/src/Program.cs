@@ -84,9 +84,8 @@ public class Program
         services.AddScoped<TokenCredential>(sp =>
         {
             var credential = new ChainedTokenCredential(
-                new ManagedIdentityCredential(),
-                new DefaultAzureCredential()
-            );
+                new ManagedIdentityCredential(new ManagedIdentityCredentialOptions()),
+                new DefaultAzureCredential());
 
             return credential;
         });
