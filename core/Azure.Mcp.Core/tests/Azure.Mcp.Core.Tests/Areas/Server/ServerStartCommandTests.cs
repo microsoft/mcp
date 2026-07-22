@@ -537,7 +537,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
     public async Task InvalidMode_FailsToStartServer()
     {
         // Act & Assert
-        await Assert.ThrowsAsync<IOException>(async () =>
+        await Assert.ThrowsAsync<ClientTransportClosedException>(async () =>
         {
             await using var client = await CreateClientAsync("server", "start", "--mode", "invalid-mode");
         });

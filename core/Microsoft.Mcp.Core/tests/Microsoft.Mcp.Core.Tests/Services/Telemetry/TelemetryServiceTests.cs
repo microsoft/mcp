@@ -1,13 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
@@ -83,7 +86,7 @@ public class TelemetryServiceTests
         };
 
         // Act
-        using var activity = service.StartActivity(activityId, clientInfo);
+        using var activity = service.StartActivity(activityId, clientInfo, null);
 
         // Assert
         Assert.Null(activity);
@@ -218,7 +221,7 @@ public class TelemetryServiceTests
             Version = "1.0.0",
             Title = "Test MCP server"
         };
-        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo));
+        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo, null));
     }
 
     [Fact]
@@ -253,7 +256,7 @@ public class TelemetryServiceTests
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => service.InitializeAsync());
 
-        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo));
+        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo, null));
     }
 
     [Fact]
@@ -544,5 +547,169 @@ public class TelemetryServiceTests
 
         public Task<string?> GetOrCreateDeviceId() => Task.FromException<string?>(
             new ArgumentNullException("test-exception"));
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_NoImplementationOrRequestParams_NothingIsSet()
+    {
+        var activity = new Activity("test");
+        TelemetryService.SetClientNameAndVersion(activity, null, null);
+
+        ValidateClientNameAndVersion(activity, null, null);
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_ImplementationOnly_SetsCorrectly()
+    {
+        var activity = new Activity("test");
+        var clientInfo = new Implementation
+        {
+            Name = "Foo-Bar-MCP",
+            Version = "1.0.0",
+        };
+        TelemetryService.SetClientNameAndVersion(activity, clientInfo, null);
+
+        ValidateClientNameAndVersion(activity, clientInfo.Name, clientInfo.Version);
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_RequestParamsOnly_SetsCorrectly()
+    {
+        var activity = new Activity("test");
+        var requestParams = new ListToolsRequestParams()
+        {
+            Meta = CreateClientInfo("Fizz-Buzz-MCP", "2.0.0")
+        };
+        TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
+
+        ValidateClientNameAndVersion(activity, "Fizz-Buzz-MCP", "2.0.0");
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_BothImplementationAndRequestParams_SetsCorrectly()
+    {
+        var activity = new Activity("test");
+        var clientInfo = new Implementation
+        {
+            Name = "Foo-Bar-MCP",
+            Version = "1.0.0",
+        };
+        var requestParams = new ListToolsRequestParams()
+        {
+            Meta = CreateClientInfo("Fizz-Buzz-MCP", "2.0.0")
+        };
+        TelemetryService.SetClientNameAndVersion(activity, clientInfo, requestParams);
+
+        ValidateClientNameAndVersion(activity, "Fizz-Buzz-MCP", "2.0.0");
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("Fizz-Buzz-MCP", null)]
+    [InlineData(null, "2.0.0")]
+    public void SetClientNameAndVersion_RequestParamsPartial_HandlesCorrectly(string? name, string? version)
+    {
+        var activity = new Activity("test");
+        var requestParams = new ListToolsRequestParams()
+        {
+            Meta = CreateClientInfo(name, version)
+        };
+        TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
+
+        ValidateClientNameAndVersion(activity, name, version);
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(1, 2)]
+    [InlineData(1.0, 2.0)]
+    public void SetClientNameAndVersion_RequestParamsNonString_AreIgnored(object name, object version)
+    {
+        var activity = new Activity("test");
+        var requestParams = new ListToolsRequestParams()
+        {
+            Meta = CreateClientInfo(name, version)
+        };
+        TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
+
+        ValidateClientNameAndVersion(activity, null, null);
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_RequestParamsMissingClientInfo_HandlesCorrectly()
+    {
+        var activity = new Activity("test");
+        var requestParams = new ListToolsRequestParams()
+        {
+            Meta = new([])
+        };
+        TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
+
+        ValidateClientNameAndVersion(activity, null, null);
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_RequestParamsArrayClientInfo_HandlesCorrectly()
+    {
+        var activity = new Activity("test");
+        var requestParams = new ListToolsRequestParams()
+        {
+            Meta = new([new(McpHelper.ClientInfoMetaKey, new JsonArray())])
+        };
+        TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
+
+        ValidateClientNameAndVersion(activity, null, null);
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_RequestParamsValueClientInfo_HandlesCorrectly()
+    {
+        var activity = new Activity("test");
+        var requestParams = new ListToolsRequestParams()
+        {
+            Meta = new([new(McpHelper.ClientInfoMetaKey, "string")])
+        };
+        TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
+
+        ValidateClientNameAndVersion(activity, null, null);
+    }
+
+    private static JsonObject CreateClientInfo(object? name, object? version)
+    {
+        var jsonObject = new JsonObject();
+        if (name != null)
+        {
+            jsonObject[McpHelper.ClientInfoNameKey] = JsonValue.Create(name);
+        }
+        if (version != null)
+        {
+            jsonObject[McpHelper.ClientInfoVersionKey] = JsonValue.Create(version);
+        }
+
+        return new([new(McpHelper.ClientInfoMetaKey, jsonObject)]);
+    }
+
+    private static void ValidateClientNameAndVersion(Activity activity, string? name, string? version)
+    {
+        var dictionary = activity.Tags.ToDictionary();
+        if (name == null)
+        {
+            Assert.False(dictionary.ContainsKey(TagName.ClientName));
+        }
+        else
+        {
+            var actualName = Assert.Contains(TagName.ClientName, dictionary);
+            Assert.Equal(name, actualName);
+        }
+
+        if (version == null)
+        {
+            Assert.False(dictionary.ContainsKey(TagName.ClientVersion));
+        }
+        else
+        {
+            var actualVersion = Assert.Contains(TagName.ClientVersion, dictionary);
+            Assert.Equal(version, actualVersion);
+        }
     }
 }

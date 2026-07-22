@@ -17,6 +17,13 @@ public static class McpHelper
     public const string ToolIdMetaKey = "MicrosoftMcpToolId";
 
     /// <summary>
+    /// Key used in _meta for stateless handling beginning in 2026-07-28 spec.
+    /// </summary>
+    public const string ClientInfoMetaKey = "io.modelcontextprotocol/clientInfo";
+    public const string ClientInfoNameKey = "name";
+    public const string ClientInfoVersionKey = "version";
+
+    /// <summary>
     /// Determines whether the tool has the hint in its metadata and is true.
     /// </summary>
     /// <param name="tool">The tool to check its metadata for the hint.</param>

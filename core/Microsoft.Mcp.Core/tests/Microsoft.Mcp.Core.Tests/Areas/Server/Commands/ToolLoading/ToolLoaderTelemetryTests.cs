@@ -193,7 +193,7 @@ public class ToolLoaderTelemetryTests : IDisposable
     {
         var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
         var telemetry = Substitute.For<ITelemetryService>();
-        telemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>()).Returns(_activity);
+        telemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>()).Returns(_activity);
         var logger = Substitute.For<ILogger<McpRuntime>>();
 
         var runtime = new McpRuntime(toolLoader, options, telemetry, logger);
@@ -203,14 +203,11 @@ public class ToolLoaderTelemetryTests : IDisposable
 
     private static RequestContext<CallToolRequestParams> CreateToolCallRequest(McpServer mcpServer, string toolName)
     {
-        return new RequestContext<CallToolRequestParams>(mcpServer, CreateJsonRpcRequest("tools/call"))
+        return new RequestContext<CallToolRequestParams>(mcpServer, CreateJsonRpcRequest("tools/call"), new()
         {
-            Params = new CallToolRequestParams()
-            {
-                Name = toolName,
-                Arguments = new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = toolName,
+            Arguments = new Dictionary<string, JsonElement>()
+        });
     }
 
     private static JsonRpcRequest CreateJsonRpcRequest(string method)

@@ -10,6 +10,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
 
@@ -29,26 +30,20 @@ public class RegistryToolLoaderTests
         return (toolLoader, mockDiscoveryStrategy);
     }
 
-    private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest()
+    private static RequestContext<ListToolsRequestParams> CreateListToolsRequest()
     {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
-        {
-            Params = new ListToolsRequestParams()
-        };
+        var mockServer = Substitute.For<McpServer>();
+        return new RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList }, new());
     }
 
-    private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IDictionary<string, JsonElement>? arguments = null)
+    private static RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IDictionary<string, JsonElement>? arguments = null)
     {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var mockServer = Substitute.For<McpServer>();
+        return new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = toolName,
-                Arguments = arguments ?? new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = toolName,
+            Arguments = arguments ?? new Dictionary<string, JsonElement>()
+        });
     }
 
     [Fact]
