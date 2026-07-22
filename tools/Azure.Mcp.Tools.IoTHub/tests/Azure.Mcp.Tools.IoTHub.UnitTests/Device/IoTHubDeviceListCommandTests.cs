@@ -215,13 +215,10 @@ public class IoTHubDeviceListCommandTests
         Assert.Equal("iothub-device-list", _command.Id);
         Assert.Equal("list", _command.Name);
         Assert.NotNull(_command.Description);
-        Assert.Contains("more than 100 devices", _command.Description, StringComparison.Ordinal);
-        Assert.Contains("iothub query run", _command.Description, StringComparison.Ordinal);
-        Assert.Contains("iothub_query_run", _command.Description, StringComparison.Ordinal);
-        Assert.Contains("compact projection", _command.Description, StringComparison.Ordinal);
-        Assert.Contains("compact summary", _command.Description, StringComparison.Ordinal);
-        Assert.Contains("return only one page", _command.Description, StringComparison.Ordinal);
-        Assert.Contains("do not loop", _command.Description, StringComparison.Ordinal);
+        Assert.Contains("--max-count", _command.Description, StringComparison.Ordinal);
+        Assert.Contains("default 100", _command.Description, StringComparison.Ordinal);
+        Assert.Contains("maximum 100", _command.Description, StringComparison.Ordinal);
+        Assert.Contains("truncated=true", _command.Description, StringComparison.Ordinal);
         Assert.True(_command.Metadata.ReadOnly);
         Assert.False(_command.Metadata.Secret);
     }
