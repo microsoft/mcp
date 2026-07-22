@@ -15,6 +15,13 @@ public static class McpServerElicitationExtensions
     /// <summary>
     /// Sends an elicitation request to gather user input with validation and error handling.
     /// </summary>
+    /// <remarks>
+    /// This extension wraps <see cref="McpServer.ElicitAsync"/> to translate between our internal
+    /// <see cref="ElicitationRequestParams"/>/<see cref="ElicitationAction"/> types and the SDK's
+    /// protocol types. The underlying SDK API is unchanged between SDK <c>1.1.0</c> and
+    /// <c>2.0.0-preview.1</c> — both versions expose the same <c>ElicitAsync</c> overload with
+    /// the same <c>ElicitRequestParams</c>/<c>ElicitResult</c> shapes.
+    /// </remarks>
     /// <param name="server">The MCP server instance.</param>
     /// <param name="request">The elicitation request parameters.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
@@ -65,6 +72,10 @@ public static class McpServerElicitationExtensions
         return elicitationResponse;
     }
 
+    // Translate our JsonObject-based schema into the SDK's typed PrimitiveSchemaDefinition
+    // hierarchy. The SDK does not accept a raw JsonObject — it requires each property to be
+    // represented as a concrete schema type (string, boolean, integer, enum, etc.) so that
+    // the MCP client can render an appropriate form widget for each field.
     private static ModelContextProtocol.Protocol.ElicitRequestParams.RequestSchema CreateRequestedSchema(JsonObject requestedSchema)
     {
         var protocolSchema = new ModelContextProtocol.Protocol.ElicitRequestParams.RequestSchema();
