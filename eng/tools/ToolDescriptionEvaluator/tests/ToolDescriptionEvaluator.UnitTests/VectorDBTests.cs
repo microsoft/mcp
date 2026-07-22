@@ -54,6 +54,16 @@ public class VectorDBTests
     }
 
     [Fact]
+    public void GetCollection_NullName_Throws()
+    {
+        using var store = new VectorDB(new CosineSimilarity());
+
+        var exception = Assert.Throws<ArgumentNullException>(() => store.GetCollection<string, Entry>(null!));
+
+        Assert.Equal("name", exception.ParamName);
+    }
+
+    [Fact]
     public void GetDynamicCollection_Throws()
     {
         using var store = new VectorDB(new CosineSimilarity());

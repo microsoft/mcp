@@ -99,6 +99,8 @@ public sealed class VectorDB : VectorStore
     [RequiresDynamicCode("Uses generic type checks that may require dynamic code.")]
     public override VectorStoreCollection<TKey, TRecord> GetCollection<TKey, TRecord>(string name, VectorStoreCollectionDefinition? definition = null)
     {
+        ArgumentNullException.ThrowIfNull(name);
+
         if (typeof(TKey) != typeof(string) || typeof(TRecord) != typeof(Entry))
         {
             throw new NotSupportedException($"This store only supports collections of <{nameof(String)}, {nameof(Entry)}>.");
@@ -191,6 +193,7 @@ public sealed class InMemoryVectorStoreCollection : VectorStoreCollection<string
     private readonly ReaderWriterLockSlim _lock = new();
     private readonly List<Entry> _entries;
     private readonly IDistanceMetric _distanceMetric;
+    private readonly IComparer<VectorSearchResult<Entry>> _resultComparer;
     private readonly string _name;
     private readonly VectorStoreCollectionMetadata _metadata;
     private bool _disposed;
@@ -199,6 +202,11 @@ public sealed class InMemoryVectorStoreCollection : VectorStoreCollection<string
     {
         _name = name;
         _distanceMetric = distanceMetric;
+        _resultComparer = Comparer<VectorSearchResult<Entry>>.Create((a, b) =>
+        {
+            int result = Nullable.Compare(a.Score, b.Score);
+            return distanceMetric.BiggerIsCloser ? -result : result;
+        });
         _entries = entries?.OrderBy(e => e.Id, StringComparer.Ordinal).ToList() ?? new();
         _metadata = new VectorStoreCollectionMetadata
         {
@@ -412,7 +420,7 @@ public sealed class InMemoryVectorStoreCollection : VectorStoreCollection<string
 
             var candidate = new VectorSearchResult<Entry>(entry, score);
 
-            int insertIndex = results.BinarySearch(candidate, ResultComparer);
+            int insertIndex = results.BinarySearch(candidate, _resultComparer);
             if (insertIndex < 0)
             {
                 insertIndex = ~insertIndex;
@@ -443,7 +451,7 @@ public sealed class InMemoryVectorStoreCollection : VectorStoreCollection<string
 
         while (leftIndex < left.Count && rightIndex < right.Count && merged.Count < top)
         {
-            if (ResultComparer.Compare(left[leftIndex], right[rightIndex]) <= 0)
+            if (_resultComparer.Compare(left[leftIndex], right[rightIndex]) <= 0)
             {
                 merged.Add(left[leftIndex++]);
             }
@@ -465,12 +473,6 @@ public sealed class InMemoryVectorStoreCollection : VectorStoreCollection<string
 
         return merged;
     }
-
-    private IComparer<VectorSearchResult<Entry>> ResultComparer => Comparer<VectorSearchResult<Entry>>.Create((a, b) =>
-    {
-        int result = Nullable.Compare(a.Score, b.Score);
-        return _distanceMetric.BiggerIsCloser ? -result : result;
-    });
 
     public override object? GetService(Type serviceType, object? serviceKey = null)
     {
