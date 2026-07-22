@@ -5,7 +5,7 @@ description: |
 on:
   pull_request:
     paths:
-      - 'tools/**'
+      - 'tools/Azure.Mcp.*/**'
       - '.vally.yaml'
   workflow_dispatch:
     inputs:
@@ -86,10 +86,13 @@ jobs:
         run: |
           $isDebug = '${{ github.event.inputs.logLevel }}' -eq 'true'
           $buildInfo = '${{ github.workspace }}/.work/build_info.json'
-          $evalsDirectory = '${{ github.workspace }}/.work/evals'
-          $outputPath = '${{ github.workspace }}/.work/vally-results'
 
-          ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath $buildInfo -EvalsDirectory $evalsDirectory -OutputPath $outputPath -IsDebug:$isDebug
+          $baseVallyDirectory = '${{ github.workspace }}/.work/vally'
+          $evalsDirectory = '$baseVallyDirectory/evals'
+          $outputPath = '$baseVallyDirectory/vally-results'
+          $workingDirectory = '$baseVallyDirectory/workspace'
+
+          ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath $buildInfo -WorkDirectory $workingDirectory -EvalsDirectory $evalsDirectory -OutputPath $outputPath -IsDebug:$isDebug
         shell: pwsh
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
@@ -99,5 +102,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: vally-results
-          path: ${{ github.workspace }}/.work/vally-results
+          path: ${{ github.workspace }}/.work/vally/vally-results
           if-no-files-found: warn
