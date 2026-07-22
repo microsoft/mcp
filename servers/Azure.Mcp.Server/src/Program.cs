@@ -211,6 +211,7 @@ internal class Program
             new Azure.Mcp.Tools.Functions.FunctionsSetup(),
             new Azure.Mcp.Tools.Grafana.GrafanaSetup(),
             new Azure.Mcp.Tools.Insights.InsightsSetup(),
+            new Azure.Mcp.Tools.IoTHub.IoTHubSetup(),
             new Azure.Mcp.Tools.KeyVault.KeyVaultSetup(),
             new Azure.Mcp.Tools.Kusto.KustoSetup(),
             new Azure.Mcp.Tools.LoadTesting.LoadTestingSetup(),

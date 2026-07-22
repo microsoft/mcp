@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using System.Reflection;
+using System.Text.Json;
 using Azure.Mcp.Tools.CloudArchitect.Models;
 using Azure.Mcp.Tools.CloudArchitect.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -33,7 +32,8 @@ namespace Azure.Mcp.Tools.CloudArchitect.Commands.Design;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class DesignCommand(ILogger<DesignCommand> logger) : BaseCommand<ArchitectureDesignToolOptions>
+public sealed class DesignCommand(ILogger<DesignCommand> logger)
+    : BaseCommand<ArchitectureDesignToolOptions, CloudArchitectDesignResponse>
 {
     private readonly ILogger<DesignCommand> _logger = logger;
 
@@ -48,57 +48,30 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : BaseCommand<A
         return EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
     }
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(ArchitectureDesignToolOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(CloudArchitectOptionDefinitions.Question);
-        command.Options.Add(CloudArchitectOptionDefinitions.QuestionNumber);
-        command.Options.Add(CloudArchitectOptionDefinitions.TotalQuestions);
-        command.Options.Add(CloudArchitectOptionDefinitions.Answer);
-        command.Options.Add(CloudArchitectOptionDefinitions.NextQuestionNeeded);
-        command.Options.Add(CloudArchitectOptionDefinitions.ConfidenceScore);
-        command.Options.Add(CloudArchitectOptionDefinitions.State);
+        base.ValidateOptions(options, validationResult);
 
-        command.Validators.Add(result =>
+        // Validate confidence score is between 0.0 and 1.0
+        if (options.ConfidenceScore < 0.0 || options.ConfidenceScore > 1.0)
         {
-            // Validate confidence score is between 0.0 and 1.0
-            var confidenceScore = result.GetValue(CloudArchitectOptionDefinitions.ConfidenceScore);
-            if (confidenceScore < 0.0 || confidenceScore > 1.0)
-            {
-                result.AddError("Confidence score must be between 0.0 and 1.0");
-                return;
-            }
+            validationResult.Errors.Add("Confidence score must be between 0.0 and 1.0");
+        }
 
-            // Validate question number is not negative
-            var questionNumber = result.GetValue(CloudArchitectOptionDefinitions.QuestionNumber);
-            if (questionNumber < 0)
-            {
-                result.AddError("Question number cannot be negative");
-                return;
-            }
+        // Validate question number is not negative
+        if (options.QuestionNumber < 0)
+        {
+            validationResult.Errors.Add("Question number cannot be negative");
+        }
 
-            // Validate total questions is not negative
-            var totalQuestions = result.GetValue(CloudArchitectOptionDefinitions.TotalQuestions);
-            if (totalQuestions < 0)
-            {
-                result.AddError("Total questions cannot be negative");
-                return;
-            }
-        });
+        // Validate total questions is not negative
+        if (options.TotalQuestions < 0)
+        {
+            validationResult.Errors.Add("Total questions cannot be negative");
+        }
     }
 
-    protected override ArchitectureDesignToolOptions BindOptions(ParseResult parseResult) => new()
-    {
-        Question = parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.Question.Name) ?? string.Empty,
-        QuestionNumber = parseResult.GetValueOrDefault<int>(CloudArchitectOptionDefinitions.QuestionNumber.Name),
-        TotalQuestions = parseResult.GetValueOrDefault<int>(CloudArchitectOptionDefinitions.TotalQuestions.Name),
-        Answer = parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.Answer.Name),
-        NextQuestionNeeded = parseResult.GetValueOrDefault<bool>(CloudArchitectOptionDefinitions.NextQuestionNeeded.Name),
-        ConfidenceScore = parseResult.GetValueOrDefault<double>(CloudArchitectOptionDefinitions.ConfidenceScore.Name),
-        State = DeserializeState(parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.State.Name))
-    };
-
-    private static ArchitectureDesignToolState DeserializeState(string? stateJson)
+    internal static ArchitectureDesignToolState DeserializeState(string? stateJson)
     {
         if (string.IsNullOrEmpty(stateJson))
         {
@@ -116,37 +89,22 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : BaseCommand<A
         }
     }
 
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ArchitectureDesignToolOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return Task.FromResult(context.Response);
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var designArchitecture = GetArchitectureDesignText();
-            var responseObject = new CloudArchitectResponseObject
-            {
-                DisplayText = options.Question,
-                DisplayThought = options.State.Thought,
-                DisplayHint = options.State.SuggestedHint,
-                QuestionNumber = options.QuestionNumber,
-                TotalQuestions = options.TotalQuestions,
-                NextQuestionNeeded = options.NextQuestionNeeded,
-                State = options.State
-            };
+            var state = DeserializeState(options.State);
+            var responseObject = new CloudArchitectResponseObject(
+                DisplayText: options.Question,
+                DisplayThought: state.Thought,
+                DisplayHint: state.SuggestedHint,
+                QuestionNumber: options.QuestionNumber,
+                TotalQuestions: options.TotalQuestions,
+                NextQuestionNeeded: options.NextQuestionNeeded,
+                State: state);
 
-            var result = new CloudArchitectDesignResponse
-            {
-                DesignArchitecture = designArchitecture,
-                ResponseObject = responseObject
-            };
-
-            context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
+            context.Response.Results = ResponseResult.Create(new(designArchitecture, responseObject), CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
