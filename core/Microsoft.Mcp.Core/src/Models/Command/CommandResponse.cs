@@ -26,26 +26,14 @@ public class CommandResponse
 }
 
 [JsonConverter(typeof(ResultConverter))]
-public sealed class ResponseResult
+public sealed class ResponseResult(object? result, JsonTypeInfo typeInfo)
 {
-    private readonly object? _result;
-    private readonly JsonTypeInfo _typeInfo;
+    private readonly object? _result = result;
+    private readonly JsonTypeInfo _typeInfo = typeInfo;
 
-    private ResponseResult(object? result, JsonTypeInfo typeInfo)
-    {
-        _result = result;
-        _typeInfo = typeInfo;
-    }
+    public static ResponseResult Create<T>(T result, JsonTypeInfo<T> typeInfo) => new(result, typeInfo);
 
-    public static ResponseResult Create<T>(T result, JsonTypeInfo<T> typeInfo)
-    {
-        return new ResponseResult(result, typeInfo);
-    }
-
-    public void Write(Utf8JsonWriter writer)
-    {
-        JsonSerializer.Serialize(writer, _result, _typeInfo);
-    }
+    public void Write(Utf8JsonWriter writer) => JsonSerializer.Serialize(writer, _result, _typeInfo);
 }
 
 public class ResultConverter : JsonConverter<ResponseResult>

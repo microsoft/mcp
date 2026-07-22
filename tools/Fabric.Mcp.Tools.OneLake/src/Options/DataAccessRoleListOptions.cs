@@ -5,7 +5,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Options;
 
-public sealed class DataAccessRoleListOptions : GlobalOptions
+public sealed class DataAccessRoleListOptions
 {
     [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
     public string? WorkspaceId { get; set; }

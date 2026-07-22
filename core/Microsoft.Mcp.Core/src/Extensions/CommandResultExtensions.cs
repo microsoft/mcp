@@ -55,63 +55,6 @@ public static class CommandResultExtensions
         return hasNonEmptyValue;
     }
 
-    public static bool TryGetValue<T>(this CommandResult commandResult, Option<T> option, out T? value)
-        => TryGetValue(commandResult, option.Name, out value);
-
-    public static bool TryGetValue<T>(this CommandResult commandResult, string optionName, out T? value)
-    {
-        // Find the option by name in the command
-        var option = FindOptionTByName<T>(commandResult, optionName);
-
-        if (option is null)
-        {
-            value = default;
-            return false;
-        }
-
-        // If the option has any result (explicit or implicit), attempt to read its value.
-        var result = commandResult.GetResult(option);
-        if (result is not null)
-        {
-            try
-            {
-                value = commandResult.GetValue(option);
-                return true;
-            }
-            catch
-            {
-                // Fall through to check default value below
-            }
-        }
-
-        // If no result (or GetValue failed), return the option's default when available.
-        if (option.HasDefaultValue)
-        {
-            var def = option.GetDefaultValue();
-            // Handle nullable types explicitly - null is a valid value for nullable types
-            if (def is null && typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))
-            {
-                value = default; // This will be null for nullable types
-                return true;
-            }
-            if (def is T typed)
-            {
-                value = typed;
-                return true;
-            }
-        }
-
-        value = default;
-        return false;
-    }
-
-    public static T? GetValueOrDefault<T>(this CommandResult commandResult, Option<T> option)
-    {
-        ArgumentNullException.ThrowIfNull(commandResult);
-        ArgumentNullException.ThrowIfNull(option);
-        return GetValueOrDefault<T>(commandResult, option.Name);
-    }
-
     public static T? GetValueOrDefault<T>(this CommandResult commandResult, string optionName)
     {
         // Find the option by name in the command

@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Tools.Options;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -29,46 +28,27 @@ namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
     LocalRequired = false,
     Secret = false)]
 public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
-    : BaseCommand<ToolsListOptions>
+    : BaseCommand<ToolsListOptions, List<CommandInfo>>
 {
+    private static readonly HashSet<string> s_ignored = new(StringComparer.OrdinalIgnoreCase) { "server", "tools" };
+    private static readonly HashSet<string> s_surfaced = new(StringComparer.OrdinalIgnoreCase) { "extension" };
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(ToolsListOptionDefinitions.NamespaceMode);
-        command.Options.Add(ToolsListOptionDefinitions.Namespace);
-        command.Options.Add(ToolsListOptionDefinitions.NameOnly);
-    }
-
-    protected override ToolsListOptions BindOptions(ParseResult parseResult)
-    {
-        var namespaces = parseResult.GetValueOrDefault(ToolsListOptionDefinitions.Namespace) ?? [];
-        return new ToolsListOptions
-        {
-            NamespaceMode = parseResult.GetValueOrDefault(ToolsListOptionDefinitions.NamespaceMode),
-            NameOnly = parseResult.GetValueOrDefault(ToolsListOptionDefinitions.NameOnly),
-            Namespaces = namespaces.ToList()
-        };
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ToolsListOptions options, CancellationToken cancellationToken)
     {
         try
         {
             var factory = context.GetService<ICommandFactory>();
-            var options = BindOptions(parseResult);
 
             // If the --namespace-mode flag is set, return distinct top‑level namespaces (e.g. child groups beneath root 'azmcp').
             if (options.NamespaceMode)
             {
-                var ignored = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "server", "tools" };
-                var surfaced = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "extension" };
                 var rootGroup = factory.RootGroup; // azmcp
+                var hasNamespaceFiltering = options.Namespace != null && options.Namespace.Length > 0;
 
                 var namespaceCommands = rootGroup.SubGroup
-                    .Where(g => !ignored.Contains(g.Name) && !surfaced.Contains(g.Name))
+                    .Where(g => !s_ignored.Contains(g.Name) && !s_surfaced.Contains(g.Name))
                     // Apply namespace filtering if specified
-                    .Where(g => options.Namespaces.Count == 0 || options.Namespaces.Contains(g.Name, StringComparer.OrdinalIgnoreCase))
+                    .Where(g => !hasNamespaceFiltering || options.Namespace.Contains(g.Name, StringComparer.OrdinalIgnoreCase))
                     .Select(g => new CommandInfo
                     {
                         Name = g.Name,
@@ -81,10 +61,10 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
 
                 // Add the commands to be surfaced directly to the list.
                 // For commands in the surfaced list, each command is exposed as a separate tool in the namespace mode.
-                foreach (var name in surfaced)
+                foreach (var name in s_surfaced)
                 {
                     // Apply namespace filtering for surfaced commands too
-                    if (options.Namespaces.Count > 0 && !options.Namespaces.Contains(name, StringComparer.OrdinalIgnoreCase))
+                    if (hasNamespaceFiltering && !options.Namespace.Contains(name, StringComparer.OrdinalIgnoreCase))
                         continue;
 
                     var subgroup = rootGroup.SubGroup.FirstOrDefault(g => string.Equals(g.Name, name, StringComparison.OrdinalIgnoreCase));
@@ -100,7 +80,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
                 if (options.NameOnly)
                 {
                     var namespaceNames = namespaceCommands.Select(nc => nc.Command).ToList();
-                    var result = new ToolNamesResult(namespaceNames);
+                    var result = new ToolsListResult(namespaceNames);
                     context.Response.Results = ResponseResult.Create(result, ModelsJsonContext.Default.ToolNamesResult);
                     return context.Response;
                 }
@@ -118,13 +98,11 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
                     .Where(name => !string.IsNullOrEmpty(name));
 
                 // Apply namespace filtering if specified (using underscore separator for tokenized names)
-                allToolNames = ApplyNamespaceFilterToNames(allToolNames, options.Namespaces, CommandFactory.Separator);
+                allToolNames = ApplyNamespaceFilterToNames(allToolNames, options.Namespace, CommandFactory.Separator);
 
-                var toolNames = await Task.Run(() => allToolNames
-                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
-                    .ToList());
+                var toolNames = allToolNames.OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToList();
 
-                var result = new ToolNamesResult(toolNames);
+                var result = new ToolsListResult(toolNames);
                 context.Response.Results = ResponseResult.Create(result, ModelsJsonContext.Default.ToolNamesResult);
                 return context.Response;
             }
@@ -134,11 +112,11 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
                 .Select(kvp => CreateCommand(kvp.Key, kvp.Value));
 
             // Apply namespace filtering if specified
-            var filteredToolNames = ApplyNamespaceFilterToNames(allTools.Select(t => t.Command), options.Namespaces, ' ');
+            var filteredToolNames = ApplyNamespaceFilterToNames(allTools.Select(t => t.Command), options.Namespace, ' ');
             var filteredToolNamesSet = filteredToolNames.ToHashSet(StringComparer.OrdinalIgnoreCase);
             allTools = allTools.Where(tool => filteredToolNamesSet.Contains(tool.Command));
 
-            var tools = await Task.Run(() => allTools.ToList());
+            var tools = allTools.ToList();
 
             context.Response.Results = ResponseResult.Create(tools, ModelsJsonContext.Default.ListCommandInfo);
             return context.Response;
@@ -152,14 +130,14 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
         }
     }
 
-    private static IEnumerable<string> ApplyNamespaceFilterToNames(IEnumerable<string> names, List<string> namespaces, char separator)
+    private static IEnumerable<string> ApplyNamespaceFilterToNames(IEnumerable<string> names, string[]? namespaces, char separator)
     {
-        if (namespaces.Count == 0)
+        if (namespaces == null || namespaces.Length == 0)
         {
             return names;
         }
 
-        var namespacePrefixes = namespaces.Select(ns => $"{ns}{separator}").ToList();
+        var namespacePrefixes = namespaces.Select(@namespace => $"{@namespace}{separator}").ToList();
 
         return names.Where(name =>
             namespacePrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)));
@@ -189,7 +167,10 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
         };
     }
 
-    public sealed record ToolNamesResult(List<string> Names);
+    public sealed record ToolsListResult(
+        List<CommandInfo>? Commands,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<string>? Names);
+
     private static void SearchCommandInCommandGroup(string commandPrefix, CommandGroup searchedGroup, List<CommandInfo> foundCommands)
     {
         var commands = CommandFactory.GetVisibleCommands(searchedGroup.Commands).Select(kvp =>
