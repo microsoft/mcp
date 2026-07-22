@@ -44,6 +44,9 @@
   <Folder Name="/eng/tools/ToolDescriptionEvaluator/src/">
     <Project Path="eng/tools/ToolDescriptionEvaluator/src/ToolDescriptionEvaluator.csproj" />
   </Folder>
+  <Folder Name="/eng/tools/ToolDescriptionEvaluator/tests/">
+    <Project Path="eng/tools/ToolDescriptionEvaluator/tests/ToolDescriptionEvaluator.UnitTests/ToolDescriptionEvaluator.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/eng/tools/ToolMetadataExporter/" />
   <Folder Name="/eng/tools/ToolMetadataExporter/src/">
     <Project Path="eng/tools/ToolMetadataExporter/src/ToolMetadataExporter.csproj" />
